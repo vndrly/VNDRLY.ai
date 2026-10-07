@@ -334,7 +334,7 @@ const entries: Entry[] = [
     occurrenceId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("moderate_work_hub_meeting", "meetings", "Host or co-host meeting moderation, including muting, removing, or checking in an invited attendee on a shared terminal. A shared-terminal email or name match confirms the invitation, not identity. A host mute never remotely unmutes the attendee; releasing it only restores their own unmute control. Attendees may request to speak.", writeSchema({
+  write("moderate_work_hub_meeting", "meetings", "Host or co-host meeting moderation, including muting, removing, or checking in an invited attendee on a shared terminal. A shared-terminal email or name match confirms the invitation, not identity. A host mute never remotely unmutes the attendee; releasing it only restores their own unmute control. Attendees may request to speak while host-muted through an exact saved operation; retry checks the original receipt and never opens their microphone or accepts consent.", writeSchema({
     action: { type: "string", enum: ["host_mute", "release_host_mute", "remove", "request_to_speak", "check_in", "check_out"] },
     occurrenceId: identifier(),
     targetUserId: { type: "number", description: "Required for host_mute, release_host_mute, remove, check_in, and check_out." },

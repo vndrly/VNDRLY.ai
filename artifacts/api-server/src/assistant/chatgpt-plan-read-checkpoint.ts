@@ -4,8 +4,8 @@ import { resumedWorkPlan, type PlanCompletionVerifier } from "./chatgpt-coordina
 
 export const PLAN_READ_CHECKPOINT_TOOL = {
   name: "v_prepare_work_plan_read_checkpoint",
-  description: "Prepare saving a server-issued planned-read receipt in the existing Work Hub action panel. Receipts come only from v_run_work_plan_read. Saves observed lookup success/failure and puts the step in waiting or failed; never marks the business work completed or starts background execution.",
-  inputSchema: { type: "object" as const, properties: { receipt: { type: "string", maxLength: 12000 } }, required: ["receipt"], additionalProperties: false },
+  description: "Prepare saving signed observations from the individual v_plan_read__ operations for every read in one saved plan step. Supply all receipts for a multi-read step. Legacy combined receipts remain accepted. Saves lookup success/failure only; never marks business work completed or starts execution.",
+  inputSchema: { type: "object" as const, properties: { receipt: { type: "string", maxLength: 12000 }, receipts: { type: "array", minItems: 1, maxItems: 50, items: { type: "string", maxLength: 12000 } } }, additionalProperties: false },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
 };
 
@@ -17,6 +17,16 @@ export const planReadReceiptSchema = z.object({
   observations: z.array(z.object({ toolName: z.string().min(1), failed: z.boolean(), resultHash: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(50),
 }).strict();
 export type PlanReadReceipt = z.infer<typeof planReadReceiptSchema>;
+/** Every value must already have passed the signed-envelope verifier. No unsigned model observation is accepted. */
+export function combinePlanReadReceipts(values: unknown[]):PlanReadReceipt {
+ if(!values.length||values.length>50)throw Error('Supply bounded signed observations');
+ const receipts=values.map(value=>planReadReceiptSchema.parse(value)),first=receipts[0];
+ const keys=['userId','organizationKey','taskId','taskVersion','planVersion','stepId'] as const;
+ if(receipts.some(receipt=>keys.some(key=>receipt[key]!==first[key]))||new Set(receipts.map(receipt=>receipt.id)).size!==receipts.length)throw Error('Plan observation context changed');
+ const observations=receipts.flatMap(receipt=>receipt.observations);
+ if(new Set(observations.map(row=>row.toolName)).size!==observations.length)throw Error('Duplicate plan observations');
+ return planReadReceiptSchema.parse({...first,expires:Math.min(...receipts.map(receipt=>receipt.expires)),observedAt:receipts.map(receipt=>receipt.observedAt).sort().at(-1),observations});
+}
 
 /** receiptValue must already have passed the server's signed-envelope verifier. */
 export function preparePlanReadCheckpoint(tasks: unknown, receiptValue: unknown, identity: PlanIdentity, owner: { type: "vendor" | "partner"; id: number }, availableReads: ReadonlySet<string>, now: number, verifyCompleted?: PlanCompletionVerifier) {

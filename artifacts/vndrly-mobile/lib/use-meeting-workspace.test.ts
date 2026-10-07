@@ -786,3 +786,35 @@ describe("useMeetingWorkspace", () => {
     secondOpen.resolve();
   });
 });
+it("retains a speak request UUID across dropped and denied responses, then recovers exact receipt without POST", async () => {
+  const occurrenceId = "11111111-1111-4111-8111-111111111119";
+  const data = snapshot({ participants: [{ userId: 1, displayName: "Synthetic attendee", role: "participant", present: true, speaking: false, muted: true, removedAt: null, hostMutedAt: "2026-10-07T10:00:00Z" }] });
+  let saved: any = null, lookupDenied = false;
+  env.api.mockImplementation(async (path: string, init: any) => {
+    if (path.endsWith("catch-up")) return data;
+    if (path.includes("/operations/")) { if (lookupDenied) throw Object.assign(Error("denied"), { status: 403 }); return { receipt: saved }; }
+    if (path.endsWith("request-to-speak")) {
+      const body = JSON.parse(init.body);
+      saved = { ...body, occurrenceId, actorUserId: 1, actorMembershipId: 10, actorSessionVersion: 1, ownerOrgType: "vendor", ownerOrgId: 4,
+        requestId: "33333333-3333-4333-8333-333333333333", requestedAt: "2026-10-07T10:00:00Z", status: "saved", microphoneOpened: false, consentAccepted: false };
+      throw Error("lost response");
+    }
+    return {};
+  });
+  const hook = renderHook(() => useMeetingWorkspace(occurrenceId)); await settle();
+  await act(async () => { await hook.result.current.requestToSpeak(); });
+  expect(hook.result.current.canRetrySpeakRequest).toBe(true);
+  const post = env.api.mock.calls.filter(c => c[0].endsWith("request-to-speak")); expect(post).toHaveLength(1);
+  data.participants[0].hostMutedAt = null;
+  lookupDenied = true;
+  await act(async () => { await hook.result.current.requestToSpeak(); });
+  expect(hook.result.current.accessLost).toBe(true);
+  expect(hook.result.current.canRetrySpeakRequest).toBe(true);
+  hook.unmount();
+  lookupDenied = false;
+  const recovered = renderHook(() => useMeetingWorkspace(occurrenceId)); await settle();
+  await act(async () => { await recovered.result.current.requestToSpeak(); });
+  expect(env.api.mock.calls.filter(c => c[0].endsWith("request-to-speak"))).toHaveLength(1);
+  expect(recovered.result.current.canRetrySpeakRequest).toBe(false);
+  expect(recovered.result.current.managementNotice).toBe("Request sent");
+});

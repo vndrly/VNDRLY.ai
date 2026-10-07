@@ -1453,4 +1453,10 @@ describe("Work Hub calendar routing", () => {
     expect(screen.queryByText("No authorized records yet.")).toBeNull();
   });
 });
-
+it("keeps exact speak-request recovery visible after the host releases mute", () => {
+  env.state = { ...hookState(), canRetrySpeakRequest: true, requestToSpeak: vi.fn() };
+  expect(env.state.snapshot.participants[0].hostMutedAt).toBeUndefined();
+  render(<MeetingWorkspace occurrenceId="meeting-a" />);
+  fireEvent.click(screen.getByLabelText("Request to speak"));
+  expect(env.state.requestToSpeak).toHaveBeenCalledTimes(1);
+});

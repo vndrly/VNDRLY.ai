@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+import { recoverMeetingSpeakRequestAction } from "../assistant/meeting-speak-request-recovery";
 import { recoverMeetingMessageAction } from "../assistant/meeting-message-recovery";
 import { recoverMeetingAssistantInvitationAction } from "../assistant/meeting-assistant-invitation-recovery";
 import { recoverFleetAvailabilityAction } from "../assistant/fleet-availability-action-recovery";
@@ -33,8 +35,9 @@ import { gateDeviceHandoff, requireMatchingGateDevice, type GateDeviceHandoff, G
 import { fleetDeviceHandoff, requireMatchingFleetDevice, type FleetDeviceHandoff, FLEET_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
-import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
-import { PLAN_READ_CHECKPOINT_TOOL, preparePlanReadCheckpoint, planReadReceiptSchema } from "../assistant/chatgpt-plan-read-checkpoint";
+import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, plannedSingleReadRequest, preparePlanMetadataTool, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
+import { plannedReadOperationTools, resolvePlannedReadOperation, backgroundStepOperationTools, defineBackgroundStepOperation } from "../assistant/plan-operation-tools";
+import { PLAN_READ_CHECKPOINT_TOOL, preparePlanReadCheckpoint, planReadReceiptSchema, combinePlanReadReceipts } from "../assistant/chatgpt-plan-read-checkpoint";
 import { PLAN_COMPLETION_TOOL, planCompletionRequestSchema, preparePlanCompletion } from "../assistant/chatgpt-plan-completion";
 import { verifiedPlanCompletionIds } from "../assistant/plan-completion-proof";
 import { readExactPlanTask } from "../assistant/coordinated-plan-exact-task";
@@ -346,17 +349,17 @@ router.post("/mcp", async (req, res) => {
     if (reads.some(tool => tool.name === "query_gate_change_over")) reads.push(GATE_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
     if (chatGptReadableTools(authorized.session, authorized.scopes).some(tool => tool.name === "query_fleet_run_detail")) reads.push(FLEET_DEVICE_TOOL);
-    if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
+    if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, ...plannedReadOperationTools(currentPlanReadDefinitions(authorized.session,authorized.scopes)));
     if (process.env.ASSISTANT_PLAN_EXECUTION_ENABLED === "1" && reads.some(tool => tool.name === "list_work_hub_tasks")) {
       reads.push(PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION_CANCEL_TOOL);
       if (authorized.session.role !== "admin" && ["get_work_hub_calendar", "get_work_hub_calendar_item", "get_work_hub_meeting_catchup", "find_work_hub_meeting_times"].every(name => reads.some(tool => tool.name === name)) && chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_meeting")) reads.push(PLAN_EXECUTION_CALENDAR_TOOL);
-      if (chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_task")) reads.push(PLAN_EXECUTION_PREPARE_TOOL);
+      if (chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_task")) reads.push(PLAN_EXECUTION_PREPARE_TOOL,...backgroundStepOperationTools(new Set([...availablePlanReadNames(authorized.session,authorized.scopes),...chatGptActionTools(authorized.session,authorized.scopes).map(tool=>tool.name)])));
     }
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_fleet_briefing", "query_fleet_site_activity", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const upgradeTools = financeConsentUpgradeTools(authorized.session, authorized.scopes).map(tool => ({ name: tool.name, description: `${tool.description} Additional finance consent is required before preparation; this does not transfer money.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter(key => !SERVER_ACTION_FIELDS.has(key)) }, securitySchemes: FINANCE_SECURITY_SCHEMES, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }, _meta: { securitySchemes: FINANCE_SECURITY_SCHEMES } }));
     upgradeTools.push(...fleetUpgradeDescriptors.filter(tool => !tool.annotations.readOnlyHint));
-    const planTools = actions.some(tool => tool.name === "manage_work_hub_task") ? [{ ...PREPARE_PLAN_TOOL, _meta: ACTION_PANEL_META }, ...(reads.some(tool => tool.name === 'list_work_hub_tasks') ? [{ ...CONTROL_PLAN_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_READ_CHECKPOINT_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_COMPLETION_TOOL, _meta: ACTION_PANEL_META }] : [])] : [];
+    const planTools = actions.some(tool => tool.name === "manage_work_hub_task") ? [{ ...preparePlanMetadataTool(new Set([...availablePlanReadNames(authorized.session,authorized.scopes),...planOperationTools(actions).map(tool=>tool.name)])), _meta: ACTION_PANEL_META }, ...(reads.some(tool => tool.name === 'list_work_hub_tasks') ? [{ ...CONTROL_PLAN_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_READ_CHECKPOINT_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_COMPLETION_TOOL, _meta: ACTION_PANEL_META }] : [])] : [];
     const preparedTools = exposedOperationTools(actions).map((tool) => ({ ...(CHATGPT_WRITE_CAPABILITIES["finance:write"].tools.includes(canonicalOperationToolName(tool.name) as never) ? { securitySchemes: tool.name === TICKET_INVOICE_PREPARATION_TOOL.name ? TICKET_INVOICE_PREPARATION_TOOL.securitySchemes : FINANCE_SECURITY_SCHEMES } : {}), ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } : {}), name: tool.name, description: `${tool.description}${tool.name.startsWith("manage_ticket_record") ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: operationToolAnnotations(tool), ...([CALENDAR_RESCHEDULE_TOOLS[1].name, CALENDAR_RESPONSE_TOOLS[1].name, AWAY_RESPONDER_TOOLS[2].name].includes(canonicalOperationToolName(tool.name) as never) ? { securitySchemes: [{ type: "oauth2" as const, scopes: ["work_hub:write"] }] } : {}), _meta: { ...ACTION_PANEL_META, ...([CALENDAR_RESCHEDULE_TOOLS[1].name, CALENDAR_RESPONSE_TOOLS[1].name, AWAY_RESPONDER_TOOLS[2].name].includes(canonicalOperationToolName(tool.name) as never) ? { securitySchemes: [{ type: "oauth2" as const, scopes: ["work_hub:write"] }] } : {}), ...(tool.name === TICKET_INVOICE_PREPARATION_TOOL.name ? { securitySchemes: TICKET_INVOICE_PREPARATION_TOOL.securitySchemes } : {}), ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } : {}) } }));
 
     return reply({ tools: [...reads, ...preparedTools, ...upgradeTools, ...planTools, ...(actions.length ? [SUBMIT_PANEL_ACTION_TOOL] : []), ...((actions.length || upgradeTools.length) ? [{ name: "v_prepare_action", securitySchemes: [{ type: "oauth2", scopes: [...authorized.scopes] }], _meta: { ...ACTION_PANEL_META, securitySchemes: [{ type: "oauth2", scopes: [...authorized.scopes] }] }, description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored. Finance operations may require finance:write consent when invoked; unrelated operations retain existing scopes.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: [...actions, ...upgradeTools].map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: actions.some(tool => tool.name === "manage_ticket_record"), openWorldHint: false } }, { name: "v_action_status", outputSchema: ACTION_STATUS_OUTPUT_SCHEMA, _meta: { "openai/widgetAccessible": true }, description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
@@ -381,6 +384,14 @@ router.post("/mcp", async (req, res) => {
       const output = await handleInvoiceActivityTool(args, authorized.session, authorized.scopes);
       await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: "invoice", toolInput: { basis: output.basis }, resultStatus: "success" });
       return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output, isError: false });
+    }
+    if(name.startsWith('v_plan_step__')){
+      if(process.env.ASSISTANT_PLAN_EXECUTION_ENABLED!=='1')throw Error('Background plan unavailable');
+      requireChatGptReadableTool(authorized.session,authorized.scopes,'list_work_hub_tasks');
+      const actions=chatGptActionTools(authorized.session,authorized.scopes);
+      if(!actions.some(tool=>tool.name==='manage_work_hub_task'))throw Error('Background plan unavailable');
+      const output=defineBackgroundStepOperation(name,args,new Set([...availablePlanReadNames(authorized.session,authorized.scopes),...actions.map(tool=>tool.name)]));
+      return reply({content:[{type:'text',text:JSON.stringify(output)}],structuredContent:output,isError:false});
     }
     if ([PLAN_EXECUTION_PREPARE_TOOL.name, PLAN_EXECUTION_STATUS_TOOL.name, PLAN_EXECUTION_CANCEL_TOOL.name, PLAN_EXECUTION_CALENDAR_TOOL.name].includes(name)) {
       if (!authorized.grantConsentHash) throw new AssistantOAuthError("access_denied");
@@ -426,6 +437,8 @@ router.post("/mcp", async (req, res) => {
       await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: "ticket", toolInput: { ticketId: handoff.ticketId }, resultStatus: "success" });
       return reply({ content: [{ type: "text", text: JSON.stringify({ deviceUrl: ASSISTANT_ISSUER + "/device/tickets/" + envelope(handoff), ticketId: handoff.ticketId, entry: handoff.entry, entrySaved: false, deviceCaptureStarted: false, message: "Complete the requested entry on this device screen. Its editing permissions remain authoritative. Read back the saved ticket before claiming completion." }) }], isError: false });
     }
+    const singlePlanRead=resolvePlannedReadOperation(name,args,currentPlanReadDefinitions(authorized.session,authorized.scopes));
+    if(singlePlanRead){name='v_run_work_plan_read';args={taskId:singlePlanRead.taskId,stepId:singlePlanRead.stepId,toolArguments:{[singlePlanRead.toolName]:singlePlanRead.arguments}};}
     if (name === "v_resume_work_plan" || name === "v_run_work_plan_read") {
       if (Object.keys(args).some(key => !(name === "v_run_work_plan_read" ? ["taskId", "stepId", "toolArguments"] : ["taskId"]).includes(key)) || typeof args.taskId !== "string") throw new Error("Invalid plan request");
       requireChatGptReadableTool(authorized.session, authorized.scopes, "list_work_hub_tasks");
@@ -438,7 +451,7 @@ router.post("/mcp", async (req, res) => {
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "list_work_hub_tasks", targetType: "task", toolInput: { taskId: args.taskId }, toolOutput: { taskId: output.taskId, taskVersion: output.taskVersion }, resultStatus: "success" });
       if (name === "v_run_work_plan_read") {
         if (typeof args.stepId !== "string") throw new Error("Missing plan step");
-        const requests = plannedReadRequests(output, args.stepId, args.toolArguments, availablePlanReadNames(session, authorized.scopes));
+        const requests = singlePlanRead ? [plannedSingleReadRequest(output,args.stepId,singlePlanRead.toolName,singlePlanRead.arguments,availablePlanReadNames(session,authorized.scopes))] : plannedReadRequests(output, args.stepId, args.toolArguments, availablePlanReadNames(session, authorized.scopes));
         const results = [];
         for (const request of requests) {
           const opportunity = availableWorkdayOpportunityTools(session, authorized.scopes).find(tool => tool.name === request.name);
@@ -581,12 +594,12 @@ router.post("/mcp", async (req, res) => {
     }
     if (name === 'v_prepare_work_plan_read_checkpoint') {
       if (!permittedActions.some(tool => tool.name === 'manage_work_hub_task')) throw new Error('Action unavailable');
-      if (Object.keys(args).some(key => key !== 'receipt')) throw new Error('Invalid checkpoint request');
+      if (Object.keys(args).some(key => !['receipt','receipts'].includes(key))||('receipt' in args)==('receipts' in args)) throw new Error('Invalid checkpoint request');
       requireChatGptReadableTool(authorized.session, authorized.scopes, 'list_work_hub_tasks');
       const session = authorized.session;
       const owner = session.vendorId ? { type: 'vendor' as const, id: session.vendorId } : session.partnerId ? { type: 'partner' as const, id: session.partnerId } : null;
       if (!owner || !session.userId) throw new Error('Plan company unavailable');
-      const receipt = planReadReceiptSchema.parse(readEnvelope(args.receipt));
+      const receipt = 'receipts' in args ? combinePlanReadReceipts(z.array(z.string().max(12000)).min(1).max(50).parse(args.receipts).map(value=>readEnvelope(value))) : planReadReceiptSchema.parse(readEnvelope(args.receipt));
       const raw = await authorizedExactPlanTask(session, authorized.scopes, receipt.taskId);
       args = preparePlanReadCheckpoint(raw, receipt, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, availablePlanReadNames(session, authorized.scopes), Date.now(), verifyPlanCompletions);
       name = 'manage_work_hub_task';
@@ -669,6 +682,9 @@ async function authorizedExactPlanTask(session: SessionPayload, scopes: string[]
 function availablePlanReadNames(session: SessionPayload, scopes: string[]) {
   return new Set([...chatGptReadableTools(session, scopes).map(tool => tool.name), ...availableWorkdayOpportunityTools(session, scopes).map(tool => tool.name), ...(invoiceActivityAvailable(session, scopes) ? [INVOICE_ACTIVITY_TOOL.name] : []), ...(ticketInvoiceCandidatesAvailable(session, scopes) ? [TICKET_INVOICE_CANDIDATES_TOOL.name] : [])]);
 }
+function currentPlanReadDefinitions(session:SessionPayload,scopes:string[]){
+ return [...chatGptReadableTools(session,scopes),...availableWorkdayOpportunityTools(session,scopes),...(invoiceActivityAvailable(session,scopes)?[INVOICE_ACTIVITY_TOOL]:[]),...(ticketInvoiceCandidatesAvailable(session,scopes)?[TICKET_INVOICE_CANDIDATES_TOOL]:[])];
+}
 async function currentPlanCompletion(session: SessionPayload, scopes: string[], input: unknown, observedAt: number) {
   const request = planCompletionRequestSchema.parse(input);
   const reads = chatGptReadableTools(session, scopes);
@@ -727,6 +743,10 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
   }
   if (result === null && action.toolName === "send_work_hub_meeting_message") {
     const receipt = await recoverMeetingMessageAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && action.toolName === "moderate_work_hub_meeting" && action.arguments.action === "request_to_speak") {
+    const receipt = await recoverMeetingSpeakRequestAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);
   }
   if (result === null && action.toolName === "confirm_operations_displays_action") {

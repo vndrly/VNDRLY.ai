@@ -11,11 +11,13 @@ import { prepareBoundExecutionProposal, planExecutionProposalInputSchema } from 
 import { createPlanExecutionConsentService } from "./plan-execution-consent";
 import type { PlanExecutionRun } from "./plan-execution";
 import { ASSISTANT_ISSUER } from "./chatgpt-oauth";
+import { typedPlanProposalStepSchema } from "./plan-operation-inputs";
 
 export const PLAN_EXECUTION_PREPARE_TOOL = {
   name: "v_prepare_background_work",
   description: "Prepare exact saved-plan reads and supported effects for separate authenticated whole-plan approval: selected eligible ticket invoice drafts under the strict >15-day recorded-history condition; exact saved-occurrence calendar reschedule; your own bounded away responder configure/pause/revoke; or a self-assigned company review draft. Each step requires current permissions, originating grant and exact saved intent; preparation grants no authority. Payment-queue reads use query_tickets approved/awaiting_payment with bounded sinceDays/limit; approved alone or a capped window is not the full queue. Unknown eligibility/history/availability must remain unknown. Never starts execution. The same-account human must approve the exact proposal within five minutes. Company drafts have normal company visibility. No payment transfer, invoice issue/email, generic outgoing messages, Gate assignment, Hotlist bid, external attendee acceptance, device capture or continuous monitoring. Notifications do not prove delivery.",
-  inputSchema: { ...z.toJSONSchema(planExecutionProposalInputSchema), type: "object" as const },
+  inputSchema: { ...z.toJSONSchema(planExecutionProposalInputSchema), type: "object" as const,
+    properties: { ...z.toJSONSchema(planExecutionProposalInputSchema).properties, steps: { type: "array", minItems: 1, maxItems: 20, items: z.toJSONSchema(typedPlanProposalStepSchema) } } },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
 };
 export const PLAN_EXECUTION_STATUS_TOOL = {
@@ -59,6 +61,7 @@ export async function handlePlanExecutionTool(name: string, input: unknown, sess
     throw Error("Unsupported background operation");
   }
   const request = planExecutionProposalInputSchema.parse(input);
+  for (const step of request.steps) typedPlanProposalStepSchema.parse(step);
   const organizationKey = session.role === "partner" && session.partnerId ? `partner:${session.partnerId}` : session.vendorId ? `vendor:${session.vendorId}` : null;
   if (!organizationKey || !session.userId || !session.activeMembershipId || !session.sv || !grantReference) throw Error("Current connection unavailable");
   const available = new Set([...chatGptReadableTools(session, scopes), ...chatGptActionTools(session, scopes)].map(tool => tool.name));

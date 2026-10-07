@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { createCoordinatedPlan, encodePlanDescription } from "./coordinated-plan";
-import { preparePlanReadCheckpoint, type PlanReadReceipt } from "./chatgpt-plan-read-checkpoint";
+import { combinePlanReadReceipts, preparePlanReadCheckpoint, type PlanReadReceipt } from "./chatgpt-plan-read-checkpoint";
 
 const identity = { userId: 17, organizationKey: "vendor:4" };
 const owner = { type: "vendor" as const, id: 4 };
@@ -50,3 +50,16 @@ it("rejects missing, duplicate or unrelated tool observations", () => {
     expect(() => preparePlanReadCheckpoint([task], { ...receipt, observations }, identity, owner, reads, now)).toThrow("tools changed");
   }
 });
+
+it("combines only exact signed step observations and retains full-coverage checkpoint requirements", () => {
+ const { task, receipt } = setup();
+ const first = { ...receipt, observations: receipt.observations.slice(0, 1) };
+ const second = { ...receipt, id: "33333333-3333-4333-8333-333333333333", expires: receipt.expires - 1000, observations: receipt.observations.slice(1) };
+ const combined = combinePlanReadReceipts([first, second]);
+ expect(combined.expires).toBe(second.expires);
+ expect(preparePlanReadCheckpoint([task], combined, identity, owner, reads, now).expectedVersion).toBe(3);
+ expect(() => preparePlanReadCheckpoint([task], combinePlanReadReceipts([first]), identity, owner, reads, now)).toThrow("tools changed");
+ for (const changed of [{ ...second, userId: 18 }, { ...second, taskVersion: 4 }, { ...second, planVersion: 2 }, { ...second, stepId: "other" }, { ...second, organizationKey: "vendor:5" }, { ...second, id: first.id }, { ...second, observations: first.observations }]) expect(() => combinePlanReadReceipts([first, changed])).toThrow();
+ expect(() => preparePlanReadCheckpoint([task], combinePlanReadReceipts([first, { ...second, expires: now }]), identity, owner, reads, now)).toThrow("expired");
+});
+

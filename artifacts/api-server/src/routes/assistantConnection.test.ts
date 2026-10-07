@@ -1224,3 +1224,46 @@ it("recovers an interrupted approved room message without resending and refuses 
  mocks.taskRead.mockResolvedValueOnce({receipt});expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"completed",result:receipt});
  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/meetings/${occurrenceId}/chat/operations/${id}`,"GET",{},expect.objectContaining({userId:17}));expect(mocks.bound).toHaveBeenCalledTimes(1);expect(mocks.run).not.toHaveBeenCalled();
 });
+it('advertises typed planned reads and executes only the exact saved operation with current scope', async () => {
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing','list_work_hub_tasks'],dependsOn:[]}]);
+ const row={id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',description:encodePlanDescription(plan)};
+ const credentials=await tokens('work_hub:read work_hub:write');
+ const invoke=(method:string,params?:unknown)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method,params});
+ const tools=(await invoke('tools/list')).body.result.tools;
+ expect(tools.some((tool:{name:string})=>tool.name==='v_run_work_plan_read')).toBe(false);
+ expect(tools.some((tool:{name:string})=>tool.name==='v_plan_read__get_work_hub_briefing')).toBe(true);
+ mocks.run.mockImplementation(async name=>JSON.stringify(name==='list_work_hub_tasks'?[row]:{tasks:[],events:[]}));
+ mocks.taskRead.mockResolvedValue({...row,subjectType:'task'});
+ const params={name:'v_plan_read__get_work_hub_briefing',arguments:{taskId,stepId:'brief',arguments:{}}};
+ const result=(await invoke('tools/call',params)).body.result;
+ expect(result.isError).not.toBe(true);
+ expect(result.structuredContent.checkpointReceipt).toEqual(expect.any(String));
+ expect(mocks.run.mock.calls.filter(([name])=>name==='get_work_hub_briefing')).toHaveLength(1);
+ expect(mocks.bound).not.toHaveBeenCalled();
+ const partial=(await invoke('tools/call',{name:'v_prepare_work_plan_read_checkpoint',arguments:{receipts:[result.structuredContent.checkpointReceipt]}})).body.result;
+ expect(partial.isError).toBe(true);
+ mocks.run.mockClear(); grants[0].scopes=[];
+ expect((await invoke('tools/call',params)).body.result.isError).toBe(true);
+ expect(mocks.run).not.toHaveBeenCalled();
+});
+it("recovers an interrupted speak request only from its exact receipt without another host alert", async () => {
+ const credentials=await tokens("work_hub:write"),occurrenceId="11111111-1111-4111-8111-111111111111";
+ const call=(name:string,args:unknown)=>request(app).post(`${base}/mcp`).set("Authorization",`Bearer ${credentials.access_token}`).send({jsonrpc:"2.0",id:1,method:"tools/call",params:{name,arguments:args}});
+ const prepared=JSON.parse((await call("moderate_work_hub_meeting",{action:"request_to_speak",occurrenceId,payload:{}})).body.result.content[0].text);
+ expect(prepared.status).toBe("pending");
+ const path=new URL(prepared.approvalUrl).pathname,approval=await request(app).get(path).set("Cookie",cookie()),nonce=/name="nonce" value="([^"]+)"/.exec(approval.text)![1],actionCookie=approval.headers["set-cookie"][0].split(";")[0];
+ mocks.bound.mockRejectedValueOnce(Error("Interrupted after saved speak request"));
+ expect((await request(app).post(path).set("Cookie",`${cookie()}; ${actionCookie}`).set("Origin","https://vndrly.ai").type("form").send({nonce})).status).toBe(503);
+ const h=grants[0].actions![0].tokenHash.slice(0,32),operationId=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`;
+ const receipt={operationId,occurrenceId,actorUserId:17,actorMembershipId:null,actorSessionVersion:1,ownerOrgType:"vendor",ownerOrgId:4,requestId:"33333333-3333-4333-8333-333333333333",requestedAt:"2026-10-07T10:00:00Z",status:"saved",microphoneOpened:false,consentAccepted:false};
+ for(const value of [null,{...receipt,actorUserId:18},{...receipt,actorSessionVersion:2},{...receipt,operationId:receipt.requestId},{...receipt,occurrenceId:receipt.requestId}]){
+  mocks.taskRead.mockResolvedValueOnce({receipt:value});
+  expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"outcome_unknown"});
+ }
+ mocks.taskRead.mockResolvedValueOnce({receipt});
+ expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"completed",result:receipt});
+ expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/meetings/${occurrenceId}/request-to-speak/operations/${operationId}`,"GET",{},expect.objectContaining({userId:17}));
+ expect(mocks.bound).toHaveBeenCalledTimes(1);expect(mocks.run).not.toHaveBeenCalled();
+});

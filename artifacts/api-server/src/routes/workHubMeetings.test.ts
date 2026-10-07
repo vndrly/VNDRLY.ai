@@ -385,6 +385,7 @@ describe("cross-device meeting moderation routes", () => {
 
   it("routes a muted attendee request to the present host and co-host", async () => {
     mocks.session = { userId: 2, vendorId: 22, partnerId: null, role: "vendor" };
+    Object.assign(mocks.session!, { sv: 1, activeMembershipId: 10 });
     const now = Date.now();
     mocks.results.push(
       [{ id: meetingId, meetingId, status: "live", recordingState: "active", askvInvitedAt: null, runtime: { presence: { 1: { seenAt: now, joinedAt: now, speaking: false }, 2: { seenAt: now, joinedAt: now, speaking: false }, 3: { seenAt: now, joinedAt: now, speaking: false } } } }],
@@ -392,10 +393,11 @@ describe("cross-device meeting moderation routes", () => {
       [{ ...host }, { ...guest, hostMutedAt: new Date(), hostMutedById: 1, hostMuteGeneration: 1 }, { ...guest, id: "cohost", userId: 3, role: "co_host" }],
       [],
     );
-    mocks.returnInserted = true;
-    const response = await request(app()).post(`/meetings/${meetingId}/request-to-speak`).send({});
+    mocks.results.push([], [], [{ id: messageId, requestedAt: new Date("2026-10-07T10:00:00Z") }], []);
+    const response = await request(app()).post(`/meetings/${meetingId}/request-to-speak`).send({ operationId: messageId });
     expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({ authorityUserIds: [1, 3], fallbackAdminUserIds: [] });
+    expect(response.body).toMatchObject({ operationId: messageId, occurrenceId: meetingId, actorUserId: 2, requestId: messageId, microphoneOpened: false, consentAccepted: false });
+    expect(mocks.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "meeting.speak_requested", metadata: { authorityUserIds: [1, 3], fallbackAdminUserIds: [] } }), expect.anything());
   });
 });
 

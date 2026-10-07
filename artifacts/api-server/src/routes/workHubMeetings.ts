@@ -1,3 +1,5 @@
+import { applyMeetingSpeakRequest, MeetingSpeakRequestError } from "../work-hub/meeting-speak-request";
+import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
 import { meetingMessageReceipt } from "../work-hub/meeting-message";
 import express, { Router, type Request, type Response, type NextFunction } from "express";
 import { createHash, randomUUID } from "node:crypto";
@@ -141,15 +143,17 @@ async function captureState(tx: Tx, ctx: Context, runtime = ctx.runtime) {
   const accepted = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.policyVersion, policyVersion), eq(consents.response, "accepted")));
   return !["ended", "cancelled"].includes(ctx.occurrence.status) && captureAllowed(Boolean(ctx.occurrence.askvInvitedAt), runtime, ctx.all.filter((p) => !p.removedAt).map((p) => p.userId), accepted.map((p) => p.userId));
 }
-async function participationAccepted(tx: Tx, ctx: Context) {
-  const [authorization] = await tx.select().from(participationAuthorizations).where(and(eq(participationAuthorizations.userId, ctx.session.userId), eq(participationAuthorizations.policyVersion, ctx.meeting.policyVersion), isNull(participationAuthorizations.revokedAt))).limit(1);
+async function participationAccepted(tx: Tx, ctx: Context, lock = false) {
+  const authorizationQuery = tx.select().from(participationAuthorizations).where(and(eq(participationAuthorizations.userId, ctx.session.userId), eq(participationAuthorizations.policyVersion, ctx.meeting.policyVersion), isNull(participationAuthorizations.revokedAt))).limit(1);
+  const [authorization] = await (lock ? authorizationQuery.for("share") : authorizationQuery);
   if (authorization) return authorization.acceptedAt;
   // Keep already-authorized active meetings compatible while onboarding authorization rolls out.
-  const [meetingConsent] = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.userId, ctx.session.userId), eq(consents.policyVersion, ctx.meeting.policyVersion), eq(consents.response, "accepted"))).limit(1);
+  const consentQuery = tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.userId, ctx.session.userId), eq(consents.policyVersion, ctx.meeting.policyVersion), eq(consents.response, "accepted"))).limit(1);
+  const [meetingConsent] = await (lock ? consentQuery.for("share") : consentQuery);
   return meetingConsent?.respondedAt ?? null;
 }
-async function requireParticipation(tx: Tx, ctx: Context) {
-  const acceptedAt = await participationAccepted(tx, ctx);
+async function requireParticipation(tx: Tx, ctx: Context, lock = false) {
+  const acceptedAt = await participationAccepted(tx, ctx, lock);
   if (!acceptedAt) throw new MeetingError(403, "Accept the work participation authorization to speak or post in this meeting.", "meeting.authorization_required");
   return acceptedAt;
 }
@@ -189,7 +193,7 @@ function route(handler: Handler, freshActor = false) {
         if (result.status === "rejected") req.log?.error?.({ err: result.reason }, "Meeting rollback cleanup failed");
       }
       if (error instanceof z.ZodError) return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid meeting request");
-      if (error instanceof MeetingError) return sendApiError(res, error.status, error.code, error.message);
+      if (error instanceof MeetingError || error instanceof MeetingSpeakRequestError) return sendApiError(res, error.status, error.code, error.message);
       if (error instanceof AudioLeaseError) return sendApiError(res, error.code === "meeting.host_muted" || error.code === "audio.in_use" || error.code === "audio.failover_warning" ? 409 : 404, error.code, error.message);
       return next(error);
     }
@@ -1199,27 +1203,181 @@ router.delete("/:occurrenceId/participants/:userId/host-mute", route(async (req,
   return { userId, ...patch };
 }));
 
-router.post("/:occurrenceId/request-to-speak", route(async (req, _res, tx, ctx) => {
-  active(ctx);
-  const present = presentUserIds(ctx.runtime);
-  const ownerColumn = ctx.meeting.ownerOrgType === "vendor" ? userOrgMembershipsTable.vendorId : userOrgMembershipsTable.partnerId;
-  const adminMemberships = await tx.select({ userId: userOrgMembershipsTable.userId }).from(userOrgMembershipsTable).where(and(
-    inArray(userOrgMembershipsTable.userId, ctx.all.map(value => value.userId)),
-    eq(userOrgMembershipsTable.orgType, ctx.meeting.ownerOrgType),
-    eq(ownerColumn, ctx.meeting.ownerOrgId),
-    eq(userOrgMembershipsTable.role, "admin"),
-  ));
-  const adminUserIds = new Set(adminMemberships.map(value => value.userId));
-  let routing;
-  try { routing = routeSpeakRequest(ctx.all.map(value => moderationParticipant(value, present, adminUserIds)), ctx.session.userId); }
-  catch (error) { if (error instanceof MeetingModerationError) throw new MeetingError(error.code === "not_found" ? 404 : 409, error.message); throw error; }
-  const [request] = await tx.insert(speakRequests).values({ occurrenceId: ctx.id, userId: ctx.session.userId, status: "pending", requestedAt: new Date(), resolvedAt: null, resolvedById: null }).onConflictDoUpdate({ target: [speakRequests.occurrenceId, speakRequests.userId, speakRequests.status], set: { requestedAt: new Date(), resolvedAt: null, resolvedById: null } }).returning();
-  const recipients = [...new Set([...routing.authorityUserIds, ...routing.fallbackAdminUserIds])];
-  for (const recipientUserId of recipients) afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId: recipientUserId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.speak_requested", payload: { context: { kind: "meeting", id: ctx.id }, subject: { type: "meeting_speak_request", id: request!.id }, occurrenceId: ctx.id, requesterUserId: ctx.session.userId, canRelease: routing.authorityUserIds.includes(recipientUserId) } }));
-  await audit(tx, ctx, "meeting.speak_requested", { authorityUserIds: routing.authorityUserIds, fallbackAdminUserIds: routing.fallbackAdminUserIds });
-  return { request, ...routing };
-}));
+function speakRequestRoute(readOnly: boolean) {
+  return route(async (req, _res, tx, ctx) => {
+    await requireParticipation(tx, ctx, true);
+    const { operationId } = MeetingSpeakRequestInputSchema.parse(
+      readOnly ? { operationId: req.params.operationId } : req.body,
+    );
+    // Serializes an actor's operation across occurrences as well as concurrent exact retries.
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext(${"meeting.speak:" + ctx.session.userId + ":" + operationId}))`,
+    );
+    const actor = {
+      actorUserId: ctx.session.userId,
+      actorMembershipId: ctx.session.activeMembershipId ?? null,
+      actorSessionVersion: ctx.session.sv!,
+      ownerOrgType: ctx.meeting.ownerOrgType as "vendor" | "partner",
+      ownerOrgId: ctx.meeting.ownerOrgId,
+    };
+    const receipt = await applyMeetingSpeakRequest(
+      ctx.id,
+      actor,
+      operationId,
+      {
+        authorize: async () => {
+          await requireParticipation(tx, ctx, true);
+        },
+        prior: async () => {
+          const [row] = await tx
+            .select()
+            .from(workHubClientOperationsTable)
+            .where(
+              and(
+                eq(workHubClientOperationsTable.userId, ctx.session.userId),
+                eq(workHubClientOperationsTable.commandKind, "meeting.speak"),
+                eq(workHubClientOperationsTable.operationId, operationId),
+              ),
+            )
+            .limit(1);
+          if (!row) return null;
+          if (
+            !row.appliedAt ||
+            !row.resultJson ||
+            row.ownerOrgType !== actor.ownerOrgType ||
+            row.ownerOrgId !== actor.ownerOrgId
+          )
+            throw new MeetingSpeakRequestError(
+              409,
+              "Invalid saved speak request operation",
+            );
+          return row.resultJson;
+        },
+        create: async () => {
+          active(ctx);
+          const present = presentUserIds(ctx.runtime);
+          const ownerColumn =
+            ctx.meeting.ownerOrgType === "vendor"
+              ? userOrgMembershipsTable.vendorId
+              : userOrgMembershipsTable.partnerId;
+          const adminMemberships = await tx
+            .select({ userId: userOrgMembershipsTable.userId })
+            .from(userOrgMembershipsTable)
+            .where(
+              and(
+                inArray(
+                  userOrgMembershipsTable.userId,
+                  ctx.all.map((value) => value.userId),
+                ),
+                eq(userOrgMembershipsTable.orgType, ctx.meeting.ownerOrgType),
+                eq(ownerColumn, ctx.meeting.ownerOrgId),
+                eq(userOrgMembershipsTable.role, "admin"),
+              ),
+            );
+          const adminUserIds = new Set(
+            adminMemberships.map((value) => value.userId),
+          );
+          let routing;
+          try {
+            routing = routeSpeakRequest(
+              ctx.all.map((value) =>
+                moderationParticipant(value, present, adminUserIds),
+              ),
+              ctx.session.userId,
+            );
+          } catch (error) {
+            if (error instanceof MeetingModerationError)
+              throw new MeetingError(
+                error.code === "not_found" ? 404 : 409,
+                error.message,
+              );
+            throw error;
+          }
 
+          const [pending] = await tx
+            .select()
+            .from(speakRequests)
+            .where(
+              and(
+                eq(speakRequests.occurrenceId, ctx.id),
+                eq(speakRequests.userId, ctx.session.userId),
+                eq(speakRequests.status, "pending"),
+              ),
+            )
+            .limit(1);
+          // A new explicit operation while the same request remains pending does not repeat the alert.
+          if (pending)
+            return { requestId: pending.id, requestedAt: pending.requestedAt };
+          const [request] = await tx
+            .insert(speakRequests)
+            .values({
+              occurrenceId: ctx.id,
+              userId: ctx.session.userId,
+              status: "pending",
+              requestedAt: new Date(),
+              resolvedAt: null,
+              resolvedById: null,
+            })
+            .returning();
+          const recipients = [
+            ...new Set([
+              ...routing.authorityUserIds,
+              ...routing.fallbackAdminUserIds,
+            ]),
+          ];
+          for (const recipientUserId of recipients)
+            afterCommit(req, () =>
+              deviceCoordinator.publishUserEvent(
+                {
+                  userId: recipientUserId,
+                  owner: {
+                    type: ctx.meeting.ownerOrgType as "vendor" | "partner",
+                    id: ctx.meeting.ownerOrgId,
+                  },
+                },
+                {
+                  eventType: "work_hub.meeting.speak_requested",
+                  payload: {
+                    context: { kind: "meeting", id: ctx.id },
+                    subject: { type: "meeting_speak_request", id: request!.id },
+                    occurrenceId: ctx.id,
+                    requesterUserId: ctx.session.userId,
+                    canRelease:
+                      routing.authorityUserIds.includes(recipientUserId),
+                  },
+                },
+              ),
+            );
+          await audit(tx, ctx, "meeting.speak_requested", {
+            authorityUserIds: routing.authorityUserIds,
+            fallbackAdminUserIds: routing.fallbackAdminUserIds,
+          });
+          return { requestId: request!.id, requestedAt: request!.requestedAt };
+        },
+        save: async (receipt) => {
+          await tx
+            .insert(workHubClientOperationsTable)
+            .values({
+              userId: ctx.session.userId,
+              ownerOrgType: actor.ownerOrgType,
+              ownerOrgId: actor.ownerOrgId,
+              commandKind: "meeting.speak",
+              operationId,
+              appliedAt: new Date(),
+              resultJson: receipt,
+            });
+        },
+      },
+      readOnly,
+    );
+    return readOnly ? { receipt } : receipt;
+  }, true);
+}
+router.post("/:occurrenceId/request-to-speak", speakRequestRoute(false));
+router.get(
+  "/:occurrenceId/request-to-speak/operations/:operationId",
+  speakRequestRoute(true),
+);
 router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
   const rows = await tx.select({ id: usersTable.id, displayName: usersTable.displayName }).from(usersTable).where(inArray(usersTable.id, ctx.all.map((p) => p.userId)));
   const names = new Map(rows.map((u) => [u.id, u.displayName]));

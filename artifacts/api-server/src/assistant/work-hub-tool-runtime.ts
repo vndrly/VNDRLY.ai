@@ -1,3 +1,4 @@
+import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
 import { MeetingMessageArgumentsSchema } from "../work-hub/meeting-message";
 import { MeetingAssistantInvitationInputSchema } from "@workspace/api-zod";
@@ -861,8 +862,11 @@ export function resolveWorkHubToolRequest(
     case "moderate_work_hub_meeting": {
       target = required(input.occurrenceId, "meeting occurrence id");
       if (typeof target !== "string") return target;
-      if (input.action === "request_to_speak")
-        return request("POST", `/work-hub/meetings/${target}/request-to-speak`);
+      if (input.action === "request_to_speak") {
+        const command = MeetingSpeakRequestInputSchema.safeParse({ operationId: input.operationId });
+        if (!z.uuid().safeParse(target).success || !command.success || input.targetUserId !== undefined || Object.keys(payload).length) return unsupported("speak request");
+        return request("POST", `/work-hub/meetings/${target}/request-to-speak`, command.data);
+      }
       const userId = required(input.targetUserId, "target user id");
       if (typeof userId !== "string") return userId;
       if (input.action === "host_mute")

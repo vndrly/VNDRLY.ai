@@ -1,3 +1,4 @@
+import { saveMeetingSpeakRequest } from "@workspace/api-zod";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { MeetingSnapshot } from "@workspace/api-client-react/meeting-workspace";
@@ -25,6 +26,7 @@ import { flushNativeWorkHubQueue, isOfflineWorkHubFailure, queueNativeWorkHubReq
 const POLL_MS = 2_000;
 const TYPING_THROTTLE_MS = 1_800;
 const drafts = new Map<string, string>();
+const pendingSpeakRequests = new Map<string, string>();
 
 type PendingMessage = { id: string; body: string; recipientUserId: number | null };
 type ScopedSnapshot = { scope: string; generation: number; data: MeetingSnapshot };
@@ -90,6 +92,7 @@ export type MeetingWorkspaceState = {
   confirmManagement: () => Promise<void>;
   moderateParticipant: (userId: number, release: boolean) => Promise<void>;
   requestToSpeak: () => Promise<void>;
+  canRetrySpeakRequest: boolean;
   acceptParticipationAuthorization: () => Promise<void>;
   chooseFile: (source: MeetingFileSource) => Promise<void>;
   retryFile: () => Promise<void>;
@@ -651,7 +654,9 @@ export function useMeetingWorkspace(occurrenceId: string): MeetingWorkspaceState
   const requestToSpeak = useCallback(async () => {
     const current = snapshotRef.current;
     const self = current?.participants.find(person => person.userId === current.userId);
-    if (!self?.hostMutedAt || current?.mySpeakRequest || managementOwnerRef.current) return;
+    const speakKey = draftPrefix;
+    const priorOperationId = pendingSpeakRequests.get(speakKey);
+    if ((!self?.hostMutedAt && !priorOperationId) || (current?.mySpeakRequest && !priorOperationId) || managementOwnerRef.current || !current) return;
     const owner = Symbol("meeting-speak-request");
     const requestScope = scopeRef.current;
     const generation = lifecycleRef.current;
@@ -659,17 +664,24 @@ export function useMeetingWorkspace(occurrenceId: string): MeetingWorkspaceState
     setManagementPending(true);
     setManagementNotice("");
     try {
-      await request(requestScope, generation, `/api/work-hub/meetings/${encodeURIComponent(occurrenceRef.current)}/request-to-speak`, { method: "POST", body: "{}" });
+      const operationId = priorOperationId ?? nativeUuid();
+      pendingSpeakRequests.set(speakKey, operationId);
+      await saveMeetingSpeakRequest(occurrenceRef.current, current.userId, operationId, (path, init) => {
+        const latest = snapshotRef.current;
+        if (init.method === "POST" && (!latest?.participants.some(p => p.userId === latest.userId && p.hostMutedAt) || !["scheduled", "live"].includes(latest.occurrence.status))) throw Error("The original speak request result remains unresolved");
+        return request(requestScope, generation, "/api/work-hub" + path, init);
+      }, Boolean(self?.hostMutedAt) && ["scheduled", "live"].includes(current.occurrence.status));
       if (managementOwnerRef.current !== owner || scopeRef.current !== requestScope || lifecycleRef.current !== generation) return;
+      pendingSpeakRequests.delete(speakKey);
       setManagementNotice(t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }));
-      await refreshRef.current();
+      await refreshRef.current().catch(() => undefined);
     } catch (cause) {
       if (isTerminal(cause)) { revoke(requestScope); return; }
-      if (!isAbort(cause) && managementOwnerRef.current === owner) setManagementNotice(t("meetingWorkspace.errors.speakRequest", { defaultValue: "The request could not be sent. Try again." }));
+      if (!isAbort(cause) && managementOwnerRef.current === owner) setManagementNotice(t("meetingWorkspace.errors.speakRequest", { defaultValue: "The result could not be confirmed. Try again to check the same request." }));
     } finally {
       if (managementOwnerRef.current === owner) { managementOwnerRef.current = null; if (mountedRef.current) setManagementPending(false); }
     }
-  }, [request, revoke, t]);
+  }, [request, revoke, t, draftPrefix]);
 
   const uploadPendingFile = useCallback(async (operation: PendingFile, inherited?: FileUploadOwnership) => {
     if ((!inherited && fileOwnerRef.current) || !snapshotRef.current || !activeRef.current ||
@@ -884,12 +896,13 @@ export function useMeetingWorkspace(occurrenceId: string): MeetingWorkspaceState
     confirmManagement,
     moderateParticipant,
     requestToSpeak,
+    canRetrySpeakRequest: pendingSpeakRequests.has(draftPrefix),
     acceptParticipationAuthorization,
     chooseFile,
     retryFile,
     openFile,
   }), [accessLost, cancelManagement, confirmManagement, draft, endedAcknowledgedScope, error, loadingScope,
     fileBusy, fileError, fileNotice, fileRefreshFailed, managementConfirmation, managementNotice, managementPending,
-    managementRefreshFailed, moderateParticipant, now, openFile, recipientUserId, refresh, requestEndConfirmation, requestRemoveConfirmation, requestToSpeak, acceptParticipationAuthorization,
+    managementRefreshFailed, moderateParticipant, now, openFile, recipientUserId, draftPrefix, refresh, requestEndConfirmation, requestRemoveConfirmation, requestToSpeak, acceptParticipationAuthorization,
     retryFile, scope, selectRecipient, send, sending, snapshot, updateDraft, chooseFile]);
 }

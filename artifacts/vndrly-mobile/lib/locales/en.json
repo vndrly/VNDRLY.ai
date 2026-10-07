@@ -2481,7 +2481,7 @@
     "emptyAgenda": "No agenda was added.",
     "errors": {
       "moderation": "The attendee mute could not be changed. Try again.",
-      "speakRequest": "The request could not be sent. Try again.",
+      "speakRequest": "The result could not be confirmed. Try again to check the same request.",
       "accessLost": "Meeting access changed. Reopen the meeting to continue.",
       "offline": "You're offline. This meeting will update when you reconnect.",
       "update": "Could not update this meeting.",

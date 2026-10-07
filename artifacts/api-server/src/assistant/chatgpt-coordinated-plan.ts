@@ -37,7 +37,7 @@ export function prepareWorkPlanControl(value:unknown,input:unknown,identity:{use
 }
 
 export const PREPARE_PLAN_TOOL = {
- name:"v_prepare_work_plan",description:"Prepare a durable coordinated Work Hub task for several specialists. Use a stable UUID planId for retries. The user/company come from the linked account. Every requested tool must already be permitted. Saving the plan requires the existing action panel and does not start background execution.",
+ name:"v_prepare_work_plan",description:"Prepare only plan metadata in a normal company Work Hub task. Tool references describe already exposed operations; this call never dispatches them, supplies their arguments, or grants permission. Use a stable UUID planId for retries. Every reference must currently be permitted for the linked account. Saving metadata requires the existing action panel. Separately define typed background step fragments and obtain whole-plan human approval before unattended execution; individual writes retain their own approval panels.",
  inputSchema:{type:"object" as const,properties:{planId:{type:"string",format:"uuid"},title:{type:"string",maxLength:200},steps:{type:"array",minItems:1,maxItems:100,items:{type:"object",properties:{id:{type:"string"},specialist:{type:"string"},toolNames:{type:"array",items:{type:"string"}},dependsOn:{type:"array",items:{type:"string"}},deadlineAt:{type:"string",format:"date-time",description:"Resolved UTC deadline; saving it does not schedule execution"},completion:{oneOf:[{type:"object",properties:{kind:{const:"canonical_work_hub_message_saved"},channelId:{type:"string",format:"uuid"},body:{type:"string",minLength:1,maxLength:4000},replyToId:{type:"string",format:"uuid"}},required:["kind","channelId","body"],additionalProperties:false},{type:"object",properties:{kind:{const:"canonical_gate_visit_action_saved"},action:{const:"check_in"},siteLocationId:{type:"integer",minimum:1},firstName:{type:"string",minLength:1,maxLength:200},lastName:{type:"string",minLength:1,maxLength:200},hostType:{type:"string",enum:["vendor","partner"]},hostId:{type:"integer",minimum:1}},required:["kind","action","siteLocationId","firstName","lastName","hostType","hostId"],additionalProperties:false},{type:"object",properties:{kind:{const:"canonical_gate_visit_action_saved"},action:{const:"check_out"},siteLocationId:{type:"integer",minimum:1},visitId:{type:"integer",minimum:1}},required:["kind","action","siteLocationId","visitId"],additionalProperties:false},{type:"object",properties:{kind:{const:"canonical_work_hub_meeting_action_saved"},action:{const:"create"},title:{type:"string",minLength:1,maxLength:200},startsAt:{type:"string",format:"date-time"},endsAt:{type:"string",format:"date-time"},timezone:{type:"string",minLength:3,maxLength:80}},required:["kind","action","title","startsAt","endsAt","timezone"],additionalProperties:false},{type:"object",properties:{kind:{const:"canonical_work_hub_meeting_action_saved"},action:{const:"cancel"},occurrenceId:{type:"string",format:"uuid"}},required:["kind","action","occurrenceId"],additionalProperties:false},{type:"object",properties:{kind:{const:"planned_read_observed"}},required:["kind"],additionalProperties:false},{type:"object",properties:{kind:{const:"canonical_ticket_action_saved"},action:{type:"string",enum:["submit","approve","cancel"]},ticketId:{type:"integer",minimum:1}},required:["kind","action","ticketId"],additionalProperties:false},{type:"object",properties:{kind:{const:"canonical_work_hub_task_action_saved"},action:{const:"create"},title:{type:"string",minLength:1,maxLength:200},assigneeUserId:{type:["integer","null"],minimum:1}},required:["kind","action","title"],additionalProperties:false},{type:"object",properties:{kind:{const:"canonical_work_hub_task_action_saved"},action:{type:"string",enum:["complete","cancel"]},taskId:{type:"string",format:"uuid"}},required:["kind","action","taskId"],additionalProperties:false}]}},required:["id","specialist","toolNames","dependsOn"],additionalProperties:false}}},required:["planId","title","steps"],additionalProperties:false},
  annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
 };
@@ -48,6 +48,11 @@ export function prepareWorkPlan(input:unknown,identity:{userId:number;organizati
  if(request.steps.some(step=>step.toolNames.some(tool=>!availableTools.has(tool))))throw Error("Plan requires unavailable tool");
  const plan={...createCoordinatedPlan(identity,request.steps),id:request.planId};
  return {owner,context:{kind:"organization",id:owner.id},expectedVersion:null,action:"create",payload:{title:request.title,description:encodePlanDescription(plan)}};
+}
+export function preparePlanMetadataTool(availableTools:ReadonlySet<string>){
+ const inputSchema=structuredClone(PREPARE_PLAN_TOOL.inputSchema);
+ Object.assign(inputSchema.properties.steps.items.properties.toolNames.items,{enum:[...availableTools].sort()});
+ return {...PREPARE_PLAN_TOOL,inputSchema};
 }
 export const RUN_PLAN_READ_TOOL = {
  name:'v_run_work_plan_read',description:'Run the currently authorized read tools for one eligible step in a saved coordinated plan. Does not execute writes, start monitoring, or save a completion checkpoint. Return actual results and preserve errors.',
@@ -62,4 +67,10 @@ export function plannedReadRequests(resumed:ReturnType<typeof resumedWorkPlan>,s
  const args=z.record(z.string(),z.record(z.string(),z.unknown())).parse(argumentsByTool);
  if(Object.keys(args).some(name=>!step.toolNames.includes(name))||step.toolNames.some(name=>!(name in args)))throw Error('Supply arguments only for the planned read tools');
  return [...new Set(step.toolNames)].map(name=>({name,arguments:args[name]}));
+}
+export function plannedSingleReadRequest(resumed:ReturnType<typeof resumedWorkPlan>,stepId:string,toolName:string,args:Record<string,unknown>,readTools:ReadonlySet<string>){
+ if(resumed.taskStatus==='completed'||resumed.taskStatus==='cancelled'||!resumed.eligibleStepIds.includes(stepId))throw Error('Plan step not eligible');
+ const step=resumed.plan.steps.find(step=>step.id===stepId);
+ if(!step||!step.toolNames.includes(toolName)||!readTools.has(toolName)||step.toolNames.some(name=>!readTools.has(name)))throw Error('Planned read operation unavailable');
+ return {name:toolName,arguments:args};
 }

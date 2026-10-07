@@ -539,8 +539,8 @@ describe("resolveWorkHubToolRequest", () => {
       action: "release_host_mute", occurrenceId: "meeting-1", targetUserId: 42,
     })).toMatchObject({ method: "DELETE", path: "/work-hub/meetings/meeting-1/participants/42/host-mute" });
     expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
-      action: "request_to_speak", occurrenceId: "meeting-1",
-    })).toMatchObject({ method: "POST", path: "/work-hub/meetings/meeting-1/request-to-speak" });
+      action: "request_to_speak", occurrenceId: "11111111-1111-4111-8111-111111111111", operationId: "22222222-2222-4222-8222-222222222222",
+    })).toMatchObject({ method: "POST", path: "/work-hub/meetings/11111111-1111-4111-8111-111111111111/request-to-speak", body: { operationId: "22222222-2222-4222-8222-222222222222" } });
     expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
       action: "check_in", occurrenceId: "meeting-1", targetUserId: 42,
     })).toMatchObject({ method: "POST", path: "/work-hub/meetings/meeting-1/participants/42/check-in" });

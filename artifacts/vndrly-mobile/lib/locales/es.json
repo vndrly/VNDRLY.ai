@@ -2481,7 +2481,7 @@
     "emptyAgenda": "No se agregó una agenda.",
     "errors": {
       "moderation": "No se pudo cambiar el silencio del asistente. Inténtelo de nuevo.",
-      "speakRequest": "No se pudo enviar la solicitud. Inténtelo de nuevo.",
+      "speakRequest": "No se pudo confirmar el resultado. Inténtelo de nuevo para consultar la misma solicitud.",
       "accessLost": "Cambió el acceso a la reunión. Vuelva a abrirla para continuar.",
       "offline": "No tiene conexión. La reunión se actualizará cuando vuelva a conectarse.",
       "update": "No se pudo actualizar esta reunión.",

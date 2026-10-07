@@ -11,6 +11,7 @@ import { PILL_IDLE, pillGreen } from "@/lib/pill-palette-assets";
 import { PILL_LABEL_CLASS, pillLabelToneClass } from "@/lib/pill-doctrine";
 import "./meeting-workspace.css";
 import AskVListeningPill from "./askv-listening-pill";
+import MeetingSpeakRequest from "./meeting-speak-request";
 import MeetingAssistantInvitation from "./meeting-assistant-invitation";
 import MeetingReplayWorkspace from "./meeting-replay-workspace";
 import { useMeetingSession } from "./meeting-session-provider";
@@ -177,7 +178,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           {!audio.joined && !ended && !viewOnly && <button onClick={() => void audio.join()}>{t("meetingWorkspace.joinAudio", { defaultValue: "Join audio" })}</button>}
           {audio.joined && <><button disabled={Boolean(selfParticipant?.hostMutedAt)} onClick={() => void audio.toggleMute()} aria-pressed={!audio.muted}>{selfParticipant?.hostMutedAt ? t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" }) : audio.muted ? t("meetingWorkspace.unmuteMic", { defaultValue: "Unmute mic" }) : t("meetingWorkspace.muteMic", { defaultValue: "Mute mic" })}</button><button onClick={() => void audio.leave()}>{t("meetingWorkspace.leave", { defaultValue: "Leave" })}</button></>}
           {audio.joined && audio.audioOnAnotherDevice && <button disabled={audio.handoffBusy || Boolean(selfParticipant?.hostMutedAt)} onClick={() => void audio.moveAudioHere()}>{audio.handoffBusy ? t("meetingWorkspace.movingAudio", { defaultValue: "Moving audio…" }) : t("meetingWorkspace.moveAudioHere", { defaultValue: "Move audio here" })}</button>}
-          {selfParticipant?.hostMutedAt && <button disabled={busy || Boolean(data.mySpeakRequest)} onClick={() => void action("request-to-speak", {})}>{data.mySpeakRequest ? t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }) : t("meetingWorkspace.requestToSpeak", { defaultValue: "Request to speak" })}</button>}
+          <MeetingSpeakRequest occurrenceId={occurrenceId} pending={Boolean(data.mySpeakRequest)} canRequest={Boolean(selfParticipant?.hostMutedAt) && ["scheduled", "live"].includes(data.occurrence.status)} onSaved={refresh} />
         </div>
       </div>
       <div className="meeting-people">
