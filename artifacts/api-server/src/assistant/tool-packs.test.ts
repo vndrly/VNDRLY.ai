@@ -169,6 +169,8 @@ describe("AskV realtime tool packs", () => {
     for (const path of [
       "/work-hub/activity",
       "/work-hub/chat",
+      "/work-hub/channels",
+      "/work-hub/crews",
       "/work-hub/calendar",
       "/work-hub/calls",
       "/work-hub/files",
@@ -185,5 +187,13 @@ describe("AskV realtime tool packs", () => {
       expect(tools.length, path).toBeLessThanOrEqual(35);
       expect(tools.map((tool) => tool.name), path).toContain("select_tool_pack");
     }
+  });
+  it("routes conversation away rules and crew administration without removing either from Ask V", () => {
+    const names=(path:string)=>toolsForRealtime({role:"vendor",membershipRole:"admin",path}).map(tool=>tool.name);
+    const chat=names("/work-hub/chat?channel=exact"),crews=names("/work-hub/crews"),command=names("/work-hub/askv");
+    for(const path of ["/work-hub/askv?run=exact","/work-hub/askv#run","/native/work-hub/askv?run=exact"])expect(names(path)).toEqual(command);
+    for(const name of ["query_work_hub_away_responder","query_work_hub_away_channels","manage_work_hub_away_responder"]){expect(chat).toContain(name);expect(crews).not.toContain(name);expect(command).toContain(name);}
+    for(const name of ["get_work_hub_crew_members","manage_work_hub_crew","manage_work_hub_crew_member"]){expect(chat).not.toContain(name);expect(crews).toContain(name);expect(command).toContain(name);}
+    for(const name of ["list_work_hub_channels","list_work_hub_channel_members","send_work_hub_message"]){expect(chat).toContain(name);}
   });
 });

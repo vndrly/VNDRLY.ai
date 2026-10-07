@@ -235,7 +235,7 @@ export function toolsForRealtime(args: {
     allowed.delete("propose_work_hub_action");
     const families =
       workHubToolFamilyForPath(path) === "command" &&
-      /\/work-hub\/askv(?:\/|$)/i.test(path)
+      /\/work-hub\/askv(?:[/?#]|$)/i.test(path)
         ? WORK_HUB_TOOL_FAMILIES
         : [workHubToolFamilyForPath(path)];
     if (/\/work-hub\/askv(?:[/?#]|$)/i.test(path)) {
@@ -246,6 +246,14 @@ export function toolsForRealtime(args: {
       for (const name of WORK_HUB_TOOL_NAMES_BY_FAMILY[family]) {
         allowed.add(name);
       }
+    }
+    // Conversation pages need messaging and away rules; crew administration
+    // belongs to its own page. The Ask V command page retains both workflows.
+    if (/\/work-hub\/(?:chat|channels)(?:[/?#]|$)/i.test(path)) {
+      for (const name of ["get_work_hub_crew_members", "manage_work_hub_crew", "manage_work_hub_crew_member"]) allowed.delete(name);
+    }
+    if (/\/work-hub\/crews(?:[/?#]|$)/i.test(path)) {
+      for (const name of ["query_work_hub_away_responder", "query_work_hub_away_channels", "manage_work_hub_away_responder", "list_work_hub_messages", "send_work_hub_message", "manage_work_hub_message", "react_work_hub_message", "mark_work_hub_channel_read", "list_work_hub_notes", "manage_work_hub_note", "manage_work_hub_chat", "respond_work_hub_invitation"]) allowed.delete(name);
     }
     if (/\/work-hub\/calendar(?:\/|$)/i.test(path)) {
       for (const name of [
