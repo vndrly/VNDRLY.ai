@@ -400,11 +400,12 @@ describe.skipIf(!isolated)(
           expect(
             await service.action(actor(), f.run.id, f.dispatch),
           ).toMatchObject({ id: f.run.id, version: fresh.version });
-          await service.action(actor(), f.run.id, {
+          expect(await service.action(actor(), f.run.id, {
             operationId: randomUUID(),
             expectedVersion: fresh.version,
             action: "cancel",
-          });
+            reason: "Synthetic race scenario finished; release the test run",
+          })).toMatchObject({ status: "cancelled" });
         }
         if (firstKind === "gate_before_fleet") {
           await expect(edit()).rejects.toThrow("driver_schedule_conflict");
@@ -567,11 +568,12 @@ describe.skipIf(!isolated)(
           driverUserId: driver.id,
         }),
       ).rejects.toThrow("operation_conflict");
-      await service.action(actor(), reassignedRun.id, {
+      expect(await service.action(actor(), reassignedRun.id, {
         operationId: randomUUID(),
         expectedVersion: replaced.version,
         action: "cancel",
-      });
+        reason: "Synthetic reassignment scenario finished; release the test run",
+      })).toMatchObject({ status: "cancelled" });
       const changedWindowRun = await service.create(actor(), {
         operationId: randomUUID(),
         fleetId,
