@@ -17,6 +17,16 @@ export function actionRecordSummary(toolName: string, input: unknown): string {
     if (typeof item !== "string" && typeof item !== "number") continue;
     const text = String(item);
     if (!text.trim()) continue;
+    if (key === "description") {
+      try {
+        const plan = JSON.parse(text);
+        if (plan?.schemaVersion === 1 && Number.isInteger(plan.version) && Array.isArray(plan.steps) && plan.steps.length > 0 && plan.steps.every((step: { id?: unknown; state?: unknown }) => typeof step?.id === "string" && ["pending", "waiting", "running", "completed", "failed", "cancelled"].includes(String(step.state)))) {
+          lines.push(`Plan version: ${plan.version}`);
+          for (const step of plan.steps) lines.push(`Step: ${String(step.id).replaceAll("_", " ")} — ${step.state}`);
+          continue;
+        }
+      } catch { /* Ordinary descriptions remain plain text. */ }
+    }
     const rendered = ["status", "action"].includes(key) ? text.replaceAll("_", " ") : text;
     lines.push(`${labels[key]}: ${rendered.length > 1000 ? rendered.slice(0, 1000) + "…" : rendered}`);
   }

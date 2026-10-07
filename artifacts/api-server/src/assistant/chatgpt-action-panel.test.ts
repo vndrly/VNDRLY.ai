@@ -21,6 +21,19 @@ function panelHarness() {
   };
 }
 describe("VNDRLY component-mediated action panel", () => {
+  it("shows coordinated steps without receipt or identity metadata while retaining exact details", async () => {
+    const description = JSON.stringify({ schemaVersion: 1, version: 6, identity: { userId: 17 }, steps: [{ id: "payment_review", state: "pending", resultReferences: ["private-receipt"] }, { id: "hotlist", state: "waiting" }] });
+    const result = { id: "plan-task", description };
+    const ui = panelHarness(); ui.publish(); await ui.status("completed", result);
+    const summary = ui.nodes.get("summary").textContent;
+    expect(summary).toContain("Plan version: 6");
+    expect(summary).toContain("Step: payment review — pending");
+    expect(summary).toContain("Step: hotlist — waiting");
+    expect(summary).not.toContain("private-receipt");
+    expect(summary).not.toContain("userId");
+    expect(ui.nodes.get("details").textContent).toContain("private-receipt");
+    expect(actionRecordSummary("manage_work_hub_task", { description: '{"schemaVersion":1,"version":6,"steps":[{"id":"bad","state":"invented"}]}' })).toContain("Description:");
+  });
   it("shows the exact target of a task completion outside its empty payload", () => {
     const summary = actionRecordSummary("manage_work_hub_task", { action: "complete", taskId: "synthetic-task", expectedVersion: 1, payload: {} });
     expect(summary).toContain("Task: synthetic-task");
