@@ -290,7 +290,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if(name === "prepare_ticket_invoices") {
     try {
-      const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;
+      const {operationId,confirmed:_confirmed,idempotencyKey:_idempotencyKey,voiceSessionId:_voiceSessionId,...fields}=input;
       return request("POST","/invoices/ticket-preparation/execute",ticketInvoicePreparationCommand(fields,z.uuid().parse(operationId)));
     } catch { return {error:"Supply exact approved ticket versions and recorded invoice chronology basis."}; }
   }
@@ -299,7 +299,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     catch {return {error:"Supply the exact saved meeting occurrence."};}
   }
   if(name === "reschedule_work_hub_meeting") {
-    try {const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return calendarRescheduleRequest(fields,z.uuid().parse(operationId));}
+    try {const {operationId,confirmed:_confirmed,idempotencyKey:_idempotencyKey,voiceSessionId:_voiceSessionId,...fields}=input;return calendarRescheduleRequest(fields,z.uuid().parse(operationId));}
     catch {return {error:"Supply the exact saved snapshot, UTC interval and unchanged meeting timezone."};}
   }
   if(name === "query_work_hub_meeting_responses") {
@@ -309,10 +309,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     try{AWAY_RESPONDER_READ_INPUT.parse(input);return request("GET",name === "query_work_hub_away_channels"?"/work-hub/away-responder/channels":"/work-hub/away-responder");}catch{return{error:"Read only your current account away settings or joined writable channels."};}
   }
   if(name === "manage_work_hub_away_responder") {
-    try{const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return awayResponderRequest(fields,z.uuid().parse(operationId));}catch{return{error:"Supply the exact reviewed away action and current revision."};}
+    try{const {operationId,confirmed:_confirmed,idempotencyKey:_idempotencyKey,voiceSessionId:_voiceSessionId,...fields}=input;return awayResponderRequest(fields,z.uuid().parse(operationId));}catch{return{error:"Supply the exact reviewed away action and current revision."};}
   }
   if(name === "respond_work_hub_meeting_invitation") {
-    try{const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return calendarResponseRequest(fields,z.uuid().parse(operationId));}catch{return{error:"Supply your exact current invitation snapshot and accepted or declined response."};}
+    try{const {operationId,confirmed:_confirmed,idempotencyKey:_idempotencyKey,voiceSessionId:_voiceSessionId,...fields}=input;return calendarResponseRequest(fields,z.uuid().parse(operationId));}catch{return{error:"Supply your exact current invitation snapshot and accepted or declined response."};}
   }
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
@@ -1035,10 +1035,10 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
-  // These exact reads derive authority only from the authenticated canonical
+  // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any
   // caller-supplied owner/context instead of silently discarding those fields.
-  if (["query_work_hub_away_responder", "query_work_hub_away_channels", "query_work_hub_meeting_responses", "query_calendar_reschedule_snapshot", "query_ticket_invoice_candidates"].includes(toolName ?? "")) return input;
+  if (["query_work_hub_away_responder", "query_work_hub_away_channels", "query_work_hub_meeting_responses", "query_calendar_reschedule_snapshot", "query_ticket_invoice_candidates", "respond_work_hub_meeting_invitation", "reschedule_work_hub_meeting", "prepare_ticket_invoices", "manage_work_hub_away_responder"].includes(toolName ?? "")) return input;
   const owner = session.vendorId
     ? { type: "vendor", id: session.vendorId }
     : session.partnerId
