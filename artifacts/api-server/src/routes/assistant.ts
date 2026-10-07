@@ -807,7 +807,7 @@ export async function runTool(
   }
   const workHubRequest = resolveExecutableWorkHubToolRequest(
     name,
-    bindWorkHubToolScope(input, session),
+    bindWorkHubToolScope(input, session, name),
     workHubMutationAuthorizedByServer,
     session,
   );

@@ -15,6 +15,23 @@ const command = {
   context: { kind: "organization" as const, id: 42 },
   expectedVersion: null,
 };
+it("keeps authenticated exact read arguments separate from injected envelope authority", () => {
+  const session={userId:9,role:"partner",partnerId:609,membershipRole:"admin"};
+  const occurrenceId="00000000-0000-4000-8000-000000000002";
+  for(const [name,args,path] of [
+    ["query_work_hub_away_responder",{},"/work-hub/away-responder"],
+    ["query_work_hub_away_channels",{},"/work-hub/away-responder/channels"],
+    ["query_work_hub_meeting_responses",{occurrenceId},`/work-hub/calendar-response/${occurrenceId}/snapshot`],
+    ["query_calendar_reschedule_snapshot",{occurrenceId},`/work-hub/calendar-reschedule/${occurrenceId}/snapshot`],
+  ] as const){
+    const bound=bindWorkHubToolScope(args,session,name);
+    expect(resolveExecutableWorkHubToolRequest(name,bound,false,session)).toMatchObject({method:"GET",path});
+    for(const extra of [{owner:{type:"vendor",id:999}},{context:{kind:"organization",id:999}},{companyId:999}])expect(resolveExecutableWorkHubToolRequest(name,bindWorkHubToolScope({...args,...extra},session,name),false,session)).toHaveProperty("error");
+  }
+  const vendor={userId:9,role:"vendor",vendorId:1107,membershipRole:"admin"};
+  expect(resolveExecutableWorkHubToolRequest("query_ticket_invoice_candidates",bindWorkHubToolScope({},vendor,"query_ticket_invoice_candidates"),false,vendor)).toMatchObject({method:"GET",path:expect.stringContaining("/invoices/ticket-preparation/candidates")});
+  expect(bindWorkHubToolScope({},session,"send_work_hub_message")).toMatchObject({owner:{type:"partner",id:609},context:{kind:"organization",id:609}});
+});
 
 describe("resolveWorkHubToolRequest", () => {
   it("requires an exact trip for the ETA read adapter", () => {
