@@ -1,6 +1,7 @@
 import { LoginHomeLink } from "@/components/login-home-link";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { loginWorkflowDestination } from "@/lib/login-workflow-destination";
 import { useTranslation } from "react-i18next";
 import { Check, Copy, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import { BrandedInput } from "@/components/work-hub/chrome";
@@ -191,9 +192,10 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
     e.preventDefault();
     if (!username || !password) return;
     setIsSubmitting(true);
+    const destination = allowAccountSwitch ? "/" : loginWorkflowDestination(location, window.location.search);
     try {
       await login(username, password);
-      navigate("/", { replace: true });
+      navigate(destination, { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),
