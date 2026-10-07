@@ -198,3 +198,14 @@ it("separates approval-device GPS from missing visitor fields without minting an
   expect(incomplete).not.toHaveProperty("continuation");
 });
 
+it("offers requester continuations only with write consent and keeps platform mediation separate",()=>{
+ const actions=(session:Record<string,unknown>,scopes:string[])=>{
+  const tool=chatGptActionTools(session,scopes).find(t=>t.name==="confirm_asset_custody_action");
+  return (tool?.inputSchema as {properties:{action:{enum:string[]}}}|undefined)?.properties.action.enum??[];
+ };
+ const requester={userId:1,role:"vendor",vendorId:7,membershipRole:"admin"};
+ expect(actions(requester,["assets:write"])).toEqual(expect.arrayContaining(["respond_identifier_claim","withdraw_identifier_claim"]));
+ expect(actions(requester,["assets:read"])).toEqual([]);
+ expect(actions({userId:1,role:"admin"},["assets:write"])).not.toContain("respond_identifier_claim");
+ expect(actions(requester,["assets:write"])).not.toContain("resolve_identifier_claim");
+});

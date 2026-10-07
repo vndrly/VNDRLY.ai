@@ -2830,7 +2830,8 @@
       "awaiting_evidence": "En espera de evidencia",
       "rejected": "Rechazado",
       "resolved_existing_retained": "Registro existente conservado",
-      "resolved_requester_corrected": "Identificador del solicitante corregido"
+      "resolved_requester_corrected": "Identificador del solicitante corregido",
+      "withdrawn": "Retirada"
     },
     "decisions": {
       "request_evidence": "Solicitar evidencia",
@@ -2847,7 +2848,13 @@
       "other": "Otro identificador"
     },
     "recordVersion": "Versión del registro guardado",
-    "claimReference": "Referencia de reclamación exacta"
+    "claimReference": "Referencia de reclamación exacta",
+    "respond": "Responder a la solicitud de evidencia",
+    "withdraw": "Retirar reclamación del identificador",
+    "continuationHint": "Registre su explicación o retire esta reclamación exacta. Solo texto; no se afirma evidencia cargada ni verificación de propiedad.",
+    "reviewRequest": "Solicitud del mediador",
+    "responseRecord": "Explicación registrada del solicitante",
+    "savedRefresh": "Registro canónico guardado. Actualice el panel de recuperación antes de otra acción; los registros actuales no están disponibles."
   },
   "workHubAway": {
     "conflict": "La configuración cambió y se rechazó esta solicitud. Actualiza la configuración actual antes de revisar una solicitud nueva.",

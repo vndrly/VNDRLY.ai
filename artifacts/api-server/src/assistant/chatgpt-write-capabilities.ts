@@ -5,7 +5,7 @@ import { TICKET_INVOICE_PREPARATION_ARGUMENTS } from "./ticket-invoice-preparati
 import { CALENDAR_RESCHEDULE_ARGUMENTS } from "./calendar-reschedule-tools";
 import { CALENDAR_RESPONSE_ARGUMENTS } from "./calendar-response-tools";
 import { financeRecordAction, WORK_HUB_FINANCE_RECORD_ACTIONS } from "./work-hub-finance-actions";
-import { FleetReplacementInputSchema, FleetReplacementActionSchema, AssetLossReportInputSchema, AssetIdentifierClaimInputSchema, AssetIdentifierClaimResolutionSchema } from "@workspace/api-zod";
+import { FleetReplacementInputSchema, FleetReplacementActionSchema, AssetLossReportInputSchema, AssetIdentifierClaimInputSchema, AssetIdentifierClaimResolutionSchema, AssetIdentifierClaimContinuationSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
 import { z } from "zod/v4";
@@ -97,11 +97,12 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
     confirm_account_invitations_action: ["create", "resend", "revoke"],
   };
   if (allowed[name] && !allowed[name].includes(String(input.action))) throw new Error("Unsupported VNDRLY action");
-  if (name === "confirm_asset_custody_action" && ["loss_report", "identifier_claim", "resolve_identifier_claim"].includes(String(input.action))) {
+  if (name === "confirm_asset_custody_action" && ["loss_report", "identifier_claim", "respond_identifier_claim", "withdraw_identifier_claim", "resolve_identifier_claim"].includes(String(input.action))) {
     z.uuid().parse(input.assetId ?? input.resourceId);
     const payload = input.payload as Record<string, unknown> | undefined;
     if (input.action === "loss_report") AssetLossReportInputSchema.omit({ operationId: true, confirmed: true }).parse({ expectedVersion: input.expectedVersion, condition: payload?.condition, reason: payload?.reason });
     if (input.action === "identifier_claim") AssetIdentifierClaimInputSchema.omit({ operationId: true, claimId: true, confirmed: true }).parse({ expectedVersion: input.expectedVersion, alias: payload?.alias, reason: payload?.reason });
+    if (["respond_identifier_claim", "withdraw_identifier_claim"].includes(String(input.action))) { z.object({ claimId: z.uuid(), reason: z.string().trim().min(1).max(2000) }).strict().parse(payload); AssetIdentifierClaimContinuationSchema.omit({ operationId: true, confirmed: true }).parse({ expectedVersion: input.expectedVersion, reason: payload?.reason }); }
     if (input.action === "resolve_identifier_claim") { z.uuid().parse(payload?.claimId); AssetIdentifierClaimResolutionSchema.parse({ operationId: "00000000-0000-4000-8000-000000000001", confirmed: true, expectedVersion: input.expectedVersion, decision: payload?.decision, reason: payload?.reason, ...(payload?.correctedAlias ? { correctedAlias: payload.correctedAlias } : {}) }); }
   }
   if (name === "confirm_incident_response_action" && input.action === "report") {

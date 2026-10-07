@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import {
   AssetIdentifierClaimInputSchema,
+  AssetIdentifierClaimContinuationSchema,
   AssetIdentifierClaimResolutionSchema,
   type AssetIdentifierClaim,
 } from "@workspace/api-zod";
@@ -26,6 +27,11 @@ function project(claim: StoredClaim): AssetIdentifierClaim {
     ...visible
   } = claim;
   return visible;
+}
+function requesterActions(session: SessionPayload, claim: StoredClaim): ("respond" | "withdraw")[] {
+  const owner = session.vendorId ? { type: "vendor", id: session.vendorId } : session.partnerId ? { type: "partner", id: session.partnerId } : null;
+  if (session.role === "admin" || !owner || owner.type !== claim.requesterOwner.type || owner.id !== claim.requesterOwner.id) return [];
+  return claim.status === "awaiting_evidence" ? ["respond", "withdraw"] : claim.status === "pending_review" ? ["withdraw"] : [];
 }
 async function append(
   client: PoolClient,
@@ -134,7 +140,7 @@ export function createAssetIdentifierClaimService(
           incomingTruncated: incoming.rows.length > 100,
           claims: rows.rows
             .slice(0, 100)
-            .map((row) => project(row.tool_output)),
+            .map((row) => ({ ...project(row.tool_output), requesterActions: requesterActions(session, row.tool_output) })),
           truncated: rows.rows.length > 100,
         };
       });
@@ -212,6 +218,31 @@ export function createAssetIdentifierClaimService(
             operationId: input.operationId,
           },
         };
+      });
+    },
+    async continueClaim(session: SessionPayload, assetId: string, claimId: string, action: "respond" | "withdraw", value: unknown) {
+      const input = AssetIdentifierClaimContinuationSchema.parse(value);
+      const fingerprint = createHash("sha256").update(JSON.stringify([action, session.userId, assetId, claimId, input])).digest("hex");
+      return transaction(session, assetId, async (client, asset) => {
+        const owner = session.vendorId ? { type: "vendor", id: session.vendorId } : session.partnerId ? { type: "partner", id: session.partnerId } : null;
+        // Company requester authority never substitutes platform mediation.
+        if (session.role === "admin" || !owner || owner.type !== asset.responsible_org_type || owner.id !== asset.responsible_org_id)
+          throw new AssetServiceError("asset.not_found", 404);
+        const saved = await client.query("SELECT tool_output FROM assistant_action_audit WHERE target_type='asset-identifier-claim' AND target_id=$1 AND tool_output->>'assetId'=$2 ORDER BY id DESC LIMIT 1", [claimId, assetId]);
+        const claim = saved.rows[0]?.tool_output as StoredClaim | undefined;
+        if (!claim || claim.requesterOwner.type !== owner.type || claim.requesterOwner.id !== owner.id)
+          throw new AssetServiceError("asset.claim_not_found", 404);
+        const replay = await prior(client, input.operationId, fingerprint, session.userId, assetId);
+        if (replay) return project(replay);
+        if (claim.version !== input.expectedVersion) throw new AssetServiceError("asset.version_conflict");
+        if (action === "respond" ? claim.status !== "awaiting_evidence" : !["pending_review", "awaiting_evidence"].includes(claim.status))
+          throw new AssetServiceError("asset.claim_terminal", 409);
+        const now = new Date().toISOString();
+        const updated: StoredClaim = { ...claim, version: claim.version + 1, operationId: input.operationId,
+          status: action === "respond" ? "pending_review" : "withdrawn", responseReason: input.reason,
+          ...(action === "respond" ? { respondedAt: now } : { withdrawnAt: now }), physicalEvidenceVerified: false };
+        await append(client, session, updated, input.operationId, fingerprint);
+        return project(updated);
       });
     },
     async resolve(

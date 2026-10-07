@@ -197,9 +197,28 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           expect.objectContaining({ id: claim.claimId }),
         ]),
       );
+      const claimPath = `${base}/identifier-claims/${claim.claimId}`;
+      await request(app).post(`${claimPath}/resolve`).set("Cookie", cookies[2]).send({operationId:randomUUID(),expectedVersion:1,decision:"request_evidence",reason:"Actual synthetic explanation requested",confirmed:true}).expect(200);
+      const response={operationId:randomUUID(),expectedVersion:2,reason:"Synthetic requester explains original registration",confirmed:true};
+      const replies=await Promise.all(Array.from({length:3},()=>request(app).post(`${claimPath}/respond`).set("Cookie",cookies[1]).send(response)));
+      expect(replies.every(r=>r.status===200)).toBe(true);expect(replies[0].body).toMatchObject({version:3,status:"pending_review",physicalEvidenceVerified:false,responseReason:response.reason});
+      expect(replies.every(r=>JSON.stringify(r.body)===JSON.stringify(replies[0].body))).toBe(true);
+      const refreshedClaims=await request(app).get(`${base}/identifier-claims`).set("Cookie",cookies[1]).expect(200);expect(refreshedClaims.body.claims.find((c:{id:string})=>c.id===claim.claimId)).toMatchObject({version:3,requesterActions:["withdraw"]});
+      const responseAudits=await pool.query("SELECT id FROM assistant_action_audit WHERE target_type='asset-identifier-claim' AND tool_input->>'operationId'=$1",[response.operationId]);expect(responseAudits.rows).toHaveLength(1);
+      await request(app).post(`${claimPath}/respond`).set("Cookie",cookies[0]).send(response).expect(404);
+      await request(app).post(`${claimPath}/respond`).set("Cookie",cookies[2]).send(response).expect(404);
+      await request(app).post(`${claimPath}/respond`).set("Cookie",cookies[1]).send({...response,reason:"Changed"}).expect(409);
+      const withdrawalClaim={...claim,claimId:randomUUID(),operationId:randomUUID()};
+      await request(app).post(`${base}/identifier-claims`).set("Cookie",cookies[1]).send(withdrawalClaim).expect(200);
+      const withdrawalPath=`${base}/identifier-claims/${withdrawalClaim.claimId}/withdraw`;
+      const withdrawal={operationId:randomUUID(),expectedVersion:1,reason:"Synthetic claim withdrawn",confirmed:true};
+      const withdrawn=await request(app).post(withdrawalPath).set("Cookie",cookies[1]).send(withdrawal).expect(200);
+      expect(withdrawn.body).toMatchObject({status:"withdrawn",version:2,ownershipTransferred:false});
+      const withdrawalReplay=await request(app).post(withdrawalPath).set("Cookie",cookies[1]).send(withdrawal).expect(200);expect(withdrawalReplay.body).toEqual(withdrawn.body);
+      await request(app).post(withdrawalPath).set("Cookie",cookies[1]).send({...withdrawal,operationId:randomUUID(),expectedVersion:2}).expect(409);
       const resolution = {
         operationId: randomUUID(),
-        expectedVersion: 1,
+        expectedVersion: 3,
         decision: "correct_requester_alias",
         reason: "Synthetic exact corrected serial reviewed",
         correctedAlias: { kind: "serial", value: `CORRECTED-${tag}` },
@@ -217,7 +236,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         .expect(200);
       expect(resolved.body).toMatchObject({
         status: "resolved_requester_corrected",
-        version: 2,
+        version: 4,
         ownershipTransferred: false,
         correctedAlias: resolution.correctedAlias,
       });
@@ -243,6 +262,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         .set("Cookie", cookies[1])
         .send(loss)
         .expect(403);
+      await request(app).post(`${claimPath}/respond`).set("Cookie",cookies[1]).send(response).expect(403);
     });
   },
 );

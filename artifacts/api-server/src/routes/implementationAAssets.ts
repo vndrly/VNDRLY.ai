@@ -624,6 +624,12 @@ router.post("/implementation-a/assets/:assetId/identifier-claims", async (req, r
     return res.json(result.claim);
   } catch (error) { return sendError(res, error); }
 });
+for (const action of ["respond", "withdraw"] as const) {
+  router.post(`/implementation-a/assets/:assetId/identifier-claims/:claimId/${action}`, async (req, res) => {
+    try { const session = getSessionFromRequest(req); if (!session?.userId) throw new AssetServiceError("asset.unauthenticated", 401); return res.json(await createAssetIdentifierClaimService(pool).continueClaim(session, IdSchema.parse(req.params.assetId), IdSchema.parse(req.params.claimId), action, req.body)); }
+    catch (error) { return sendError(res, error); }
+  });
+}
 router.post("/implementation-a/assets/:assetId/identifier-claims/:claimId/resolve", async (req, res) => {
   try { const session = getSessionFromRequest(req); if (!session?.userId) throw new AssetServiceError("asset.unauthenticated", 401); return res.json(await createAssetIdentifierClaimService(pool).resolve(session, IdSchema.parse(req.params.assetId), IdSchema.parse(req.params.claimId), req.body)); }
   catch (error) { return sendError(res, error); }

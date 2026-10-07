@@ -1,6 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { aliasedTable, and, eq, desc, gte, isNotNull, sql } from "drizzle-orm";
-import crypto from "crypto";
 import {
   db,
   ticketsTable,
@@ -15,7 +14,10 @@ import {
 } from "@workspace/db";
 import { notifyUsers, findVendorUserIds, findPartnerUserIds } from "./notifications";
 
-import { SESSION_SECRET } from "../lib/session";
+import { getSessionFromRequest, type SessionPayload } from "../lib/session";
+import { canReadTicket } from "../lib/field-ticket-access";
+import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
+import { authorizedTicketCommentRecipients } from "../lib/ticket-comment-access";
 import {
   publishHotlistCommentEvent,
   subscribeHotlistCommentEvents,
@@ -27,10 +29,9 @@ import { enforceParticipantsRateLimit } from "../lib/participants-rate-limit";
 import { sendApiError } from "../lib/apiError";
 import { withSerialInsertRetry } from "../lib/pg-sequence-resync";
 
-const COOKIE_NAME = "vndrly_session";
 const EDIT_WINDOW_MS = 5 * 60 * 1000;
 
-type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null; displayName?: string };
+type Session = SessionPayload & { userId: number; role: string };
 type EditHistoryEntry = { at: string; prev: string };
 
 function isSafeAttachmentUrl(a: string): boolean {
@@ -50,28 +51,9 @@ function parseEditHistory(raw: unknown): EditHistoryEntry[] {
 }
 
 function getSession(req: Request): Session | null {
-  const cookie = (req as any).cookies?.[COOKIE_NAME];
-  if (!cookie) return null;
-  const lastDot = cookie.lastIndexOf(".");
-  if (lastDot === -1) return null;
-  const payload = cookie.slice(0, lastDot);
-  const sig = cookie.slice(lastDot + 1);
-  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
-  try {
-    if (!crypto.timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expected, "hex"))) return null;
-  } catch {
-    return null;
-  }
-  try {
-    const obj = JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
-    const now = Math.floor(Date.now() / 1000);
-    if (!obj || typeof obj.exp !== "number" || obj.exp < now) return null;
-    return obj;
-  } catch {
-    return null;
-  }
+  const session = getSessionFromRequest(req);
+  return session?.userId && session.role ? session as Session : null;
 }
-
 // Parse "@displayname" tokens out of body. Names may contain spaces if quoted
 // (e.g. @"Jane Doe"). For simplicity, we accept @word characters or quoted form.
 function extractMentionTokens(text: string): string[] {
@@ -101,6 +83,7 @@ async function resolveMentionUserIds(tokens: string[], candidateUserIds: number[
 // ---------------- Ticket participants & authz ----------------
 
 async function ticketParticipantUserIds(ticketId: number): Promise<{
+  ticketId: number;
   ids: number[];
   vendorId: number | null;
   partnerId: number | null;
@@ -116,7 +99,7 @@ async function ticketParticipantUserIds(ticketId: number): Promise<{
     .from(ticketsTable)
     .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
     .where(eq(ticketsTable.id, ticketId));
-  if (!t) return { ids: [], vendorId: null, partnerId: null, fieldUserId: null };
+  if (!t) return { ticketId, ids: [], vendorId: null, partnerId: null, fieldUserId: null };
   const ids = new Set<number>();
   if (t.vendorId) (await findVendorUserIds(t.vendorId)).forEach((i) => ids.add(i));
   if (t.partnerId) (await findPartnerUserIds(t.partnerId)).forEach((i) => ids.add(i));
@@ -135,17 +118,12 @@ async function ticketParticipantUserIds(ticketId: number): Promise<{
   const { ticketParticipantUserIdsExpanded } = await import("../lib/field-ticket-access");
   const expanded = await ticketParticipantUserIdsExpanded(ticketId);
   expanded.ids.forEach((i) => ids.add(i));
-  return { ids: [...ids], vendorId: t.vendorId, partnerId: t.partnerId, fieldUserId };
+  return { ticketId, ids: await authorizedTicketCommentRecipients(ticketId, [...ids]), vendorId: t.vendorId, partnerId: t.partnerId, fieldUserId };
 }
 
-function canParticipateTicket(session: Session, ctx: { ids: number[]; vendorId: number | null; partnerId: number | null; fieldUserId: number | null }): boolean {
-  if (session.role === "admin") return true;
-  if (session.role === "vendor" && session.vendorId && session.vendorId === ctx.vendorId) return true;
-  if (session.role === "partner" && session.partnerId && session.partnerId === ctx.partnerId) return true;
-  if (session.role === "field_employee" && ctx.ids.includes(session.userId)) return true;
-  return false;
+async function canParticipateTicket(session: Session, ctx: { ticketId: number }): Promise<boolean> {
+  try { return await canReadTicket(await validateAssistantSession(session), ctx.ticketId); } catch { return false; }
 }
-
 // ---------------- Hotlist participants & authz ----------------
 
 async function hotlistParticipantUserIds(jobId: number): Promise<{
@@ -222,7 +200,7 @@ router.get("/tickets/:id/comments", async (req: Request, res: Response): Promise
   if (!await enforceCommentsRateLimit(req, res, session)) return;
 
   const ctx = await ticketParticipantUserIds(ticketId);
-  if (!canParticipateTicket(session, ctx)) {
+  if (!await canParticipateTicket(session, ctx)) {
     sendApiError(res, 403, "auth.forbidden", "Forbidden"); return;
   }
 
@@ -299,7 +277,7 @@ router.get("/tickets/:id/comments/:commentId/seen-by", async (req: Request, res:
   const commentId = parseInt(String(req.params.commentId));
   if (isNaN(ticketId) || isNaN(commentId)) { sendApiError(res, 400, "validation.invalid_id", "Invalid id"); return; }
   const ctx = await ticketParticipantUserIds(ticketId);
-  if (!canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
+  if (!await canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
   const [owning] = await db
     .select({ ticketId: ticketNoteLogsTable.ticketId })
     .from(ticketNoteLogsTable)
@@ -320,7 +298,7 @@ router.post("/tickets/:id/comments", async (req: Request, res: Response): Promis
   const ticketId = parseInt(String(req.params.id));
   if (isNaN(ticketId)) { sendApiError(res, 400, "validation.invalid_id", "Invalid id"); return; }
   const ctx = await ticketParticipantUserIds(ticketId);
-  if (!canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
+  if (!await canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
 
   const { content, attachments } = req.body ?? {};
   const text = String(content ?? "").trim();
@@ -394,7 +372,7 @@ router.patch("/tickets/:id/comments/:commentId", async (req: Request, res: Respo
   if (isNaN(ticketId) || isNaN(commentId)) { sendApiError(res, 400, "validation.invalid_id", "Invalid id"); return; }
 
   const ctx = await ticketParticipantUserIds(ticketId);
-  if (!canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
+  if (!await canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
   const [existing] = await db.select().from(ticketNoteLogsTable).where(eq(ticketNoteLogsTable.id, commentId));
   if (!existing || existing.ticketId !== ticketId) { sendApiError(res, 404, "comment.not_found", "Not found"); return; }
   if (existing.deletedAt) { sendApiError(res, 400, "comment.removed", "Comment removed"); return; }
@@ -440,7 +418,7 @@ router.delete("/tickets/:id/comments/:commentId", async (req: Request, res: Resp
   const commentId = parseInt(String(req.params.commentId));
   if (isNaN(ticketId) || isNaN(commentId)) { sendApiError(res, 400, "validation.invalid_id", "Invalid id"); return; }
   const ctx = await ticketParticipantUserIds(ticketId);
-  if (!canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
+  if (!await canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
   const [existing] = await db.select().from(ticketNoteLogsTable).where(eq(ticketNoteLogsTable.id, commentId));
   if (!existing || existing.ticketId !== ticketId) { sendApiError(res, 404, "comment.not_found", "Not found"); return; }
   const isAuthor = existing.createdById === session.userId;
@@ -464,6 +442,7 @@ router.post("/tickets/:id/comments/:commentId/restore", async (req: Request, res
   const ticketId = parseInt(String(req.params.id));
   const commentId = parseInt(String(req.params.commentId));
   if (isNaN(ticketId) || isNaN(commentId)) { sendApiError(res, 400, "validation.invalid_id", "Invalid id"); return; }
+  if (!await canParticipateTicket(session, { ticketId })) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
   const [existing] = await db.select().from(ticketNoteLogsTable).where(eq(ticketNoteLogsTable.id, commentId));
   if (!existing || existing.ticketId !== ticketId) { sendApiError(res, 404, "comment.not_found", "Not found"); return; }
   if (!existing.deletedAt) { res.json({ ok: true, restored: false }); return; }
@@ -893,7 +872,7 @@ router.get("/tickets/:id/comments-participants", async (req: Request, res: Respo
   // repeatedly running the participant + users-by-id fan-out.
   if (!await enforceParticipantsRateLimit(req, res, session)) return;
   const ctx = await ticketParticipantUserIds(ticketId);
-  if (!canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
+  if (!await canParticipateTicket(session, ctx)) { sendApiError(res, 403, "auth.forbidden", "Forbidden"); return; }
   if (!ctx.ids.length) { res.json([]); return; }
   const users = await db
     .select({ id: usersTable.id, displayName: usersTable.displayName, role: usersTable.role, username: usersTable.username })

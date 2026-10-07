@@ -2830,7 +2830,8 @@
       "awaiting_evidence": "Awaiting evidence",
       "rejected": "Rejected",
       "resolved_existing_retained": "Existing registration retained",
-      "resolved_requester_corrected": "Requester identifier corrected"
+      "resolved_requester_corrected": "Requester identifier corrected",
+      "withdrawn": "Withdrawn"
     },
     "decisions": {
       "request_evidence": "Request evidence",
@@ -2847,7 +2848,13 @@
       "other": "Other identifier"
     },
     "recordVersion": "Saved record version",
-    "claimReference": "Exact claim reference"
+    "claimReference": "Exact claim reference",
+    "respond": "Respond to evidence request",
+    "withdraw": "Withdraw identifier claim",
+    "continuationHint": "Record your explanation or withdraw this exact claim. Text only; no uploaded evidence or ownership verification is claimed.",
+    "reviewRequest": "Mediator request",
+    "responseRecord": "Recorded requester explanation",
+    "savedRefresh": "Canonical record saved. Refresh the recovery panel before another action; current records are unavailable."
   },
   "workHubAway": {
     "conflict": "The setting changed and this request was refused. Refresh the current setting before reviewing a new request.",

@@ -316,7 +316,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
-    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued", "loss_report", "identifier_claim", "resolve_identifier_claim"];
+    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued", "loss_report", "identifier_claim", "respond_identifier_claim", "withdraw_identifier_claim", "resolve_identifier_claim"];
     if (name === "query_asset_custody") {
       if (resourceId) return request("GET", `/implementation-a/assets/${resourceId}`);
       if (input.alias !== undefined) {
@@ -343,7 +343,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     }
     if (action === "create") return name === "prepare_asset_custody_action" ? request("GET", "/implementation-a/assets") : request("POST", "/implementation-a/assets", { ...assetPayload, responsibleOwner: input.owner });
     if (!resourceId) return { error: "A valid asset id is required." };
-    if (name === "prepare_asset_custody_action") return request("GET", `/implementation-a/assets/${resourceId}`);
+    if (name === "prepare_asset_custody_action") return request("GET", `/implementation-a/assets/${resourceId}${["respond_identifier_claim", "withdraw_identifier_claim"].includes(action) ? "/identifier-claims" : ""}`);
     if (!Number.isSafeInteger(input.expectedVersion) || Number(input.expectedVersion) < 1)
       return { error: "Read the current asset version before confirming custody." };
     if (action === "release_hold") {
@@ -353,6 +353,11 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     }
     if (action === "loss_report") return request("POST", `/implementation-a/assets/${resourceId}/loss-report`, { operationId: input.operationId, expectedVersion: input.expectedVersion, condition: payload.condition, reason: payload.reason, confirmed: true });
     if (action === "identifier_claim") return request("POST", `/implementation-a/assets/${resourceId}/identifier-claims`, { operationId: input.operationId, claimId: input.operationId, expectedVersion: input.expectedVersion, alias: payload.alias, reason: payload.reason, confirmed: true });
+    if (["respond_identifier_claim", "withdraw_identifier_claim"].includes(action)) {
+      const parsed = z.object({ claimId: z.uuid(), reason: z.string().trim().min(1).max(2000) }).strict().safeParse(payload);
+      if (!parsed.success || !z.number().int().positive().safeParse(input.expectedVersion).success) return { error: "An exact own claim, version and actual explanation are required; attachments are not supported." };
+      return request("POST", `/implementation-a/assets/${resourceId}/identifier-claims/${encoded(parsed.data.claimId)}/${action === "respond_identifier_claim" ? "respond" : "withdraw"}`, { operationId: input.operationId, expectedVersion: input.expectedVersion, reason: parsed.data.reason, confirmed: true });
+    }
     if (action === "resolve_identifier_claim") { const claimId = encoded(payload.claimId); if (!z.uuid().safeParse(payload.claimId).success) return { error: "An exact claim ID is required." }; return request("POST", `/implementation-a/assets/${resourceId}/identifier-claims/${claimId}/resolve`, { operationId: input.operationId, expectedVersion: input.expectedVersion, decision: payload.decision, reason: payload.reason, ...(payload.correctedAlias ? { correctedAlias: payload.correctedAlias } : {}), confirmed: true }); }
     return request("POST", `/implementation-a/assets/${resourceId}/${action}`, { ...assetPayload, operationId: input.operationId, expectedVersion: input.expectedVersion, confirmed: true });
   }

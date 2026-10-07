@@ -134,3 +134,11 @@ describe("initial safety report preparation", () => {
     expect(chatGptActionResult(name, { success: true, data: { id: 4, status: "submitted", description: "private", reportedByUserId: 8 } })).toEqual({ ok: true, id: 4, status: "submitted" });
   });
 });
+it("validates exact text-only requester claim continuation before preparation",()=>{
+ for(const action of ["respond_identifier_claim","withdraw_identifier_claim"]){
+  const input={action,assetId:"11111111-1111-4111-8111-111111111111",expectedVersion:2,payload:{claimId:"22222222-2222-4222-8222-222222222222",reason:"Actual explanation"}};
+  expect(()=>validateChatGptActionInput("confirm_asset_custody_action",input)).not.toThrow();
+  for(const payload of [{...input.payload,photos:["invented"]},{reason:"Actual explanation"},{...input.payload,reason:" "},{...input.payload,holderUserId:99}])expect(()=>validateChatGptActionInput("confirm_asset_custody_action",{...input,payload})).toThrow();
+  expect(()=>validateChatGptActionInput("confirm_asset_custody_action",{...input,expectedVersion:undefined})).toThrow();
+ }
+});

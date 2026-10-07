@@ -1,3 +1,4 @@
+import { InventoryClaimContinuation } from "./asset-claim-continuation";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -94,6 +95,7 @@ const identifierLabels: Record<string, [string, string]> = {
   other: ["Other identifier", "Otro identificador"],
 };
 const statusLabels: Record<string, [string, string]> = {
+  withdrawn: ["Withdrawn", "Retirada"],
   pending_review: ["Pending platform review", "Pendiente de revisión"],
   awaiting_evidence: ["Awaiting evidence", "En espera de evidencia"],
   rejected: ["Rejected", "Rechazado"],
@@ -468,11 +470,13 @@ export function InventoryRecovery({
     enabled: open && canManage,
   });
   const refresh = async () => {
-    await Promise.all([
+    const [detailRead, claimRead] = await Promise.all([
       detail.refetch(),
       canManage ? claims.refetch() : Promise.resolve(),
       onSaved(),
     ]);
+    if (detailRead.isError || claimRead?.isError)
+      throw Error("Current inventory records unavailable");
   };
   return (
     <section>

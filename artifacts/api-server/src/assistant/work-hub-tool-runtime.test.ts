@@ -709,3 +709,13 @@ it("meeting search validates query before HTTP and respects denial rather than r
     ),
   ).toMatchObject({ ok: true, matches: [], matchCount: 0 });
 });
+it("routes requester continuation only through trusted authorization and the saved claim revision", () => {
+ const assetId="11111111-1111-4111-8111-111111111111",claimId="22222222-2222-4222-8222-222222222222";
+ for(const [action,endpoint] of [["respond_identifier_claim","respond"],["withdraw_identifier_claim","withdraw"]]) {
+  const input={...command,assetId,action,expectedVersion:4,payload:{claimId,reason:"Actual user explanation"}};
+  expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action",input,false)).toHaveProperty("error");
+  expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action",input,true)).toEqual({method:"POST",path:`/implementation-a/assets/${assetId}/identifier-claims/${claimId}/${endpoint}`,body:{operationId:command.operationId,expectedVersion:4,reason:"Actual user explanation",confirmed:true}});
+  expect(resolveExecutableWorkHubToolRequest("prepare_asset_custody_action",input,false)).toMatchObject({method:"GET",path:`/implementation-a/assets/${assetId}/identifier-claims`});
+  expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action",{...input,payload:{...input.payload,photos:["invented"]}},true)).toHaveProperty("error");
+ }
+});
