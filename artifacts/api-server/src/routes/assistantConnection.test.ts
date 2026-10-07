@@ -497,6 +497,32 @@ it("prepares coordinated task creation through the existing action panel, withou
  const retry=await call();expect(JSON.parse(retry.body.result.content[0].text).reference).toBe(result.reference);
  expect(grants[0].actions).toHaveLength(1);
 });
+it('prepares only a signed observed checkpoint and retains panel authorization', async () => {
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing','get_work_hub_briefing'],dependsOn:[]}]);
+ const row={id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',description:encodePlanDescription(plan)};
+ const credentials=await tokens('work_hub:read work_hub:write');
+ const call=(name:string,args:unknown,token=credentials.access_token)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}});
+ mocks.run.mockResolvedValueOnce(JSON.stringify([row])).mockResolvedValueOnce(JSON.stringify({tasks:[],events:[]}));
+ const response=await call('v_run_work_plan_read',{taskId,stepId:'brief',toolArguments:{get_work_hub_briefing:{}}});
+ const receipt=response.body.result.structuredContent.checkpointReceipt;
+ expect(typeof receipt).toBe('string');
+ expect(response.body.result.structuredContent.results).toHaveLength(1);
+ expect(mocks.run).toHaveBeenCalledTimes(2);
+ mocks.run.mockResolvedValue(JSON.stringify([row]));
+ expect((await call('v_prepare_work_plan_read_checkpoint',{receipt})).body.result.isError).toBe(false);
+ const saved=grants[0].actions![0];
+ expect(saved.state).toBe('pending');
+ expect(JSON.parse((saved.arguments.payload as {description:string}).description).steps[0]).toMatchObject({state:'waiting',resultReferences:[expect.stringContaining('plan-read:')]});
+ expect(mocks.bound).not.toHaveBeenCalled();
+ const [body,signature]=receipt.split('.');
+ const decoded=JSON.parse(Buffer.from(body,'base64url').toString('utf8')); decoded.userId=99;
+ expect((await call('v_prepare_work_plan_read_checkpoint',{receipt:Buffer.from(JSON.stringify(decoded)).toString('base64url')+'.'+signature})).body.result.isError).toBe(true);
+ const limited=await tokens('work_hub:read'); mocks.run.mockClear();
+ expect((await call('v_prepare_work_plan_read_checkpoint',{receipt},limited.access_token)).body.result.isError).toBe(true);
+ expect(mocks.run).not.toHaveBeenCalled();
+});
 it('executes a saved plan read step without claiming a saved checkpoint',async()=>{
  const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
  const taskId='11111111-1111-4111-8111-111111111111';

@@ -57,6 +57,5 @@ export function plannedReadRequests(resumed:ReturnType<typeof resumedWorkPlan>,s
  if(step.toolNames.some(name=>!readTools.has(name)))throw Error('Step requires an action authorization');
  const args=z.record(z.string(),z.record(z.string(),z.unknown())).parse(argumentsByTool);
  if(Object.keys(args).some(name=>!step.toolNames.includes(name))||step.toolNames.some(name=>!(name in args)))throw Error('Supply arguments only for the planned read tools');
- return step.toolNames.map(name=>({name,arguments:args[name]}));
+ return [...new Set(step.toolNames)].map(name=>({name,arguments:args[name]}));
 }
-
