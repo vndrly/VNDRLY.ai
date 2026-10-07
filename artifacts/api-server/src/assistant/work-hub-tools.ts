@@ -250,9 +250,9 @@ const entries: Entry[] = [
     date: text("Local date in YYYY-MM-DD format."),
     timezone: text("IANA timezone."),
   }, ["date"])),
-  read("get_work_hub_calendar_item", "scheduling", "Read one authorized shift, meeting, event, or task in full.", schema({
+  read("get_work_hub_calendar_item", "scheduling", "Read one authorized shift, meeting, event, or task in full. For meeting/event, itemId is the occurrence ID returned by the calendar or meeting creation, never the parent meeting ID.", schema({
     kind: { type: "string", enum: ["shift", "event", "meeting", "task"] },
-    itemId: identifier(),
+    itemId: identifier("Shift/task ID, or meeting/event occurrence ID; not the parent meeting ID."),
   }, ["kind", "itemId"])),  read("find_work_hub_meeting_times", "scheduling", "Check the authorized participants' real meetings and assigned shifts, then return privacy-safe conflicts and the earliest common openings. Use the creator's device timezone without asking unless they explicitly override it.", schema({
     participantUserIds: { type: "array", items: { type: "number" }, minItems: 1, maxItems: 100 },
     requestedStart: text("Optional requested ISO start time."),
@@ -262,7 +262,7 @@ const entries: Entry[] = [
     timezone: text("Creator's IANA timezone."),
     limit: { type: "number", minimum: 1, maximum: 10, default: 3 },
   }, ["participantUserIds", "searchStart", "searchEnd", "timezone"])),
-  write("manage_work_hub_calendar_item", "scheduling", "Create, update, reschedule, or cancel one authorized Calendar shift, event, meeting, or task with one confirmation.", writeSchema({
+  write("manage_work_hub_calendar_item", "scheduling", "Create, update, reschedule, or cancel one authorized Calendar shift, event, meeting, or task with one confirmation. Updating/rescheduling/cancelling a meeting or event requires its occurrence ID in itemId, never the parent meeting ID.", writeSchema({
     action: { type: "string", enum: ["create", "update", "reschedule", "cancel"] },
     kind: { type: "string", enum: ["shift", "event", "meeting", "task"] },
     itemId: identifier(),
