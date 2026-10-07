@@ -1,3 +1,4 @@
+import { workHubAvailabilityAvailable } from "./work-hub-availability-tools";
 import { awayResponderAvailable } from "./away-responder-tools";
 import type { SessionPayload } from "../lib/session";
 import { ticketInvoiceCandidatesAvailable } from "./ticket-invoice-candidates-tools";
@@ -72,7 +73,7 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
     && (!(CHATGPT_WRITE_CAPABILITIES["onboarding:write"].tools as readonly string[]).includes(tool.name) || hasOnboardingScope(session))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin") && tool.mutating);
-  return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client" && (tool.name !== "prepare_ticket_invoices" || ticketInvoicePreparationAvailable(session,scopes)) && (tool.name!=="reschedule_work_hub_meeting"||calendarRescheduleAvailable(session,scopes)) && (tool.name!=="respond_work_hub_meeting_invitation"||calendarResponseAvailable(session,scopes)) && (tool.name!=="manage_work_hub_away_responder"||awayResponderAvailable(session,scopes))).map((tool) => [tool.name, tool])).values()].map(tool => {
+  return [...new Map([...gate, ...hub, ...additional].filter((tool) => (tool.name!=="manage_work_hub_availability"||workHubAvailabilityAvailable(session,scopes,true)) && tool.execution !== "client" && (tool.name !== "prepare_ticket_invoices" || ticketInvoicePreparationAvailable(session,scopes)) && (tool.name!=="reschedule_work_hub_meeting"||calendarRescheduleAvailable(session,scopes)) && (tool.name!=="respond_work_hub_meeting_invitation"||calendarResponseAvailable(session,scopes)) && (tool.name!=="manage_work_hub_away_responder"||awayResponderAvailable(session,scopes))).map((tool) => [tool.name, tool])).values()].map(tool => {
     if (tool.name === "schedule_ticket_crew" && session.role === "field_employee") return { ...tool, description: `${tool.description} Field employees require current vendor foreman authority or assignment as the exact ticket's foreman or acting foreman. The canonical ticket permission is checked before crew lookup and execution; discovery does not grant company roster access.` };
     if (tool.name === "confirm_asset_custody_action" && session.role === "admin") { const schema = tool.inputSchema as { properties: Record<string, unknown> }; const action = schema.properties.action as { enum: string[] }; return { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...schema.properties, action: { type: "string", enum: action.enum.filter(value => !["respond_identifier_claim", "withdraw_identifier_claim"].includes(value)) } } } }; }
     if (tool.name === "confirm_asset_custody_action" && session.role !== "admin") { const schema = tool.inputSchema as { properties: Record<string, unknown> }; const action = schema.properties.action as { enum: string[] }; return { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...schema.properties, action: { type: "string", enum: action.enum.filter(value => value !== "resolve_identifier_claim") } } } }; }
@@ -114,7 +115,7 @@ export function chatGptReadableTools(
     }).filter((tool) => Boolean(tool.workHubFamily)));
   }
   return [...new Map(candidates.filter((tool) =>
-    !tool.mutating && tool.confirmation === "none" && tool.execution !== "client" && (tool.name!=="query_ticket_invoice_candidates"||ticketInvoiceCandidatesAvailable(session,scopes)) && (tool.name!=="query_calendar_reschedule_snapshot"||calendarRescheduleAvailable(session,scopes,false)) && (tool.name!=="query_work_hub_meeting_responses"||calendarResponseAvailable(session,scopes,false)) && (!["query_work_hub_away_responder","query_work_hub_away_channels"].includes(tool.name)||awayResponderAvailable(session,scopes,false)),
+    (tool.name!=="query_work_hub_availability"||workHubAvailabilityAvailable(session,scopes)) && !tool.mutating && tool.confirmation === "none" && tool.execution !== "client" && (tool.name!=="query_ticket_invoice_candidates"||ticketInvoiceCandidatesAvailable(session,scopes)) && (tool.name!=="query_calendar_reschedule_snapshot"||calendarRescheduleAvailable(session,scopes,false)) && (tool.name!=="query_work_hub_meeting_responses"||calendarResponseAvailable(session,scopes,false)) && (!["query_work_hub_away_responder","query_work_hub_away_channels"].includes(tool.name)||awayResponderAvailable(session,scopes,false)),
   ).map((tool) => [tool.name, tool])).values()];
 }
 

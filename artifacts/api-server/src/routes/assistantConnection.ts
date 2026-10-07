@@ -3,6 +3,7 @@ import { recoverMeetingSpeakRequestAction } from "../assistant/meeting-speak-req
 import { recoverMeetingMessageAction } from "../assistant/meeting-message-recovery";
 import { recoverMeetingAssistantInvitationAction } from "../assistant/meeting-assistant-invitation-recovery";
 import { recoverFleetAvailabilityAction } from "../assistant/fleet-availability-action-recovery";
+import { recoverWorkHubAvailabilityAction } from "../assistant/work-hub-availability-action-recovery";
 import { savedGateVisitResourceId } from "../assistant/plan-gate-visit-proof";
 import { selectConsentedScopes } from "../assistant/chatgpt-consent-selection";
 import { fleetConsentUpgradeTools, partnerFleetConsentUpgradeTools, supportFleetConsentUpgradeTools, fleetConsentChallenge, fleetToolSecuritySchemes } from "../assistant/chatgpt-fleet-consent";
@@ -735,6 +736,10 @@ const unresolved = (action: AssistantPreparedAction) => action.state === "runnin
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">, scopes: string[]) {
   if (!unresolved(action) || !action.executionFingerprint) return;
   let result = await readPersistentAskVMutationResult({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${action.turnId}`, key: `chatgpt:${action.tokenHash}`, fingerprint: action.executionFingerprint }, database);
+  if (result === null && action.toolName === "manage_work_hub_availability") {
+    const receipt = await recoverWorkHubAvailabilityAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
   if (result === null && action.toolName === "record_fleet_driver_availability") {
     const receipt = await recoverFleetAvailabilityAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);

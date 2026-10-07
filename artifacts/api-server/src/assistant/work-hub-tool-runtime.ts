@@ -1,3 +1,4 @@
+import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
 import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
 import { MeetingMessageArgumentsSchema } from "../work-hub/meeting-message";
@@ -207,6 +208,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     const transitions: Record<string, string> = { accept: "accept", deny: "deny", reinvite: "reinvite", submit: "submit", approve: "approve", kickback: "kickback", awaiting_payment: "awaiting-payment", cancel: "cancel", reactivate: "reactivate" };
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
   }
+  if(name==='query_work_hub_availability') return z.object({}).strict().safeParse(input).success ? request('GET','/work-hub/availability') : {error:'Personal availability accepts no other-user target.'};
+  if(name==='manage_work_hub_availability') { const {confirmed:_confirmed,...business}=input;const parsed=WorkHubAvailabilityInputSchema.safeParse(business);return parsed.success?request('POST','/work-hub/availability',parsed.data):{error:'Supply the exact personal availability fingerprint and reviewed interval.'}; }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
     if (name === "query_fleet_driver_availability") {
       if (!z.object({ driverUserId: z.number().int().positive() }).strict().safeParse(input).success) return { error: "Select an exact authorized Fleet driver." };
@@ -1089,7 +1092,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
-  if (["query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
+  if (["query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any
   // caller-supplied owner/context instead of silently discarding those fields.

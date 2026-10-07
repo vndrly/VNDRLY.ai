@@ -1,3 +1,4 @@
+import { WORK_HUB_AVAILABILITY_TOOLS } from "./work-hub-availability-tools";
 import { AWAY_RESPONDER_TOOLS } from "./away-responder-tools";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import { WORK_HUB_CONTEXT_KINDS } from "@workspace/api-zod";
@@ -117,6 +118,8 @@ function write(
 }
 
 const entries: Entry[] = [
+ read(WORK_HUB_AVAILABILITY_TOOLS[0].name,"scheduling",WORK_HUB_AVAILABILITY_TOOLS[0].description,WORK_HUB_AVAILABILITY_TOOLS[0].inputSchema),
+ write(WORK_HUB_AVAILABILITY_TOOLS[1].name,"scheduling",WORK_HUB_AVAILABILITY_TOOLS[1].description,WORK_HUB_AVAILABILITY_TOOLS[1].inputSchema),
   read(AWAY_RESPONDER_TOOLS[0].name,"collaboration",AWAY_RESPONDER_TOOLS[0].description,{...AWAY_RESPONDER_TOOLS[0].inputSchema,type:"object"}),
   read(AWAY_RESPONDER_TOOLS[1].name,"collaboration",AWAY_RESPONDER_TOOLS[1].description,{...AWAY_RESPONDER_TOOLS[1].inputSchema,type:"object"}),
   write(AWAY_RESPONDER_TOOLS[2].name,"collaboration",AWAY_RESPONDER_TOOLS[2].description,{...AWAY_RESPONDER_TOOLS[2].inputSchema,type:"object"}),

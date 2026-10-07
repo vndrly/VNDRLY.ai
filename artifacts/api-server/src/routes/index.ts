@@ -1,3 +1,4 @@
+import workHubAvailabilityRouter from "./workHubAvailability";
 import fleetRouter from "./fleet";
 import { organizationSubscriptionRouter } from "./organizationSubscription";
 import ticketInvoicePreparationRouter from "./ticketInvoicePreparation";
@@ -164,6 +165,7 @@ router.use(workHubFileLibraryRouter);
 router.use(workHubFinanceRouter);
 router.use(workHubCallsRouter);
 router.use(workHubSchedulingRouter);
+router.use(workHubAvailabilityRouter);
 router.use(workHubTransfersRouter);
 router.use(workHubCollaborationRouter);
 router.use(workHubChannelsRouter);

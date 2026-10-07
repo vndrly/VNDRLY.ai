@@ -32,3 +32,6 @@ export * from "./meeting-assistant-invitation";
 export * from "./fleet-availability";
 export * from "./fleet-availability-client";
 export * from "./meeting-speak-request";
+
+export * from "./work-hub-availability";
+export * from "./work-hub-availability-client";

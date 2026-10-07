@@ -1,3 +1,4 @@
+import WorkHubAvailability from "@/components/WorkHubAvailability";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -435,6 +436,7 @@ function WorkHubModuleContent() {
           </View>
         )}
         {module === "meetings" && <MeetingScheduling onSaved={() => load("")} />}
+        {module === "calendar" && <WorkHubAvailability />}
         {module === "calendar" && <ShiftScheduling onSaved={() => load("")} />}
         {owner &&
           canManage &&

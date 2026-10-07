@@ -1,3 +1,4 @@
+import { WorkHubAvailabilityArgumentsSchema } from "./work-hub-availability-tools";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
 import { MeetingMessageArgumentsSchema } from "../work-hub/meeting-message";
 import { MeetingAssistantInvitationInputSchema } from "@workspace/api-zod";
@@ -38,6 +39,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+ if(name==="manage_work_hub_availability"){const {operationId:_op,confirmed:_confirmed,...fields}=input;return fields;}
   if (name === "moderate_work_hub_meeting" && input.action === "request_to_speak") { const { operationId: _op, confirmed: _confirmed, ...fields } = input; return fields; }
   if (name === "send_work_hub_meeting_message") { const { operationId: _op, confirmed: _confirm, ...fields } = input; return fields; }
   if (name === "manage_work_hub_meeting" && input.action === "set_assistant") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
@@ -66,6 +68,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
   if (name === "moderate_work_hub_meeting" && input.action === "request_to_speak") z.object({ action: z.literal("request_to_speak"), occurrenceId: z.uuid(), payload: z.object({}).strict().optional(), operationId: z.uuid().optional() }).strict().parse(input);
+  if(name==="manage_work_hub_availability"){const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);WorkHubAvailabilityArgumentsSchema.parse(fields);}
   if (name === "send_work_hub_meeting_message") { const { operationId, ...fields } = input; if (operationId !== undefined) z.uuid().parse(operationId); MeetingMessageArgumentsSchema.parse(fields); }
   if (name === "manage_work_hub_meeting" && input.action === "set_assistant") { z.uuid().parse(input.occurrenceId); MeetingAssistantInvitationInputSchema.omit({ operationId: true }).parse(input.payload); }
   if (name === "record_fleet_driver_availability") {

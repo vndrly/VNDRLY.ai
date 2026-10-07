@@ -103,7 +103,7 @@ function Panel({
         setError(
           cause instanceof Error
             ? cause.message
-            : t("meetingWorkspace.errors.speakRequest"),
+            : t("meetingWorkspace.tryAgain"),
         );
     } finally {
       if (alive.current) setBusy(false);
