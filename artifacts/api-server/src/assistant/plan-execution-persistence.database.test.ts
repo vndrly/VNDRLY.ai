@@ -41,7 +41,7 @@ describe.skipIf(!isolated)('private plan execution PostgreSQL owner-row persiste
   beforeEach(async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
     const marker = `isolated-plan-persistence-${randomUUID()}@example.invalid`;
-    ownerId = (await pool.query<{ id: number }>("INSERT INTO users(username, email, password_hash, role) VALUES ($1, $1, 'synthetic-unusable-password', 'field_employee') RETURNING id", [marker])).rows[0].id;
+    ownerId = (await pool.query<{ id: number }>("INSERT INTO users(username, email, password_hash, role, display_name) VALUES ($1, $1, 'synthetic-unusable-password', 'field_employee', 'Synthetic isolated persistence owner') RETURNING id", [marker])).rows[0].id;
     now = Date.now();
     proposal = core.planExecutionAuthorizationSchema.parse({ id: randomUUID(), requester: { userId: ownerId, organizationKey: 'vendor:1', membershipId: 1, sessionVersion: 1 }, grantReference: 'synthetic-test-no-live-grant', taskId: randomUUID(), taskVersion: 1, planId: randomUUID(), planVersion: 1, planFingerprint: 'a'.repeat(64), approvedAt: now, expiresAt: now + 60000, maxAttempts: 2, steps: [{ id: 'read', adapter: 'authorized_read', toolName: 'list_work_hub_tasks', arguments: {}, dependsOn: [], operationId: randomUUID() }], notificationOperationId: randomUUID() });
     session = { userId: ownerId, role: 'vendor', vendorId: 1, activeMembershipId: 1, sv: 1 };
@@ -105,4 +105,3 @@ describe.skipIf(!isolated)('private plan execution PostgreSQL owner-row persiste
     expect(await records()).toEqual(before);
   });
 });
-

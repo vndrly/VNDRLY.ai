@@ -42,6 +42,7 @@ import { savedWorkHubMessageTarget } from "../assistant/plan-work-hub-message-pr
 import assistantPlanExecutionRouter from "./assistantPlanExecution";
 import { PLAN_EXECUTION_PREPARE_TOOL, PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION_CANCEL_TOOL, handlePlanExecutionTool } from "../assistant/plan-execution-chatgpt";
 import { PLAN_EXECUTION_CALENDAR_TOOL, handlePlanExecutionCalendarTool } from "../assistant/plan-execution-calendar-chatgpt";
+import { recoverOperationsDisplayAction } from "../assistant/operations-display-action-recovery";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -448,7 +449,7 @@ router.post("/mcp", async (req, res) => {
         if (!grant || !candidate || candidate.fingerprint !== proof.fingerprint || (!unresolved(candidate) && candidate.expiresAt <= Date.now()) || needsLocation(candidate.toolName, candidate.arguments)) throw new AssistantOAuthError("access_denied");
         const current = await validateAssistantSession(grant.session, database);
         if (!chatGptActionTools(current, grant.scopes).some(tool => tool.name === candidate.toolName)) throw new AssistantOAuthError("access_denied");
-        await reconcileAction(candidate, current, database);
+        await reconcileAction(candidate, current, database, grant.scopes);
         return structuredClone(candidate);
       });
       const reserved = { token: args.reference, session: authorized.session, action };
@@ -516,7 +517,7 @@ router.post("/mcp", async (req, res) => {
         const owner = grants.find((item) => organizationKeyFromSession(item.session) === organizationKeyFromSession(grant.session) && item.actions?.some((action) => action.tokenHash === assistantTokenHash(args.reference)));
         const action = owner?.actions?.find((item) => item.tokenHash === assistantTokenHash(args.reference));
         if (!action || (!unresolved(action) && action.expiresAt <= Date.now())) throw new Error("Action unavailable");
-        await reconcileAction(action, authorized.session, database);
+        await reconcileAction(action, authorized.session, database, grant.scopes);
         return { state: action.state, toolName: action.toolName, result: action.result ? JSON.parse(action.result) : null };
       });
       return reply({ content: [{ type: "text", text: JSON.stringify(status) }], structuredContent: status, isError: false });
@@ -665,9 +666,13 @@ async function currentPlanCompletion(session: SessionPayload, scopes: string[], 
   return preparePlanCompletion(tasks, request, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, available, new Set(reads.map(tool => tool.name)), evidence, SESSION_SECRET, Date.now(), observedAt);
 }
 const unresolved = (action: AssistantPreparedAction) => action.state === "running" || action.state === "outcome_unknown";
-async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">) {
+async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">, scopes: string[]) {
   if (!unresolved(action) || !action.executionFingerprint) return;
-  const result = await readPersistentAskVMutationResult({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${action.turnId}`, key: `chatgpt:${action.tokenHash}`, fingerprint: action.executionFingerprint }, database);
+  let result = await readPersistentAskVMutationResult({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${action.turnId}`, key: `chatgpt:${action.tokenHash}`, fingerprint: action.executionFingerprint }, database);
+  if (result === null && action.toolName === "confirm_operations_displays_action") {
+    const receipt = await recoverOperationsDisplayAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
   if (result !== null) { action.state = "completed"; action.result = JSON.stringify(chatGptActionResult(action.toolName, JSON.parse(result))); action.arguments = chatGptActionAuditInput(action.toolName, action.arguments); action.expiresAt = Date.now() + 3600_000; }
   else if (action.createdAt < Date.now() - 300_000) action.state = "outcome_unknown";
 }
@@ -684,7 +689,7 @@ async function authorizedAction(req: Request) {
       if (grant.revoked || (!unresolved(action) && action.expiresAt <= Date.now()) || organizationKeyFromSession(current) !== organizationKeyFromSession(grant.session)) throw new AssistantOAuthError("access_denied");
       await validateAssistantSession(grant.session, database);
       if (!chatGptActionTools(current, grant.scopes).some((tool) => tool.name === action.toolName)) throw new AssistantOAuthError("access_denied");
-      await reconcileAction(action, current, database);
+      await reconcileAction(action, current, database, grant.scopes);
       return structuredClone(action);
     }
     throw new AssistantOAuthError("access_denied");

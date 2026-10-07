@@ -20,6 +20,7 @@ import {
   type OperationsDisplayOutput,
   type OperationsDisplayRepository,
 } from "../services/operations-displays";
+import { createDatabaseOperationsDisplayCommands, displayCommandActor } from "../assistant/operations-display-command-repository";
 
 const router = Router();
 const idSchema = z.string().uuid();
@@ -168,10 +169,14 @@ async function trustedCompanion(
 function fail(res: Response, error: unknown) {
   if (error instanceof z.ZodError)
     return res.status(400).json({ code: "operations_display.invalid_request" });
-  const status =
+  const code = error instanceof Error ? error.message : "operations_display.internal_error";
+  const commandStatus = ["operations_display.version_conflict", "operations_display.operation_conflict", "operations_display.revoked"].includes(code) ? 409
+    : ["operations_display.not_found", "operations_display.monitor_not_found"].includes(code) ? 404
+      : ["operations_display.trusted_companion_required", "operations_display.site_not_allowed", "operations_display.view_not_allowed"].includes(code) ? 403 : null;
+  const status = commandStatus ?? (
     typeof error === "object" && error && "status" in error
       ? Number((error as { status: unknown }).status)
-      : 500;
+      : 500);
   return res
     .status(status)
     .json({
@@ -181,6 +186,25 @@ function fail(res: Response, error: unknown) {
           : "operations_display.internal_error",
     });
 }
+
+// Exact account-bound commands. Registration/pairing remains device-only and
+// existing legacy paths retain their compatibility while clients migrate.
+router.post("/implementation-a/operations-displays/commands", async (req, res) => {
+  try {
+    const session = getSessionFromRequest(req);
+    if (!session) return res.status(401).json({ code: "operations_display.current_account_required" });
+    const result = await createDatabaseOperationsDisplayCommands(session).execute(req.body, displayCommandActor(session));
+    return res.json(result);
+  } catch (error) { return fail(res, error); }
+});
+router.post("/implementation-a/operations-displays/commands/readback", async (req, res) => {
+  try {
+    const session = getSessionFromRequest(req);
+    if (!session) return res.status(401).json({ code: "operations_display.current_account_required" });
+    const result = await createDatabaseOperationsDisplayCommands(session).readback(req.body, displayCommandActor(session));
+    return result ? res.json(result) : res.status(404).json({ code: "operations_display.operation_not_found" });
+  } catch (error) { return fail(res, error); }
+});
 
 router.get("/implementation-a/operations-displays", async (req, res) => {
   try {

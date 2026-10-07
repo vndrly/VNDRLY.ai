@@ -1,4 +1,5 @@
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
+import { displayActionCommand } from "./operations-display-action-adapter";
 import { financeRecordAction, WORK_HUB_FINANCE_RECORD_ACTIONS } from "./work-hub-finance-actions";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema, AssetLossReportInputSchema, AssetIdentifierClaimInputSchema, AssetIdentifierClaimResolutionSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
@@ -22,12 +23,16 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "invitations:write": { label: "Prepare vendor administrator account invitation creation, resends, and revocation", tools: ["confirm_account_invitations_action"] },
   "onboarding:write": { label: "Prepare your onboarding field changes and completion for authenticated approval", tools: ["start_onboarding", "set_onboarding_field", "complete_onboarding_step", "finalize_onboarding"] },
   "tickets:write": { label: "Prepare authorized ticket creation, edits, assignments, acknowledgements, line items, lifecycle changes, and role-appropriate review", tools: ["manage_ticket_record", "acknowledge_ticket_assignment", "schedule_ticket_crew", "set_ticket_flag", "post_ticket_comment", "set_ticket_lifecycle", "close_ticket_for_review"] },
-  "operations:write": { label: "Prepare changes to your notification read status", tools: ["mark_notifications_read"] },
+  "operations:write": { label: "Prepare notification read status and authorized saved Operations Display monitor routing, meeting-room view or revocation; no pairing or physical-display proof", tools: ["mark_notifications_read", "confirm_operations_displays_action"] },
 } as const;
 export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIES;
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  if (name === "confirm_operations_displays_action") {
+    const { operationId: _operationId, confirmed: _confirmed, ...fields } = input;
+    return fields;
+  }
   if (name === "manage_ticket_record") {
     const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
     const serverFields = new Set(["latitude", "longitude", "checkInLatitude", "checkInLongitude", "accuracyMeters", "recordedAt", "operationId", "confirmed", "idempotencyKey", "locationSharingActive"]);
@@ -43,6 +48,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if (name === "confirm_operations_displays_action") displayActionCommand(input, true);
   if (name === "manage_work_hub_finance" && (WORK_HUB_FINANCE_RECORD_ACTIONS as readonly unknown[]).includes(input.action)) financeRecordAction(input);
   if(name==="reconcile_fleet_gate_visit"){z.uuid().parse(input.runId);FleetGateLinkInputSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,stopId:input.stopId,visitId:input.visitId,reason:input.reason});}
   if(name==="manage_fleet_saved_view")FleetSavedViewInputSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",viewId:input.viewId,expectedVersion:input.expectedVersion,action:input.action,name:input.name,filters:input.filters});

@@ -1,4 +1,5 @@
 import { meetingSearchInputSchema, searchSavedMeetingProjection } from "./work-hub-meeting-search";
+import { displayActionRequest } from "./operations-display-action-adapter";
 import { financeRecordAction } from "./work-hub-finance-actions";
 import { z } from "zod/v4";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
@@ -277,7 +278,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if (name === "query_operations_displays" || name === "prepare_operations_displays_action")
     return request("GET", "/implementation-a/operations-displays");
-  if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
+  if (name === "confirm_operations_displays_action") {
+    try { return displayActionRequest(input); }
+    catch { return { error: "Supply exact saved display ID, updatedAt, supported monitor/action/site or meeting and reason. Pairing and registration remain device-only." }; }
+  }
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
     const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued", "loss_report", "identifier_claim", "resolve_identifier_claim"];

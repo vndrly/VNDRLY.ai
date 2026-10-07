@@ -32,7 +32,7 @@ async function main() {
     assert.equal(beforeColumn.rowCount, 0, "First application requires the private column to be absent in the exact baseline");
     assert.equal((await client.query("SELECT count(*)::int AS count FROM users")).rows[0].count, 0);
     const marker = `assistant-plan-rehearsal-${randomUUID()}@example.invalid`;
-    const userId = (await client.query<{ id: number }>("INSERT INTO users(username, email, password_hash, role) VALUES ($1, $1, 'synthetic-rehearsal-unusable-password', 'field_employee') RETURNING id", [marker])).rows[0].id;
+    const userId = (await client.query<{ id: number }>("INSERT INTO users(username, email, password_hash, role, display_name) VALUES ($1, $1, 'synthetic-rehearsal-unusable-password', 'field_employee', 'Synthetic isolated migration owner') RETURNING id", [marker])).rows[0].id;
     const original = (await client.query("SELECT to_jsonb(u) AS original FROM users u WHERE id = $1", [userId])).rows[0].original;
     const migrationPath = fileURLToPath(new URL("./migrate-assistant-plan-execution.ts", import.meta.url));
     const cwd = fileURLToPath(new URL("../", import.meta.url));
@@ -63,7 +63,17 @@ async function main() {
   } finally { await client.end(); }
 }
 
-main().catch(() => {
+main().catch((error: unknown) => {
   console.error("Assistant plan execution owned-scratch rehearsal failed");
+  // Keep database URLs, query parameters and row contents out of CI logs while
+  // retaining structural diagnostics for a failed fresh-database rehearsal.
+  if (error && typeof error === "object") {
+    const source = error as Record<string, unknown>;
+    const diagnostic: Record<string, string> = {};
+    for (const key of ["name", "code", "table", "column", "constraint", "operator"]) {
+      if (typeof source[key] === "string" && /^[A-Za-z0-9_. -]{1,100}$/.test(source[key])) diagnostic[key] = source[key];
+    }
+    console.error(JSON.stringify(diagnostic));
+  }
   process.exitCode = 1;
 });
