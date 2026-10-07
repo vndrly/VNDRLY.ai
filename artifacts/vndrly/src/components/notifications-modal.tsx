@@ -107,6 +107,7 @@ const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   direct_assignment_passed: { Icon: XCircle, labelKey: "notifications.types.direct_assignment_passed" },
   direct_assignment_cancelled: { Icon: XCircle, labelKey: "notifications.types.direct_assignment_cancelled" },
   workflow_nudge: { Icon: BellRing, labelKey: "notifications.types.workflow_nudge" },
+  fleet_run_event: { Icon: BellRing, labelKey: "notifications.types.fleet_run_event" },
   crew_added: { Icon: UserPlus, labelKey: "notifications.types.crew_added" },
   schedule_changed: { Icon: CalendarClock, labelKey: "notifications.types.schedule_changed" },
   crew_removed: { Icon: UserMinus, labelKey: "notifications.types.crew_removed" },
