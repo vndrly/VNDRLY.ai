@@ -1,7 +1,8 @@
 import { z } from 'zod/v4';
+import { PLAN_EXECUTION_READ_TOOL_NAMES } from './plan-execution-read-policy';
 import { planExecutionResultSchema, type PlanExecutionAdapter, type PlanExecutionAuthorization, type PlanExecutionResult, type PlanExecutionStep, type PlanExecutionReconciliation } from './plan-execution';
 
-const readTools=new Set(['list_work_hub_tasks','query_asset_custody']);
+const readTools=new Set(PLAN_EXECUTION_READ_TOOL_NAMES);
 const personalDraftInput=z.object({title:z.string().trim().min(1).max(200)}).strict();
 export type PersonalDraftCommand={operationId:string;title:string;description:string;assigneeUserId:number};
 export interface PlanExecutionCanonicalApi{

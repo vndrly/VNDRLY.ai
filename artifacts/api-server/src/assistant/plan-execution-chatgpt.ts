@@ -11,7 +11,7 @@ import { ASSISTANT_ISSUER } from "./chatgpt-oauth";
 
 export const PLAN_EXECUTION_PREPARE_TOOL = {
   name: "v_prepare_background_work",
-  description: "Prepare exact bounded saved-plan reads and an optional self-assigned company review draft for separate authenticated approval. Never starts execution. No outgoing message, calendar change, payment, device capture or continuous monitoring. Company drafts have normal company visibility. The signed review expires in five minutes.",
+  description: "Prepare exact bounded saved-plan reads and an optional self-assigned company review draft for separate authenticated approval. Supported read families are tasks, recorded invoices and receivable aging, ticket review queues, Gate stations and change-over, workforce coverage and roster candidates, visible Hotlist jobs, Work Hub calendar, and asset custody. Each read still requires the connected user's current permissions and exact saved-plan intent. Records alone do not prove invoice eligibility, qualified Gate candidates, Hotlist service matching, physical attendance or possession. Never starts execution. No outgoing message, calendar change, payment, device capture or continuous monitoring. Company drafts have normal company visibility. The signed review expires in five minutes.",
   inputSchema: { ...z.toJSONSchema(planExecutionProposalInputSchema), type: "object" as const },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
 };

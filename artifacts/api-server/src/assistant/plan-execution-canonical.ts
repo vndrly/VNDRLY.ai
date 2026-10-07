@@ -7,6 +7,7 @@ import { callNaturalVoiceDomainApi } from "./natural-voice-write-tools";
 import { createWorkHubAccess, requireWorkHubCapability } from "../work-hub/context-access";
 import { planExecutionResultSchema, type PlanExecutionAuthorization } from "./plan-execution";
 import type { PersonalDraftCommand, PlanExecutionCanonicalApi } from "./plan-execution-adapters";
+import { createPlanExecutionBusinessReads, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES } from "./plan-execution-business-reads";
 
 type Authority = Awaited<ReturnType<typeof currentPlanExecutionAuthority>>;
 type Receipt = Pick<typeof workHubClientOperationsTable.$inferSelect, "userId" | "commandKind" | "operationId" | "ownerOrgType" | "ownerOrgId" | "resultJson" | "appliedAt">;
@@ -72,6 +73,9 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
       return result.result;
     },
     async read(authorization, step) {
+      // Existing custody delegations retain their original bound adapter. New
+      // business families dispatch only through fixed canonical read tools.
+      if (Object.hasOwn(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES, step.toolName) && (step.toolName !== "query_asset_custody" || typeof step.arguments.checkedOutLongerThanDays === "number" && step.arguments.checkedOutLongerThanDays >= 90)) return createPlanExecutionBusinessReads({ authorize: deps.authorize })(authorization, step);
       if (step.adapter !== "authorized_read" || !authorization.steps.some(saved => saved.id === step.id && saved.operationId === step.operationId && saved.toolName === step.toolName && JSON.stringify(saved.arguments) === JSON.stringify(step.arguments))) throw Error("Read differs from approved operation");
       const authority = await deps.authorize(authorization);
       if (!authority.current.availableTools.includes(step.toolName)) throw Error("Read permission unavailable");
