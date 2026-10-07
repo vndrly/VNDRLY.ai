@@ -462,6 +462,7 @@ router.post("/mcp", async (req, res) => {
         if (request.sourceTool !== "query_fleet_briefing") await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "query_fleet_capabilities", targetType: "work_hub", toolInput: {}, toolOutput: fleet, resultStatus: fleet.error ? "failure" : "success" });
         if (!fleet.error && (fleet.roles?.length || fleet.capabilities?.canSetup)) {
           output.availableViews.push("fleet", "fleet_map");
+          if (allowedNames.has("query_fleet_run_eta")) output.availableViews.push("fleet_eta");
           if (allowedNames.has("query_fleet_report")) output.availableViews.push("fleet_reports");
           if ((fleet.capabilities?.canMaintain || fleet.capabilities?.canReportDefect) && allowedNames.has("query_fleet_maintenance")) output.availableViews.push("fleet_maintenance");
           if (fleet.capabilities?.canDispatch && allowedNames.has("query_fleet_resources")) output.availableViews.push("fleet_dispatch");

@@ -250,6 +250,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { key: "fleet-drivers", href: "/fleet/drivers", label: fleetText.drivers, icon: Users },
     { key: "fleet-readiness", href: "/fleet/readiness", label: fleetText.readinessTitle, icon: ClipboardList },
     { key: "fleet-costs", href: "/fleet/costs", label: fleetText.costs, icon: Receipt },
+    { key: "fleet-history", href: "/fleet/history", label: fleetText.history, icon: FileText },
     { key: "fleet-settings", href: "/fleet/settings", label: fleetText.settings, icon: Gauge },
     { key: "fleet-reports", href: "/fleet/reports", label: fleetText.reports, icon: Receipt },
     { key: "fleet-work-hub", href: "/work-hub", label: fleetText.workHub, icon: BriefcaseBusiness },

@@ -7,6 +7,23 @@ const runId = "11111111-1111-4111-8111-111111111111",
   operationId = "22222222-2222-4222-8222-222222222222";
 const session = { userId: 1, role: "vendor", membershipRole: "admin" };
 describe("Fleet assistant canonical action boundary", () => {
+  it("keeps every scheduled-service and saved-view variant executable and refuses unknown variants", () => {
+    const assetId="33333333-3333-4333-8333-333333333333";
+    expect(resolveExecutableWorkHubToolRequest("manage_fleet_maintenance",{action:"create",operationId,fleetId:assetId,assetId,title:"Scheduled",notes:"Actual schedule"},true,session)).toMatchObject({method:"POST",path:"/fleet/maintenance"});
+    for(const action of ["triage","record_repair","release","cancel"])
+      expect(resolveExecutableWorkHubToolRequest("manage_fleet_maintenance",{action,operationId,maintenanceId:assetId,expectedVersion:1,notes:"Actual user action"},true,session)).toMatchObject({method:"POST",path:`/fleet/maintenance/${assetId}/actions`});
+    expect(resolveExecutableWorkHubToolRequest("manage_fleet_maintenance",{action:"invented",operationId},true,session)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("manage_fleet_saved_view",{action:"save",operationId,name:"Actual filter",filters:{}},true,session)).toMatchObject({method:"POST",path:"/fleet/views"});
+    expect(resolveExecutableWorkHubToolRequest("manage_fleet_saved_view",{action:"archive",operationId,viewId:assetId,expectedVersion:1},true,session)).toMatchObject({method:"POST",path:"/fleet/views"});
+    expect(resolveExecutableWorkHubToolRequest("manage_fleet_saved_view",{action:"invented",operationId},true,session)).toHaveProperty("error");
+  });
+  it("prepares only exact draft edits through trusted confirmation and retains structured facts", () => {
+    const input={runId,operationId,expectedVersion:1,title:"Actual edit",schedule:{plannedStartAt:"2026-10-08T12:00:00Z",plannedEndAt:"2026-10-08T20:00:00Z",timezone:"America/Chicago"},ownerUserId:99};
+    expect(resolveExecutableWorkHubToolRequest("edit_fleet_draft",input,false,session)).toMatchObject({requiresConfirmation:true});
+    expect(resolveExecutableWorkHubToolRequest("edit_fleet_draft",input,true,session)).toMatchObject({method:"PATCH",path:`/fleet/runs/${runId}/draft`,body:{title:"Actual edit",schedule:input.schedule}});
+    expect(resolveExecutableWorkHubToolRequest("edit_fleet_draft",{runId,operationId,expectedVersion:1},true,session)).toHaveProperty("error");
+    expect(()=>validateChatGptActionInput("edit_fleet_draft",input)).not.toThrow();
+  });
   it("routes ETA exact run reads without accepting coordinates and declares external provider", () => {
     expect(resolveExecutableWorkHubToolRequest("query_fleet_run_eta", {runId, latitude: 99}, false, session)).toMatchObject({method:"GET", path:`/fleet/runs/${runId}/eta`});
     expect(resolveExecutableWorkHubToolRequest("query_fleet_run_eta", {}, false, session)).toHaveProperty("error");

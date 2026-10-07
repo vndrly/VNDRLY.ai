@@ -17,6 +17,24 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/runs/:id/evidence", endpoint(req => service.evidence(actor(req),z.uuid().parse(req.params.id))));
+router.post("/fleet/runs/:id/evidence", endpoint(req => service.addEvidence(actor(req),z.uuid().parse(req.params.id),req.body)));
+router.get("/fleet/runs/:id/evidence/:evidenceId/file", async(req,res)=>{
+  res.setHeader("Cache-Control","private, no-store");
+  try {
+    const result=await service.evidenceFile(actor(req),z.uuid().parse(req.params.id),z.uuid().parse(req.params.evidenceId));
+    res.setHeader("Content-Type",result.object.contentType);
+    res.setHeader("X-Content-Type-Options","nosniff");
+    res.setHeader("Content-Disposition",`attachment; filename="fleet-${result.record.evidenceId}.${result.record.contentType==="application/pdf"?"pdf":result.record.contentType==="image/png"?"png":result.record.contentType==="image/webp"?"webp":"jpg"}"`);
+    res.setHeader("Content-Length",String(result.object.size));
+    res.send(result.object.body);
+  } catch(error) {
+    if(error instanceof FleetError){res.status(error.status).json({code:error.code});return;}
+    if(error instanceof z.ZodError){res.status(400).json({code:"fleet.invalid_request"});return;}
+    req.log?.error({err:error},"Fleet evidence read failed");res.status(500).json({code:"fleet.internal_error"});
+  }
+});
+router.patch("/fleet/runs/:id/draft", endpoint((req) => service.editDraft(actor(req), z.uuid().parse(req.params.id), req.body)));
 router.get(
   "/fleet/runs/:id/eta",
   endpoint((req) => service.eta(actor(req), z.uuid().parse(req.params.id))),

@@ -9,3 +9,5 @@ export * from "./fleet-run-preview";
 export * from "./fleet-location";
 export * from "./fleet-site-activity";
 export * from "./fleet-eta";
+export * from "./fleet-planning";
+export * from "./fleet-evidence";

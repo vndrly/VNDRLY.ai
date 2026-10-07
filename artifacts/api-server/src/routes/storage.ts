@@ -447,6 +447,7 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const objectPath = `/objects/${wildcardPath}`;
     const obj = await objectStorageService.getStoredObject(objectPath);
 
+    if (obj.acl?.purpose === "fleet-evidence") { res.status(403).json({ error: "Fleet evidence requires current Fleet access" }); return; }
     const aclAccess = await objectStorageService.canAccessStoredObject({
       userId,
       object: obj,

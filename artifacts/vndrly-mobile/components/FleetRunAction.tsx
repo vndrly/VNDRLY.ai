@@ -3,11 +3,11 @@ import React, { useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import type { FleetActionInput, FleetRun, FleetResources } from "@workspace/api-zod";
-import { FleetActionInputSchema } from "@workspace/api-zod";
+import { FleetActionInputSchema, checkFleetInspectionRequirements, checkFleetManifestRequirements, type FleetInspectionResponses } from "@workspace/api-zod";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
 export default function FleetRunAction({ run, action, disabled, onSubmit, tickets = [] }: {
-    run: Pick<FleetRun, "version" | "currentStopId" | "stops" | "labels"> & { loads: { id: string; commodity: string; quantity: number; unit: string; manifestReference: string; deliveredAt?: string | null; delivered?: boolean }[] };
+    run: Pick<FleetRun, "version" | "currentStopId" | "stops" | "labels" | "operationalProfile"> & { loads: { id: string; commodity: string; quantity: number; unit: string; manifestReference: string; deliveredAt?: string | null; delivered?: boolean }[] };
     action: FleetActionInput["action"];
     disabled: boolean;
     onSubmit: (fields: Partial<FleetActionInput>) => void;
@@ -23,6 +23,8 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
     const [unit, setUnit] = useState("");
     const [ticketId, setTicketId] = useState<number | null>(null);
     const [error, setError] = useState("");
+    const [responses,setResponses]=useState<FleetInspectionResponses>([]);
+    const [manifest,setManifest]=useState<Record<string,string>>({});
     const fields = action === "inspect" || action === "submit_closeout" ? ["notes"] : action === "record_load" ? ["commodity", "quantity", "unit", "manifestReference"] : action === "record_delivery" ? ["deliveryReference"] : ["cancel", "review", "pause"].includes(action) ? ["reason"] : action === "record_fuel" ? ["quantity", "notes"] : action === "record_meter" ? ["reading", "notes"] : [];
     function submit() {
         const input: Partial<FleetActionInput> = {};
@@ -32,14 +34,20 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
             input.unit = unit;
         if (action === "link_ticket" && ticketId)
             input.ticketId = ticketId;
-        if (action === "inspect")
+        if (action === "inspect") {
             input.inspectionOutcome = inspectionOutcome;
+            if(run.operationalProfile)input.inspectionResponses = responses;
+            if(!checkFleetInspectionRequirements(run.operationalProfile,responses,inspectionOutcome)){setError("Answer the required inspection items. A reported defect cannot be marked passed.");return;}
+        }
         if (action === "review")
             input.decision = decision;
         if (["arrive_stop", "depart_stop"].includes(action))
             input.stopId = stopId;
-        if (action === "record_load")
+        if (action === "record_load") {
             input.loadId = Crypto.randomUUID();
+            if(run.operationalProfile)input.manifestValues=manifest;
+            if(!checkFleetManifestRequirements(run.operationalProfile,manifest)){setError("Complete the required manifest fields for this run's saved profile.");return;}
+        }
         if (action === "record_delivery")
             input.loadId = loadId;
         const parsed = FleetActionInputSchema.safeParse({ ...input, action, expectedVersion: run.version, operationId: Crypto.randomUUID() });
@@ -55,6 +63,8 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
     {["inspect", "arrive_stop", "depart_stop", "record_load", "record_delivery"].includes(action) && <Text style={{ color: colors.text }}>{copy("Records your report. No device location, photograph, signature or regulatory inspection evidence is captured here. Complete detailed forms while stopped.")}</Text>}
     {fields.map(field => <TextInput key={field} accessibilityLabel={`${copy(action)} ${copy(field)}`} placeholder={copy(field.replaceAll(/([A-Z])/g, " $1"))} value={values[field] ?? ""} keyboardType={field === "quantity" ? "decimal-pad" : "default"} onChangeText={value => setValues(v => ({ ...v, [field]: value }))} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 8 }}/>)}
     {action === "inspect" && <><TogglePillButton solid={inspectionOutcome === "defect_reported"} onPress={() => setInspectionOutcome("defect_reported")}>{copy("Report defect")}</TogglePillButton><TogglePillButton solid={inspectionOutcome === "passed"} onPress={() => setInspectionOutcome("passed")}>{copy("Report inspection passed")}</TogglePillButton></>}
+    {action === "inspect" && run.operationalProfile?.inspectionItems.map(item=><View key={item.id} style={{gap:8}}><Text style={{color:colors.text}}>{item.label} · {copy(item.required?"Required":"Optional")}</Text>{(["passed","defect_reported","not_applicable"] as const).filter(outcome=>!item.required || outcome!=="not_applicable").map(outcome=><TogglePillButton key={outcome} solid={responses.some(response=>response.id===item.id&&response.outcome===outcome)} onPress={()=>setResponses(current=>[...current.filter(response=>response.id!==item.id),{id:item.id,outcome}])}>{item.label}: {copy(outcome.replaceAll("_"," "))}</TogglePillButton>)}</View>)}
+    {action === "record_load" && run.operationalProfile?.manifestFields.map(item=><TextInput key={item.id} accessibilityLabel={item.label} placeholder={`${item.label} · ${copy(item.required?"Required":"Optional")}`} value={manifest[item.id]??""} onChangeText={value=>setManifest(current=>{const next={...current};if(value.trim())next[item.id]=value;else delete next[item.id];return next;})} style={{color:colors.text,padding:12,borderWidth:1,borderColor:colors.border}}/>)}
     {action === "review" && <><TogglePillButton solid={decision === "return"} onPress={() => setDecision("return")}>{copy("Return for correction")}</TogglePillButton><TogglePillButton solid={decision === "accept"} onPress={() => setDecision("accept")}>{copy("Accept Fleet closeout")}</TogglePillButton><Text style={{ color: colors.text }}>{copy("Fleet review does not approve a commercial ticket or record payment.")}</Text></>}
     {action === "submit_closeout" && <Text style={{ color: colors.text }}>{copy("Submit recorded stops and load/delivery references for review. This does not approve billing or verify physical proof.")}</Text>}
     {action === "link_ticket" && <><Text style={{ color: colors.text }}>{copy("Choose an authorized existing ticket for this run's sites. Linking does not change ticket status or approve billing.")}</Text>{tickets.length === 0 && <Text style={{ color: colors.text }}>{copy("No eligible existing tickets are available.")}</Text>}{tickets.map(ticket => <TogglePillButton key={ticket.id} solid={ticketId === ticket.id} onPress={() => setTicketId(ticket.id)}>{copy("Ticket #")}{ticket.id}{copy(" \u00B7 site ")}{ticket.siteId}{copy(" \u00B7 ")}{ticket.status}</TogglePillButton>)}</>}

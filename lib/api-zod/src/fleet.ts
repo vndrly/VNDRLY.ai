@@ -1,3 +1,4 @@
+import { FleetScheduleSchema, FleetOperationalProfileSchema, FleetInspectionResponsesSchema, FleetManifestValuesSchema } from "./fleet-planning";
 import { z } from "zod/v4";
 export const FleetRoleSchema = z.enum([
   "fleet_manager",
@@ -35,6 +36,7 @@ export const FleetGrantSchema = z
   .strict();
 export const FleetDefinitionSchema = z
   .object({
+    operationalProfile: FleetOperationalProfileSchema.optional(),
     equipmentAssetIds: z.array(z.uuid()).max(500).default([]),
     requiredCertifications: z
       .array(z.string().trim().min(1).max(100))
@@ -55,6 +57,7 @@ export const FleetStopSchema = z
   .strict();
 export const FleetInspectionSchema = z
   .object({
+    responses: FleetInspectionResponsesSchema.optional(),
     driverUserId: z.number().int().positive(),
     vehicleAssetId: z.uuid(),
     trailerAssetId: z.uuid().nullable(),
@@ -67,6 +70,7 @@ export const FleetInspectionSchema = z
   .strict();
 export const FleetLoadSchema = z
   .object({
+    manifestValues: FleetManifestValuesSchema.optional(),
     id: z.uuid(),
     pickupStopId: z.uuid(),
     deliveryStopId: z.uuid().nullable(),
@@ -97,6 +101,9 @@ export const FleetRunRecordSchema = z
   })
   .strict();
 export const FleetRunSchema = z.object({
+  canEditDraft: z.boolean().optional(),
+  schedule: FleetScheduleSchema.nullable().optional(),
+  operationalProfile: FleetOperationalProfileSchema.optional(),
   labels: z
     .object({
       driverName: z.string().nullable(),
@@ -164,6 +171,8 @@ export const FleetActionInputSchema = z
     trailerAssetId: z.uuid().nullable().optional(),
     reason: z.string().trim().min(1).max(500).optional(),
     stopId: z.uuid().optional(),
+    inspectionResponses: FleetInspectionResponsesSchema.optional(),
+    manifestValues: FleetManifestValuesSchema.optional(),
     inspectionOutcome: z.enum(["passed", "defect_reported"]).optional(),
     notes: z.string().trim().min(1).max(2000).optional(),
     loadId: z.uuid().optional(),
@@ -177,6 +186,7 @@ export const FleetActionInputSchema = z
   .strict();
 export const CreateFleetRunSchema = z
   .object({
+    schedule: FleetScheduleSchema.nullable().optional(),
     operationId: z.uuid(),
     fleetId: z.uuid(),
     title: z.string().trim().min(1).max(200),

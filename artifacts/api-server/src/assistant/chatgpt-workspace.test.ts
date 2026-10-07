@@ -31,6 +31,21 @@ function workspaceHarness() {
   };
 }
 describe("VNDRLY workspace presentation", () => {
+  it("shows an exact sourced driving estimate or its honest unavailable state", () => {
+    const runId="17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+    expect(workspaceRequest({view:"fleet_eta",runId})).toMatchObject({sourceTool:"query_fleet_run_eta",sourceArguments:{runId}});
+    expect(()=>workspaceRequest({view:"fleet_eta"})).toThrow();
+    const estimate={ok:true,runId,stopId:runId,siteId:392,siteName:"Synthetic well",provider:"mapbox",trafficAware:true,routeConfidence:"medium",distanceMiles:12,durationMinutes:20,estimatedAt:now.toISOString(),source:"driver_phone",sourceRecordedAt:now.toISOString(),sourceReceivedAt:now.toISOString(),sourceAccuracyMeters:10,truckSafeRouting:false,physicalProofVerified:false};
+    const result=workspaceOutput("fleet_eta","query_fleet_run_eta",{runId},estimate,now);
+    expect(result.sections[0].rows[0].detail).toContain("12 miles");
+    expect(result.sections[0].rows[1].title).toBe("Driver-phone source");
+    expect(result.attention[0].detail).toContain("Not verified truck-safe");
+    const unavailable=workspaceOutput("fleet_eta","query_fleet_run_eta",{runId},{ok:false,runId,code:"fleet.eta_run_paused",truckSafeRouting:false,physicalProofVerified:false},now);
+    expect(unavailable.sections[0].rows[0].title).toBe("The run is paused.");
+    expect(()=>workspaceOutput("fleet_eta","query_fleet_run_eta",{runId:"afafd3ab-bca4-4949-a3db-768ae3b31f10"},estimate,now)).toThrow();
+    expect(()=>workspaceOutput("fleet_eta","query_field_trip_eta",{runId},estimate,now)).toThrow();
+    expect(WORKSPACE_HTML).toContain("Request driving estimate");
+  });
   it("selects canonical Fleet sources and requires an exact run identity", () => {
     expect(workspaceRequest({ view: "fleet" }, new Set(["query_fleet_briefing"])).sourceTool).toBe("query_fleet_briefing");
     expect(workspaceRequest({ view: "fleet_dispatch" }).sourceTool).toBe("query_fleet_resources");
@@ -80,6 +95,11 @@ describe("VNDRLY workspace presentation", () => {
     const detail = workspaceOutput("fleet_run", "query_fleet_run_detail", {runId: run.id}, run, now);
     expect(detail.sourceArguments).toEqual({runId: run.id});
     expect(detail.sections.some(section => section.rows.some(row => row.title === "pause"))).toBe(true);
+    expect(detail.sections.find(section => section.title === "Draft editing")?.rows).toEqual([]);
+    const planned = workspaceOutput("fleet_run", "query_fleet_run_detail", {runId: run.id}, {...run, canEditDraft: true, schedule: {plannedStartAt:"2026-10-07T08:00:00Z",plannedEndAt:"2026-10-07T16:00:00Z",timezone:"America/Chicago"}, operationalProfile:{name:"Synthetic profile",inspectionItems:[{id:"brakes",label:"Brake check",required:true}],manifestFields:[]}}, now);
+    expect(planned.sections.find(section => section.title === "Draft editing")?.rows[0].title).toBe("Draft edits permitted");
+    expect(planned.sections.find(section => section.title === "Saved operational requirements")?.rows[0].title).toBe("Brake check");
+    expect(planned.sections.find(section => section.title === "Planned hours")?.rows[0].detail).toContain("does not end duty automatically");
   });
   it("shows only the canonical inventory projection and highlights missing assets", () => {
     expect(workspaceRequest({ view: "inventory" })).toMatchObject({ sourceTool: "query_asset_custody", sourceArguments: {} });

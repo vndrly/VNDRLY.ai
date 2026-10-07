@@ -1,3 +1,4 @@
+vi.mock("@/lib/fleet-background-location-native",()=>({startFleetBackgroundLocation:vi.fn(async()=>{}),stopFleetBackgroundLocation:vi.fn(async()=>{}),subscribeFleetBackgroundLocation:()=>()=>{}}));
 import React from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";

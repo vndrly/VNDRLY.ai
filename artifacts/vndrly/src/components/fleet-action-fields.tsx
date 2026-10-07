@@ -1,3 +1,9 @@
+import {
+  checkFleetInspectionRequirements,
+  checkFleetManifestRequirements,
+} from "@workspace/api-zod";
+import { useTranslation } from "react-i18next";
+import { fleetCopy } from "@/lib/fleet-copy";
 import type {
   FleetActionInput,
   FleetRun,
@@ -16,6 +22,8 @@ export function FleetActionFields({
   disabled: boolean;
   tickets?: FleetResources["tickets"];
 }) {
+  const { i18n } = useTranslation();
+  const c = fleetCopy(i18n.language);
   const update = (fields: Partial<FleetActionInput>) =>
     onChange({ ...input, ...fields });
   const text = (
@@ -142,6 +150,88 @@ export function FleetActionFields({
               <option value="defect_reported">Defect reported</option>
             </select>
           </label>
+          {run.operationalProfile?.inspectionItems.map((item) => (
+            <fieldset className="rounded border p-2" key={item.id}>
+              <legend>
+                {item.label}
+                {item.required ? ` · ${c.required}` : ""}
+              </legend>
+              <select
+                disabled={disabled}
+                aria-label={item.label}
+                value={
+                  input.inspectionResponses?.find(
+                    (answer) => answer.id === item.id,
+                  )?.outcome ?? ""
+                }
+                onChange={(event) =>
+                  update({
+                    inspectionResponses: event.target.value
+                      ? [
+                          ...(input.inspectionResponses ?? []).filter(
+                            (answer) => answer.id !== item.id,
+                          ),
+                          {
+                            ...input.inspectionResponses?.find(
+                              (answer) => answer.id === item.id,
+                            ),
+                            id: item.id,
+                            outcome: event.target.value as
+                              | "passed"
+                              | "defect_reported"
+                              | "not_applicable",
+                          },
+                        ]
+                      : (input.inspectionResponses ?? []).filter(
+                          (answer) => answer.id !== item.id,
+                        ),
+                  })
+                }
+              >
+                <option value="">{c.chooseOutcome}</option>
+                <option value="passed">{c.reportedPassed}</option>
+                <option value="defect_reported">{c.reportedDefect}</option>
+                {!item.required && (
+                  <option value="not_applicable">{c.notApplicable}</option>
+                )}
+              </select>
+              <input
+                disabled={
+                  disabled ||
+                  !input.inspectionResponses?.some(
+                    (answer) => answer.id === item.id,
+                  )
+                }
+                aria-label={`${item.label} ${c.notes}`}
+                placeholder={c.notes}
+                value={
+                  input.inspectionResponses?.find(
+                    (answer) => answer.id === item.id,
+                  )?.notes ?? ""
+                }
+                onChange={(event) => {
+                  const existing = input.inspectionResponses?.find(
+                    (answer) => answer.id === item.id,
+                  );
+                  if (existing)
+                    update({
+                      inspectionResponses: (
+                        input.inspectionResponses ?? []
+                      ).map((answer) =>
+                        answer.id === item.id
+                          ? {
+                              ...answer,
+                              ...(event.target.value
+                                ? { notes: event.target.value }
+                                : { notes: undefined }),
+                            }
+                          : answer,
+                      ),
+                    });
+                }}
+              />
+            </fieldset>
+          ))}
           {text("notes", "Inspection notes")}
         </>
       )}
@@ -180,6 +270,24 @@ export function FleetActionFields({
           </label>
           {text("unit", "Unit")}
           {text("manifestReference", "Manifest reference")}
+          {run.operationalProfile?.manifestFields.map((field) => (
+            <label className="block" key={field.id}>
+              {field.label}
+              {field.required ? ` · ${c.required}` : ""}
+              <input
+                disabled={disabled}
+                className="block rounded border p-2"
+                aria-label={field.label}
+                value={input.manifestValues?.[field.id] ?? ""}
+                onChange={(event) => {
+                  const values = { ...input.manifestValues };
+                  if (event.target.value) values[field.id] = event.target.value;
+                  else delete values[field.id];
+                  update({ manifestValues: values });
+                }}
+              />
+            </label>
+          ))}
         </>
       )}
       {input.action === "record_delivery" && (
@@ -265,7 +373,15 @@ export function fleetActionComplete(
         ? present(input.notes)
         : true;
     case "inspect":
-      return Boolean(input.inspectionOutcome && present(input.notes));
+      return Boolean(
+        input.inspectionOutcome &&
+        present(input.notes) &&
+        checkFleetInspectionRequirements(
+          run?.operationalProfile,
+          input.inspectionResponses,
+          input.inspectionOutcome,
+        ),
+      );
     case "arrive_stop":
     case "depart_stop":
       return present(input.stopId);
@@ -278,7 +394,11 @@ export function fleetActionComplete(
           Number.isFinite(input.quantity),
         ) &&
         present(input.unit) &&
-        present(input.manifestReference)
+        present(input.manifestReference) &&
+        checkFleetManifestRequirements(
+          run?.operationalProfile,
+          input.manifestValues,
+        )
       );
     case "record_delivery":
       return present(input.loadId) && present(input.deliveryReference);

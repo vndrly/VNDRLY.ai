@@ -53,7 +53,7 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
   async function write(value: FleetOfflineDocument) { await store.setItem(fleetOfflineKey(value.scope), JSON.stringify(value)); }
   function validateBase(scope: FleetOfflineScope, action: FleetQueuedAction) {
     if (!["acknowledge", "inspect", "start", "pause", "resume", "arrive_stop", "depart_stop", "record_load", "record_delivery", "record_fuel", "record_meter", "submit_closeout"].includes(action.input.action)) throw new Error("Only assigned driver facts can be stored offline.");
-    if (action.sessionVersion !== undefined) z.number().int().positive().parse(action.sessionVersion);
+    if (action.sessionVersion !== undefined) z.number().int().nonnegative().parse(action.sessionVersion);
     if (action.input.capturedAt && action.input.capturedAt !== action.capturedAt) throw new Error("Fleet original capture time changed.");
     const base = z.object({ runId: z.uuid(), companyId: z.number().int().positive(), driverUserId: z.number().int().positive(), vehicleAssetId: z.uuid(), trailerAssetId: z.uuid().nullable(), version: z.number().int().positive() }).strict().parse(action.base);
     if (base.companyId !== scope.companyId || base.driverUserId !== scope.userId || base.runId !== action.runId) throw new Error("Fleet offline assignment does not match this account.");
@@ -62,7 +62,7 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
     read,
     clear: (scope: FleetOfflineScope) => store.removeItem(fleetOfflineKey(scope)),
     async bindAccount(scope: FleetOfflineScope) {
-      if (!Number.isInteger(scope.sessionVersion) || scope.sessionVersion! < 1) throw new Error("Fresh account verification is required before synchronization.");
+      if (!Number.isInteger(scope.sessionVersion) || scope.sessionVersion! < 0) throw new Error("Fresh account verification is required before synchronization.");
       const value = await read(scope);
       if (value.scope.sessionVersion !== scope.sessionVersion) {
         value.actions = value.actions.map(action => ({...action,state:"revoked",message:"The verified account session changed. This offline sequence was not submitted."}));

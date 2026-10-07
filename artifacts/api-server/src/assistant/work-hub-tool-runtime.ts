@@ -1,4 +1,4 @@
-import { CreateFleetRunSchema, FleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetReportFilterSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema,FleetSiteActivityFilterSchema } from "@workspace/api-zod";
+import { FleetDraftEditSchema, CreateFleetRunSchema, FleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetReportFilterSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema,FleetSiteActivityFilterSchema } from "@workspace/api-zod";
 import { FLEET_TOOLS } from "./fleet-tools";
 import { ticketRecordActionsForRole } from "./ticket-workflow-tools";
 export type WorkHubHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -200,7 +200,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     }
     if(name==="query_fleet_saved_views")return request("GET","/fleet/views");
     if(name==="query_fleet_report"){const filters=FleetReportFilterSchema.safeParse({fleetId:input.fleetId,siteId:input.siteId,startsAt:input.startsAt,endsAt:input.endsAt});if(!filters.success)return {error:"Supply authorized exact Fleet report filters and UTC dates."};const query=new URLSearchParams(Object.entries(filters.data).filter(([,value])=>value!==undefined).map(([key,value])=>[key,String(value)]));return request("GET",`/fleet/reports${query.size?`?${query}`:""}`);}
-    if(name==="manage_fleet_saved_view"){const body=FleetSavedViewInputSchema.safeParse({operationId:input.operationId,viewId:input.viewId,expectedVersion:input.expectedVersion,action:input.action,name:input.name,filters:input.filters});return body.success?request("POST","/fleet/views",body.data):{error:"Supply exact personal saved view fields and current version."};}
+    if(name==="edit_fleet_draft"){const runId=FleetRunSchema.shape.id.safeParse(input.runId),body=FleetDraftEditSchema.safeParse({operationId:input.operationId,expectedVersion:input.expectedVersion,title:input.title,schedule:input.schedule,stops:input.stops});return runId.success&&body.success?request("PATCH",`/fleet/runs/${runId.data}/draft`,body.data):{error:"Supply an exact draft run, explicit changed fields, current version and operation ID."};}
+    if(name==="manage_fleet_saved_view"){if(!["save","archive"].includes(String(input.action)))return {error:"Select save or archive for the personal Fleet view."};const body=FleetSavedViewInputSchema.safeParse({operationId:input.operationId,viewId:input.viewId,expectedVersion:input.expectedVersion,action:input.action,name:input.name,filters:input.filters});return body.success?request("POST","/fleet/views",body.data):{error:"Supply exact personal saved view fields and current version."};}
     if(name==="query_fleet_maintenance"){
       if(input.maintenanceId!==undefined)return FleetRunSchema.shape.id.safeParse(input.maintenanceId).success?request("GET",`/fleet/maintenance/${input.maintenanceId}`):{error:"Select an exact maintenance UUID."};
       if(input.limit!==undefined&&(!Number.isInteger(input.limit)||Number(input.limit)<1||Number(input.limit)>50))return {error:"Maintenance page limit must be 1 to 50."};
@@ -208,6 +209,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
       const query=new URLSearchParams();if(input.limit!==undefined)query.set("limit",String(input.limit));if(input.cursor!==undefined)query.set("cursor",String(input.cursor));return request("GET",`/fleet/maintenance${query.size?`?${query}`:""}`);
     }
     if(["report_fleet_defect","manage_fleet_maintenance"].includes(name)){
+      if(name==="manage_fleet_maintenance"&&!["create","triage","record_repair","release","cancel"].includes(String(input.action)))return {error:"Select a supported canonical Fleet maintenance action."};
       if(name==="report_fleet_defect"||input.action==="create"){
         const body=FleetMaintenanceCreateSchema.safeParse({operationId:input.operationId,fleetId:input.fleetId,assetId:input.assetId,runId:input.runId,kind:name==="report_fleet_defect"?"defect":"scheduled_service",title:input.title,notes:input.notes,dueAt:input.dueAt});return body.success?request("POST","/fleet/maintenance",body.data):{error:"Supply exact maintenance equipment and user-reported notes."};
       }
@@ -229,9 +231,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (name === "query_fleet_resources") return request("GET", "/fleet/resources");
     const runId = required(input.runId, "run id");
     if(typeof runId==="string"&&!FleetRunSchema.shape.id.safeParse(runId).success)return {error:"Select an exact Fleet run UUID."};
+    if (name === "query_fleet_evidence") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/evidence`) : runId;
     if (name === "query_fleet_run_eta") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/eta`) : runId;
     if (name === "query_fleet_run_detail") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}`) : runId;
-    const keys=["operationId","expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
+    const keys=["operationId","expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","schedule","inspectionResponses","manifestValues","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
     const fields=Object.fromEntries(keys.filter(key=>input[key]!==undefined).map(key=>[key,input[key]]));
     const validActions: Record<string,string[]> = {manage_fleet_run:["create","dispatch","reassign","cancel","link_ticket"],transition_fleet_run:["inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout","pause","resume","record_fuel","record_meter"]};
     if(validActions[name]&&!validActions[name].includes(String(input.action)))return {error:"This Fleet action is unavailable through this tool."};

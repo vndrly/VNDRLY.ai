@@ -22,6 +22,12 @@ import { FleetSetupPanel } from "@/components/fleet-setup";
 import { FleetPreferences } from "@/components/fleet-preferences";
 import { FleetMaintenancePanel } from "@/components/fleet-maintenance";
 import { FleetReportsPanel } from "@/components/fleet-reports";
+import {
+  FleetScheduleFields,
+  fleetScheduleDraft,
+  parseFleetSchedule,
+} from "@/components/fleet-schedule-fields";
+import { FleetDraftEditor } from "@/components/fleet-draft-editor";
 import { FleetEtaPanel } from "@/components/fleet-eta";
 import { FleetGateObservationsPanel } from "@/components/fleet-gate-observations";
 import { fleetPositions, fleetVisibleRuns } from "@/lib/fleet-view";
@@ -135,6 +141,9 @@ function FleetWorkspace({
   } | null>(null);
   const [create, setCreate] = useState(false);
   const [title, setTitle] = useState("");
+  const [scheduleDraft, setScheduleDraft] = useState(() =>
+    fleetScheduleDraft(null),
+  );
   const [driver, setDriver] = useState("");
   const [vehicle, setVehicle] = useState("");
   const [trailer, setTrailer] = useState("");
@@ -225,7 +234,12 @@ function FleetWorkspace({
     fleetId,
     siteId,
     search,
-  ).filter((item) => !status || item.status === status);
+  ).filter(
+    (item) =>
+      (!location.endsWith("/history") ||
+        ["completed", "cancelled"].includes(item.status)) &&
+      (!status || item.status === status),
+  );
   const run = runs.find((item) => item.id === selected);
   const observations = fleetPositions(
     data,
@@ -271,8 +285,14 @@ function FleetWorkspace({
       busy
     )
       return;
+    const schedule = parseFleetSchedule(scheduleDraft);
+    if (!schedule.valid) {
+      setNotice(c.blocked);
+      return;
+    }
     setBusy(true);
     const fingerprint = JSON.stringify({
+      schedule: schedule.schedule,
       fleetId,
       title,
       driver,
@@ -290,6 +310,7 @@ function FleetWorkspace({
           operationId: crypto.randomUUID(),
           fleetId,
           title,
+          schedule: schedule.schedule,
           driverUserId: Number(driver),
           vehicleAssetId: vehicle,
           trailerAssetId: trailer || null,
@@ -373,6 +394,7 @@ function FleetWorkspace({
         )}
         <Link href="/work-hub">{c.workHub}</Link>
         <Link href="/fleet/reports">{c.reports}</Link>
+        <Link href="/fleet/history">{c.history}</Link>
       </nav>
       <div className="flex flex-wrap gap-3">
         <select
@@ -589,6 +611,11 @@ function FleetWorkspace({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+            <FleetScheduleFields
+              value={scheduleDraft}
+              onChange={setScheduleDraft}
+              disabled={busy}
+            />
             <select
               aria-label={c.driver}
               className={selectClass}
@@ -782,7 +809,8 @@ function FleetWorkspace({
             {observations.map((point, index) => (
               <li key={`${point.runId}:${index}`}>
                 {runs.find((r) => r.id === point.runId)?.title} · {point.source}{" "}
-                · {point.freshness} · {point.recordedAt}
+                · {point.freshness} · {point.recordedAt} ·{" "}
+                <Link href={`/fleet/runs/${point.runId}`}>{c.openRun}</Link>
               </li>
             ))}
           </ul>
@@ -814,6 +842,34 @@ function FleetWorkspace({
                   run.labels?.vehicleName ??
                   run.vehicleAssetId}
               </p>
+              {run.schedule && (
+                <p>
+                  {c.plannedHours}:{" "}
+                  {new Date(run.schedule.plannedStartAt).toLocaleString(
+                    i18n.language,
+                    { timeZone: run.schedule.timezone },
+                  )}{" "}
+                  –{" "}
+                  {new Date(run.schedule.plannedEndAt).toLocaleString(
+                    i18n.language,
+                    { timeZone: run.schedule.timezone },
+                  )}{" "}
+                  · {run.schedule.timezone}
+                </p>
+              )}
+              {run.canEditDraft === true && (
+                <FleetDraftEditor
+                  key={run.id}
+                  run={run}
+                  sites={
+                    data.fleets.find((fleet) => fleet.id === run.fleetId)
+                      ?.siteIds ?? []
+                  }
+                  onSaved={reload}
+                />
+              )}
+              <Link href={`/fleet/runs/${run.id}`}>{c.openRun}</Link>
+              <p className="text-xs">{c.routeUnavailable}</p>
               <h3>{c.stops}</h3>
               <p>
                 {c.trailer}:{" "}
@@ -864,6 +920,16 @@ function FleetWorkspace({
                       ? `Delivered ${load.deliveredAt}`
                       : "Awaiting delivery"}{" "}
                     · {load.source}
+                    {Object.entries(load.manifestValues ?? {}).map(
+                      ([id, value]) => (
+                        <p key={id}>
+                          {run.operationalProfile?.manifestFields.find(
+                            (field) => field.id === id,
+                          )?.label ?? id}
+                          : {value}
+                        </p>
+                      ),
+                    )}
                   </li>
                 ))}
               </ul>
@@ -873,6 +939,14 @@ function FleetWorkspace({
                   <li key={index}>
                     {inspection.outcome} · {inspection.notes} ·{" "}
                     {inspection.recordedAt} · {inspection.source}
+                    {inspection.responses?.map((answer) => (
+                      <p key={answer.id}>
+                        {run.operationalProfile?.inspectionItems.find(
+                          (item) => item.id === answer.id,
+                        )?.label ?? answer.id}
+                        : {answer.outcome} · {answer.notes ?? ""}
+                      </p>
+                    ))}
                   </li>
                 ))}
               </ul>
@@ -1085,12 +1159,11 @@ function FleetWorkspace({
               <ul className="text-xs">
                 {run.events.map((event) => (
                   <li key={event.id}>
-                    {event.type.replaceAll("_", " ")} · Actor{" "}
-                    {event.actorUserId} · Accepted {event.recordedAt}
+                    {event.type.replaceAll("_", " ")} · {c.actor}{" "}
+                    {event.actorUserId} · {c.accepted} {event.recordedAt}
                     {event.capturedAt && (
                       <p>
-                        Reported capture time {event.capturedAt} ·{" "}
-                        {event.source}
+                        {c.captured} {event.capturedAt} · {event.source}
                       </p>
                     )}
                     {["reason", "notes", "decision"].map((key) =>

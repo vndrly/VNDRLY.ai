@@ -1,3 +1,4 @@
+import {startFleetBackgroundLocation, stopFleetBackgroundLocation, subscribeFleetBackgroundLocation, type FleetBackgroundStatus} from "@/lib/fleet-background-location-native";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Text, View } from "react-native";
 import * as Location from "expo-location";
@@ -16,18 +17,20 @@ import { useFleetCopy } from "@/lib/fleet-copy";
 export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;account:FleetVerifiedAccount;disabled:boolean}) {
   const colors=useColors(),copy=useFleetCopy();
   const [status,setStatus]=useState<FleetPhoneLocationState>({state:"stopped",message:"Phone sharing is stopped.",lastAccepted:null});
+  const [background,setBackground]=useState<FleetBackgroundStatus>({state:"stopped",message:"Background phone sharing is stopped.",lastAcceptedAt:null});
   const controller=useRef<ReturnType<typeof createFleetPhoneLocationCollector>|null>(null);
   const timer=useRef<ReturnType<typeof setInterval>|null>(null);
   const alive=useRef(true);
   function stop(message="Phone sharing is stopped.",discard=false){if(timer.current)clearInterval(timer.current);timer.current=null;controller.current?.stop(message,discard);}
   useEffect(()=>{
     alive.current=true;
+    const backgroundSubscription=subscribeFleetBackgroundLocation(value=>{if(alive.current)setBackground(value);});
     const stopAuth=()=>{stop("The account or device context changed. Phone sharing stopped.",true);controller.current=null;};
     const user=subscribeUser(stopAuth),token=subscribeToken(stopAuth);
     const app=AppState.addEventListener("change",state=>{if(state!=="active")stop("Phone sharing is foreground only and stopped while the app is inactive.");});
-    return()=>{alive.current=false;stop();user();token();app.remove();};
+    return()=>{alive.current=false;stop();backgroundSubscription();user();token();app.remove();};
   },[]);
-  useEffect(()=>{if(disabled || run.status!=="in_progress" || run.phase==="paused")stop("This run is paused or no longer active. Phone sharing stopped.");},[disabled,run.status,run.phase]);
+  useEffect(()=>{if(disabled || run.status!=="in_progress" || run.phase==="paused"){stop("This run is paused or no longer active. Phone sharing stopped.");void stopFleetBackgroundLocation(true).catch(()=>undefined);}},[disabled,run.status,run.phase]);
   function start(){
     if(disabled || run.status!=="in_progress" || run.phase==="paused" || AppState.currentState!=="active")return;
     stop();
@@ -59,7 +62,11 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
     <Text style={{color:colors.text}}>{copy(status.message)}</Text>
     {status.lastAccepted && <Text style={{color:colors.text}}>{copy("Last accepted phone observation")}: {status.lastAccepted.recordedAt} · {copy(status.lastAccepted.freshness)} · {copy("Accuracy")}: {status.lastAccepted.accuracyMeters ?? copy("unavailable")}</Text>}
     <TogglePillButton disabled={disabled || run.status!=="in_progress" || run.phase==="paused" || status.state==="checking" || status.state==="sharing"} onPress={start}>{copy("Start foreground phone sharing")}</TogglePillButton>
-    <TogglePillButton onPress={()=>stop()}>{copy("Stop phone sharing")}</TogglePillButton>
-    <TogglePillButton disabled={disabled} onPress={()=>{stop();router.push({pathname:"/location-consent",params:{returnTo:`/fleet-run/${run.id}`}} as never);}}>{copy("Review device location consent")}</TogglePillButton>
+    <TogglePillButton onPress={()=>{stop();void stopFleetBackgroundLocation(true).catch(()=>undefined);}}>{copy("Stop phone sharing")}</TogglePillButton>
+    <Text style={{color:colors.text}}>{copy(background.message)}</Text>
+    {background.lastAcceptedAt && <Text style={{color:colors.text}}>{copy("Last accepted background phone report")}: {background.lastAcceptedAt}</Text>}
+    <TogglePillButton disabled={disabled || run.status!=="in_progress" || run.phase==="paused" || background.state==="configured" || background.state==="accepted"} onPress={()=>{stop();void (async()=>{try {await Location.requestBackgroundPermissionsAsync();await startFleetBackgroundLocation(account,run);}catch(error){if(alive.current)setBackground({state:"unavailable",message:error instanceof Error?error.message:"Background phone sharing is unavailable.",lastAcceptedAt:null});}})();}}>{copy("Start duty-bound background phone sharing")}</TogglePillButton>
+    <Text style={{color:colors.text}}>{copy("Background sharing uses this phone only during the verified active run. Always location permission and device consent are required. OS suspension can delay reports; no truck telemetry or physical proof is provided.")}</Text>
+    <TogglePillButton disabled={disabled} onPress={()=>{stop();void stopFleetBackgroundLocation(true).catch(()=>undefined);router.push({pathname:"/location-consent",params:{returnTo:`/fleet-run/${run.id}`}} as never);}}>{copy("Review device location consent")}</TogglePillButton>
   </View>;
 }

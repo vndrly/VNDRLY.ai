@@ -47,3 +47,22 @@ describe("Fleet reported workflow forms", () => {
     expect(screen.getByText(/No device location/)).toBeTruthy();
   });
 });
+
+it("requires exact saved inspection responses and rejects a defect with an overall passed report",()=>{
+ const submit=vi.fn(),profile={name:"Synthetic haul",inspectionItems:[{id:"brakes",label:"Brake condition",required:true}],manifestFields:[]};
+ render(<FleetRunAction run={{...run,operationalProfile:profile}} action="inspect" disabled={false} onSubmit={submit}/>);
+ fireEvent.change(screen.getByLabelText("inspect notes"),{target:{value:"Checked while stopped"}});
+ fireEvent.click(screen.getByRole("button",{name:"Report inspection passed"}));fireEvent.click(screen.getByRole("button",{name:"inspect"}));expect(submit).not.toHaveBeenCalled();
+ expect(screen.queryByRole("button",{name:"Brake condition: not applicable"})).toBeNull();
+ fireEvent.click(screen.getByRole("button",{name:"Brake condition: defect reported"}));fireEvent.click(screen.getByRole("button",{name:"inspect"}));expect(submit).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole("button",{name:"Report defect"}));fireEvent.click(screen.getByRole("button",{name:"inspect"}));
+ expect(submit).toHaveBeenCalledWith(expect.objectContaining({inspectionOutcome:"defect_reported",inspectionResponses:[{id:"brakes",outcome:"defect_reported"}]}));
+});
+it("collects required manifest values against saved labels without inventing them",()=>{
+ const submit=vi.fn(),profile={name:"Synthetic haul",inspectionItems:[],manifestFields:[{id:"seal",label:"Actual seal reference",required:true}]};
+ render(<FleetRunAction run={{...run,operationalProfile:profile}} action="record_load" disabled={false} onSubmit={submit}/>);
+ for(const [field,value]of Object.entries({commodity:"Sand",quantity:"12",unit:"tons",manifestReference:"SYN-1"}))fireEvent.change(screen.getByLabelText(`record_load ${field}`),{target:{value}});
+ fireEvent.click(screen.getByRole("button",{name:"record load"}));expect(submit).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText("Actual seal reference"),{target:{value:"SYN-SEAL"}});fireEvent.click(screen.getByRole("button",{name:"record load"}));
+ expect(submit).toHaveBeenCalledWith(expect.objectContaining({manifestValues:{seal:"SYN-SEAL"}}));
+});

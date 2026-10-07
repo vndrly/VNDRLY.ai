@@ -1,12 +1,12 @@
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
 import { z } from "zod/v4";
-import { AssetCustodyCommandSchema, CreateFleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema } from "@workspace/api-zod";
+import { FleetDraftEditSchema, AssetCustodyCommandSchema, CreateFleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema } from "@workspace/api-zod";
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
   "fleet:maintenance": {label:"Prepare Fleet Manager maintenance and explicitly permitted hold release; no physical certification",tools:["manage_fleet_maintenance","report_fleet_defect"]},
   "fleet:admin":{label:"Prepare current company administrator Fleet settings and explicit role grants",tools:["manage_fleet_settings"]},
-  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
   "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: ["report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
   "finance:write": { label: "Prepare recording or reversing ticket payment records with current Accounts Payable authority; never transfer money", tools: ["record_ticket_payment", "reverse_ticket_payment_record"] },
@@ -46,10 +46,11 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
     if(name==="report_fleet_defect"||input.action==="create")FleetMaintenanceCreateSchema.parse({operationId,fleetId:input.fleetId,assetId:input.assetId,runId:input.runId,kind:name==="report_fleet_defect"?"defect":"scheduled_service",title:input.title,notes:input.notes,dueAt:input.dueAt});
     else {z.uuid().parse(input.maintenanceId);FleetMaintenanceActionSchema.parse({operationId,expectedVersion:input.expectedVersion,action:input.action,notes:input.notes});}
   }
+  if(name==="edit_fleet_draft"){ z.uuid().parse(input.runId);FleetDraftEditSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,title:input.title,schedule:input.schedule,stops:input.stops}); }
   if(name==="set_fleet_preferences")FleetWorkspacePreferenceInputSchema.parse({expectedVersion:input.expectedVersion,defaultWorkspace:input.defaultWorkspace,selectedFleetId:input.selectedFleetId});
   if(name==="manage_fleet_settings")FleetSetupInputSchema.parse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants,supportGrants:input.supportGrants});
   if(["manage_fleet_run","acknowledge_fleet_assignment","transition_fleet_run","review_fleet_closeout"].includes(name)){
-    const keys=["expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
+    const keys=["expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","schedule","inspectionResponses","manifestValues","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
     const fields=Object.fromEntries(keys.filter(key=>input[key]!==undefined).map(key=>[key,input[key]]));
     const operationId="00000000-0000-4000-8000-000000000001";
     if(name==="manage_fleet_run"&&input.action==="create"){const {action,expectedVersion,...create}=fields;CreateFleetRunSchema.parse({...create,operationId});}

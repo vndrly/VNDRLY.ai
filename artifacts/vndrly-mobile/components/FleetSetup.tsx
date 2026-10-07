@@ -1,3 +1,4 @@
+import FleetProfileEditor from "@/components/FleetProfileEditor";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import React, { useEffect, useState } from "react";
 import { Text, TextInput, View } from "react-native";
@@ -86,6 +87,7 @@ export default function FleetSetup({ onSaved }: {
       <Text style={{ color: colors.text }}>{copy("Draft changes are unsaved. Fleet roles grant operational access only; safety release and finance remain separate.")}</Text>
       <TogglePillButton solid={setup.enabled} onPress={() => setSetup({ ...setup, enabled: !setup.enabled })}>{copy(setup.enabled ? "Fleet enabled" : "Fleet disabled")}</TogglePillButton>
       {setup.fleets.map(fleet => <TogglePillButton key={fleet.id} solid={selectedFleet === fleet.id} onPress={() => setSelectedFleet(fleet.id)}>{fleet.name}{copy(" \u00B7 sites ")}{fleet.siteIds.join(", ")}</TogglePillButton>)}
+      {setup.fleets.filter(fleet=>fleet.id===selectedFleet).map(fleet=><FleetProfileEditor key={fleet.id} profile={fleet.operationalProfile} disabled={busy} onChange={profile=>setSetup(current=>current?{...current,fleets:current.fleets.map(item=>{if(item.id!==fleet.id)return item;const next={...item};if(profile)next.operationalProfile=profile;else delete next.operationalProfile;return next;})}:current)}/>)} 
       <TextInput accessibilityLabel={copy("New Fleet name")} placeholder={copy("New fleet name")} value={name} onChangeText={setName} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border }}/>
       <TextInput accessibilityLabel={copy("Required Fleet certifications")} placeholder={copy("Required certification names, separated by commas")} value={certifications} onChangeText={setCertifications} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border }}/>
       {setup.sites.map(site => <TogglePillButton key={site.siteId} solid={sites.includes(site.siteId)} onPress={() => setSites(current => current.includes(site.siteId) ? current.filter(id => id !== site.siteId) : [...current, site.siteId])}>{site.name}</TogglePillButton>)}

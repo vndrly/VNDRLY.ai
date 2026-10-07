@@ -56,6 +56,32 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet configuration", () => {
+  it("saves explicit checklist configuration only through the reviewed company setup", async () => {
+    mount();
+    fireEvent.change(await screen.findByLabelText("Profile name"), {
+      target: { value: "Fluid hauling" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Add requirement" })[0],
+    );
+    fireEvent.change(screen.getByLabelText("Stable field ID"), {
+      target: { value: "brakes" },
+    });
+    fireEvent.change(screen.getByLabelText("Field label"), {
+      target: { value: "Brakes" },
+    });
+    fireEvent.click(screen.getByLabelText("Required"));
+    expect(api.saveSetup).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText("Save reviewed configuration"));
+    await waitFor(() => expect(api.saveSetup).toHaveBeenCalledOnce());
+    expect(api.saveSetup.mock.calls[0][0].fleets[0].operationalProfile).toEqual(
+      {
+        name: "Fluid hauling",
+        inspectionItems: [{ id: "brakes", label: "Brakes", required: true }],
+        manifestFields: [],
+      },
+    );
+  });
   it("preserves explicit support scope and expiry when saving unrelated configuration", async () => {
     const supportGrants = [
       {

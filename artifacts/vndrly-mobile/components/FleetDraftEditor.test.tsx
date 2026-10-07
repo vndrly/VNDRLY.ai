@@ -1,0 +1,23 @@
+import React from "react";
+import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
+import {afterEach,expect,it,vi} from "vitest";
+import {FleetRunSchema} from "@workspace/api-zod";
+const api=vi.hoisted(()=>vi.fn());
+vi.mock("@/lib/api",()=>({apiFetch:api}));
+vi.mock("@/lib/fleet-copy",()=>({useFleetCopy:()=>(v:string)=>v}));
+vi.mock("expo-crypto",()=>({randomUUID:()=>"10000000-0000-4000-8000-000000000001"}));
+vi.mock("@react-native-community/datetimepicker",()=>({default:()=>null}));
+vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
+import FleetDraftEditor from "./FleetDraftEditor";
+const run=FleetRunSchema.parse({id:"20000000-0000-4000-8000-000000000001",fleetId:"60000000-0000-4000-8000-000000000001",companyId:609,title:"Synthetic draft",driverUserId:1,vehicleAssetId:"30000000-0000-4000-8000-000000000001",trailerAssetId:null,status:"draft",phase:null,version:4,stops:[{id:"40000000-0000-4000-8000-000000000001",siteId:392,kind:"pickup",sequence:0}],siteIds:[392],loads:[],inspections:[],records:[],events:[],currentStopId:null,visitedStopIds:[],linkedTicketId:null,allowedActions:["dispatch"],canEditDraft:true});
+const fleet={id:run.fleetId,name:"Synthetic fleet",siteIds:[392],equipmentAssetIds:[],requiredCertifications:[]};
+afterEach(()=>{cleanup();api.mockReset();});
+it("does not expose editing without server authority",()=>{render(<FleetDraftEditor run={{...run,canEditDraft:false}} fleet={fleet} disabled={false} onSaved={()=>{}}/>);expect(screen.queryByRole("button")).toBeNull();});
+it("preserves UUID/version/body after unknown save and resolves exact saved event before retry",async()=>{
+ const saved=vi.fn();let accepted=false;
+ api.mockImplementation(async(path,options)=>{if(options){accepted=true;throw new Error("Response lost");}return {...run,version:5,events:accepted?[{id:"70000000-0000-4000-8000-000000000001",operationId:"10000000-0000-4000-8000-000000000001",type:"draft_updated",actorUserId:1,recordedAt:"2026-10-07T12:00:00Z",source:"user_report"}]:[]};});
+ render(<FleetDraftEditor run={run} fleet={fleet} disabled={false} onSaved={saved}/>);fireEvent.change(screen.getByLabelText("Draft title"),{target:{value:"Explicit edited draft"}});fireEvent.click(screen.getByRole("button",{name:"Save Fleet draft changes"}));
+ expect(await screen.findByText("Response lost")).toBeTruthy();expect(saved).not.toHaveBeenCalled();
+ const request=api.mock.calls[0];expect(request[1].method).toBe("PATCH");expect(JSON.parse(request[1].body)).toMatchObject({expectedVersion:4,title:"Explicit edited draft",schedule:null,operationId:"10000000-0000-4000-8000-000000000001"});
+ fireEvent.click(screen.getByRole("button",{name:"Verify and retry exact draft save"}));await waitFor(()=>expect(saved).toHaveBeenCalledTimes(1));expect(api.mock.calls.filter(call=>call[1])).toHaveLength(1);
+});

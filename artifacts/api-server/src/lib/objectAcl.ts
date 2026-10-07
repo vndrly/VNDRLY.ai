@@ -28,7 +28,7 @@ export interface ObjectAclRule {
 export interface ObjectAclPolicy {
   owner: string;
   visibility: "public" | "private";
-  purpose?: "gate-evidence";
+  purpose?: "gate-evidence" | "fleet-evidence";
   aclRules?: Array<ObjectAclRule>;
 }
 

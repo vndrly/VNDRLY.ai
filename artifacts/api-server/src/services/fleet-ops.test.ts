@@ -115,6 +115,25 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
+  it("snapshots configured requirements and enforces checklist before accepting a passed inspection", async () => {
+    const f=fixture();
+    f.state().fleets[0].operationalProfile={name:"Bulk",inspectionItems:[{id:"brakes",label:"Brakes",required:true}],manifestFields:[{id:"seal",label:"Seal reference",required:true}]};
+    let run=await f.service.create(manager,{...createInput,schedule:{plannedStartAt:"2026-10-08T12:00:00Z",plannedEndAt:"2026-10-08T20:00:00Z",timezone:"America/Chicago"}});
+    expect(run.canEditDraft).toBe(true);expect(run.operationalProfile?.inspectionItems).toHaveLength(1);
+    f.state().fleets[0].operationalProfile=undefined;
+    run=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),action:"dispatch",expectedVersion:run.version});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"acknowledge",expectedVersion:run.version});
+    await expect(f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"inspect",inspectionOutcome:"passed",notes:"User report",expectedVersion:run.version})).rejects.toMatchObject({code:"fleet.inspection_fields_required"});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"inspect",inspectionOutcome:"passed",inspectionResponses:[{id:"brakes",outcome:"passed"}],notes:"Actually checked",expectedVersion:run.version});
+    expect(run.inspections[0].responses).toEqual([{id:"brakes",outcome:"passed"}]);expect(run.operationalProfile?.manifestFields[0].id).toBe("seal");
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"record_meter",reading:100,unit:"miles",notes:"Actual meter",expectedVersion:run.version});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"start",expectedVersion:run.version});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"arrive_stop",stopId:run.stops[0].id,expectedVersion:run.version});
+    const load={operationId:crypto.randomUUID(),action:"record_load",loadId:crypto.randomUUID(),commodity:"Bulk",quantity:20,unit:"tons",manifestReference:"Fictional fixture manifest",expectedVersion:run.version};
+    await expect(f.service.action(driver,run.id,load)).rejects.toMatchObject({code:"fleet.load_fields_required"});
+    run=await f.service.action(driver,run.id,{...load,manifestValues:{seal:"Actual user-reported seal"}});
+    expect(run.loads[0].manifestValues).toEqual({seal:"Actual user-reported seal"});expect(run.loads[0].source).toBe("user_report");
+  });
   it("retains inspection exceptions and requires inventory release before a later passed inspection can start", async () => {
     const f = fixture();
     let run = await f.service.create(manager, createInput);

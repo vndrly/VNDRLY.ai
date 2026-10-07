@@ -1,3 +1,4 @@
+import { FleetProfileFields } from "@/components/fleet-profile-fields";
 import { FleetSupportGrants } from "@/components/fleet-support-grants";
 import { useTranslation } from "react-i18next";
 import { fleetCopy } from "@/lib/fleet-copy";
@@ -128,6 +129,20 @@ function FleetSetupForm({
         {draft.fleets.map((fleet) => (
           <fieldset className="rounded border p-3" key={fleet.id}>
             <legend>{fleet.name}</legend>
+            <FleetProfileFields
+              disabled={busy}
+              value={fleet.operationalProfile}
+              onChange={(operationalProfile) =>
+                setDraft({
+                  ...draft,
+                  fleets: draft.fleets.map((item) =>
+                    item.id === fleet.id
+                      ? { ...item, operationalProfile }
+                      : item,
+                  ),
+                })
+              }
+            />
             <div className="space-y-1">
               <h4 className="text-sm font-semibold">{c.assignedEquipment}</h4>
               {initial.equipment.map((asset) => (

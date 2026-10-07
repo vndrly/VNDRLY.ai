@@ -78,3 +78,8 @@ it("retains refused facts when the server verified session changes and refuses r
   await replayFleetSequence([{...document.actions[0],state:"unsynced"}],{scope:{...scope,sessionVersion:2},readRun:async()=>{reads++;throw new Error("unexpected");},submit:async()=>{throw new Error("unexpected");},resolve:async(_,state)=>{outcomes.push(state);}});
   expect(reads).toBe(0);expect(outcomes).toEqual(["revoked"]);
 });
+it("binds and preserves canonical initial session version zero",async()=>{
+ const queue=fixture(),initial={...scope,sessionVersion:0};await queue.bindAccount(initial);
+ await queue.enqueue(initial,{base,runId:base.runId,input:{action:"acknowledge",operationId:"10000000-0000-4000-8000-000000000001",expectedVersion:7} as FleetActionInput,capturedAt:"2026-10-07T12:00:00Z",state:"unsynced"});
+ expect((await queue.read(initial)).actions[0].sessionVersion).toBe(0);
+});

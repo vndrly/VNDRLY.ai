@@ -1,3 +1,11 @@
+import { z } from "zod/v4";
+import {
+  FleetDraftEditSchema,
+  FleetScheduleSchema,
+  FleetOperationalProfileSchema,
+  FleetInspectionResponsesSchema,
+  FleetManifestValuesSchema,
+} from "@workspace/api-zod";
 import type { AskVToolDefinition } from "./tool-registry";
 const id = { type: "string", format: "uuid" };
 const page = {
@@ -58,7 +66,38 @@ const common = {
   expectedVersion: { type: "integer", minimum: 1 },
 };
 export const FLEET_TOOLS: AskVToolDefinition[] = [
-  read("query_fleet_run_eta", "Estimate an exact authorized active run to its actual next site using a current reliable consented driver-phone observation and Mapbox. May return no estimate; not truck-safe routing or verified physical proof. Never accepts model coordinates.", { runId: id }, ["runId"]),
+  read(
+    "query_fleet_evidence",
+    "Read exact authorized Fleet run device-upload evidence metadata and authenticated file links. Upload association requires actual device bytes and your own current assignment. Signature images are user-reported, not identity verified; attachments never prove actual delivery or regulatory clearance.",
+    { runId: id },
+    ["runId"],
+  ),
+  action(
+    "edit_fleet_draft",
+    "Prepare explicit title, UTC planned schedule or ordered stop changes on an exact draft only. Current Manager/Dispatcher authority, sites, readiness, version and replay are checked. Planned hours are informational and never end active duty. Existing dispatched work cannot be edited.",
+    {
+      runId: id,
+      ...Object.fromEntries(
+        Object.entries(
+          z.toJSONSchema(
+            z.object({
+              expectedVersion: FleetDraftEditSchema.shape.expectedVersion,
+              title: FleetDraftEditSchema.shape.title,
+              schedule: FleetDraftEditSchema.shape.schedule,
+              stops: FleetDraftEditSchema.shape.stops,
+            }),
+          ).properties ?? {},
+        ),
+      ),
+    },
+    ["runId", "expectedVersion"],
+  ),
+  read(
+    "query_fleet_run_eta",
+    "Estimate an exact authorized active run to its actual next site using a current reliable consented driver-phone observation and Mapbox. May return no estimate; not truck-safe routing or verified physical proof. Never accepts model coordinates.",
+    { runId: id },
+    ["runId"],
+  ),
   {
     ...read(
       "query_fleet_support",
@@ -217,6 +256,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
                 items: { type: "integer", minimum: 1 },
                 maxItems: 200,
               },
+              operationalProfile: z.toJSONSchema(FleetOperationalProfileSchema),
               equipmentAssetIds: { type: "array", items: id, maxItems: 500 },
               requiredCertifications: {
                 type: "array",
@@ -303,6 +343,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
         enum: ["create", "dispatch", "reassign", "cancel", "link_ticket"],
       },
       fleetId: id,
+      schedule: z.toJSONSchema(FleetScheduleSchema.nullable()),
       title: { type: "string", minLength: 1, maxLength: 200 },
       driverUserId: { type: "integer", minimum: 1 },
       vehicleAssetId: id,
@@ -355,6 +396,8 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
         ],
       },
       stopId: id,
+      inspectionResponses: z.toJSONSchema(FleetInspectionResponsesSchema),
+      manifestValues: z.toJSONSchema(FleetManifestValuesSchema),
       inspectionOutcome: {
         type: "string",
         enum: ["passed", "defect_reported"],

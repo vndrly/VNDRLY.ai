@@ -86,6 +86,28 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("shows only own completed or cancelled loaded runs in recorded history", async () => {
+    api.location = "/fleet/history";
+    const initial = await api.overviewPage();
+    api.overviewPage.mockResolvedValue({
+      ...initial,
+      runs: [
+        run,
+        { ...run, id: "done", title: "Own completed", status: "completed" },
+        {
+          ...run,
+          id: "other-done",
+          title: "Other completed",
+          driverUserId: 8,
+          status: "completed",
+        },
+      ],
+    });
+    mount();
+    await screen.findByText("Own completed");
+    expect(screen.queryByText("Own pickup")).toBeNull();
+    expect(screen.queryByText("Other completed")).toBeNull();
+  });
   it("clears previously loaded runs when a later page reports their fleet grant revoked", async () => {
     const initial = await api.overviewPage();
     api.overviewPage

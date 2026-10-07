@@ -12,6 +12,9 @@ The user approved the October 6 Fleet design for implementation on October 7, 20
 - Submit closeout, return for correction and accept operational review without implying ticket approval or payment.
 - Link the existing authorized commercial ticket; reconcile authorized Gate observations once and preserve ambiguity as an exception.
 - Provide maintenance and defect repair history, explicit release authority, scoped reporting and saved views.
+- Save optional planned hours without automatically ending actual duty; edit only authorized drafts with exact versions and preserved stop IDs.
+- Snapshot company-configured inspection and manifest requirements onto new runs; save actual supplied responses without inventing passed checks.
+- Associate actual private device photos/documents with an exact run using immutable copies, durable replay and fresh access checks. Signature images do not verify identity.
 
 ## Interfaces
 
@@ -26,6 +29,7 @@ The user approved the October 6 Fleet design for implementation on October 7, 20
 - Exact operation replay is durable, audited and permission-checked; conflicting reuse is refused.
 - Offline storage is account/company/membership scoped and encrypted using the existing device storage. Interrupted writes preserve the previous committed generation.
 - Offline submissions retain original capture time, recheck current permission/version/holds, and display conflicts rather than overwrite.
+- Background driver-phone collection uses its own duty task, current consent and active assignment; stops on pause, duty end, revoked access or loss of authority. Actual iOS behavior requires device verification.
 - Demonstrate a manager, a dispatcher and two fictional drivers through the complete hauling scenario, including refusal, correction and replay cases.
 - Verify actual saved results separately in web, iOS and ChatGPT. Local tests, deployment and live verification are separate evidence.
 - Full ship includes the guarded additive database migration, web/API, OTA, TestFlight submission and ChatGPT package/tool refresh.

@@ -1,3 +1,4 @@
+import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "./fleet-planning";
 import type { FleetActionInput, FleetRun } from "./fleet";
 
 export type FleetRunPreview = {
@@ -110,7 +111,7 @@ export function previewFleetRunActions(
       fail();
     if (action.action === "acknowledge") next.status = "acknowledged";
     else if (action.action === "inspect") {
-      if (!action.inspectionOutcome || !action.notes) fail();
+      if (!action.inspectionOutcome || !action.notes || !checkFleetInspectionRequirements(base.operationalProfile, action.inspectionResponses, action.inspectionOutcome)) fail();
       passed = action.inspectionOutcome === "passed";
       defect ||= action.inspectionOutcome === "defect_reported";
     } else if (action.action === "record_meter") {
@@ -160,6 +161,7 @@ export function previewFleetRunActions(
             ? "at_delivery"
             : "returning";
     } else if (action.action === "record_load") {
+      if (!checkFleetManifestRequirements(base.operationalProfile, action.manifestValues)) fail();
       if (
         !action.loadId ||
         !action.commodity ||

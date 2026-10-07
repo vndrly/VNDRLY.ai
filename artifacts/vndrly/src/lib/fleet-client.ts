@@ -25,6 +25,7 @@ import {
   FleetSavedViewInputSchema,
   FleetReportSchema,
   FleetEtaSchema,
+  FleetDraftEditSchema,
   FleetMaintenanceRecordSchema,
   FleetGateLinkInputSchema,
 } from "@workspace/api-zod";
@@ -69,12 +70,16 @@ export function fleetErrorMessage(error: unknown, fallback: string) {
   };
   return messages[error.code] ?? fallback;
 }
-async function request<T>(path: string, body?: unknown): Promise<T> {
+async function request<T>(
+  path: string,
+  body?: unknown,
+  method = "POST",
+): Promise<T> {
   const response = await fetch(`/api/fleet${path}`, {
     credentials: "include",
     ...(body
       ? {
-          method: "POST",
+          method,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         }
@@ -90,6 +95,8 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
   return response.json();
 }
 export const fleetClient = {
+  editDraft: (id: string, input: z.infer<typeof FleetDraftEditSchema>) =>
+    request<FleetRun>(`/runs/${encodeURIComponent(id)}/draft`, input, "PATCH"),
   eta: (id: string) =>
     request<unknown>(`/runs/${encodeURIComponent(id)}/eta`).then((data) =>
       FleetEtaSchema.parse(data),

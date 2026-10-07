@@ -1,3 +1,6 @@
+import { createFleetEvidenceOperations } from "./fleet-evidence";
+import { createFleetPlanningOperations } from "./fleet-planning";
+import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "@workspace/api-zod";
 import type { FleetItemizedAuthority } from "./fleet-itemized-repository";
 import {
   createFleetMaintenanceOperations,
@@ -175,6 +178,7 @@ function project(
       trailerName: null,
       sites: [],
     },
+    canEditDraft: run.status === "draft" && permitted(state, actor, run, "dispatch") && (!actor.currentRunsById || actor.currentRunsById.get(run.id)?.version === run.version),
     allowedActions: allowed(state, actor, run),
   };
 }
@@ -373,6 +377,8 @@ export function createFleetService(repository: FleetRepository) {
       permitted,
       locations.readObservations,
     ),
+    ...createFleetEvidenceOperations(transaction, permitted),
+    ...createFleetPlanningOperations(transaction, permitted, eligible, project),
     ...createFleetMaintenanceOperations(transaction, grantFor),
     ...createFleetReportingOperations(transaction, grantFor),
     ...createFleetGateOperations(transaction, permitted),
@@ -771,6 +777,7 @@ export function createFleetService(repository: FleetRepository) {
             ...runFields,
             id: randomUUID(),
             companyId: actor.companyId,
+            operationalProfile: fleet.operationalProfile ? structuredClone(fleet.operationalProfile) : undefined,
             siteIds,
             status: "draft",
             phase: null,
@@ -964,6 +971,7 @@ export function createFleetService(repository: FleetRepository) {
           else if (body.action === "inspect") {
             if (!body.inspectionOutcome || !body.notes)
               throw new FleetError("fleet.inspection_fields_required", 400);
+            if (!checkFleetInspectionRequirements(run.operationalProfile, body.inspectionResponses, body.inspectionOutcome)) throw new FleetError("fleet.inspection_fields_required", 400);
             if (run.inspections.length >= 100)
               throw new FleetError("fleet.store_capacity_reached");
             if (body.inspectionOutcome === "defect_reported")
@@ -975,6 +983,7 @@ export function createFleetService(repository: FleetRepository) {
                 body.notes,
               );
             run.inspections.push({
+              responses: body.inspectionResponses,
               driverUserId: run.driverUserId,
               vehicleAssetId: run.vehicleAssetId,
               trailerAssetId: run.trailerAssetId,
@@ -1025,12 +1034,14 @@ export function createFleetService(repository: FleetRepository) {
               !body.manifestReference
             )
               throw new FleetError("fleet.load_fields_required", 400);
+            if (!checkFleetManifestRequirements(run.operationalProfile, body.manifestValues)) throw new FleetError("fleet.load_fields_required", 400);
             if (run.loads.some((l) => l.id === body.loadId))
               throw new FleetError("fleet.load_exists");
             if (run.loads.length >= 100)
               throw new FleetError("fleet.store_capacity_reached");
             run.loads.push({
               id: body.loadId,
+              manifestValues: body.manifestValues,
               pickupStopId: run.currentStopId!,
               deliveryStopId: null,
               commodity: body.commodity,
