@@ -8,6 +8,7 @@ import {
 } from "./work-hub-tool-runtime";
 import { WORK_HUB_TOOL_NAMES } from "./work-hub-tools";
 import { IMPLEMENTATION_A_CAPABILITY_TOOLS } from "./tool-registry";
+import { sanitizeChatGptActionInput, validateChatGptActionInput } from "./chatgpt-write-capabilities";
 
 const command = {
   operationId: "00000000-0000-4000-8000-000000000001",
@@ -438,6 +439,35 @@ describe("resolveWorkHubToolRequest", () => {
     expect(resolveWorkHubToolRequest("manage_work_hub_task", {
       ...command, action: "cancel", taskId, payload: {},
     })).toMatchObject({ body: { payload: { status: "cancelled" } } });
+  });
+
+  it("preserves status-free task changes through prepared action validation and trusted execution", () => {
+    const taskId = "7be22c7d-4638-4144-bb18-0d2a66996a43";
+    for (const payload of [
+      { title: "Review the saved report", description: "Recorded work only" },
+      { dueAt: "2026-10-10T15:00:00.000Z", assigneeUserId: 17, priority: "high" },
+    ]) {
+      const prepared = sanitizeChatGptActionInput("manage_work_hub_task", {
+        action: "update", taskId, expectedVersion: 4, payload,
+      });
+      validateChatGptActionInput("manage_work_hub_task", prepared);
+      const bound = { ...prepared, ...command, expectedVersion: 4 };
+      expect(resolveExecutableWorkHubToolRequest("manage_work_hub_task", bound, false))
+        .toMatchObject({ requiresConfirmation: true });
+      expect(resolveExecutableWorkHubToolRequest("manage_work_hub_task", bound, true))
+        .toEqual({ method: "PATCH", path: `/work-hub/tasks/${taskId}`, body: {
+          ...command, payloadVersion: 1, expectedVersion: 4, payload,
+        } });
+    }
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_task", {
+      ...command, action: "update", taskId, payload: { status: "invented" },
+    }, true)).toHaveProperty("error");
+    for (const [action, status] of [["complete", "completed"], ["cancel", "cancelled"]]) {
+      expect(resolveExecutableWorkHubToolRequest("manage_work_hub_task", {
+        ...command, action, taskId, expectedVersion: 4,
+        payload: { status: "open", title: "Ignored override" },
+      }, true)).toMatchObject({ body: { expectedVersion: 4, payload: { status } } });
+    }
   });
 
   it("uses a server-issued watch token when saving replay progress", () => {

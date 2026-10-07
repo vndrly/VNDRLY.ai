@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { meetingClock, meetingTimer } from "@workspace/api-client-react/meeting-workspace";
 import WorkHubAudioRoom from "@/components/WorkHubAudioRoom";
+import MeetingRsvp from "@/components/MeetingRsvp";
 import MeetingSpeakingBars from "@/components/MeetingSpeakingBars";
 import MeetingTimeline, {
   authorizedThreadEntries,
@@ -161,6 +162,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ padding: 16, gap: 14 }}
     >
+      <MeetingRsvp occurrenceId={occurrenceId} />
       <View testID="meeting-header-row" style={{ flexDirection: wide ? "row" : "column", flexWrap: "wrap", justifyContent: "space-between", gap: 14 }}>
         <View style={{ flex: 1, gap: 8 }}>
           <Text selectable accessibilityRole="header" style={{ color: "#ffffff", fontSize: 24, fontWeight: "800" }}>
@@ -466,3 +468,4 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
     </ScrollView>
   </KeyboardAvoidingView>;
 }
+

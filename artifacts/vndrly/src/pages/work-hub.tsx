@@ -41,6 +41,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import MeetingWorkspace from "@/components/meeting-workspace";
+import MeetingInvitationResponse from "@/components/meeting-invitation-response";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1851,7 +1852,7 @@ function MeetingsModule() {
           </Card>
         )}
       </div>
-      {selected && <div className="mt-4"><MeetingWorkspace key={selected} occurrenceId={selected} /></div>}
+      {selected && <div className="mt-4"><MeetingInvitationResponse occurrenceId={selected} /><MeetingWorkspace key={selected} occurrenceId={selected} /></div>}
     </Shell>
   );
 }

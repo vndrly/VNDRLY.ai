@@ -18,3 +18,4 @@ export * from "./legal-policy";
 export * from "./inventory-recovery";
 export * from "./operations-display-view";
 export * from "./work-hub-away";
+export * from "./work-hub-calendar-response";

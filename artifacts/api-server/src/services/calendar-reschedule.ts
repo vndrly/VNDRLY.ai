@@ -2,12 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod/v4";
 
 const utc = z.iso.datetime();
-export const calendarSnapshotSchema = z.object({
-  occurrenceId: z.uuid(), meetingId: z.uuid(), ownerType: z.enum(["vendor", "partner"]), ownerId: z.number().int().positive(),
-  title: z.string().min(1).max(200), agenda: z.string().nullable(), timezone: z.string().min(1).max(80),
-  createdById: z.number().int().positive(), startsAt: utc, endsAt: utc.nullable(), status: z.string(),
-  participantUserIds: z.array(z.number().int().positive()).min(1).max(100),
-}).strict();
+export { WorkHubCalendarSnapshotSchema as calendarSnapshotSchema } from "@workspace/api-zod";
+import { WorkHubCalendarSnapshotSchema as calendarSnapshotSchema } from "@workspace/api-zod";
 export type CalendarSnapshot = z.infer<typeof calendarSnapshotSchema>;
 export function calendarSnapshotFingerprint(raw: unknown) {
   const snapshot = calendarSnapshotSchema.parse(raw);

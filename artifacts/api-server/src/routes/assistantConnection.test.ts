@@ -125,6 +125,8 @@ async function tokens(scope = auth.scope) {
 }
 describe("ChatGPT account connection boundary", () => {
   it.each([
+    { name: "manage_work_hub_task", input: {"action":"update","owner":{"type":"vendor","id":4},"context":{"kind":"organization","id":4},"taskId":"11111111-1111-4111-8111-111111111111","expectedVersion":7,"payload":{"title":"Updated task title"}} },
+    { name: "manage_work_hub_task", input: {"action":"update","owner":{"type":"vendor","id":4},"context":{"kind":"organization","id":4},"taskId":"11111111-1111-4111-8111-111111111111","expectedVersion":7,"payload":{"dueAt":"2026-10-09T14:00:00.000Z"}} },
     { name: "reschedule_work_hub_meeting", input: { occurrenceId: "11111111-1111-4111-8111-111111111111", expectedFingerprint: "a".repeat(64), startsAt: "2026-10-08T14:00:00.000Z", endsAt: "2026-10-08T15:00:00.000Z", timezone: "America/Chicago" } },
     { name: "respond_work_hub_meeting_invitation", input: { occurrenceId: "11111111-1111-4111-8111-111111111111", expectedFingerprint: "a".repeat(64), response: "accepted" } },
     { name: "manage_work_hub_away_responder", input: { action: "configure", expectedVersion: 0, startsAt: "2026-10-08T14:00:00.000Z", endsAt: "2026-10-08T15:00:00.000Z", replyText: "I will reply when I return.", channelIds: ["11111111-1111-4111-8111-111111111111"] } },
@@ -149,6 +151,15 @@ describe("ChatGPT account connection boundary", () => {
     expect(mocks.bound).toHaveBeenCalledOnce();
     expect(mocks.bound.mock.calls[0][0].input.operationId).toMatch(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-8[a-f0-9]{3}-[a-f0-9]{12}$/);
     expect(mocks.bound.mock.calls[0][0].input.operationId).not.toBe("99999999-9999-4999-8999-999999999999");
+    if (name === "manage_work_hub_task") {
+      const approvedInput = mocks.bound.mock.calls[0][0].input;
+      expect(approvedInput).toMatchObject(input);
+      expect(approvedInput.payload).not.toHaveProperty("status");
+      const resolved = resolveExecutableWorkHubToolRequest(name, approvedInput, true, actor);
+      expect(resolved).toMatchObject({ method: "PATCH", path: `/work-hub/tasks/${input.taskId}`, body: { expectedVersion: 7, payload: input.payload } });
+      if (!resolved || "error" in resolved) throw new Error("Expected authorized task update request");
+      expect(resolved.body?.payload).not.toHaveProperty("status");
+    }
   });
   it("advertises calendar snapshot reads and approved rescheduling with their separate current permissions", async () => {
     const credentials = await tokens("work_hub:read work_hub:write");

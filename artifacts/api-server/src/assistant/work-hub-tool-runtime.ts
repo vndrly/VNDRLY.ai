@@ -621,11 +621,11 @@ export function resolveWorkHubToolRequest(
             : input.action === "cancel"
               ? "cancelled"
               : payload.status;
-        if (!["open", "in_progress", "completed", "cancelled"].includes(String(status)))
+        if (status !== undefined && !["open", "in_progress", "completed", "cancelled"].includes(String(status)))
           return { error: "A valid task status is required." };
         return request("PATCH", `/work-hub/tasks/${target}`, envelope(input, {
           ...(input.action === "update" ? payload : {}),
-          status,
+          ...(status !== undefined ? { status } : {}),
         }));
       }
     case "manage_work_hub_form_template":

@@ -1,3 +1,4 @@
+vi.mock("@/components/MeetingRsvp", () => ({ default: () => null }));
 import React from "react";
 import {
   act,
@@ -1452,3 +1453,4 @@ describe("Work Hub calendar routing", () => {
     expect(screen.queryByText("No authorized records yet.")).toBeNull();
   });
 });
+
