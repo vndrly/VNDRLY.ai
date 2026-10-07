@@ -1,4 +1,5 @@
-export const LEGAL_POLICY_VERSION = "2026-08-20";
+import { LEGAL_POLICY_VERSION } from "@workspace/api-zod";
+export { LEGAL_POLICY_VERSION };
 
 export function isLegalConsentPayloadAccepted(
   payload: Record<string, unknown>,

@@ -78,6 +78,11 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
     const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
     if (!z.object({ siteLocationId: z.number().int().positive(), title: z.string().trim().min(1).max(200), description: z.string().max(4000).optional(), isStopWork: z.boolean().optional(), isHighPotential: z.boolean().optional(), isAnonymous: z.boolean().optional(), ticketId: z.number().int().positive().optional(), vendorId: z.number().int().positive().optional(), eventType: z.enum(["near_miss", "unsafe_condition", "unsafe_act", "injury", "property_damage", "observation"]) }).safeParse(payload).success) throw new Error("Supply the actual site, report title and supported event type before preparing a safety report.");
   }
+  if (name === "confirm_asset_custody_action" && input.action === "release_hold") {
+    const payload = input.payload as Record<string, unknown> | undefined;
+    z.uuid().parse(input.assetId ?? input.resourceId); z.uuid().parse(payload?.holdId);
+    if (!Number.isSafeInteger(input.expectedVersion) || Number(input.expectedVersion) < 1 || typeof payload?.reason !== "string" || !payload.reason.trim() || payload.reason.trim().length > 2000) throw new Error("Supply current asset version, exact Inventory hold and actual release reason.");
+  }
   if (name === "confirm_asset_custody_action" && ["checkout", "return", "transfer", "verify-issued"].includes(String(input.action))) {
     const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
     const custody = AssetCustodyCommandSchema.omit({ operationId: true, confirmed: true });
@@ -132,3 +137,4 @@ export function chatGptActionResult(name: string, output: unknown): unknown {
   const { value: _value, ...result } = output as Record<string, unknown>;
   return result;
 }
+

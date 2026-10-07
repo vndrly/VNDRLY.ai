@@ -23,7 +23,7 @@ type Session = {
 };
 type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
 type MeetingIdentity = { deviceId: string; connectionId: string };
-type JoinInfo = MeetingIdentity & { userId: number; iceServers: any[]; recordingAllowed: boolean; policyVersion: number; consentAccepted?: boolean; peerConnections?: MeetingPeer[] };
+type JoinInfo = MeetingIdentity & { userId: number; iceServers: any[]; recordingAllowed: boolean; policyVersion: number; consentAccepted?: boolean; participationMode?: string; authorizationRequired?: boolean; startedAt?: string | null; peerConnections?: MeetingPeer[] };
 type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kind: string; payload: any };
 type ServerAudioLease = { token: string; generation: number; expiresAt: string };
 type ServerAudioState = { deviceId: string; generation: number; active: boolean; expiresAt: string; pendingDeviceId: string | null };
@@ -321,7 +321,11 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       await apiFetch("/api/work-hub/devices/register", { method: "POST", body: JSON.stringify({ deviceId: identity.deviceId, friendlyName: workHubDeviceLabel(), deviceClass: workHubDeviceClass(), capabilities: { microphone: true, speaker: true, fileSelection: true, pushNotifications: true } }), signal: controller.signal }); check();
       await apiFetch(`/api/work-hub/devices/${identity.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.connectionId, foreground: true, microphonePermission: "granted", surface: { path: `/work-hub/meetings/${occurrenceId}`, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }), signal: controller.signal }); check();
       lastDeviceHeartbeat = Date.now();
-      const info = await request<JoinInfo>("join", {}); check(); joinedServer = true;
+      const info = await request<JoinInfo>("join", {}); check();
+      if (info.authorizationRequired === true || info.participationMode === "view_only" || !info.startedAt) {
+        throw new Error("Accept the work participation authorization before joining meeting audio.");
+      }
+      joinedServer = true;
       for (const peer of info.peerConnections ?? []) if (!peerConnectionByUser.has(peer.userId)) peerConnectionByUser.set(peer.userId, peer);
       if (native) await native.start({ sourceId: `meeting-${info.userId}-${version}`, iceServers: info.iceServers ?? [] });
       recordingPolicy = info.recordingAllowed ? info.policyVersion : null; accepted = info.consentAccepted ?? false;

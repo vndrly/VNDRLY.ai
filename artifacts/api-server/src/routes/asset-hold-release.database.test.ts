@@ -1,0 +1,30 @@
+import {randomUUID} from 'node:crypto';
+import {describe,it,expect} from 'vitest';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import request from 'supertest';
+import {db,pool,vendorsTable,usersTable,userOrgMembershipsTable,assetsTable,assetHoldsTable,assetConditionEvidenceTable} from '@workspace/db';
+import {assertFreshLocalTestDatabaseEnvironment} from '../../../../scripts/fresh-test-database.mjs';
+import {buildTestCookie} from '../test-utils/session';
+import router from './implementationAAssets';
+describe.runIf(process.env.VNDRLY_TEST_DB_MODE==='fresh-local')('Inventory hold release isolated canonical persistence',()=>{
+ it('serializes six exact retries, preserves unrelated holds/custody/condition and refuses Fleet-owned release',async()=>{
+  assertFreshLocalTestDatabaseEnvironment(process.env);const tag=randomUUID();
+  const [vendor]=await db.insert(vendorsTable).values({name:'Hold release '+tag,contactName:'Synthetic',contactEmail:tag+'@example.invalid'}).returning();
+  const [user]=await db.insert(usersTable).values({username:'hold-'+tag,passwordHash:'not-a-login-hash',role:'vendor',displayName:'Synthetic manager'}).returning();
+  const [member]=await db.insert(userOrgMembershipsTable).values({userId:user.id,orgType:'vendor',vendorId:vendor.id,role:'admin'}).returning();
+  const [asset]=await db.insert(assetsTable).values({name:'Synthetic radio '+tag,category:'equipment',legalOwnerName:'Synthetic',responsibleOrgType:'vendor',responsibleOrgId:vendor.id,status:'held',currentHolderUserId:user.id}).returning();
+  await db.insert(assetConditionEvidenceTable).values({assetId:asset.id,condition:'good',reportedByUserId:user.id});
+  const holds=await db.insert(assetHoldsTable).values([{assetId:asset.id,reason:'Selected Inventory hold'},{assetId:asset.id,reason:'Separate Fleet hold'}]).returning();
+  await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'test','typed','canonical','fleet_maintenance','maintenance-snapshot','fleet-maintenance',$3,$4::jsonb,'completed')",[user.id,vendor.id,randomUUID(),JSON.stringify({holdId:holds[1].id})]);
+  const cookie=buildTestCookie({userId:user.id,sv:user.sessionVersion,role:'vendor',vendorId:vendor.id,activeMembershipId:member.id,membershipRole:'admin'});
+  const app=express().use(express.json()).use(cookieParser()).use(router);const body={operationId:randomUUID(),expectedVersion:asset.version,reason:'Administrative review; no physical repair verified'};
+  const path=`/implementation-a/assets/${asset.id}/holds/${holds[0].id}/release`;
+  const replies=await Promise.all(Array.from({length:6},()=>request(app).post(path).set('Cookie',cookie).send(body)));
+  expect(replies.every(reply=>reply.status===200)).toBe(true);for(const reply of replies)expect(reply.body).toEqual({assetId:asset.id,holdId:holds[0].id,operationId:body.operationId,version:asset.version+1,status:'applied',physicalRepairVerified:false});
+  const events=await pool.query("SELECT * FROM asset_custody_events WHERE asset_id=$1 AND event_type='hold_release'",[asset.id]);expect(events.rows).toHaveLength(1);expect(events.rows[0].actor_user_id).toBe(user.id);
+  const detail=await request(app).get(`/implementation-a/assets/${asset.id}`).set('Cookie',cookie);expect(detail.status).toBe(200);expect(detail.body).toMatchObject({status:'held',holderUserId:user.id,condition:'good',version:asset.version+1});expect(detail.body.holds).toEqual([expect.objectContaining({id:holds[1].id,source:'fleet_maintenance',canRelease:false})]);
+  const fleet=await request(app).post(`/implementation-a/assets/${asset.id}/holds/${holds[1].id}/release`).set('Cookie',cookie).send({...body,operationId:randomUUID(),expectedVersion:asset.version+1});expect(fleet.status).toBe(403);
+  await pool.query('UPDATE user_org_memberships SET role=$1 WHERE id=$2',['member',member.id]);const revoked=await request(app).post(path).set('Cookie',cookie).send(body);expect(revoked.status).toBe(403);
+ });
+});

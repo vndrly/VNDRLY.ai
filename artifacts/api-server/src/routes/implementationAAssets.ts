@@ -1,3 +1,5 @@
+import { createAssetHoldReleaseService, readAssetHolds, authorizeAssetHoldRelease } from "../services/asset-hold-release";
+import { pool } from "@workspace/db";
 import { assetHolderDisplayName } from "../services/asset-holder-name";
 import { custodyAge } from "../services/asset-custody-age";
 import { Router, type Request, type Response } from "express";
@@ -29,6 +31,19 @@ import {
   type AssetRecord,
 } from "../services/assets";
 
+async function projectedHolds(req: Request, asset: AssetRecord) {
+  const holds = await readAssetHolds(pool, asset.id);
+  if (!holds.length) return [];
+  const session = getSessionFromRequest(req);
+  if (!session) return holds.map(hold => ({...hold, canRelease: false}));
+  const client = await pool.connect(); let canRelease = false;
+  try {
+    await client.query("BEGIN");
+    await authorizeAssetHoldRelease(client, session, {id: asset.id, responsible_org_type: asset.responsibleOwner.type, responsible_org_id: asset.responsibleOwner.id, version: asset.version, status: asset.status, current_holder_user_id: asset.holderUserId});
+    canRelease = true; await client.query("COMMIT");
+  } catch { await client.query("ROLLBACK"); } finally { client.release(); }
+  return holds.map(hold => ({...hold, canRelease: canRelease && hold.source === "inventory" && !["merged", "retired"].includes(asset.status)}));
+}
 const router = Router();
 const service = createAssetService(databaseAssetRepository);
 const IdSchema = z.string().uuid();
@@ -158,14 +173,14 @@ async function holderName(owner: AssetOwner, userId: number | null) {
     return rows[0]?.displayName ?? null;
   });
 }
-async function assetDetails(asset: AssetRecord) {
+async function assetDetails(asset: AssetRecord, req?: Request) {
   const names = new Map<number, Promise<string | null>>();
   const name = (id: number | null | undefined) => {
     if (id == null) return Promise.resolve(null);
     if (!names.has(id)) names.set(id, holderName(asset.responsibleOwner, id));
     return names.get(id)!;
   };
-  return { ...asset, ...custodyAge(asset, new Date()), currentHolderDisplayName: await name(asset.holderUserId),
+  return { ...asset, holds: req ? await projectedHolds(req, asset) : [], ...custodyAge(asset, new Date()), currentHolderDisplayName: await name(asset.holderUserId),
     history: await Promise.all(asset.history.map(async event => ({ ...event,
       fromHolderDisplayName: await name(event.fromHolderUserId), toHolderDisplayName: await name(event.toHolderUserId) }))) };
 }
@@ -277,6 +292,7 @@ router.get("/implementation-a/assets", async (req, res) => {
         ...custodyAge(asset, evaluatedAt),
         currentHolderDisplayName: await holderName(asset.responsibleOwner, asset.holderUserId),
         currentLocation: asset.currentLocationType === "user" ? null : asset.currentLocation ?? null,
+        holds: await projectedHolds(req, asset),
         hold: asset.hold ?? null, expectedReturnAt: asset.expectedReturnAt ?? null,
         policy: {
           photosRequiredOnCheckout: currentPolicy.photosRequiredOnCheckout,
@@ -314,7 +330,7 @@ router.get("/implementation-a/assets/find", async (req, res) => {
     const asset = await service.findAsset(alias);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
     await assertCurrentAssetAccess(context, asset.responsibleOwner);
-    return res.json(await assetDetails(asset));
+    return res.json(await assetDetails(asset, req));
   } catch (error) {
     return sendError(res, error);
   }
@@ -486,7 +502,7 @@ router.get("/implementation-a/assets/:assetId", async (req, res) => {
     const asset = await databaseAssetRepository.get(assetId);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
     await assertCurrentAssetAccess(context, asset.responsibleOwner);
-    return res.json(await assetDetails(asset));
+    return res.json(await assetDetails(asset, req));
   } catch (error) {
     return sendError(res, error);
   }
@@ -693,5 +709,14 @@ router.put("/implementation-a/assets/policies/:category", async (req, res) => {
   }
 });
 
+router.post("/implementation-a/assets/:assetId/holds/:holdId/release", async (req, res) => {
+  try {
+    const session = getSessionFromRequest(req);
+    if (!session) throw new AssetServiceError("asset.unauthenticated", 401);
+    const assetId = IdSchema.parse(req.params.assetId), holdId = IdSchema.parse(req.params.holdId);
+    res.json(await createAssetHoldReleaseService().release(session, assetId, holdId, req.body));
+  } catch (error) { sendError(res, error); }
+});
 export default router;
+
 

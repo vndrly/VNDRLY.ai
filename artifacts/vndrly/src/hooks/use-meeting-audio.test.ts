@@ -34,6 +34,31 @@ function snapshot(): MeetingSnapshot {
     chat: [], activity: [], transcript: [], attendance: [], recap: null,
   };
 }
+it("does not claim attendance or create audio processing when a stale authorized snapshot receives a view-only join result", async () => {
+  const context = vi.fn(function () {return {createAnalyser:()=>({fftSize:256,getByteTimeDomainData:(samples:Uint8Array)=>samples.fill(128)}),createMediaStreamSource:()=>({connect(){}}),close:async()=>{},resume:async()=>{}};});
+  vi.stubGlobal("AudioContext",context);
+  boundary.request.mockImplementation(async (path:string)=>path.endsWith("/join")?{userId:4,roomId:null,startedAt:null,iceServers:[],peerConnections:[],participationMode:"view_only",authorizationRequired:true,consentAccepted:false}:{});
+  const {result}=renderHook(()=>useMeetingAudio("meeting",snapshot()));
+  await act(async()=>{await result.current.join();});
+  expect(result.current.joined).toBe(false);
+  expect(result.current.muted).toBe(true);
+  expect(result.current.error).toMatch(/authorization/i);
+  expect(track.enabled).toBe(false);
+  expect(track.stop).toHaveBeenCalled();
+  expect(context).not.toHaveBeenCalled();
+  expect(Recorder.instances).toHaveLength(0);
+  expect(boundary.startStreaming).not.toHaveBeenCalled();
+  expect(boundary.request.mock.calls.some(([path])=>path.endsWith("/audio-lease"))).toBe(false);
+});
+it("preserves authorized audio participation when per-meeting recording consent is absent", async () => {
+  boundary.request.mockImplementation(async (path: string) => path.endsWith("/join") ? { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [], participationMode: "active", authorizationRequired: false, consentAccepted: false } : {});
+  const { result } = renderHook(() => useMeetingAudio("meeting", { ...snapshot(), myConsent: "pending" }));
+  await act(async () => { await result.current.join(); });
+  expect(result.current.joined).toBe(true);
+  expect(result.current.muted).toBe(true);
+  expect(Recorder.instances).toHaveLength(0);
+  expect(boundary.startStreaming).not.toHaveBeenCalled();
+});
 beforeEach(() => {
   window.localStorage.clear(); window.sessionStorage.clear();
   vi.useFakeTimers(); vi.setSystemTime(new Date("2026-09-09T14:05:00Z"));

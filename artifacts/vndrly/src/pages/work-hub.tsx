@@ -633,8 +633,8 @@ function CalendarModule() {
           kind: "Task",
         })),
         ...(calendar.data?.meetings ?? []).map((x: Row) => ({
-          ...x.occurrence,
-          title: x.meeting.title,
+          ...x.item.occurrence,
+          title: x.item.meeting.title,
           kind: "Meeting",
         })),
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
@@ -1742,7 +1742,7 @@ function MeetingsModule() {
             <CardTitle><WorkHubCardTitle icon={CalendarClock}>Scheduled meetings</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            {calendar.data?.meetings?.map(({ meeting, occurrence }: Row) => (
+            {calendar.data?.meetings?.map(({ item: { meeting, occurrence } }: Row) => (
               <article key={occurrence.id} className="rounded-lg border p-4">
                 <h2 className="font-semibold">{meeting.title}</h2>
                 <p className="text-sm text-muted-foreground">

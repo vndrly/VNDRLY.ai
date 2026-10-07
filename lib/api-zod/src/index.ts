@@ -14,3 +14,4 @@ export * from "./fleet-evidence";
 export * from "./fleet-cargo";
 export * from "./fleet-replacement";
 export * from "./fleet-review-packet";
+export * from "./legal-policy";

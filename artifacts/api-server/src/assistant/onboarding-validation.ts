@@ -12,7 +12,7 @@
 
 import { PLATFORM_EULA_VERSION } from "@workspace/platform-eula";
 
-const LEGAL_POLICY_VERSION = "2026-08-20";
+import { LEGAL_POLICY_VERSION } from "@workspace/api-zod";
 
 export type Persona = "partner" | "vendor" | "field_employee";
 
@@ -20,6 +20,14 @@ export const REQUIRED_STEPS: Record<Persona, readonly string[]> = {
   partner: ["company-basics", "platform-eula", "legal-consent", "first-site", "tax-billing"],
   vendor: ["company-basics", "platform-eula", "legal-consent", "tax-ids", "work-types", "first-employee"],
   field_employee: ["personal-info", "photo-certs", "set-password"],
+};
+
+// The wizard may save these sections as deferred; final completion still
+// requires their canonical data. Legal consent and field steps cannot defer.
+export const DEFERABLE_STEPS: Record<Persona, readonly string[]> = {
+  partner: ["branding", "first-site", "tax-billing", "preferences", "invite-team"],
+  vendor: ["branding", "tax-ids", "work-types", "first-employee"],
+  field_employee: [],
 };
 
 // Full canonical sequence the wizard renders. Mirrors STEP_KEYS in
@@ -65,8 +73,8 @@ export const STEP_REQUIRED_FIELDS: Record<Persona, Record<string, readonly strin
     rates: [],
   },
   field_employee: {
-    "personal-info": [],
-    "photo-certs": [],
+    "personal-info": ["info.firstName", "info.lastName", "info.phone", "info.vendorRole"],
+    "photo-certs": ["photoUrl", "pec.certified", "pec.expirationDate"],
     "set-password": [],
   },
 };
@@ -166,7 +174,7 @@ export function validateStepCompletion(args: {
       error: `Invalid step name. Valid steps for ${persona}: ${validSteps.join(", ")}.`,
     };
   }
-  if (skipped && REQUIRED_STEPS[persona].includes(step)) {
+  if (skipped && !DEFERABLE_STEPS[persona].includes(step)) {
     return {
       ok: false,
       code: "required_step_skipped",
@@ -182,6 +190,9 @@ export function validateStepCompletion(args: {
   }
   const stepIdx = validSteps.indexOf(step);
   const nextIdx = validSteps.indexOf(nextStep);
+  if (skipped && nextStep === "done") {
+    return { ok: false, code: "out_of_sequence_next", error: "Deferring the last section saves it for later. Keep nextStep on the current section; only canonical final completion finishes onboarding." };
+  }
   if (nextIdx !== stepIdx && nextIdx !== stepIdx + 1) {
     return {
       ok: false,
@@ -193,6 +204,8 @@ export function validateStepCompletion(args: {
     const requiredPaths = STEP_REQUIRED_FIELDS[persona]?.[step] ?? [];
     const payload = (existing.payload ?? {}) as Record<string, unknown>;
     const missing = requiredPaths.filter((p) => !isPayloadFieldFilled(getPayloadPath(payload, p)));
+    if (persona === "field_employee" && step === "personal-info" && !["field", "foreman", "office", "both"].includes(String(getPayloadPath(payload, "info.vendorRole"))) && !missing.includes("info.vendorRole")) missing.push("info.vendorRole");
+    if (persona === "field_employee" && step === "photo-certs" && getPayloadPath(payload, "pec.certified") !== true && !missing.includes("pec.certified")) missing.push("pec.certified");
     if (missing.length > 0) {
       return {
         ok: false,
@@ -256,6 +269,8 @@ function setPath(obj: Record<string, unknown>, path: string, value: unknown) {
 function sampleValue(path: string): unknown {
   const leaf = path.split(".").pop() ?? "";
   if (/^accepted$/i.test(leaf)) return true;
+  if (leaf === "certified") return true;
+  if (leaf === "vendorRole") return "field";
   if (/Hours|Multiplier|Radius|Miles/i.test(leaf)) return 1;
   if (/Consent/i.test(leaf)) return true;
   if (/^workTypeIds$/.test(leaf)) return ["1"];

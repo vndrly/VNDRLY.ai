@@ -6,7 +6,7 @@ import { workHubDeviceIdentity } from "./use-work-hub-device-presence";
 
 type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
 type MeetingIdentity = { deviceId: string; connectionId: string };
-type Join = MeetingIdentity & { userId: number; startedAt: string; iceServers: RTCIceServer[]; peerConnections: MeetingPeer[] };
+type Join = MeetingIdentity & { userId: number; startedAt: string | null; iceServers: RTCIceServer[]; peerConnections: MeetingPeer[]; participationMode?: string; authorizationRequired?: boolean; consentAccepted?: boolean };
 type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kind: "offer" | "answer" | "ice"; payload: RTCSessionDescriptionInit & RTCIceCandidateInit };
 type Peer = { userId: number; connection: RTCPeerConnection; audio: HTMLAudioElement; pendingIce: RTCIceCandidateInit[] };
 type OwnershipLease = { token: string; generation: number; expiresAt: string };
@@ -105,6 +105,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
       await workHubRequest(`/devices/${identity.current.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.current.connectionId, foreground: document.visibilityState === "visible", microphonePermission: "granted", surface: { path: window.location.pathname, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }) });
       lastDeviceHeartbeat.current = Date.now();
       const result = await workHubRequest<Join>(`/meetings/${occurrenceId}/join`, { method: "POST", body: JSON.stringify(identity.current) });
+      if (result.authorizationRequired === true || result.participationMode === "view_only" || !result.startedAt) throw new Error("Accept the work participation authorization before joining meeting audio.");
       if (!alive.current) { cleanup(); await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }); return; }
       const context = new AudioContext(); const node = context.createAnalyser(); node.fftSize = 256;
       context.createMediaStreamSource(input).connect(node); analyser.current = { context, node };

@@ -54,7 +54,7 @@ function nativeStream() {
   const track = { enabled: true, stop: vi.fn(), addEventListener: (name: string, fn: () => void) => listeners.set(name, fn), removeEventListener: (name: string) => listeners.delete(name) };
   return { track, listeners, getTracks: () => [track], getAudioTracks: () => [track], release: vi.fn() };
 }
-const info = { userId: 1, iceServers: [], recordingAllowed: true, policyVersion: 2, consentAccepted: false };
+const info = { startedAt: "2026-09-09T14:00:00Z", userId: 1, iceServers: [], recordingAllowed: true, policyVersion: 2, consentAccepted: false };
 function response(path: string) {
   if (path.endsWith("/join")) return info;
   if (path.endsWith("/audio-lease")) return { token: "a".repeat(32), generation: 1, expiresAt: "2026-09-09T14:06:00Z" };
@@ -87,6 +87,18 @@ afterEach(async () => {
 });
 
 describe("native meeting microphone lifecycle", () => {
+  it.each([null, undefined])("does not start native audio or claim joined with a denied or incomplete join timestamp %s",async(startedAt)=>{
+    const native={start:vi.fn(async()=>{}),setMuted:vi.fn(async()=>{}),setTranscription:vi.fn(async()=>{}),createOffer:vi.fn(async()=>{}),applySignal:vi.fn(async()=>{}),removePeer:vi.fn(async()=>{}),stop:vi.fn(async()=>{})};
+    env.nativeFactory.mockReturnValue(native);
+    env.api.mockImplementation(async path=>path.endsWith("/join")?{...info,roomId:null,startedAt,authorizationRequired:startedAt === null,participationMode:startedAt === null ? "view_only" : "active"}:response(path));
+    render(<WorkHubAudioRoom occurrenceId="room-a"/>);await join();
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(native.start).not.toHaveBeenCalled();
+    expect(env.capture).not.toHaveBeenCalled();
+    expect(screen.getByRole("button",{name:"Join audio"})).toBeTruthy();
+    expect(screen.queryByRole("button",{name:"Unmute"})).toBeNull();
+    expect(screen.getByText(/participation authorization/i)).toBeTruthy();
+  });
   it("renders the meeting audio status and controls in Spanish", async () => {
     await i18n.changeLanguage("es");
     render(<WorkHubAudioRoom occurrenceId="room-a" />);
@@ -108,12 +120,14 @@ describe("native meeting microphone lifecycle", () => {
   it("uses the meeting-only native session without opening the global WebRTC microphone", async () => {
     const native = { start: vi.fn(async () => undefined), setMuted: vi.fn(async () => undefined), setTranscription: vi.fn(async () => undefined), createOffer: vi.fn(async () => undefined), applySignal: vi.fn(async () => undefined), removePeer: vi.fn(async () => undefined), stop: vi.fn(async () => undefined) };
     env.nativeFactory.mockReturnValue(native);
+    env.api.mockImplementation(async path => path.endsWith("/join") ? { ...info, consentAccepted: false, participationMode: "active", authorizationRequired: false, startedAt: "2026-09-09T14:00:00Z" } : response(path));
     render(<WorkHubAudioRoom occurrenceId="room-a" />); await join();
     // Secure per-install device identity schedules one immediate storage task;
     // flush it without advancing the 1.2 second meeting poll.
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(env.capture).not.toHaveBeenCalled();
     expect(native.start).toHaveBeenCalledWith({ sourceId: expect.stringContaining("meeting-1-"), iceServers: [] });
+    expect(native.setTranscription).not.toHaveBeenCalledWith(true, 2);
     expect(screen.getByRole("button", { name: "Unmute" })).toBeTruthy();
   });
 

@@ -39,6 +39,7 @@ export type AssetSummary = Pick<AssetRecord, "id" | "name" | "category" | "statu
   custodyDays?: number | null;
   condition: AssetCondition | null;
   currentLocation: string | null;
+  holds?: {id:string;reason:string;placedAt:string;source:"inventory"|"fleet_maintenance";canRelease:boolean}[];
   hold: string | null;
   expectedReturnAt: Date | null;
   policy: {
@@ -49,7 +50,7 @@ export type AssetSummary = Pick<AssetRecord, "id" | "name" | "category" | "statu
   };
   capabilities: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean };
 };
-export type CustodyEvent = { id: string; type: "checkout" | "return" | "transfer" | "condition" | "hold" | "merge" | "verify-issued"; actorUserId?: number | null; commandFingerprint?: string | null; condition?: AssetCondition; fromHolderUserId?: number | null; toHolderUserId?: number | null; note?: string; photos?: string[]; occurredAt: Date };
+export type CustodyEvent = { id: string; type: "checkout" | "return" | "transfer" | "condition" | "hold" | "hold_release" | "merge" | "verify-issued"; actorUserId?: number | null; commandFingerprint?: string | null; condition?: AssetCondition; fromHolderUserId?: number | null; toHolderUserId?: number | null; note?: string; photos?: string[]; occurredAt: Date };
 
 export class AssetServiceError extends Error {
   constructor(public readonly code: string, public readonly status = 409) { super(code); }
@@ -239,4 +240,3 @@ export function createAssetService(repository: AssetRepository) {
     },
   };
 }
-

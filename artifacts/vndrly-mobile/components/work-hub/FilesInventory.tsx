@@ -15,7 +15,7 @@ import type { MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
 type Owner = { type: "vendor" | "partner"; id: number };
 type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null; contentType?: string; byteSize?: number }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
 type NoteRow = { id: string; channelId: string; title: string; body: string; version: number; createdById: number; createdAt: string; capabilities?: { canEdit: boolean } };
-type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean } };
+type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; holds?: { id: string; reason: string; placedAt: string; source: "inventory" | "fleet_maintenance"; canRelease: boolean }[]; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean } };
 type ChannelRow = { id: string; name: string; ownerOrgType: Owner["type"]; ownerOrgId: number; contextKind: string; contextId: string | number };
 type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: ChannelRow[]; onRefresh: () => void | Promise<void>; selectedAssetId?: string };
 
@@ -46,6 +46,10 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   const [custodyCondition, setCustodyCondition] = useState("good");
   const [custodyPhotos, setCustodyPhotos] = useState<string[]>([]);
   const [expectedReturn, setExpectedReturn] = useState("");
+  const [releaseHold, setReleaseHold] = useState<{ assetId: string; holdId: string } | null>(null);
+  const [releaseReason, setReleaseReason] = useState("");
+  const [releaseUnknown, setReleaseUnknown] = useState(false);
+  const releaseAttempt = useRef<{ assetId: string; holdId: string; body: { operationId: string; expectedVersion: number; reason: string } } | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(false);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -53,7 +57,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   const uploadAttempt = useRef<UploadAttempt | null>(null);
   useEffect(() => {
     mountedRef.current = true;
-    const invalidate = () => { requestRef.current?.abort(); cleanupRef.current?.(); noteAttempt.current = null; uploadAttempt.current = null; };
+    const invalidate = () => { requestRef.current?.abort(); cleanupRef.current?.(); noteAttempt.current = null; uploadAttempt.current = null; releaseAttempt.current = null; setReleaseHold(null); setReleaseReason(""); setReleaseUnknown(false); };
     const unsubscribeUser = subscribeUser(invalidate);
     const unsubscribeToken = subscribeToken(invalidate);
     return () => { mountedRef.current = false; invalidate(); unsubscribeUser(); unsubscribeToken(); };
@@ -80,6 +84,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
         setError(cause instanceof Error ? cause.message : t("filesInventory.actionFailed"));
         if ([401, 403, 404].includes((cause as { status?: number }).status ?? 0)) {
           noteAttempt.current = null; uploadAttempt.current = null;
+          releaseAttempt.current = null; setReleaseHold(null); setReleaseUnknown(false);
           await onRefresh();
         }
       }
@@ -203,6 +208,36 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     }
   });
 
+  const submitHoldRelease = (asset: AssetRow) => void run(async (scope) => {
+    if (!releaseHold || releaseHold.assetId !== asset.id) return;
+    const hold = asset.holds?.find(item => item.id === releaseHold.holdId);
+    if (!releaseAttempt.current) {
+      if (!hold?.canRelease || hold.source !== "inventory" || !asset.version) throw new Error(t("filesInventory.actionFailed"));
+      if (!releaseReason.trim() || releaseReason.trim().length > 2000) throw new Error(t("filesInventory.holdReleaseReasonRequired"));
+      releaseAttempt.current = { ...releaseHold, body: { operationId: nativeUuid(), expectedVersion: asset.version, reason: releaseReason.trim() } };
+    }
+    const attempt = releaseAttempt.current;
+    if (attempt.assetId !== asset.id || attempt.holdId !== releaseHold.holdId) throw new Error(t("filesInventory.actionFailed"));
+    try {
+      const result = await apiFetch<{ assetId: string; holdId: string; operationId: string; version: number; status: string; physicalRepairVerified: false }>(`/api/implementation-a/assets/${encodeURIComponent(attempt.assetId)}/holds/${encodeURIComponent(attempt.holdId)}/release`, { method: "POST", body: JSON.stringify(attempt.body), signal: scope.signal }, scope.authScope);
+      scope.assertCurrent();
+      if (result.assetId !== attempt.assetId || result.holdId !== attempt.holdId || result.operationId !== attempt.body.operationId || result.status !== "applied" || result.version !== attempt.body.expectedVersion + 1 || result.physicalRepairVerified !== false) throw new Error(t("filesInventory.holdReleaseUnknown"));
+      releaseAttempt.current = null; setReleaseHold(null); setReleaseUnknown(false); setReleaseReason("");
+      setNotice(t("filesInventory.holdReleased"));
+      await onRefresh();
+    } catch (cause) {
+      scope.assertCurrent();
+      const status = (cause as { status?: number }).status;
+      if (status === 409 || (cause as { code?: string }).code === "asset.version_conflict") {
+        releaseAttempt.current = null; setReleaseHold(null); setReleaseUnknown(false);
+        await onRefresh(); scope.assertCurrent(); setNotice(t("filesInventory.assetChanged")); return;
+      }
+      if (status === undefined || status >= 500) setReleaseUnknown(true);
+      else releaseAttempt.current = null;
+      throw cause;
+    }
+  });
+
   return <View style={{ gap: 14 }}>
     {error ? <Text nativeID={errorId} accessibilityRole="alert" style={{ color: colors.text, backgroundColor: colors.card, borderColor: colors.destructive, borderWidth: 1, borderRadius: 6, padding: 8 }}>{error}</Text> : null}
     {notice ? <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{notice}</Text> : null}
@@ -240,6 +275,16 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
         <Text style={muted}>{[asset.category, asset.status ? enumLabel("status", asset.status) : null, asset.condition ? enumLabel("condition", asset.condition) : null].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>
+        {[...(asset.holds ?? []), ...(releaseUnknown && releaseAttempt.current?.assetId === asset.id && !asset.holds?.some(hold => hold.id === releaseAttempt.current?.holdId) ? [{ id: releaseAttempt.current.holdId, reason: t("filesInventory.holdReleaseUnknown"), placedAt: "", source: "inventory" as const, canRelease: false }] : [])].map(hold => <View key={hold.id} style={{ gap: 6 }}>
+          <Text style={muted}>{hold.reason}</Text>
+          {hold.canRelease && hold.source === "inventory" && asset.version ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.releaseNamedHold", { name: hold.reason })} disabled={busy || releaseUnknown} onPress={() => { releaseAttempt.current = null; setReleaseHold({ assetId: asset.id, holdId: hold.id }); setReleaseReason(""); setReleaseUnknown(false); }}>{t("filesInventory.releaseHold")}</TogglePillButton> : null}
+          {releaseHold?.assetId === asset.id && releaseHold.holdId === hold.id ? <View style={{ gap: 8 }}>
+            <Text style={muted}>{t("filesInventory.holdReleaseConfirmation")}</Text>
+            <TextInput accessibilityLabel={t("filesInventory.releaseHoldReason")} editable={!busy && !releaseUnknown} value={releaseReason} onChangeText={setReleaseReason} maxLength={2000} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 44 }} />
+            {releaseUnknown ? <Text style={muted}>{t("filesInventory.holdReleaseUnknown")}</Text> : null}
+            <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.confirmHoldRelease")} disabled={busy} onPress={() => submitHoldRelease(asset)}>{t("filesInventory.confirmHoldRelease")}</TogglePillButton>
+          </View> : null}
+        </View>)}
         {asset.capabilities?.canCheckOut && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.checkOutNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "checkout")}>{t("filesInventory.checkOut")}</TogglePillButton> : null}
         {asset.capabilities?.canReturn && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.returnNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "return")}>{t("filesInventory.returnAsset")}</TogglePillButton> : null}
         {asset.capabilities?.canVerifyIssued && capabilities.canVerifyIssuedAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.verifyNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "verify-issued")}>{t("filesInventory.verifyIssued")}</TogglePillButton> : null}

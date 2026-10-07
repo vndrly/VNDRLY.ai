@@ -1,3 +1,4 @@
+vi.mock("../services/asset-hold-release", () => ({readAssetHolds:async()=>[],authorizeAssetHoldRelease:vi.fn(),createAssetHoldReleaseService:vi.fn()}));
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
@@ -234,4 +235,3 @@ it('returns named custody history through exact asset and alias lookup',async()=
  const found=await request(app).get('/implementation-a/assets/find').query({kind:'serial',value:'SYNTHETIC-RADIO-1'}).set('Cookie',admin);
  expect(found.status).toBe(200);expect(found.body.currentHolderDisplayName).toBe('Synthetic Gatekeeper');
 });
-

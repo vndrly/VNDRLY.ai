@@ -50,6 +50,14 @@
     "error": "No se pudo completar la acción. Verifique su acceso y actualice la puerta antes de reintentar una edición desactualizada."
   },
   "filesInventory": {
+    "confirmHoldRelease": "Confirmar liberación",
+    "holdReleaseConfirmation": "Libere solo esta retención seleccionada. Las demás permanecen. Esto no verifica una reparación física.",
+    "holdReleased": "Se guardó la liberación seleccionada. Las demás retenciones permanecen.",
+    "holdReleaseReasonRequired": "Ingrese un motivo de liberación de 1–2000 caracteres.",
+    "holdReleaseUnknown": "El resultado es desconocido. Reintente esta misma solicitud; no cree otra liberación.",
+    "releaseHold": "Liberar retención",
+    "releaseHoldReason": "Motivo para liberar esta retención",
+    "releaseNamedHold": "Liberar retención: {{name}}",
     "title": "Archivos e inventario",
     "filesNotes": "Archivos y notas",
     "inventory": "Inventario",

@@ -35,13 +35,22 @@ async function ojson<T>(method: string, path: string, body?: unknown): Promise<T
   });
   if (!res.ok) {
     let message = `${method} ${path} failed (${res.status})`;
+    let code: string | undefined;
+    let missing: string[] = [];
     try {
       const data = await res.json();
-      if (data?.error) message = data.error;
+      if (typeof data?.error === "string") message = data.error;
+      if (typeof data?.code === "string") code = data.code;
+      if (Array.isArray(data?.missing)) missing = data.missing.filter((field: unknown): field is string => typeof field === "string");
+      if (missing.length) {
+        const sections: Record<string, string> = { firstSite: "First site", taxBilling: "Tax & billing", taxIds: "Tax IDs", serviceArea: "Service area", firstEmployee: "First employee", info: "Personal information", pec: "Certification" };
+        const labels: Record<string, string> = { federalTaxId: "federal tax ID", stateTaxId: "state tax ID", physicalAddress: "physical address", billingAddress: "billing address", siteCode: "site code", siteRadiusMeters: "site radius", operatingRadiusMiles: "operating radius", workTypeIds: "Work types", platformEula: "Platform agreement", legalConsent: "Privacy & messaging consent", photoUrl: "Profile photo", pecCertification: "Certification confirmation", pecExpirationDate: "Certification expiration date", vendorRole: "Role", firstName: "first name", lastName: "last name" };
+        message += `: ${missing.map(field => { const [section, leaf] = field.split("."); return leaf ? `${sections[section] ?? section}: ${labels[leaf] ?? leaf}` : labels[section] ?? section; }).join("; ")}`;
+      }
     } catch {
       // body wasn't JSON — keep the generic message.
     }
-    throw new Error(message);
+    throw Object.assign(new Error(message), { status: res.status, code, missing });
   }
   return (await res.json()) as T;
 }

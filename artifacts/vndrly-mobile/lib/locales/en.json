@@ -50,6 +50,14 @@
     "error": "Unable to complete this action. Check your access and refresh the gate before retrying an outdated edit."
   },
   "filesInventory": {
+    "confirmHoldRelease": "Confirm hold release",
+    "holdReleaseConfirmation": "Release only this selected hold. Other holds remain. This does not verify physical repair.",
+    "holdReleased": "The selected hold release was saved. Other holds remain.",
+    "holdReleaseReasonRequired": "Enter a release reason of 1–2000 characters.",
+    "holdReleaseUnknown": "The result is unknown. Retry this exact request; do not create a new release.",
+    "releaseHold": "Release hold",
+    "releaseHoldReason": "Reason for releasing this hold",
+    "releaseNamedHold": "Release hold: {{name}}",
     "title": "Files & Inventory",
     "filesNotes": "Files & Notes",
     "inventory": "Inventory",

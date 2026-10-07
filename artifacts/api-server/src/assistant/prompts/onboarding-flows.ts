@@ -8,6 +8,8 @@
 // schema and gives the model surgical guidance instead of a
 // kitchen-sink instruction blob.
 //
+import { DEFERABLE_STEPS } from "../onboarding-validation";
+
 // Required vs optional:
 //   - "required" steps are validated by /onboarding/.../complete and
 //     map 1:1 with REQUIRED_STEPS in routes/assistant.ts.
@@ -235,6 +237,7 @@ const fieldEmployeeFlow: StepSpec[] = [
       { path: "info.firstName", label: "First name", required: true },
       { path: "info.lastName", label: "Last name", required: true },
       { path: "info.phone", label: "Mobile phone", required: true },
+      { path: "info.vendorRole", label: "Actual role: field, foreman, office or both", required: true },
     ],
     guidance:
       "The vendor pre-filled these from the invite — confirm they're correct or correct them. Phone must be a US mobile number.",
@@ -246,10 +249,11 @@ const fieldEmployeeFlow: StepSpec[] = [
     purpose: "Upload a profile photo and any safety certifications (H2S, PEC, OSHA, etc.).",
     fields: [
       { path: "photoUrl", label: "Profile photo (uploaded URL)", required: true },
-      { path: "pec.documentUrl", label: "PEC/SafeLand certificate (if applicable)", required: false },
+      { path: "pec.certified", label: "User's actual PEC/SafeLand certification confirmation", required: true },
+      { path: "pec.expirationDate", label: "Actual certification expiration date", required: true },
     ],
     guidance:
-      "Profile photo is required (used for site check-in identity). Certs are upload-only — the user must use the wizard's drop zone, not paste a URL.",
+      "Profile photo must be uploaded on the wizard's device screen, never invented or pasted by the model. Ask for the actual certification confirmation and expiration date; do not claim independent credential verification.",
   },
   {
     step: "set-password",
@@ -286,6 +290,7 @@ export function getFlow(persona: OrgPersona): readonly StepSpec[] {
 export function renderStepGuidance(persona: OrgPersona, step: string | null): string {
   const spec = getStepSpec(persona, step);
   if (!spec) return "";
+  const canDefer = DEFERABLE_STEPS[persona].includes(spec.step);
   const fieldsBlock =
     spec.fields.length === 0
       ? "(no payload fields — confirm and advance)"
@@ -298,7 +303,7 @@ export function renderStepGuidance(persona: OrgPersona, step: string | null): st
           .join("\n");
   return `\n\nCURRENT STEP DETAIL — "${spec.title}" (${spec.step})
 Purpose: ${spec.purpose}
-Status: ${spec.required ? "Required (cannot be skipped)" : "Optional (skippable)"}
+Status: ${canDefer ? spec.required ? "Required for final completion; may defer and resume later" : "Optional (may defer)" : "Required (cannot be skipped)"}
 
 Fields to collect:
 ${fieldsBlock}
@@ -310,6 +315,5 @@ Workflow:
 2. After each answer, call set_onboarding_field with the exact \`path\` shown.
 3. Once all required fields for this step are set, call complete_onboarding_step
    with skipped:false to advance.
-4. If the step is optional and the user wants to defer, call complete_onboarding_step
-   with skipped:true.`;
+4. ${canDefer ? "If the user wants to defer this section, call complete_onboarding_step with skipped:true. For the last section keep nextStep on the same section rather than done. This saves deferred progress; it does not waive final completion requirements or finish onboarding." : "This step cannot be skipped. Password setup, legal consent and device uploads must be completed on their dedicated VNDRLY screens; never infer those actions from chat."}`;
 }

@@ -474,7 +474,7 @@ describe("onboarding flows", () => {
       const realSteps = flow.filter((s) => s !== "done");
       for (let i = 0; i < realSteps.length; i++) {
         const step = realSteps[i];
-        const nextStep = flow[i + 1]; // either next real step or "done"
+        const nextStep = flow[i + 1] === "done" && !REQUIRED_STEPS[p].includes(step) ? step : flow[i + 1];
         // Build payload for required steps (optional steps allow
         // skipped:true with no payload).
         if (REQUIRED_STEPS[p].includes(step)) {
@@ -510,14 +510,14 @@ describe("onboarding flows", () => {
   const ERROR_PATHS: Record<OrgPersona, ErrorCase[]> = {
     partner: [
       {
-        label: "skip a required step (first-site)",
+        label: "skip required platform agreement",
         run: () =>
           validateStepCompletion({
             persona: "partner",
-            step: "first-site",
-            nextStep: "tax-billing",
+            step: "platform-eula",
+            nextStep: "legal-consent",
             skipped: true,
-            existing: { currentStep: "first-site", payload: {} },
+            existing: { currentStep: "platform-eula", payload: {} },
           }),
         expectedCode: "required_step_skipped",
       },
@@ -565,14 +565,14 @@ describe("onboarding flows", () => {
     ],
     vendor: [
       {
-        label: "skip a required step (tax IDs)",
+        label: "skip required legal consent",
         run: () =>
           validateStepCompletion({
             persona: "vendor",
-            step: "tax-ids",
-            nextStep: "work-types",
+            step: "legal-consent",
+            nextStep: "branding",
             skipped: true,
-            existing: { currentStep: "tax-ids", payload: {} },
+            existing: { currentStep: "legal-consent", payload: {} },
           }),
         expectedCode: "required_step_skipped",
       },
@@ -606,14 +606,14 @@ describe("onboarding flows", () => {
         expectedCode: "out_of_sequence_next",
       },
       {
-        label: "skip first-employee step",
+        label: "skip required account step",
         run: () =>
           validateStepCompletion({
             persona: "vendor",
-            step: "first-employee",
-            nextStep: "done",
+            step: "company-basics",
+            nextStep: "platform-eula",
             skipped: true,
-            existing: { currentStep: "first-employee", payload: {} },
+            existing: { currentStep: "company-basics", payload: {} },
           }),
         expectedCode: "required_step_skipped",
       },

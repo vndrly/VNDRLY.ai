@@ -10,6 +10,16 @@
   "currentLocation": null,
   "hold": null,
   "expectedReturnAt": null,
-  "policy": { "photosRequiredOnCheckout": false, "photosRequiredOnReturn": false, "expectedReturnRequired": false, "supervisorApprovalRequired": false },
-  "capabilities": { "canCheckOut": false, "canReturn": true, "canVerifyIssued": true }
+  "policy": {
+    "photosRequiredOnCheckout": false,
+    "photosRequiredOnReturn": false,
+    "expectedReturnRequired": false,
+    "supervisorApprovalRequired": false
+  },
+  "capabilities": {
+    "canCheckOut": false,
+    "canReturn": true,
+    "canVerifyIssued": true
+  },
+  "holds": []
 }

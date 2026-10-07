@@ -1,3 +1,4 @@
+import { z } from "zod/v4";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
@@ -273,7 +274,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
-    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"];
+    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued"];
     if (name === "query_asset_custody") {
       if (resourceId) return request("GET", `/implementation-a/assets/${resourceId}`);
       if (input.alias !== undefined) {
@@ -303,6 +304,11 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (name === "prepare_asset_custody_action") return request("GET", `/implementation-a/assets/${resourceId}`);
     if (!Number.isSafeInteger(input.expectedVersion) || Number(input.expectedVersion) < 1)
       return { error: "Read the current asset version before confirming custody." };
+    if (action === "release_hold") {
+      const holdId = encoded(payload.holdId);
+      if (!holdId || !z.uuid().safeParse(payload.holdId).success || !z.uuid().safeParse(input.operationId).success || typeof payload.reason !== "string" || !payload.reason.trim() || payload.reason.trim().length > 2000) return { error: "Supply an exact Inventory hold ID and release reason." };
+      return request("POST", `/implementation-a/assets/${resourceId}/holds/${holdId}/release`, { operationId: input.operationId, expectedVersion: input.expectedVersion, reason: payload.reason.trim() });
+    }
     return request("POST", `/implementation-a/assets/${resourceId}/${action}`, { ...assetPayload, operationId: input.operationId, expectedVersion: input.expectedVersion, confirmed: true });
   }
   const readPaths: Record<string, string> = {
@@ -976,3 +982,4 @@ export function bindWorkHubToolScope(
       : currentContext;
   return { ...input, owner, context };
 }
+
