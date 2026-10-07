@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 import { SESSION_SECRET, type SessionPayload } from "../lib/session";
 import { chatGptActionTools, chatGptReadableTools } from "./chatgpt-tool-access";
+import { invoiceActivityAvailable } from "./invoice-activity-chatgpt";
 import { readExactPlanTask } from "./coordinated-plan-exact-task";
 import { decodePlanDescription } from "./coordinated-plan";
 import { callNaturalVoiceDomainApi } from "./natural-voice-write-tools";
@@ -59,6 +60,7 @@ export async function handlePlanExecutionTool(name: string, input: unknown, sess
   const organizationKey = session.role === "partner" && session.partnerId ? `partner:${session.partnerId}` : session.vendorId ? `vendor:${session.vendorId}` : null;
   if (!organizationKey || !session.userId || !session.activeMembershipId || !session.sv || !grantReference) throw Error("Current connection unavailable");
   const available = new Set([...chatGptReadableTools(session, scopes), ...chatGptActionTools(session, scopes)].map(tool => tool.name));
+  if (invoiceActivityAvailable(session, scopes)) available.add("query_invoice_activity");
   if (!available.has("list_work_hub_tasks") || !available.has("manage_work_hub_task")) throw Error("Background plan unavailable");
   const identity = { userId: session.userId, organizationKey };
   const task = await readExactPlanTask(path => callNaturalVoiceDomainApi(path, "GET", {}, session), request.taskId, identity);

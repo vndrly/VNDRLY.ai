@@ -1549,9 +1549,14 @@
       "invalid_request": "La solicitud del activo no es válida.",
       "internal_error": "No se pudo completar la solicitud del activo."
     },
+    "display_view": {
+      "unavailable": "Esta vista de pantalla no está disponible. Revisa tu cuenta actual, el sitio asignado y la conexión de la pantalla."
+    },
     "operations_display": {
       "invalid_request": "La solicitud de la pantalla de operaciones no es válida.",
-      "trusted_companion_required": "Se requiere un dispositivo complementario de confianza."
+      "trusted_companion_required": "Se requiere un dispositivo complementario de confianza.",
+      "current_account_required": "Inicia sesión en tu cuenta de empresa actual para usar esta pantalla.",
+      "operation_not_found": "No se encontró la operación guardada de la pantalla."
     },
     "operations_health": {
       "unauthenticated": "Inicia sesión para ver el estado de las operaciones.",

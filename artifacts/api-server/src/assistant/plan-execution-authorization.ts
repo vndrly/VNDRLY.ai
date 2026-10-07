@@ -5,6 +5,7 @@ import { decodePlanDescription } from "./coordinated-plan";
 import { callNaturalVoiceDomainApi } from "./natural-voice-write-tools";
 import { planExecutionFingerprint, type PlanExecutionAuthorization, type PlanExecutionCurrentAuthorization } from "./plan-execution";
 import type { SessionPayload } from "../lib/session";
+import { invoiceActivityAvailable } from "./invoice-activity-chatgpt";
 
 /** Fresh authority only. Stored OAuth credentials and delegation data are not authority. */
 export async function currentPlanExecutionAuthority(authorization: PlanExecutionAuthorization): Promise<{
@@ -42,7 +43,7 @@ export async function currentPlanExecutionAuthority(authorization: PlanExecution
     planId: plan.id,
     planVersion: plan.version,
     planFingerprint: planExecutionFingerprint(plan),
-    availableTools: [...new Set([...readable, ...chatGptActionTools(session, scopes)].map(tool => tool.name))],
+    availableTools: [...new Set([...readable, ...chatGptActionTools(session, scopes)].map(tool => tool.name).concat(invoiceActivityAvailable(session, scopes) ? ["query_invoice_activity"] : []))],
   };
   // Canonical adapters call this helper directly as well as through the executor.
   // Do not rely on the executor's separate preflight for effect-time authority.

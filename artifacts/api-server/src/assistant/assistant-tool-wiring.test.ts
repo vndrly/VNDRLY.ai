@@ -44,10 +44,12 @@ describe("AskV advertised tool wiring", () => {
   it("keeps every advertised action variant connected to a runtime branch", () => {
     const routeSource = readFileSync(new URL("../routes/assistant.ts", import.meta.url), "utf8");
     const workHubRuntime = readFileSync(new URL("./work-hub-tool-runtime.ts", import.meta.url), "utf8");
+    const displayCommands = readFileSync(new URL("./operations-display-commands.ts", import.meta.url), "utf8");
+    expect(workHubRuntime).toContain("displayActionRequest(input)");
     const missing = ASK_V_TOOL_REGISTRY.flatMap((tool) => {
       const actionSchema = (tool.inputSchema.properties as Record<string, { enum?: unknown[] }> | undefined)?.action;
       const actions = Array.isArray(actionSchema?.enum) ? actionSchema.enum.filter((value): value is string => typeof value === "string") : [];
-      const source = tool.name === "propose_work_hub_action" ? routeSource : workHubRuntime;
+      const source = tool.name === "propose_work_hub_action" ? routeSource : tool.name === "confirm_operations_displays_action" ? workHubRuntime + displayCommands : workHubRuntime;
       return actions.filter((action) =>
         !source.includes(`"${action}"`) &&
         !source.includes(`'${action}'`) &&

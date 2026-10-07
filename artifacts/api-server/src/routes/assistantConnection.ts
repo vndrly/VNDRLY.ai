@@ -406,17 +406,21 @@ router.post("/mcp", async (req, res) => {
       if (!owner || !session.userId) throw new Error("Plan company unavailable");
       const raw = await authorizedExactPlanTask(session, authorized.scopes, args.taskId);
       const tools = [...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(chatGptActionTools(session, authorized.scopes))];
-      const output = resumedWorkPlan(raw, args.taskId, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, new Set(tools.map(tool => tool.name)), Date.now(), verifyPlanCompletions);
+      const output = resumedWorkPlan(raw, args.taskId, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, new Set([...tools.map(tool => tool.name), ...availablePlanReadNames(session, authorized.scopes)]), Date.now(), verifyPlanCompletions);
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "list_work_hub_tasks", targetType: "task", toolInput: { taskId: args.taskId }, toolOutput: { taskId: output.taskId, taskVersion: output.taskVersion }, resultStatus: "success" });
       if (name === "v_run_work_plan_read") {
         if (typeof args.stepId !== "string") throw new Error("Missing plan step");
-        const requests = plannedReadRequests(output, args.stepId, args.toolArguments, new Set(chatGptReadableTools(session, authorized.scopes).map(tool => tool.name)));
+        const requests = plannedReadRequests(output, args.stepId, args.toolArguments, availablePlanReadNames(session, authorized.scopes));
         const results = [];
         for (const request of requests) {
-          const tool = requireChatGptReadableTool(session, authorized.scopes, request.name);
+          const tool = request.name === INVOICE_ACTIVITY_TOOL.name && invoiceActivityAvailable(session, authorized.scopes)
+            ? { name: INVOICE_ACTIVITY_TOOL.name, auditTarget: "invoice" as const }
+            : requireChatGptReadableTool(session, authorized.scopes, request.name);
           let result: unknown;
           try {
-            result = chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")));
+            result = tool.name === INVOICE_ACTIVITY_TOOL.name
+              ? await handleInvoiceActivityTool(request.arguments, session, authorized.scopes)
+              : chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")));
           } catch {
             // Preserve earlier reads without exposing internal/provider exception details.
             result = { ok: false, error: "This planned lookup failed. Its result is unavailable; retry this lookup before treating the step as complete." };
@@ -550,7 +554,7 @@ router.post("/mcp", async (req, res) => {
       if (!owner || !session.userId) throw new Error('Plan company unavailable');
       const receipt = planReadReceiptSchema.parse(readEnvelope(args.receipt));
       const raw = await authorizedExactPlanTask(session, authorized.scopes, receipt.taskId);
-      args = preparePlanReadCheckpoint(raw, receipt, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set(chatGptReadableTools(session, authorized.scopes).map(tool => tool.name)), Date.now(), verifyPlanCompletions);
+      args = preparePlanReadCheckpoint(raw, receipt, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, availablePlanReadNames(session, authorized.scopes), Date.now(), verifyPlanCompletions);
       name = 'manage_work_hub_task';
     }
     if (name === 'v_prepare_work_plan_control') {
@@ -560,7 +564,7 @@ router.post("/mcp", async (req, res) => {
       const owner = session.vendorId ? { type: 'vendor' as const, id: session.vendorId } : session.partnerId ? { type: 'partner' as const, id: session.partnerId } : null;
       if (!owner || !session.userId) throw new Error('Plan company unavailable');
       const raw = await authorizedExactPlanTask(session, authorized.scopes, args.taskId);
-      args = prepareWorkPlanControl(raw, args, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(permittedActions)].map(tool => tool.name)), verifyPlanCompletions);
+      args = prepareWorkPlanControl(raw, args, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set([...availablePlanReadNames(session, authorized.scopes), ...planOperationTools(permittedActions).map(tool => tool.name)]), verifyPlanCompletions);
       await writeAskVActionAudit({ session, clientSurface: 'api', inputMode: 'web_text', provider: 'chatgpt_mcp', toolName: 'list_work_hub_tasks', targetType: 'task', toolInput: { taskId: args.taskId }, toolOutput: { taskId: args.taskId, taskVersion: args.expectedVersion }, resultStatus: 'success' });
       name = 'manage_work_hub_task';
     }
@@ -569,7 +573,7 @@ router.post("/mcp", async (req, res) => {
       const session = authorized.session;
       const owner = session.vendorId ? { type: "vendor" as const, id: session.vendorId } : session.partnerId ? { type: "partner" as const, id: session.partnerId } : null;
       if (!owner || !session.userId) throw new Error("Plan company unavailable");
-      args = prepareWorkPlan(args, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(permittedActions)].map(tool => tool.name)));
+      args = prepareWorkPlan(args, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, owner, new Set([...availablePlanReadNames(session, authorized.scopes), ...planOperationTools(permittedActions).map(tool => tool.name)]));
       name = "manage_work_hub_task";
     }
     if (name === "v_prepare_action" || permittedActions.some((tool) => tool.name === name)) {
@@ -628,6 +632,9 @@ async function authorizedExactPlanTask(session: SessionPayload, scopes: string[]
   if (!owner || !session.userId || typeof taskId !== 'string') throw Error('Plan company unavailable');
   return [await readExactPlanTask(path => callNaturalVoiceDomainApi(path, 'GET', {}, session), taskId, { userId: session.userId, organizationKey: owner })];
 }
+function availablePlanReadNames(session: SessionPayload, scopes: string[]) {
+  return new Set([...chatGptReadableTools(session, scopes).map(tool => tool.name), ...(invoiceActivityAvailable(session, scopes) ? [INVOICE_ACTIVITY_TOOL.name] : [])]);
+}
 async function currentPlanCompletion(session: SessionPayload, scopes: string[], input: unknown, observedAt: number) {
   const request = planCompletionRequestSchema.parse(input);
   const reads = chatGptReadableTools(session, scopes);
@@ -637,7 +644,7 @@ async function currentPlanCompletion(session: SessionPayload, scopes: string[], 
   const owner = session.vendorId ? { type: 'vendor' as const, id: session.vendorId } : session.partnerId ? { type: 'partner' as const, id: session.partnerId } : null;
   if (!owner) throw Error('Plan company unavailable');
   const tasks = await authorizedExactPlanTask(session, scopes, request.taskId);
-  const available = new Set([...reads, ...planOperationTools(actions)].map(tool => tool.name));
+  const available = new Set([...availablePlanReadNames(session, scopes), ...planOperationTools(actions).map(tool => tool.name)]);
   const resumed = resumedWorkPlan(tasks, request.taskId, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, available, Date.now(), verifyPlanCompletions);
   const step = resumed.plan.steps.find(row => row.id === request.stepId);
   const evidence: { receipt?: unknown; action?: unknown; ticket?: unknown; resource?: unknown } = {};
@@ -670,7 +677,7 @@ async function currentPlanCompletion(session: SessionPayload, scopes: string[], 
       evidence.resource=await callNaturalVoiceDomainApi(`/work-hub/channels/${target.channelId}/messages/${target.messageId}`,'GET',{},session);
     } else throw Error('Unsupported plan completion');
   }
-  return preparePlanCompletion(tasks, request, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, available, new Set(reads.map(tool => tool.name)), evidence, SESSION_SECRET, Date.now(), observedAt);
+  return preparePlanCompletion(tasks, request, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, available, availablePlanReadNames(session, scopes), evidence, SESSION_SECRET, Date.now(), observedAt);
 }
 const unresolved = (action: AssistantPreparedAction) => action.state === "running" || action.state === "outcome_unknown";
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">, scopes: string[]) {

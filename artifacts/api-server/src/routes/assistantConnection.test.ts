@@ -124,6 +124,20 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("prepares a saved invoice-activity plan through the supported tool and refuses it after finance consent removal", async () => {
+    const credentials = await tokens("work_hub:read work_hub:write finance:read");
+    grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };
+    const input = { planId: "11111111-1111-4111-8111-111111111111", title: "Synthetic invoice history", steps: [{ id: "invoice", specialist: "Finn", toolNames: ["query_invoice_activity"], dependsOn: [] }] };
+    const call = () => request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_prepare_work_plan", arguments: input } });
+    const prepared = (await call()).body.result;
+    expect(prepared.isError).not.toBe(true);
+    expect(prepared.structuredContent).toMatchObject({ status: "pending", requiresConfirmation: true });
+    expect(grants[0].actions?.[0].toolName).toBe("manage_work_hub_task");
+    expect(mocks.run).not.toHaveBeenCalled();
+    grants[0].scopes = grants[0].scopes.filter(scope => scope !== "finance:read");
+    expect((await call()).body.result.isError).toBe(true);
+    expect(grants[0].actions).toHaveLength(1);
+  });
   it("discovers invoice activity only for a current company finance grant and refuses a direct ungranted call", async () => {
     const credentials = await tokens("gate:read work_hub:read finance:read");
     grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };

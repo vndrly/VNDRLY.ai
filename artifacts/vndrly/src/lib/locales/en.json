@@ -4696,9 +4696,14 @@
       "invalid_request": "The asset request is invalid.",
       "internal_error": "The asset request could not be completed."
     },
+    "display_view": {
+      "unavailable": "This display view is unavailable. Check your current account, assigned site, and display connection."
+    },
     "operations_display": {
       "invalid_request": "The operations display request is invalid.",
-      "trusted_companion_required": "A trusted companion device is required."
+      "trusted_companion_required": "A trusted companion device is required.",
+      "current_account_required": "Sign in to your current company account to use this display.",
+      "operation_not_found": "The saved display operation was not found."
     },
     "operations_health": {
       "unauthenticated": "Sign in to view operations health.",

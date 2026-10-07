@@ -8,6 +8,7 @@ import { createWorkHubAccess, requireWorkHubCapability } from "../work-hub/conte
 import { planExecutionResultSchema, type PlanExecutionAuthorization } from "./plan-execution";
 import type { PersonalDraftCommand, PlanExecutionCanonicalApi } from "./plan-execution-adapters";
 import { createPlanExecutionBusinessReads, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES } from "./plan-execution-business-reads";
+import { createPlanInvoiceActivityRead } from "./plan-execution-invoice-activity";
 
 type Authority = Awaited<ReturnType<typeof currentPlanExecutionAuthority>>;
 type Receipt = Pick<typeof workHubClientOperationsTable.$inferSelect, "userId" | "commandKind" | "operationId" | "ownerOrgType" | "ownerOrgId" | "resultJson" | "appliedAt">;
@@ -73,6 +74,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
       return result.result;
     },
     async read(authorization, step) {
+      if (step.toolName === "query_invoice_activity") return createPlanInvoiceActivityRead({ authorize: deps.authorize })(authorization, step);
       // Existing custody delegations retain their original bound adapter. New
       // business families dispatch only through fixed canonical read tools.
       if (Object.hasOwn(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES, step.toolName) && (step.toolName !== "query_asset_custody" || typeof step.arguments.checkedOutLongerThanDays === "number" && step.arguments.checkedOutLongerThanDays >= 90)) return createPlanExecutionBusinessReads({ authorize: deps.authorize })(authorization, step);

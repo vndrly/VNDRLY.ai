@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod/v4';
-import { PLAN_EXECUTION_READ_TOOL_NAMES, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES } from './plan-execution-read-policy';
+import { PLAN_EXECUTION_READ_TOOL_NAMES, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES, PLAN_EXECUTION_INVOICE_ACTIVITY_INPUT } from './plan-execution-read-policy';
 
 const jsonObject = z.record(z.string(), z.json());
 export const planExecutionRequesterSchema = z.object({userId:z.number().int().positive(),organizationKey:z.string().regex(/^(vendor|partner):[1-9]\d*$/),membershipId:z.number().int().positive(),sessionVersion:z.number().int().positive()}).strict();
@@ -15,6 +15,7 @@ export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),r
  if(a.steps.some(s=>Buffer.byteLength(JSON.stringify(s.arguments))>8192))ctx.addIssue({code:'custom',message:'Approved arguments exceed bounded capacity'});
  for(const step of a.steps){
   if(step.adapter==='authorized_read'&&!PLAN_EXECUTION_READ_TOOL_NAMES.includes(step.toolName))ctx.addIssue({code:'custom',message:'Unsupported unattended read tool'});
+  if(step.adapter==='authorized_read'&&step.toolName==='query_invoice_activity'&&!PLAN_EXECUTION_INVOICE_ACTIVITY_INPUT.safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid invoice activity basis'});
   if(step.adapter==='authorized_read'&&step.toolName!=='query_asset_custody'&&Object.hasOwn(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES,step.toolName)&&!PLAN_EXECUTION_BUSINESS_READ_CANDIDATES[step.toolName as keyof typeof PLAN_EXECUTION_BUSINESS_READ_CANDIDATES].safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid bounded business read arguments'});
   if(step.adapter==='personal_draft'&&(step.toolName!=='manage_work_hub_task'||!z.object({title:z.string().trim().min(1).max(200)}).strict().safeParse(step.arguments).success||!step.dependsOn.length||step.dependsOn.some(id=>a.steps.find(s=>s.id===id)?.adapter!=='authorized_read')))ctx.addIssue({code:'custom',message:'Personal draft requires title-only bounds and source read dependencies'});
  }

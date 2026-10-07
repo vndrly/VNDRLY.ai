@@ -15,4 +15,5 @@ export const PLAN_EXECUTION_BUSINESS_READ_CANDIDATES = {
   get_work_hub_calendar: z.object({ start: z.iso.datetime(), end: z.iso.datetime() }).strict().refine(value => Date.parse(value.end) > Date.parse(value.start) && Date.parse(value.end) - Date.parse(value.start) <= 31 * 86400000, "Calendar window must be positive and at most 31 days"),
   query_asset_custody: z.object({ checkedOutLongerThanDays: z.number().int().min(90).max(36500).default(90) }).strict(),
 };
-export const PLAN_EXECUTION_READ_TOOL_NAMES = ["list_work_hub_tasks", ...Object.keys(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES)];
+export const PLAN_EXECUTION_INVOICE_ACTIVITY_INPUT = z.object({ basis: z.enum(["recorded_invoice_activity", "provider_acceptance"]).default("recorded_invoice_activity") }).strict();
+export const PLAN_EXECUTION_READ_TOOL_NAMES = ["list_work_hub_tasks", "query_invoice_activity", ...Object.keys(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES)];
