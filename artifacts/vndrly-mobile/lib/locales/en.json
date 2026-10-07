@@ -1552,6 +1552,11 @@
     "display_view": {
       "unavailable": "This display view is unavailable. Check your current account, assigned site, and display connection."
     },
+    "billing": {
+      "current_account_required": "Sign in as your current company administrator to manage the subscription.",
+      "invalid_arguments": "Review the subscription request details and try again.",
+      "outcome_unverified": "The subscription result could not be verified. Retain and retry the same request."
+    },
     "operations_display": {
       "invalid_request": "The operations display request is invalid.",
       "trusted_companion_required": "A trusted companion device is required.",

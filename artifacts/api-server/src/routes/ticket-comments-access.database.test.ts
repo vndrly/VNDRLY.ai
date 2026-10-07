@@ -22,13 +22,14 @@ describe.runIf(
     assertFreshLocalTestDatabaseEnvironment(process.env);
     const d = await import("@workspace/db");
     const identity = await d.pool.query(
-      "select current_database() as name,inet_server_addr()::text as address",
+      "select current_database() as name,host(inet_server_addr()) as address,inet_server_port() as port",
     );
     const configured = new URL(process.env.DATABASE_URL!);
     expect(identity.rows[0].name).toBe(
       decodeURIComponent(configured.pathname.slice(1)),
     );
     expect(["127.0.0.1", "::1"]).toContain(identity.rows[0].address);
+    expect(identity.rows[0].port).toBe(Number(configured.port || 5432));
     const express = (await import("express")).default,
       cookieParser = (await import("cookie-parser")).default,
       request = (await import("supertest")).default;

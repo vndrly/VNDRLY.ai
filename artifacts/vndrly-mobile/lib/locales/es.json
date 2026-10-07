@@ -1552,6 +1552,11 @@
     "display_view": {
       "unavailable": "Esta vista de pantalla no está disponible. Revisa tu cuenta actual, el sitio asignado y la conexión de la pantalla."
     },
+    "billing": {
+      "current_account_required": "Inicia sesión como administrador de tu empresa actual para administrar la suscripción.",
+      "invalid_arguments": "Revisa los datos de la solicitud de suscripción e inténtalo de nuevo.",
+      "outcome_unverified": "No se pudo verificar el resultado de la suscripción. Conserva y reintenta la misma solicitud."
+    },
     "operations_display": {
       "invalid_request": "La solicitud de la pantalla de operaciones no es válida.",
       "trusted_companion_required": "Se requiere un dispositivo complementario de confianza.",
