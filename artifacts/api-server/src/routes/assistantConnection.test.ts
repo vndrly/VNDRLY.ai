@@ -136,7 +136,12 @@ describe("ChatGPT account connection boundary", () => {
       expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === name).annotations.destructiveHint).toBe(true);
     }
     const ticketTool = descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "manage_ticket_record");
-    expect(ticketTool._meta.ui.resourceUri).toBe("ui://vndrly/action/v2.html");
+    expect(ticketTool._meta.ui.resourceUri).toBe("ui://vndrly/action/v3.html");
+    for (const version of [1, 2, 3]) {
+      const resource = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 3, method: "resources/read", params: { uri: `ui://vndrly/action/v${version}.html` } });
+      expect(resource.body.result.contents[0].mimeType).toContain("text/html");
+      expect(resource.body.result.contents[0].text).toContain("v_submit_panel_action");
+    }
     expect(ticketTool.description).toContain("This call only prepares the change");
     expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "v_action_status").outputSchema.required).toEqual(["state", "toolName", "result"]);
     expect((await call("v_submit_panel_action", { reference: component.reference, proof: "model-confirmed" })).body.result.isError).toBe(true);
