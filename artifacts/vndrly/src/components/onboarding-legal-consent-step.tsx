@@ -23,6 +23,7 @@ export function OnboardingLegalConsentStep({
   onChange,
   disabled,
 }: OnboardingLegalConsentStepProps): React.ReactElement {
+  const currentAcceptance = value.accepted && value.version === LEGAL_POLICY_VERSION;
   return (
     <div className="space-y-4" data-testid="step-legal-consent-body">
       <div>
@@ -48,7 +49,7 @@ export function OnboardingLegalConsentStep({
 
       <label className="flex cursor-pointer items-start gap-3">
         <Checkbox
-          checked={value.accepted}
+          checked={currentAcceptance}
           disabled={disabled}
           onCheckedChange={(c) =>
             onChange({
@@ -64,7 +65,7 @@ export function OnboardingLegalConsentStep({
           the VNDRLY Privacy Policy on behalf of my organization.
         </span>
       </label>
-      {!value.accepted && (
+      {!currentAcceptance && (
         <p className="text-xs text-amber-700" data-testid="text-legal-consent-required-hint">
           Acceptance of the Privacy Policy and Terms & Conditions is required to continue.
         </p>
@@ -77,6 +78,7 @@ export function OnboardingLegalConsentStep({
           onCheckedChange={(c) =>
             onChange({
               ...value,
+              accepted: currentAcceptance,
               smsOptIn: c === true,
               version: LEGAL_POLICY_VERSION,
             })

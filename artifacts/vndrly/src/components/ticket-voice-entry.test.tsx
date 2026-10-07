@@ -23,6 +23,7 @@ const props = { ticket, role: "field_employee", accessAllowed: true, onClose: vi
 const fetchMock = vi.fn();
 const gps = vi.fn();
 const response = (data: unknown = {}, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
+const photoResponse = (_url:unknown, init:RequestInit) => { const body=JSON.parse(String(init.body)); return response({ticketId:42,noteId:7,operationId:body.operationId,objectPath:body.objectPath,sha256:"a".repeat(64),size:10,contentType:"image/jpeg",status:"applied",physicalCaptureVerified:false}); };
 const fix = { coords: { latitude: 32.5, longitude: -102.25 } } as GeolocationPosition;
 const click = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
 const selectPhoto = () => fireEvent.change(screen.getByLabelText("Choose ticket photo"), {
@@ -92,7 +93,7 @@ describe("voice-opened ticket entries", () => {
 
   it("uploads privately and attaches a photo only after a reviewed confirmation", async () => {
     fetchMock.mockResolvedValueOnce(response({ uploadURL: "https://signed.example/upload", objectPath: "/objects/uploads/test-photo" }))
-      .mockResolvedValueOnce(response()).mockResolvedValueOnce(response()).mockResolvedValueOnce(response());
+      .mockResolvedValueOnce(response()).mockResolvedValueOnce(response()).mockImplementationOnce(photoResponse);
     render(<TicketEntryDialog {...props} kind="photo" />);
     selectPhoto();
     expect(fetchMock).not.toHaveBeenCalled();
@@ -102,10 +103,10 @@ describe("voice-opened ticket entries", () => {
     click("Save photo");
     await waitFor(() => expect(props.onSaved).toHaveBeenCalledTimes(1));
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      "/api/storage/uploads/request-url", "https://signed.example/upload", "/api/storage/uploads/finalize", "/api/tickets/42/note-logs",
+      "/api/storage/uploads/request-url", "https://signed.example/upload", "/api/storage/uploads/finalize", "/api/tickets/42/photo-associations",
     ]);
     expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({ objectURL: "https://signed.example/upload", visibility: "private" });
-    expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ content: "[photo] /objects/uploads/test-photo" });
+    expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toMatchObject({ objectPath: "/objects/uploads/test-photo",operationId:expect.any(String) });
     expect(fetchMock.mock.calls[1][1].credentials).toBeUndefined();
     expect(props.onClose).toHaveBeenCalledTimes(1);
   });
@@ -132,14 +133,15 @@ describe("voice-opened ticket entries", () => {
   it("retains the finalized photo for an explicit attach retry", async () => {
     fetchMock.mockResolvedValueOnce(response({ uploadURL: "https://signed.example/upload", objectPath: "/objects/uploads/test-photo" }))
       .mockResolvedValueOnce(response()).mockResolvedValueOnce(response()).mockResolvedValueOnce(response({}, 503))
-      .mockResolvedValueOnce(response());
+      .mockImplementationOnce(photoResponse);
     render(<TicketEntryDialog {...props} kind="photo" />);
     selectPhoto(); click("Review"); click("Save photo");
     await screen.findByRole("alert");
     click("Save photo");
     await waitFor(() => expect(props.onSaved).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledTimes(5);
-    expect(fetchMock.mock.calls[4][0]).toBe("/api/tickets/42/note-logs");
+    expect(fetchMock.mock.calls[4][0]).toBe("/api/tickets/42/photo-associations");
+    expect(fetchMock.mock.calls[4][1].body).toBe(fetchMock.mock.calls[3][1].body);
   });
 
   it("requires an entered starting reading and reviews real GPS before changing the ticket", async () => {
@@ -217,3 +219,6 @@ describe("voice-opened ticket entries", () => {
     expect(mileageActionFor({ ...ticket, status: "pending_review", lifecycleState: "off_site" })).toBeNull();
   });
 });
+
+it("ignores a late rejected association after ticket/account changes",async()=>{let reject!:(e:Error)=>void;fetchMock.mockResolvedValueOnce(response({uploadURL:"https://signed.example/upload",objectPath:"/objects/uploads/test-photo"})).mockResolvedValueOnce(response()).mockResolvedValueOnce(response()).mockImplementationOnce(()=>new Promise((_resolve,fail)=>{reject=fail;}));const view=render(<TicketEntryDialog {...props} actorIdentity="one" kind="photo"/>);selectPhoto();click("Review");click("Save photo");await waitFor(()=>expect(fetchMock).toHaveBeenCalledTimes(4));view.rerender(<TicketEntryDialog {...props} ticket={{...ticket,id:43}} actorIdentity="two" kind="photo"/>);reject(Error("lost response"));await waitFor(()=>expect(screen.queryByRole("alert")).toBeNull());expect(screen.queryByTestId("ticket-entry-review")).toBeNull();expect(props.onSaved).not.toHaveBeenCalled();expect(fetchMock.mock.calls[3][0]).toBe("/api/tickets/42/photo-associations");});
+it("does not claim a photo saved from a mismatched association receipt",async()=>{fetchMock.mockResolvedValueOnce(response({uploadURL:"https://signed.example/upload",objectPath:"/objects/uploads/test-photo"})).mockResolvedValueOnce(response()).mockResolvedValueOnce(response()).mockImplementationOnce((url,init)=>{const good=photoResponse(url,init);return good.json().then(data=>response({...data,ticketId:999}));});render(<TicketEntryDialog {...props} kind="photo"/>);selectPhoto();click("Review");click("Save photo");await screen.findByRole("alert");expect(props.onSaved).not.toHaveBeenCalled();expect(props.onClose).not.toHaveBeenCalled();});

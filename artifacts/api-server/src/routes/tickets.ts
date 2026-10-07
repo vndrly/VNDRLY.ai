@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
 import { decodeSession } from "../lib/session";
 
+import { createTicketPhotoService, ownedTicketPhoto, TicketPhotoError, TicketPhotoInputSchema } from "../services/ticket-photo-association";
 import { SESSION_SECRET } from "../lib/session";
 
 const COOKIE_NAME = "vndrly_session";
@@ -5320,6 +5321,24 @@ router.get("/tickets/:id/note-logs", async (req, res): Promise<void> => {
   sendResponse(res, GetTicketNoteLogsResponse, logs);
 });
 
+// @no-accept-guard: service locks the ticket and enforces current mutable status on first save and replay.
+router.post("/tickets/:id/photo-associations", async (req, res): Promise<void> => {
+  try {
+    const body=TicketPhotoInputSchema.safeParse(req.body);
+    if(!body.success){sendValidationFailed(res,body.error);return;}
+    const session=decodeSession(req.cookies?.[COOKIE_NAME]);
+    if(!session){res.status(401).json({code:"auth.required"});return;}
+    res.json(await createTicketPhotoService().associate(session,Number(req.params.id),body.data));
+  }catch(error){if(error instanceof TicketPhotoError){res.status(error.status).json({code:error.code,message:error.message});return;}throw error;}
+});
+router.get("/tickets/:id/photo-associations/:operationId", async (req, res): Promise<void> => {
+  try {
+    const session=decodeSession(req.cookies?.[COOKIE_NAME]);
+    if(!session){res.status(401).json({code:"auth.required"});return;}
+    res.json(await createTicketPhotoService().read(session,Number(req.params.id),String(req.params.operationId)));
+  }catch(error){if(error instanceof TicketPhotoError){res.status(error.status).json({code:error.code,message:error.message});return;}throw error;}
+});
+
 router.post("/tickets/:id/note-logs", async (req, res): Promise<void> => {
   const params = CreateTicketNoteLogParams.safeParse(req.params);
   if (!params.success) {
@@ -5334,6 +5353,10 @@ router.post("/tickets/:id/note-logs", async (req, res): Promise<void> => {
     return;
   }
   const session = getSession(req);
+  if (/^\[photo\]/i.test(parsed.data.content.trim())) {
+    try { await ownedTicketPhoto(session!.userId, parsed.data.content.trim().slice(7).trim()); }
+    catch(error){if(error instanceof TicketPhotoError){res.status(error.status).json({code:error.code});return;}throw error;}
+  }
   const [log] = await db
     .insert(ticketNoteLogsTable)
     .values({

@@ -3,7 +3,7 @@ import { CHATGPT_WRITE_CAPABILITIES } from "./chatgpt-write-capabilities";
 type AvailableTool = { name: string; workHubFamily?: string };
 const DOMAIN_SCOPES: Record<string, readonly string[]> = {
   field_operations: ["tickets", "workforce", "sites", "catalog", "crew"],
-  fleet: ["trips", "crew"], inventory: ["assets"], safety: ["safety"],
+  fleet: ["fleet", "trips", "crew"], inventory: ["assets"], safety: ["safety"],
   finance: ["finance"], administration: ["onboarding", "invitations", "subscriptions"],
 };
 
@@ -11,7 +11,7 @@ const DOMAIN_SCOPES: Record<string, readonly string[]> = {
 const SPECIALISTS = [
   { id: "gate", name: "Gate", style: "Brief and attentive to access exceptions", matches: /gate|visitor|visits|shift_notes|paid_travel/ },
   { id: "field_operations", name: "Field Operations", style: "Practical and focused on the next job step", matches: /ticket|crew|workforce/ },
-  { id: "fleet", name: "Felix", style: "Dispatch-focused and explicit about location freshness", matches: /field_trips|driving_route|mileage/ },
+  { id: "fleet", name: "Felix", style: "Dispatch-focused and explicit about location freshness", matches: /(?:^|_)fleet(?:_|$)|field_trips|driving_route|mileage/ },
   { id: "inventory", name: "Ivy", style: "Precise about custody, condition, and availability", matches: /asset_custody/ },
   { id: "work_hub", name: "Work Hub", style: "Organized and clear about commitments", matches: /work_hub/ },
   { id: "safety", name: "Sage", style: "Evidence-focused and explicit about unresolved hazards", matches: /incident|safety|certification|compliance/ },
@@ -21,7 +21,7 @@ const SPECIALISTS = [
 
 export const SPECIALISTS_TOOL = {
   name: "v_list_specialists",
-  description: "List V's domain specialists and their currently available toolsets for this connected account. Calling Felix, Ivy, Sage, or Finn selects a domain; it never expands permissions. Names and styles are presentation, not separately running agents. Voice switching and speaker identification are not enabled by this directory. Fleet tools cover existing trips only; the new VENDRY Fleet backend is not connected.",
+  description: "List V's domain specialists and their currently available toolsets for this connected account. Calling Felix, Ivy, Sage, or Finn selects a domain; it never expands permissions. Names and styles are presentation, not separately running agents. Voice switching and speaker identification are not enabled by this directory. Felix includes only currently exposed Fleet and trip tools; actual operational access and integrations require current canonical record checks.",
   inputSchema: { type: "object" as const, properties: {}, additionalProperties: false },
   annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
 };
@@ -47,7 +47,7 @@ export function specialistDirectory(reads: readonly AvailableTool[], actions: re
         .flatMap(([, capability]) => [...capability.tools]));
       const tools = names.filter(name => capabilityNames.has(name) || matches.test(name) || (specialist.id === "work_hub" && Boolean(metadata.get(name)?.workHubFamily)));
       tools.forEach(name => assigned.add(name));
-      return tools.length ? [{ ...specialist, readTools: tools.filter(name => readNames.has(name)), prepareTools: tools.filter(name => actionNames.has(name)), ...(specialist.id === "fleet" ? { integrationStatus: "existing_trips_only; VENDRY Fleet not connected" } : {}) }] : [];
+      return tools.length ? [{ ...specialist, readTools: tools.filter(name => readNames.has(name)), prepareTools: tools.filter(name => actionNames.has(name)), ...(specialist.id === "fleet" ? { integrationStatus: tools.some(name => /(?:^|_)fleet(?:_|$)/.test(name)) ? "authorized_fleet_tools_available; current_record_access_requires_verification" : "existing_trips_only; Fleet tools not exposed for this account" } : {}) }] : [];
     }),
     // General tools remain with V instead of disappearing from the directory.
     coordinatorTools: names.filter(name => !assigned.has(name)),

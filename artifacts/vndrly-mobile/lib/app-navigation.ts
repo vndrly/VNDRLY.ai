@@ -133,6 +133,7 @@ export function isGatekeeperRouteAllowed(
     "compliance",
     "notifications",
     "notification-preferences",
+    "onboarding",
   ]);
   return (
     (root === "(tabs)" && (isGatekeeperTabKey(child) || child === "fleet" || child === "fleet-run" || child === "fleet-site-activity")) ||

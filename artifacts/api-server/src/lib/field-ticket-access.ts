@@ -12,10 +12,11 @@ import type { SessionPayload } from "./session";
 export async function canReadTicket(
   session: SessionPayload | null,
   ticketId: number,
+  database: Omit<typeof db, "$client"> = db,
 ): Promise<boolean> {
   if (!session?.userId || !Number.isSafeInteger(ticketId) || ticketId <= 0)
     return false;
-  const ticket = await loadFieldTicketAccessRow(ticketId);
+  const ticket = await loadFieldTicketAccessRow(ticketId, database);
   if (!ticket) return false;
   if (session.role === "admin") return true;
   if (session.role === "vendor")
@@ -23,7 +24,7 @@ export async function canReadTicket(
   if (session.role === "partner")
     return Boolean(session.partnerId && session.partnerId === ticket.partnerId);
   if (session.role !== "field_employee") return false;
-  const [employee] = await db
+  const [employee] = await database
     .select({ id: vendorPeopleTable.id, vendorId: vendorPeopleTable.vendorId })
     .from(vendorPeopleTable)
     .where(
@@ -38,6 +39,7 @@ export async function canReadTicket(
     ticketId,
     { ...employee, userId: session.userId },
     ticket,
+    database,
   );
 }
 
@@ -52,8 +54,9 @@ export type FieldTicketAccessRow = {
 /** Load ticket tenancy fields used for field-employee access checks. */
 export async function loadFieldTicketAccessRow(
   ticketId: number,
+  database: Omit<typeof db, "$client"> = db,
 ): Promise<FieldTicketAccessRow | null> {
-  const [t] = await db
+  const [t] = await database
     .select({
       vendorId: ticketsTable.vendorId,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
@@ -78,13 +81,14 @@ export async function fieldEmployeeCanAccessTicket(
   ticketId: number,
   employee: { id: number; vendorId: number; userId: number },
   ticket: FieldTicketAccessRow,
+  database: Omit<typeof db, "$client"> = db,
 ): Promise<boolean> {
   if (ticket.vendorId !== employee.vendorId) return false;
   if (ticket.fieldEmployeeId === employee.id) return true;
   if (ticket.foremanUserId === employee.userId) return true;
   if (ticket.actingForemanUserId === employee.userId) return true;
 
-  const [onCrew] = await db
+  const [onCrew] = await database
     .select({ ticketId: ticketCrewTable.ticketId })
     .from(ticketCrewTable)
     .where(

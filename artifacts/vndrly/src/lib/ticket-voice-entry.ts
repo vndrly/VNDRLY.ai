@@ -82,8 +82,11 @@ export async function uploadTicketPhoto(file: File, signal: AbortSignal): Promis
   return signed.objectPath;
 }
 
-export async function attachTicketPhoto(ticketId: number, objectPath: string, signal: AbortSignal): Promise<void> {
-  await post(`/tickets/${ticketId}/note-logs`, { content: `[photo] ${objectPath}` }, signal);
+export type TicketPhotoReceipt = {ticketId:number;noteId:number;operationId:string;objectPath:string;sha256:string;size:number;contentType:string;status:"applied";physicalCaptureVerified:false};
+export async function attachTicketPhoto(ticketId:number,objectPath:string,signal:AbortSignal,operationId:string):Promise<TicketPhotoReceipt>{
+ const result=await post<TicketPhotoReceipt>(`/tickets/${ticketId}/photo-associations`,{operationId,objectPath},signal);
+ if(result.ticketId!==ticketId || result.operationId!==operationId || result.objectPath!==objectPath || !Number.isSafeInteger(result.noteId) || result.noteId<=0 || result.status!=="applied" || result.physicalCaptureVerified!==false || !/^[0-9a-f]{64}$/.test(result.sha256) || !Number.isSafeInteger(result.size) || result.size<=0 || !["image/jpeg","image/png","image/webp"].includes(result.contentType)) throw Error("Ticket photo result is unverified");
+ return result;
 }
 
 export async function saveTicketMileage(ticketId: number, action: MileageAction, reading: number, coordinates: EntryCoordinates, signal: AbortSignal): Promise<void> {

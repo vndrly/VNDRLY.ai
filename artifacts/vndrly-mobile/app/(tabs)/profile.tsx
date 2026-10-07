@@ -462,6 +462,9 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
+      <LayeredPillButton onPress={() => router.push("/onboarding")} height={40} style={styles.actionBtn} testID="button-onboarding">
+        <Text style={[styles.actionText, styles.pillTextShadow]}>{t("onboardingNative.title")}</Text>
+      </LayeredPillButton>
       <LayeredPillButton
         onPress={() => router.push("/edit-profile")}
         height={40}

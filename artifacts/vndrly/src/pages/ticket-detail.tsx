@@ -1374,6 +1374,7 @@ export default function TicketDetail({ id }: { id: number }) {
     >
       <TicketVoiceEntry
         key={`${id}:${user?.userId}:${user?.activeMembershipId}`}
+        actorIdentity={JSON.stringify([user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId])}
         ticket={ticket}
         role={user?.role}
         accessAllowed={!assignmentRemoved && !!user && user.vendorId === ticket.vendorId}

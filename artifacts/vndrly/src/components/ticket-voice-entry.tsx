@@ -15,6 +15,7 @@ type Props = {
   ticket: EntryTicket;
   role?: string;
   accessAllowed: boolean;
+  actorIdentity?: string;
   onLineItem: (kind: "parts" | "labor") => void;
   onSaved: () => void;
 };
@@ -44,7 +45,7 @@ export function TicketVoiceEntry(props: Props) {
     kind={request.kind} onClose={() => setRequest(null)} /> : null;
 }
 
-export function TicketEntryDialog({ ticket, role, accessAllowed, kind, onClose, onSaved }: Omit<Props, "onLineItem"> & {
+export function TicketEntryDialog({ ticket, role, accessAllowed, actorIdentity = "", kind, onClose, onSaved }: Omit<Props, "onLineItem"> & {
   kind: TicketEntryKind;
   onClose: () => void;
 }) {
@@ -57,6 +58,10 @@ export function TicketEntryDialog({ ticket, role, accessAllowed, kind, onClose, 
   const [error, setError] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);
   const uploadedPath = useRef<string | null>(null);
+  const photoAttempt = useRef<{ticketId:number;actorIdentity:string;operationId:string;objectPath:string}|null>(null);
+  const currentIdentity=useRef("");
+  currentIdentity.current=JSON.stringify([ticket.id,actorIdentity]);
+  useEffect(()=>{controller.current?.abort();controller.current=null;uploadedPath.current=null;photoAttempt.current=null;setFile(null);setPreview(null);setReview(null);setBusy(false);setError(null);},[ticket.id,actorIdentity]);
   const allowed = accessAllowed && canEnterTicket(ticket, role);
   const mileageAction = mileageActionFor(ticket);
   const available = allowed && (kind === "photo" || (kind === "mileage" && mileageAction !== null));
@@ -114,17 +119,25 @@ export function TicketEntryDialog({ ticket, role, accessAllowed, kind, onClose, 
     if (!available || !review) return;
     const operation = begin();
     if (!operation) return;
+    const identity=currentIdentity.current;
+    const isCurrent=()=>!operation.signal.aborted && currentIdentity.current===identity;
     try {
       if (review === "photo" && file) {
         // Retain the finalized path if attaching the note fails, so an explicit retry does not upload again.
-        uploadedPath.current ??= await uploadTicketPhoto(file, operation.signal);
-        await attachTicketPhoto(ticket.id, uploadedPath.current, operation.signal);
+        const targetTicketId=ticket.id;
+        const path=uploadedPath.current ?? await uploadTicketPhoto(file, operation.signal);
+        if(!isCurrent())return;
+        uploadedPath.current=path;
+        photoAttempt.current ??= {ticketId:targetTicketId,actorIdentity,operationId:crypto.randomUUID(),objectPath:path};
+        const attempt=photoAttempt.current;
+        if(attempt.ticketId!==ticket.id || attempt.actorIdentity!==actorIdentity) return;
+        await attachTicketPhoto(attempt.ticketId, attempt.objectPath, operation.signal, attempt.operationId);
       } else if (review !== "photo" && mileageAction) {
         await saveTicketMileage(ticket.id, mileageAction, review.reading, review.coordinates, operation.signal);
       } else return;
-      if (!operation.signal.aborted) { onSaved(); onClose(); }
+      if (isCurrent()) { onSaved(); onClose(); }
     } catch (failure) {
-      if (!operation.signal.aborted) setError(translateApiError(failure, t, t("ticketVoiceEntry.saveFailed")));
+      if (isCurrent()) setError(translateApiError(failure, t, t("ticketVoiceEntry.saveFailed")));
     } finally { finish(operation); }
   };
 
@@ -138,7 +151,7 @@ export function TicketEntryDialog({ ticket, role, accessAllowed, kind, onClose, 
       {!available ? <p role="status">{t(allowed ? "ticketVoiceEntry.mileageUnavailable" : "ticketVoiceEntry.notAllowed")}</p> : <>
         {kind === "photo" ? <div className="space-y-3">
           <p className="text-sm text-muted-foreground">{t("ticketVoiceEntry.photoHelp")}</p>
-          {!review && <Input aria-label={t("ticketVoiceEntry.choosePhoto")} type="file" accept="image/*" capture="environment" disabled={busy}
+          {!review && <Input aria-label={t("ticketVoiceEntry.choosePhoto")} type="file" accept="image/*" capture="environment" disabled={busy || !!photoAttempt.current}
             onChange={(event) => { setFile(event.target.files?.[0] ?? null); uploadedPath.current = null; setError(null); }} />}
           {file && <p className="text-sm break-all">{file.name}</p>}
           {preview && <img src={preview} alt={t("ticketVoiceEntry.previewAlt")} className="max-h-64 w-full rounded object-contain" />}
@@ -164,7 +177,7 @@ export function TicketEntryDialog({ ticket, role, accessAllowed, kind, onClose, 
       <div className="flex flex-wrap justify-end gap-2">
         <PngPillButton onClick={onClose} disabled={busy}>{t("ticketVoiceEntry.cancel")}</PngPillButton>
         {available && (review ? <>
-          <PngPillButton onClick={() => { setReview(null); setError(null); }} disabled={busy}>{t("ticketVoiceEntry.edit")}</PngPillButton>
+          <PngPillButton onClick={() => { setReview(null); setError(null); }} disabled={busy || !!photoAttempt.current}>{t("ticketVoiceEntry.edit")}</PngPillButton>
           <PngPillButton color="green" onClick={() => void confirm()} disabled={busy}>
             {t(busy ? "ticketVoiceEntry.saving" : kind === "photo" ? "ticketVoiceEntry.savePhoto" : mileageAction === "en-route" ? "ticketVoiceEntry.confirmEnRoute" : "ticketVoiceEntry.confirmCheckOut")}
           </PngPillButton>

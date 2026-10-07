@@ -1,0 +1,36 @@
+import { randomUUID } from "node:crypto";
+import { describe, it, expect, vi } from "vitest";
+import express from "express";
+import cookieParser from "cookie-parser";
+import request from "supertest";
+import { db, pool, vendorsTable, partnersTable, usersTable, userOrgMembershipsTable, siteLocationsTable, workTypesTable, ticketsTable } from "@workspace/db";
+import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
+import { buildTestCookie } from "../test-utils/session";
+import { attachTestErrorMiddleware } from "../test-utils/route-app";
+const objects=vi.hoisted(()=>new Map<string,any>());
+vi.mock("../lib/objectStore",()=>({getObjectStore:()=>({getObject:async(path:string)=>objects.get(path)??null})}));
+import router from "./tickets";
+import { resolveContext } from "./auth";
+describe.runIf(process.env.VNDRLY_TEST_DB_MODE==="fresh-local")("ticket photo association isolated persistence",()=>{
+ it("normal canonical API serializes six exact retries into one note and refuses foreign photo/current-session replay",async()=>{
+  assertFreshLocalTestDatabaseEnvironment(process.env);const tag=randomUUID();
+  const [vendor]=await db.insert(vendorsTable).values({name:"Synthetic photo "+tag,contactName:"Synthetic",contactEmail:tag+"@example.invalid"}).returning();
+  const [partner]=await db.insert(partnersTable).values({name:"Synthetic photo owner "+tag,contactName:"Synthetic",contactEmail:tag+"@example.invalid"}).returning();
+  const [user]=await db.insert(usersTable).values({username:"photo-"+tag,passwordHash:"not-a-login-hash",role:"vendor",displayName:"Synthetic photo worker"}).returning();
+  await db.insert(userOrgMembershipsTable).values({userId:user.id,orgType:"vendor",vendorId:vendor.id,role:"admin"});
+  const context=await resolveContext(user);const session={...context,userId:user.id,sv:user.sessionVersion};
+  const [site]=await db.insert(siteLocationsTable).values({partnerId:partner.id,name:"Synthetic photo site",address:"Synthetic",latitude:0,longitude:0,siteCode:"PHOTO-"+tag}).returning();
+  const [work]=await db.insert(workTypesTable).values({name:"Synthetic photo work "+tag,category:"test"}).returning();
+  const [ticket]=await db.insert(ticketsTable).values({vendorId:vendor.id,siteLocationId:site.id,workTypeId:work.id,status:"in_progress",lifecycleState:"on_site"}).returning();
+  const objectPath="/objects/uploads/"+randomUUID(),bytes=Buffer.from([137,80,78,71,13,10,26,10]);objects.set(objectPath,{body:bytes,size:bytes.length,contentType:"image/png",acl:{owner:String(user.id),visibility:"private"}});
+  const body={operationId:randomUUID(),objectPath},cookie=buildTestCookie(session);const app=express().use(express.json()).use(cookieParser()).use(router);attachTestErrorMiddleware(app);
+  const path=`/tickets/${ticket.id}/photo-associations`;const responses=await Promise.all(Array.from({length:6},()=>request(app).post(path).set("Cookie",cookie).send(body)));
+  expect(responses.every(row=>row.status===200)).toBe(true);for(const row of responses)expect(row.body).toEqual(responses[0].body);
+  expect(responses[0].body).toMatchObject({ticketId:ticket.id,operationId:body.operationId,objectPath,status:"applied",physicalCaptureVerified:false});
+  const notes=await pool.query("SELECT id,created_by_id FROM ticket_note_logs WHERE ticket_id=$1",[ticket.id]);expect(notes.rows).toHaveLength(1);expect(notes.rows[0].created_by_id).toBe(user.id);
+  const read=await request(app).get(path+"/"+body.operationId).set("Cookie",cookie);expect(read.status).toBe(200);expect(read.body).toEqual(responses[0].body);
+  const altered=await request(app).post(path).set("Cookie",cookie).send({...body,objectPath:"/objects/uploads/"+randomUUID()});expect(altered.status).toBe(409);
+  objects.get(objectPath).acl.owner="0";const foreign=await request(app).post(path).set("Cookie",cookie).send(body);expect(foreign.status).toBe(403);
+  await pool.query("UPDATE users SET session_version=session_version+1 WHERE id=$1",[user.id]);const revoked=await request(app).post(path).set("Cookie",cookie).send(body);expect(revoked.status).not.toBe(200);
+ });
+});

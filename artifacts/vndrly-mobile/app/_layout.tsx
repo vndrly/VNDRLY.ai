@@ -180,9 +180,10 @@ function AuthGate() {
     const inLogin = seg0 === "login";
     const inGuestLogin = seg0 === "guest-login";
     const inActivation = seg0 === "activate-account";
+    const inOnboarding = seg0 === "onboarding";
     const inGuestStack = seg0 === "visitor-checkin";
     if (!hasAuth) {
-      if (!inLogin && !inGuestLogin && !inActivation) router.replace("/login");
+      if (!inLogin && !inGuestLogin && !inActivation && !inOnboarding) router.replace("/login");
       return;
     }
     (async () => {
