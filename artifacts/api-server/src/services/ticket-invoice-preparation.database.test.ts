@@ -22,7 +22,7 @@ describe.skipIf(!isolated)("canonical ticket invoice preparation isolated persis
     const [site]=await s.db.insert(s.siteLocationsTable).values({partnerId:partner.id,name:`Synthetic site ${marker}`,address:"Synthetic isolated fixture",latitude:30,longitude:-97,state:"TX",siteCode:`IP-${marker.slice(0,20)}`}).returning();
     await s.db.insert(s.vendorPartnerBillingSettingsTable).values({vendorId:vendor.id,partnerId:partner.id,cadence:"weekly",paymentTermsDays:30});
     const now=new Date();
-    await s.pool.query("INSERT INTO work_hub_finance_records(org_type,org_id,kind,record_key,data) VALUES ('vendor',$1,'invoice',$2,$3::jsonb)",[vendor.id,`synthetic-history-${marker}`,JSON.stringify({status:"issued",approvedAt:new Date(now.getTime()-20*86400000).toISOString()})]);
+    await s.pool.query("INSERT INTO work_hub_finance_records(org_type,org_id,kind,record_key,data,created_by) VALUES ('vendor',$1,'invoice',$2,$3::jsonb,$4)",[vendor.id,`synthetic-history-${marker}`,JSON.stringify({status:"issued",approvedAt:new Date(now.getTime()-20*86400000).toISOString()}),user.id]);
     const [ticket]=await s.db.insert(s.ticketsTable).values({vendorId:vendor.id,siteLocationId:site.id,workTypeId:workType.id,status:"approved",approvedAt:now,lifecycleState:"off_site"}).returning();
     const session={userId:user.id,role:"vendor",vendorId:vendor.id,activeMembershipId:membership.id,membershipRole:"admin",sv:user.sessionVersion};
     const [foreignVendor]=await s.db.insert(s.vendorsTable).values({name:`Synthetic foreign invoice vendor ${marker}`,contactName:"Synthetic",contactEmail:`foreign-${marker}@example.invalid`}).returning();
@@ -47,7 +47,7 @@ describe.skipIf(!isolated)("canonical ticket invoice preparation isolated persis
     await expect(api.execute(command)).rejects.toThrow("current_authority_required");
     await expect(api.readback(command)).rejects.toThrow("current_authority_required");
     const memberSession={...session,membershipRole:"member"};
-    await s.pool.query("INSERT INTO work_hub_finance_records(org_type,org_id,kind,record_key,data) VALUES ('vendor',$1,'grant',$2,$3::jsonb)",[vendor.id,String(user.id),JSON.stringify({roles:["billing_manager"]})]);
+    await s.pool.query("INSERT INTO work_hub_finance_records(org_type,org_id,kind,record_key,data,created_by) VALUES ('vendor',$1,'grant',$2,$3::jsonb,$4)",[vendor.id,String(user.id),JSON.stringify({roles:["billing_manager"]}),user.id]);
     expect((await ticketInvoiceCandidatesForSession({},memberSession)).tickets).toEqual([]);
     await s.pool.query("UPDATE work_hub_finance_records SET data=$3::jsonb WHERE org_type='vendor' AND org_id=$1 AND kind='grant' AND record_key=$2",[vendor.id,String(user.id),JSON.stringify({roles:[]})]);
     await expect(ticketInvoiceCandidatesForSession({},memberSession)).rejects.toThrow("billing_permission_required");
