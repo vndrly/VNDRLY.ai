@@ -5351,6 +5351,8 @@
     "offline": "Connection unavailable. Previously loaded records may be outdated. Refresh after reconnecting; shift transfers cannot be queued offline.",
     "loading": "Loading…",
     "failed": "Unable to complete Change Over.",
+    "readTimeout": "The Gate read timed out. Refresh to retrieve the saved state.",
+    "writeUnconfirmed": "The Gate result is unconfirmed. Check the saved station state before retrying; the change may have completed.",
     "noSites": "No assigned Gate sites are available.",
     "search": "Search Shift Notes",
     "range": "History range",

@@ -5351,6 +5351,8 @@
     "offline": "Sin conexión. Los registros cargados pueden estar desactualizados. Actualice al reconectar; las transferencias no se guardan para enviarlas sin conexión.",
     "loading": "Cargando…",
     "failed": "No se pudo completar el cambio de turno.",
+    "readTimeout": "La consulta de portería agotó el tiempo de espera. Actualice para obtener el estado guardado.",
+    "writeUnconfirmed": "El resultado de portería no está confirmado. Revise el estado guardado antes de volver a intentar; el cambio podría haberse completado.",
     "noSites": "No hay sitios de portería asignados disponibles.",
     "search": "Buscar notas de turno",
     "range": "Período del historial",
