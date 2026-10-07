@@ -115,6 +115,8 @@ vi.mock("@/lib/api", () => ({
 const { getUserMock } = vi.hoisted(() => ({ getUserMock: vi.fn() }));
 vi.mock("@/lib/auth", () => ({
   getUser: (...a: unknown[]) => getUserMock(...a),
+  captureAuthScope: () => Object.freeze({ generation: 1 }),
+  isAuthScopeCurrent: () => true,
   setUser: vi.fn(),
   setToken: vi.fn(),
   getToken: vi.fn(),

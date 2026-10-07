@@ -1,5 +1,5 @@
 export const LEGAL_EFFECTIVE_DATE = "August 24, 2026";
-import { LEGAL_POLICY_VERSION } from "@workspace/api-zod";
+import { LEGAL_POLICY_VERSION } from "@workspace/api-zod/legal-policy";
 export { LEGAL_POLICY_VERSION };
 export const LEGAL_CONTACT_EMAIL = "legal@vndrly.ai";
 export const LEGAL_SUPPORT_EMAIL = "support@vndrly.ai";
