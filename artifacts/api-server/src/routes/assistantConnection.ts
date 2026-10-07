@@ -446,7 +446,11 @@ router.post("/mcp", async (req, res) => {
     }
     if (name === "v_show_workspace") {
       const allowedNames = new Set(chatGptReadableTools(authorized.session, authorized.scopes).map(tool => tool.name));
-      const request = workspaceRequest(args, allowedNames);
+      const upgrades = typeof args.view === "string" && args.view.startsWith("fleet")
+        ? await fleetUpgradeDiscovery(authorized.session, authorized.scopes) : [];
+      const request = workspaceRequest(args, new Set([...allowedNames, ...upgrades.filter(item => !item.tool.mutating).map(item => item.tool.name)]));
+      const missing = upgrades.find(item => item.tool.name === request.sourceTool);
+      if (missing) return reply(fleetConsentChallenge(ASSISTANT_ISSUER, authorized.scopes, missing.scope));
       const source = requireChatGptReadableTool(authorized.session, authorized.scopes, request.sourceTool);
       const raw = chatGptReadToolOutput(source.name, JSON.parse(await runTool(source.name, request.sourceArguments, authorized.session, "")));
       const output = workspaceOutput(request.view, source.name, request.sourceArguments, raw);
@@ -696,3 +700,4 @@ function oauthError(res: Response, error: unknown) {
   return res.status(error instanceof AssistantOAuthError ? 400 : 503).json({ error: error instanceof AssistantOAuthError ? error.code : "temporarily_unavailable" });
 }
 export default router;
+

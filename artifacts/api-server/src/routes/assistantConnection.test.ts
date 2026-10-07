@@ -61,6 +61,39 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("challenges missing Fleet consent for the authorized Partner workspace source before reading records", async () => {
+    const credentials = await tokens("gate:read work_hub:read");
+    grants[0].session = { ...grants[0].session, role: "partner", vendorId: null, partnerId: 609, membershipRole: "admin" };
+    mocks.run.mockImplementation(async (name, input) => {
+      if (name === "query_fleet_site_activity" && Object.keys(input).length === 0) return JSON.stringify({ sites: [{siteId:392,name:"Private site name"}] });
+      throw new Error("Record read must require consent");
+    });
+    const invoke = (method: string, params?: unknown) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({jsonrpc:"2.0",id:1,method,params});
+    const listed = (await invoke("tools/list")).body.result;
+    expect(listed.tools.find((tool: {name:string}) => tool.name === "query_fleet_site_activity").securitySchemes).toEqual([{type:"oauth2",scopes:["fleet:read"]}]);
+    mocks.run.mockClear();
+    const result = (await invoke("tools/call", {name:"v_show_workspace",arguments:{view:"fleet_site",siteId:392}})).body.result;
+    expect(result.isError).toBe(true);
+    expect(result._meta["mcp/www_authenticate"][0]).toContain('error="insufficient_scope"');
+    expect(result._meta["mcp/www_authenticate"][0]).toContain('scope="gate:read work_hub:read fleet:read"');
+    expect(JSON.stringify(result)).not.toContain("Private site name");
+    expect(result.structuredContent).toBeUndefined();
+    expect(mocks.run.mock.calls).toEqual([["query_fleet_site_activity",{},expect.any(Object),""]]);
+    expect(grants[0].scopes).toEqual(["gate:read","work_hub:read"]);
+    expect(grants[0].actions ?? []).toEqual([]);
+    expect(mocks.bound).not.toHaveBeenCalled();
+    mocks.run.mockResolvedValue(JSON.stringify({sites:[]}));
+    const denied = (await invoke("tools/call",{name:"v_show_workspace",arguments:{view:"fleet_site",siteId:392}})).body.result;
+    expect(denied.isError).toBe(true);
+    expect(denied._meta?.["mcp/www_authenticate"]).toBeUndefined();
+    grants[0].scopes.push("fleet:read");
+    mocks.run.mockClear();
+    mocks.run.mockResolvedValue(JSON.stringify({sites:[{siteId:392,name:"Consented site"}]}));
+    const consented = (await invoke("tools/call",{name:"v_show_workspace",arguments:{view:"fleet_site"}})).body.result;
+    expect(consented.isError).toBe(false);
+    expect(consented._meta?.["mcp/www_authenticate"]).toBeUndefined();
+    expect(consented.structuredContent).toMatchObject({view:"fleet_site",sourceTool:"query_fleet_site_activity"});
+  });
   it("labels cancellation tools as potentially destructive without widening their input operation", async () => {
     const credentials = await tokens("gate:write fleet:dispatch");
     const descriptors = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({jsonrpc:"2.0",id:1,method:"tools/list"});
@@ -725,3 +758,4 @@ it('returns safety draft fields through the scoped read boundary without a clien
  expect((await call(limited.access_token)).body.result.isError).toBe(true);
  expect(mocks.run).not.toHaveBeenCalled();
 });
+
