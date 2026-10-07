@@ -4,6 +4,7 @@ export type PlanIdentity = { userId: number; organizationKey: string };
 export const planCompletionIntentSchema = z.discriminatedUnion("kind", [
  z.object({ kind: z.literal("planned_read_observed") }).strict(),
  z.object({ kind: z.literal("canonical_ticket_action_saved"), action: z.enum(["submit", "approve", "cancel"]), ticketId: z.number().int().positive() }).strict(),
+ z.object({ kind: z.literal("canonical_work_hub_task_action_saved"), action: z.enum(["create", "complete", "cancel"]), title: z.string().trim().min(1).max(200).optional(), assigneeUserId: z.number().int().positive().nullable().optional(), taskId: z.string().uuid().optional() }).strict().refine(value => value.action === "create" ? value.title !== undefined && value.taskId === undefined : value.taskId !== undefined && value.title === undefined && value.assigneeUserId === undefined, "Supply exact task creation fields or existing task identity"),
 ]);
 export type PlanStepInput = { id: string; specialist: string; toolNames: string[]; dependsOn: string[]; deadlineAt?: string; completion?: z.infer<typeof planCompletionIntentSchema> };
 export type PlanStep = PlanStepInput & { state: "pending" | "completed" | "failed" | "waiting" | "cancelled"; resultReferences: string[]; detail?: string };

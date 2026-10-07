@@ -3533,7 +3533,7 @@ router.get("/work-hub/search/items/:type/:id", async (req, res) => {
   if (kind.data === "task") {
     const [row] = await db.select().from(workHubTasksTable).where(eq(workHubTasksTable.id, id.data)).limit(1);
     if (!row || !await liveOwner(row.ownerOrgType, row.ownerOrgId) || session.managedSubcontractor && row.assigneeUserId !== session.userId && row.createdById !== session.userId) return notFound();
-    return res.json({ id: row.id, subjectType: "task", title: row.title, body: row.description, status: row.status, updatedAt: row.updatedAt });
+    return res.json({ id: row.id, subjectType: "task", title: row.title, body: row.description, description: row.description, ownerOrgType: row.ownerOrgType, ownerOrgId: row.ownerOrgId, version: row.version, assigneeUserId: row.assigneeUserId, status: row.status, updatedAt: row.updatedAt });
   }
   if (kind.data === "meeting") {
     const [row] = await db.select({ occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable })

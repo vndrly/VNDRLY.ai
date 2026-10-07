@@ -5,7 +5,8 @@ import request from "supertest";
 import { createHmac } from "node:crypto";
 import { ASSISTANT_RESOURCE, CHATGPT_CLIENT_ID, assistantPkceChallenge, type AssistantOAuthGrant } from "../assistant/chatgpt-oauth";
 
-const mocks = vi.hoisted(() => ({ validate: vi.fn(), store: vi.fn(), run: vi.fn(), audit: vi.fn(), bound: vi.fn(), pending: vi.fn(), durableResult: vi.fn() }));
+const mocks = vi.hoisted(() => ({ validate: vi.fn(), store: vi.fn(), run: vi.fn(), taskRead: vi.fn(), audit: vi.fn(), bound: vi.fn(), pending: vi.fn(), durableResult: vi.fn() }));
+vi.mock("../assistant/natural-voice-write-tools", async importOriginal => ({ ...await importOriginal<typeof import('../assistant/natural-voice-write-tools')>(), callNaturalVoiceDomainApi: (...args: unknown[]) => mocks.taskRead(...args) }));
 vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: mocks.validate, withAssistantGrants: mocks.store }));
 vi.mock("./assistant", () => ({ runTool: mocks.run }));
 vi.mock("../assistant/action-audit", () => ({ writeAskVActionAudit: mocks.audit }));
@@ -34,6 +35,13 @@ beforeEach(() => {
   mocks.validate.mockReset().mockImplementation(async (value) => ({ ...value, exp: Math.floor(Date.now() / 1000) + 60 }));
   mocks.store.mockReset().mockImplementation(async (_id, operation) => operation(grants));
   mocks.run.mockReset().mockResolvedValue(JSON.stringify({ sites: [{ id: 3 }] }));
+  mocks.taskRead.mockReset().mockImplementation(async (path, _method, _input, actor) => {
+    // Existing fixtures supply task records through this common mock; production uses the exact canonical endpoint.
+    const raw = JSON.parse(await mocks.run('list_work_hub_tasks', {}, actor, ''));
+    const rows = Array.isArray(raw) ? raw : raw.tasks ?? raw.items ?? [];
+    const row = rows.find((item: { id: string }) => path.endsWith('/' + item.id));
+    return row ? { ...row, subjectType: 'task' } : { ok: false, status: 404 };
+  });
   mocks.audit.mockReset().mockResolvedValue(undefined);
   mocks.pending.mockReset();
   mocks.bound.mockReset().mockImplementation(async (args) => args.execute({ ...args.input, confirmed: true, idempotencyKey: "server-approved-test-key" }));
@@ -41,6 +49,43 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ client_id: CHATGPT_CLIENT_ID, redirect_uris: [redirect], token_endpoint_auth_methods_supported: ["none"] }) }));
 });
 afterEach(() => { delete process.env.ASSISTANT_CONNECTION_ENABLED; vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+it('uses the actual saved WorkHub creation receipt and refuses changed resource revision at checkpoint approval', async () => {
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111', savedId='33333333-3333-4333-8333-333333333333';
+ const credentials=await tokens('work_hub:read work_hub:write');
+ const call=(name:string,args:unknown)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}});
+ const resource={id:savedId,title:'Follow up',ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',assigneeUserId:null};
+ mocks.run.mockImplementation(async (_name,input)=>JSON.stringify({operationId:input.operationId,appliedAt:new Date().toISOString(),replayed:false,resource}));
+ const prepared=(await call('manage_work_hub_task',{action:'create',owner:{type:'vendor',id:4},context:{kind:'organization',id:4},expectedVersion:null,payload:{title:'Follow up'}})).body.result;
+ expect((await call('v_submit_panel_action',prepared._meta.componentApproval)).body.result.structuredContent.ok).toBe(true);
+ const reference=prepared._meta.componentApproval.reference;
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'create',specialist:'V',toolNames:['manage_work_hub_task'],dependsOn:[],completion:{kind:'canonical_work_hub_task_action_saved',action:'create',title:'Follow up'}}]);
+ const row={id:taskId,subjectType:'task',ownerOrgType:'vendor',ownerOrgId:4,version:3,status:'open',description:encodePlanDescription(plan)};
+ mocks.taskRead.mockImplementation(async path=>path.endsWith('/'+taskId)?row:{...resource,subjectType:'task'});
+ const checkpoint=(await call('v_prepare_work_plan_completion',{taskId,expectedTaskVersion:3,stepId:'create',actionReference:reference})).body.result;
+ expect(checkpoint.isError).toBe(false); expect(mocks.bound).toHaveBeenCalledOnce();
+ resource.version=2;
+ expect((await call('v_submit_panel_action',checkpoint._meta.componentApproval)).body.result.isError).toBe(true);
+ expect(mocks.bound).toHaveBeenCalledOnce();
+});
+it('reads an authorized plan beyond the first100 and refuses foreign detail or missing task scope', async () => {
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[]}]);
+ const row={id:taskId,subjectType:'task',ownerOrgType:'vendor',ownerOrgId:4,version:7,status:'open',description:encodePlanDescription(plan)};
+ const credentials=await tokens('work_hub:read');
+ const call=(token=credentials.access_token)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_resume_work_plan',arguments:{taskId}}});
+ mocks.run.mockResolvedValue(JSON.stringify(Array.from({length:100},(_,id)=>({id:'different-task-'+id}))));
+ mocks.taskRead.mockResolvedValue(row);
+ expect(JSON.parse((await call()).body.result.content[0].text)).toMatchObject({taskId,taskVersion:7,eligibleStepIds:['brief']});
+ expect(mocks.run).not.toHaveBeenCalled();
+ expect(mocks.taskRead).toHaveBeenCalledWith(`/work-hub/search/items/task/${taskId}`,'GET',{},expect.objectContaining({userId:17,vendorId:4}));
+ mocks.taskRead.mockResolvedValue({...row,ownerOrgId:5});
+ expect((await call()).body.result.isError).toBe(true);
+ const limited=await tokens('tickets:read'); mocks.taskRead.mockClear();
+ expect((await call(limited.access_token)).body.result.isError).toBe(true);
+ expect(mocks.taskRead).not.toHaveBeenCalled();
+});
 it.each([false, true])('rechecks observed plan completion at approval (changed task: %s)', async changed => {
  const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
  const taskId='11111111-1111-4111-8111-111111111111';
@@ -659,7 +704,7 @@ it("resumes a coordinated plan only with Work Hub read access and the linked act
  const { createCoordinatedPlan, encodePlanDescription } = await import("../assistant/coordinated-plan");
  const taskId = "11111111-1111-4111-8111-111111111111";
  const plan = createCoordinatedPlan({ userId: 17, organizationKey: "vendor:4" }, [{ id: "brief", specialist: "V", toolNames: ["get_work_hub_briefing"], dependsOn: [] }]);
- mocks.run.mockResolvedValue(JSON.stringify([{ id: taskId, ownerOrgType: "vendor", ownerOrgId: 4, version: 1, description: encodePlanDescription(plan) }]));
+ mocks.run.mockResolvedValue(JSON.stringify([{ id: taskId, ownerOrgType: "vendor", ownerOrgId: 4, version: 1, status: 'open', description: encodePlanDescription(plan) }]));
  const credentials = await tokens("work_hub:read");
  const call = (access: string) => request(app).post(base + "/mcp").set("Authorization", "Bearer " + access).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_resume_work_plan", arguments: { taskId } } });
  const resumed = await call(credentials.access_token);
@@ -719,7 +764,7 @@ it('executes a saved plan read step without claiming a saved checkpoint',async()
  const taskId='11111111-1111-4111-8111-111111111111';
  const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[]}]);
  const credentials=await tokens('work_hub:read');
- mocks.run.mockResolvedValueOnce(JSON.stringify([{id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,description:encodePlanDescription(plan)}])).mockResolvedValueOnce(JSON.stringify({tasks:[],events:[]}));
+ mocks.run.mockResolvedValueOnce(JSON.stringify([{id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',description:encodePlanDescription(plan)}])).mockResolvedValueOnce(JSON.stringify({tasks:[],events:[]}));
  const response=await request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_run_work_plan_read',arguments:{taskId,stepId:'brief',toolArguments:{get_work_hub_briefing:{}}}}});
  expect(response.body.result.structuredContent).toMatchObject({stepId:'brief',executionStarted:true,checkpointSaved:false,results:[{toolName:'get_work_hub_briefing',result:{tasks:[],events:[]}}]});
  expect(grants[0].actions??[]).toHaveLength(0);
@@ -729,7 +774,7 @@ it.each(['exception', 'ok false'])('preserves successful planned reads when anot
  const taskId='11111111-1111-4111-8111-111111111111';
  const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing','list_work_hub_tasks'],dependsOn:[]}]);
  const credentials=await tokens('work_hub:read');
- mocks.run.mockResolvedValueOnce(JSON.stringify([{id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,description:encodePlanDescription(plan)}])).mockResolvedValueOnce(JSON.stringify({tasks:[],events:[]}));
+ mocks.run.mockResolvedValueOnce(JSON.stringify([{id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',description:encodePlanDescription(plan)}])).mockResolvedValueOnce(JSON.stringify({tasks:[],events:[]}));
  if(failure==='exception') mocks.run.mockRejectedValueOnce(new Error('private-provider-detail'));
  else mocks.run.mockResolvedValueOnce(JSON.stringify({ok:false,message:'Unavailable'}));
  const response=await request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_run_work_plan_read',arguments:{taskId,stepId:'brief',toolArguments:{get_work_hub_briefing:{},list_work_hub_tasks:{}}}}});

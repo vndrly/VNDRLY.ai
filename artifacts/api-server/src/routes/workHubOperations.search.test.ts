@@ -63,7 +63,7 @@ describe.skipIf(!isolated)("federated Work Hub asset search", () => {
     const search = await request(app).get("/work-hub/search").query({ q: term, type: "task" }).set("Cookie", cookie);
     expect(search.status).toBe(200);
     expect(search.body.results).toContainEqual(expect.objectContaining({ subjectId: task.id, destination: { module: "search-item", section: "task", itemId: task.id } }));
-    expect((await request(app).get(`/work-hub/search/items/task/${task.id}`).set("Cookie", cookie)).body).toMatchObject({ id: task.id, title: `${term} task` });
+    expect((await request(app).get(`/work-hub/search/items/task/${task.id}`).set("Cookie", cookie)).body).toMatchObject({ id: task.id, subjectType: "task", title: `${term} task`, ownerOrgType: "vendor", ownerOrgId: ownerId, version: task.version, description: task.description });
     await db.update(userOrgMembershipsTable).set({ vendorId: otherId }).where(eq(userOrgMembershipsTable.userId, viewerId));
     const revokedSearch = await request(app).get("/work-hub/search").query({ q: term, type: "task" }).set("Cookie", cookie);
     expect(revokedSearch.body.results).toEqual([]);
