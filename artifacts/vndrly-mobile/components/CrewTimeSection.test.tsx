@@ -421,13 +421,17 @@ describe("CrewTimeSection — inline error wiring (Task #546)", () => {
       "That employee is already checked in to this ticket.",
     );
 
+    // An error can render before the first request releases its busy button.
+    await waitFor(() => expect(firstByTestId("button-crew-toggle-100").style.opacity).toBe("1"));
+
     // Second click — server now returns ticket_state_changed. Row error
     // must clear and a refresh GET to /crew-sessions must fire.
     tapInOutForCrewId(100);
     await waitFor(() => {
+      expect(attempt).toBe(2);
       expect(screen.queryByTestId("inline-error-crew-100")).toBeNull();
+      expect(sessionsCallCount).toBeGreaterThan(baseline);
     });
-    expect(sessionsCallCount).toBeGreaterThan(baseline);
     // Still no modal alert from the state-conflict path.
     expect(alertSpy).not.toHaveBeenCalled();
   });

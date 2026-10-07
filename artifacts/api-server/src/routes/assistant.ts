@@ -1078,6 +1078,12 @@ export async function runTool(
         if (session.role === "field_employee") {
           return JSON.stringify({ invoices: [], note: "Field employees don't see invoices." });
         }
+        const hasInvoiceScope = session.role === "admin"
+          || (session.role === "vendor" && Number.isInteger(session.vendorId) && Number(session.vendorId) > 0)
+          || (session.role === "partner" && Number.isInteger(session.partnerId) && Number(session.partnerId) > 0);
+        if (!hasInvoiceScope) {
+          return JSON.stringify({ error: "No authorized invoice scope on this session." });
+        }
         const filters = [ne(invoicesTable.status, "paid")];
         if (session.role === "vendor" && session.vendorId) {
           filters.push(eq(invoicesTable.vendorId, session.vendorId));

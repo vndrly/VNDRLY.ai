@@ -136,7 +136,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "lookup_open_invoices",
-    description: "Returns up to 10 open (unpaid or partially paid) invoices for this user's org, with totals and due dates.",
+    description: "Returns up to 10 open (unpaid or partially paid) invoices for this user's org, with totals and due dates. Use this instead of query_invoices when the user asks for open, unpaid, or outstanding invoices without extra filters; this lookup does not impose query_invoices' default 90-day creation window.",
     input_schema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -343,7 +343,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_invoices",
     description:
-      "Lists individual invoices (number, status, amounts, due date) in the caller's scope. Use when the user needs specific invoice numbers or a list, not just totals. Field employees blocked.",
+      "Lists individual invoices (number, status, amounts, due date) in the caller's scope within a creation-date window (defaults to 90 days). Use for explicitly filtered invoice lists or specific invoice detail, not just totals. For open, unpaid, or outstanding invoices without extra filters, use lookup_open_invoices instead so older unpaid invoices are not silently omitted. Field employees blocked.",
     input_schema: {
       type: "object",
       properties: {
