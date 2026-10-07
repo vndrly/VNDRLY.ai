@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { QueryConfig } from "pg";
 import { describe, expect, it } from "vitest";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
 
@@ -56,19 +57,28 @@ describe.skipIf(!isolated)("Gate assignment PostgreSQL boundary", () => {
     const waiting=new Promise<void>(resolve=>{writerWaiting=resolve;});
     const wrapped=(reader:boolean)=>({connect:async()=>{
       const client=await s.pool.connect();let first=true;
-      return {release:()=>client.release(),query:async(text:string,values?:unknown[])=>{
+      return {release:()=>client.release(),query:async(query:string|QueryConfig,values?:unknown[])=>{
+        const text=typeof query==="string"?query:query.text;
         const userLock=text.includes("FROM users")&&text.includes("FOR UPDATE");
         if(!reader&&userLock&&first){first=false;writerWaiting();}
-        const result=await client.query(text,values);
+        const result=await client.query(query,values);
         if(reader&&userLock&&first){first=false;readerLocked();await release;}
         return result;
       }};
     }});
     const recovery=readShiftCreationOperation(session,creationId,wrapped(true) as never);
-    await locked;
+    // Surface failures immediately instead of waiting for an unreachable lock barrier.
+    await Promise.race([locked,recovery.then(()=>{throw new Error("Recovery completed before reader lock barrier");})]);
     const replay=executeGateShiftAssignment(session,shift.id,input,wrapped(false) as never);
-    await waiting;releaseReader();
-    const [recovered,replayed]=await Promise.all([recovery,replay]);
+    let recovered, replayed;
+    try {
+      await Promise.race([waiting,replay.then(()=>{throw new Error("Assignment completed before writer lock barrier");})]);
+      releaseReader();
+      [recovered,replayed]=await Promise.all([recovery,replay]);
+    } finally {
+      releaseReader();
+      await Promise.allSettled([recovery,replay]);
+    }
     expect(recovered.receipt?.resource.id).toBe(shift.id);expect(replayed).toEqual(first);
     const [otherShift]=await s.db.insert(s.workHubShiftsTable).values({...shift,id:randomUUID(),title:"Synthetic second shift"}).returning();
     // Both transactions target different shifts but share the same worker and conflicting rows.

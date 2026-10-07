@@ -261,7 +261,7 @@ describe("authenticated scheduling reservations", () => {
         },
       };
       const created = await request(app).post("/work-hub/shifts").set("Cookie", hostCookie).send(body);
-      expect(created.status).toBe(201);
+      expect(created.status, JSON.stringify(created.body) + "\n" + created.text).toBe(201);
       expect(created.body.resource).toMatchObject({
         siteLocationId: gateSiteId,
         gateStationId,
