@@ -1,4 +1,6 @@
 import { resolveMessageThread } from "../work-hub/message-thread";
+import { assertMessageMutationReceipt, assertMessageMutationTarget, type MessageMutationIntent } from "../work-hub/message-mutation";
+import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
 import { assertCollaborationInvite } from "../work-hub/collaboration-access";
 import { applyAwayRepliesForIncoming } from "../services/work-hub-away-responder-repository";
 import { Router, type IRouter, type Request, type Response } from "express";
@@ -471,8 +473,10 @@ router.patch("/work-hub/channels/:channelId/messages/:messageId", async (req, re
   try {
     const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.write");
     const envelope = workHubCommandEnvelopeSchema.parse(req.body); const payload = updateMessagePayload.parse(envelope.payload);
+    if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+    const intent: MessageMutationIntent = { action: "update", actorUserId: actor.userId, channelId: channel.id, messageId: req.params.messageId, expectedVersion: envelope.expectedVersion, body: payload.body };
     const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "message.update", envelope, async (tx) => {
-      const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, req.params.messageId), eq(workHubMessagesTable.channelId, channel.id))).limit(1);
+      const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, req.params.messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
       if (!current) throw new WorkHubAccessError("not_found");
       if (current.authorUserId !== actor.userId) throw new WorkHubAccessError("forbidden");
       if (current.deletedAt) throw new WorkHubAccessError("forbidden");
@@ -481,7 +485,20 @@ router.patch("/work-hub/channels/:channelId/messages/:messageId", async (req, re
       const [updated] = await tx.update(workHubMessagesTable).set({ body: payload.body, version: current.version + 1, editedAt: new Date() }).where(eq(workHubMessagesTable.id, current.id)).returning();
       await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "message.updated", subjectType: "message", subjectId: current.id, priorVersion: current.version, newVersion: updated.version, source: source(req), operationId: envelope.operationId }, tx);
       return updated;
+    }, async tx => {
+      await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, actor.userId)).for("share");
+      if (actor.activeMembershipId) await tx.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.id, actor.activeMembershipId)).for("share");
+      await tx.select({ id: workHubChannelsTable.id }).from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channel.id)).for("share");
+      await tx.select({ userId: workHubChannelMembersTable.userId }).from(workHubChannelMembersTable).where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, actor.userId))).for("share");
+      try { await validateAssistantSession(actor, tx); } catch { throw new WorkHubAccessError("forbidden"); }
+      const liveAccess = await resolveChannelAccess(actor, channel.id, "channel.write", tx);
+      if (envelope.owner.type !== liveAccess.channel.ownerOrgType || envelope.owner.id !== liveAccess.channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+      const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, intent.messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
+      assertMessageMutationTarget(intent, current);
+      const [prior] = await tx.select().from(workHubClientOperationsTable).where(and(eq(workHubClientOperationsTable.userId, actor.userId), eq(workHubClientOperationsTable.commandKind, "message.update"), eq(workHubClientOperationsTable.operationId, envelope.operationId))).limit(1);
+      if (prior?.resultJson) assertMessageMutationReceipt(intent, prior.resultJson);
     });
+    assertMessageMutationReceipt(intent, result.resource);
     return res.json(result);
   } catch (error) { return fail(res, error); }
 });
@@ -491,18 +508,33 @@ router.delete("/work-hub/channels/:channelId/messages/:messageId", async (req, r
   try {
     const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.write");
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    z.object({}).strict().parse(envelope.payload);
     if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+    const intent: MessageMutationIntent = { action: "delete", actorUserId: actor.userId, channelId: channel.id, messageId: req.params.messageId, expectedVersion: envelope.expectedVersion };
     const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "message.delete", envelope, async tx => {
       const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, req.params.messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
       if (!current) throw new WorkHubAccessError("not_found");
       if (current.authorUserId !== actor.userId) throw new WorkHubAccessError("forbidden");
-      if (current.deletedAt) return { ...current, body: "" };
+      if (current.deletedAt) throw new WorkHubAccessError("forbidden");
       if (envelope.expectedVersion !== current.version) throw new Error("work_hub.version_conflict");
       await tx.insert(workHubMessageVersionsTable).values({ messageId: current.id, version: current.version, body: current.body, editorUserId: actor.userId });
       const [updated] = await tx.update(workHubMessagesTable).set({ body: "", deletedAt: new Date(), deletedById: actor.userId, version: current.version + 1 }).where(eq(workHubMessagesTable.id, current.id)).returning();
       await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "message.deleted", subjectType: "message", subjectId: current.id, source: source(req), operationId: envelope.operationId }, tx);
       return updated;
+    }, async tx => {
+      await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, actor.userId)).for("share");
+      if (actor.activeMembershipId) await tx.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.id, actor.activeMembershipId)).for("share");
+      await tx.select({ id: workHubChannelsTable.id }).from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channel.id)).for("share");
+      await tx.select({ userId: workHubChannelMembersTable.userId }).from(workHubChannelMembersTable).where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, actor.userId))).for("share");
+      try { await validateAssistantSession(actor, tx); } catch { throw new WorkHubAccessError("forbidden"); }
+      const liveAccess = await resolveChannelAccess(actor, channel.id, "channel.write", tx);
+      if (envelope.owner.type !== liveAccess.channel.ownerOrgType || envelope.owner.id !== liveAccess.channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+      const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, intent.messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
+      assertMessageMutationTarget(intent, current);
+      const [prior] = await tx.select().from(workHubClientOperationsTable).where(and(eq(workHubClientOperationsTable.userId, actor.userId), eq(workHubClientOperationsTable.commandKind, "message.delete"), eq(workHubClientOperationsTable.operationId, envelope.operationId))).limit(1);
+      if (prior?.resultJson) assertMessageMutationReceipt(intent, prior.resultJson);
     });
+    assertMessageMutationReceipt(intent, result.resource);
     return res.json(result);
   } catch (error) { return fail(res, error); }
 });
