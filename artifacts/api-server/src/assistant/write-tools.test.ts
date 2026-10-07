@@ -9,6 +9,8 @@ const { updateMock, flagTicketMock, clearTicketFlagMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@workspace/db", () => ({
+  // Imported route services may retain this dependency; this unit suite never opens a database.
+  pool: { connect: () => { throw new Error("Unexpected database connection in write-tools unit test"); } },
   db: {
     update: () => ({
       set: () => ({
