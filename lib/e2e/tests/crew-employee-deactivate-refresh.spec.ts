@@ -148,7 +148,9 @@ async function seedFixture(): Promise<Seed> {
   // Keep the requesting foreman active while deactivating a separate target.
   const workerVp = await createVendorPerson(pool, {
     vendorId: vendor.id,
-    vendorRole: "field_employee",
+    // vendor_people uses the canonical worker role "field"; field_employee
+    // is the login role and is intentionally not an employee-list role.
+    vendorRole: "field",
     firstName: "E524Worker",
     lastName: stamp,
     email: `e524-worker-${stamp}@example.com`,
@@ -393,3 +395,4 @@ test.describe.serial(
     });
   },
 );
+
