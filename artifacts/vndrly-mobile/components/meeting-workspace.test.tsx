@@ -112,7 +112,7 @@ vi.mock("@/hooks/use-brand", () => ({
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({ user: env.user }),
 }));
-vi.mock("@/lib/auth", () => ({ getToken: env.getToken, captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true }));
+vi.mock("@/lib/auth", () => ({ getToken: env.getToken, captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {} }));
 vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: vi.fn() }));
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(async () => env.moduleData),
@@ -209,7 +209,7 @@ vi.mock("react-i18next", () => {
         String(values?.[name] ?? ""),
       );
     };
-  return { useTranslation: () => ({ t }) };
+  return { useTranslation: () => ({ t, i18n: { language: env.spanish ? "es" : "en" } }) };
 });
 
 import MeetingWorkspace from "./meeting-workspace";
