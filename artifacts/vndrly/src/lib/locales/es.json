@@ -272,6 +272,7 @@
     "goToDashboard": "Ir a VNDRLY.ai ahora"
   },
   "onboardingProgress": {
+    "legalConsent": "Privacidad y mensajería",
     "bannerTitle": "Termine de configurar su cuenta",
     "bannerHint": "Explore la plataforma mientras reúne la información — haga clic en cualquier paso abajo o en Reanudar para continuar cuando quiera.",
     "onboardingLabel": "configuración",
@@ -5429,5 +5430,16 @@
       "online": "En línea",
       "offline": "Sin conexión"
     }
-  }
+  },
+  "meetingParticipants": {
+  "reviewHint": "Revisa el horario exacto y los participantes seleccionados antes de guardar. No se verifica la entrega ni la aceptación.",
+  "save": "Guardar reunión revisada",
+  "unavailable": "Participantes no disponibles. Actualiza para revisar.",
+  "unknown": "Resultado no verificado. Consulta las reuniones guardadas antes de preparar otra solicitud.",
+  "loading": "Cargando participantes…",
+  "review": "Revisar reunión",
+  "hint": "Eres el anfitrión. Selecciona nombres; no se confirma la entrega ni la aceptación.",
+  "hostOnly": "Solo el anfitrión",
+  "company": "Participantes de tu empresa"
+}
 }

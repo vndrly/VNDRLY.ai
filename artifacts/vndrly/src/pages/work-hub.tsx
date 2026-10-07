@@ -11,6 +11,8 @@ import { WorkHubExactItem } from "@/components/work-hub/exact-item";
 import { WorkPlanDetail, isWorkPlanDescription } from "@/components/work-hub/plan-detail";
 import { WorkHubCalls } from "@/components/work-hub/calls";
 import { MeetingScheduling } from "@/components/work-hub/meeting-scheduling";
+import { MeetingParticipants } from "@/components/work-hub/meeting-participants";
+import { useTranslation } from "react-i18next";
 import { WorkHubAwaySettings } from "@/components/work-hub/away-settings";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
 import { CalendarTimeGrid, localDateKey } from "@/components/work-hub/calendar-views";
@@ -1663,6 +1665,11 @@ function TasksModule() {
 
 function MeetingsModule() {
   const { user } = useAuth();
+  return <MeetingsContent key={`${user?.userId}:${user?.role}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} />;
+}
+function MeetingsContent() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const canManage = isWorkHubAdmin(user);
   const owner = useOwner();
   const qc = useQueryClient();
@@ -1681,8 +1688,14 @@ function MeetingsModule() {
     agenda: "",
     startsAt: "",
     endsAt: "",
-    participants: "",
+    participants: [] as number[],
   });
+  const [participantsReady, setParticipantsReady] = useState(false);
+  const meetingIdentity = `${user?.userId}:${user?.activeMembershipId}:${owner?.type}:${owner?.id}`;
+  const [meetingReview, setMeetingReview] = useState<ReturnType<typeof commandEnvelope> | null>(null);
+  const [participantChoices, setParticipantChoices] = useState<{ id: number; displayName: string }[]>([]);
+  const [reviewNames, setReviewNames] = useState<string[]>([]);
+  function editMeeting(next: typeof form) { setMeetingReview(null); setForm(next); }
   const [selected, setSelected] = useState<string | undefined>(() => new URLSearchParams(window.location.search).get("meeting") ?? undefined);
   const catchUp = useQuery<Row>({
     queryKey: ["work-hub", "meeting-catch-up", selected],
@@ -1691,23 +1704,15 @@ function MeetingsModule() {
     refetchInterval: selected ? 5_000 : false,
   });
   const create = useMutation({
-    mutationFn: () =>
+    mutationFn: (review: ReturnType<typeof commandEnvelope>) =>
       workHubRequest("/meetings", {
         method: "POST",
-        body: JSON.stringify(
-          commandEnvelope(owner!, {
-            title: form.title,
-            agenda: form.agenda,
-            startsAt: new Date(form.startsAt).toISOString(),
-            endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            recordingAllowed: false,
-            participantUserIds: parseIds(form.participants),
-          }),
-        ),
+        body: JSON.stringify(review),
       }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] }),
+    onSuccess: () => {
+      setMeetingReview(null);
+      return qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] });
+    },
   });
   const startNow = useMutation({
     mutationFn: () => {
@@ -1723,7 +1728,7 @@ function MeetingsModule() {
             endsAt: endsAt.toISOString(),
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             recordingAllowed: false,
-            participantUserIds: parseIds(form.participants),
+            participantUserIds: form.participants,
           }),
         ),
       });
@@ -1735,7 +1740,7 @@ function MeetingsModule() {
     <Shell module="meetings"><MeetingScheduling />
       {canManage && <div className="mb-4 flex flex-wrap gap-2">
         <BrandPillButton tone="brand" onClick={() => document.getElementById("schedule-meeting")?.scrollIntoView({ behavior: "smooth" })}>Schedule meeting</BrandPillButton>
-        <BrandPillButton tone="green" disabled={!owner || startNow.isPending} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>
+        <BrandPillButton tone="green" disabled={!owner || !participantsReady || create.isPending || create.isError || startNow.isPending || startNow.isError} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>
       </div>}
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
@@ -1784,14 +1789,16 @@ function MeetingsModule() {
                 className="grid gap-3"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  create.mutate();
+                  if (!owner || !participantsReady || create.isPending || create.isError || startNow.isPending || startNow.isError) return;
+                  setMeetingReview(commandEnvelope(owner, { title: form.title, agenda: form.agenda, startsAt: new Date(form.startsAt).toISOString(), endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, recordingAllowed: false, participantUserIds: [...form.participants] }));
+                  setReviewNames(form.participants.map(id => participantChoices.find(person => person.id === id)?.displayName ?? ""));
                 }}
               >
                 <Field label="Title">
                   <Input
                     value={form.title}
                     onChange={(e) =>
-                      setForm({ ...form, title: e.target.value })
+                      editMeeting({ ...form, title: e.target.value })
                     }
                     required
                   />
@@ -1800,7 +1807,7 @@ function MeetingsModule() {
                   <Textarea
                     value={form.agenda}
                     onChange={(e) =>
-                      setForm({ ...form, agenda: e.target.value })
+                      editMeeting({ ...form, agenda: e.target.value })
                     }
                   />
                 </Field>
@@ -1809,7 +1816,7 @@ function MeetingsModule() {
                     type="datetime-local"
                     value={form.startsAt}
                     onChange={(e) =>
-                      setForm({ ...form, startsAt: e.target.value })
+                      editMeeting({ ...form, startsAt: e.target.value })
                     }
                     required
                   />
@@ -1819,22 +1826,17 @@ function MeetingsModule() {
                     type="datetime-local"
                     value={form.endsAt}
                     onChange={(e) =>
-                      setForm({ ...form, endsAt: e.target.value })
+                      editMeeting({ ...form, endsAt: e.target.value })
                     }
                   />
                 </Field>
-                <Field label="Participant user IDs">
-                  <Input
-                    value={form.participants}
-                    onChange={(e) =>
-                      setForm({ ...form, participants: e.target.value })
-                    }
-                  />
-                </Field>
+                <MeetingParticipants identity={meetingIdentity} selected={form.participants} onChange={(participants) => { setMeetingReview(null); setForm(current => ({ ...current, participants })); }} onChoices={setParticipantChoices} onReady={setParticipantsReady} />
                 <Notice error={create.error} />
-                <BrandPillButton type="submit" tone="brand" disabled={!owner}>
-                  Schedule and invite
+                {create.isError && <p role="alert">{t("meetingParticipants.unknown")}</p>}
+                <BrandPillButton type="submit" tone="brand" disabled={!owner || !participantsReady || create.isPending || create.isError || startNow.isPending || startNow.isError}>
+                  {t("meetingParticipants.review")}
                 </BrandPillButton>
+                {meetingReview && <div><p>{t("meetingParticipants.reviewHint")}</p><p>{(meetingReview.payload as Row).title}</p><p>{new Date((meetingReview.payload as Row).startsAt).toLocaleString(undefined, { timeZone: (meetingReview.payload as Row).timezone })} → {(meetingReview.payload as Row).endsAt ? new Date((meetingReview.payload as Row).endsAt).toLocaleString(undefined, { timeZone: (meetingReview.payload as Row).timezone }) : "—"} · {(meetingReview.payload as Row).timezone}</p><p>{reviewNames.join(", ") || t("meetingParticipants.hostOnly")}</p><BrandPillButton type="button" tone="brand" disabled={create.isPending || create.isError || startNow.isPending || startNow.isError} onClick={() => create.mutate(meetingReview)}>{t("meetingParticipants.save")}</BrandPillButton></div>}
               </form>
             </CardContent>
           </Card>

@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import MeetingScheduling from "@/components/MeetingScheduling";
 import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
@@ -266,17 +267,6 @@ function WorkHubModuleContent() {
           } : {}),
         },
       },
-      meetings: {
-        path: "/api/work-hub/meetings",
-        payload: {
-          title: draft,
-          startsAt: startsAt.toISOString(),
-          endsAt: endsAt.toISOString(),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          recordingAllowed: false,
-          participantUserIds: [],
-        },
-      },
     };
     const target = targets[module];
     if (!target) return;
@@ -496,9 +486,10 @@ function WorkHubModuleContent() {
             {!!chatActionNotice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text, fontWeight: "700" }}>{chatActionNotice}</Text>}
           </View>
         )}
+        {module === "meetings" && <MeetingScheduling onSaved={() => load("")} />}
         {owner &&
           canManage &&
-          ["channels", "calendar", "tasks-forms", "meetings"].includes(
+          ["channels", "calendar", "tasks-forms"].includes(
             module,
           ) && (
             <View style={{ gap: 10 }}>
@@ -720,7 +711,7 @@ function WorkHubModuleContent() {
         )}
         {owner &&
           canManage &&
-          ["channels", "calendar", "tasks-forms", "meetings"].includes(
+          ["channels", "calendar", "tasks-forms"].includes(
             module,
           ) && (
             <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>

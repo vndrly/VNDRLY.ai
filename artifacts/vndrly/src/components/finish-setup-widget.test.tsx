@@ -7,7 +7,7 @@ vi.mock("wouter", () => ({
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key === "onboardingProgress.legalConsent" ? "Privacy & Messaging" : key }),
 }));
 
 vi.mock("@/hooks/use-brand", () => ({
@@ -28,6 +28,7 @@ const completedVendorProgress: OnboardingProgressRow = {
   completedSteps: [
     "company-basics",
     "platform-eula",
+    "legal-consent",
     "branding",
     "tax-ids",
     "work-types",
@@ -46,4 +47,19 @@ describe("FinishSetupWidget", () => {
 
     expect(screen.queryByTestId("finish-setup-widget")).toBeNull();
   });
+});
+
+it('keeps required privacy consent visible when all other partner steps are complete', () => {
+  sessionStorage.clear();
+  render(<FinishSetupWidget progressOverride={{ ...completedVendorProgress, orgType: 'partner', currentStep: 'legal-consent', completedSteps: ['company-basics', 'platform-eula', 'branding', 'first-site', 'tax-billing', 'preferences', 'invite-team'] }} />);
+  expect(screen.getByTestId('finish-setup-widget')).not.toBeNull();
+  expect(screen.getByText('Privacy & Messaging')).not.toBeNull();
+  expect(screen.getByTitle(/Platform Agreement/)).not.toBeNull();
+});
+
+it('does not count a skipped mandatory legal step as completion', () => {
+  sessionStorage.clear();
+  render(<FinishSetupWidget progressOverride={{ ...completedVendorProgress, currentStep: 'legal-consent', completedSteps: completedVendorProgress.completedSteps.filter(step => step !== 'legal-consent'), skippedSteps: ['legal-consent'] }} />);
+  expect(screen.getByTestId('finish-setup-widget')).not.toBeNull();
+  expect(screen.getByText('Privacy & Messaging')).not.toBeNull();
 });

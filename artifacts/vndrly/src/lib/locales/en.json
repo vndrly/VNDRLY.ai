@@ -272,6 +272,7 @@
     "goToDashboard": "Go to VNDRLY.ai now"
   },
   "onboardingProgress": {
+    "legalConsent": "Privacy & Messaging",
     "bannerTitle": "Finish setting up your account",
     "bannerHint": "Explore the platform while you gather info — click any step below or Resume to continue onboarding anytime.",
     "onboardingLabel": "onboarding",
@@ -5429,5 +5430,16 @@
       "online": "Online",
       "offline": "Offline"
     }
-  }
+  },
+  "meetingParticipants": {
+  "reviewHint": "Review the exact meeting schedule and selected company participants before saving. Delivery and acceptance are not verified.",
+  "save": "Save reviewed meeting",
+  "unavailable": "Participant choices unavailable. Refresh to review.",
+  "unknown": "Outcome unverified. Check saved meetings before preparing another request.",
+  "loading": "Loading participants…",
+  "review": "Review meeting",
+  "hint": "You are the host. Select names; delivery and acceptance are not confirmed.",
+  "hostOnly": "Host only",
+  "company": "Company participants"
+}
 }

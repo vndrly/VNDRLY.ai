@@ -80,6 +80,7 @@ const QUICK_ACTIONS: Record<string, QuickAction[]> = {
 const STEP_LABELS: Record<string, string> = {
   "company-basics": "Company basics",
   "platform-eula": "Platform agreement",
+  "legal-consent": "Privacy & Messaging",
   "branding": "Branding",
   "first-site": "First site",
   "tax-billing": "Tax & billing",
@@ -94,8 +95,8 @@ const STEP_LABELS: Record<string, string> = {
 };
 
 const STEPS_BY_ORG: Record<"partner" | "vendor" | "field_employee", string[]> = {
-  partner: ["company-basics", "platform-eula", "branding", "first-site", "tax-billing", "preferences", "invite-team"],
-  vendor: ["company-basics", "platform-eula", "branding", "tax-ids", "work-types", "first-employee"],
+  partner: ["company-basics", "platform-eula", "legal-consent", "branding", "first-site", "tax-billing", "preferences", "invite-team"],
+  vendor: ["company-basics", "platform-eula", "legal-consent", "branding", "tax-ids", "work-types", "first-employee"],
   field_employee: ["personal-info", "photo-certs", "set-password"],
 };
 
@@ -106,8 +107,8 @@ const STEPS_BY_ORG: Record<"partner" | "vendor" | "field_employee", string[]> = 
 // suppresses the "Skip this step" quick chip when the current step is
 // required so the user is never offered an action the server refuses.
 const REQUIRED_STEPS: Record<"partner" | "vendor" | "field_employee", Set<string>> = {
-  partner: new Set(["company-basics", "platform-eula", "first-site", "tax-billing"]),
-  vendor: new Set(["company-basics", "platform-eula", "tax-ids", "work-types", "first-employee"]),
+  partner: new Set(["company-basics", "platform-eula", "legal-consent", "first-site", "tax-billing"]),
+  vendor: new Set(["company-basics", "platform-eula", "legal-consent", "tax-ids", "work-types", "first-employee"]),
   field_employee: new Set(["personal-info", "photo-certs", "set-password"]),
 };
 
@@ -490,7 +491,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   // surface an action the server will refuse.
   const onboardingChips: QuickAction[] | null = useMemo(() => {
     if (!progress) return null;
-    const stepLabel = STEP_LABELS[progress.currentStep] ?? progress.currentStep;
+    const stepLabel = progress.currentStep === "legal-consent" ? t("onboardingProgress.legalConsent") : STEP_LABELS[progress.currentStep] ?? progress.currentStep;
     const isRequired = REQUIRED_STEPS[progress.orgType]?.has(progress.currentStep) ?? false;
     const chips: QuickAction[] = [
       {
@@ -509,7 +510,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
       prompt: "Where am I in onboarding? What's left, and what's the fastest path to finish?",
     });
     return chips;
-  }, [progress]);
+  }, [progress, t]);
 
   // Signup chips win over the role/onboarding chips when we're on the
   // public signup pages — those are the only ones that actually
@@ -534,13 +535,13 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
     const name = sourceName?.split(" ")[0] ?? "there";
     if (embedded) return `Hi ${name}! What can I help you with?`;
     if (progress) {
-      const stepLabel = STEP_LABELS[progress.currentStep] ?? progress.currentStep;
+      const stepLabel = progress.currentStep === "legal-consent" ? t("onboardingProgress.legalConsent") : STEP_LABELS[progress.currentStep] ?? progress.currentStep;
       const orgLabel = progress.orgType === "field_employee" ? "field-employee" : progress.orgType;
       return `Hi ${name}! Looks like you're mid-way through ${orgLabel} onboarding — currently on "${stepLabel}". I can help you finish it from here.`;
     }
     if (voiceSession.greeting && !signupMode && !tokenMode) return voiceSession.greeting;
     return `Hi ${name}! I can answer how-to questions about VNDRLY and walk you through onboarding. What can I help with?`;
-  }, [user, progress, tokenMode, tokenName, signupMode, signupLang, voiceSession.greeting, embedded]);
+  }, [user, progress, tokenMode, tokenName, signupMode, signupLang, voiceSession.greeting, embedded, t]);
 
   // Reopening or selecting a conversation starts at its newest messages.
   useEffect(() => {
@@ -1364,10 +1365,12 @@ function PendingSignupChatOffer({
 // onboarding flow is in progress. Mirrors the dot/check iattern from
 // the wizard pages so users get a consistent sense of "where am I".
 export function OnboardingMiniStepper({ progress }: { progress: OnboardingProgress }) {
+  const { t } = useTranslation();
+  const label = (step: string) => step === "legal-consent" ? t("onboardingProgress.legalConsent") : STEP_LABELS[step] ?? step;
   const steps = STEPS_BY_ORG[progress.orgType];
   const currentIdx = steps.indexOf(progress.currentStep);
   const completed = new Set(progress.completedSteps);
-  const skipped = new Set(progress.skippedSteps);
+  const skipped = new Set(progress.skippedSteps.filter(step => step !== "legal-consent"));
   const totalDone = steps.filter((step) => completed.has(step) || skipped.has(step)).length;
   if (totalDone === steps.length) return null;
   return (
@@ -1391,7 +1394,7 @@ export function OnboardingMiniStepper({ progress }: { progress: OnboardingProgre
             <div
               key={s}
               className="flex-1 flex items-center gap-1"
-              title={STEP_LABELS[s] ?? s}
+              title={label(s)}
             >
               {isDone ? (
                 <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
@@ -1412,7 +1415,7 @@ export function OnboardingMiniStepper({ progress }: { progress: OnboardingProgre
         })}
       </div>
       <div className="text-[12px] text-white">
-        Current: <span className="font-medium">{STEP_LABELS[progress.currentStep] ?? progress.currentStep}</span>
+        Current: <span className="font-medium">{label(progress.currentStep)}</span>
       </div>
     </div>
   );

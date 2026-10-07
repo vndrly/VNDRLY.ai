@@ -40,6 +40,7 @@ const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[
   partner: [
     { key: "company-basics", label: "Company Basics" },
     { key: "platform-eula", label: "Platform Agreement" },
+    { key: "legal-consent", label: "Privacy & Messaging" },
     { key: "branding", label: "Branding" },
     { key: "first-site", label: "First Site" },
     { key: "tax-billing", label: "Tax & Billing" },
@@ -49,6 +50,7 @@ const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[
   vendor: [
     { key: "company-basics", label: "Company Basics" },
     { key: "platform-eula", label: "Platform Agreement" },
+    { key: "legal-consent", label: "Privacy & Messaging" },
     { key: "branding", label: "Branding" },
     { key: "tax-ids", label: "Tax IDs" },
     { key: "work-types", label: "Service & Work Types" },
@@ -108,7 +110,7 @@ export default function FinishSetupWidget({
   const items: StepEntry[] = useMemo(() => {
     if (!progress) return [];
     const map = progress.orgType === "partner" ? PARTNER_STEPS : progress.orgType === "vendor" ? VENDOR_STEPS : {};
-    return (progress.skippedSteps ?? [])
+    return (progress.skippedSteps ?? []).filter(step => step !== "legal-consent")
       .map((k) => {
         const entry = map[k];
         return entry ? { key: k, label: entry.label, href: entry.href } : null;
@@ -123,7 +125,7 @@ export default function FinishSetupWidget({
     }
     const accountedFor = new Set([
       ...(progress.completedSteps ?? []),
-      ...(progress.skippedSteps ?? []),
+      ...(progress.skippedSteps ?? []).filter(step => step !== "legal-consent"),
     ]);
     return STEPS_BY_ORG[progress.orgType].every((step) => accountedFor.has(step.key));
   }, [progress]);
@@ -135,10 +137,10 @@ export default function FinishSetupWidget({
     if (progress.orgType !== "partner" && progress.orgType !== "vendor") {
       return null;
     }
-    const steps = STEPS_BY_ORG[progress.orgType];
+    const steps = STEPS_BY_ORG[progress.orgType].map((step) => ({ ...step, label: step.key === "legal-consent" ? t("onboardingProgress.legalConsent") : step.label }));
     const done = new Set([
       ...(progress.completedSteps ?? []),
-      ...(progress.skippedSteps ?? []),
+      ...(progress.skippedSteps ?? []).filter(step => step !== "legal-consent"),
     ]);
     const currentIdx = steps.findIndex((s) => s.key === progress.currentStep);
     const doneCount = steps.filter((s) => done.has(s.key)).length;
@@ -147,7 +149,7 @@ export default function FinishSetupWidget({
         ? steps[currentIdx].label
         : (steps.find((s) => !done.has(s.key))?.label ?? null);
     return { steps, done, currentIdx, doneCount, currentLabel };
-  }, [progress, incomplete, canonicalStepsComplete]);
+  }, [progress, incomplete, canonicalStepsComplete, t]);
 
   if (hidden || !progress) return null;
   if (canonicalStepsComplete) return null;

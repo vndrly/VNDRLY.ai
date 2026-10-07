@@ -124,7 +124,7 @@ it('hides the AskV onboarding stepper after every current vendor step is complet
   render(<OnboardingMiniStepper progress={{
     orgType: 'vendor',
     currentStep: 'first-employee',
-    completedSteps: ['company-basics', 'platform-eula', 'branding', 'tax-ids', 'work-types', 'first-employee'],
+    completedSteps: ['company-basics', 'platform-eula', 'legal-consent', 'branding', 'tax-ids', 'work-types', 'first-employee'],
     skippedSteps: [],
   }} />);
 
@@ -143,4 +143,12 @@ it('groups microphone and across-VNDRLY controls under one recognizable settings
   expect(screen.getByRole('button', { name: /Enable AskV across VNDRLY/ })).not.toBeNull();
   expect(screen.getAllByRole('button', { name: 'AskV is Unavailable' })).toHaveLength(1);
   expect(within(screen.getByTestId('assistant-brand-controls')).getByRole('button', { name: 'AskV is Unavailable' })).not.toBeNull();
+});
+
+it('keeps mandatory privacy consent current and offers no skip action', async () => {
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => String(url).includes('/onboarding/me') ? { ok: true, json: async () => ({ progress: { orgType: 'partner', currentStep: 'legal-consent', completedSteps: ['company-basics', 'platform-eula', 'branding', 'first-site', 'tax-billing', 'preferences', 'invite-team'], skippedSteps: [] } }) } : { ok: false }));
+  render(<QueryClientProvider client={new QueryClient()}><AssistantPanel open onOpenChange={() => {}} /></QueryClientProvider>);
+  await waitFor(() => expect(screen.getByTestId('assistant-mini-stepper')).not.toBeNull());
+  expect(screen.queryByRole('button', { name: 'Skip this step' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Help with: Privacy & Messaging' })).not.toBeNull();
 });
