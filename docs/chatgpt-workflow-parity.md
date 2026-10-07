@@ -143,3 +143,15 @@ The old payment-review action was unavailable after its interrupted submission. 
 The v4 panel follow-up adds Check saved result after a submission interruption or unresolved result. It reads only the same action reference and never resubmits automatically. A fresh pending status can expose the existing approval control for another explicit click; completed actions remain disabled and show their actual saved result. Twelve panel checks, including interrupted request recovery and duplicate prevention, pass; together with connection checks, 70 focused tests pass. API typecheck passes. The new panel is local and still requires full validation and deployment. Legacy v1/v2/v3 resources remain readable.
 
 Refreshing ChatGPT tools succeeded but reset the plugin presentation metadata to its generic connection name and developer. Restoring the unchanged reviewed private package 1.8.4 is blocked by the Edge extension file-upload setting. Both account links remain present; no new permission grant was created.
+
+### Actual ChatGPT parts entry — 2026-10-07 02:50 UTC
+
+Synthetic OpenAI Reviewer prepared and approved a zero-value part on fictional ticket100007 through the embedded ChatGPT action panel. Action1069.WaLNexBI7E6WzNKWXBlkkqBjvfu5h2dJSD4w4uLKg1k displayed The change completed. Independent canonical readback found exactly one matching line12714, quantity1.00 and unitPrice0.00, created02:50:07.601 UTC. Ticket status remained initiated and lifecycle pending_arrival. No real material, payment, GPS capture or ticket status transition was recorded. This proves one actual parts-entry workflow, not complete ticket-lifecycle or worker-role parity.
+
+### Validated Gate release advancement — 2026-10-07
+
+Full validation37562047713 passed for4beef90b080cb04da8c1e90e1d0a904257988745. Main advanced non-force from74d0f5d653f5563bfcfc141255d6c97f1f480ed0. Publication37564093031, API37564092962, OTA37564098011 and TestFlight37564101251 started. Deployment and submission are still pending; dispatch is not ship completion. The v4 action-recovery candidate remains in validation37563570580 and is not part of this release.
+
+### Exact-tag inventory history in ChatGPT — 2026-10-07
+
+Actual ChatGPT lookup under Synthetic Reviewer resolved asset_tag SYNTHETIC-CUSTODY-REVIEW-01 to c72dbf37-47fd-4922-babd-47a36068cfbe. It reported available, current holder none, condition good, version5, and last holder Synthetic OpenAI Reviewer user1069 from the saved return event at2026-10-06T23:38:13.341Z. These values agree with the previously verified custody round trip. No new custody mutation occurred. An independent connector re-read during the API deployment returned an internal error; a fresh post-deployment check remains necessary. This verifies the observed exact-identifier/history presentation, not every inventory function or stale-custody reporting.
