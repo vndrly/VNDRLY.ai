@@ -61,6 +61,47 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("requests eligible finance consent before either direct or generic preparation", async () => {
+    const credentials = await tokens("gate:read gate:write");
+    const original = grants[0].session;
+    grants[0].session = { ...original, role: "partner", vendorId: null, partnerId: 8, membershipRole: "admin" };
+    const invoke = (method: string, params?: unknown) => request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method, params });
+    const listed = await invoke("tools/list");
+    const tool = listed.body.result.tools.find((t: { name: string }) => t.name === "record_ticket_payment");
+    expect(tool.securitySchemes).toEqual([{ type: "oauth2", scopes: ["finance:write"] }]);
+    const generic = listed.body.result.tools.find((t: { name: string }) => t.name === "v_prepare_action");
+    expect(generic.inputSchema.properties.toolName.enum).toContain("record_ticket_payment");
+    expect(generic.securitySchemes).toEqual([{ type: "oauth2", scopes: ["gate:read", "gate:write"] }]);
+    expect(generic._meta.securitySchemes).toEqual(generic.securitySchemes);
+    const ordinary = (await invoke("tools/call", { name: "v_prepare_action", arguments: { toolName: "manage_gate_shift", arguments: { action: "prepare_handoff", stationId: "00000000-0000-4000-8000-000000000009" } } })).body.result;
+    expect(ordinary._meta?.["mcp/www_authenticate"]).toBeUndefined();
+    expect(ordinary.isError).toBe(false);
+    grants[0].actions = [];
+
+    for (const params of [{ name: "record_ticket_payment", arguments: { ticketId: 1 } }, { name: "v_prepare_action", arguments: { toolName: "record_ticket_payment", arguments: { ticketId: 1 } } }]) {
+      const result = (await invoke("tools/call", params)).body.result;
+      expect(result.isError).toBe(true);
+      expect(result._meta["mcp/www_authenticate"][0]).toContain('error="insufficient_scope"');
+      expect(result._meta["mcp/www_authenticate"][0]).toContain('scope="gate:read gate:write finance:write"');
+    }
+    expect(grants[0].actions ?? []).toEqual([]);
+    expect(mocks.run).not.toHaveBeenCalled();
+    expect(mocks.bound).not.toHaveBeenCalled();
+    grants[0].session = { ...original, role: "field_employee" };
+    const denied = await invoke("tools/list");
+    expect(denied.body.result.tools.some((t: { name: string }) => t.name === "record_ticket_payment")).toBe(false);
+    expect(denied.body.result.tools.find((t: { name: string }) => t.name === "v_prepare_action").inputSchema.properties.toolName.enum).not.toContain("record_ticket_payment");
+    const deniedCall = (await invoke("tools/call", { name: "record_ticket_payment", arguments: {} })).body.result;
+    expect(deniedCall._meta?.["mcp/www_authenticate"]).toBeUndefined();
+    grants[0].session = { ...original, role: "partner", vendorId: null, partnerId: 8, membershipRole: "admin" };
+    grants[0].scopes.push("finance:write");
+    const prepared = (await invoke("tools/call", { name: "record_ticket_payment", arguments: { ticketId: 1, payload: { paymentMethod: "check", paymentReference: "Synthetic check" } } })).body.result;
+    expect(prepared.isError).toBe(false);
+    expect(JSON.parse(prepared.content[0].text)).toMatchObject({ status: "pending", result: null });
+    expect(grants[0].actions).toHaveLength(1);
+    expect(mocks.bound).not.toHaveBeenCalled();
+  });
+
   it("reads connection context without unrelated Work Hub permissions or credentials", async () => {
     const credentials = await tokens("gate:read");
     const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_connection_context", arguments: {} } });
@@ -632,3 +673,4 @@ it('returns safety draft fields through the scoped read boundary without a clien
  expect((await call(limited.access_token)).body.result.isError).toBe(true);
  expect(mocks.run).not.toHaveBeenCalled();
 });
+
