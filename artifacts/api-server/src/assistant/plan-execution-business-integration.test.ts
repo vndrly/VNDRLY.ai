@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ runTool: vi.fn() }));
 vi.mock("../routes/assistant", () => ({ runTool: mocks.runTool }));
-import { planExecutionAuthorizationSchema } from "./plan-execution";
+import { planExecutionAuthorizationSchema, planExecutionResultSchema } from "./plan-execution";
 import { createPlanExecutionAdapters } from "./plan-execution-adapters";
 import { createPlanExecutionCanonicalApi } from "./plan-execution-canonical";
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -13,7 +13,7 @@ describe("registered business read dispatch", () => {
     mocks.runTool.mockResolvedValue(JSON.stringify({ invoices: [{ id: 8, invoiceNumber: "INV8", status: "sent", createdAt: "2026-10-01T00:00:00Z" }] }));
     const adapter = createPlanExecutionAdapters(createPlanExecutionCanonicalApi({ authorize }));
     const result = await adapter.authorized_read.execute({ authorization, results: [] }, authorization.steps[0]);
-    expect(result.sourceReferences).toContain("record:query_invoices:8");
+    expect(planExecutionResultSchema.parse(result).sourceReferences).toContain("record:query_invoices:8");
     expect(mocks.runTool).toHaveBeenCalledWith("query_invoices", { sinceDays: 90, limit: 20 }, expect.objectContaining({ userId: 17, vendorId: 4 }), "", false, false);
     expect(authorize).toHaveBeenCalledTimes(2);
   });

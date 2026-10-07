@@ -1,3 +1,4 @@
+import { CALENDAR_CONFIRMATION_ARGUMENTS } from "./plan-execution-calendar-confirmation-policy";
 import { AWAY_RESPONDER_ARGUMENTS } from "./away-responder-tools";
 import { createHash } from 'node:crypto';
 import { z } from 'zod/v4';
@@ -9,7 +10,7 @@ import { PLAN_EXECUTION_READ_TOOL_NAMES, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES
 
 const jsonObject = z.record(z.string(), z.json());
 export const planExecutionRequesterSchema = z.object({userId:z.number().int().positive(),organizationKey:z.string().regex(/^(vendor|partner):[1-9]\d*$/),membershipId:z.number().int().positive(),sessionVersion:z.number().int().positive()}).strict();
-export const planExecutionStepSchema = z.object({id:z.string().min(1).max(100),adapter:z.enum(['authorized_read','personal_draft','ticket_invoice_preparation','calendar_reschedule','away_responder']),toolName:z.string().min(1).max(150),arguments:jsonObject,dependsOn:z.array(z.string().min(1).max(100)).max(20),operationId:z.string().uuid()}).strict();
+export const planExecutionStepSchema = z.object({id:z.string().min(1).max(100),adapter:z.enum(['authorized_read','personal_draft','ticket_invoice_preparation','calendar_reschedule','away_responder','calendar_confirmation']),toolName:z.string().min(1).max(150),arguments:jsonObject,dependsOn:z.array(z.string().min(1).max(100)).max(20),operationId:z.string().uuid()}).strict();
 export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),requester:planExecutionRequesterSchema,grantReference:z.string().min(1).max(200),taskId:z.string().uuid(),taskVersion:z.number().int().positive(),planId:z.string().uuid(),planVersion:z.number().int().positive(),planFingerprint:z.string().regex(/^[a-f0-9]{64}$/),approvedAt:z.number().int().nonnegative(),expiresAt:z.number().int().positive(),maxAttempts:z.number().int().min(1).max(5),steps:z.array(planExecutionStepSchema).min(1).max(20),notificationOperationId:z.string().uuid()}).strict().superRefine((a,ctx)=>{
  const ids=new Set(a.steps.map(s=>s.id)),ops=new Set(a.steps.map(s=>s.operationId));
  if(ids.size!==a.steps.length||ops.size!==a.steps.length||ops.has(a.notificationOperationId))ctx.addIssue({code:'custom',message:'Step and operation IDs must be unique'});
@@ -19,6 +20,7 @@ export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),r
  if(!a.steps.every(s=>visit(s.id)))ctx.addIssue({code:'custom',message:'Invalid dependency graph'});
  if(a.steps.some(s=>Buffer.byteLength(JSON.stringify(s.arguments))>8192))ctx.addIssue({code:'custom',message:'Approved arguments exceed bounded capacity'});
  for(const step of a.steps){
+  if(step.adapter==='calendar_confirmation'){const args=CALENDAR_CONFIRMATION_ARGUMENTS.safeParse(step.arguments);if(step.toolName!=='query_work_hub_meeting_responses'||!args.success||Date.parse(args.data.deadlineAt)<=a.approvedAt||Date.parse(args.data.deadlineAt)>a.expiresAt)ctx.addIssue({code:'custom',message:'Confirmation requires exact reviewed schedule and bounded deadline'});}
   if(step.adapter==='away_responder'&&(step.toolName!=='manage_work_hub_away_responder'||!AWAY_RESPONDER_ARGUMENTS.safeParse(step.arguments).success))ctx.addIssue({code:'custom',message:'Away responder requires exact reviewed own rule command'});
   if(step.adapter==='calendar_reschedule'&&(step.toolName!=='reschedule_work_hub_meeting'||!CALENDAR_RESCHEDULE_ARGUMENTS.safeParse(step.arguments).success))ctx.addIssue({code:'custom',message:'Calendar reschedule requires exact snapshot and UTC interval'});
   if(step.adapter==='authorized_read'&&step.toolName==='query_ticket_invoice_candidates'&&!ticketInvoiceCandidatesInputSchema.safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid bounded invoice candidate selection'});
@@ -37,7 +39,7 @@ export type PlanExecutionAuthorization=z.infer<typeof planExecutionAuthorization
 export type PlanExecutionStep=z.infer<typeof planExecutionStepSchema>;
 export const planExecutionResultSchema=z.object({operationId:z.string().uuid(),sourceReferences:z.array(z.string().min(1).max(300)).min(1).max(100),summary:z.string().min(1).max(8000)}).strict();
 export type PlanExecutionResult=z.infer<typeof planExecutionResultSchema>;
-export const planExecutionRunSchema=z.object({authorization:planExecutionAuthorizationSchema,authorizationHash:z.string().regex(/^[a-f0-9]{64}$/),revision:z.number().int().nonnegative(),state:z.enum(['pending','running','completed','blocked','cancelled','outcome_unknown']),cancelRequested:z.boolean(),steps:z.array(z.object({id:z.string(),state:z.enum(['pending','running','completed','outcome_unknown']),attempts:z.number().int().nonnegative(),reconciliationAttempts:z.number().int().nonnegative().default(0),result:planExecutionResultSchema.optional()}).strict()),brief:z.string().max(20000).optional(),notificationSaved:z.boolean(),notificationAttempts:z.number().int().nonnegative().default(0),detail:z.string().max(1000).optional()}).strict();
+export const planExecutionRunSchema=z.object({authorization:planExecutionAuthorizationSchema,authorizationHash:z.string().regex(/^[a-f0-9]{64}$/),revision:z.number().int().nonnegative(),state:z.enum(['pending','running','completed','blocked','cancelled','outcome_unknown']),cancelRequested:z.boolean(),nextAttemptAt:z.number().int().nonnegative().optional(),steps:z.array(z.object({id:z.string(),state:z.enum(['pending','running','completed','outcome_unknown']),attempts:z.number().int().nonnegative(),reconciliationAttempts:z.number().int().nonnegative().default(0),result:planExecutionResultSchema.optional()}).strict()),brief:z.string().max(20000).optional(),notificationSaved:z.boolean(),notificationAttempts:z.number().int().nonnegative().default(0),detail:z.string().max(1000).optional()}).strict();
 export type PlanExecutionRun=z.infer<typeof planExecutionRunSchema>;
 export function planExecutionFingerprint(value:unknown):string{
  function ordered(v:unknown):unknown{if(Array.isArray(v))return v.map(ordered);if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>[k,ordered(x)]));return v;}
@@ -53,10 +55,11 @@ export interface PlanExecutionRepository{
  release(claim:PlanExecutionClaim):Promise<void>;
 }
 export type PlanExecutionCurrentAuthorization=z.infer<typeof planExecutionRequesterSchema>&{grantReference:string;grantRevoked:boolean;taskId:string;taskVersion:number;planId:string;planVersion:number;planFingerprint:string;availableTools:string[]};
-export type PlanExecutionContext={authorization:PlanExecutionAuthorization;results:PlanExecutionResult[]};
+export type PlanExecutionContext={authorization:PlanExecutionAuthorization;results:PlanExecutionResult[];attempt?:number};
 export type PlanExecutionReconciliation={state:'completed';result:PlanExecutionResult}|{state:'not_found'}|{state:'unknown'};
+export type PlanExecutionObservation={state:"completed";result:PlanExecutionResult}|{state:"waiting";retryAt:number};
 export interface PlanExecutionAdapter{
- execute(context:PlanExecutionContext,step:PlanExecutionStep):Promise<PlanExecutionResult>;
+ execute(context:PlanExecutionContext,step:PlanExecutionStep):Promise<PlanExecutionResult|PlanExecutionObservation>;
  /** not_found means canonical current authorized operation lookup proves absent; errors must not become not_found. */
  reconcile(context:PlanExecutionContext,step:PlanExecutionStep):Promise<PlanExecutionReconciliation>;
 }
@@ -83,14 +86,14 @@ export function createPlanExecutor(deps:PlanExecutorDependencies){return {async 
  const save=async(next:PlanExecutionRun)=>{next.revision=run.revision+1;assertRun(next);if(!await deps.repository.commit(claim,run.revision,next,deps.now()))throw Error('Execution lease, revision or cancellation changed');run=structuredClone(next);claim.run=structuredClone(next);};
  const fresh=async()=>{if(run.cancelRequested)throw Error('Execution cancelled');assertCurrent(run.authorization,await deps.authorize(run.authorization),deps.now());if(deps.now()>=claim.leaseUntil)throw Error('Execution lease expired');};
  try{
-  assertRun(run);if(run.cancelRequested){return true;}if(['completed','blocked','cancelled'].includes(run.state))return true;
+  assertRun(run);if(run.nextAttemptAt!==undefined&&run.nextAttemptAt>deps.now())return true;if(run.cancelRequested){return true;}if(['completed','blocked','cancelled'].includes(run.state))return true;
   try{await fresh();}catch{await save({...run,state:'blocked',detail:'Current authority, expiry or saved plan no longer permits execution'});return true;}
   for(let count=0;count<run.steps.length;count++){
    const index=run.steps.findIndex(s=>s.state!=='completed'&&run.authorization.steps.find(p=>p.id===s.id)!.dependsOn.every(id=>run.steps.find(d=>d.id===id)?.state==='completed'));if(index<0)break;
    const step=run.authorization.steps[index],state=run.steps[index],adapter=deps.adapters[step.adapter];
    await fresh();
    const context={authorization:run.authorization,results:step.dependsOn.map(id=>run.steps.find(s=>s.id===id)!.result!)};
-   let result:PlanExecutionResult|undefined;
+   let result:PlanExecutionResult|PlanExecutionObservation|undefined;
    if(state.state==='running'||state.state==='outcome_unknown'){
     if(state.reconciliationAttempts>=run.authorization.maxAttempts){await save({...run,state:'blocked',detail:'Canonical outcome unknown; bounded reconciliation exhausted'});return true;}
     const retry=structuredClone(run);retry.steps[index].reconciliationAttempts++;await save(retry);await fresh();
@@ -103,8 +106,10 @@ export function createPlanExecutor(deps:PlanExecutorDependencies){return {async 
    if(!result){
     if(state.attempts>=run.authorization.maxAttempts){await save({...run,state:'blocked',detail:'Bounded attempts exhausted'});return true;}
     const next=structuredClone(run);next.state='running';next.steps[index].state='running';next.steps[index].attempts++;await save(next);await fresh();
-    try{result=await adapter.execute(context,step);}catch{const unknown=structuredClone(run);unknown.state='outcome_unknown';unknown.steps[index].state='outcome_unknown';unknown.detail='Command may have committed; exact canonical reconciliation required';await save(unknown);return true;}
+    try{result=await adapter.execute({...context,attempt:run.steps[index].attempts},step);}catch{const unknown=structuredClone(run);unknown.state='outcome_unknown';unknown.steps[index].state='outcome_unknown';unknown.detail='Command may have committed; exact canonical reconciliation required';await save(unknown);return true;}
    }
+   if(result&&"state" in result){await fresh();if(result.state==="waiting"){if(step.adapter!=="calendar_confirmation"||!Number.isSafeInteger(result.retryAt)||result.retryAt<=deps.now()||result.retryAt>run.authorization.expiresAt)throw Error("Invalid confirmation retry");const waiting=structuredClone(run);waiting.state="pending";waiting.steps[index].state="pending";waiting.nextAttemptAt=result.retryAt;waiting.detail="Waiting for saved participant responses; bounded attempts and deadline apply";await save(waiting);return true;}result=result.result;}
+   run.nextAttemptAt=undefined;
    result=planExecutionResultSchema.parse(result);if(result.operationId!==step.operationId)throw Error('Receipt operation mismatch');await fresh();
    const next=structuredClone(run);next.steps[index].state='completed';next.steps[index].result=result;next.detail=undefined;await save(next);
   }

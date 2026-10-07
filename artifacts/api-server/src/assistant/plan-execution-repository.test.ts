@@ -35,6 +35,12 @@ it("only one worker claims a current lease", async () => {
   expect(claims.filter(Boolean)).toHaveLength(1);
 });
 
+it("does not claim a confirmation wait before its saved retry time",async()=>{
+ const f=fixture();f.records[0].run.nextAttemptAt=4000;
+ expect(await f.repository.claimNext(3000,5000)).toBeNull();
+ expect(await f.repository.claimNext(4000,5000)).not.toBeNull();
+});
+
 it("fences an expired owner and preserves running state for reconciliation", async () => {
   const f = fixture();
   const old = (await f.repository.claimNext(2000, 3000))!;

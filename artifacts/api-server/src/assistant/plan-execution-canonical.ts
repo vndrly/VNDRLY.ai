@@ -1,3 +1,4 @@
+import { createPlanCalendarConfirmation } from "./plan-execution-calendar-confirmation";
 import { createPlanAwayCommand } from "./plan-execution-away-command";
 import { and, eq } from "drizzle-orm";
 import { db, notificationPreferencesTable, notificationsTable, workHubClientOperationsTable } from "@workspace/db";
@@ -69,6 +70,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
   }
   return {
     prepareTicketInvoices: createPlanTicketInvoicePreparation({authorize:deps.authorize,request:deps.request}),
+    observeCalendarConfirmation:createPlanCalendarConfirmation({authorize:deps.authorize,request:deps.request}),
     configureAway: createPlanAwayCommand({authorize:deps.authorize,request:deps.request}),
     rescheduleCalendar: createPlanCalendarReschedule({authorize:deps.authorize,request:deps.request}),
     readbackDraft,

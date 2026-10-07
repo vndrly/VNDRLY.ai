@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 import { PLAN_EXECUTION_READ_TOOL_NAMES } from './plan-execution-read-policy';
-import { planExecutionResultSchema, type PlanExecutionAdapter, type PlanExecutionAuthorization, type PlanExecutionResult, type PlanExecutionStep, type PlanExecutionReconciliation } from './plan-execution';
+import { planExecutionResultSchema, type PlanExecutionAdapter, type PlanExecutionAuthorization, type PlanExecutionResult, type PlanExecutionStep, type PlanExecutionReconciliation, type PlanExecutionObservation } from './plan-execution';
 
 const readTools=new Set(PLAN_EXECUTION_READ_TOOL_NAMES);
 const personalDraftInput=z.object({title:z.string().trim().min(1).max(200)}).strict();
@@ -14,6 +14,7 @@ export interface PlanExecutionCanonicalApi{
  savePersonalDraft(authorization:PlanExecutionAuthorization,command:PersonalDraftCommand):Promise<PlanExecutionResult>;
  prepareTicketInvoices?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,readback:boolean):Promise<PlanExecutionReconciliation>;
  configureAway?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,readback:boolean):Promise<PlanExecutionReconciliation>;
+ observeCalendarConfirmation?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,attempt:number):Promise<PlanExecutionObservation>;
  rescheduleCalendar?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,readback:boolean):Promise<PlanExecutionReconciliation>;
 }
 /** Retrieved text is literal record data. No model interpretation, instruction following, recipients or external effects. */
@@ -30,6 +31,7 @@ export function createPlanExecutionAdapters(api:PlanExecutionCanonicalApi):Recor
   return {operationId:step.operationId,title:args.title,description:personalDraftDescription(context.results),assigneeUserId:context.authorization.requester.userId};
  }
  return {
+  calendar_confirmation:{async execute(context,step){if(!api.observeCalendarConfirmation)throw Error("Calendar confirmation unavailable");return api.observeCalendarConfirmation(context.authorization,step,context.attempt??1);},async reconcile(){return {state:"not_found"};}},
   authorized_read:{async execute(context,step){assertRead(step);return planExecutionResultSchema.parse(await api.read(context.authorization,step));},async reconcile(_context,step){assertRead(step);return {state:'not_found'};}},
   personal_draft:{async execute(context,step){return planExecutionResultSchema.parse(await api.savePersonalDraft(context.authorization,command(context,step)));},async reconcile(context,step){return api.readbackDraft(context.authorization,command(context,step));}},
   ticket_invoice_preparation:{async execute(context,step){if(!api.prepareTicketInvoices)throw Error('Invoice preparation unavailable');const result=await api.prepareTicketInvoices(context.authorization,step,false);if(result.state!=='completed')throw Error('Invoice preparation outcome unverified');return result.result;},async reconcile(context,step){if(!api.prepareTicketInvoices)throw Error('Invoice preparation unavailable');return api.prepareTicketInvoices(context.authorization,step,true);}},

@@ -63,7 +63,7 @@ export function createPrivatePlanExecutionRepository(
               store.reportInvalidRecord?.(userId, index);
               continue;
             }
-            if (record.leaseUntil > now || record.run.cancelRequested ||
+            if (record.leaseUntil > now || (record.run.nextAttemptAt !== undefined && record.run.nextAttemptAt > now) || record.run.cancelRequested ||
                 !["pending", "running", "outcome_unknown"].includes(record.run.state)) continue;
             if (record.fence >= Number.MAX_SAFE_INTEGER) {
               store.reportInvalidRecord?.(userId, index);
