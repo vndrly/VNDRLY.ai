@@ -1,9 +1,19 @@
 import { Router } from "express";
 import { ZodError } from "zod/v4";
 import { getSessionFromRequest } from "../lib/session";
-import { ticketInvoicePreparationForSession } from "../services/ticket-invoice-preparation-repository";
+import { ticketInvoicePreparationForSession, ticketInvoiceCandidatesForSession } from "../services/ticket-invoice-preparation-repository";
+import { ticketInvoiceCandidatesInputSchema } from "../services/ticket-invoice-candidates";
 
 const router = Router();
+router.get("/invoices/ticket-preparation/candidates",async(req,res)=>{
+  const session=getSessionFromRequest(req);
+  if(!session){res.status(401).json({error:"Unauthorized"});return;}
+  try{
+    if(Object.keys(req.query).some(key=>!["limit","afterTicketId"].includes(key))||Object.values(req.query).some(value=>typeof value!=="string"||!/^\d+$/.test(value))){res.status(400).json({error:"Invalid invoice candidate query"});return;}
+    const input=ticketInvoiceCandidatesInputSchema.parse(Object.fromEntries(Object.entries(req.query).map(([key,value])=>[key,Number(value)])));
+    res.json(await ticketInvoiceCandidatesForSession(input,session));
+  }catch(error){res.status(error instanceof ZodError?400:403).json({error:"Invoice candidates unavailable"});}
+});
 for (const action of ["execute", "readback"] as const) {
   router.post(`/invoices/ticket-preparation/${action}`, async (req, res) => {
     const session = getSessionFromRequest(req);

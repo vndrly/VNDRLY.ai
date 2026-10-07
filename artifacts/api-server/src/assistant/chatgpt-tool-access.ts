@@ -1,4 +1,5 @@
 import type { SessionPayload } from "../lib/session";
+import { ticketInvoiceCandidatesAvailable } from "./ticket-invoice-candidates-tools";
 import { toolsForRealtime } from "./tool-packs";
 import type { AskVToolDefinition } from "./tool-registry";
 import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
@@ -109,7 +110,7 @@ export function chatGptReadableTools(
     }).filter((tool) => Boolean(tool.workHubFamily)));
   }
   return [...new Map(candidates.filter((tool) =>
-    !tool.mutating && tool.confirmation === "none" && tool.execution !== "client",
+    !tool.mutating && tool.confirmation === "none" && tool.execution !== "client" && (tool.name!=="query_ticket_invoice_candidates"||ticketInvoiceCandidatesAvailable(session,scopes)),
   ).map((tool) => [tool.name, tool])).values()];
 }
 

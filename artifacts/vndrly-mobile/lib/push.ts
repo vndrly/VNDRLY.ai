@@ -8,6 +8,8 @@ import { apiFetch } from "./api";
 import { handleForegroundNotificationSound, PUSH_NOTIFICATION_SOUND } from "./notificationSounds";
 import { applyPushBadgeFromPayload } from "./notificationBadge";
 import { isExpoGo } from "./runtime";
+import { isWorkHubMessagePush } from "./work-hub-message-sound";
+import { handleWorkHubMessageSound } from "./work-hub-message-sound-native";
 
 // expo-notifications in SDK 54 dropped remote push support inside
 // Expo Go. setNotificationHandler still works for local notifications
@@ -22,10 +24,11 @@ try {
       // handleForegroundNotificationSound in the root listener instead
       // of the system notification chime.
       const isForeground = AppState.currentState === "active";
-      if (isForeground) {
-        handleForegroundNotificationSound();
-      }
       const data = notification.request.content.data as Record<string, unknown> | undefined;
+      if (isForeground) {
+        if (isWorkHubMessagePush(data)) void handleWorkHubMessageSound(data);
+        else handleForegroundNotificationSound();
+      }
       void applyPushBadgeFromPayload(data);
       return {
         shouldShowAlert: true,

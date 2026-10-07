@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod/v4';
 import { TICKET_INVOICE_PREPARATION_ARGUMENTS } from './ticket-invoice-preparation-tools';
+import { ticketInvoiceCandidatesInputSchema } from '../services/ticket-invoice-candidates';
 import { PLAN_EXECUTION_OPPORTUNITY_INPUTS } from './plan-execution-read-policy';
 import { PLAN_EXECUTION_READ_TOOL_NAMES, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES, PLAN_EXECUTION_INVOICE_ACTIVITY_INPUT } from './plan-execution-read-policy';
 
@@ -16,6 +17,7 @@ export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),r
  if(!a.steps.every(s=>visit(s.id)))ctx.addIssue({code:'custom',message:'Invalid dependency graph'});
  if(a.steps.some(s=>Buffer.byteLength(JSON.stringify(s.arguments))>8192))ctx.addIssue({code:'custom',message:'Approved arguments exceed bounded capacity'});
  for(const step of a.steps){
+  if(step.adapter==='authorized_read'&&step.toolName==='query_ticket_invoice_candidates'&&!ticketInvoiceCandidatesInputSchema.safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid bounded invoice candidate selection'});
   if(step.adapter==='authorized_read'&&Object.hasOwn(PLAN_EXECUTION_OPPORTUNITY_INPUTS,step.toolName)&&!PLAN_EXECUTION_OPPORTUNITY_INPUTS[step.toolName as keyof typeof PLAN_EXECUTION_OPPORTUNITY_INPUTS].safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid exact opportunity read arguments'});
   if(step.adapter==='ticket_invoice_preparation') {
    const args=TICKET_INVOICE_PREPARATION_ARGUMENTS.safeParse(step.arguments);

@@ -2,7 +2,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, ticketsTable, invoiceTicketLinksTable, workHubClientOperationsTable, workHubAuditLogTable } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { generateInvoiceForTicket } from "../lib/invoice-generator";
-import { financePermissions, type FinanceRole } from "../lib/workHubFinancePolicy";
+import { authorizeTicketInvoiceBilling, readTicketInvoiceCandidates } from "./ticket-invoice-candidates";
 import { readInvoiceActivityInTransaction, type InvoiceActivityQuery } from "../assistant/invoice-activity-transaction-read";
 import { createTicketInvoicePreparation, ticketInvoicePreparationActorSchema } from "./ticket-invoice-preparation";
 
@@ -33,12 +33,8 @@ export function ticketInvoicePreparationForSession(session: SessionPayload) {
       if (prior.length > 1 || prior.length === 1 && (prior[0].ownerOrgType !== "vendor" || prior[0].ownerOrgId !== trustedActor.vendorId || !prior[0].resultJson)) throw Error("invoice_preparation.operation_conflict");
       return run({
         async authorize() {
-          const authority = await client.query("SELECT u.id FROM users u JOIN user_org_memberships m ON m.user_id=u.id WHERE u.id=$1 AND u.session_version=$2 AND u.suspended_at IS NULL AND m.id=$3 AND m.org_type='vendor' AND m.vendor_id=$4 AND m.role=$5 FOR SHARE OF u,m", [trustedActor.userId, trustedActor.sessionVersion, trustedActor.membershipId, trustedActor.vendorId, session.membershipRole]);
-          if (!authority.rows.length || rows.length !== command.tickets.length || rows.some(ticket => ticket.vendorId !== trustedActor.vendorId)) throw Error("invoice_preparation.current_authority_required");
-          const grants = await client.query("SELECT data FROM work_hub_finance_records WHERE org_type='vendor' AND org_id=$1 AND kind='grant' AND record_key=$2 FOR SHARE", [trustedActor.vendorId, String(trustedActor.userId)]);
-          const data = grants.rows[0]?.data as { roles?: FinanceRole[] } | undefined;
-          const roles = data?.roles ?? [];
-          if (!Array.isArray(roles) || roles.some(role => !["billing_manager", "payroll_preparer", "payroll_approver", "payroll_viewer"].includes(role)) || !financePermissions(session.membershipRole === "admin", roles).billing) throw Error("invoice_preparation.billing_permission_required");
+          await authorizeTicketInvoiceBilling(session,client);
+          if (rows.length !== command.tickets.length || rows.some(ticket => ticket.vendorId !== trustedActor.vendorId)) throw Error("invoice_preparation.current_authority_required");
         },
         activity: basis => readInvoiceActivityInTransaction({ basis }, session, client),
         async eligible(tickets) {
@@ -63,4 +59,7 @@ export function ticketInvoicePreparationForSession(session: SessionPayload) {
     }),
   });
   return { execute: (raw: unknown) => service.execute(raw, actor), readback: (raw: unknown) => service.readback(raw, actor) };
+}
+export function ticketInvoiceCandidatesForSession(raw:unknown,session:SessionPayload){
+  return db.transaction(tx=>readTicketInvoiceCandidates(raw,session,invoicePreparationQuery(statement=>tx.execute(statement))));
 }

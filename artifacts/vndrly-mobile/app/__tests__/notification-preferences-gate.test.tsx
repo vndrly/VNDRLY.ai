@@ -42,6 +42,14 @@ beforeEach(() => { apiFetch.mockReset(); auth.generation = 0; });
 afterEach(cleanup);
 
 describe("role-specific notification preferences", () => {
+  it("saves the current account's Work Hub message mute without changing other categories", async () => {
+    apiFetch.mockResolvedValue({ ...office, workHubMessagesEnabled: true });
+    render(<NotificationPreferencesScreen />);
+    fireEvent.click(await screen.findByRole("switch", { name: "Work Hub messages" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save preferences" }));
+    await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
+    expect(JSON.parse(apiFetch.mock.calls[1][1].body)).toEqual({ ...office, workHubMessagesEnabled: false });
+  });
   it("shows seven gate categories and sends only editable gate fields", async () => {
     apiFetch.mockResolvedValue({ ...gate, userId: 123, ticketsEnabled: true });
     render(<NotificationPreferencesScreen />);
@@ -83,7 +91,7 @@ describe("role-specific notification preferences", () => {
     expect(screen.queryByText("Handoffs")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Save preferences" }));
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
-    expect(JSON.parse(apiFetch.mock.calls[1][1].body)).toEqual(office);
+    expect(JSON.parse(apiFetch.mock.calls[1][1].body)).toEqual({ ...office, workHubMessagesEnabled: true });
   });
 
   it("shows a retry after loading fails and never exposes editable defaults", async () => {

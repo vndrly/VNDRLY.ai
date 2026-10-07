@@ -40,3 +40,23 @@ it("rejects identity injection, unsupported adapters and changed saved draft int
   expect(() => prepareBoundExecutionProposal(f.plan, f.context, { ...f.input,
     steps: [f.input.steps[0], { ...f.input.steps[1], arguments: { title: "Different action" } }] })).toThrow("intent");
 });
+it("preserves explicit candidate versions and chronology prerequisites in review without automatic batch selection",()=>{
+  const plan=createCoordinatedPlan({userId:17,organizationKey:"vendor:4"},[
+    {id:"candidates",specialist:"Ivy",toolNames:["query_ticket_invoice_candidates"],dependsOn:[]},
+    {id:"history",specialist:"Ivy",toolNames:["query_invoice_activity"],dependsOn:[]},
+    {id:"prepare",specialist:"Ivy",toolNames:["prepare_ticket_invoices"],dependsOn:["candidates","history"]},
+  ]);
+  const context={...fixture().context,availableTools:new Set(["query_ticket_invoice_candidates","query_invoice_activity","prepare_ticket_invoices"])};
+  const selection={ticketId:100007,expectedUpdatedAt:"2026-10-07T10:00:00.123Z"};
+  const input={taskId:context.taskId,expectedTaskVersion:context.taskVersion,expectedPlanVersion:plan.version,expiresInMinutes:30,maxAttempts:2,steps:[
+    {id:"candidates",adapter:"authorized_read",toolName:"query_ticket_invoice_candidates",arguments:{limit:20,afterTicketId:0}},
+    {id:"history",adapter:"authorized_read",toolName:"query_invoice_activity",arguments:{basis:"recorded_invoice_activity"}},
+    {id:"prepare",adapter:"ticket_invoice_preparation",toolName:"prepare_ticket_invoices",arguments:{basis:"recorded_invoice_activity",tickets:[selection]}},
+  ]};
+  const proposal=prepareBoundExecutionProposal(plan,context,input,1000);
+  expect(proposal.steps[2].arguments).toEqual({basis:"recorded_invoice_activity",tickets:[selection]});
+  expect(proposal.steps[2].dependsOn).toEqual(["candidates","history"]);
+  expect(proposal.steps[2].operationId).toMatch(/^[a-f0-9-]{36}$/);
+  expect(()=>prepareBoundExecutionProposal(plan,context,{...input,steps:input.steps.slice(1)},1000)).toThrow("prerequisite");
+  expect(()=>prepareBoundExecutionProposal(plan,context,{...input,steps:[input.steps[0],input.steps[1],{...input.steps[2],arguments:{basis:"recorded_invoice_activity",allEligible:true}}]},1000)).toThrow();
+});

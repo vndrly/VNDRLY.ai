@@ -42,6 +42,7 @@ type OfficePrefs = SharedPrefs & {
   complianceEnabled: boolean;
   crewEnabled: boolean;
   systemEnabled: boolean;
+  workHubMessagesEnabled?: boolean;
   // Task #50 — comments thread fan-out. The mobile app shows a single
   // toggle per channel-group: `commentsEnabled` covers in-app + push for
   // both @mention and reply notifications, the mention-email and
@@ -66,13 +67,14 @@ function parsePreferences(value: unknown): Prefs {
   const row = value as Record<string, unknown>;
   const keys = row.mode === "gate" ? GATE_ROWS.map(([key]) => key) : OFFICE_SWITCHES;
   if ((row.mode != null && row.mode !== "gate" && row.mode !== "office") ||
+    (row.workHubMessagesEnabled != null && typeof row.workHubMessagesEnabled !== "boolean") ||
     [...keys, "pushEnabled"].some((key) => typeof row[key] !== "boolean") ||
     [row.dndStartHour, row.dndEndHour].some((hour) => hour !== null &&
       (typeof hour !== "number" || !Number.isInteger(hour) || hour < 0 || hour > 23))) {
     throw new Error("Invalid preferences response");
   }
   return row.mode === "gate" ? { ...row, alertsEmailEnabled: row.alertsEmailEnabled !== false,
-    alertsSmsEnabled: row.alertsSmsEnabled === true, alertsSmsAvailable: row.alertsSmsAvailable === true } as GatePrefs : value as Prefs;
+    alertsSmsEnabled: row.alertsSmsEnabled === true, alertsSmsAvailable: row.alertsSmsAvailable === true } as GatePrefs : { ...row, workHubMessagesEnabled: row.workHubMessagesEnabled !== false } as OfficePrefs;
 }
 function subscribeAuth(listener: () => void) {
   const user = subscribeUser(listener);
@@ -90,7 +92,7 @@ export default function NotificationPreferencesScreen() {
 function NotificationPreferencesForm() {
   const scope = useRef(captureAuthScope()).current;
   const colors = useColors();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const pathname = usePathname();
   const notificationsHref = pathname.endsWith("/gate-notification-preferences")
     ? "/(tabs)/gate-notifications"
@@ -114,6 +116,7 @@ function NotificationPreferencesForm() {
       { key: "complianceEnabled", label: t("notifications.rows.compliance"), desc: t("notifications.rows.complianceDesc") },
       { key: "crewEnabled", label: t("notifications.rows.crew"), desc: t("notifications.rows.crewDesc") },
       { key: "systemEnabled", label: t("notifications.rows.system"), desc: t("notifications.rows.systemDesc") },
+      { key: "workHubMessagesEnabled", label: i18n?.language?.startsWith("es") ? "Mensajes de Work Hub" : "Work Hub messages", desc: i18n?.language?.startsWith("es") ? "Avisos y sonido de mensajes con notificaciones permitidas. El dispositivo controla el sonido en segundo plano." : "Message notices and sound when notifications are permitted. Your device controls background sound." },
       // Task #50 — comments fan-out toggles. Three rows because the
       // user wants independent control over (a) in-app/push for the
       // category, (b) instant @mention emails, and (c) the every-few-
@@ -128,7 +131,7 @@ function NotificationPreferencesForm() {
       ] : []),
       { key: "pushEnabled", label: t("notifications.rows.push"), desc: t("notifications.rows.pushDesc") },
     ],
-    [t, gateMode],
+    [t, gateMode, i18n?.language],
   );
 
   useEffect(() => {

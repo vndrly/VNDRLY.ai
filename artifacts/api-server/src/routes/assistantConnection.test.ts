@@ -124,6 +124,31 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("advertises both required finance permissions for invoice preparation without changing other finance metadata", async () => {
+    const credentials = await tokens("work_hub:read work_hub:write finance:read finance:write");
+    grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };
+    const tools = (await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/list" })).body.result.tools;
+    const preparation = tools.find((tool: { name: string }) => tool.name === "prepare_ticket_invoices");
+    const expected = [{ type: "oauth2", scopes: ["finance:read", "finance:write"] }];
+    expect(preparation.securitySchemes).toEqual(expected);
+    expect(preparation._meta.securitySchemes).toEqual(expected);
+  });
+  it("reads exact invoice candidates through the canonical endpoint and refuses consent removal before another lookup", async () => {
+    const credentials = await tokens("work_hub:read finance:read");
+    grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };
+    const output = { company: { type: "vendor", id: 4 }, observedAt: new Date().toISOString(), source: "canonical_approved_uninvoiced_tickets", tickets: [{ ticketId: 21, siteLocationId: 3, status: "approved", expectedUpdatedAt: new Date().toISOString() }], page: { limit: 1, nextAfterTicketId: null, truncated: false }, automaticApprovalCreated: false, invoicesPrepared: false };
+    mocks.taskRead.mockResolvedValue(output);
+    const invoke = (method: string, params?: unknown) => request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method, params });
+    const descriptor = (await invoke("tools/list")).body.result.tools.find((tool: { name: string }) => tool.name === "query_ticket_invoice_candidates");
+    expect(descriptor).toMatchObject({ annotations: { readOnlyHint: true }, securitySchemes: [{ type: "oauth2", scopes: ["finance:read"] }], outputSchema: { additionalProperties: false } });
+    expect((await invoke("tools/call", { name: descriptor.name, arguments: { limit: 1, afterTicketId: 20 } })).body.result.structuredContent).toEqual(output);
+    expect(mocks.taskRead).toHaveBeenCalledWith("/invoices/ticket-preparation/candidates?limit=1&afterTicketId=20", "GET", {}, expect.objectContaining({ userId: 17, vendorId: 4 }));
+    grants[0].scopes = grants[0].scopes.filter(scope => scope !== "finance:read");
+    expect((await invoke("tools/list")).body.result.tools.some((tool: { name: string }) => tool.name === descriptor.name)).toBe(false);
+    expect((await invoke("tools/call", { name: descriptor.name, arguments: {} })).body.result.isError).toBe(true);
+    expect(mocks.taskRead).toHaveBeenCalledOnce();
+    expect(mocks.pending).not.toHaveBeenCalled();
+  });
   it("prepares a saved invoice-activity plan through the supported tool and refuses it after finance consent removal", async () => {
     const credentials = await tokens("work_hub:read work_hub:write finance:read");
     grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };

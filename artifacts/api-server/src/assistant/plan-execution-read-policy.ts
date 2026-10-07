@@ -4,6 +4,7 @@ const positive = z.number().int().positive();
 const empty = z.object({}).strict();
 /** Fixed supported read schemas. Existing custody reads retain their legacy bounds. */
 export const PLAN_EXECUTION_BUSINESS_READ_CANDIDATES = {
+  query_ticket_invoice_candidates: z.object({ limit: z.number().int().min(1).max(20).default(20), afterTicketId: z.number().int().nonnegative().default(0) }).strict(),
   query_invoices: z.object({ sinceDays: z.number().int().min(1).max(365).default(90), status: z.enum(["draft", "open", "sent", "overdue", "paid", "cancelled"]).optional(), limit }).strict(),
   query_ar_aging: empty,
   query_tickets: z.object({ status: z.enum(["completed", "submitted", "approved", "awaiting_payment", "pending_review"]), sinceDays: z.number().int().min(1).max(365).default(90), limit }).strict(),

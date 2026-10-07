@@ -1,6 +1,7 @@
 import { meetingSearchInputSchema, searchSavedMeetingProjection } from "./work-hub-meeting-search";
 import { displayActionRequest } from "./operations-display-action-adapter";
 import { ticketInvoicePreparationCommand } from "./ticket-invoice-preparation-tools";
+import { ticketInvoiceCandidatesPath } from "./ticket-invoice-candidates-tools";
 import { financeRecordAction } from "./work-hub-finance-actions";
 import { z } from "zod/v4";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
@@ -279,6 +280,9 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if (name === "query_operations_displays" || name === "prepare_operations_displays_action")
     return request("GET", "/implementation-a/operations-displays");
+  if(name === "query_ticket_invoice_candidates"){
+    try{return request("GET",ticketInvoiceCandidatesPath(input));}catch{return {error:"Supply a bounded current invoice candidate page."};}
+  }
   if (name === "confirm_operations_displays_action") {
     try { return displayActionRequest(input); }
     catch { return { error: "Supply exact saved display ID, updatedAt, supported monitor/action/site or meeting and reason. Pairing and registration remain device-only." }; }

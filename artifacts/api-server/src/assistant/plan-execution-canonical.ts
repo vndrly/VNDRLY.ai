@@ -10,6 +10,7 @@ import type { PersonalDraftCommand, PlanExecutionCanonicalApi } from "./plan-exe
 import { createPlanExecutionBusinessReads, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES } from "./plan-execution-business-reads";
 import { createPlanInvoiceActivityRead } from "./plan-execution-invoice-activity";
 import { createPlanTicketInvoicePreparation } from "./plan-execution-ticket-invoices";
+import { createPlanTicketInvoiceCandidatesRead } from "./plan-execution-ticket-invoice-candidates";
 import { createPlanOpportunityRead } from "./plan-execution-opportunities";
 import { PLAN_EXECUTION_OPPORTUNITY_INPUTS } from "./plan-execution-read-policy";
 
@@ -78,6 +79,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
       return result.result;
     },
     async read(authorization, step) {
+      if(step.toolName==="query_ticket_invoice_candidates")return createPlanTicketInvoiceCandidatesRead({authorize:deps.authorize,request:deps.request})(authorization,step);
       if(Object.hasOwn(PLAN_EXECUTION_OPPORTUNITY_INPUTS,step.toolName))return createPlanOpportunityRead({authorize:deps.authorize})(authorization,step);
       if (step.toolName === "query_invoice_activity") return createPlanInvoiceActivityRead({ authorize: deps.authorize })(authorization, step);
       // Existing custody delegations retain their original bound adapter. New
