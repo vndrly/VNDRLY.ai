@@ -41,6 +41,7 @@ import { savedWorkHubMeetingResourceId } from "../assistant/plan-work-hub-meetin
 import { savedWorkHubMessageTarget } from "../assistant/plan-work-hub-message-proof";
 import assistantPlanExecutionRouter from "./assistantPlanExecution";
 import { PLAN_EXECUTION_PREPARE_TOOL, PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION_CANCEL_TOOL, handlePlanExecutionTool } from "../assistant/plan-execution-chatgpt";
+import { PLAN_EXECUTION_CALENDAR_TOOL, handlePlanExecutionCalendarTool } from "../assistant/plan-execution-calendar-chatgpt";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -328,6 +329,7 @@ router.post("/mcp", async (req, res) => {
     if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
     if (process.env.ASSISTANT_PLAN_EXECUTION_ENABLED === "1" && reads.some(tool => tool.name === "list_work_hub_tasks")) {
       reads.push(PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION_CANCEL_TOOL);
+      if (authorized.session.role !== "admin" && ["get_work_hub_calendar", "get_work_hub_calendar_item", "get_work_hub_meeting_catchup", "find_work_hub_meeting_times"].every(name => reads.some(tool => tool.name === name)) && chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_meeting")) reads.push(PLAN_EXECUTION_CALENDAR_TOOL);
       if (chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_task")) reads.push(PLAN_EXECUTION_PREPARE_TOOL);
     }
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_fleet_briefing", "query_fleet_site_activity", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
@@ -344,9 +346,10 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
-    if ([PLAN_EXECUTION_PREPARE_TOOL.name, PLAN_EXECUTION_STATUS_TOOL.name, PLAN_EXECUTION_CANCEL_TOOL.name].includes(name)) {
+    if ([PLAN_EXECUTION_PREPARE_TOOL.name, PLAN_EXECUTION_STATUS_TOOL.name, PLAN_EXECUTION_CANCEL_TOOL.name, PLAN_EXECUTION_CALENDAR_TOOL.name].includes(name)) {
       if (!authorized.grantConsentHash) throw new AssistantOAuthError("access_denied");
-      const output = await handlePlanExecutionTool(name, args, authorized.session, authorized.scopes, authorized.grantConsentHash);
+      const handler = name === PLAN_EXECUTION_CALENDAR_TOOL.name ? handlePlanExecutionCalendarTool : (input: unknown, session: typeof authorized.session, scopes: string[], grant: string) => handlePlanExecutionTool(name, input, session, scopes, grant);
+      const output = await handler(args, authorized.session, authorized.scopes, authorized.grantConsentHash);
       return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output });
     }
     if (requiresFinanceConsent(authorized.session, authorized.scopes, name, args)) return reply(financeConsentChallenge(ASSISTANT_ISSUER, authorized.scopes));
