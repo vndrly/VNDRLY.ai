@@ -218,6 +218,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     return request("POST", `/implementation-a/assets/${resourceId}/${action}`, { ...assetPayload, operationId: input.operationId, expectedVersion: input.expectedVersion, confirmed: true });
   }
   const readPaths: Record<string, string> = {
+    query_ticket_assignment_candidates: queryPath("/implementation-a/workforce/ticket-assignment-candidates", { vendorId: input.vendorId, name: input.name, limit: input.limit }),
     query_account_invitations: "/implementation-a/account-invitations",
     query_workforce_coverage: "/implementation-a/workforce/coverage",
     query_asset_custody: "/implementation-a/assets",

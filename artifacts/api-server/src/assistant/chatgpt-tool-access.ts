@@ -76,6 +76,7 @@ export function chatGptReadableTools(
   const explicitNames = new Set<string>(Object.entries(CHATGPT_READ_CAPABILITIES)
     .filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
   candidates.push(...ASK_V_TOOL_REGISTRY.filter(tool => explicitNames.has(tool.name)
+    && (tool.name !== "query_ticket_assignment_candidates" || session.role !== "field_employee" || ["foreman", "both"].includes(session.vendorRole ?? ""))
     && (!tool.name.includes("account_invitations") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
     && (!tool.name.includes("worker_subscriptions") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
     && (!tool.name.includes("operations_displays") || ((session.role === "admin" || session.membershipRole === "admin") && Boolean(session.vendorId || session.partnerId)))

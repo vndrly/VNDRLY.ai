@@ -4,6 +4,14 @@ import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
 import { findAskVTool } from "./tool-registry";
 
 describe("ChatGPT assistant tool access", () => {
+  it("requires workforce consent and foreman scope for field-worker roster discovery", () => {
+    const name = "query_ticket_assignment_candidates";
+    const foreman = { userId: 9, role: "field_employee", vendorId: 12, vendorRole: "foreman" };
+    expect(requireChatGptReadableTool(foreman, ["workforce:read"], name).name).toBe(name);
+    expect(() => requireChatGptReadableTool(foreman, ["crew:read"], name)).toThrow();
+    expect(() => requireChatGptReadableTool({ ...foreman, vendorRole: "field" }, ["workforce:read"], name)).toThrow();
+    expect(() => requireChatGptReadableTool({ userId: 9, role: "partner", partnerId: 12 }, ["workforce:read"], name)).toThrow();
+  });
   it("limits operations displays to an administrator's active company", () => {
     const tool = "query_operations_displays";
     expect(() => requireChatGptReadableTool({ userId: 1, role: "vendor", vendorId: 7, membershipRole: "admin" }, ["operations:read"], tool)).not.toThrow();

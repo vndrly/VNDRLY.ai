@@ -17,6 +17,9 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("reads selection candidates without arbitrary scope or private-contact fields", () => {
+    expect(resolveExecutableWorkHubToolRequest("query_ticket_assignment_candidates", { vendorId: 12, name: "Bob", limit: 10, includePrivate: true }, false)).toMatchObject({ method: "GET", path: "/implementation-a/workforce/ticket-assignment-candidates?vendorId=12&name=Bob&limit=10" });
+  });
   it("uses the canonical text message kind for an ordinary spoken message", () => {
     const channelId = "00000000-0000-4000-8000-000000000002";
     const input = { ...command, channelId, body: "SYNTHETIC DEMO: I am running late" };

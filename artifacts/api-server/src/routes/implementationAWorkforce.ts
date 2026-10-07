@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { and, desc, eq, gte, inArray, isNull, lt, ne } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   AcknowledgeWorkforceAssignmentSchema,
@@ -30,6 +30,7 @@ import {
 } from "../services/workforce-coverage";
 import { ChangeOverError } from "../services/gate-change-over";
 import { setGateCoverageStatus } from "../services/gate-coverage-monitor";
+import { assertCanManageVendorPeople } from "../lib/vendor-people-management";
 
 const router = Router();
 const id = z.string().uuid();
@@ -86,6 +87,24 @@ async function eligibilityFor(workerUserId: number, shiftId: string, vendorId: n
   const weekHours = assigned.reduce((sum, item) => sum + Math.max(0, item.endsAt.getTime() - item.startsAt.getTime()), shift.endsAt.getTime() - shift.startsAt.getTime()) / 3_600_000;
   return { shift, eligibility: { accountState, credentialsCurrent, overlaps, overtime: weekHours > 40, restWindow } };
 }
+
+router.get("/implementation-a/workforce/ticket-assignment-candidates", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  try {
+    const session = getSessionFromRequest(req);
+    if (!session?.userId) return res.status(401).json({ code: "workforce.login_required" });
+    const query = z.object({ vendorId: z.coerce.number().int().positive().optional(), name: z.string().trim().min(1).max(100).optional(), limit: z.coerce.number().int().min(1).max(100).default(50) }).parse(req.query);
+    const vendorId = session.role === "admin" ? query.vendorId : session.vendorId;
+    if (!vendorId || (session.role !== "admin" && query.vendorId !== undefined && query.vendorId !== vendorId)) return res.status(403).json({ code: "workforce.vendor_scope_required" });
+    const permission = await assertCanManageVendorPeople({ ...session, userId: session.userId, role: session.role ?? "", vendorId: session.vendorId ?? null }, vendorId);
+    if (!permission.ok) return res.status(permission.status).json({ code: "workforce.roster_access_denied" });
+    const candidates = await db.select({ crewEmployeeId: vendorPeopleTable.id, userId: vendorPeopleTable.userId, vendorId: vendorPeopleTable.vendorId, firstName: vendorPeopleTable.firstName, lastName: vendorPeopleTable.lastName, vendorRole: vendorPeopleTable.vendorRole })
+      .from(vendorPeopleTable).leftJoin(usersTable, eq(usersTable.id, vendorPeopleTable.userId))
+      .where(and(eq(vendorPeopleTable.vendorId, vendorId), eq(vendorPeopleTable.isActive, true), isNull(vendorPeopleTable.deletedAt), isNull(usersTable.suspendedAt), inArray(vendorPeopleTable.vendorRole, ["field", "both", "foreman"]), query.name ? ilike(sql`COALESCE(${vendorPeopleTable.firstName}, '') || ' ' || COALESCE(${vendorPeopleTable.lastName}, '')`, `%${query.name.replace(/[\\%_]/g, "\\$&")}%`) : undefined))
+      .orderBy(vendorPeopleTable.firstName, vendorPeopleTable.lastName).limit(query.limit);
+    return res.json({ vendorId, candidates, assignmentEligibilityVerified: false, note: "Active field roster only. Ticket-specific authorization, qualifications and availability are rechecked when assigning crew." });
+  } catch (error) { return sendError(res, error); }
+});
 
 router.get("/implementation-a/workforce/coverage", async (req, res) => {
   res.setHeader("Cache-Control", "no-store");

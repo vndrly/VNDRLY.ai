@@ -1,2 +1,5 @@
 import { capabilityTools } from "./types";
-export const WORKFORCE_CAPABILITY_TOOLS = capabilityTools("workforce_coverage", "schedules, vacancies, assignment acknowledgements, and escalation", "schedule.manage", ["admin", "partner", "vendor", "field_employee"]);
+export const WORKFORCE_CAPABILITY_TOOLS = [
+  ...capabilityTools("workforce_coverage", "schedules, vacancies, assignment acknowledgements, and escalation", "schedule.manage", ["admin", "partner", "vendor", "field_employee"]),
+  { name: "query_ticket_assignment_candidates", description: "Read the authorized vendor's active field roster for crew selection. Vendor office managers and foremen only; platform admins must specify vendorId. Does not establish ticket eligibility or assign anyone. No partner-wide employee directory.", input_schema: { type: "object" as const, properties: { vendorId: { type: "integer", minimum: 1 }, name: { type: "string", minLength: 1, maxLength: 100 }, limit: { type: "integer", minimum: 1, maximum: 100 } }, additionalProperties: false }, mutating: false, confirmation: "none" as const, roles: ["admin", "vendor", "field_employee"] as ("admin" | "vendor" | "field_employee")[], authorityCapability: "directory.read" as const },
+];

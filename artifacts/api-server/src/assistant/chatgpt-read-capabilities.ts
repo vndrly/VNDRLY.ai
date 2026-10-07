@@ -1,7 +1,7 @@
 /** Explicit server-read adapters. A new registry tool is not exposed automatically. */
 export const CHATGPT_READ_CAPABILITIES = {
   "invitations:read": { label: "Vendor administrator invitation enrollment and delivery status", tools: ["query_account_invitations", "prepare_account_invitations_action"] },
-  "workforce:read": { label: "Authorized staffing coverage and assignment status", tools: ["query_workforce_coverage", "prepare_workforce_coverage_action"] },
+  "workforce:read": { label: "Authorized staffing coverage, field roster and assignment status", tools: ["query_workforce_coverage", "prepare_workforce_coverage_action", "query_ticket_assignment_candidates"] },
   "tickets:read": { label: "Assigned tickets, work details, and proof", tools: ["lookup_open_tickets", "query_tickets", "query_ticket_detail", "query_ticket_proof_packet", "query_ticket_crew", "query_ticket_labor", "query_ticket_notes", "query_work_type_history", "query_flagged_tickets", "query_ticket_logged_miles", "query_ticket_mileage_audit"] },
   "sites:read": { label: "Authorized sites and operational status", tools: ["query_site_locations", "lookup_site_detail", "lookup_site_operational_status"] },
   "crew:read": { label: "Authorized crew locations, routes, GPS trails, and ETA", tools: ["query_field_trips", "prepare_field_trips_action", "query_live_crew", "lookup_crew_member_status", "query_crew_eta", "query_crew_route_summary", "query_gps_trail", "query_ticket_route_eta", "lookup_map_origin", "estimate_driving_route"] },
