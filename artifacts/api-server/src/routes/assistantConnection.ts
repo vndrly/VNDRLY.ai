@@ -1,3 +1,4 @@
+import { selectConsentedScopes } from "../assistant/chatgpt-consent-selection";
 import { financeConsentUpgradeTools, requiresFinanceConsent, financeConsentChallenge, FINANCE_SECURITY_SCHEMES } from "../assistant/chatgpt-consent-upgrade";
 import { Router, type Request, type Response } from "express";
 import { exposedOperationTools, resolveOperationTool, planOperationTools } from "../assistant/chatgpt-operation-tools";
@@ -36,7 +37,7 @@ function envelope(value: unknown) {
   const body = Buffer.from(JSON.stringify(value)).toString("base64url");
   return `${body}.${sign(body)}`;
 }
-function readEnvelope(value: unknown): { request: Record<string, unknown>; userId: number; sv: number; activeMembershipId: number | null; nonce: string; expires: number } {
+function readEnvelope(value: unknown): { request: Record<string, unknown>; scopeSelection?: boolean; userId: number; sv: number; activeMembershipId: number | null; nonce: string; expires: number } {
   if (typeof value !== "string" || value.length > 12_000) throw new AssistantOAuthError("invalid_request");
   const [body, signature, extra] = value.split(".");
   if (!body || !signature || extra) throw new AssistantOAuthError("invalid_request");
@@ -164,18 +165,18 @@ router.get("/authorize", async (req, res) => {
   // form-action self would otherwise block that browser redirect after success.
   res.set("Content-Security-Policy", "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; form-action 'self' https://chatgpt.com/connector_platform_oauth_redirect");
   try {
-    await validateAssistantAuthorization(req.query, await clientRedirects());
+    const authorizationRequest = await validateAssistantAuthorization(req.query, await clientRedirects());
     if (typeof req.query.state !== "string" || req.query.state.length > 4096) throw new AssistantOAuthError("invalid_request");
     const session = getSessionFromRequest(req);
     if (!session) return page(res, '<p>Sign into VNDRLY in another tab, then return here and refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const nonce = randomBytes(32).toString("base64url");
     res.cookie("vndrly_assistant_consent", nonce, { httpOnly: true, secure: true, sameSite: "lax", path: "/api/assistant-connection", maxAge: 300_000 });
-    const consent = envelope({ request: req.query, userId: current.userId, sv: current.sv, activeMembershipId: current.activeMembershipId ?? null, nonce, expires: Date.now() + 300_000 });
+    const consent = envelope({ request: req.query, scopeSelection: true, userId: current.userId, sv: current.sv, activeMembershipId: current.activeMembershipId ?? null, nonce, expires: Date.now() + 300_000 });
     const writeAccess = String(req.query.scope).split(" ").some((scope) => scope.endsWith(":write"));
-    const requestedScopes = String(req.query.scope).split(" ");
+    const requestedScopes = authorizationRequest.scopes;
     const labels: Record<string, string> = { "gate:read": "Gate records and draft preparation", "gate:write": "Prepare Gate changes for authenticated approval", "work_hub:read": "Work Hub records", "work_hub:write": "Prepare Work Hub changes for authenticated approval", ...Object.fromEntries(Object.entries({...CHATGPT_READ_CAPABILITIES, ...CHATGPT_WRITE_CAPABILITIES}).map(([scope, capability]) => [scope, capability.label])) };
-    return page(res, `<p>Connect ChatGPT to the VNDRLY records available to ${escape(current.displayName ?? "your VNDRLY account")}.</p><ul>${requestedScopes.map(scope => `<li>${escape(labels[scope] ?? scope)}</li>`).join("")}</ul><p>${writeAccess ? "V can read the listed records and prepare changes. Changes requiring approval are completed through your signed-in VNDRLY account." : "This connection can read the listed records. It cannot change them."}</p><form method="post" action="/api/assistant-connection/authorize"><input type="hidden" name="consent" value="${escape(consent)}"><button type="submit">Connect my VNDRLY account</button></form><p><a href="/switch-account" target="_blank" rel="noopener">Switch VNDRLY account</a>. After signing in, return here and refresh before connecting.</p>`);
+    return page(res, `<p>Connect ChatGPT to the VNDRLY records available to ${escape(current.displayName ?? "your VNDRLY account")}.</p><p>Choose the access to grant. Uncheck permissions you do not want; reconnecting does not require selecting every permission.</p><p>${writeAccess ? "V can read the listed records and prepare changes. Changes requiring approval are completed through your signed-in VNDRLY account." : "This connection can read the listed records. It cannot change them."}</p><form method="post" action="/api/assistant-connection/authorize"><input type="hidden" name="consent" value="${escape(consent)}"><fieldset><legend>Selected permissions</legend>${requestedScopes.map(scope => `<label style="display:block"><input type="checkbox" name="selected_scope" value="${escape(scope)}" checked> ${escape(labels[scope] ?? scope)} (${escape(scope)})</label>`).join("")}</fieldset><button type="submit">Connect my VNDRLY account</button></form><p><a href="/switch-account" target="_blank" rel="noopener">Switch VNDRLY account</a>. After signing in, return here and refresh before connecting.</p>`);
   } catch (error) { return oauthError(res, error); }
 });
 router.post("/authorize", async (req, res) => {
@@ -187,6 +188,8 @@ router.post("/authorize", async (req, res) => {
     const current = await validateAssistantSession(session);
     if (current.sv !== consent.sv || (current.activeMembershipId ?? null) !== consent.activeMembershipId) throw new AssistantOAuthError("access_denied");
     const authorization = validateAssistantAuthorization(consent.request, await clientRedirects());
+    if (consent.scopeSelection !== true) throw new AssistantOAuthError("invalid_request");
+    authorization.scopes = selectConsentedScopes(authorization.scopes, req.body.selected_scope);
     const issued = issueAssistantCode(authorization, current);
     issued.grant.consentHash = assistantTokenHash(consent.nonce);
     await withAssistantGrants(current.userId!, async (grants) => {

@@ -47,11 +47,11 @@ async function consent(scope = auth.scope) {
   expect(response.headers["content-security-policy"]).toContain("form-action 'self' https://chatgpt.com/connector_platform_oauth_redirect");
   const consentValue = /name="consent" value="([^"]+)"/.exec(response.text)![1];
   const nonceCookie = response.headers["set-cookie"][0].split(";")[0];
-  return { consentValue, cookies: `${cookie()}; ${nonceCookie}` };
+  return { consentValue, selectedScopes: scope.split(" "), cookies: `${cookie()}; ${nonceCookie}` };
 }
 async function tokens(scope = auth.scope) {
   const form = await consent(scope);
-  const authorized = await request(app).post(`${base}/authorize`).set("Origin", "https://vndrly.ai").set("Cookie", form.cookies).type("form").send({ consent: form.consentValue });
+  const authorized = await request(app).post(`${base}/authorize`).set("Origin", "https://vndrly.ai").set("Cookie", form.cookies).type("form").send({ consent: form.consentValue, selected_scope: form.selectedScopes });
   expect(authorized.status).toBe(303);
   const callback = new URL(authorized.headers.location);
   expect(callback.searchParams.get("state")).toBe(auth.state);
@@ -61,6 +61,28 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("issues only selected scopes and refuses scope expansion or empty consent", async () => {
+    const form = await consent("gate:read gate:write tickets:read tickets:write finance:write");
+    const sendSelection = (selected_scope: unknown) => request(app).post(`${base}/authorize`)
+      .set("Origin", "https://vndrly.ai").set("Cookie", form.cookies).type("form")
+      .send({ consent: form.consentValue, selected_scope });
+    expect((await sendSelection(["gate:read", "operations:write"])).status).toBe(400);
+    expect((await sendSelection([])).status).toBe(400);
+    expect(grants).toHaveLength(0);
+    const response = await sendSelection(["gate:read", "gate:write", "tickets:read", "tickets:write"]);
+    expect(response.status).toBe(303);
+    expect(grants[0].scopes).toEqual(["gate:read", "gate:write", "tickets:read", "tickets:write"]);
+    const callback = new URL(response.headers.location);
+    const exchanged = await request(app).post(`${base}/token`).type("form").send({
+      grant_type: "authorization_code", client_id: CHATGPT_CLIENT_ID, redirect_uri: redirect,
+      resource: ASSISTANT_RESOURCE, code: callback.searchParams.get("code"), code_verifier: verifier,
+    });
+    expect(exchanged.status).toBe(200);
+    expect(exchanged.body.scope).toBe("gate:read gate:write tickets:read tickets:write");
+    const tools = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${exchanged.body.access_token}`)
+      .send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
+    expect(tools.body.result.tools.some((tool: { name: string }) => tool.name === "record_ticket_payment")).toBe(false);
+  });
   it("requests eligible finance consent before either direct or generic preparation", async () => {
     const credentials = await tokens("gate:read gate:write");
     const original = grants[0].session;
@@ -380,10 +402,10 @@ describe("ChatGPT account connection boundary", () => {
     for (const origin of ["https://attacker.test", undefined]) {
       const attempt = request(app).post(`${base}/authorize`).set("Cookie", form.cookies).type("form");
       if (origin) attempt.set("Origin", origin);
-      expect((await attempt.send({ consent: form.consentValue })).status).toBe(400);
+      expect((await attempt.send({ consent: form.consentValue, selected_scope: form.selectedScopes })).status).toBe(400);
     }
-    expect((await request(app).post(`${base}/authorize`).set("Origin", "https://vndrly.ai").set("Cookie", cookie()).type("form").send({ consent: form.consentValue })).status).toBe(400);
-    const submit = () => request(app).post(`${base}/authorize`).set("Origin", "https://vndrly.ai").set("Cookie", form.cookies).type("form").send({ consent: form.consentValue });
+    expect((await request(app).post(`${base}/authorize`).set("Origin", "https://vndrly.ai").set("Cookie", cookie()).type("form").send({ consent: form.consentValue, selected_scope: form.selectedScopes })).status).toBe(400);
+    const submit = () => request(app).post(`${base}/authorize`).set("Origin", "https://vndrly.ai").set("Cookie", form.cookies).type("form").send({ consent: form.consentValue, selected_scope: form.selectedScopes });
     expect((await submit()).status).toBe(303);
     expect((await submit()).status).toBe(400);
   });
