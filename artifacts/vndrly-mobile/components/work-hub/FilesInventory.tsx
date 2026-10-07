@@ -1,3 +1,5 @@
+import { InventoryRegistration } from "./InventoryRegistration";
+import { makeCustodyAttempt, custodyFingerprintValues, submitCustodyAttempt, CustodyAbsentConflict, type CustodyAttempt } from "@workspace/api-zod";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, TextInput, View } from "react-native";
@@ -5,7 +7,7 @@ import * as Crypto from "expo-crypto";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
-import { captureAuthScope, isAuthScopeCurrent, subscribeUser, subscribeToken, type AuthScope } from "@/lib/auth";
+import { getUser, captureAuthScope, isAuthScopeCurrent, subscribeUser, subscribeToken, type AuthScope } from "@/lib/auth";
 import { pickMeetingFile, downloadAndShareProtectedFile, type OwnedMeetingFile } from "@/lib/meeting-files";
 import { uploadWorkHubFile } from "@/lib/work-hub-file-upload";
 import { nativeUuid } from "@/lib/native-uuid";
@@ -48,6 +50,8 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   const [noteTitle, setNoteTitle] = useState("");
   const [noteBody, setNoteBody] = useState("");
   const [custody, setCustody] = useState<{ assetId: string; action: "checkout" | "return" | "verify-issued"; operationId: string } | null>(null);
+  const custodyAttempt = useRef<CustodyAttempt | null>(null);
+  const [custodyUnknown, setCustodyUnknown] = useState(false);
   const [custodyCondition, setCustodyCondition] = useState("good");
   const [custodyPhotos, setCustodyPhotos] = useState<string[]>([]);
   const [expectedReturn, setExpectedReturn] = useState("");
@@ -62,7 +66,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   const uploadAttempt = useRef<UploadAttempt | null>(null);
   useEffect(() => {
     mountedRef.current = true;
-    const invalidate = () => { requestRef.current?.abort(); cleanupRef.current?.(); noteAttempt.current = null; uploadAttempt.current = null; releaseAttempt.current = null; setReleaseHold(null); setReleaseReason(""); setReleaseUnknown(false); };
+    const invalidate = () => { requestRef.current?.abort(); cleanupRef.current?.(); noteAttempt.current = null; uploadAttempt.current = null; custodyAttempt.current = null; setCustody(null); setCustodyUnknown(false); releaseAttempt.current = null; setReleaseHold(null); setReleaseReason(""); setReleaseUnknown(false); };
     const unsubscribeUser = subscribeUser(invalidate);
     const unsubscribeToken = subscribeToken(invalidate);
     return () => { mountedRef.current = false; invalidate(); unsubscribeUser(); unsubscribeToken(); };
@@ -156,6 +160,8 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     await downloadAndShareProtectedFile({ ...scope, fileName: file.data.name ?? t("filesInventory.openFile"), contentType: file.data.contentType, byteSize: file.data.byteSize }, `/api/work-hub/file-library/${encodeURIComponent(file.id)}/download`);
   });
   const openCustody = (asset: AssetRow, action: "checkout" | "return" | "verify-issued") => {
+    if (custodyAttempt.current) return;
+    setCustodyUnknown(false);
     setCustody({ assetId: asset.id, action, operationId: nativeUuid() });
     setCustodyCondition(asset.condition && ["new", "good", "fair", "damaged", "missing", "stolen"].includes(asset.condition) ? asset.condition : "good");
     setCustodyPhotos([]);
@@ -172,7 +178,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   const submitCustody = (asset: AssetRow) => void run(async (scope) => {
     if (!custody || !asset.version) return;
     const needsPhotos = custody.action === "checkout" ? asset.policy?.photosRequiredOnCheckout : custody.action === "return" ? asset.policy?.photosRequiredOnReturn : false;
-    if (needsPhotos && custodyPhotos.length === 0) throw new Error(t("filesInventory.photoRequired"));
+    if (!custodyAttempt.current && needsPhotos && custodyPhotos.length === 0) throw new Error(t("filesInventory.photoRequired"));
     let expectedReturnAt: string | undefined;
     if (custody.action === "checkout" && expectedReturn.trim()) {
       const timestamp = Date.parse(expectedReturn.trim());
@@ -182,32 +188,30 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
       }
       expectedReturnAt = new Date(timestamp).toISOString();
     }
-    if (custody.action === "checkout" && asset.policy?.expectedReturnRequired && !expectedReturnAt) {
+    if (!custodyAttempt.current && custody.action === "checkout" && asset.policy?.expectedReturnRequired && !expectedReturnAt) {
       setInvalidField("expectedReturn"); expectedReturnRef.current?.focus();
       throw new Error(t("filesInventory.expectedReturnRequired"));
     }
     try {
-      const result = await apiFetch<{ status: "applied" | "conflict" | "blocked"; code?: string }>(`/api/implementation-a/assets/${encodeURIComponent(asset.id)}/${custody.action}`, { method: "POST", body: JSON.stringify({ operationId: custody.operationId, expectedVersion: asset.version, condition: custodyCondition, confirmed: true, photos: custodyPhotos, ...(expectedReturnAt ? { expectedReturnAt } : {}) }), signal: scope.signal }, scope.authScope);
-      scope.assertCurrent();
-      if (result.status === "conflict") {
-        setCustody(null);
-        await onRefresh();
-        scope.assertCurrent();
-        setNotice(t("filesInventory.assetChanged"));
-        return;
+      if (!custodyAttempt.current) {
+        const user = await getUser(); scope.assertCurrent();
+        if (!user) throw Error(t("filesInventory.actionFailed"));
+        const raw = { assetId: asset.id, action: custody.action, actorUserId: user.id, holderUserId: asset.holderUserId ?? null, input: { operationId: custody.operationId, expectedVersion: asset.version, condition: custodyCondition, confirmed: true, photos: custodyPhotos, ...(expectedReturnAt ? { expectedReturnAt } : {}) } };
+        const bytes = new TextEncoder().encode(JSON.stringify(custodyFingerprintValues(raw)));
+        const digest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, bytes); scope.assertCurrent();
+        const fingerprint = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+        custodyAttempt.current = makeCustodyAttempt(raw, fingerprint);
       }
-      if (result.status === "blocked") throw new Error(result.code ?? t("filesInventory.actionFailed"));
-      setCustody(null);
+      setCustodyUnknown(true);
+      await submitCustodyAttempt(custodyAttempt.current, (path, init) => apiFetch(path, { ...init, signal: scope.signal }, scope.authScope), () => { try { scope.assertCurrent(); return true; } catch { return false; } });
+      scope.assertCurrent(); custodyAttempt.current = null; setCustodyUnknown(false); setCustody(null);
       setNotice(t("filesInventory.custodyApplied"));
-      await onRefresh();
+      try { await onRefresh(); } catch { scope.assertCurrent(); setNotice(t("inventoryCustody.savedRefresh")); }
     } catch (cause) {
       scope.assertCurrent();
-      if ((cause as { code?: string }).code === "asset.version_conflict") {
-        setCustody(null);
-        await onRefresh();
-        scope.assertCurrent();
-        setNotice(t("filesInventory.assetChanged"));
-        return;
+      if (cause instanceof CustodyAbsentConflict) {
+        custodyAttempt.current = null; setCustodyUnknown(false); setCustody(null);
+        await onRefresh(); scope.assertCurrent(); setNotice(t("filesInventory.assetChanged")); return;
       }
       throw cause;
     }
@@ -278,10 +282,12 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.inventory")}</Text>
       {!assets.length || selectedAssetId && !assets.some(asset => asset.id === selectedAssetId) ? <Text style={muted}>{t("filesInventory.noInventory")}</Text> : null}
+      <InventoryRegistration owner={owner} canManage={capabilities.canCreateAsset && capabilities.canManageAsset} onSaved={onRefresh} />
       {assets.filter(asset => !selectedAssetId || asset.id === selectedAssetId).map((asset,index) => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
         <InventoryTransfer assetId={asset.id} owner={owner} canTransfer={asset.capabilities?.canTransfer === true} onRefresh={onRefresh} />
         <InventoryRecovery assetId={asset.id} owner={owner} canManage={capabilities.canManageAsset} onRefresh={onRefresh} includePlatformQueue={index===0}/>
+        <InventoryRegistration owner={owner} assetId={asset.id} version={asset.version} canManage={capabilities.canManageAsset} onSaved={onRefresh} />
         <Text style={muted}>{[asset.category, asset.status ? enumLabel("status", asset.status) : null, asset.condition ? enumLabel("condition", asset.condition) : null].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>
         {[...(asset.holds ?? []), ...(releaseUnknown && releaseAttempt.current?.assetId === asset.id && !asset.holds?.some(hold => hold.id === releaseAttempt.current?.holdId) ? [{ id: releaseAttempt.current.holdId, reason: t("filesInventory.holdReleaseUnknown"), placedAt: "", source: "inventory" as const, canRelease: false }] : [])].map(hold => <View key={hold.id} style={{ gap: 6 }}>
@@ -294,16 +300,17 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
             <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.confirmHoldRelease")} disabled={busy} onPress={() => submitHoldRelease(asset)}>{t("filesInventory.confirmHoldRelease")}</TogglePillButton>
           </View> : null}
         </View>)}
-        {asset.capabilities?.canCheckOut && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.checkOutNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "checkout")}>{t("filesInventory.checkOut")}</TogglePillButton> : null}
-        {asset.capabilities?.canReturn && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.returnNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "return")}>{t("filesInventory.returnAsset")}</TogglePillButton> : null}
-        {asset.capabilities?.canVerifyIssued && capabilities.canVerifyIssuedAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.verifyNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "verify-issued")}>{t("filesInventory.verifyIssued")}</TogglePillButton> : null}
+        {asset.capabilities?.canCheckOut && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.checkOutNamed", { name: asset.name })} disabled={busy || custodyUnknown} onPress={() => openCustody(asset, "checkout")}>{t("filesInventory.checkOut")}</TogglePillButton> : null}
+        {asset.capabilities?.canReturn && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.returnNamed", { name: asset.name })} disabled={busy || custodyUnknown} onPress={() => openCustody(asset, "return")}>{t("filesInventory.returnAsset")}</TogglePillButton> : null}
+        {asset.capabilities?.canVerifyIssued && capabilities.canVerifyIssuedAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.verifyNamed", { name: asset.name })} disabled={busy || custodyUnknown} onPress={() => openCustody(asset, "verify-issued")}>{t("filesInventory.verifyIssued")}</TogglePillButton> : null}
         {custody?.assetId === asset.id ? <View style={{ gap: 8 }}>
           <Text style={muted}>{t("filesInventory.custodyConfirmation", { name: asset.name })}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["new", "good", "fair", "damaged", "missing", "stolen"] as const).map(condition => <TogglePillButton key={condition} color="blue" solid={custodyCondition === condition} accessibilityState={{ selected: custodyCondition === condition }} disabled={busy} accessibilityLabel={t(`filesInventory.condition.${condition}`)} onPress={() => setCustodyCondition(condition)}>{t(`filesInventory.condition.${condition}`)}</TogglePillButton>)}</View>
-          {custody.action === "checkout" ? <TextInput ref={expectedReturnRef} {...fieldError("expectedReturn")} accessibilityLabel={t("filesInventory.expectedReturn")} editable={!busy} value={expectedReturn} onChangeText={setExpectedReturn} placeholder={t("filesInventory.expectedReturnPlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 44 }} /> : null}
-          <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.addEvidencePhoto")} disabled={busy} onPress={addCustodyPhoto}>{t("filesInventory.addEvidencePhoto")}</TogglePillButton>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["new", "good", "fair", "damaged", "missing", "stolen"] as const).map(condition => <TogglePillButton key={condition} color="blue" solid={custodyCondition === condition} accessibilityState={{ selected: custodyCondition === condition }} disabled={busy || custodyUnknown} accessibilityLabel={t(`filesInventory.condition.${condition}`)} onPress={() => setCustodyCondition(condition)}>{t(`filesInventory.condition.${condition}`)}</TogglePillButton>)}</View>
+          {custody.action === "checkout" ? <TextInput ref={expectedReturnRef} {...fieldError("expectedReturn")} accessibilityLabel={t("filesInventory.expectedReturn")} editable={!busy && !custodyUnknown} value={expectedReturn} onChangeText={setExpectedReturn} placeholder={t("filesInventory.expectedReturnPlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 44 }} /> : null}
+          <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.addEvidencePhoto")} disabled={busy || custodyUnknown} onPress={addCustodyPhoto}>{t("filesInventory.addEvidencePhoto")}</TogglePillButton>
           {custodyPhotos.length ? <Text style={muted}>{t("filesInventory.photoCount", { count: custodyPhotos.length })}</Text> : null}
-          <TogglePillButton color="blue" accessibilityLabel={t(`filesInventory.confirm.${custody.action}`)} disabled={busy} onPress={() => submitCustody(asset)}>{t(`filesInventory.confirm.${custody.action}`)}</TogglePillButton>
+          {custodyUnknown ? <Text style={muted}>{t("inventoryCustody.unknown")}</Text> : null}
+          <TogglePillButton color="blue" accessibilityLabel={custodyUnknown ? t("inventoryCustody.retry") : t(`filesInventory.confirm.${custody.action}`)} disabled={busy} onPress={() => submitCustody(asset)}>{custodyUnknown ? t("inventoryCustody.retry") : t(`filesInventory.confirm.${custody.action}`)}</TogglePillButton>
         </View> : null}
       </View>)}
     </View>

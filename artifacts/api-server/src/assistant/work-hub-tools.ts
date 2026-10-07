@@ -189,10 +189,11 @@ const entries: Entry[] = [
     messageId: identifier(),
     body: text(),
   }, ["action", "channelId", "messageId"])),
-  write("react_work_hub_message", "collaboration", "Add or remove the caller''s reaction to a message.", writeSchema({
+  write("react_work_hub_message", "collaboration", "Set the caller's reaction on an authorized message after confirmation. Use action add or remove for the exact desired state; omitted action retains legacy toggle. Read the current message version first.", writeSchema({
     channelId: identifier(),
     messageId: identifier(),
     reaction: text(),
+    action: { type: "string", enum: ["add", "remove"] },
   }, ["channelId", "messageId", "reaction"])),
   write("mark_work_hub_channel_read", "collaboration", "Advance the caller''s read cursor in an authorized channel.", writeSchema({
     channelId: identifier(),

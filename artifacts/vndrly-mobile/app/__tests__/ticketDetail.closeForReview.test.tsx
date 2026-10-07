@@ -102,7 +102,7 @@ vi.mock("expo-location", () => ({
 // translation" check treats the lookup as found, and we can assert
 // that the code-driven message reached the inline-error node.
 const tIdentity = (k: string) => (k.startsWith("errors.") ? `tx:${k}` : k);
-const useTranslationReturn = { t: tIdentity };
+const useTranslationReturn = { t: tIdentity, i18n: { language: "en" } };
 vi.mock("react-i18next", () => ({
   useTranslation: () => useTranslationReturn,
 }));

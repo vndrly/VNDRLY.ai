@@ -5441,5 +5441,64 @@
   "hint": "Eres el anfitrión. Selecciona nombres; no se confirma la entrega ni la aceptación.",
   "hostOnly": "Solo el anfitrión",
   "company": "Participantes de tu empresa"
-}
+},
+"inventoryRegistration": {
+    "register": "Registrar un activo",
+    "addAlias": "Agregar un identificador",
+    "hint": "Registre un activo o identificador en su organización actual. Un registro coincidente no verifica posesión, condición ni propiedad legal.",
+    "name": "Nombre del activo",
+    "category": "Categoría",
+    "legalOwner": "Propietario legal registrado",
+    "kind": "Tipo de identificador",
+    "identifier": "Identificador",
+    "jurisdiction": "Jurisdicción (opcional)",
+    "kinds": {
+      "serial": "Número de serie",
+      "asset_tag": "Etiqueta del activo",
+      "vin": "VIN",
+      "plate": "Matrícula",
+      "model": "Modelo",
+      "other": "Otro"
+    },
+    "review": "Revisar detalles exactos",
+    "confirm": "Guardar detalles revisados",
+    "check": "Consultar registro coincidente",
+    "unknown": "El resultado no está verificado. Conserve estos detalles exactos; consulte los registros sin volver a enviar.",
+    "matching": "Se guardó un registro de activo coincidente.",
+    "savedRefresh": "El registro coincidente está guardado; no se pudo actualizar el inventario.",
+    "required": "Complete los detalles requeridos y el identificador.",
+    "refused": "La solicitud fue rechazada. Actualice y revise los detalles actuales.",
+    "forbidden": "Se requiere acceso actual de administrador de activos."
+  },
+  "inventoryCustody": {
+    "checkout": "Retirar activo",
+    "return": "Devolver activo",
+    "verify-issued": "Verificar activo entregado",
+    "condition": "Condición informada",
+    "date": "Devolución prevista (hora local)",
+    "photo": "Agregar foto real de evidencia",
+    "photoCount": "{{count}} fotos cargadas",
+    "hint": "Guarda custodia y condición informadas. No verifica posesión física ni entrega.",
+    "review": "Revisar registro exacto de custodia",
+    "confirm": "Guardar custodia revisada",
+    "retry": "Recuperar solicitud exacta revisada",
+    "unknown": "El resultado no está verificado. Los detalles originales permanecen bloqueados para recuperación exacta.",
+    "conflict": "La operación original no existe y el activo cambió. Actualice y revise de nuevo.",
+    "saved": "Registro de custodia guardado.",
+    "savedRefresh": "Custodia guardada; no se pudo actualizar el inventario.",
+    "failed": "La solicitud falló.",
+    "photoRequired": "Este activo requiere una foto real cargada.",
+    "dateRequired": "Este activo requiere fecha de devolución prevista.",
+    "imageRequired": "Seleccione una imagen JPEG, PNG o WebP.",
+    "reviewed": "Condición revisada: {{condition}}. Devolución prevista: {{date}}.",
+    "noDate": "No indicada",
+    "conditions": {
+      "new": "Nuevo",
+      "good": "Bueno",
+      "fair": "Aceptable",
+      "damaged": "Dañado",
+      "missing": "Desaparecido",
+      "stolen": "Robado"
+    }
+  }
 }

@@ -107,7 +107,7 @@ vi.mock("expo-location", () => ({
 // where downstream tests need it). Returning the same `t` reference on
 // every render keeps the screen's effect dependencies stable.
 const tIdentity = (k: string) => (k.startsWith("errors.") ? `tx:${k}` : k);
-const useTranslationReturn = { t: tIdentity };
+const useTranslationReturn = { t: tIdentity, i18n: { language: "en" } };
 vi.mock("react-i18next", () => ({
   useTranslation: () => useTranslationReturn,
 }));
@@ -121,6 +121,9 @@ vi.mock("@/lib/api", () => ({
 
 const { getUserMock } = vi.hoisted(() => ({ getUserMock: vi.fn() }));
 vi.mock("@/lib/auth", () => ({
+  // Faithful auth scope for the mounted labor recovery panel; no mutation authority.
+  captureAuthScope: () => ({ generation: 1 }),
+  isAuthScopeCurrent: () => true,
   getUser: (...a: unknown[]) => getUserMock(...a),
   setUser: vi.fn(),
   setToken: vi.fn(),

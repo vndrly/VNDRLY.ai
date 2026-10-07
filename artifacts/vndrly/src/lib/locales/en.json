@@ -5441,5 +5441,64 @@
   "hint": "You are the host. Select names; delivery and acceptance are not confirmed.",
   "hostOnly": "Host only",
   "company": "Company participants"
-}
+},
+"inventoryRegistration": {
+    "register": "Register an asset",
+    "addAlias": "Add an identifier",
+    "hint": "Record an asset or identifier in your current organization. A saved matching record does not verify possession, condition or legal ownership.",
+    "name": "Asset name",
+    "category": "Category",
+    "legalOwner": "Recorded legal owner",
+    "kind": "Identifier type",
+    "identifier": "Identifier",
+    "jurisdiction": "Jurisdiction (optional)",
+    "kinds": {
+      "serial": "Serial number",
+      "asset_tag": "Asset tag",
+      "vin": "VIN",
+      "plate": "License plate",
+      "model": "Model",
+      "other": "Other"
+    },
+    "review": "Review exact details",
+    "confirm": "Save reviewed details",
+    "check": "Check matching saved record",
+    "unknown": "Outcome is unverified. Keep these exact details; check saved records without sending again.",
+    "matching": "A matching asset record is saved.",
+    "savedRefresh": "A matching record is saved; current Inventory could not be refreshed.",
+    "required": "Complete the required details and identifier.",
+    "refused": "The request was refused. Refresh and review current details.",
+    "forbidden": "Current asset manager access is required."
+  },
+  "inventoryCustody": {
+    "checkout": "Check out asset",
+    "return": "Return asset",
+    "verify-issued": "Verify issued asset",
+    "condition": "Reported condition",
+    "date": "Expected return (local time)",
+    "photo": "Add actual evidence photo",
+    "photoCount": "{{count}} uploaded photos",
+    "hint": "This saves reported custody and condition. It does not verify physical possession or handoff.",
+    "review": "Review exact custody record",
+    "confirm": "Save reviewed custody record",
+    "retry": "Recover exact reviewed request",
+    "unknown": "Outcome is unverified. The original details remain locked for exact recovery.",
+    "conflict": "The original operation is absent and the asset changed. Refresh and review again.",
+    "saved": "Custody record saved.",
+    "savedRefresh": "Custody record saved; current Inventory could not be refreshed.",
+    "failed": "Request failed.",
+    "photoRequired": "This asset requires an actual uploaded photo.",
+    "dateRequired": "This asset requires an expected return date.",
+    "imageRequired": "Select a JPEG, PNG or WebP image.",
+    "reviewed": "Reviewed condition: {{condition}}. Expected return: {{date}}.",
+    "noDate": "Not supplied",
+    "conditions": {
+      "new": "New",
+      "good": "Good",
+      "fair": "Fair",
+      "damaged": "Damaged",
+      "missing": "Missing",
+      "stolen": "Stolen"
+    }
+  }
 }

@@ -16,6 +16,7 @@ const env = vi.hoisted(() => ({
 vi.mock("@/lib/api", () => ({ apiFetch: env.api, apiFetchRaw: env.raw, getApiBase: () => "https://example.test" }));
 vi.mock("@/lib/auth", () => ({
   getToken: async () => "token",
+  getUser: async () => ({id:17}),
   captureAuthScope: () => ({ generation: env.generation }),
   isAuthScopeCurrent: (scope: { generation: number }) => scope.generation === env.generation,
   subscribeUser: (listener: () => void) => { env.listeners.add(listener); return () => env.listeners.delete(listener); }, subscribeToken: () => () => {},
@@ -24,7 +25,7 @@ vi.mock("@/lib/meeting-files", async (original) => ({ ...await original<any>(), 
 vi.mock("@/lib/photos", () => ({ captureAndUploadImage: vi.fn() }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ card: "white", text: "black", mutedForeground: "gray", border: "gray", primary: "blue" }) }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, accessibilityLabel, onPress, disabled }: any) => <button aria-label={accessibilityLabel} onClick={onPress} disabled={disabled}>{children}</button> }));
-vi.mock("expo-crypto", () => ({ CryptoDigestAlgorithm: { SHA256: "SHA-256" }, digest: async (_algorithm: string, bytes: ArrayBuffer) => new Uint8Array([new Uint8Array(bytes).reduce((a, b) => a + b, 0)]).buffer }));
+vi.mock("expo-crypto", () => ({ CryptoDigestAlgorithm: { SHA256: "SHA-256" }, digest: async (_algorithm: string, bytes: ArrayBuffer) => new Uint8Array(bytes).length > 3 ? new Uint8Array(32).fill(170).buffer : new Uint8Array([new Uint8Array(bytes).reduce((a, b) => a + b, 0)]).buffer }));
 vi.mock("expo/fetch", () => ({ fetch: env.put }));
 vi.mock("expo-file-system", () => ({
   Paths: { cache: "file:///cache" }, Directory: class {},
@@ -64,14 +65,47 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.cle
 describe("native Files & Inventory boundaries", () => {
   it("renders the canonical API custodian separately and confirms custody without browser UUIDs", async () => {
     vi.spyOn(globalThis.crypto, "randomUUID").mockImplementation(() => { throw new Error("Browser UUID unavailable"); });
-    env.api.mockResolvedValue({ status: "applied" });
+    let event:any=null;
+    env.api.mockImplementation(async (_path:string,init:any)=>{
+      if(!init?.method)return {id:canonicalSummary.id,version:2,history:event?[event]:[]};
+      event={id:nativeId,type:"verify-issued",actorUserId:17,commandFingerprint:"a".repeat(64),condition:"good",fromHolderUserId:11,toHolderUserId:11,occurredAt:"2026-10-07T10:00:00Z"};return {status:"applied"};
+    });
     render(<FilesInventory {...props} assets={[canonicalSummary]} />);
     expect(screen.getByText("Held by User 11")).toBeTruthy();
     expect(screen.queryByText("user:11")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Verify issued Issued radio" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirm verification" }));
     await screen.findByText("Custody updated.");
-    expect(JSON.parse(env.api.mock.calls[0]![1].body).operationId).toBe(nativeId);
+    expect(JSON.parse(env.api.mock.calls.find(c=>c[1]?.method==="POST")![1].body).operationId).toBe(nativeId);
+  });
+  it("retains immutable custody through denied recovery and recovers the original event without resending", async () => {
+    let reads=0;
+    const event={id:nativeId,type:"verify-issued",actorUserId:17,commandFingerprint:"a".repeat(64),condition:"good",fromHolderUserId:11,toHolderUserId:11,occurredAt:"2026-10-07T10:00:00Z"};
+    env.api.mockImplementation(async (_path:string,init:any)=>{
+      if(init?.method==="POST")throw Error("Dropped response");
+      reads++;if(reads===2)throw Object.assign(Error("Denied read"),{status:403});
+      return {id:canonicalSummary.id,version:reads>2?4:2,history:reads>2?[event]:[]};
+    });
+    render(<FilesInventory {...props} assets={[canonicalSummary]}/>);
+    fireEvent.click(screen.getByRole("button",{name:"Verify issued Issued radio"}));
+    fireEvent.click(screen.getByRole("button",{name:"Confirm verification"}));
+    await screen.findByText("Custody outcome is unverified. The original details remain locked for exact recovery.");
+    expect((screen.getByRole("button",{name:"Fair"}) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button",{name:"Recover exact custody request"}));
+    await screen.findByText("Custody updated.");
+    expect(env.api.mock.calls.filter(c=>c[1]?.method==="POST")).toHaveLength(1);
+    expect(JSON.parse(env.api.mock.calls.find(c=>c[1]?.method==="POST")![1].body)).toMatchObject({operationId:nativeId,expectedVersion:2,condition:"good"});
+  });
+  it("keeps verified custody saved when current inventory refresh fails", async () => {
+    let event:any=null;
+    env.api.mockImplementation(async (_path:string,init:any)=>{
+      if(!init?.method)return {id:canonicalSummary.id,version:event?3:2,history:event?[event]:[]};
+      event={id:nativeId,type:"verify-issued",actorUserId:17,commandFingerprint:"a".repeat(64),condition:"good",fromHolderUserId:11,toHolderUserId:11,occurredAt:"2026-10-07T10:00:00Z"};return {status:"applied"};
+    });
+    render(<FilesInventory {...props} assets={[canonicalSummary]} onRefresh={vi.fn().mockRejectedValue(Error("Refresh failed"))}/>);
+    fireEvent.click(screen.getByRole("button",{name:"Verify issued Issued radio"}));fireEvent.click(screen.getByRole("button",{name:"Confirm verification"}));
+    await screen.findByText("Custody record saved; current Inventory could not be refreshed.");
+    expect(screen.queryByRole("button",{name:"Recover exact custody request"})).toBeNull();expect(env.api.mock.calls.filter(c=>c[1]?.method==="POST")).toHaveLength(1);
   });
   it("creates a shared partner note with the native UUID and channel owner/context", async () => {
     vi.spyOn(globalThis.crypto, "randomUUID").mockImplementation(() => { throw new Error("Browser UUID unavailable"); });

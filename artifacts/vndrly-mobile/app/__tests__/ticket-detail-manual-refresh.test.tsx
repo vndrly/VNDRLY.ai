@@ -59,7 +59,7 @@ vi.mock("expo-router", () => ({
 
 const tIdentity = (k: string) => k;
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: tIdentity }),
+  useTranslation: () => ({ t: tIdentity, i18n: { language: "en" } }),
 }));
 
 vi.mock("expo-location", () => ({
@@ -89,6 +89,9 @@ vi.mock("expo-linear-gradient", async () => {
 });
 
 vi.mock("@/lib/auth", () => ({
+  // Faithful auth scope for the mounted labor recovery panel; no mutation authority.
+  captureAuthScope: () => ({ generation: 1 }),
+  isAuthScopeCurrent: () => true,
   getUser: vi.fn(async () => ({
     id: 99,
     role: "field_employee",

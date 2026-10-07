@@ -1,3 +1,4 @@
+vi.mock("./WorkHubMessageReactions", () => ({ default: () => null }));
 import React from "react";
 import { cleanup, fireEvent, render, screen, waitFor, act } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";

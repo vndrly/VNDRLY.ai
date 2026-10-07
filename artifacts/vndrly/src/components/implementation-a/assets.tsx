@@ -1,3 +1,5 @@
+import { InventoryCustody } from "./asset-custody";
+import { InventoryRegistration } from "./asset-registration";
 import { InventoryRecovery, InventoryIdentifierQueue } from "./asset-recovery";
 import { InventoryTransfer } from "./asset-transfer";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,7 +18,8 @@ type Asset = {
   currentLocation?: string | null;
   hold?: string | null;
   holderUserId?: number | null;
-  capabilities?: { canTransfer?: boolean };
+  capabilities?: { canTransfer?: boolean; canCheckOut?: boolean; canReturn?: boolean; canVerifyIssued?: boolean };
+  policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean };
 };
 type AssetCapabilities = {
   canCheckOutAsset: boolean;
@@ -37,12 +40,15 @@ export function Assets() {
     queryKey: ["implementation-a", "assets", identity],
     queryFn: () => implementationARequest("/assets"),
   });
+  const owner = user?.partnerId ? { type: "partner" as const, id: user.partnerId } : user?.vendorId ? { type: "vendor" as const, id: user.vendorId } : null;
+  const refreshed=async()=>{const r=await query.refetch();if(r.isError)throw Error("Refresh failed")};
   return (
     <ImplementationSurface
       module="assets"
       title="Inventory"
       description="Asset identity, custody, condition, and evidence history."
     >
+      {owner && <InventoryRegistration key={identity+"register"} owner={owner} identity={identity} canManage={!query.isError && query.data?.capabilities.canManageAsset===true} onSaved={refreshed} />}
       {user?.role === "admin" && (
         <InventoryIdentifierQueue key={identity} identity={identity} />
       )}
@@ -76,6 +82,8 @@ export function Assets() {
                   onSaved={() => query.refetch()}
                 />
               ) : null}
+              {user?.userId && <InventoryCustody key={identity+asset.id+"custody"} asset={{...asset,holderUserId:asset.holderUserId??null}} userId={user.userId} identity={identity} onSaved={refreshed} />}
+              {owner && <InventoryRegistration key={identity+asset.id+"alias"} owner={owner} identity={identity} assetId={asset.id} version={asset.version} canManage={query.data.capabilities.canManageAsset} onSaved={refreshed} />}
               {user?.userId && (
                 <InventoryTransfer key={identity + asset.id + "transfer"} assetId={asset.id} assetName={asset.name} userId={user.userId} identity={identity} canTransfer={asset.capabilities?.canTransfer === true} onSaved={async () => { const value = await query.refetch(); if (value.isError) throw new Error("Refresh failed"); }} />
               )}

@@ -1,3 +1,4 @@
+import { messageReactionPayload, reactionActive, assertReactionReceipt, type ReactionIntent } from "../work-hub/message-reaction";
 import { resolveMessageThread } from "../work-hub/message-thread";
 import { assertMessageMutationReceipt, assertMessageMutationTarget, type MessageMutationIntent } from "../work-hub/message-mutation";
 import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
@@ -541,17 +542,38 @@ router.delete("/work-hub/channels/:channelId/messages/:messageId", async (req, r
 router.post("/work-hub/channels/:channelId/messages/:messageId/reactions", async (req, res) => {
   const actor = session(req); if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
   try {
-    const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.write");
-    const envelope = workHubCommandEnvelopeSchema.parse(req.body); const payload = z.object({ emoji: z.string().trim().min(1).max(16) }).parse(envelope.payload);
-    const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "reaction.toggle", envelope, async (tx) => {
-      const [message] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, req.params.messageId), eq(workHubMessagesTable.channelId, channel.id))).limit(1);
+    const { channel } = await resolveChannelAccess(actor, uuid.parse(req.params.channelId), "channel.write");
+    const messageId = uuid.parse(req.params.messageId);
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    const payload = messageReactionPayload.parse(envelope.payload);
+    if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+    const intent: ReactionIntent = { actorUserId: actor.userId, channelId: channel.id, messageId,
+      emoji: payload.emoji, action: payload.action ?? "toggle", expectedVersion: envelope.expectedVersion };
+    const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "reaction.toggle", envelope, async tx => {
+      const [message] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
       if (!message || message.deletedAt) throw new WorkHubAccessError("not_found");
-      const where = and(eq(workHubReactionsTable.messageId, req.params.messageId), eq(workHubReactionsTable.userId, actor.userId), eq(workHubReactionsTable.emoji, payload.emoji));
+      if (intent.expectedVersion !== null && intent.expectedVersion !== message.version) throw new Error("work_hub.version_conflict");
+      const where = and(eq(workHubReactionsTable.messageId, messageId), eq(workHubReactionsTable.userId, actor.userId), eq(workHubReactionsTable.emoji, payload.emoji));
       const [existing] = await tx.select().from(workHubReactionsTable).where(where).limit(1);
-      if (existing) { await tx.delete(workHubReactionsTable).where(eq(workHubReactionsTable.id, existing.id)); return { active: false, emoji: payload.emoji }; }
-      await tx.insert(workHubReactionsTable).values({ messageId: req.params.messageId, userId: actor.userId, emoji: payload.emoji });
-      return { active: true, emoji: payload.emoji, channelId: channel.id };
+      const active = reactionActive(intent.action, !!existing);
+      if (!active && existing) await tx.delete(workHubReactionsTable).where(eq(workHubReactionsTable.id, existing.id));
+      if (active && !existing) await tx.insert(workHubReactionsTable).values({ messageId, userId: actor.userId, emoji: payload.emoji });
+      await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "message.reaction_changed", subjectType: "message", subjectId: messageId, source: source(req), operationId: envelope.operationId }, tx);
+      return { ...intent, active };
+    }, async tx => {
+      await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, actor.userId)).for("share");
+      if (actor.activeMembershipId) await tx.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.id, actor.activeMembershipId)).for("share");
+      await tx.select({ id: workHubChannelsTable.id }).from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channel.id)).for("share");
+      await tx.select({ userId: workHubChannelMembersTable.userId }).from(workHubChannelMembersTable).where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, actor.userId))).for("share");
+      try { await validateAssistantSession(actor, tx); } catch { throw new WorkHubAccessError("forbidden"); }
+      const current = await resolveChannelAccess(actor, channel.id, "channel.write", tx);
+      if (envelope.owner.type !== current.channel.ownerOrgType || envelope.owner.id !== current.channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+      const [message] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
+      if (!message) throw new WorkHubAccessError("not_found");
+      const [prior] = await tx.select().from(workHubClientOperationsTable).where(and(eq(workHubClientOperationsTable.userId, actor.userId), eq(workHubClientOperationsTable.commandKind, "reaction.toggle"), eq(workHubClientOperationsTable.operationId, envelope.operationId))).limit(1);
+      if (prior?.resultJson) assertReactionReceipt(intent, prior.resultJson);
     });
+    assertReactionReceipt(intent, result.resource);
     return res.json(result);
   } catch (error) { return fail(res, error); }
 });

@@ -167,6 +167,9 @@ describe("native explicit shift scheduling", () => {
     fireEvent.click(await screen.findByText("Synthetic site"));
     fireEvent.click(await screen.findByText("Synthetic station"));
     fill();
+    fireEvent.change(screen.getByLabelText("Required gatekeepers"), { target: { value: "2" } });
+    fireEvent.click(screen.getByText(en.shiftScheduling.on_site));
+    await screen.findByText(en.shiftScheduling.paid_travel);
     fireEvent.click(screen.getByText("Review shift"));
     await screen.findByText("Save reviewed shift");
     fireEvent.click(screen.getByText("Save reviewed shift"));
@@ -177,6 +180,8 @@ describe("native explicit shift scheduling", () => {
     expect(b.payload.assigneeUserIds).toEqual([]);
     expect(b.payload.siteLocationId).toBe(5);
     expect(b.payload.gateStationId).toBe(id);
+    expect(b.payload.requiredStaffCount).toBe(2);
+    expect(b.payload.workStartPolicy).toBe("paid_travel");
   });
   it("clears reviewed private fields on account invalidation before any write", async () => {
     render(<ShiftScheduling />);

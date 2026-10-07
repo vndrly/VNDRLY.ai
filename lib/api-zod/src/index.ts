@@ -23,3 +23,6 @@ export * from "./asset-transfer";
 
 export * from "./ticket-labor-finalization";
 export * from "./gate-shift-assignment";
+
+export * from "./inventory-custody-client";
+export * from "./inventory-registration-client";

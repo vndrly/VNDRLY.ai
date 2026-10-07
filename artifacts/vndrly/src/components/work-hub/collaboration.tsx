@@ -1,3 +1,4 @@
+import { MessageReactions } from "./message-reactions";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageSquare, Hash, Star, Search, Users } from "lucide-react";
@@ -917,25 +918,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                               >
                                 Reply in thread
                               </button>
-                              {["👍", "❤️", "✅"].map((emoji) => (
-                                <button
-                                  key={emoji}
-                                  aria-label={`React ${emoji}`}
-                                  onClick={() =>
-                                    mutation.mutate({
-                                      path: `/channels/${active}/messages/${m.id}/reactions`,
-                                      data: commandEnvelope(channelOwner!, {
-                                        emoji,
-                                      }),
-                                    })
-                                  }
-                                >
-                                  {emoji}{" "}
-                                  {m.reactions?.filter(
-                                    (r: Row) => r.emoji === emoji,
-                                  ).length || ""}
-                                </button>
-                              ))}
+                              <MessageReactions channel={channel!} message={m} onSaved={() => qc.invalidateQueries({ queryKey: ["work-hub"] })} />
                               {m.authorUserId === user?.userId && (
                                 <>
                                   <button

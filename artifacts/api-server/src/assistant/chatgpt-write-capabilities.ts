@@ -57,6 +57,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if (name === "react_work_hub_message") { z.uuid().parse(input.channelId); z.uuid().parse(input.messageId); z.object({ emoji: z.string().trim().min(1).max(16), action: z.enum(["add", "remove"]).optional() }).parse({ emoji: input.reaction, action: input.action }); }
   if (name === "manage_ticket_record" && input.action === "finalize_labor") TicketLaborFinalizationInputSchema.omit({ operationId: true }).parse(input.payload);
   if(name === "manage_work_hub_away_responder") {const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);AWAY_RESPONDER_ARGUMENTS.parse(fields);}
   if(name === "respond_work_hub_meeting_invitation") {const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);CALENDAR_RESPONSE_ARGUMENTS.parse(fields);}

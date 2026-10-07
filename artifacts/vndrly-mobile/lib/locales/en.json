@@ -3026,5 +3026,38 @@
     "refresh": "Refresh staffing choices",
     "version": "Reviewed shift version {{version}}",
     "resultUnknown": "Assignment result uncertain or refused. Check the original assignment before doing anything else."
+  },
+"inventoryRegistration": {
+    "register": "Register an asset",
+    "addAlias": "Add an identifier",
+    "hint": "Record an asset or identifier in your current organization. A saved matching record does not verify possession, condition or legal ownership.",
+    "name": "Asset name",
+    "category": "Category",
+    "legalOwner": "Recorded legal owner",
+    "kind": "Identifier type",
+    "identifier": "Identifier",
+    "jurisdiction": "Jurisdiction (optional)",
+    "kinds": {
+      "serial": "Serial number",
+      "asset_tag": "Asset tag",
+      "vin": "VIN",
+      "plate": "License plate",
+      "model": "Model",
+      "other": "Other"
+    },
+    "review": "Review exact details",
+    "confirm": "Save reviewed details",
+    "check": "Check matching saved record",
+    "unknown": "Outcome is unverified. Keep these exact details; check saved records without sending again.",
+    "matching": "A matching asset record is saved.",
+    "savedRefresh": "A matching record is saved; current Inventory could not be refreshed.",
+    "required": "Complete the required details and identifier.",
+    "refused": "The request was refused. Refresh and review current details.",
+    "forbidden": "Current asset manager access is required."
+  },
+  "inventoryCustody": {
+    "unknown": "Custody outcome is unverified. The original details remain locked for exact recovery.",
+    "retry": "Recover exact custody request",
+    "savedRefresh": "Custody record saved; current Inventory could not be refreshed."
   }
 }

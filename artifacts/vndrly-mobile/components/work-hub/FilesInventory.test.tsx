@@ -12,7 +12,7 @@ const photos = vi.hoisted(() => ({ capture: vi.fn() }));
 vi.mock("@/lib/photos", () => ({ captureAndUploadImage: photos.capture }));
 vi.mock("@/lib/meeting-files", () => ({ pickMeetingFile: network.pick }));
 vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: network.upload }));
-vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {} }));
+vi.mock("@/lib/auth", () => ({ getUser: async () => ({id:17}), captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {} }));
 vi.mock("@/lib/api", () => ({ apiFetch: network.api, getApiBase: () => "https://example.test" }));
 vi.mock("expo-file-system/legacy", () => ({ cacheDirectory: "file:///cache/", downloadAsync: vi.fn(), deleteAsync: vi.fn() }));
 vi.mock("expo-sharing", () => ({ isAvailableAsync: vi.fn(), shareAsync: vi.fn() }));
@@ -32,6 +32,15 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, valu
   return (labels[key] ?? key).replace(/\{\{(\w+)\}\}/g, (_, name) => String(values?.[name] ?? ""));
 } }) }));
 
+const custodyId="11111111-1111-4111-8111-111111111111";
+function custodyNetwork(conflict=false){
+ network.digest.mockResolvedValue(new Uint8Array(32).fill(170).buffer);
+ let event:any=null;
+ network.api.mockImplementation(async (_path:string,init:any)=>{
+  if(!init?.method)return {id:custodyId,version:conflict?2:1,history:event?[event]:[]};
+  const input=JSON.parse(init.body);event={id:input.operationId,type:"checkout",actorUserId:17,commandFingerprint:"a".repeat(64),condition:input.condition,fromHolderUserId:null,toHolderUserId:17,occurredAt:"2026-10-07T10:00:00Z"};return {status:"applied"};
+ });
+}
 const owner = { type: "vendor" as const, id: 7 };
 const channel = { id: "channel-1", name: "Gate A", ownerOrgType: "vendor" as const, ownerOrgId: 7, contextKind: "organization", contextId: "7" };
 const records = {
@@ -78,7 +87,7 @@ describe("Files & Inventory", () => {
       render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[channel]} onRefresh={vi.fn()} />);
       fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
       expect(await screen.findByText(/permit.pdf: reserved/)).toBeTruthy();
-      expect(JSON.parse(network.api.mock.calls[0][1].body).payload).toMatchObject({ scope: "channel", channelId: "channel-1" });
+      expect(JSON.parse(network.api.mock.calls.find((call:any)=>call[1]?.method==="POST")![1].body).payload).toMatchObject({ scope: "channel", channelId: "channel-1" });
       uploaded(true);
       expect(await screen.findByText(/permit.pdf: finalized and private/)).toBeTruthy();
   });
@@ -86,21 +95,21 @@ describe("Files & Inventory", () => {
   it("offers policy-aware checkout with evidence, expected return, and the asset version", async () => {
     const onRefresh = vi.fn();
     photos.capture.mockResolvedValue({ objectPath: "/objects/uploads/radio.jpg" });
-    network.api.mockResolvedValue({ status: "applied" });
-    render(<FilesInventory owner={owner} capabilities={caps} {...records} assets={[{ ...records.assets[0], version: 1 }]} channels={[]} onRefresh={vi.fn()} />);
+    custodyNetwork();
+    render(<FilesInventory owner={owner} capabilities={caps} {...records} assets={[{ ...records.assets[0], id: custodyId, version: 1 }]} channels={[]} onRefresh={vi.fn()} />);
     expect(screen.getByText("Radio 4")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Check out Radio 4" }));
     expect(screen.getByRole("button", { name: "Confirm checkout" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Confirm checkout" }));
     expect(await screen.findByText("filesInventory.custodyApplied")).toBeTruthy();
-    expect(JSON.parse(network.api.mock.calls[0][1].body)).toMatchObject({ expectedVersion: 1, condition: "good", confirmed: true, photos: [] });
-    expect(JSON.parse(network.api.mock.calls[0][1].body).operationId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(JSON.parse(network.api.mock.calls.find((call:any)=>call[1]?.method==="POST")![1].body)).toMatchObject({ expectedVersion: 1, condition: "good", confirmed: true, photos: [] });
+    expect(JSON.parse(network.api.mock.calls.find((call:any)=>call[1]?.method==="POST")![1].body).operationId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
   it("requires policy photos and expected return before checkout", async () => {
     photos.capture.mockResolvedValue({ objectPath: "/objects/uploads/radio.jpg" });
-    network.api.mockResolvedValue({ status: "applied" });
-    render(<FilesInventory owner={owner} capabilities={caps} {...records} assets={[{ ...records.assets[0], policy: { ...records.assets[0].policy, photosRequiredOnCheckout: true, expectedReturnRequired: true } }]} channels={[]} onRefresh={vi.fn()} />);
+    custodyNetwork();
+    render(<FilesInventory owner={owner} capabilities={caps} {...records} assets={[{ ...records.assets[0], id: custodyId, policy: { ...records.assets[0].policy, photosRequiredOnCheckout: true, expectedReturnRequired: true } }]} channels={[]} onRefresh={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Check out Radio 4" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirm checkout" }));
     expect(network.api).not.toHaveBeenCalled();
@@ -110,13 +119,13 @@ describe("Files & Inventory", () => {
     fireEvent.change(screen.getByLabelText("Expected return"), { target: { value: "2026-10-01T12:00:00Z" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm checkout" }));
     expect(await screen.findByText("filesInventory.custodyApplied")).toBeTruthy();
-    expect(JSON.parse(network.api.mock.calls[0][1].body)).toMatchObject({ expectedReturnAt: "2026-10-01T12:00:00.000Z", photos: ["https://example.test/api/storage/objects/uploads/radio.jpg"] });
+    expect(JSON.parse(network.api.mock.calls.find((call:any)=>call[1]?.method==="POST")![1].body)).toMatchObject({ expectedReturnAt: "2026-10-01T12:00:00.000Z", photos: ["https://example.test/api/storage/objects/uploads/radio.jpg"] });
   });
 
   it("refreshes the asset after an optimistic conflict", async () => {
     const onRefresh = vi.fn();
-    network.api.mockResolvedValue({ status: "conflict", code: "asset.version_conflict" });
-    render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[]} onRefresh={onRefresh} />);
+    custodyNetwork(true);
+    render(<FilesInventory owner={owner} capabilities={caps} {...records} assets={[{...records.assets[0],id:custodyId}]} channels={[]} onRefresh={onRefresh} />);
     fireEvent.click(screen.getByRole("button", { name: "Check out Radio 4" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirm checkout" }));
     expect(await screen.findByText("filesInventory.assetChanged")).toBeTruthy();
@@ -137,6 +146,6 @@ describe("Files & Inventory", () => {
       render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[]} onRefresh={vi.fn()} />);
       fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
       expect(await screen.findByText(/private.pdf: finalized and private/)).toBeTruthy();
-      expect(JSON.parse(network.api.mock.calls[0][1].body).payload).toMatchObject({ scope: "personal" });
+      expect(JSON.parse(network.api.mock.calls.find((call:any)=>call[1]?.method==="POST")![1].body).payload).toMatchObject({ scope: "personal" });
   });
 });

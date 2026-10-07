@@ -563,8 +563,9 @@ export function resolveWorkHubToolRequest(
       const message = required(input.messageId, "message id");
       if (typeof channel !== "string") return channel;
       if (typeof message !== "string") return message;
-      return request("POST", `/work-hub/channels/${channel}/messages/${message}/reactions`,
-        envelope(input, { emoji: input.reaction }));
+      const reaction = z.object({ emoji: z.string().trim().min(1).max(16), action: z.enum(["add", "remove"]).optional() }).safeParse({ emoji: input.reaction, ...(input.action === undefined ? {} : { action: input.action }) });
+      if (!reaction.success) return unsupported("reaction");
+      return request("POST", `/work-hub/channels/${channel}/messages/${message}/reactions`, envelope(input, reaction.data));
     }
     case "mark_work_hub_channel_read":
       target = required(input.channelId, "channel id");

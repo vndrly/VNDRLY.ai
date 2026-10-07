@@ -1,0 +1,45 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const env = vi.hoisted(() => ({ request: vi.fn(), user: { userId: 17, activeMembershipId: 8, vendorId: 4 } }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
+vi.mock("@/components/png-pill-rollover", () => ({ PngPillButton: ({ children, color, ...props }: any) => <button {...props}>{children}</button> }));
+vi.mock("@/lib/work-hub-client", async importOriginal => ({ ...await importOriginal<object>(), workHubRequest: env.request }));
+import { MessageReactions } from "./message-reactions";
+const channel = { id: "channel-a", ownerOrgType: "vendor", ownerOrgId: 4, contextKind: "organization", contextId: 4 };
+const message = { id: "message-a", version: 2, reactions: [] };
+const receipt = (options: any) => { const body = JSON.parse(options.body); return { operationId: body.operationId, resource: { actorUserId: 17, channelId: channel.id, messageId: message.id, expectedVersion: body.expectedVersion, ...body.payload, active: body.payload.action === "add" } }; };
+beforeEach(() => { env.request.mockReset(); env.user = { userId: 17, activeMembershipId: 8, vendorId: 4 }; });
+afterEach(cleanup);
+it("retains exact desired state and UUID after a dropped response and denied retry", async () => {
+  env.request.mockRejectedValueOnce(Error("Dropped")).mockRejectedValueOnce(Object.assign(Error("Denied"), { status: 403 })).mockImplementation((_path, options) => Promise.resolve(receipt(options)));
+  render(<MessageReactions channel={channel} message={message} onSaved={async () => {}} />);
+  fireEvent.click(screen.getByLabelText("React 👍"));
+  fireEvent.click(await screen.findByText("Retry original request"));
+  await waitFor(() => expect(env.request).toHaveBeenCalledTimes(2));
+  fireEvent.click(screen.getByText("Retry original request"));
+  await screen.findByText("Reaction saved.");
+  expect(env.request.mock.calls[1]).toEqual(env.request.mock.calls[0]);
+  expect(env.request.mock.calls[2]).toEqual(env.request.mock.calls[0]);
+  expect(JSON.parse(env.request.mock.calls[0][1].body)).toMatchObject({ expectedVersion: 2, payload: { emoji: "👍", action: "add" } });
+});
+it("uses remove for the caller's saved reaction and keeps verified save separate from refresh failure", async () => {
+  env.request.mockImplementation((_path, options) => Promise.resolve(receipt(options)));
+  render(<MessageReactions channel={channel} message={{ ...message, reactions: [{ userId: 17, emoji: "👍" }] }} onSaved={async () => { throw Error("Refresh"); }} />);
+  fireEvent.click(screen.getByLabelText("React 👍"));
+  await screen.findByText("Saved. Refresh the conversation.");
+  expect(JSON.parse(env.request.mock.calls[0][1].body).payload.action).toBe("remove");
+  expect(screen.queryByText("Retry original request")).toBeNull();
+  expect((screen.getByLabelText("React 👍") as HTMLButtonElement).disabled).toBe(true);
+});
+it("fences a late old-account result and permits no stale retry on the new identity", async () => {
+  let finish!: (value: unknown) => void;
+  env.request.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const view = render(<MessageReactions channel={channel} message={message} onSaved={async () => {}} />);
+  fireEvent.click(screen.getByLabelText("React 👍"));
+  env.user = { ...env.user, userId: 18 };
+  view.rerender(<MessageReactions channel={channel} message={message} onSaved={async () => {}} />);
+  await act(async () => finish(receipt(env.request.mock.calls[0][1])));
+  expect(screen.queryByText("Reaction saved.")).toBeNull();
+  expect(screen.queryByText("Retry original request")).toBeNull();
+});

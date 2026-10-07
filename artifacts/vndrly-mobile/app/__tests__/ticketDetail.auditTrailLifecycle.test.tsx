@@ -153,7 +153,7 @@ function tInterpolating(
     return v == null ? "" : String(v);
   });
 }
-const useTranslationReturn = { t: tInterpolating };
+const useTranslationReturn = { t: tInterpolating, i18n: { language: "en" } };
 vi.mock("react-i18next", () => ({
   useTranslation: () => useTranslationReturn,
 }));
@@ -167,6 +167,9 @@ vi.mock("@/lib/api", () => ({
 
 const { getUserMock } = vi.hoisted(() => ({ getUserMock: vi.fn() }));
 vi.mock("@/lib/auth", () => ({
+  // Faithful auth scope for the mounted labor recovery panel; no mutation authority.
+  captureAuthScope: () => ({ generation: 1 }),
+  isAuthScopeCurrent: () => true,
   getUser: (...a: unknown[]) => getUserMock(...a),
   setUser: vi.fn(),
   setToken: vi.fn(),

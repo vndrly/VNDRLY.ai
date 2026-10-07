@@ -62,7 +62,7 @@ vi.mock("expo-router", () => ({
 // arrays that include `t` (e.g. `load`'s) don't fire on every render and
 // trigger an infinite loop in the test environment.
 const tIdentity = (k: string) => k;
-const useTranslationReturn = { t: tIdentity };
+const useTranslationReturn = { t: tIdentity, i18n: { language: "en" } };
 vi.mock("react-i18next", () => ({
   useTranslation: () => useTranslationReturn,
 }));
@@ -120,6 +120,9 @@ vi.mock("expo-linear-gradient", async () => {
 });
 
 vi.mock("@/lib/auth", () => ({
+  // Faithful auth scope for the mounted labor recovery panel; no mutation authority.
+  captureAuthScope: () => ({ generation: 1 }),
+  isAuthScopeCurrent: () => true,
   getUser: vi.fn(async () => ({
     id: 99,
     role: "field_employee",
