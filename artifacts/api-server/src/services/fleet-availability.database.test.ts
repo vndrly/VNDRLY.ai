@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
+import { instrumentPoolConnect } from "../test-utils/instrument-pool-connect";
+import type { PoolClient } from "pg";
 const isolated =
   process.env.VNDRLY_TEST_DB_MODE === "fresh-local" &&
   process.env.VNDRLY_ISOLATED_TEST_DB === "1";
@@ -294,10 +296,11 @@ describe.skipIf(!isolated)(
         });
         const spy = vi
           .spyOn(s.pool, "connect")
-          .mockImplementation((async () => {
-            const client = await connect(),
+          .mockImplementation(instrumentPoolConnect(connect as (...args: unknown[]) => unknown, (rawClient) => {
+            const client = rawClient as PoolClient,
               index = count++,
               original = client.query.bind(client);
+            if (index > 1) return client;
             let seen = false;
             return {
               release: () => client.release(),

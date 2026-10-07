@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
 import { toolsForRealtime, workHubToolFamilyForPath } from "./tool-packs";
 import { workHubContextRefSchema } from "@workspace/api-zod";
+import { bindWorkHubToolScope, resolveExecutableWorkHubToolRequest } from "./work-hub-tool-runtime";
 
 const namesFor = (
   path: string,
@@ -51,6 +52,7 @@ describe("Work Hub AskV web/iOS parity", () => {
       "update",
       "reschedule",
       "cancel",
+      "set_assistant",
     ]);
     expect(actions("manage_work_hub_meeting_file")).toEqual(["delete"]);
     expect(actions("moderate_work_hub_meeting")).toEqual([
@@ -76,6 +78,17 @@ describe("Work Hub AskV web/iOS parity", () => {
       "approve",
       "reject",
     ]);
+  });
+
+  it.each([true, false])("maps reviewed assistant invitation state %s to the exact guarded canonical route", (invited) => {
+    const occurrenceId = "11111111-1111-4111-8111-111111111111";
+    const operationId = "22222222-2222-4222-8222-222222222222";
+    const session = { userId: 9, role: "vendor", vendorId: 4 };
+    const input = { ...bindWorkHubToolScope({ action: "set_assistant", occurrenceId, payload: { expectedVersion: 3, invited } }, session, "manage_work_hub_meeting"), operationId };
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_meeting", input, false, session)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_meeting", input, true, session)).toMatchObject({ method: "POST", path: `/work-hub/meetings/${occurrenceId}/askv`, body: { operationId, expectedVersion: 3, invited } });
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_meeting", { ...input, payload: { invited } }, true, session)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_meeting", { ...input, payload: { expectedVersion: 3, invited, consentAccepted: true } }, true, session)).toHaveProperty("error");
   });
 
   it("keeps the legacy server toolbox available while typed tools replace it in page packs", () => {
