@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import type { Pool } from "pg";
-import { lockShiftSchedulingRows, executeGateShiftAssignment, executeGateShiftClaim, readGateShiftAssignment, readShiftCreationOperation } from "./gate-shift-assignment";
+import { authorizeGateSchedulingSite, gateAssignmentTransactionClient, lockShiftSchedulingRows, executeGateShiftAssignment, executeGateShiftClaim, readGateShiftAssignment, readShiftCreationOperation } from "./gate-shift-assignment";
 import { readGateStaffingCandidatesForClient } from "../assistant/gate-staffing-candidates";
 
 const authority = vi.hoisted(() => ({ current: true }));
@@ -96,4 +96,18 @@ it("locks sorted users before the complete sorted shift set and refuses a newly 
   const changed=vi.fn(async(text:string)=>({rows:text.startsWith("SELECT user_id")?(++reads===1?[]:[{user_id:21}]):[]}));
   await expect(lockShiftSchedulingRows({query:changed} as never,17,shiftId,[18])).rejects.toThrow("version_conflict");
   expect(changed.mock.calls.some(([text])=>text.includes("FROM work_hub_shifts"))).toBe(false);
+});
+
+it("does not confuse the pg connection database name with the same-transaction authorization database", async () => {
+  const { validateAssistantSession } = await import("../assistant/chatgpt-grant-store");
+  const validate = vi.mocked(validateAssistantSession);
+  const query = vi.fn(async () => ({ rows: [{id:1}] }));
+  await authorizeGateSchedulingSite({database:"synthetic_database_name",query} as never,session,392,operationId);
+  const rawDatabase=validate.mock.calls.at(-1)![1];
+  expect(typeof rawDatabase!.select).toBe("function");
+  expect(rawDatabase).not.toBe("synthetic_database_name");
+  const transaction={select:vi.fn(),execute:vi.fn(async()=>({rows:[{id:1}]}))};
+  await authorizeGateSchedulingSite(gateAssignmentTransactionClient(transaction as never),session,392,operationId);
+  expect(validate.mock.calls.at(-1)![1]).toBe(transaction);
+  expect(transaction.execute).toHaveBeenCalled();
 });

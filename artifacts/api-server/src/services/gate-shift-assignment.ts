@@ -15,13 +15,13 @@ import { createWorkHubAccess, requireWorkHubCapability } from "../work-hub/conte
 export class GateShiftAssignmentError extends Error {
   constructor(public code: string, public status = 409) { super(code); }
 }
-type Client = Pick<PoolClient, "query"> & { database?: Omit<typeof db, "$client"> };
+type Client = Pick<PoolClient, "query"> & { transactionDatabase?: Omit<typeof db, "$client"> };
 const kind = "shift.gate.assign";
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
 /** Parameterized bridge for the existing Drizzle transaction, never a separate connection. */
 export function gateAssignmentTransactionClient(tx: Parameters<Parameters<typeof db.transaction>[0]>[0]): Client {
-  return { database: tx, query: async (text: string, values: unknown[] = []) => {
+  return { transactionDatabase: tx, query: async (text: string, values: unknown[] = []) => {
     const parts = text.split(/(\$\d+)/g);
     const query = sql.join(parts.map(part => /^\$\d+$/.test(part)
       ? sql`${values[Number(part.slice(1)) - 1]}` : sql.raw(part)), sql.raw(""));
@@ -74,7 +74,7 @@ export async function authorizeGateSchedulingSite(client: Client, session: Sessi
   await client.query("SELECT id FROM site_locations WHERE id=$1 FOR SHARE", [siteId]);
   await client.query("SELECT id FROM site_work_assignments WHERE vendor_id=$1 AND site_location_id=$2 ORDER BY id FOR SHARE", [session.vendorId, siteId]);
   await client.query("SELECT id FROM partner_vendor_relationships WHERE vendor_id=$1 AND partner_id=(SELECT partner_id FROM site_locations WHERE id=$2) ORDER BY id FOR SHARE", [session.vendorId, siteId]);
-  const freshSession = await validateAssistantSession(session, client.database ?? drizzle(client as PoolClient, { schema }));
+  const freshSession = await validateAssistantSession(session, client.transactionDatabase ?? drizzle(client as PoolClient, { schema }));
   const access = await requireChangeOverAccess(client, session, siteId, { allowInactiveSite: allowInactive });
   if (supervisor && !access.supervisor) throw new GateShiftAssignmentError("work_hub.forbidden", 403);
   if (supervisor) requireWorkHubCapability(createWorkHubAccess({ session: { ...freshSession, userId: session.userId },
