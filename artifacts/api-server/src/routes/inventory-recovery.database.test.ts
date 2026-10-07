@@ -199,9 +199,12 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
       );
       const claimPath = `${base}/identifier-claims/${claim.claimId}`;
       await request(app).post(`${claimPath}/resolve`).set("Cookie", cookies[2]).send({operationId:randomUUID(),expectedVersion:1,decision:"request_evidence",reason:"Actual synthetic explanation requested",confirmed:true}).expect(200);
+      const beforeResponse = await request(app).get(`${base}/identifier-claims`).set("Cookie", cookies[1]).expect(200);
+      expect(beforeResponse.body.claims.find((c: { id: string }) => c.id === claim.claimId)).toMatchObject({version:2,status:"awaiting_evidence",requesterActions:["respond","withdraw"]});
       const response={operationId:randomUUID(),expectedVersion:2,reason:"Synthetic requester explains original registration",confirmed:true};
       const replies=await Promise.all(Array.from({length:3},()=>request(app).post(`${claimPath}/respond`).set("Cookie",cookies[1]).send(response)));
-      expect(replies.every(r=>r.status===200)).toBe(true);expect(replies[0].body).toMatchObject({version:3,status:"pending_review",physicalEvidenceVerified:false,responseReason:response.reason});
+      expect(replies.map(r=>({status:r.status,body:r.body})), "Exact concurrent requester response receipts").toEqual(Array.from({length:3},()=>({status:200,body:expect.objectContaining({version:3,status:"pending_review",physicalEvidenceVerified:false,responseReason:response.reason})})));
+      expect(replies[0].body).toMatchObject({version:3,status:"pending_review",physicalEvidenceVerified:false,responseReason:response.reason});
       expect(replies.every(r=>JSON.stringify(r.body)===JSON.stringify(replies[0].body))).toBe(true);
       const refreshedClaims=await request(app).get(`${base}/identifier-claims`).set("Cookie",cookies[1]).expect(200);expect(refreshedClaims.body.claims.find((c:{id:string})=>c.id===claim.claimId)).toMatchObject({version:3,requesterActions:["withdraw"]});
       const responseAudits=await pool.query("SELECT id FROM assistant_action_audit WHERE target_type='asset-identifier-claim' AND tool_input->>'operationId'=$1",[response.operationId]);expect(responseAudits.rows).toHaveLength(1);

@@ -1802,7 +1802,11 @@ describe("real fan-out call sites (regression)", () => {
 
     const postRes = await request(app)
       .post(`/api/tickets/${ticket.id}/comments`)
-      .set("Cookie", adminCookie(admin.id))
+      .set("Cookie", buildTestCookie({
+        ...await auth.resolveContext(admin as any),
+        userId: admin.id,
+        sv: admin.sessionVersion,
+      }))
       .send({ content: "Status update from admin" });
     expectStatus(postRes, 201);
 

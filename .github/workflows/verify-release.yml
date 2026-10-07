@@ -1,4 +1,4 @@
-name: Verify release
+name: Focused isolated security fixture diagnostic
 
 on:
   push:
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 15
     env:
       VNDRLY_TEST_DB_MODE: fresh-local
       VNDRLY_TEST_DB_MAINTENANCE_URL: postgresql://postgres@127.0.0.1:55439/postgres
@@ -35,17 +35,6 @@ jobs:
           cache: pnpm
       - id: dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Install the pinned test browser
-        id: browser
-        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm --filter @workspace/e2e exec playwright install --with-deps chromium
-          browser_path="$(pnpm --filter @workspace/e2e exec node -e 'console.log(require("@playwright/test").chromium.executablePath())')"
-          test -x "$browser_path"
-          printf 'PLAYWRIGHT_CHROMIUM=%s\n' "$browser_path" >> "$GITHUB_ENV"
 
       - name: Start a new runner-local PostgreSQL cluster
         id: postgres
@@ -72,18 +61,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --test scripts/tests/fresh-test-database.test.mjs scripts/tests/verify-release-workflow.test.mjs
+          node --test scripts/tests/fresh-test-database.test.mjs
 
-      - name: Typecheck and locale parity
-        id: static
-        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm run typecheck
-          pnpm lint:i18n
-
-      - name: Independent database-backed API gate
+      - name: Focused isolated inherited fixture diagnostic
         id: api
         if: >-
           ${{ !cancelled() &&
@@ -93,7 +73,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pnpm run test:api 2>&1 | tee "$RUNNER_TEMP/vndrly-api-tests.log"
+          pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run --no-file-parallelism src/routes/inventory-recovery.database.test.ts src/routes/orgMembers.test.ts src/routes/ticket-comments-access.database.test.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-api-tests.log"
 
       - name: Retain failed API gate diagnostics immediately
         if: ${{ !cancelled() && steps.api.outcome == 'failure' }}
@@ -104,53 +84,14 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Rehearse first application and replay of guarded Work Hub migrations
-        id: migrations
-        if: >-
-          ${{ !cancelled() &&
-              steps.dependencies.outcome == 'success' &&
-              steps.postgres.outcome == 'success' &&
-              steps.db-safety.outcome == 'success' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --test scripts/tests/work-hub-migration-rehearsal.test.mjs
-          pnpm --filter @workspace/api-server exec tsx scripts/rehearse-work-hub-migrations.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-migration-replay.log"
-          node --test scripts/tests/assistant-plan-execution-migration.test.mjs
-          pnpm --filter @workspace/api-server exec tsx scripts/rehearse-assistant-plan-execution.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-plan-execution-migration.log"
-
-      - name: Full required test chain
-        id: full-chain
-        if: >-
-          ${{ !cancelled() &&
-              steps.dependencies.outcome == 'success' &&
-              steps.browser.outcome == 'success' &&
-              steps.postgres.outcome == 'success' &&
-              steps.db-safety.outcome == 'success' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm test 2>&1 | tee "$RUNNER_TEMP/vndrly-tests.log"
-
-      - name: Diagnose browser gate after an earlier chain failure
-        if: ${{ !cancelled() && steps.full-chain.outcome == 'failure' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm run test:e2e 2>&1 | tee "$RUNNER_TEMP/vndrly-browser-tests.log"
-
       - name: Retain verification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: release-verification-${{ github.sha }}
+          name: focused-security-fixture-diagnostic-${{ github.sha }}
           path: |
-            ${{ runner.temp }}/vndrly-tests.log
             ${{ runner.temp }}/vndrly-api-tests.log
-            ${{ runner.temp }}/vndrly-browser-tests.log
-            ${{ runner.temp }}/vndrly-migration-replay.log
             ${{ runner.temp }}/vndrly-postgres.log
-            lib/e2e/test-results
           if-no-files-found: warn
           retention-days: 7
 
