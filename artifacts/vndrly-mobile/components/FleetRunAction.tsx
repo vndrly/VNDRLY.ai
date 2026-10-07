@@ -7,7 +7,7 @@ import { FleetActionInputSchema, checkFleetInspectionRequirements, checkFleetMan
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
 export default function FleetRunAction({ run, action, disabled, onSubmit, tickets = [] }: {
-    run: Pick<FleetRun, "version" | "currentStopId" | "stops" | "labels" | "operationalProfile"> & { loads: { id: string; commodity: string; quantity: number; unit: string; manifestReference: string; deliveredAt?: string | null; delivered?: boolean }[] };
+    run: Pick<FleetRun, "version" | "currentStopId" | "stops" | "labels" | "operationalProfile"> & { loads: { id: string; commodity: string; quantity: number; unit: string; manifestReference: string; deliveredAt?: string | null; delivered?: boolean; transferOut?: unknown }[] };
     action: FleetActionInput["action"];
     disabled: boolean;
     onSubmit: (fields: Partial<FleetActionInput>) => void;
@@ -70,7 +70,7 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
     {action === "link_ticket" && <><Text style={{ color: colors.text }}>{copy("Choose an authorized existing ticket for this run's sites. Linking does not change ticket status or approve billing.")}</Text>{tickets.length === 0 && <Text style={{ color: colors.text }}>{copy("No eligible existing tickets are available.")}</Text>}{tickets.map(ticket => <TogglePillButton key={ticket.id} solid={ticketId === ticket.id} onPress={() => setTicketId(ticket.id)}>{copy("Ticket #")}{ticket.id}{copy(" \u00B7 site ")}{ticket.siteId}{copy(" \u00B7 ")}{ticket.status}</TogglePillButton>)}</>}
     {(["record_fuel", "record_meter"].includes(action)) && (action === "record_fuel" ? ["gallons", "liters"] : ["miles", "kilometers", "engine_hours"]).map(value => <TogglePillButton key={value} solid={unit === value} onPress={() => setUnit(value)}>{copy(value.replaceAll("_", " "))}</TogglePillButton>)}
     {["arrive_stop", "depart_stop"].includes(action) && run.stops.map(stop => <TogglePillButton key={stop.id} solid={stopId === stop.id} onPress={() => setStopId(stop.id)}>{stop.sequence + 1}{copy(". ")}{copy(stop.kind)}{copy(" \u00B7 ")}{run.labels?.sites.find(site => site.siteId === stop.siteId)?.name ?? `site ${stop.siteId}`}</TogglePillButton>)}
-    {action === "record_delivery" && run.loads.filter(load => !load.deliveredAt && !load.delivered).map(load => <TogglePillButton key={load.id} solid={loadId === load.id} onPress={() => setLoadId(load.id)}>{load.commodity}{copy(" \u00B7 ")}{load.quantity} {load.unit}{copy(" \u00B7 ")}{load.manifestReference}</TogglePillButton>)}
+    {action === "record_delivery" && run.loads.filter(load => !load.deliveredAt && !load.delivered && !load.transferOut).map(load => <TogglePillButton key={load.id} solid={loadId === load.id} onPress={() => setLoadId(load.id)}>{load.commodity}{copy(" \u00B7 ")}{load.quantity} {load.unit}{copy(" \u00B7 ")}{load.manifestReference}</TogglePillButton>)}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     <TogglePillButton disabled={disabled} onPress={submit}>{copy(action.replaceAll("_", " "))}</TogglePillButton>
   </View>;

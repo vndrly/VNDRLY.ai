@@ -301,7 +301,7 @@ export function FleetActionFields({
             >
               <option value="">Choose undelivered load</option>
               {run.loads
-                .filter((load) => !load.deliveredAt)
+                .filter((load) => !load.deliveredAt && !load.transferOut)
                 .map((load) => (
                   <option key={load.id} value={load.id}>
                     {load.commodity} · {load.quantity} {load.unit} ·{" "}
@@ -401,7 +401,17 @@ export function fleetActionComplete(
         )
       );
     case "record_delivery":
-      return present(input.loadId) && present(input.deliveryReference);
+      return (
+        present(input.loadId) &&
+        present(input.deliveryReference) &&
+        (!run ||
+          run.loads.some(
+            (load) =>
+              load.id === input.loadId &&
+              !load.deliveredAt &&
+              !load.transferOut,
+          ))
+      );
     case "review":
       return Boolean(input.decision && present(input.reason));
     case "cancel":

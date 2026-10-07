@@ -34,6 +34,7 @@ export function summarizeFleetRecords(
     distance = new Map<string, number>();
   for (const run of runs) {
     for (const load of run.loads) {
+      if (load.transferOut) continue;
       const key = JSON.stringify([load.commodity, load.unit]);
       const total = loads.get(key) ?? {
         commodity: load.commodity,

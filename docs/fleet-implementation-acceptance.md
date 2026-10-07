@@ -15,6 +15,8 @@ The user approved the October 6 Fleet design for implementation on October 7, 20
 - Save optional planned hours without automatically ending actual duty; edit only authorized drafts with exact versions and preserved stop IDs.
 - Snapshot company-configured inspection and manifest requirements onto new runs; save actual supplied responses without inventing passed checks.
 - Associate actual private device photos/documents with an exact run using immutable copies, durable replay and fresh access checks. Signature images do not verify identity.
+- Transfer a full undelivered load between eligible paused runs only after separate acknowledgments by both assigned drivers; preserve source manifests, count cargo once, and leave Inventory custody unchanged.
+- Propose replacement equipment for a paused run and require acceptance by its assigned driver. Existing Inventory custody, current readiness, a new equipment-bound inspection and a new meter observation are required before resuming; preserve prior equipment facts and never subtract readings from different vehicles.
 
 ## Interfaces
 

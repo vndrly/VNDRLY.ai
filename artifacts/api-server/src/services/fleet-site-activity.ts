@@ -43,7 +43,7 @@ export function projectFleetSiteRun(
           source: "user_report",
         })),
     })),
-    loads: run.loads
+    loads: run.loads.filter(load => !load.transferOut)
       .filter(
         (load) =>
           ids.has(load.pickupStopId) ||

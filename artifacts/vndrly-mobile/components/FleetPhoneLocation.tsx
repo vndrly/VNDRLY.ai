@@ -34,6 +34,7 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
   function start(){
     if(disabled || run.status!=="in_progress" || run.phase==="paused" || AppState.currentState!=="active")return;
     stop();
+    void stopFleetBackgroundLocation(false).catch(()=>undefined);
     if(controller.current){controller.current.start();void controller.current.poll();timer.current=setInterval(()=>void controller.current?.poll(),60_000);return;}
     const scope=captureAuthScope();
     controller.current=createFleetPhoneLocationCollector(account,{

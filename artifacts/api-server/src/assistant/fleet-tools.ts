@@ -1,3 +1,5 @@
+import { FLEET_CARGO_TOOLS } from "./fleet-cargo-tools";
+import { FLEET_REPLACEMENT_TOOLS } from "./fleet-replacement-tools";
 import { z } from "zod/v4";
 import {
   FleetDraftEditSchema,
@@ -66,6 +68,8 @@ const common = {
   expectedVersion: { type: "integer", minimum: 1 },
 };
 export const FLEET_TOOLS: AskVToolDefinition[] = [
+  ...FLEET_CARGO_TOOLS,
+  ...FLEET_REPLACEMENT_TOOLS,
   read(
     "query_fleet_evidence",
     "Read exact authorized Fleet run device-upload evidence metadata and authenticated file links. Upload association requires actual device bytes and your own current assignment. Signature images are user-reported, not identity verified; attachments never prove actual delivery or regulatory clearance.",
@@ -376,7 +380,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
   ),
   action(
     "transition_fleet_run",
-    "Prepare your own run user-reported inspection, start, ordered stop arrival/departure, load/delivery record or closeout. Supply actual observations and exact IDs; no invented GPS, media, regulatory clearance or manifests. Inspection requires outcome+notes. Before start record an actual initial meter (reading, unit miles|kilometers, notes); closeout requires a second ending meter. Fuel records require actual positive quantity, unit gallons|liters and notes. Pause requires reason; resume rechecks readiness. Load requires new loadId,commodity,positive quantity,unit,manifestReference; delivery requires exact loadId+deliveryReference. Read allowedActions and version first. Closeout submits for review; it does not approve a ticket or financial record.",
+    "Prepare your own run user-reported inspection, start, ordered stop arrival/departure, load/delivery record or closeout. Supply actual observations and exact IDs; no invented GPS, media, regulatory clearance or manifests. Inspection requires outcome+notes plus the exact snapshotted configured inspectionResponses (id/outcome/actual notes) when present. Required fields and manifestValues must come from actual user observations; ask for missing values, never invent answers. Before start record an actual initial meter (reading, unit miles|kilometers, notes); closeout requires a second ending meter. Fuel records require actual positive quantity, unit gallons|liters and notes. Pause requires reason; resume rechecks readiness. Load requires new loadId,commodity,positive quantity,unit,manifestReference; delivery requires exact loadId+deliveryReference. Read allowedActions and version first. Closeout submits for review; it does not approve a ticket or financial record.",
     {
       ...common,
       action: {

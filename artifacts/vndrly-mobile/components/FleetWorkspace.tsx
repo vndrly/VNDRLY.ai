@@ -1,3 +1,6 @@
+import FleetReplacement from "@/components/FleetReplacement";
+import FleetCargo from "@/components/FleetCargo";
+import FleetEvidence from "@/components/FleetEvidence";
 import FleetDraftEditor from "@/components/FleetDraftEditor";
 import FleetEta from "@/components/FleetEta";
 import { useFleetCopy } from "@/lib/fleet-copy";
@@ -354,6 +357,9 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
         {run.records.map(record => <Text key={record.id} style={textStyle}>{copy(record.kind)}{copy(": ")}{record.quantity ?? record.reading} {record.unit}{copy(" \u00B7 ")}{record.notes}{copy(" \u00B7 source ")}{copy(record.source)}{copy(" \u00B7 captured ")}{record.capturedAt ?? copy("not separately supplied")}{copy(" \u00B7 accepted ")}{record.recordedAt}</Text>)}
         {run.events.map(event => <Text key={event.id} style={textStyle}>{event.type}{copy(" \u00B7 captured ")}{event.capturedAt ?? copy("not separately supplied")}{copy(" \u00B7 accepted ")}{event.recordedAt}</Text>)}
         {run.driverUserId === user?.id && overview.capabilities.canDrive && verifiedAccount && !cachedAt && <FleetPhoneLocation key={`${identity}:${run.id}:${run.vehicleAssetId}:${run.trailerAssetId}`} run={run} account={verifiedAccount} disabled={busy || !!unresolved || pendingRun.length > 0}/>}
+        <FleetReplacement key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        <FleetCargo key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        <FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetEta key={`${identity}:${run.id}:${run.version}`} runId={run.id} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0}/>
         <FleetGate key={`${identity}:${run.id}:${run.version}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0} onChanged={() => setRevision(n => n + 1)}/>
         {run.linkedTicketId && <Text style={textStyle}>{copy("Open the linked ticket for its authorized camera attachments and consented ticket location workflow. These remain ticket records; opening the screen does not save Fleet proof or start Fleet tracking.")}</Text>}

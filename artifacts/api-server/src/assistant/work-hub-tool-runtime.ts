@@ -1,4 +1,7 @@
-import { FleetDraftEditSchema, CreateFleetRunSchema, FleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetReportFilterSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema,FleetSiteActivityFilterSchema } from "@workspace/api-zod";
+import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
+import { FleetReplacementInputSchema, FleetReplacementActionSchema } from "@workspace/api-zod";
+import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
+import { FleetCargoTransferInputSchema, FleetCargoTransferActionSchema, FleetDraftEditSchema, CreateFleetRunSchema, FleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetReportFilterSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema,FleetSiteActivityFilterSchema } from "@workspace/api-zod";
 import { FLEET_TOOLS } from "./fleet-tools";
 import { ticketRecordActionsForRole } from "./ticket-workflow-tools";
 export type WorkHubHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -200,6 +203,17 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     }
     if(name==="query_fleet_saved_views")return request("GET","/fleet/views");
     if(name==="query_fleet_report"){const filters=FleetReportFilterSchema.safeParse({fleetId:input.fleetId,siteId:input.siteId,startsAt:input.startsAt,endsAt:input.endsAt});if(!filters.success)return {error:"Supply authorized exact Fleet report filters and UTC dates."};const query=new URLSearchParams(Object.entries(filters.data).filter(([,value])=>value!==undefined).map(([key,value])=>[key,String(value)]));return request("GET",`/fleet/reports${query.size?`?${query}`:""}`);}
+    if (name === "prepare_fleet_equipment_replacement") {
+      const run = FleetRunSchema.shape.id.safeParse(input.runId), body = FleetReplacementInputSchema.safeParse({ operationId: input.operationId, expectedVersion: input.expectedVersion, vehicleAssetId: input.vehicleAssetId, trailerAssetId: input.trailerAssetId, reason: input.reason });
+      return run.success && body.success ? request("POST", "/fleet/runs/" + run.data + "/replacements", body.data) : { error: "Supply exact current run, replacement equipment, revision and actual reason." };
+    }
+    if (FLEET_REPLACEMENT_ACTIONS[name]) {
+      if (input.action !== undefined && input.action !== FLEET_REPLACEMENT_ACTIONS[name]) return { error: "Named replacement operation conflicts with supplied action." };
+      const run = FleetRunSchema.shape.id.safeParse(input.runId), id = FleetRunSchema.shape.id.safeParse(input.replacementId), body = FleetReplacementActionSchema.safeParse({ operationId: input.operationId, expectedVersion: input.expectedVersion, runExpectedVersion: input.runExpectedVersion, notes: input.notes, action: FLEET_REPLACEMENT_ACTIONS[name] });
+      return run.success && id.success && body.success ? request("POST", "/fleet/runs/" + run.data + "/replacements/" + id.data + "/actions", body.data) : { error: "Supply exact replacement/run IDs and current revisions with actual notes." };
+    }
+    if(name==="prepare_fleet_cargo_transfer"){const keys=["operationId","sourceRunId","targetRunId","sourceExpectedVersion","targetExpectedVersion","sourceLoadId","targetLoadId","siteId","targetDeliveryStopId","quantity","reason"];const body=FleetCargoTransferInputSchema.safeParse(Object.fromEntries(keys.filter(key=>input[key]!==undefined).map(key=>[key,input[key]])));return body.success?request("POST","/fleet/cargo-transfers",body.data):{error:"Supply exact current source/recipient run, cargo, site and revision fields."};}
+    if(FLEET_CARGO_ACTIONS[name]){if(input.action!==undefined&&input.action!==FLEET_CARGO_ACTIONS[name])return {error:"Named cargo operation conflicts with supplied action."};const id=FleetRunSchema.shape.id.safeParse(input.transferId),body=FleetCargoTransferActionSchema.safeParse({operationId:input.operationId,expectedVersion:input.expectedVersion,sourceExpectedVersion:input.sourceExpectedVersion,targetExpectedVersion:input.targetExpectedVersion,notes:input.notes,action:FLEET_CARGO_ACTIONS[name]});return id.success&&body.success?request("POST",`/fleet/cargo-transfers/${id.data}/actions`,body.data):{error:"Supply exact handoff ID, current record/run revisions and actual user notes."};}
     if(name==="edit_fleet_draft"){const runId=FleetRunSchema.shape.id.safeParse(input.runId),body=FleetDraftEditSchema.safeParse({operationId:input.operationId,expectedVersion:input.expectedVersion,title:input.title,schedule:input.schedule,stops:input.stops});return runId.success&&body.success?request("PATCH",`/fleet/runs/${runId.data}/draft`,body.data):{error:"Supply an exact draft run, explicit changed fields, current version and operation ID."};}
     if(name==="manage_fleet_saved_view"){if(!["save","archive"].includes(String(input.action)))return {error:"Select save or archive for the personal Fleet view."};const body=FleetSavedViewInputSchema.safeParse({operationId:input.operationId,viewId:input.viewId,expectedVersion:input.expectedVersion,action:input.action,name:input.name,filters:input.filters});return body.success?request("POST","/fleet/views",body.data):{error:"Supply exact personal saved view fields and current version."};}
     if(name==="query_fleet_maintenance"){
@@ -231,6 +245,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (name === "query_fleet_resources") return request("GET", "/fleet/resources");
     const runId = required(input.runId, "run id");
     if(typeof runId==="string"&&!FleetRunSchema.shape.id.safeParse(runId).success)return {error:"Select an exact Fleet run UUID."};
+    if (name === "query_fleet_equipment_replacements") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/replacements`) : runId;
+    if (name === "query_fleet_cargo_transfers") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/cargo-transfers`) : runId;
     if (name === "query_fleet_evidence") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/evidence`) : runId;
     if (name === "query_fleet_run_eta") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/eta`) : runId;
     if (name === "query_fleet_run_detail") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}`) : runId;

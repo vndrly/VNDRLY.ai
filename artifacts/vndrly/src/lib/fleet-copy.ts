@@ -1,5 +1,65 @@
 /** Fleet-specific copy kept together while the workspace evolves. */
 const en = {
+  none: "None",
+  replacementTitle: "Paused-run equipment replacement",
+  replacementSource:
+    "Manager or dispatcher proposes; the assigned driver accepts. The truck and selected trailer must already be checked out to that driver in Inventory. Fleet does not change custody or verify a physical exchange.",
+  replacementUnavailable:
+    "Current replacement permission, saved run or equipment is unavailable. Refresh and review current references.",
+  replacementUnknown:
+    "Replacement outcome is unverified. Retry the exact reviewed request or refresh.",
+  replacementNeedsChecks:
+    "Replacement accepted; record a new inspection and vehicle meter before resuming. Current server readiness still applies.",
+  replacementRecordedReady:
+    "New inspection and meter are recorded. Resume remains subject to current server permissions, custody and equipment readiness.",
+  replacementAccept: "Review acceptance as assigned driver",
+  replacementVehicle: "Replacement vehicle candidate",
+  replacementTrailer: "Replacement trailer candidate",
+  replacementReview: "Read current run and review replacement",
+  replacementProposal: "Equipment replacement proposal",
+  replacementSave: "Save exact reviewed replacement",
+  choose: "Choose",
+  complete: "Complete reported transfer",
+  acknowledge_source: "Acknowledge as source driver",
+  acknowledge_target: "Acknowledge as target driver",
+  cargoTitle: "Reported cargo transfers",
+  cargoSource:
+    "Full undelivered loads only. Each assigned driver acknowledges separately. Physical handoff is not verified; inventory custody does not change.",
+  cargoUnavailable:
+    "Current cargo records or eligible pair are unavailable. Refresh and review current saved references.",
+  cargoUnknown:
+    "Cargo outcome is unverified. Retry the exact reviewed request or refresh.",
+  cargoSourceAck: "Source driver acknowledgment",
+  cargoTargetAck: "Target driver acknowledgment",
+  cargoLoadedCandidates:
+    "Choices show loaded authorized runs only. Both must be paused at the same current site; target must be at pickup.",
+  cargoTarget: "Target paused run",
+  cargoLoad: "Full undelivered source load",
+  cargoDestination: "Later target delivery stop",
+  cargoReview: "Read current pair and review proposal",
+  cargoProposal: "Proposed reported transfer",
+  cargoSave: "Save exact reviewed cargo request",
+  cargoTransferredOut: "Transferred out — reported",
+  cargoTransferredIn: "Transferred in — reported",
+  draftChanged:
+    "The saved draft changed. Reload it before preparing new changes.",
+  reloadDraft: "Reload saved draft",
+  evidenceTitle: "Run files and reported documents",
+  evidenceSource:
+    "Uploaded bytes only. Physical proof and signature identity are not verified.",
+  evidenceFileInvalid:
+    "Choose a JPEG, PNG, WebP or PDF up to 10 MB and complete the report.",
+  evidenceSaved: "File association verified in the saved run.",
+  evidenceUnknown:
+    "Association outcome is unverified. Retry the exact reviewed file or refresh.",
+  evidenceUnavailable: "Current file metadata is unavailable.",
+  bytes: "bytes",
+  evidenceReadFile: "Open authorized file",
+  chooseFile: "Choose file",
+  capturePhoto: "Capture photo",
+  evidenceCaptureTime: "Reported capture time (optional)",
+  evidenceReview: "Review exact file association",
+  evidenceSave: "Upload and save reviewed association",
   removeProfile: "Remove operational profile for future runs",
   moveUp: "Move stop earlier",
   removeStop: "Remove stop",
@@ -324,6 +384,66 @@ const en = {
     "Readiness and eligibility are checked by the server when dispatch is saved.",
 } as const;
 const es: Record<keyof typeof en, string> = {
+  none: "Ninguno",
+  replacementTitle: "Reemplazo de equipo con recorrido pausado",
+  replacementSource:
+    "El gerente o despachador propone; el conductor asignado acepta. El camión y remolque elegido ya deben estar registrados en Inventario a cargo de ese conductor. Fleet no cambia la custodia ni verifica el intercambio físico.",
+  replacementUnavailable:
+    "El permiso, recorrido o equipo actual no está disponible. Actualice y revise las referencias.",
+  replacementUnknown:
+    "El resultado no está verificado. Reintente la solicitud revisada exacta o actualice.",
+  replacementNeedsChecks:
+    "Reemplazo aceptado; registre nueva inspección y medidor del vehículo antes de reanudar. Se aplica la disponibilidad actual del servidor.",
+  replacementRecordedReady:
+    "Nueva inspección y medidor registrados. Reanudar requiere permisos, custodia y disponibilidad actuales del servidor.",
+  replacementAccept: "Revisar aceptación como conductor asignado",
+  replacementVehicle: "Vehículo candidato de reemplazo",
+  replacementTrailer: "Remolque candidato de reemplazo",
+  replacementReview: "Leer recorrido actual y revisar reemplazo",
+  replacementProposal: "Propuesta de reemplazo de equipo",
+  replacementSave: "Guardar reemplazo revisado exacto",
+  choose: "Elegir",
+  complete: "Completar transferencia reportada",
+  acknowledge_source: "Confirmar como conductor de origen",
+  acknowledge_target: "Confirmar como conductor de destino",
+  cargoTitle: "Transferencias de carga reportadas",
+  cargoSource:
+    "Solo cargas completas sin entregar. Cada conductor asignado confirma por separado. La entrega física no está verificada; la custodia de inventario no cambia.",
+  cargoUnavailable:
+    "Los registros o el par actual no están disponibles. Actualice y revise las referencias guardadas.",
+  cargoUnknown:
+    "El resultado no está verificado. Reintente la solicitud revisada exacta o actualice.",
+  cargoSourceAck: "Confirmación del conductor de origen",
+  cargoTargetAck: "Confirmación del conductor de destino",
+  cargoLoadedCandidates:
+    "Solo recorridos cargados y autorizados. Ambos deben estar pausados en el mismo sitio actual; el destino debe estar en recogida.",
+  cargoTarget: "Recorrido pausado de destino",
+  cargoLoad: "Carga completa de origen sin entregar",
+  cargoDestination: "Parada posterior de entrega",
+  cargoReview: "Leer par actual y revisar propuesta",
+  cargoProposal: "Transferencia reportada propuesta",
+  cargoSave: "Guardar solicitud de carga revisada exacta",
+  cargoTransferredOut: "Transferida a otro recorrido — reportada",
+  cargoTransferredIn: "Recibida de otro recorrido — reportada",
+  draftChanged:
+    "El borrador guardado cambió. Recárguelo antes de preparar nuevos cambios.",
+  reloadDraft: "Recargar borrador guardado",
+  evidenceTitle: "Archivos y documentos reportados del recorrido",
+  evidenceSource:
+    "Solo bytes cargados. La prueba física y la identidad de la firma no están verificadas.",
+  evidenceFileInvalid:
+    "Elija JPEG, PNG, WebP o PDF de hasta 10 MB y complete el reporte.",
+  evidenceSaved: "Asociación del archivo verificada en el recorrido guardado.",
+  evidenceUnknown:
+    "El resultado no está verificado. Reintente el archivo revisado exacto o actualice.",
+  evidenceUnavailable: "Los metadatos actuales no están disponibles.",
+  bytes: "bytes",
+  evidenceReadFile: "Abrir archivo autorizado",
+  chooseFile: "Elegir archivo",
+  capturePhoto: "Capturar foto",
+  evidenceCaptureTime: "Hora de captura reportada (opcional)",
+  evidenceReview: "Revisar asociación exacta",
+  evidenceSave: "Cargar y guardar asociación revisada",
   removeProfile: "Eliminar perfil operativo para recorridos futuros",
   moveUp: "Mover parada antes",
   removeStop: "Eliminar parada",

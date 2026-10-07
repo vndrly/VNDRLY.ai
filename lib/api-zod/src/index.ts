@@ -11,3 +11,5 @@ export * from "./fleet-site-activity";
 export * from "./fleet-eta";
 export * from "./fleet-planning";
 export * from "./fleet-evidence";
+export * from "./fleet-cargo";
+export * from "./fleet-replacement";

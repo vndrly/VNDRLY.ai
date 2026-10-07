@@ -19,6 +19,12 @@ import type {
   FleetGateLink,
 } from "@workspace/api-zod";
 import {
+  FleetReplacementInputSchema,
+  FleetReplacementActionSchema,
+  FleetReplacementSchema,
+  FleetCargoTransferInputSchema,
+  FleetCargoTransferActionSchema,
+  FleetCargoTransferSchema,
   CreateFleetRunSchema,
   FleetSetupInputSchema,
   FleetWorkspacePreferenceInputSchema,
@@ -26,6 +32,8 @@ import {
   FleetReportSchema,
   FleetEtaSchema,
   FleetDraftEditSchema,
+  FleetEvidenceInputSchema,
+  FleetEvidenceSchema,
   FleetMaintenanceRecordSchema,
   FleetGateLinkInputSchema,
 } from "@workspace/api-zod";
@@ -95,6 +103,17 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
+  evidence: (id: string) =>
+    request<{ runId: string; evidence: unknown[] }>(
+      `/runs/${encodeURIComponent(id)}/evidence`,
+    ).then((data) => ({
+      runId: data.runId,
+      evidence: data.evidence.map((item) => FleetEvidenceSchema.parse(item)),
+    })),
+  addEvidence: (id: string, input: z.infer<typeof FleetEvidenceInputSchema>) =>
+    request<unknown>(`/runs/${encodeURIComponent(id)}/evidence`, input).then(
+      (data) => FleetEvidenceSchema.parse(data),
+    ),
   editDraft: (id: string, input: z.infer<typeof FleetDraftEditSchema>) =>
     request<FleetRun>(`/runs/${encodeURIComponent(id)}/draft`, input, "PATCH"),
   eta: (id: string) =>
@@ -164,6 +183,57 @@ export const fleetClient = {
     request<FleetOverview>(
       `/overview${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
     ),
+  replacements: (id: string) =>
+    request<{ runId: string; replacements: unknown[] }>(
+      `/runs/${encodeURIComponent(id)}/replacements`,
+    ).then((value) => ({
+      runId: value.runId,
+      replacements: value.replacements.map((item) =>
+        FleetReplacementSchema.parse(item),
+      ),
+    })),
+  proposeReplacement: (
+    id: string,
+    input: z.infer<typeof FleetReplacementInputSchema>,
+  ) =>
+    request<unknown>(
+      `/runs/${encodeURIComponent(id)}/replacements`,
+      input,
+    ).then((value) => FleetReplacementSchema.parse(value)),
+  replacementAction: (
+    id: string,
+    replacementId: string,
+    input: z.infer<typeof FleetReplacementActionSchema>,
+  ) =>
+    request<unknown>(
+      `/runs/${encodeURIComponent(id)}/replacements/${encodeURIComponent(replacementId)}/actions`,
+      input,
+    ).then((value) => FleetReplacementSchema.parse(value)),
+  cargoTransfers: (id: string) =>
+    request<{ runId: string; transfers: unknown[] }>(
+      `/runs/${encodeURIComponent(id)}/cargo-transfers`,
+    ).then((value) => ({
+      runId: value.runId,
+      transfers: value.transfers.map((item) =>
+        FleetCargoTransferSchema.parse(item),
+      ),
+    })),
+  cargoTransfer: (id: string) =>
+    request<unknown>(`/cargo-transfers/${encodeURIComponent(id)}`).then(
+      (value) => FleetCargoTransferSchema.parse(value),
+    ),
+  proposeCargo: (input: z.infer<typeof FleetCargoTransferInputSchema>) =>
+    request<unknown>("/cargo-transfers", input).then((value) =>
+      FleetCargoTransferSchema.parse(value),
+    ),
+  cargoAction: (
+    id: string,
+    input: z.infer<typeof FleetCargoTransferActionSchema>,
+  ) =>
+    request<unknown>(
+      `/cargo-transfers/${encodeURIComponent(id)}/actions`,
+      input,
+    ).then((value) => FleetCargoTransferSchema.parse(value)),
   resources: () => request<FleetResources>("/resources"),
   run: (id: string) => request<FleetRun>(`/runs/${encodeURIComponent(id)}`),
   create: (input: z.infer<typeof CreateFleetRunSchema>) =>

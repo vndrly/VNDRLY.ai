@@ -17,6 +17,13 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/runs/:id/replacements", endpoint(req => service.replacements(actor(req), z.uuid().parse(req.params.id))));
+router.post("/fleet/runs/:id/replacements", endpoint(req => service.proposeReplacement(actor(req), z.uuid().parse(req.params.id), req.body)));
+router.post("/fleet/runs/:id/replacements/:replacementId/actions", endpoint(req => service.replacementAction(actor(req), z.uuid().parse(req.params.id), z.uuid().parse(req.params.replacementId), req.body)));
+router.get("/fleet/runs/:id/cargo-transfers",endpoint(req=>service.cargoTransfers(actor(req),z.uuid().parse(req.params.id))));
+router.get("/fleet/cargo-transfers/:id",endpoint(req=>service.cargoTransfer(actor(req),z.uuid().parse(req.params.id))));
+router.post("/fleet/cargo-transfers",endpoint(req=>service.prepareCargoTransfer(actor(req),req.body)));
+router.post("/fleet/cargo-transfers/:id/actions",endpoint(req=>service.cargoAction(actor(req),z.uuid().parse(req.params.id),req.body)));
 router.get("/fleet/runs/:id/evidence", endpoint(req => service.evidence(actor(req),z.uuid().parse(req.params.id))));
 router.post("/fleet/runs/:id/evidence", endpoint(req => service.addEvidence(actor(req),z.uuid().parse(req.params.id),req.body)));
 router.get("/fleet/runs/:id/evidence/:evidenceId/file", async(req,res)=>{

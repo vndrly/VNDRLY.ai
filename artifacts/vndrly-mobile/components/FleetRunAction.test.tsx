@@ -9,6 +9,11 @@ import FleetRunAction from "./FleetRunAction";
 const run = { version: 3, currentStopId: null, stops: [], loads: [] } as unknown as FleetRun;
 afterEach(cleanup);
 describe("Fleet reported workflow forms", () => {
+  it("does not offer transferred-out cargo as a delivery choice",()=>{
+    const load={id:"50000000-0000-4000-8000-000000000001",commodity:"Transferred history",quantity:10,unit:"tons",manifestReference:"SYN-01",transferOut:{transferId:"90000000-0000-4000-8000-000000000001"}};
+    render(<FleetRunAction run={{...run,loads:[load]}} action="record_delivery" disabled={false} onSubmit={()=>{}}/>);
+    expect(screen.queryByRole("button",{name:/Transferred history/})).toBeNull();
+  });
   it("links only a selected existing ticket candidate", () => {
     const submit = vi.fn();
     render(<FleetRunAction run={run} action="link_ticket" disabled={false} onSubmit={submit} tickets={[{ id: 77, siteId: 392, status: "submitted" }]} />);

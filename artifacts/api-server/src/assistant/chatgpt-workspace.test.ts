@@ -2,6 +2,18 @@ import { describe, expect, it } from "vitest";
 import { runInNewContext } from "node:vm";
 import { workspaceOutput, workspaceRequest, WORKSPACE_HTML } from "./chatgpt-workspace";
 const now = new Date("2026-10-05T17:00:00Z");
+it("keeps Fleet evidence metadata bound to the exact run without disclosing file URLs", () => {
+  const runId="17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+  expect(workspaceRequest({view:"fleet_evidence",runId})).toMatchObject({sourceTool:"query_fleet_evidence",sourceArguments:{runId}});
+  expect(()=>workspaceRequest({view:"fleet_evidence"})).toThrow();
+  const item={evidenceId:runId,runId,companyId:1107,operationId:runId,runVersion:2,kind:"photo",stopId:null,loadId:null,notes:"Synthetic device test",size:100,contentType:"image/png",sha256:"a".repeat(64),recordedByUserId:1073,recordedAt:now.toISOString(),capturedAt:null,source:"device_upload",physicalProofVerified:false,signatureIdentityVerified:false,fileUrl:"/private-test-file"};
+  const output=workspaceOutput("fleet_evidence","query_fleet_evidence",{runId},{runId,evidence:[item]},now);
+  expect(output.sections[0].rows[0].title).toBe("photo");
+  expect(output.attention[0].detail).toContain("not verified");
+  expect(JSON.stringify(output)).not.toContain("/private-test-file");
+  expect(()=>workspaceOutput("fleet_evidence","query_fleet_evidence",{runId},{runId,evidence:[{...item,runId:"afafd3ab-bca4-4949-a3db-768ae3b31f10"}]},now)).toThrow("another run");
+  expect(WORKSPACE_HTML).toContain("Saved evidence");
+});
 function workspaceHarness() {
   const nodes = new Map<string, any>();
   const makeNode = () => ({ textContent: "", className: "", append() {}, replaceChildren() {}, setAttribute() {}, removeAttribute() {} });

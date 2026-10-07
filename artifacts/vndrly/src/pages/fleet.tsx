@@ -28,6 +28,9 @@ import {
   parseFleetSchedule,
 } from "@/components/fleet-schedule-fields";
 import { FleetDraftEditor } from "@/components/fleet-draft-editor";
+import { FleetReplacementPanel } from "@/components/fleet-replacement";
+import { FleetCargoPanel } from "@/components/fleet-cargo";
+import { FleetEvidencePanel } from "@/components/fleet-evidence";
 import { FleetEtaPanel } from "@/components/fleet-eta";
 import { FleetGateObservationsPanel } from "@/components/fleet-gate-observations";
 import { fleetPositions, fleetVisibleRuns } from "@/lib/fleet-view";
@@ -916,9 +919,16 @@ function FleetWorkspace({
                   <li key={load.id}>
                     {load.commodity} · {load.quantity} {load.unit} ·{" "}
                     {load.manifestReference} ·{" "}
-                    {load.deliveredAt
-                      ? `Delivered ${load.deliveredAt}`
-                      : "Awaiting delivery"}{" "}
+                    {load.transferOut
+                      ? `${c.cargoTransferredOut} · ${load.transferOut.otherRunId}`
+                      : load.deliveredAt
+                        ? `Delivered ${load.deliveredAt}`
+                        : "Awaiting delivery"}{" "}
+                    {load.transferIn && (
+                      <p>
+                        {c.cargoTransferredIn} · {load.transferIn.otherRunId}
+                      </p>
+                    )}
                     · {load.source}
                     {Object.entries(load.manifestValues ?? {}).map(
                       ([id, value]) => (
@@ -960,6 +970,39 @@ function FleetWorkspace({
                 key={`${run.id}:${run.version}`}
                 run={run}
                 identity={identity}
+              />
+              <FleetReplacementPanel
+                key={run.id}
+                run={run}
+                identity={identity}
+                canDispatch={data.capabilities.canDispatch}
+                equipment={(candidates?.equipment ?? []).filter((item) =>
+                  (
+                    data.fleets.find((fleet) => fleet.id === run.fleetId)
+                      ?.equipmentAssetIds ?? []
+                  ).includes(item.id),
+                )}
+                onSaved={reload}
+              />
+              <FleetCargoPanel
+                key={run.id}
+                run={run}
+                runs={data.runs}
+                identity={identity}
+                canDispatch={data.capabilities.canDispatch}
+                onSaved={reload}
+              />
+              <FleetEvidencePanel
+                key={run.id}
+                run={run}
+                identity={identity}
+                userId={userId}
+                canAdd={
+                  data.capabilities.canDrive &&
+                  run.driverUserId === userId &&
+                  ["acknowledged", "in_progress"].includes(run.status)
+                }
+                onSaved={reload}
               />
               <FleetGateObservationsPanel
                 key={run.id}

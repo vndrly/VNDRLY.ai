@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chatGptReadToolAnnotations } from "./chatgpt-tool-access";
+import { chatGptActionTools, chatGptReadToolAnnotations } from "./chatgpt-tool-access";
 import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
 import { resolveExecutableWorkHubToolRequest } from "./work-hub-tool-runtime";
 import { validateChatGptActionInput } from "./chatgpt-write-capabilities";
@@ -7,6 +7,23 @@ const runId = "11111111-1111-4111-8111-111111111111",
   operationId = "22222222-2222-4222-8222-222222222222";
 const session = { userId: 1, role: "vendor", membershipRole: "admin" };
 describe("Fleet assistant canonical action boundary", () => {
+  it("keeps cargo dispatch and own-driver consent families separate", () => {
+    const dispatch=chatGptActionTools(session,["fleet:dispatch"]).map(tool=>tool.name),driver=chatGptActionTools(session,["fleet:run"]).map(tool=>tool.name);
+    expect(dispatch).toContain("prepare_fleet_cargo_transfer");expect(dispatch).toContain("complete_fleet_cargo_transfer");expect(dispatch).not.toContain("acknowledge_fleet_cargo_source");
+    expect(driver).toContain("acknowledge_fleet_cargo_source");expect(driver).toContain("acknowledge_fleet_cargo_recipient");expect(driver).not.toContain("complete_fleet_cargo_transfer");
+    expect(chatGptActionTools({...session,role:"partner"},["fleet:dispatch","fleet:run"]).some(tool=>tool.name.includes("cargo"))).toBe(false);
+    expect(chatGptActionTools(session,[]).some(tool=>tool.name.includes("cargo"))).toBe(false);
+  });
+  it("pins each cargo acknowledgement to its named operation and retains trusted confirmation", () => {
+    const input={transferId:runId,operationId,expectedVersion:1,sourceExpectedVersion:4,targetExpectedVersion:4,notes:"Actual user acknowledgement",actorUserId:99};
+    for(const [name,action] of [["acknowledge_fleet_cargo_source","acknowledge_source"],["acknowledge_fleet_cargo_recipient","acknowledge_target"],["complete_fleet_cargo_transfer","complete"],["cancel_fleet_cargo_transfer","cancel"]]){
+      expect(resolveExecutableWorkHubToolRequest(name,input,false,session)).toMatchObject({requiresConfirmation:true});
+      const request=resolveExecutableWorkHubToolRequest(name,input,true,session);
+      expect(request).toMatchObject({method:"POST",path:`/fleet/cargo-transfers/${runId}/actions`,body:{action}});
+      expect(request && "body" in request && request.body).not.toHaveProperty("actorUserId");
+      expect(resolveExecutableWorkHubToolRequest(name,{...input,action:"invented"},true,session)).toHaveProperty("error");
+    }
+  });
   it("keeps every scheduled-service and saved-view variant executable and refuses unknown variants", () => {
     const assetId="33333333-3333-4333-8333-333333333333";
     expect(resolveExecutableWorkHubToolRequest("manage_fleet_maintenance",{action:"create",operationId,fleetId:assetId,assetId,title:"Scheduled",notes:"Actual schedule"},true,session)).toMatchObject({method:"POST",path:"/fleet/maintenance"});

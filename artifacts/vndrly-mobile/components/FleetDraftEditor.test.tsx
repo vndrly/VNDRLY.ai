@@ -12,6 +12,17 @@ import FleetDraftEditor from "./FleetDraftEditor";
 const run=FleetRunSchema.parse({id:"20000000-0000-4000-8000-000000000001",fleetId:"60000000-0000-4000-8000-000000000001",companyId:609,title:"Synthetic draft",driverUserId:1,vehicleAssetId:"30000000-0000-4000-8000-000000000001",trailerAssetId:null,status:"draft",phase:null,version:4,stops:[{id:"40000000-0000-4000-8000-000000000001",siteId:392,kind:"pickup",sequence:0}],siteIds:[392],loads:[],inspections:[],records:[],events:[],currentStopId:null,visitedStopIds:[],linkedTicketId:null,allowedActions:["dispatch"],canEditDraft:true});
 const fleet={id:run.fleetId,name:"Synthetic fleet",siteIds:[392],equipmentAssetIds:[],requiredCertifications:[]};
 afterEach(()=>{cleanup();api.mockReset();});
+it("requires explicit reload after an external revision instead of rebasing local edits",()=>{
+ const props={fleet,disabled:false,onSaved:()=>{}};
+ const {rerender}=render(<FleetDraftEditor run={run} {...props}/>);
+ fireEvent.change(screen.getByLabelText("Draft title"),{target:{value:"Unsaved local title"}});
+ rerender(<FleetDraftEditor run={{...run,version:5,title:"Current server title"}} {...props}/>);
+ expect((screen.getByRole("button",{name:"Save Fleet draft changes"}) as HTMLButtonElement).disabled).toBe(true);
+ expect(api).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole("button",{name:"Reload current draft"}));
+ expect((screen.getByLabelText("Draft title") as HTMLInputElement).value).toBe("Current server title");
+ expect((screen.getByRole("button",{name:"Save Fleet draft changes"}) as HTMLButtonElement).disabled).toBe(false);
+});
 it("does not expose editing without server authority",()=>{render(<FleetDraftEditor run={{...run,canEditDraft:false}} fleet={fleet} disabled={false} onSaved={()=>{}}/>);expect(screen.queryByRole("button")).toBeNull();});
 it("preserves UUID/version/body after unknown save and resolves exact saved event before retry",async()=>{
  const saved=vi.fn();let accepted=false;

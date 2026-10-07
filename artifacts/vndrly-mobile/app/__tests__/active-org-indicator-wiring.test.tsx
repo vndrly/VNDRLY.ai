@@ -3,6 +3,10 @@ import Module from "node:module";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0, syncAppIconBadge: vi.fn() }));
+// This shell test exercises layout, not native task/storage registration.
+// Dedicated Fleet module tests cover the real account and permission callbacks.
+vi.mock("@/lib/fleet-background-location-native", () => ({}));
+vi.mock("@/lib/fleet-evidence-device-native", () => ({}));
 
 // Task #186 originally proved ActiveOrgIndicator was wired into the
 // native Expo Router header. The mobile shell no longer uses a root

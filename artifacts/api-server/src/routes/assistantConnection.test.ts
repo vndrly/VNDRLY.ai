@@ -61,6 +61,16 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("labels cancellation tools as potentially destructive without widening their input operation", async () => {
+    const credentials = await tokens("gate:write fleet:dispatch");
+    const descriptors = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({jsonrpc:"2.0",id:1,method:"tools/list"});
+    const tools = descriptors.body.result.tools;
+    for (const name of ["manage_gate_shift_cancel_handoff","cancel_fleet_cargo_transfer","cancel_fleet_equipment_replacement"]) {
+      const tool=tools.find((item:{name:string})=>item.name===name);
+      expect(tool.annotations.destructiveHint).toBe(true);
+      expect(tool.inputSchema.properties).not.toHaveProperty("action");
+    }
+  });
   it("issues only selected scopes and refuses scope expansion or empty consent", async () => {
     const form = await consent("gate:read gate:write tickets:read tickets:write finance:write");
     const sendSelection = (selected_scope: unknown) => request(app).post(`${base}/authorize`)

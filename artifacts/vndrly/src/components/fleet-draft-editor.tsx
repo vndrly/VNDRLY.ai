@@ -22,6 +22,7 @@ export function FleetDraftEditor({
   const { i18n } = useTranslation();
   const c = fleetCopy(i18n.language);
   const [open, setOpen] = useState(false),
+    [baseVersion, setBaseVersion] = useState(run.version),
     [title, setTitle] = useState(run.title),
     [schedule, setSchedule] = useState(() => fleetScheduleDraft(run.schedule)),
     [stops, setStops] = useState(() =>
@@ -32,13 +33,23 @@ export function FleetDraftEditor({
     > | null>(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
-  const locked = busy || !!reviewed;
+  const stale = baseVersion !== run.version;
+  const locked = busy || !!reviewed || stale;
+  function reloadSaved() {
+    setTitle(run.title);
+    setSchedule(fleetScheduleDraft(run.schedule));
+    setStops([...run.stops].sort((a, b) => a.sequence - b.sequence));
+    setBaseVersion(run.version);
+    setReviewed(null);
+    setMessage("");
+  }
   function review() {
+    if (stale) return;
     const parsedSchedule = parseFleetSchedule(schedule);
     if (!parsedSchedule.valid) return;
     const parsed = FleetDraftEditSchema.safeParse({
       operationId: crypto.randomUUID(),
-      expectedVersion: run.version,
+      expectedVersion: baseVersion,
       title,
       schedule: parsedSchedule.schedule,
       stops: stops.map((stop, sequence) => ({ ...stop, sequence })),
@@ -80,6 +91,12 @@ export function FleetDraftEditor({
       </PngPillButton>
       {open && (
         <>
+          {stale && <p role="alert">{c.draftChanged}</p>}
+          {stale && !reviewed && (
+            <PngPillButton disabled={busy} onClick={reloadSaved}>
+              {c.reloadDraft}
+            </PngPillButton>
+          )}
           <label>
             {c.title}
             <input
@@ -208,7 +225,9 @@ export function FleetDraftEditor({
             </>
           ) : (
             <PngPillButton
-              disabled={!parseFleetSchedule(schedule).valid || !title.trim()}
+              disabled={
+                stale || !parseFleetSchedule(schedule).valid || !title.trim()
+              }
               onClick={review}
             >
               {c.reviewDraft}

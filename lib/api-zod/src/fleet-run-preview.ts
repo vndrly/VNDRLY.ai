@@ -13,6 +13,8 @@ export type FleetRunPreview = {
   loads: {
     id: string;
     pickupStopId: string;
+    transferredOut?: boolean;
+    plannedDeliveryStopId?: string;
     commodity: string;
     quantity: number;
     unit: string;
@@ -41,16 +43,19 @@ export function previewFleetRunActions(
     loads: base.loads.map((load) => ({
       id: load.id,
       pickupStopId: load.pickupStopId,
+      transferredOut: Boolean(load.transferOut),
+      plannedDeliveryStopId: load.plannedDeliveryStopId,
       commodity: load.commodity,
       quantity: load.quantity,
       unit: load.unit,
       manifestReference: load.manifestReference,
-      delivered: Boolean(load.deliveredAt),
+      delivered: Boolean(load.deliveredAt || load.transferOut),
     })),
   };
   let pausedFrom = base.pausedFromPhase;
   const inspection = base.inspections.at(-1);
   let passed =
+    (!base.activeReplacement || base.inspections.length > base.activeReplacement.inspectionCount) &&
     inspection?.outcome === "passed" &&
     inspection.driverUserId === base.driverUserId &&
     inspection.vehicleAssetId === base.vehicleAssetId &&
@@ -58,7 +63,7 @@ export function previewFleetRunActions(
   let defect = inspection?.outcome === "defect_reported";
   const meters = base.records
     .filter(
-      (r) => r.kind === "meter" && r.vehicleAssetId === base.vehicleAssetId,
+      (r, index) => r.kind === "meter" && r.vehicleAssetId === base.vehicleAssetId && (!base.activeReplacement || index >= base.activeReplacement.recordCount),
     )
     .map((r) => ({ unit: r.unit, reading: r.reading! }));
   const available = (): FleetRun["allowedActions"] => {
@@ -74,7 +79,7 @@ export function previewFleetRunActions(
           : []),
       ];
     if (next.status !== "in_progress") return [];
-    if (next.phase === "paused") return ["resume"];
+    if (next.phase === "paused") return ["record_meter", ...(base.activeReplacement ? ["inspect" as const] : []), ...(!base.activeReplacement || passed && !defect && meters.some(m => ["miles", "kilometers"].includes(m.unit)) ? ["resume" as const] : [])];
     const result: FleetRun["allowedActions"] = [
       "pause",
       "record_fuel",
@@ -183,7 +188,7 @@ export function previewFleetRunActions(
       next.phase = "loading";
     } else if (action.action === "record_delivery") {
       const load = next.loads.find((l) => l.id === action.loadId);
-      if (!load || load.delivered || !action.deliveryReference) fail();
+      if (!load || load.delivered || load.transferredOut || (load.plannedDeliveryStopId && load.plannedDeliveryStopId !== next.currentStopId) || !action.deliveryReference) fail();
       load!.delivered = true;
       next.phase = "unloading";
     } else if (action.action === "depart_stop") {

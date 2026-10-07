@@ -235,3 +235,51 @@ describe("Fleet hauling forms", () => {
     ).toBe(true);
   });
 });
+it("excludes transferred-out loads from delivery review and choices", () => {
+  const id = "55555555-5555-4555-8555-555555555555";
+  const run = FleetRunSchema.parse({
+    ...baseRun,
+    loads: [
+      {
+        id,
+        pickupStopId: baseRun.stops[0].id,
+        deliveryStopId: null,
+        commodity: "Transferred synthetic gravel",
+        quantity: 3,
+        unit: "tons",
+        manifestReference: "SYNTHETIC",
+        deliveryReference: null,
+        recordedByUserId: 8,
+        recordedAt: "2026-10-07T00:00:00Z",
+        deliveredAt: null,
+        source: "user_report",
+        transferOut: {
+          transferId: id,
+          otherRunId: id,
+          otherLoadId: id,
+          recordedAt: "2026-10-07T00:00:00Z",
+          source: "user_report",
+          physicalHandoffVerified: false,
+        },
+      },
+    ],
+  });
+  const action: FleetActionInput = {
+    ...input,
+    action: "record_delivery",
+    loadId: id,
+    deliveryReference: "Actual receipt",
+  };
+  expect(fleetActionComplete(action, run)).toBe(false);
+  render(
+    <FleetActionFields
+      run={run}
+      input={action}
+      onChange={vi.fn()}
+      disabled={false}
+    />,
+  );
+  expect(
+    screen.queryByRole("option", { name: /Transferred synthetic gravel/ }),
+  ).toBeNull();
+});

@@ -1,3 +1,4 @@
+import "@/lib/fleet-evidence-device-native";
 import "@/lib/fleet-background-location-native";
 import "react-native-gesture-handler";
 

@@ -1,3 +1,6 @@
+import { createFleetCargoOperations } from "./fleet-cargo";
+import { createFleetReplacementOperations, assertFleetReplacementCustody } from "./fleet-replacement";
+import { fleetReplacementReady } from "@workspace/api-zod";
 import { createFleetEvidenceOperations } from "./fleet-evidence";
 import { createFleetPlanningOperations } from "./fleet-planning";
 import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "@workspace/api-zod";
@@ -131,7 +134,7 @@ function allowed(
       result.push("start");
   }
   if (run.status === "in_progress") {
-    if (run.phase === "paused") return [...result, "resume"];
+    if (run.phase === "paused") return [...result, "record_meter", ...(run.activeReplacement ? ["inspect" as const] : []), ...(fleetReplacementReady(run) ? ["resume" as const] : [])];
     result.push("pause", "record_fuel", "record_meter");
     if (!run.currentStopId && run.visitedStopIds.length < run.stops.length)
       result.push("arrive_stop");
@@ -145,9 +148,9 @@ function allowed(
       !run.currentStopId &&
       run.visitedStopIds.length === run.stops.length &&
       run.loads.length &&
-      run.loads.every((l) => l.deliveredAt) &&
+      run.loads.every((l) => l.deliveredAt || l.transferOut) &&
       run.records.filter(
-        (r) => r.kind === "meter" && ["miles", "kilometers"].includes(r.unit),
+        (r, index) => r.kind === "meter" && r.vehicleAssetId === run.vehicleAssetId && (!run.activeReplacement || index >= run.activeReplacement.recordCount) && ["miles", "kilometers"].includes(r.unit),
       ).length >= 2
     )
       result.push("submit_closeout");
@@ -377,6 +380,8 @@ export function createFleetService(repository: FleetRepository) {
       permitted,
       locations.readObservations,
     ),
+    ...createFleetCargoOperations(transaction, permitted, eligible),
+    ...createFleetReplacementOperations(transaction, permitted, eligible),
     ...createFleetEvidenceOperations(transaction, permitted),
     ...createFleetPlanningOperations(transaction, permitted, eligible, project),
     ...createFleetMaintenanceOperations(transaction, grantFor),
@@ -943,7 +948,9 @@ export function createFleetService(repository: FleetRepository) {
             run.pausedFromPhase = run.phase;
             run.phase = "paused";
           } else if (body.action === "resume") {
+              if (!fleetReplacementReady(run)) throw new FleetError("fleet.inspection_fields_required", 400);
             await eligible(state, client, run);
+              if (run.activeReplacement) await assertFleetReplacementCustody(client, run);
             run.phase = run.pausedFromPhase;
             run.pausedFromPhase = null;
           } else if (body.action === "link_ticket") {
@@ -1019,7 +1026,7 @@ export function createFleetService(repository: FleetRepository) {
               throw new FleetError("fleet.load_required");
             if (
               stop.kind === "delivery" &&
-              run.loads.some((l) => !l.deliveredAt)
+              run.loads.some((l) => !l.deliveredAt && !l.transferOut)
             )
               throw new FleetError("fleet.delivery_required");
             run.visitedStopIds.push(stop.id);
@@ -1057,7 +1064,7 @@ export function createFleetService(repository: FleetRepository) {
             run.phase = "loading";
           } else if (body.action === "record_delivery") {
             const load = run.loads.find((l) => l.id === body.loadId);
-            if (!load || load.deliveredAt || !body.deliveryReference)
+            if (!load || load.deliveredAt || load.transferOut || (load.plannedDeliveryStopId && load.plannedDeliveryStopId !== run.currentStopId) || !body.deliveryReference)
               throw new FleetError("fleet.delivery_fields_required", 400);
             load.deliveryStopId = run.currentStopId!;
             load.deliveryReference = body.deliveryReference;

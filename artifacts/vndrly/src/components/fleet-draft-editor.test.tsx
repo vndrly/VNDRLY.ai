@@ -111,3 +111,32 @@ it("rejects partial/reversed schedule and preserves explicit no-schedule", () =>
       new Date("2026-10-07T10:00").toISOString(),
     );
 });
+
+it("requires explicit reload rather than rebasing unsaved fields on a newer revision", () => {
+  const saved = vi.fn(async () => {});
+  const view = render(
+    <FleetDraftEditor run={run} sites={[9]} onSaved={saved} />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Edit saved draft" }));
+  fireEvent.change(screen.getByLabelText("Run title"), {
+    target: { value: "Old local edits" },
+  });
+  view.rerender(
+    <FleetDraftEditor
+      run={{ ...run, version: 5, title: "New saved title" }}
+      sites={[9]}
+      onSaved={saved}
+    />,
+  );
+  expect(
+    screen.getByRole("button", { name: "Review exact draft changes" }),
+  ).toHaveProperty("disabled", true);
+  fireEvent.click(screen.getByRole("button", { name: "Reload saved draft" }));
+  expect(screen.getByLabelText("Run title")).toHaveProperty(
+    "value",
+    "New saved title",
+  );
+  expect(
+    screen.getByRole("button", { name: "Review exact draft changes" }),
+  ).toHaveProperty("disabled", false);
+});

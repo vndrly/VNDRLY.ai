@@ -1,3 +1,5 @@
+import { FleetCargoMarkerSchema } from "./fleet-cargo";
+import { FleetReplacementMarkerSchema } from "./fleet-replacement";
 import { FleetScheduleSchema, FleetOperationalProfileSchema, FleetInspectionResponsesSchema, FleetManifestValuesSchema } from "./fleet-planning";
 import { z } from "zod/v4";
 export const FleetRoleSchema = z.enum([
@@ -70,6 +72,9 @@ export const FleetInspectionSchema = z
   .strict();
 export const FleetLoadSchema = z
   .object({
+    transferOut: FleetCargoMarkerSchema.optional(),
+    transferIn: FleetCargoMarkerSchema.optional(),
+    plannedDeliveryStopId: z.uuid().optional(),
     manifestValues: FleetManifestValuesSchema.optional(),
     id: z.uuid(),
     pickupStopId: z.uuid(),
@@ -101,6 +106,7 @@ export const FleetRunRecordSchema = z
   })
   .strict();
 export const FleetRunSchema = z.object({
+  activeReplacement: FleetReplacementMarkerSchema.optional(),
   canEditDraft: z.boolean().optional(),
   schedule: FleetScheduleSchema.nullable().optional(),
   operationalProfile: FleetOperationalProfileSchema.optional(),

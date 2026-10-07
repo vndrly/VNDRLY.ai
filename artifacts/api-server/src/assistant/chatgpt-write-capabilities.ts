@@ -1,13 +1,16 @@
+import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
+import { FleetReplacementInputSchema, FleetReplacementActionSchema } from "@workspace/api-zod";
+import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
 import { z } from "zod/v4";
-import { FleetDraftEditSchema, AssetCustodyCommandSchema, CreateFleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema } from "@workspace/api-zod";
+import { FleetCargoTransferInputSchema, FleetCargoTransferActionSchema, FleetDraftEditSchema, AssetCustodyCommandSchema, CreateFleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema } from "@workspace/api-zod";
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
   "fleet:maintenance": {label:"Prepare Fleet Manager maintenance and explicitly permitted hold release; no physical certification",tools:["manage_fleet_maintenance","report_fleet_defect"]},
   "fleet:admin":{label:"Prepare current company administrator Fleet settings and explicit role grants",tools:["manage_fleet_settings"]},
-  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
-  "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: ["report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["prepare_fleet_equipment_replacement","cancel_fleet_equipment_replacement","prepare_fleet_cargo_transfer","complete_fleet_cargo_transfer","cancel_fleet_cargo_transfer","edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: ["accept_fleet_equipment_replacement","acknowledge_fleet_cargo_source","acknowledge_fleet_cargo_recipient","report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
   "finance:write": { label: "Prepare recording or reversing ticket payment records with current Accounts Payable authority; never transfer money", tools: ["record_ticket_payment", "reverse_ticket_payment_record"] },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
@@ -46,6 +49,10 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
     if(name==="report_fleet_defect"||input.action==="create")FleetMaintenanceCreateSchema.parse({operationId,fleetId:input.fleetId,assetId:input.assetId,runId:input.runId,kind:name==="report_fleet_defect"?"defect":"scheduled_service",title:input.title,notes:input.notes,dueAt:input.dueAt});
     else {z.uuid().parse(input.maintenanceId);FleetMaintenanceActionSchema.parse({operationId,expectedVersion:input.expectedVersion,action:input.action,notes:input.notes});}
   }
+  if (name === "prepare_fleet_equipment_replacement") { z.uuid().parse(input.runId); FleetReplacementInputSchema.parse({ operationId: "00000000-0000-4000-8000-000000000001", expectedVersion: input.expectedVersion, vehicleAssetId: input.vehicleAssetId, trailerAssetId: input.trailerAssetId, reason: input.reason }); }
+  if (FLEET_REPLACEMENT_ACTIONS[name]) { if (input.action !== undefined && input.action !== FLEET_REPLACEMENT_ACTIONS[name]) throw new Error("Named replacement operation conflicts with supplied action."); z.uuid().parse(input.runId); z.uuid().parse(input.replacementId); FleetReplacementActionSchema.parse({ operationId: "00000000-0000-4000-8000-000000000001", expectedVersion: input.expectedVersion, runExpectedVersion: input.runExpectedVersion, notes: input.notes, action: FLEET_REPLACEMENT_ACTIONS[name] }); }
+  if(name==="prepare_fleet_cargo_transfer"){const {operationId,confirmed,...fields}=input;FleetCargoTransferInputSchema.parse({...fields,operationId:"00000000-0000-4000-8000-000000000001"});}
+  if(FLEET_CARGO_ACTIONS[name]){if(input.action!==undefined&&input.action!==FLEET_CARGO_ACTIONS[name])throw new Error("Named cargo operation conflicts with supplied action.");z.uuid().parse(input.transferId);FleetCargoTransferActionSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,sourceExpectedVersion:input.sourceExpectedVersion,targetExpectedVersion:input.targetExpectedVersion,notes:input.notes,action:FLEET_CARGO_ACTIONS[name]});}
   if(name==="edit_fleet_draft"){ z.uuid().parse(input.runId);FleetDraftEditSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,title:input.title,schedule:input.schedule,stops:input.stops}); }
   if(name==="set_fleet_preferences")FleetWorkspacePreferenceInputSchema.parse({expectedVersion:input.expectedVersion,defaultWorkspace:input.defaultWorkspace,selectedFleetId:input.selectedFleetId});
   if(name==="manage_fleet_settings")FleetSetupInputSchema.parse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants,supportGrants:input.supportGrants});
