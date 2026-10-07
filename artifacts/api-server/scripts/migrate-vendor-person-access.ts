@@ -28,20 +28,22 @@ CREATE TABLE IF NOT EXISTS vendor_person_site_access (
 CREATE INDEX IF NOT EXISTS vendor_person_site_access_person_active_idx ON vendor_person_site_access(vendor_people_id, is_active);
 INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active)
 SELECT id, 'office', true FROM vendor_people WHERE deleted_at IS NULL AND vendor_role IN ('office','both')
-ON CONFLICT (vendor_people_id, role) DO UPDATE SET is_active = true, updated_at = now();
+ON CONFLICT (vendor_people_id, role) DO NOTHING;
 INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active)
 SELECT id, 'field_employee', true FROM vendor_people WHERE deleted_at IS NULL AND vendor_role IN ('field','both')
-ON CONFLICT (vendor_people_id, role) DO UPDATE SET is_active = true, updated_at = now();
+ON CONFLICT (vendor_people_id, role) DO NOTHING;
 INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active)
 SELECT id, vendor_role, true FROM vendor_people WHERE deleted_at IS NULL AND vendor_role IN ('foreman','gatekeeper','gate_supervisor')
-ON CONFLICT (vendor_people_id, role) DO UPDATE SET is_active = true, updated_at = now();
+ON CONFLICT (vendor_people_id, role) DO NOTHING;
 INSERT INTO vendor_person_site_access (vendor_people_id, site_location_id, is_active)
 SELECT DISTINCT person.id, assignment.site_location_id, true
 FROM vendor_people person
 JOIN site_work_assignments assignment ON assignment.vendor_id=person.vendor_id
 WHERE person.deleted_at IS NULL AND person.is_active=true
 AND person.vendor_role IN ('gatekeeper','gate_supervisor')
-ON CONFLICT (vendor_people_id, site_location_id) DO UPDATE SET is_active = true, updated_at = now();
+AND NOT EXISTS (SELECT 1 FROM vendor_person_site_access existing WHERE existing.vendor_people_id=person.id)
+AND NOT EXISTS (SELECT 1 FROM vendor_person_operational_roles configured WHERE configured.vendor_people_id=person.id AND configured.granted_by_user_id IS NOT NULL)
+ON CONFLICT (vendor_people_id, site_location_id) DO NOTHING;
 `;
 
 const ALLOWED_STATEMENT_PREFIXES = [
