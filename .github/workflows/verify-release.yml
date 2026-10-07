@@ -116,6 +116,8 @@ jobs:
           set -euo pipefail
           node --test scripts/tests/work-hub-migration-rehearsal.test.mjs
           pnpm --filter @workspace/api-server exec tsx scripts/rehearse-work-hub-migrations.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-migration-replay.log"
+          node --test scripts/tests/assistant-plan-execution-migration.test.mjs
+          pnpm --filter @workspace/api-server exec tsx scripts/rehearse-assistant-plan-execution.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-plan-execution-migration.log"
 
       - name: Full required test chain
         id: full-chain

@@ -1,4 +1,6 @@
 import app from "./app";
+import { createPlanExecutionLifecycle } from "./assistant/plan-execution-lifecycle";
+import { createCanonicalPlanExecutionWorker } from "./assistant/plan-execution-worker";
 import { logger } from "./lib/logger";
 import { startInactivityNotifier } from "./lib/inactivity-notifier";
 import { startRulesEngine } from "./lib/rules-engine";
@@ -102,6 +104,11 @@ const MAX_LISTEN_ATTEMPTS = 5;
 const LISTEN_RETRY_DELAY_MS = 500;
 
 let listenAttempts = 0;
+const planExecutionLifecycle = createPlanExecutionLifecycle({
+  enabled: () => process.env.ASSISTANT_PLAN_EXECUTION_ENABLED === "1",
+  create: () => createCanonicalPlanExecutionWorker({ onError: failure => logger.warn(failure, "Plan execution worker stopped a poll") }),
+  reportFailure: () => logger.warn({ code: "plan_execution_start_failed" }, "Plan execution worker unavailable"),
+});
 let server = createServer();
 
 function createServer() {
@@ -112,6 +119,7 @@ function createServer() {
 }
 
 function onListening(): void {
+  void planExecutionLifecycle.start();
   listenAttempts = 0;
   logger.info({ port }, "Server listening");
   // Best-effort: backfill `users.email` from `users.username` for any
@@ -216,6 +224,7 @@ function onError(err: NodeJS.ErrnoException): void {
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   logger.info({ signal }, "Shutting down server");
+  const planExecutionStop = planExecutionLifecycle.stop();
   stopStaleVisitSweeper();
   stopGateEvidenceCleanupWorker();
   stopScheduledNotificationWorker();
@@ -242,6 +251,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   void stopNotificationEventBus();
   void stopMajikEventBus();
   await retentionPlannerStop;
+  await planExecutionStop;
   void completeServerShutdown({
     closeServer: (done) => server.close(done),
     closeStreams: closeAllAssemblyAIStreams,

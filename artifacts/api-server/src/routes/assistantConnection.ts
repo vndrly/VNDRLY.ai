@@ -39,6 +39,8 @@ import { callNaturalVoiceDomainApi } from "../assistant/natural-voice-write-tool
 import { savedWorkHubTaskResourceId } from "../assistant/plan-work-hub-task-proof";
 import { savedWorkHubMeetingResourceId } from "../assistant/plan-work-hub-meeting-proof";
 import { savedWorkHubMessageTarget } from "../assistant/plan-work-hub-message-proof";
+import assistantPlanExecutionRouter from "./assistantPlanExecution";
+import { PLAN_EXECUTION_PREPARE_TOOL, PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION_CANCEL_TOOL, handlePlanExecutionTool } from "../assistant/plan-execution-chatgpt";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -85,6 +87,7 @@ router.use(async (req, res, next) => {
   if (!(await limiter.enforce(req, res, null))) return undefined;
   return next();
 });
+router.use("/executions", assistantPlanExecutionRouter);
 router.get("/.well-known/oauth-authorization-server", (_req, res) => res.json({
   issuer: ASSISTANT_ISSUER, authorization_endpoint: `${ASSISTANT_ISSUER}/authorize`, token_endpoint: `${ASSISTANT_ISSUER}/token`, revocation_endpoint: `${ASSISTANT_ISSUER}/revoke`,
   response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"], token_endpoint_auth_methods_supported: ["none"], code_challenge_methods_supported: ["S256"], scopes_supported: ASSISTANT_SCOPES,
@@ -323,6 +326,10 @@ router.post("/mcp", async (req, res) => {
     if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
     if (chatGptReadableTools(authorized.session, authorized.scopes).some(tool => tool.name === "query_fleet_run_detail")) reads.push(FLEET_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
+    if (process.env.ASSISTANT_PLAN_EXECUTION_ENABLED === "1" && reads.some(tool => tool.name === "list_work_hub_tasks")) {
+      reads.push(PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION_CANCEL_TOOL);
+      if (chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_task")) reads.push(PLAN_EXECUTION_PREPARE_TOOL);
+    }
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_fleet_briefing", "query_fleet_site_activity", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const upgradeTools = financeConsentUpgradeTools(authorized.session, authorized.scopes).map(tool => ({ name: tool.name, description: `${tool.description} Additional finance consent is required before preparation; this does not transfer money.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter(key => !SERVER_ACTION_FIELDS.has(key)) }, securitySchemes: FINANCE_SECURITY_SCHEMES, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }, _meta: { securitySchemes: FINANCE_SECURITY_SCHEMES } }));
@@ -337,6 +344,11 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if ([PLAN_EXECUTION_PREPARE_TOOL.name, PLAN_EXECUTION_STATUS_TOOL.name, PLAN_EXECUTION_CANCEL_TOOL.name].includes(name)) {
+      if (!authorized.grantConsentHash) throw new AssistantOAuthError("access_denied");
+      const output = await handlePlanExecutionTool(name, args, authorized.session, authorized.scopes, authorized.grantConsentHash);
+      return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output });
+    }
     if (requiresFinanceConsent(authorized.session, authorized.scopes, name, args)) return reply(financeConsentChallenge(ASSISTANT_ISSUER, authorized.scopes));
     const fleetTarget = name === "v_prepare_action" ? args.toolName : name;
     if (typeof fleetTarget === "string" && /fleet/.test(fleetTarget)) {

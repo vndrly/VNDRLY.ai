@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "migrate:assistant-connection": "tsx scripts/migrate-assistant-connection.ts",
+    "migrate:assistant-plan-execution": "tsx scripts/migrate-assistant-plan-execution.ts",
     "migrate:gate-locations": "tsx scripts/migrate-gate-locations.ts",
     "migrate:gate-alert-channels": "tsx scripts/migrate-gate-alert-channels.ts",
     "migrate:push-token-retirement": "tsx scripts/migrate-push-token-retirement.ts",
