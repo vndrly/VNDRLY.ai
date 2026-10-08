@@ -22,6 +22,7 @@ import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AskVNavLogo from "@/components/AskVNavLogo";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import AssistantMarkdown from "@/components/AssistantMarkdown";
+import CooperativeVContext from "@/components/CooperativeVContext";
 import AssistantSendToModal, {
   type AssistantShareContext,
 } from "@/components/AssistantSendToModal";
@@ -112,7 +113,7 @@ export default function AskVScreen() {
   }, [voiceSession.preferencesReady, voiceSession.setAcrossVndrly, voiceSession.startConversation]));
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const params = useLocalSearchParams<{ prompt?: string | string[] }>();
+  const params = useLocalSearchParams<{ prompt?: string | string[]; taskId?: string }>();
   const autoPromptRef = useRef<string | null>(null);
   const [draft, setDraft] = useState("");
   const inputRef = useRef<TextInput>(null);
@@ -400,6 +401,7 @@ export default function AskVScreen() {
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
       >
+        <CooperativeVContext key={voiceSession.assistant.contextEpoch ?? 0} taskId={params.taskId} selectSavedTask={voiceSession.assistant.selectSavedTask} selectConnection={voiceSession.assistant.selectConnection} disabled={streaming} />
         <View
           style={[
             styles.greetingCard,
@@ -462,6 +464,13 @@ export default function AskVScreen() {
             ) : m.role === "assistant" ? (
               <>
                 <AssistantMarkdown text={m.content || (m.pending ? "…" : "")} />
+                {m.providers?.length ? <Text style={{ color: colors.mutedForeground }}>{t("nativeCooperation.consulted", { providers: m.providers.join(", ") })}</Text> : null}
+                {m.recovery ? <View style={{ gap: 6 }}>
+                  {(["completed", "remaining", "needed"] as const).map(kind => m.recovery![kind].length ? <View key={kind}>
+                    <Text style={{ color: colors.text, fontWeight: "700" }}>{t(`nativeCooperation.${kind}`)}</Text>
+                    {m.recovery![kind].map((item, index) => <Text key={index} style={{ color: colors.text }}>{item}</Text>)}
+                  </View> : null)}
+                </View> : null}
                 {!m.pending &&
                   m.serverId != null &&
                   m.content.trim().length > 0 && (

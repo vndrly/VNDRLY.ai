@@ -45,6 +45,8 @@ export const siteVisitsTable = pgTable(
     plateState: text("plate_state"),
     platePhotoUrl: text("plate_photo_url"),
     vehiclePhotoUrl: text("vehicle_photo_url"),
+    // Returned only through the current-Gate-authorized identity endpoint.
+    gateIdentityDocument: jsonb("gate_identity_document").$type<Record<string, unknown>>(),
     purpose: text("purpose"),
     entryCategory: text("entry_category"),
     notes: text("notes"),

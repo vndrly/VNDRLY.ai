@@ -7,6 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("./NativeDictation", () => ({ default: () => null }));
 const env = vi.hoisted(() => ({
   scan: vi.fn(),
   summary: vi.fn(),

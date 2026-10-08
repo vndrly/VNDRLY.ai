@@ -61,7 +61,7 @@ function assertCurrent(scope?: AuthScope) {
     });
 }
 
-async function uploadAsset(
+export async function uploadAsset(
   asset: ImagePicker.ImagePickerAsset,
   maxBytes?: number,
   purpose?: "gate-evidence",

@@ -1,3 +1,4 @@
+import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
 import ShiftOpening from "@/components/work-hub/shift-opening";
 import { ManagedCrews } from "@/components/implementation-a/managed-crews";
@@ -2305,6 +2306,7 @@ export function AskVWorkspace() {
 }
 function WorkHubContent() {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
   const [location, navigate] = useLocation();
   const moduleName = location.split("/")[2];
   const module = moduleName as ModuleKey | undefined;
@@ -2313,7 +2315,8 @@ function WorkHubContent() {
     const channel = new URLSearchParams(window.location.search).get("channel");
     if (channel) navigate(`/work-hub/chat?channel=${encodeURIComponent(channel)}`, { replace: true });
   }, [moduleName, navigate]);
-  if (!module) return <ActivityWorkspace />;
+  if (!module) return <><div className="px-4 pt-4"><a className="underline" href="/work-hub/native-work">{i18n.language.startsWith("es") ? "Teléfono de trabajo y solicitudes" : "Work phone and device requests"}</a></div><ActivityWorkspace /></>;
+  if (moduleName === "native-work") return <NativeOperations />;
   if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
   if (moduleName === "managed-crews") return <ManagedCrews />;
   if (moduleName === "coverage") return <WorkforceCoverage />;

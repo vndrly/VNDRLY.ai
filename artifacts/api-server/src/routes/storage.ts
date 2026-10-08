@@ -30,6 +30,7 @@ import {
   ticketAttachmentReference,
 } from "../lib/ticket-attachment-access";
 import { canReadWorkHubFile } from "../work-hub/file-access";
+import {canReadGateIdentityObject} from "../services/gate-identity";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -446,6 +447,11 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
     const objectPath = `/objects/${wildcardPath}`;
     const obj = await objectStorageService.getStoredObject(objectPath);
+
+    if(obj.acl?.purpose==="gate-id"){
+      if(!await canReadGateIdentityObject(session,objectPath)){res.status(403).json({error:"Current Gate access required or image expired"});return;}
+      res.setHeader("Content-Type",obj.contentType);res.setHeader("Cache-Control","private, no-store");res.setHeader("Content-Length",String(obj.size));res.send(obj.body);return;
+    }
 
     if (obj.acl?.purpose === "fleet-evidence") { res.status(403).json({ error: "Fleet evidence requires current Fleet access" }); return; }
     const aclAccess = await objectStorageService.canAccessStoredObject({

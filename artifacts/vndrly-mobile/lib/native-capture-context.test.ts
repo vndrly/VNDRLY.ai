@@ -17,6 +17,8 @@ const env = vi.hoisted(() => ({
     partnerId: null as number | null,
   },
   api: vi.fn(),
+  cached: vi.fn(),
+  cacheWrite: vi.fn(),
 }));
 vi.mock("./auth", () => ({
   getUser: async () => env.stored,
@@ -24,6 +26,7 @@ vi.mock("./auth", () => ({
   isAuthScopeCurrent: () => env.current,
 }));
 vi.mock("./api", () => ({ apiFetch: env.api }));
+vi.mock("./native-assigned-cache", () => ({ readAssignedCache: env.cached, cacheAssignedRead: env.cacheWrite }));
 import { currentNativeCaptureContext } from "./native-capture-context";
 beforeEach(() => {
   env.current = true;
@@ -43,6 +46,18 @@ beforeEach(() => {
     partnerId: null,
   };
   env.api.mockReset().mockImplementation(async () => env.session);
+  env.cached.mockReset().mockResolvedValue({ value: env.session });
+  env.cacheWrite.mockReset().mockResolvedValue(undefined);
+});
+it("permits local drafts from the same protected snapshot only for network loss, never authorization refusal", async () => {
+  env.api.mockRejectedValue(Object.assign(new Error("offline"), { code: "network.unreachable" }));
+  await expect(currentNativeCaptureContext(undefined, false)).rejects.toThrow("offline");
+  expect((await currentNativeCaptureContext(undefined, true)).account.userId).toBe(9);
+  env.api.mockRejectedValue(Object.assign(new Error("revoked"), { status: 403, code: "auth.forbidden" }));
+  await expect(currentNativeCaptureContext(undefined, true)).rejects.toThrow("revoked");
+  env.api.mockRejectedValue(Object.assign(new Error("offline"), { code: "network.unreachable" }));
+  env.cached.mockResolvedValue({ value: { ...env.session, vendorId: 88 } });
+  await expect(currentNativeCaptureContext(undefined, true)).rejects.toThrow("account_changed");
 });
 it("derives stable context from fresh server-read session while generation remains a separate callback fence", async () => {
   const first = await currentNativeCaptureContext({ generation: 1 });

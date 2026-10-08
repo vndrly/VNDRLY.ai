@@ -16,14 +16,13 @@ export default function NativeWorkEntry() {
   useEffect(() => {
     if (isLoading || !user || requiresContextChoice) return;
     const scope = captureAuthScope();
-    const action =
-      Object.keys(params).length === 1
-        ? parseNativeWorkAction(params.action)
-        : null;
+    const systemRequestId = typeof params.systemRequestId === "string" && /^[0-9a-f-]{36}$/i.test(params.systemRequestId) ? params.systemRequestId : null;
+    const action = Object.keys(params).every(key => key === "action" || key === "systemRequestId")
+      ? parseNativeWorkAction(params.action) : null;
     if (!isAuthScopeCurrent(scope)) return;
     router.replace(
       (action
-        ? nativeWorkDestination(action)
+        ? `${nativeWorkDestination(action)}${systemRequestId && ["start-duty", "end-duty"].includes(action) ? `&systemRequestId=${encodeURIComponent(systemRequestId)}` : ""}`
         : gateLandingRoute(user)) as never,
     );
   }, [params, user, isLoading, requiresContextChoice]);

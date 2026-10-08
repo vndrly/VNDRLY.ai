@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, index, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, index, boolean, uuid } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 
 export const fieldPushTokensTable = pgTable(
@@ -10,6 +10,7 @@ export const fieldPushTokensTable = pgTable(
       .references(() => usersTable.id, { onDelete: "cascade" }),
     expoToken: text("expo_token").notNull().unique(),
     platform: text("platform"),
+    nativeDeviceId: uuid("native_device_id"),
     // DeviceNotRegistered is a registration-owned barrier, independent of dismissible inbox rows.
     retirementPending: boolean("retirement_pending").notNull().default(false),
     retirementRequestedAt: timestamp("retirement_requested_at", { withTimezone: true }),

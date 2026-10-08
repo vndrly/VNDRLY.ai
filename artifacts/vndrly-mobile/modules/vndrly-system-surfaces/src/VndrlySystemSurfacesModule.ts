@@ -8,9 +8,12 @@ export type WorkActivitySnapshot = {
   /** Unix seconds from the actual accepted canonical read, expires <= recordedAt + 300. */
   recordedAt: number;
   expiresAt: number;
+  company?: string; site?: string; identifier?: string; startedAt?: number; eta?: number;
 };
 declare class VndrlySystemSurfaces extends NativeModule {
+  completeSystemAction(requestId: string, saved: boolean): Promise<void>;
   getCapabilities(): Promise<{ liveActivities: boolean; remoteUpdates: false; appIntents: boolean }>;
+  getDeviceConditions(): Promise<{ lowPowerMode: boolean; batteryLevel: number; backgroundRefreshAvailable: boolean }>;
   setContext(contextBinding: string | null): Promise<void>;
   updateWorkActivity(snapshot: WorkActivitySnapshot): Promise<string>;
   endWorkActivities(): Promise<void>;

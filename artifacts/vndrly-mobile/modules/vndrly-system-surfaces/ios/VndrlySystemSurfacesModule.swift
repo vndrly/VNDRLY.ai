@@ -11,11 +11,20 @@ struct WorkActivityInput: Record {
   @Field var phase: String = ""
   @Field var recordedAt: Double = 0
   @Field var expiresAt: Double = 0
+  @Field var company: String = "VNDRLY"
+  @Field var site: String = ""
+  @Field var identifier: String = ""
+  @Field var startedAt: Double = 0
+  @Field var eta: Double = 0
 }
 
 public final class VndrlySystemSurfacesModule: Module {
   public func definition() -> ModuleDefinition {
     Name("VndrlySystemSurfaces")
+    AsyncFunction("completeSystemAction") { (requestId: String, saved: Bool) in
+      guard UUID(uuidString: requestId) != nil else { throw SurfaceError.invalidInput }
+      NotificationCenter.default.post(name: Notification.Name("VNDRLYSystemActionResult"), object: requestId, userInfo: ["saved": saved])
+    }
     AsyncFunction("getCapabilities") { () -> [String: Any] in
       let configured = Bundle.main.object(forInfoDictionaryKey: "VNDRLYSystemSurfacesConfigured") as? Bool == true
       if #available(iOS 16.2, *) {
@@ -26,6 +35,14 @@ public final class VndrlySystemSurfacesModule: Module {
     }
     AsyncFunction("setContext") { (binding: String?) async throws in
       if #available(iOS 16.2, *) { try await WorkActivityController.shared.setContext(binding) }
+    }
+    AsyncFunction("getDeviceConditions") { () async -> [String: Any] in
+      await MainActor.run {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        return ["lowPowerMode": ProcessInfo.processInfo.isLowPowerModeEnabled,
+          "batteryLevel": UIDevice.current.batteryLevel,
+          "backgroundRefreshAvailable": UIApplication.shared.backgroundRefreshStatus == .available]
+      }
     }
     AsyncFunction("updateWorkActivity") { (input: WorkActivityInput) async throws -> String in
       guard #available(iOS 16.2, *) else { throw SurfaceError.unavailable }
@@ -48,6 +65,7 @@ private actor WorkActivityController {
   private var revision = 0
   private var updating = false
   private var expiry: Task<Void, Never>?
+  private var activityBirth: [String: Date] = [:]
   private let phases = Set(["assigned", "en_route", "on_location", "on_site", "on_duty", "paused", "in_progress"])
   private func hash(_ value: String) -> String {
     SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
@@ -72,6 +90,7 @@ private actor WorkActivityController {
   func endAll() async {
     expiry?.cancel()
     expiry = nil
+    activityBirth.removeAll()
     for activity in Activity<VndrlyWorkAttributes>.activities {
       await activity.end(nil, dismissalPolicy: .immediate)
     }
@@ -88,7 +107,8 @@ private actor WorkActivityController {
       contextHash == hash(input.contextBinding),
       ["ticket", "shift", "fleet"].contains(input.subjectKind),
       input.subjectId.range(of: "^[A-Za-z0-9-]{1,64}$", options: .regularExpression) != nil,
-      phases.contains(input.phase), recorded <= now.addingTimeInterval(30),
+      phases.contains(input.phase), input.company.count <= 100, input.site.count <= 100, input.identifier.count <= 100,
+      input.startedAt.isFinite, input.eta.isFinite, recorded <= now.addingTimeInterval(30),
       recorded >= now.addingTimeInterval(-300), expires > now,
       expires <= recorded.addingTimeInterval(300) else { throw SurfaceError.invalidInput }
     let expected = revision
@@ -97,10 +117,10 @@ private actor WorkActivityController {
       ActivityAuthorizationInfo().areActivitiesEnabled else { throw SurfaceError.unavailable }
     guard expected == revision, contextHash == hash(input.contextBinding) else { throw SurfaceError.contextChanged }
     let attributes = VndrlyWorkAttributes(contextHash: hash(input.contextBinding), subjectKind: input.subjectKind, subjectId: input.subjectId)
-    let content = ActivityContent(state: VndrlyWorkAttributes.ContentState(phase: input.phase, recordedAt: recorded, expiresAt: expires), staleDate: expires)
+    let content = ActivityContent(state: VndrlyWorkAttributes.ContentState(phase: input.phase, recordedAt: recorded, expiresAt: expires, company: input.company, site: input.site, identifier: input.identifier, startedAt: input.startedAt > 0 ? Date(timeIntervalSince1970: input.startedAt) : nil, eta: input.eta > 0 ? Date(timeIntervalSince1970: input.eta) : nil), staleDate: expires)
     var current: Activity<VndrlyWorkAttributes>?
     for activity in Activity<VndrlyWorkAttributes>.activities {
-      if activity.attributes == attributes { current = activity }
+      if activity.attributes == attributes && now.timeIntervalSince(activityBirth[activity.id] ?? now) < 7.5 * 60 * 60 { current = activity }
       else { await activity.end(nil, dismissalPolicy: .immediate) }
     }
     guard expected == revision else { throw SurfaceError.contextChanged }
@@ -109,6 +129,7 @@ private actor WorkActivityController {
       await existing.update(content)
     } else {
       current = try Activity.request(attributes: attributes, content: content, pushType: nil)
+      if let current { activityBirth[current.id] = now }
     }
     guard expected == revision else {
       await current?.end(nil, dismissalPolicy: .immediate)

@@ -12,6 +12,8 @@ import {
   readAskVCurrentLocationForMessage,
 } from "@/lib/assistant-location-context";
 import { getDeviceId } from "@/lib/deviceId";
+import { captureAuthScope, isAuthScopeCurrent, type AuthScope } from "@/lib/auth";
+export type VConnectionSelection = { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean };
 
 export type AssistantFeedbackRating = "helpful" | "unhelpful";
 
@@ -22,6 +24,8 @@ export interface AssistantMessage {
   pending?: boolean;
   serverId?: number;
   feedbackRating?: AssistantFeedbackRating | null;
+  recovery?: { completed: string[]; remaining: string[]; needed: string[]; taskId: string | null };
+  providers?: string[];
 }
 
 export interface ConversationSummary {
@@ -72,6 +76,13 @@ export interface UseAssistantOptions {
 }
 
 export function useAssistant(opts: UseAssistantOptions = {}) {
+  const [contextEpoch, setContextEpoch] = useState(0);
+  const selectedConnection = useRef<{ value: VConnectionSelection; auth: AuthScope } | null>(null);
+  const savedTask = useRef<{ id: string; auth: AuthScope } | null>(null);
+  const selectSavedTask = useCallback((id: string | null) => { savedTask.current = id && /^[0-9a-f-]{36}$/i.test(id) ? { id, auth: captureAuthScope() } : null; }, []);
+  const selectConnection = useCallback((value: VConnectionSelection | null) => {
+    selectedConnection.current = value ? { value, auth: captureAuthScope() } : null;
+  }, []);
   const onAssistantReplyRef = useRef(opts.onAssistantReply);
   onAssistantReplyRef.current = opts.onAssistantReply;
   const onClientIntentRef = useRef(opts.onClientIntent);
@@ -115,6 +126,9 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   }, [conversationId]);
 
   const startNew = useCallback(() => {
+    setContextEpoch(value => value + 1);
+    selectedConnection.current = null;
+    savedTask.current = null;
     abortRef.current?.abort();
     abortRef.current = null;
     restoreVersionRef.current += 1;
@@ -225,6 +239,8 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                 message: trimmed,
                 ...(convId !== null ? { conversationId: convId } : {}),
                 deviceContext: { sourceDeviceId },
+                ...(savedTask.current && isAuthScopeCurrent(savedTask.current.auth) ? { taskId: savedTask.current.id } : {}),
+                ...(selectedConnection.current && isAuthScopeCurrent(selectedConnection.current.auth) ? { selectedConnection: selectedConnection.current.value } : {}),
                 pageContext: {
                   path: pagePathRef.current,
                   ...(currentLocation ? { currentLocation } : {}),
@@ -286,6 +302,10 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             clientIntents.push(execute ? execute(evt.intent) : Promise.resolve({ ok: false, message: "This device cannot open that workflow." }));
           } else if (evt.type === "mutation") {
             onMutationRef.current?.();
+          } else if (evt.type === "recovery") {
+            setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, recovery: evt } : message));
+          } else if (evt.type === "provider_usage") {
+            setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, providers: [...new Set([...(message.providers ?? []), evt.provider])] } : message));
           } else if (evt.type === "done") {
             sawDone = true;
             accumulatedContent = evt.content || accumulatedContent;
@@ -425,5 +445,8 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
     getConversationId,
     restoreConversation,
     upsertMessage,
+    selectConnection,
+    selectSavedTask,
+    contextEpoch,
   };
 }

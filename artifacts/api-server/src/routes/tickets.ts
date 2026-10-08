@@ -3,6 +3,12 @@ import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-o
 import { decodeSession, getSessionFromRequest } from "../lib/session";
 import { z } from "zod";
 import { createTicketLaborFinalizationService } from "../services/ticket-labor-finalization";
+import {authorizeNativeAutomaticArrival,withLiveNativeTicketAssignment} from "../services/native-operations";
+import {NativeOperationError} from "../services/native-operations-policy";
+import {drizzle} from "drizzle-orm/node-postgres";
+import * as nativeDatabaseSchema from "@workspace/db/schema";
+import {requireMeasuredArrival} from "../services/native-arrival-policy";
+import {validateAssistantSession} from "../assistant/chatgpt-grant-store";
 
 import { createTicketPhotoService, ownedTicketPhoto, TicketPhotoError, TicketPhotoInputSchema } from "../services/ticket-photo-association";
 import { SESSION_SECRET } from "../lib/session";
@@ -1973,6 +1979,30 @@ router.post("/tickets/:id/en-route", async (req, res): Promise<void> => {
 //   lifecycle: pending_arrival | en_route | on_location | null
 //   status:    initiated | draft | in_progress
 // Idempotent — pressing it twice just refreshes onLocationAt + coords.
+router.post("/tickets/:id/correct-automatic-arrival",async(req,res):Promise<void>=>{
+  const ticketId=Number(req.params.id),session=getSessionFromRequest(req);
+  const input=z.object({operationId:z.string().uuid(),reason:z.string().trim().min(1).max(500)}).strict().safeParse(req.body);
+  if(!session){res.status(401).json({message:"Login required"});return;}
+  if(!Number.isSafeInteger(ticketId)||ticketId<=0||!input.success){res.status(400).json({message:"Exact ticket, reason and original correction key required"});return;}
+  if(!await ensureFieldOwnership(req,res,ticketId)||!await ensureFieldAssignmentForFieldEmployee(req,res,ticketId))return;
+  try{
+    await withLiveNativeTicketAssignment(session,ticketId,async client=>{
+      const tx=drizzle(client,{schema:nativeDatabaseSchema});
+      await validateAssistantSession(session,tx);
+      const [ticket]=await tx.select().from(ticketsTable).where(eq(ticketsTable.id,ticketId)).for("update");
+      if(!ticket)throw new NativeOperationError("native.ticket_unavailable",404);
+      const [prior]=await tx.select().from(nativeDatabaseSchema.assistantActionAuditTable).where(and(eq(nativeDatabaseSchema.assistantActionAuditTable.targetType,"native_arrival_correction"),eq(nativeDatabaseSchema.assistantActionAuditTable.targetId,input.data.operationId))).limit(1);
+      if(prior){const body=prior.toolInput as any;if(prior.userId!==session.userId||body.ticketId!==ticketId||body.reason!==input.data.reason)throw new NativeOperationError("native.arrival_correction_conflict",409);return;}
+      const [arrival]=await tx.select().from(nativeDatabaseSchema.assistantActionAuditTable).where(and(eq(nativeDatabaseSchema.assistantActionAuditTable.targetType,"native_automatic_arrival"),eq(nativeDatabaseSchema.assistantActionAuditTable.targetId,String(ticketId)),eq(nativeDatabaseSchema.assistantActionAuditTable.userId,session.userId!))).orderBy(desc(nativeDatabaseSchema.assistantActionAuditTable.id)).limit(1);
+      const saved=arrival?.toolOutput as any,original=arrival?.toolInput as any;
+      if(!arrival||ticket.lifecycleState!=="on_location"||!["initiated","draft"].includes(ticket.status)||ticket.onLocationAt?.toISOString()!==saved.onLocationAt||!["pending_arrival","en_route",null].includes(original.previousLifecycleState))throw new NativeOperationError("native.arrival_correction_unavailable",409);
+      await tx.update(ticketsTable).set({lifecycleState:original.previousLifecycleState,onLocationAt:null,onLocationLatitude:null,onLocationLongitude:null}).where(eq(ticketsTable.id,ticketId));
+      await tx.insert(ticketNoteLogsTable).values({ticketId,createdById:session.userId,content:"[arrival correction] "+input.data.reason+" — original reported observation retained."});
+      await tx.insert(nativeDatabaseSchema.assistantActionAuditTable).values({userId:session.userId,actorRole:session.role,vendorId:session.vendorId,clientSurface:"ios",inputMode:"device_entry",provider:"vndrly",toolName:"correct_native_automatic_arrival",actionType:"mutation",targetType:"native_arrival_correction",targetId:input.data.operationId,toolInput:{ticketId,reason:input.data.reason,originalAuditId:arrival.id},toolOutput:{ticketId,lifecycleState:original.previousLifecycleState,originalObservationRetained:true},resultStatus:"success"});
+    });
+    const [ticket]=await ticketQuery().where(eq(ticketsTable.id,ticketId));res.json({ticket,correctionSaved:true,originalObservationRetained:true});
+  }catch(error){if(error instanceof NativeOperationError){res.status(error.status).json({code:error.code,message:error.message});return;}throw error;}
+});
 router.post("/tickets/:id/on-location", async (req, res): Promise<void> => {
   const idNum = Number(req.params.id);
   if (!Number.isFinite(idNum)) {
@@ -1981,6 +2011,27 @@ router.post("/tickets/:id/on-location", async (req, res): Promise<void> => {
   }
   if (!(await ensureFieldOwnership(req, res, idNum))) return;
   if (!(await ensureFieldAssignmentForFieldEmployee(req, res, idNum))) return;
+  if(req.body?.automaticArrival===true){
+    const session=getSessionFromRequest(req);
+    if(!session){res.status(401).json({message:"Login required"});return;}
+    const input=z.object({deviceId:z.string().uuid(),bindingVersion:z.number().int().nonnegative(),latitude:z.number().finite().min(-90).max(90),longitude:z.number().finite().min(-180).max(180),accuracy:z.number().finite().nonnegative(),capturedAt:z.string().datetime()}).safeParse(req.body);
+    if(!input.success){res.status(400).json({code:"native.arrival_invalid",message:"Current designated phone and location required"});return;}
+    try{
+      await authorizeNativeAutomaticArrival(session,idNum,{deviceId:input.data.deviceId,bindingVersion:input.data.bindingVersion},async client=>{
+        const tx=drizzle(client,{schema:nativeDatabaseSchema});
+        const [before]=await tx.select().from(ticketsTable).where(eq(ticketsTable.id,idNum)).for("update");
+        if(!before||!["initiated","draft"].includes(before.status)||!["pending_arrival","en_route",null].includes(before.lifecycleState)){throw new NativeOperationError("native.arrival_state_changed",409);}
+        const [site]=await tx.select().from(siteLocationsTable).where(eq(siteLocationsTable.id,before.siteLocationId));
+        if(!site)throw new NativeOperationError("native.arrival_site_unavailable",409);
+        requireMeasuredArrival(input.data,site);
+        const [updated]=await tx.update(ticketsTable).set({lifecycleState:"on_location",onLocationAt:new Date(),onLocationLatitude:input.data.latitude,onLocationLongitude:input.data.longitude}).where(eq(ticketsTable.id,idNum)).returning();
+        await tx.insert(gpsLogsTable).values({ticketId:idNum,latitude:input.data.latitude,longitude:input.data.longitude,eventType:"on_location"});
+        await tx.insert(nativeDatabaseSchema.assistantActionAuditTable).values({userId:session.userId,actorRole:session.role,vendorId:session.vendorId,clientSurface:"ios",inputMode:"device_entry",provider:"vndrly",toolName:"native_automatic_arrival",actionType:"mutation",targetType:"native_automatic_arrival",targetId:String(idNum),toolInput:{deviceId:input.data.deviceId,bindingVersion:input.data.bindingVersion,previousLifecycleState:before.lifecycleState},toolOutput:{ticketId:idNum,lifecycleState:updated.lifecycleState,onLocationAt:updated.onLocationAt?.toISOString(),physicalPresenceVerified:false},resultStatus:"success"});
+      });
+      const [result]=await ticketQuery().where(eq(ticketsTable.id,idNum));res.json({ticket:result,automaticArrival:true,physicalPresenceVerified:false});
+    }catch(error){if(error instanceof NativeOperationError){res.status(error.status).json({code:error.code,message:error.message});return;}throw error;}
+    return;
+  }
 
   const [existing] = await db
     .select({

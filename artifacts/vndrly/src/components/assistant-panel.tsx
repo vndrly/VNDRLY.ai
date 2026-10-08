@@ -21,6 +21,7 @@ import { AskVMicrophoneSettings, ASKV_MICROPHONE_SETUP_KEY } from "@/components/
 import { captureAskVMicrophone, meterAskVMicrophone } from "@/lib/askv-microphone";
 import { writeAskVAcrossVndrly } from "@/lib/askv-voice-preferences";
 import { useAuth } from "@/hooks/use-auth";
+import { CooperativeVContext } from "@/components/cooperative-v-context";
 import { useBrand } from "@/hooks/use-brand";
 import {
   useAssistant,
@@ -1205,6 +1206,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             handleSend();
           }}
         >
+          {!tokenMode && !signupMode && <CooperativeVContext identity={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} revision={(sharedAssistant ?? legacyAssistant).contextRevision ?? 0} disabled={streaming || transcribing || voiceRecording} selectConnection={(sharedAssistant ?? legacyAssistant).selectConnection} selectSavedTask={(sharedAssistant ?? legacyAssistant).selectSavedTask} messages={messages} />}
           <div className="flex items-center gap-2">
             <Textarea
               value={input}

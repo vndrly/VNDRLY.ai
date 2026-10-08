@@ -2,6 +2,7 @@ import {
   parseSafetyEventIdFromHref,
   parseTicketIdFromNotificationLink,
 } from "@/lib/notification-link";
+import { nativeRequestRoute } from "./native-operations-policy";
 
 export type PushRoute =
   | { type: "route"; path: string }
@@ -11,6 +12,10 @@ export type PushRoute =
 export function routeForPushData(data: unknown): PushRoute {
   if (!data || typeof data !== "object") return { type: "none" };
   const d = data as Record<string, unknown>;
+  if (["native_operation", "native_operations_request", "native_photo_request"].includes(String(d.type))) {
+    const path = nativeRequestRoute(d.nativeRequestId ?? d.requestId);
+    return path ? { type: "route", path } : { type: "none" };
+  }
 
   if (d.type === "crew_removed") {
     return { type: "route", path: "/(tabs)" };

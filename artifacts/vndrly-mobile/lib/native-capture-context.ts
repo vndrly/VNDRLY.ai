@@ -10,6 +10,7 @@ import {
   NativeCaptureAccountSchema,
   nativeCaptureBinding,
 } from "./native-capture-context-policy";
+
 export {
   NativeCaptureAccountSchema,
   type NativeCaptureAccount,
@@ -26,11 +27,21 @@ const sessionSchema = z.object({
 /** Stable across restarts, bound to fresh server-read signed-session context. Canonical effects still revalidate persisted authority. */
 export async function currentNativeCaptureContext(
   scope: AuthScope = captureAuthScope(),
+  allowOfflineDraft = false,
 ) {
   const stored = await getUser();
-  const session = sessionSchema.parse(
-    await apiFetch("/api/auth/me", {}, scope),
-  );
+  let raw: unknown;
+  try {
+    raw = await apiFetch("/api/auth/me", {}, scope);
+
+  } catch (error) {
+    if (!allowOfflineDraft || !stored || !isAuthScopeCurrent(scope) || (error as { code?: string }).code !== "network.unreachable") throw error;
+    const { readAssignedCache } = await import("./native-assigned-cache");
+    const cached = await readAssignedCache(stored, "native.capture-session");
+    if (!cached) throw error;
+    raw = cached.value;
+  }
+  const session = sessionSchema.parse(raw);
   if (
     !stored ||
     stored.id !== session.userId ||
@@ -53,6 +64,7 @@ export async function currentNativeCaptureContext(
     orgType,
     orgId,
   });
+  if (stored && isAuthScopeCurrent(scope)) await import("./native-assigned-cache").then(cache => cache.cacheAssignedRead(stored, "native.capture-session", raw)).catch(() => undefined);
   const binding = nativeCaptureBinding(account);
   const assertCurrent = () => {
     if (!isAuthScopeCurrent(scope))

@@ -1,3 +1,4 @@
+import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
 import { managedWorkerSessionIsCurrent } from "../lib/managed-worker-session";
 import { hasGateSupervisorAuthority } from "../lib/gate-supervisor-authority";
 import { managedWorkerSiteIds, managedWorkerSiteRole } from "../lib/managed-worker-access";
@@ -432,6 +433,16 @@ async function requireGateReviewSession(req: any, res: any): Promise<Session | n
 
 const gateAssetService = createAssetService(databaseAssetRepository);
 const router: IRouter = Router();
+// Identity images and reviewed fields use a stricter dedicated Gate boundary.
+router.use((_req,res,next)=>{
+  const send=res.json.bind(res);
+  function strip(value:any):any {
+    if(Array.isArray(value))return value.map(strip);
+    if(value&&typeof value==="object"&&!(value instanceof Date))return Object.fromEntries(Object.entries(value).filter(([key])=>key!=="gateIdentityDocument"&&key!=="gate_identity_document").map(([key,item])=>[key,strip(item)]));
+    return value;
+  }
+  res.json=((value:any)=>send(strip(value))) as typeof res.json;next();
+});
 const visitPollBuffer = createScopedEventBuffer<PublishedVisitEvent>(500);
 subscribeVisitEvents((event) => visitPollBuffer.push(event));
 
@@ -1054,6 +1065,13 @@ router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
 
 // ---------- Gate observations and retrospective reconciliation ----------
 router.post("/visits/gate/observations", async (req, res): Promise<void> => {
+  if (req.body?.operationId !== undefined) {
+    const staff=getStaffSession(req);
+    if(!staff){res.status(401).json({message:"Login required",code:AUTH_REQUIRED});return;}
+    try { const saved=await offlineGateObservationService.execute(staff as import("../lib/session").SessionPayload,req.body);res.status(201).json(saved); }
+    catch(error){if(error instanceof z.ZodError){res.status(400).json({message:"Invalid offline gate observation",code:VISIT_INVALID_INPUT,details:error.issues});return;}if(error instanceof OfflineGateError){res.status(error.status).json({message:error.message,code:error.code});return;}throw error;}
+    return;
+  }
   const session = await requireGateReconciliationSession(req, res);
   if (!session) return;
   try {

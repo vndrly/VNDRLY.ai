@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createImplementationAQueue, type ImplementationAQueueStore } from "./implementation-a-queue";
 
-function store(): ImplementationAQueueStore { let value: string | null = null; return { getItem: async () => value, setItem: async (_key, next) => { value = next; } }; }
+function store(): ImplementationAQueueStore { const values = new Map<string, string>(); return { getItem: async key => values.get(key) ?? null, setItem: async (key, next) => { values.set(key, next); } }; }
 const scope = { userId: 7, ownerOrgType: "vendor" as const, ownerOrgId: 1, deviceId: "phone-1" };
 
 describe("Implementation A offline queue", () => {
@@ -25,6 +25,25 @@ describe("Implementation A offline queue", () => {
   it("never replays into a different authenticated scope", async () => {
     const queue = createImplementationAQueue(store());
     await queue.enqueue(scope, { domain: "task", domainVersion: 1, operationId: "scoped", originalEventAt: "2026-09-14T12:00:00Z", path: "/api/implementation-a/task", method: "POST", payload: {} });
-    await expect(queue.inspect({ ...scope, ownerOrgId: 2 })).rejects.toThrow("scope mismatch");
+    await expect(queue.inspect({ ...scope, ownerOrgId: 2 })).resolves.toMatchObject({ items: [] });
+    await expect(queue.inspect(scope)).resolves.toMatchObject({ items: [{ operationId: "scoped" }] });
+  });
+  it("migrates the original legacy scope without deleting or resurrecting its operations", async () => {
+    const storage = store(), queue = createImplementationAQueue(storage);
+    const item = { operationId: "original", domain: "gate", domainVersion: 1, path: "/api/implementation-a/gate", method: "POST", payload: { reviewed: true }, originalEventAt: "2026-10-08T01:00:00Z", authScope: scope, deviceId: scope.deviceId, state: "pending", attempts: 0 };
+    const legacy = JSON.stringify({ version: 1, scope, items: [item] });
+    await storage.setItem("implementation-a-offline-queue-v1", legacy);
+    expect((await queue.inspect({ ...scope, ownerOrgId: 2 })).items).toEqual([]);
+    expect((await queue.inspect(scope)).items[0]).toMatchObject({ operationId: "original", payload: { reviewed: true } });
+    await queue.flush(scope, async () => undefined);
+    expect((await queue.inspect(scope)).items).toEqual([]);
+    expect(await storage.getItem("implementation-a-offline-queue-v1")).toBe(legacy);
+  });
+  it("serializes concurrent enqueue and rejects replacement of the original operation body", async () => {
+    const queue = createImplementationAQueue(store());
+    const input = { domain: "task" as const, domainVersion: 1, operationId: "first", originalEventAt: "2026-10-08T01:00:00Z", path: "/api/implementation-a/task", method: "POST" as const, payload: { exact: 1 } };
+    await Promise.all([queue.enqueue(scope, input), queue.enqueue(scope, { ...input, operationId: "second" })]);
+    expect((await queue.inspect(scope)).items).toHaveLength(2);
+    await expect(queue.enqueue(scope, { ...input, payload: { exact: 2 } })).rejects.toThrow("operation changed");
   });
 });

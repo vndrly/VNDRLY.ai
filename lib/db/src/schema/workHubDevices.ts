@@ -64,6 +64,7 @@ export const workHubDevicePreferencesTable = pgTable("work_hub_device_preference
   id: uuid("id").primaryKey().defaultRandom(),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   ...organization,
+  nativeOperations: jsonb("native_operations").$type<Record<string, unknown>>().notNull().default({}),
   rankedDeviceIds: jsonb("ranked_device_ids").$type<string[]>().notNull().default([]),
   automaticBackupDeviceIds: jsonb("automatic_backup_device_ids").$type<string[]>().notNull().default([]),
   learning: jsonb("learning").$type<Record<string, number>>().notNull().default({}),
@@ -72,6 +73,7 @@ export const workHubDevicePreferencesTable = pgTable("work_hub_device_preference
 
 export const workHubUserEventsTable = pgTable("work_hub_user_events", {
   id: uuid("id").primaryKey().defaultRandom(),
+  retentionUntil: timestamp("retention_until", { withTimezone: true }),
   sequence: bigserial("sequence", { mode: "number" }).notNull(),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   ...organization,

@@ -80,7 +80,7 @@ export function createNativeMeetingAudioSession(options: {
   const pendingFrames: NativeMeetingPCMFrame[] = [];
   let uploadTask: Promise<void> | null = null;
 
-  const stop = () => {
+  const stop = (): Promise<void> => {
     if (stopping) return stopping;
     alive = false;
     native!.invalidateSession({ generation: options.generation });
@@ -90,7 +90,7 @@ export function createNativeMeetingAudioSession(options: {
     subscriptions.splice(0).forEach(subscription => subscription.remove());
     transcription = false;
     pendingFrames.splice(0);
-    stopping = stream.close();
+    stopping = Promise.resolve(stream.close());
     return stopping;
   };
 

@@ -7,14 +7,26 @@ import { openNotificationDestination } from "./notification-deep-links";
 
 export const RECORD_NOTIFICATION_CATEGORY = "vndrly_record";
 export const MEETING_NOTIFICATION_CATEGORY = "vndrly_meeting";
-export const NOTIFICATION_ACTIONS = { open: "vndrly_open", read: "vndrly_mark_read", meeting: "vndrly_review_meeting" } as const;
+export const ASSIGNMENT_NOTIFICATION_CATEGORY = "vndrly_assignment";
+export const MESSAGE_NOTIFICATION_CATEGORY = "vndrly_message";
+export const NOTIFICATION_ACTIONS = { open: "vndrly_open", read: "vndrly_mark_read", meeting: "vndrly_review_meeting", acknowledge: "vndrly_acknowledge", accept: "vndrly_review_accept", decline: "vndrly_review_decline", reply: "vndrly_review_reply" } as const;
 export const notificationCategoryDefinitions = [
   { identifier: RECORD_NOTIFICATION_CATEGORY, actions: [
     { identifier: NOTIFICATION_ACTIONS.open, buttonTitle: "Open / Abrir", options: { opensAppToForeground: true } },
     { identifier: NOTIFICATION_ACTIONS.read, buttonTitle: "Mark read / Marcar leído", options: { opensAppToForeground: true } },
+    { identifier: NOTIFICATION_ACTIONS.acknowledge, buttonTitle: "Acknowledge / Confirmar recepción", options: { opensAppToForeground: true } },
   ] },
   { identifier: MEETING_NOTIFICATION_CATEGORY, actions: [
     { identifier: NOTIFICATION_ACTIONS.meeting, buttonTitle: "Review response / Revisar respuesta", options: { opensAppToForeground: true } },
+    { identifier: NOTIFICATION_ACTIONS.read, buttonTitle: "Mark read / Marcar leído", options: { opensAppToForeground: true } },
+  ] },
+  { identifier: ASSIGNMENT_NOTIFICATION_CATEGORY, actions: [
+    { identifier: NOTIFICATION_ACTIONS.accept, buttonTitle: "Review acceptance / Revisar aceptación", options: { opensAppToForeground: true } },
+    { identifier: NOTIFICATION_ACTIONS.decline, buttonTitle: "Review decline / Revisar rechazo", options: { opensAppToForeground: true } },
+    { identifier: NOTIFICATION_ACTIONS.acknowledge, buttonTitle: "Acknowledge / Confirmar recepción", options: { opensAppToForeground: true } },
+  ] },
+  { identifier: MESSAGE_NOTIFICATION_CATEGORY, actions: [
+    { identifier: NOTIFICATION_ACTIONS.reply, buttonTitle: "Review reply / Revisar respuesta", options: { opensAppToForeground: true } },
     { identifier: NOTIFICATION_ACTIONS.read, buttonTitle: "Mark read / Marcar leído", options: { opensAppToForeground: true } },
   ] },
 ];
@@ -36,7 +48,12 @@ export async function handleNotificationAction(action: string, data: unknown, ro
       const resolved = await apiFetch<{ href: unknown }>(`/api/notifications/${id}/resolve`, { method: "POST" }, scope);
       const target = parseNotificationTarget(resolved.href);
       if (!target || !isAuthScopeCurrent(scope) || (action === NOTIFICATION_ACTIONS.meeting && target.kind !== "meeting")) return "unavailable";
-      if (action === NOTIFICATION_ACTIONS.read) {
+      if ([NOTIFICATION_ACTIONS.accept, NOTIFICATION_ACTIONS.decline].some(value => value === action) && !["shift", "task"].includes(target.kind)) return "unavailable";
+      if (action === NOTIFICATION_ACTIONS.reply && target.kind !== "channel") return "unavailable";
+      if (action === NOTIFICATION_ACTIONS.acknowledge) {
+        await apiFetch(`/api/notifications/${id}/acknowledge`, { method: "POST" }, scope);
+        if (!isAuthScopeCurrent(scope)) return "unavailable";
+      } else if (action === NOTIFICATION_ACTIONS.read) {
         // Setting read is intrinsically idempotent for this exact owned notification.
         await apiFetch(`/api/notifications/${id}/read`, { method: "POST" }, scope);
         if (!isAuthScopeCurrent(scope)) return "unavailable";

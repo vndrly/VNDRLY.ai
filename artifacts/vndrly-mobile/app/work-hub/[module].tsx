@@ -33,6 +33,7 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
+import { cacheAssignedRead, readAssignedCache } from "@/lib/native-assigned-cache";
 import { pickMeetingFile, persistMeetingFileForOffline, uploadMeetingFile, type MeetingFileSource } from "@/lib/meeting-files";
 import { loadFilesInventoryData, mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
 import { isCoordinatedPlanDescription } from "@/lib/work-hub-plan";
@@ -138,9 +139,16 @@ function WorkHubModuleContent() {
           if (!currentOwner) throw new Error(t("filesInventory.chooseCompany"));
           result = await loadFilesInventoryData(currentOwner, fetchScoped);
         } else result = await fetchScoped(moduleEndpoint(module, search));
-        if (current()) setData(result);
+        if (current()) {
+          setData(result);
+          if (user && ["files-notes", "tasks-forms", "calendar"].includes(module)) await cacheAssignedRead(user, `workhub.${module}`, result);
+        }
       } catch (e) {
-        if (current()) { setData(undefined); setError(e instanceof Error ? e.message : "Could not load Work Hub"); }
+        if (current()) {
+          const cached = user && isOfflineWorkHubFailure(e) && ["files-notes", "tasks-forms", "calendar"].includes(module) ? await readAssignedCache(user, `workhub.${module}`) : null;
+          if (!current()) return;
+          setData(cached?.value); setError(cached ? t("nativeJournal.cached", { time: new Date(cached.capturedAt).toLocaleString() }) : e instanceof Error ? e.message : "Could not load Work Hub");
+        }
       } finally {
         if (current()) setLoading(false);
       }

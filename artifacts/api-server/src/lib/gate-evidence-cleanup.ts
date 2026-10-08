@@ -2,12 +2,14 @@ import { db, siteVisitsTable } from "@workspace/db";
 import { inArray, isNotNull, or } from "drizzle-orm";
 import { logger } from "./logger";
 import { ObjectStorageService } from "./objectStorage";
+import {purgeExpiredGateIdentityImages} from "../services/gate-identity";
 
 const DEFAULT_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_RETENTION_MS = 24 * 60 * 60 * 1000;
 let intervalHandle: NodeJS.Timeout | null = null;
 
 export async function cleanupUnattachedGateEvidence(now = new Date()): Promise<number> {
+  await purgeExpiredGateIdentityImages(now);
   const storage = new ObjectStorageService();
   const visitEvidence = await db
     .select({ plate: siteVisitsTable.platePhotoUrl, vehicle: siteVisitsTable.vehiclePhotoUrl })

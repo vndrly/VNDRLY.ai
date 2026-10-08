@@ -41,6 +41,9 @@ import TicketNudgePanel from "@/components/TicketNudgePanel";
 import TicketFlagPanel from "@/components/TicketFlagPanel";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import CommentsPanel from "@/components/CommentsPanel";
+import NativeTicketPhoto from "@/components/work-hub/NativeTicketPhoto";
+import { cacheAssignedRead, readAssignedCache, denyAssignedCache } from "@/lib/native-assigned-cache";
+import { readNativeOperations } from "@/lib/native-operations";
 import TicketRecovery from "@/components/TicketRecovery";
 import TicketUnlock from "@/components/TicketUnlock";
 import TicketLaborFinalization from "@/components/TicketLaborFinalization";
@@ -399,6 +402,9 @@ export default function TicketDetailScreen() {
   // happened without interrupting whatever they're doing on screen.
   // Auto-dismisses after ~3s like the other toasts below.
   const [arrivedVisible, setArrivedVisible] = useState(false);
+  const [automaticArrivalSaved, setAutomaticArrivalSaved] = useState(false);
+  const [arrivalCorrectionReason, setArrivalCorrectionReason] = useState("");
+  const arrivalCorrection = useRef<{ operationId: string; reason: string } | null>(null);
   // Tracks whether the in-flight `load()` was initiated by a manual
   // user gesture (header button or pull-to-refresh). We can't gate the
   // toast on `refreshing` alone because the header button path doesn't
@@ -411,6 +417,7 @@ export default function TicketDetailScreen() {
   // for the server-supplied window. Set even when `silent: true`
   // suppresses the alert so the gate still arms.
   const [loadError, setLoadError] = useState<unknown>(null);
+  const [offlineSnapshotAt, setOfflineSnapshotAt] = useState<number | null>(null);
   const { rateLimited, retryAfterSeconds } = useTicketsRateLimitGate(loadError);
   // Task #678 — timestamp of the most recent successful primary
   // ticket load. Drives the FreshnessPill in the nav-bar header so a
@@ -447,6 +454,7 @@ export default function TicketDetailScreen() {
   // boolean return value is unaffected.
   const load = useCallback(async (opts?: { silent?: boolean }): Promise<boolean> => {
     const silent = opts?.silent === true;
+    const loadScope = captureAuthScope();
     try {
       // Task #686: the per-session tickets rate limit (Task #675)
       // returns 429 + Retry-After when a client overruns its budget.
@@ -477,7 +485,9 @@ export default function TicketDetailScreen() {
           () => [] as TicketTransition[],
         ),
       ]);
+      if (!isAuthScopeCurrent(loadScope)) return false;
       setTicket(tk);
+      setOfflineSnapshotAt(null);
       setItems(li || []);
       setNotes(nl || []);
       setGpsLogs(gl || []);
@@ -510,8 +520,27 @@ export default function TicketDetailScreen() {
       } else {
         setSiteLocation(null);
       }
+      const cacheUser = await getUser();
+      if (cacheUser) {
+        const assigned = await readNativeOperations(loadScope).catch(() => null);
+        if (isAuthScopeCurrent(loadScope) && assigned?.tasks?.some(task => task.kind === "ticket" && task.id === String(ticketId))) {
+          await cacheAssignedRead(cacheUser, `ticket.${ticketId}`, { ticket: tk, items: li, notes: nl }).catch(() => undefined);
+        }
+      }
       return true;
     } catch (e) {
+      if (!isAuthScopeCurrent(loadScope)) return false;
+      const cacheUser = await getUser();
+      if (cacheUser && [401, 403, 404].includes((e as { status?: number }).status ?? 0)) await denyAssignedCache(cacheUser, `ticket.${ticketId}`).catch(() => undefined);
+      if (cacheUser && (e as { code?: string }).code === "network.unreachable") {
+        const snapshot = await readAssignedCache<{ ticket: Ticket; items: LineItem[]; notes: NoteLog[] }>(cacheUser, `ticket.${ticketId}`).catch(() => null);
+        if (snapshot) {
+          setTicket(snapshot.value.ticket); setItems(snapshot.value.items); setNotes(snapshot.value.notes);
+          setGpsLogs([]); setUnlocks([]); setTransitions([]); setSiteLocation(null);
+          setOfflineSnapshotAt(snapshot.capturedAt); setLoadError(e); setLastLoadedAt(snapshot.capturedAt);
+          return false; // A cached view never confirms a mutation or restored assignment.
+        }
+      }
       // Task #686: arm the rate-limit gate BEFORE deciding whether to
       // alert. We always feed the error through `setLoadError` so the
       // hook can park the screen for the cooldown — and we suppress
@@ -739,13 +768,32 @@ export default function TicketDetailScreen() {
       return 2 * R * Math.asin(Math.sqrt(a));
     };
 
-    const autoCheckIn = async (lat: number, lng: number) => {
+    const autoCheckIn = async (lat: number, lng: number, accuracy: number | null, capturedAt: number) => {
       if (attempted || cancelled) return;
       attempted = true;
       try {
-        await apiFetch(`/api/tickets/${ticketId}/check-in`, {
+        const { readNativeOperations } = await import("@/lib/native-operations");
+        const { arrivalMayBeAutomatic } = await import("@/lib/native-operations-policy");
+        const settings = await readNativeOperations();
+        if (cancelled) return;
+        const automaticArrival = arrivalMayBeAutomatic(settings) && accuracy !== null && Number.isFinite(accuracy) && accuracy >= 0
+          && distanceTo(lat, lng) + accuracy <= radius && Number.isFinite(capturedAt) && Date.now() - capturedAt <= 60_000;
+        if (!automaticArrival) {
+          const confirmed = await new Promise<boolean>(resolve => Alert.alert(
+            t("nativeArrival.title"), t("nativeArrival.confirm"),
+            [{ text: t("nativeOperations.cancel"), style: "cancel", onPress: () => resolve(false) },
+              { text: t("nativeArrival.save"), onPress: () => resolve(true) }],
+            { cancelable: true, onDismiss: () => resolve(false) },
+          ));
+          if (!confirmed || cancelled) return;
+        }
+        // Arrival does not start the work clock. Existing Check In remains explicit.
+        await apiFetch(`/api/tickets/${ticketId}/on-location`, {
           method: "POST",
-          body: JSON.stringify({ latitude: lat, longitude: lng }),
+          body: JSON.stringify({ latitude: lat, longitude: lng, ...(automaticArrival ? {
+            automaticArrival: true, deviceId: await import("@/lib/deviceId").then(module => module.getDeviceId()), bindingVersion: settings.bindingVersion,
+            accuracy, capturedAt: new Date(capturedAt).toISOString(),
+          } : {}) }),
         });
         if (cancelled) return;
         // Refresh first so the lifecycle stepper / status pill flip to
@@ -757,7 +805,7 @@ export default function TicketDetailScreen() {
         // the on-screen status is still stale (e.g. the refresh
         // itself failed or got rate-limited).
         const ok = await load();
-        if (!cancelled && ok) setArrivedVisible(true);
+        if (!cancelled && ok) { setArrivedVisible(true); setAutomaticArrivalSaved(automaticArrival); }
       } catch (e) {
         if (cancelled) return;
         // The auto path is silent on success — but on failure we DO
@@ -792,7 +840,7 @@ export default function TicketDetailScreen() {
               pos.coords.longitude,
             );
             if (meters <= radius) {
-              void autoCheckIn(pos.coords.latitude, pos.coords.longitude);
+              void autoCheckIn(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, pos.timestamp);
             } else if (meters > radius * 1.5 && attempted) {
               // User has clearly left the radius — allow re-attempting
               // if they come back later. The 1.5x buffer keeps us from
@@ -2136,6 +2184,19 @@ export default function TicketDetailScreen() {
         ) : null}
       </View>
 
+      {automaticArrivalSaved && ticket.lifecycleState === "on_location" ? <View style={{ gap: 8, padding: 12, backgroundColor: colors.card }}>
+        <Text style={{ color: colors.text }}>{t("nativeArrival.saved")}</Text>
+        <TextInput accessibilityLabel={t("nativeArrival.reason")} placeholder={t("nativeArrival.reason")} value={arrivalCorrectionReason} onChangeText={setArrivalCorrectionReason} editable={!arrivalCorrection.current} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 10 }} />
+        <LayeredPillButton disabled={!arrivalCorrectionReason.trim()} onPress={() => { void (async () => {
+          const { nativeUuid } = await import("@/lib/native-uuid");
+          const command = arrivalCorrection.current ?? { operationId: nativeUuid(), reason: arrivalCorrectionReason.trim() };
+          arrivalCorrection.current = command;
+          try {
+            await apiFetch(`/api/tickets/${ticketId}/correct-automatic-arrival`, { method: "POST", body: JSON.stringify(command) });
+            if (await load()) { setAutomaticArrivalSaved(false); arrivalCorrection.current = null; }
+          } catch (error) { Alert.alert(t("nativeArrival.correction"), translateApiError(error, t, t("tickets.pleaseTryAgain"))); }
+        })(); }}><Text style={{ color: "white" }}>{t("nativeArrival.correction")}</Text></LayeredPillButton>
+      </View> : null}
       {ticket.siteLocationId ? (
         <LayeredPillButton
           testID="button-safety-report"
@@ -4195,6 +4256,8 @@ export default function TicketDetailScreen() {
       </LayeredPillButton> : null}
       {photoPending ? <Text style={{ color: colors.mutedForeground }}>{t("ticketPhoto.pending")}</Text> : null}
       <CommentsPanel source="ticket" parentId={Number(ticketId)} />
+      {offlineSnapshotAt ? <Text accessibilityRole="alert" style={{ color: colors.text }}>{t("nativeTicketPhoto.offline", { time: new Date(offlineSnapshotAt).toLocaleString() })}</Text> : null}
+      <NativeTicketPhoto ticketId={Number(ticketId)} />
 
       <View
         style={[
@@ -4370,7 +4433,7 @@ export default function TicketDetailScreen() {
         <View style={styles.restoredToast}>
           <Feather name="check-circle" size={16} color="#ffffff" />
           <Text style={styles.restoredToastText}>
-            {t("tickets.arrivedToast")}
+            {t("nativeArrival.saved")}
           </Text>
         </View>
       </View>

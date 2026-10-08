@@ -104,6 +104,12 @@ function signUploadURL(uploadId: string, expires: number): string {
     .digest("hex");
 }
 
+/** Called only after an authenticated exact-record upload grant is checked. */
+export function renewObjectUploadDescriptor(objectPath:string):{uploadURL:string;objectPath:string}{
+ const match=/^\/objects\/uploads\/([0-9a-f-]{36})$/i.exec(objectPath);
+ if(!match)throw new Error("Invalid upload object path");
+ return {uploadURL:signedUploadURL(match[1]),objectPath};
+}
 function signedUploadURL(uploadId: string): string {
   const expires = Date.now() + UPLOAD_URL_TTL_MS;
   const signature = signUploadURL(uploadId, expires);

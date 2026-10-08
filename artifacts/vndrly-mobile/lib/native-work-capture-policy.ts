@@ -62,6 +62,7 @@ export const NativeUploadTransportSchema = z
       .max(25 * 1024 * 1024),
     sha256: z.string().regex(/^[a-f0-9]{64}$/),
     canonicalSaved: z.literal(false),
+    bytesSent: z.number().int().nonnegative().max(25 * 1024 * 1024).optional(),
   })
   .strict()
   .refine(

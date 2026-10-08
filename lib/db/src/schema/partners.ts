@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, jsonb, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -6,6 +6,7 @@ import { usersTable } from "./users";
 
 export const partnersTable = pgTable("partners", {
   id: serial("id").primaryKey(),
+  nativeOperationsPolicy: jsonb("native_operations_policy").$type<Record<string, unknown>>().notNull().default({}),
   name: text("name").notNull(),
   contactName: text("contact_name").notNull(),
   contactEmail: text("contact_email").notNull(),

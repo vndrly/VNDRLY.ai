@@ -11,6 +11,7 @@ declare class VndrlyWorkCapture extends NativeModule {
   /** Current local account fence, never a server permission or consent. null cancels old-context transport. */
   setContext(contextBinding: string | null): Promise<void>;
   scanDocument(contextBinding: string): Promise<WorkCaptureScan>;
+  transcribeLocalDraft(input: { contextBinding: string; uri: string; language: "en-US" | "es-ES" }): Promise<{ source: "speech_on_device"; text: string; reviewRequired: true; canonicalSaved: false }>;
   summarizeDraft(input: {
     contextBinding: string;
     text: string;
@@ -31,6 +32,7 @@ declare class VndrlyWorkCapture extends NativeModule {
     uploadUrl: string;
     canonicalApiOrigin: string;
     contentType: string;
+    wifiOnly?: boolean;
   }): Promise<WorkCaptureUpload>;
   readUpload(input: {
     contextBinding: string;

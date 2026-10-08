@@ -1,0 +1,27 @@
+{
+  "apps": "./.app.json",
+  "interface": {
+    "defaultPrompt": [
+      "V, show my workday.",
+      "V, who has this asset?",
+      "V, show tickets needing my attention.",
+      "Felix, show my Fleet workday."
+    ],
+    "logo": "./assets/icon.png",
+    "displayName": "VNDRLY.ai",
+    "composerIcon": "./assets/icon.png",
+    "developerName": "VNDRLY",
+    "shortDescription": "Your VNDRLY work desk",
+    "longDescription": "V for authorized VNDRLY work, tickets, Gate, Work Hub, onboarding, inventory and Fleet operations",
+    "category": "Other",
+    "capabilities": []
+  },
+  "name": "dev-6ac4f61e0aac8191b7f7b4fbbc5822b0",
+  "version": "1.10.0",
+  "description": "V for authorized VNDRLY work, tickets, Gate, Work Hub, onboarding, inventory and Fleet operations",
+  "author": {
+    "name": "Workspace upload"
+  },
+  "keywords": [],
+  "skills": "./skills"
+}

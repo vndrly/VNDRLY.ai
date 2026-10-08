@@ -1,0 +1,8 @@
+{
+  "apps": {
+    "vndrly-assistant": {
+      "id": "asdk_app_6ac4f61e0aac8191b7f7b4fbbc5822b0",
+      "required": true
+    }
+  }
+}

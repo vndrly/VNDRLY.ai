@@ -154,6 +154,8 @@ export type NotificationDestinationContent = {
   title: string;
   lines: string[];
   kind: NotificationTarget["kind"];
+  channel?: RecordData;
+  replyMessage?: { id: string; body: string };
 };
 function content(
   target: NotificationTarget,
@@ -185,6 +187,8 @@ function content(
     title: title ?? row.title ?? row.name ?? "",
     lines,
     kind: target.kind,
+    ...(target.kind === "channel" && !target.messageId ? { channel: row } : {}),
+    ...(target.kind === "channel" && target.messageId && typeof row.body === "string" ? { replyMessage: { id: String(row.id), body: row.body } } : {}),
   };
 }
 

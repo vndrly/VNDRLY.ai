@@ -25,7 +25,7 @@ function requireCapture() {
 
 async function currentCapture() {
   const native = requireCapture();
-  const context = await currentNativeCaptureContext();
+  const context = await currentNativeCaptureContext(undefined, true);
   await native.setContext(context.binding);
   context.assertCurrent();
   return {
@@ -64,6 +64,12 @@ export async function summarizeWorkDraft(text: string, language: "en" | "es") {
   context.assertCurrent();
   // This is local review text only. Saving uses the original domain workflow.
   return NativeSummaryDraftSchema.parse(result);
+}
+export async function transcribeLocalWorkDraft(uri: string, language: "en-US" | "es-ES") {
+  const context = await currentCapture();
+  const result = await context.native.transcribeLocalDraft({ contextBinding: context.binding, uri, language });
+  context.assertCurrent();
+  return z.object({ source: z.literal("speech_on_device"), text: z.string().min(1).max(20000), reviewRequired: z.literal(true), canonicalSaved: z.literal(false) }).strict().parse(result);
 }
 
 function stagedScanFileIds(raw: unknown): string[] {

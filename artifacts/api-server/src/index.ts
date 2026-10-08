@@ -85,6 +85,7 @@ import { recoverAndStartWorkHubExportWorker, stopWorkHubExportWorker } from "./w
 import { recoverAndStartWorkHubRetentionPlannerWorker, stopWorkHubRetentionPlannerWorker } from "./work-hub/governance-retention-planner-runtime";
 import { startReliableNotificationWorker, stopReliableNotificationWorker } from "./services/notification-delivery";
 import { startImplementationARetentionWorker, stopImplementationARetentionWorker } from "./services/operations-health";
+import { startNativeOperationsWorker, stopNativeOperationsWorker } from "./services/native-operations";
 import { startGateCoverageMonitor, stopGateCoverageMonitor } from "./services/gate-coverage-monitor";
 
 const rawPort = process.env["PORT"];
@@ -169,6 +170,7 @@ function onListening(): void {
   startScheduledNotificationWorker();
   startReliableNotificationWorker();
   startImplementationARetentionWorker();
+  startNativeOperationsWorker();
   startGateCoverageMonitor();
   startInvoicePeriodWorker();
   startInvoiceAgingWorker();
@@ -242,6 +244,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopScheduledNotificationWorker();
   stopReliableNotificationWorker();
   stopImplementationARetentionWorker();
+  stopNativeOperationsWorker();
   stopGateCoverageMonitor();
   stopInvoicePeriodWorker();
   stopInvoiceAgingWorker();

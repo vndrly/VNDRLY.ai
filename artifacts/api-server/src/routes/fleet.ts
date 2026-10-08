@@ -1,3 +1,5 @@
+import { withNativeLocationCollection } from "../services/native-operations";
+import { NativeOperationError } from "../services/native-operations-policy";
 import { Router } from "express";
 import { pool } from "@workspace/db";
 import { z } from "zod/v4";
@@ -17,39 +19,140 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
-router.get("/fleet/drivers/:driverUserId/availability", endpoint(req => service.driverAvailability(actor(req), z.coerce.number().int().positive().parse(req.params.driverUserId))));
-router.post("/fleet/drivers/:driverUserId/availability", endpoint(req => {
-  const driverUserId = z.coerce.number().int().positive().parse(req.params.driverUserId);
-  if (req.body?.driverUserId !== driverUserId) throw new FleetError("fleet.invalid_request", 400);
-  return service.recordDriverAvailability(actor(req), req.body);
-}));
-router.get("/fleet/drivers/:driverUserId/availability/operations/:operationId", endpoint(req => service.driverAvailabilityOperation(actor(req), z.coerce.number().int().positive().parse(req.params.driverUserId), z.uuid().parse(req.params.operationId))));
-router.get("/fleet/runs/:id/review-packet",endpoint(req=>service.reviewPacket(actor(req),z.uuid().parse(req.params.id))));
-router.get("/fleet/runs/:id/replacements", endpoint(req => service.replacements(actor(req), z.uuid().parse(req.params.id))));
-router.post("/fleet/runs/:id/replacements", endpoint(req => service.proposeReplacement(actor(req), z.uuid().parse(req.params.id), req.body)));
-router.post("/fleet/runs/:id/replacements/:replacementId/actions", endpoint(req => service.replacementAction(actor(req), z.uuid().parse(req.params.id), z.uuid().parse(req.params.replacementId), req.body)));
-router.get("/fleet/runs/:id/cargo-transfers",endpoint(req=>service.cargoTransfers(actor(req),z.uuid().parse(req.params.id))));
-router.get("/fleet/cargo-transfers/:id",endpoint(req=>service.cargoTransfer(actor(req),z.uuid().parse(req.params.id))));
-router.post("/fleet/cargo-transfers",endpoint(req=>service.prepareCargoTransfer(actor(req),req.body)));
-router.post("/fleet/cargo-transfers/:id/actions",endpoint(req=>service.cargoAction(actor(req),z.uuid().parse(req.params.id),req.body)));
-router.get("/fleet/runs/:id/evidence", endpoint(req => service.evidence(actor(req),z.uuid().parse(req.params.id))));
-router.post("/fleet/runs/:id/evidence", endpoint(req => service.addEvidence(actor(req),z.uuid().parse(req.params.id),req.body)));
-router.get("/fleet/runs/:id/evidence/:evidenceId/file", async(req,res)=>{
-  res.setHeader("Cache-Control","private, no-store");
+router.get(
+  "/fleet/drivers/:driverUserId/availability",
+  endpoint((req) =>
+    service.driverAvailability(
+      actor(req),
+      z.coerce.number().int().positive().parse(req.params.driverUserId),
+    ),
+  ),
+);
+router.post(
+  "/fleet/drivers/:driverUserId/availability",
+  endpoint((req) => {
+    const driverUserId = z.coerce
+      .number()
+      .int()
+      .positive()
+      .parse(req.params.driverUserId);
+    if (req.body?.driverUserId !== driverUserId)
+      throw new FleetError("fleet.invalid_request", 400);
+    return service.recordDriverAvailability(actor(req), req.body);
+  }),
+);
+router.get(
+  "/fleet/drivers/:driverUserId/availability/operations/:operationId",
+  endpoint((req) =>
+    service.driverAvailabilityOperation(
+      actor(req),
+      z.coerce.number().int().positive().parse(req.params.driverUserId),
+      z.uuid().parse(req.params.operationId),
+    ),
+  ),
+);
+router.get(
+  "/fleet/runs/:id/review-packet",
+  endpoint((req) =>
+    service.reviewPacket(actor(req), z.uuid().parse(req.params.id)),
+  ),
+);
+router.get(
+  "/fleet/runs/:id/replacements",
+  endpoint((req) =>
+    service.replacements(actor(req), z.uuid().parse(req.params.id)),
+  ),
+);
+router.post(
+  "/fleet/runs/:id/replacements",
+  endpoint((req) =>
+    service.proposeReplacement(
+      actor(req),
+      z.uuid().parse(req.params.id),
+      req.body,
+    ),
+  ),
+);
+router.post(
+  "/fleet/runs/:id/replacements/:replacementId/actions",
+  endpoint((req) =>
+    service.replacementAction(
+      actor(req),
+      z.uuid().parse(req.params.id),
+      z.uuid().parse(req.params.replacementId),
+      req.body,
+    ),
+  ),
+);
+router.get(
+  "/fleet/runs/:id/cargo-transfers",
+  endpoint((req) =>
+    service.cargoTransfers(actor(req), z.uuid().parse(req.params.id)),
+  ),
+);
+router.get(
+  "/fleet/cargo-transfers/:id",
+  endpoint((req) =>
+    service.cargoTransfer(actor(req), z.uuid().parse(req.params.id)),
+  ),
+);
+router.post(
+  "/fleet/cargo-transfers",
+  endpoint((req) => service.prepareCargoTransfer(actor(req), req.body)),
+);
+router.post(
+  "/fleet/cargo-transfers/:id/actions",
+  endpoint((req) =>
+    service.cargoAction(actor(req), z.uuid().parse(req.params.id), req.body),
+  ),
+);
+router.get(
+  "/fleet/runs/:id/evidence",
+  endpoint((req) =>
+    service.evidence(actor(req), z.uuid().parse(req.params.id)),
+  ),
+);
+router.post(
+  "/fleet/runs/:id/evidence",
+  endpoint((req) =>
+    service.addEvidence(actor(req), z.uuid().parse(req.params.id), req.body),
+  ),
+);
+router.get("/fleet/runs/:id/evidence/:evidenceId/file", async (req, res) => {
+  res.setHeader("Cache-Control", "private, no-store");
   try {
-    const result=await service.evidenceFile(actor(req),z.uuid().parse(req.params.id),z.uuid().parse(req.params.evidenceId));
-    res.setHeader("Content-Type",result.object.contentType);
-    res.setHeader("X-Content-Type-Options","nosniff");
-    res.setHeader("Content-Disposition",`attachment; filename="fleet-${result.record.evidenceId}.${result.record.contentType==="application/pdf"?"pdf":result.record.contentType==="image/png"?"png":result.record.contentType==="image/webp"?"webp":"jpg"}"`);
-    res.setHeader("Content-Length",String(result.object.size));
+    const result = await service.evidenceFile(
+      actor(req),
+      z.uuid().parse(req.params.id),
+      z.uuid().parse(req.params.evidenceId),
+    );
+    res.setHeader("Content-Type", result.object.contentType);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="fleet-${result.record.evidenceId}.${result.record.contentType === "application/pdf" ? "pdf" : result.record.contentType === "image/png" ? "png" : result.record.contentType === "image/webp" ? "webp" : "jpg"}"`,
+    );
+    res.setHeader("Content-Length", String(result.object.size));
     res.send(result.object.body);
-  } catch(error) {
-    if(error instanceof FleetError){res.status(error.status).json({code:error.code});return;}
-    if(error instanceof z.ZodError){res.status(400).json({code:"fleet.invalid_request"});return;}
-    req.log?.error({err:error},"Fleet evidence read failed");res.status(500).json({code:"fleet.internal_error"});
+  } catch (error) {
+    if (error instanceof FleetError) {
+      res.status(error.status).json({ code: error.code });
+      return;
+    }
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ code: "fleet.invalid_request" });
+      return;
+    }
+    req.log?.error({ err: error }, "Fleet evidence read failed");
+    res.status(500).json({ code: "fleet.internal_error" });
   }
 });
-router.patch("/fleet/runs/:id/draft", endpoint((req) => service.editDraft(actor(req), z.uuid().parse(req.params.id), req.body)));
+router.patch(
+  "/fleet/runs/:id/draft",
+  endpoint((req) =>
+    service.editDraft(actor(req), z.uuid().parse(req.params.id), req.body),
+  ),
+);
 router.get(
   "/fleet/runs/:id/eta",
   endpoint((req) => service.eta(actor(req), z.uuid().parse(req.params.id))),
@@ -57,7 +160,20 @@ router.get(
 router.post(
   "/fleet/runs/:id/location",
   endpoint((req) =>
-    service.recordLocation(actor(req), z.uuid().parse(req.params.id), req.body),
+    withNativeLocationCollection(
+      getSessionFromRequest(req)!,
+      req.header("x-vndrly-device-id"),
+      async () =>
+        service.recordLocation(
+          actor(req),
+          z.uuid().parse(req.params.id),
+          req.body,
+        ),
+    ).catch((error) => {
+      if (error instanceof NativeOperationError)
+        throw new FleetError(error.code, error.status);
+      throw error;
+    }),
   ),
 );
 router.get(

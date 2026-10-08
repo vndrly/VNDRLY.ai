@@ -1,3 +1,4 @@
+vi.mock("../services/native-operations",()=>({withNativeLocationCollection:async(_session:unknown,_device:unknown,apply:()=>Promise<unknown>)=>apply()}));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import express from "express";
 import cookieParser from "cookie-parser";

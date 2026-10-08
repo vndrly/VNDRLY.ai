@@ -26,6 +26,13 @@ import SphereBackButton from "@/components/SphereBackButton";
 import VisitorHostPicker from "@/components/VisitorHostPicker";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
+import NativeGateJournal from "@/components/work-hub/NativeGateJournal";
+import NativeJournal from "@/components/work-hub/NativeJournal";
+import GateIdentityDocument from "@/components/work-hub/GateIdentityDocument";
+import { assignedReadWithOfflineFallback } from "@/lib/native-assigned-cache";
+import { enqueueNativeOperation } from "@/lib/native-operation-journal-runtime";
+import { isOfflineWorkHubFailure } from "@/lib/work-hub-queue-runtime";
+import { nativeUuid } from "@/lib/native-uuid";
 import { translateApiError } from "@/lib/apiErrors";
 import {
   pickDefaultGateHostKey,
@@ -186,7 +193,7 @@ export default function GatekeeperScreen() {
 
   const activeVisits = useQuery({
     queryKey: ["gatekeeper-visits"],
-    queryFn: fetchGatekeeperVisits,
+    queryFn: () => user ? assignedReadWithOfflineFallback(user, "gate.visits", fetchGatekeeperVisits) : fetchGatekeeperVisits(),
     refetchInterval: 30000,
     retry: false,
   });
@@ -222,12 +229,14 @@ export default function GatekeeperScreen() {
   });
   const assigned = useQuery({
     queryKey: ["gatekeeper-assigned-sites", user?.vendorId],
-    queryFn: () =>
-      resolveAssignedGateSites({
+    queryFn: () => {
+      const fetcher = () => resolveAssignedGateSites({
         vendorId: user?.vendorId ?? null,
         listAssigned: fetchAssignedGateSites,
         getSiteContext: fetchSiteContext,
-      }),
+      });
+      return user ? assignedReadWithOfflineFallback(user, "gate.assigned", fetcher) : fetcher();
+    },
     retry: false,
   });
   const assignedSites = assigned.data?.sites ?? [];
@@ -254,7 +263,7 @@ export default function GatekeeperScreen() {
   }, [selectedAssignedSite, selectedPartnerId]);
   const ctxQuery = useQuery<SiteContext>({
     queryKey: ["gatekeeper-site-context", confirmedCode],
-    queryFn: () => fetchSiteContext(confirmedCode!),
+    queryFn: () => user ? assignedReadWithOfflineFallback(user, `gate.site.${confirmedCode!}`, () => fetchSiteContext(confirmedCode!)) : fetchSiteContext(confirmedCode!),
     enabled: !!confirmedCode,
     retry: false,
   });
@@ -823,6 +832,13 @@ export default function GatekeeperScreen() {
       await qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await qc.invalidateQueries({ queryKey: ["gatekeeper-recent-visits"] });
     } catch (e) {
+      if (user && isOfflineWorkHubFailure(e)) {
+        const visit = (activeVisits.data ?? []).find(row => row.id === visitId);
+        if (visit?.siteLocationId && visit.vehiclePlate) {
+          await enqueueNativeOperation(user, { operationId: nativeUuid(), domain: "gate", capturedAt: new Date().toISOString(), payload: { siteLocationId: visit.siteLocationId, direction: "exit", originalVisitId: visitId, plate: visit.vehiclePlate, plateState: visit.plateState ?? undefined } });
+          Alert.alert(t("nativeJournal.title"), t("nativeJournal.gatePending")); return;
+        }
+      }
       Alert.alert(
         t("visitor.error"),
         translateApiError(e, t, t("tickets.errorCheckOut")),
@@ -844,6 +860,9 @@ export default function GatekeeperScreen() {
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
+          <NativeJournal />
+          <NativeGateJournal siteId={selectedSiteId} visitor={{ firstName, lastName, company, purpose, notes, vehiclePlate, plateState }} onRecorded={resetForm} />
+          <GateIdentityDocument visits={selectedActiveVisits} siteId={selectedSiteId} />
           <BrandTitleRow
             subtitle="iOS Portal"
             logoTestId="gate-brand-logo"

@@ -1,3 +1,4 @@
+import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
 import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
 import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
@@ -460,6 +461,8 @@ export function resolveWorkHubToolRequest(
 ): WorkHubToolRequest | null {
   const input = record(rawInput);
   const payload = record(input.payload);
+  const native = nativeOperationsToolRequest(name, input);
+  if (native) return native;
   let target: string | WorkHubToolRequest;
 
   switch (name) {
@@ -1078,6 +1081,7 @@ export function resolveExecutableWorkHubToolRequest(
       error: "Please confirm the exact Work Hub action first.",
       requiresConfirmation: true,
     };
+  if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === name)) return nativeOperationsToolRequest(name, input, mutationAuthorizedByServer);
   return resolveWorkHubToolRequest(name, input) ?? resolveImplementationACapabilityRequest(name, input) ?? unsupported("tool");
 }
 import { WORK_HUB_TOOL_METADATA } from "./work-hub-tools";
@@ -1097,6 +1101,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
+  if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName)) return input;
   if (["query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any
@@ -1115,4 +1120,3 @@ export function bindWorkHubToolScope(
       : currentContext;
   return { ...input, owner, context };
 }
-

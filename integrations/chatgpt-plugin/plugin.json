@@ -1,0 +1,24 @@
+{
+  "extensions": {
+    "com.openai": {
+      "apps": "./.app.json",
+      "interface": {
+        "defaultPrompt": [
+          "V, show my workday.",
+          "V, who has this asset?",
+          "V, show tickets needing my attention.",
+          "Felix, show my Fleet workday."
+        ],
+        "logo": "./assets/icon.png",
+        "displayName": "VNDRLY.ai",
+        "composerIcon": "./assets/icon.png",
+        "developerName": "VNDRLY",
+        "shortDescription": "Your VNDRLY work desk"
+      }
+    }
+  },
+  "description": "V for authorized VNDRLY work, tickets, Gate, Work Hub, onboarding, inventory and Fleet operations",
+  "name": "dev-6ac4f61e0aac8191b7f7b4fbbc5822b0",
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "version": "1.10.0"
+}

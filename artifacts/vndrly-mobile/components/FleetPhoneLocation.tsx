@@ -45,11 +45,11 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
         const current=await apiFetch<FleetRun>(`/api/fleet/runs/${run.id}`);
         return {account:overview.accountScope,run:current};
       },
-      consent:hasActiveConsentForThisDevice,
+      consent:async()=> await hasActiveConsentForThisDevice() && await import("@/lib/native-operations").then(module=>module.nativeLocationCollectionAllowed()),
       permission:async()=>(await Location.getForegroundPermissionsAsync()).status==="granted",
       deviceId:getDeviceId,
       sample:async()=>{const position=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.Balanced});return {latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy:position.coords.accuracy,timestamp:position.timestamp};},
-      post:input=>apiFetch(`/api/fleet/runs/${run.id}/location`,{method:"POST",body:JSON.stringify(input)}),
+      post:async input=>apiFetch(`/api/fleet/runs/${run.id}/location`,{method:"POST",headers:{"x-vndrly-device-id":await getDeviceId()},body:JSON.stringify(input)}),
       operationId:Crypto.randomUUID,
       contextCurrent:()=>alive.current && isAuthScopeCurrent(scope) && AppState.currentState==="active",
       changed:value=>{if(alive.current)setStatus(value);},

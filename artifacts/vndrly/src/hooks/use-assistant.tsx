@@ -37,7 +37,10 @@ export interface AssistantMessage {
   // finishes. Used by the panel to render a "Used tool: …" footer.
   toolCalls?: Array<{ name: string; input: unknown; output: string }>;
   pending?: boolean;
+  recovery?: { completed: string[]; remaining: string[]; needed: string; taskId?: string | null };
+  usageAlert?: string;
 }
+export type VConnectionSelection = { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean };
 
 // ─────────────────────────────────────────────────────────────────
 // Pre-auth → post-auth hand-off: stash the signup-mode chat in
@@ -125,6 +128,8 @@ type StreamEvent =
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
   | { type: "client_intent"; intent: AskVClientIntent }
+  | { type: "recovery"; completed: string[]; remaining: string[]; needed: string; taskId?: string | null }
+  | { type: "usage_alert"; message: string }
   | { type: "done"; content: string; assistantMessageId?: number }
   | { type: "error"; message: string };
 
@@ -198,6 +203,12 @@ export function useAssistant(opts: AssistantOptions = {}) {
   const [streaming, setStreaming] = useState(false);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const selectedConnection = useRef<VConnectionSelection | null>(null);
+  const savedTaskId = useRef<string | null>(null);
+  const [contextRevision, setContextRevision] = useState(0);
+  const [cooperativeContextActive, setCooperativeContextActive] = useState(false);
+  const selectConnection = useCallback((value: VConnectionSelection | null) => { selectedConnection.current = value; setCooperativeContextActive(Boolean(value || savedTaskId.current)); }, []);
+  const selectSavedTask = useCallback((id: string | null) => { savedTaskId.current = id; setCooperativeContextActive(Boolean(id || selectedConnection.current)); }, []);
 
   // Ensure we only run one stream at a time per conversation. If the
   // user sends a second message before the first one finishes we abort
@@ -230,6 +241,10 @@ export function useAssistant(opts: AssistantOptions = {}) {
   // user's back, and pins hasRestoredRef=true so a re-render of the
   // panel won't auto-restore over the user's "New chat" decision.
   const startNew = useCallback(() => {
+    selectedConnection.current = null;
+    savedTaskId.current = null;
+    setCooperativeContextActive(false);
+    setContextRevision(value => value + 1);
     abortRef.current?.abort();
     abortRef.current = null;
     restoreVersionRef.current += 1;
@@ -384,6 +399,8 @@ export function useAssistant(opts: AssistantOptions = {}) {
             ? { message: trimmed, history: priorHistory }
             : {
                 message: trimmed,
+                ...(selectedConnection.current ? { selectedConnection: selectedConnection.current } : {}),
+                ...(savedTaskId.current ? { taskId: savedTaskId.current } : {}),
                 deviceContext: { sourceDeviceId: browserWorkHubDeviceId() },
                 ...(pageContext || currentLocation
                   ? {
@@ -418,6 +435,10 @@ export function useAssistant(opts: AssistantOptions = {}) {
             setActiveTool(evt.status === "start" ? evt.name : null);
           } else if (evt.type === "client_intent") {
             clientResults.push(applyAskVClientIntent(evt.intent));
+          } else if (evt.type === "recovery") {
+            setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, recovery: { completed: evt.completed, remaining: evt.remaining, needed: evt.needed, taskId: evt.taskId } } : m));
+          } else if (evt.type === "usage_alert") {
+            setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, usageAlert: evt.message } : m));
           } else if (evt.type === "done") {
             const clientMessage = clientResults.map((result) => result.message).filter(Boolean).join(" ");
             const spoken = (clientMessage || evt.content || accumulatedContent).trim();
@@ -651,6 +672,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   }, []);
 
   return {
+    selectConnection, selectSavedTask, contextRevision, cooperativeContextActive,
     prepareVoiceConversation,
     appendVoiceTranscript,
     conversationId,
@@ -716,6 +738,11 @@ async function consumeSse(
       }
       else if (eventName === "token") onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
       else if (eventName === "tool") onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
+      else if (eventName === "recovery" && parsed && typeof parsed === "object") {
+        const value = parsed as { completed?: unknown; remaining?: unknown; needed?: unknown; taskId?: string | null };
+        if (Array.isArray(value.completed) && Array.isArray(value.remaining) && typeof value.needed === "string") onEvent({ type: "recovery", completed: value.completed.filter((item): item is string => typeof item === "string"), remaining: value.remaining.filter((item): item is string => typeof item === "string"), needed: value.needed, taskId: value.taskId });
+      }
+      else if (eventName === "usage_alert" && parsed && typeof parsed === "object" && typeof (parsed as { message?: unknown }).message === "string") onEvent({ type: "usage_alert", message: (parsed as { message: string }).message });
       else if (eventName === "done") {
         const payload = parsed as { content: string; assistantMessageId?: number };
         if (shouldOfferAskVVisualResult(payload.content)) {

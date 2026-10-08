@@ -134,6 +134,7 @@ jobs:
           pnpm --filter @workspace/api-server exec tsx scripts/rehearse-work-hub-migrations.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-migration-replay.log"
           node --test scripts/tests/assistant-plan-execution-migration.test.mjs
           pnpm --filter @workspace/api-server exec tsx scripts/rehearse-assistant-plan-execution.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-plan-execution-migration.log"
+          pnpm --filter @workspace/api-server exec tsx scripts/rehearse-native-operations.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-native-migration.log"
 
       - name: Full required test chain
         id: full-chain

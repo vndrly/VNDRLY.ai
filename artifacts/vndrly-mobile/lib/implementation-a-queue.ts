@@ -30,6 +30,12 @@ export type ImplementationAQueueStore = {
 type QueueInput = Omit<ImplementationAQueueItem, "authScope" | "deviceId" | "state" | "attempts">;
 type QueueTransport = (item: ImplementationAQueueItem) => Promise<unknown>;
 const KEY = "implementation-a-offline-queue-v1";
+const partitionKey = (scope: ImplementationAScope) => `${KEY}.${scope.userId}.${scope.ownerOrgType}.${scope.ownerOrgId}.${encodeURIComponent(scope.deviceId)}`;
+const storeLocks = new WeakMap<ImplementationAQueueStore, Promise<unknown>>();
+function exclusive<T>(store: ImplementationAQueueStore, work: () => Promise<T>): Promise<T> {
+  const result = (storeLocks.get(store) ?? Promise.resolve()).catch(() => undefined).then(work);
+  storeLocks.set(store, result); return result;
+}
 
 const sameScope = (left: ImplementationAScope, right: ImplementationAScope) =>
   left.userId === right.userId && left.ownerOrgType === right.ownerOrgType &&
@@ -37,27 +43,45 @@ const sameScope = (left: ImplementationAScope, right: ImplementationAScope) =>
 
 export function createImplementationAQueue(store: ImplementationAQueueStore) {
   async function read(scope: ImplementationAScope): Promise<QueueDocument> {
-    const value = await store.getItem(KEY);
+    // Preserve the legacy document in its own partition before any scope switch.
+    // The marker prevents an already replayed legacy operation being resurrected.
+    if (!await store.getItem(`${KEY}.partitioned`)) {
+      const legacy = await store.getItem(KEY);
+      if (legacy) {
+        const original = JSON.parse(legacy) as QueueDocument;
+        if (original.version !== 1 || !original.scope || !Array.isArray(original.items)) throw new Error("invalid offline queue");
+        const target = partitionKey(original.scope);
+        if (!await store.getItem(target)) await store.setItem(target, legacy);
+      }
+      await store.setItem(`${KEY}.partitioned`, "true");
+    }
+    const value = await store.getItem(partitionKey(scope));
     if (!value) return { version: 1, scope, items: [] };
     const parsed = JSON.parse(value) as QueueDocument;
     if (parsed.version !== 1 || !sameScope(parsed.scope, scope)) throw new Error("scope mismatch");
     return parsed;
   }
-  const write = (document: QueueDocument) => store.setItem(KEY, JSON.stringify(document));
+  const write = (document: QueueDocument) => store.setItem(partitionKey(document.scope), JSON.stringify(document));
 
   return {
     async enqueue(scope: ImplementationAScope, input: QueueInput) {
+      return exclusive(store, async () => {
       if (!input.path.startsWith("/api/implementation-a/")) throw new Error("unapproved offline API path");
       if (!Number.isInteger(input.domainVersion) || input.domainVersion < 1) throw new Error("invalid domain version");
       const document = await read(scope);
       const existing = document.items.find((item) => item.operationId === input.operationId);
-      if (existing) return existing;
+      if (existing) {
+        if (existing.path !== input.path || existing.method !== input.method || JSON.stringify(existing.payload) !== JSON.stringify(input.payload)) throw new Error("offline operation changed");
+        return existing;
+      }
       const item: ImplementationAQueueItem = { ...input, authScope: scope, deviceId: scope.deviceId, state: "pending", attempts: 0 };
       document.items.push(item);
       await write(document);
       return item;
+      });
     },
     async flush(scope: ImplementationAScope, transport: QueueTransport) {
+      return exclusive(store, async () => {
       const document = await read(scope);
       const remaining: ImplementationAQueueItem[] = [];
       for (const item of document.items) {
@@ -82,7 +106,8 @@ export function createImplementationAQueue(store: ImplementationAQueueStore) {
       document.items = remaining;
       await write(document);
       return document;
+      });
     },
-    inspect(scope: ImplementationAScope) { return read(scope); },
+    inspect(scope: ImplementationAScope) { return exclusive(store, () => read(scope)); },
   };
 }

@@ -1,6 +1,6 @@
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
-import { openDatabaseAsync, type SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "expo-sqlite";
 import { Platform } from "react-native";
 import type { QueueStore } from "./work-hub-queue";
 
@@ -33,6 +33,7 @@ async function databaseKey() {
 }
 
 async function initializeDatabase(): Promise<SQLiteDatabase> {
+  const { openDatabaseAsync } = await import("expo-sqlite");
   const key = await databaseKey();
   const database = await openDatabaseAsync(DATABASE_NAME);
   // SQLCipher requires the key to be the first statement on a new connection.

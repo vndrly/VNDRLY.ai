@@ -1,6 +1,7 @@
 import ExpoModulesCore
 import UIKit
 import CryptoKit
+import Speech
 #if canImport(VisionKit)
 import VisionKit
 #endif
@@ -21,6 +22,11 @@ struct CaptureStageInput: Record {
   @Field var contextBinding: String = ""
   @Field var uri: String = ""
 }
+struct CaptureDictationInput: Record {
+  @Field var contextBinding: String = ""
+  @Field var uri: String = ""
+  @Field var language: String = "en-US"
+}
 struct CaptureUploadInput: Record {
   @Field var contextBinding: String = ""
   @Field var jobId: String = ""
@@ -28,6 +34,7 @@ struct CaptureUploadInput: Record {
   @Field var uploadUrl: String = ""
   @Field var canonicalApiOrigin: String = ""
   @Field var contentType: String = ""
+  @Field var wifiOnly: Bool = false
 }
 struct CaptureDiscardInput: Record {
   @Field var contextBinding: String = ""
@@ -40,6 +47,7 @@ struct CaptureJobInput: Record {
 
 public final class VndrlyWorkCaptureModule: Module {
   private var scanner: CaptureScanner?
+  private var speechDraft: CaptureSpeechDraft?
   public func definition() -> ModuleDefinition {
     Name("VndrlyWorkCapture")
     AsyncFunction("getCapabilities") { () -> [String: Any] in
@@ -63,11 +71,31 @@ public final class VndrlyWorkCaptureModule: Module {
       do {
         if try CaptureTransport.shared.setContext(binding) {
           self.scanner?.cancel(); self.scanner = nil
+          self.speechDraft?.cancel(); self.speechDraft = nil
         }
       } catch {
         self.scanner?.cancel(); self.scanner = nil
+        self.speechDraft?.cancel(); self.speechDraft = nil
         throw error
       }
+    }.runOnQueue(.main)
+    AsyncFunction("transcribeLocalDraft") { (input: CaptureDictationInput, promise: Promise) in
+      do {
+        let generation = try CaptureTransport.shared.authorize(input.contextBinding)
+        guard self.speechDraft == nil, ["en-US", "es-ES"].contains(input.language),
+          let source = URL(string: input.uri), source.isFileURL else { throw CaptureError.invalidInput }
+        let resolved = source.resolvingSymlinksInPath().standardizedFileURL
+        guard [FileManager.SearchPathDirectory.documentDirectory, .cachesDirectory].contains(where: { kind in
+          guard let root = FileManager.default.urls(for: kind, in: .userDomainMask).first else { return false }
+          return resolved.path.hasPrefix(root.resolvingSymlinksInPath().path + "/")
+        }), let bytes = try resolved.resourceValues(forKeys: [.fileSizeKey]).fileSize, bytes > 0, bytes <= 25 * 1024 * 1024 else { throw CaptureError.invalidInput }
+        let draft = CaptureSpeechDraft(binding: input.contextBinding, generation: generation) { result in
+          self.speechDraft = nil
+          switch result { case .success(let value): promise.resolve(value); case .failure(let error): promise.reject(error) }
+        }
+        self.speechDraft = draft
+        draft.transcribe(resolved, language: input.language)
+      } catch { promise.reject(error) }
     }.runOnQueue(.main)
     AsyncFunction("scanDocument") { (binding: String, promise: Promise) in
       do {
@@ -120,6 +148,52 @@ public final class VndrlyWorkCaptureModule: Module {
     AsyncFunction("startUpload") { (input: CaptureUploadInput) -> [String: Any] in try CaptureTransport.shared.start(input) }
     AsyncFunction("readUpload") { (input: CaptureJobInput) -> [String: Any]? in try CaptureTransport.shared.read(input) }
     AsyncFunction("cancelUpload") { (input: CaptureJobInput) in try CaptureTransport.shared.cancel(input) }
+  }
+}
+
+/** Explicit recording is made by the existing microphone coordinator. Speech never routes to a cloud recognizer. */
+private final class CaptureSpeechDraft {
+  private let binding: String, generation: Int
+  private var completion: ((Result<[String: Any], Error>) -> Void)?
+  private var recognition: SFSpeechRecognitionTask?
+  private var timeout: DispatchWorkItem?
+  init(binding: String, generation: Int, completion: @escaping (Result<[String: Any], Error>) -> Void) {
+    self.binding = binding; self.generation = generation; self.completion = completion
+  }
+  func cancel() { finish(.failure(CaptureError.cancelled)) }
+  private func finish(_ result: Result<[String: Any], Error>) {
+    let callback = completion; completion = nil
+    timeout?.cancel(); timeout = nil; recognition?.cancel(); recognition = nil
+    callback?(result)
+  }
+  func transcribe(_ url: URL, language: String) {
+    SFSpeechRecognizer.requestAuthorization { authorization in
+      DispatchQueue.main.async {
+        guard self.completion != nil else { return }
+        do {
+          try CaptureTransport.shared.check(self.binding, self.generation)
+          guard authorization == .authorized, let recognizer = SFSpeechRecognizer(locale: Locale(identifier: language)),
+            recognizer.isAvailable, recognizer.supportsOnDeviceRecognition else { throw CaptureError.unavailable }
+          let request = SFSpeechURLRecognitionRequest(url: url)
+          request.requiresOnDeviceRecognition = true; request.shouldReportPartialResults = false
+          self.recognition = recognizer.recognitionTask(with: request) { result, error in
+            DispatchQueue.main.async {
+              guard self.completion != nil else { return }
+              do {
+                try CaptureTransport.shared.check(self.binding, self.generation)
+                if let error { throw error }
+                guard let result, result.isFinal else { return }
+                let text = result.bestTranscription.formattedString
+                guard !text.isEmpty, text.count <= 20000 else { throw CaptureError.invalidInput }
+                self.finish(.success(["source": "speech_on_device", "text": text, "reviewRequired": true, "canonicalSaved": false]))
+              } catch { self.finish(.failure(error)) }
+            }
+          }
+          let timeout = DispatchWorkItem { self.finish(.failure(CaptureError.unavailable)) }
+          self.timeout = timeout; DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: timeout)
+        } catch { self.finish(.failure(error)) }
+      }
+    }
   }
 }
 
@@ -181,7 +255,8 @@ private struct CaptureJob: Codable {
   var jobId: String, fileId: String, contextBinding: String, status: String, sha256: String
   var httpStatus: Int?, byteSize: Int
   var destinationDigest: String, contentType: String
-  func output() -> [String: Any] { ["jobId": jobId, "fileId": fileId, "contextBinding": contextBinding, "status": status, "sha256": sha256, "httpStatus": httpStatus.map { $0 as Any } ?? NSNull(), "byteSize": byteSize, "canonicalSaved": false] }
+  var bytesSent: Int64? = nil
+  func output() -> [String: Any] { ["jobId": jobId, "fileId": fileId, "contextBinding": contextBinding, "status": status, "sha256": sha256, "httpStatus": httpStatus.map { $0 as Any } ?? NSNull(), "byteSize": byteSize, "bytesSent": bytesSent ?? 0, "canonicalSaved": false] }
 }
 
 private final class CaptureTransport: NSObject, URLSessionTaskDelegate {
@@ -303,6 +378,8 @@ private final class CaptureTransport: NSObject, URLSessionTaskDelegate {
       var job = CaptureJob(jobId: input.jobId, fileId: input.fileId, contextBinding: input.contextBinding, status: "queued", sha256: digest, httpStatus: nil, byteSize: data.count, destinationDigest: destinationDigest, contentType: input.contentType)
       jobs[input.jobId] = job; try persist()
       var request = URLRequest(url: destination); request.httpMethod = "PUT"; request.setValue(input.contentType, forHTTPHeaderField: "Content-Type")
+      request.allowsCellularAccess = !input.wifiOnly
+      request.allowsExpensiveNetworkAccess = !input.wifiOnly
       let task = session.uploadTask(with: request, fromFile: file); task.taskDescription = input.jobId
       job.status = "uploading"; jobs[input.jobId] = job; try persist(); task.resume()
       return job.output()
@@ -325,11 +402,18 @@ private final class CaptureTransport: NSObject, URLSessionTaskDelegate {
     if let persistenceError { throw persistenceError }
   }
   func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+  func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+    synchronized {
+      guard let id = task.taskDescription, var job = jobs[id] else { return }
+      job.bytesSent = min(Int64(job.byteSize), max(0, totalBytesSent)); jobs[id] = job
+    }
+  }
   func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
     synchronized {
       guard let id = task.taskDescription, var job = jobs[id] else { return }
       job.httpStatus = (task.response as? HTTPURLResponse)?.statusCode
       if job.status != "cancelled" { job.status = error == nil && job.httpStatus == 204 ? "transport_complete" : "failed" }
+      if job.status == "transport_complete" { job.bytesSent = Int64(job.byteSize) }
       jobs[id] = job; try? persist()
     }
   }

@@ -3,6 +3,8 @@ import path from "node:path";
 import React from "react";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+vi.mock("@/components/work-hub/NativeOperations", () => ({ default: () => null }));
+vi.mock("@/components/work-hub/NativeJournal", () => ({ default: () => null }));
 
 const { response, membership } = vi.hoisted(() => ({ response: { current: {} as Record<string, unknown> }, membership: { id: 1 } }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));

@@ -35,6 +35,8 @@ const run = {
   status: "in_progress",
   phase: "traveling_to_pickup",
   version: 4,
+  title: "Assigned Fleet run",
+  stops: [],
   allowedActions: ["pause"],
 };
 beforeEach(() => {

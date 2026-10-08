@@ -128,10 +128,11 @@ function verifyReceipt(
   )
     throw new Error("Photo association was not verified");
 }
-export function createTicketPhotoClient(user: StoredUser, ticketId: number) {
+export function createTicketPhotoClient(user: StoredUser, ticketId: number, reviewedCapture?: () => Promise<{ objectPath: string } | null>, requestId?: string) {
+  if (requestId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId)) throw new Error("Invalid photo request binding");
   const account = ticketPhotoAccount(user),
     scope = captureAuthScope();
-  const key = `vndrly.ticket-photo.${account}.${ticketId}`;
+  const key = `vndrly.ticket-photo.${account}.${ticketId}${requestId ? `.${requestId}` : ""}`;
   const set = (value: string) =>
     Platform.OS === "web"
       ? Promise.resolve(globalThis.localStorage.setItem(key, value))
@@ -144,12 +145,16 @@ export function createTicketPhotoClient(user: StoredUser, ticketId: number) {
       : SecureStore.deleteItemAsync(key);
   const dependencies: Dependencies = {
     current: () => isAuthScopeCurrent(scope),
-    read: () => readTicketPhotoAttempt(user, ticketId),
+    read: requestId ? async () => {
+      const raw = Platform.OS === "web" ? globalThis.localStorage.getItem(key) : await SecureStore.getItemAsync(key);
+      return raw ? JSON.parse(raw) as TicketPhotoAttempt : null;
+    } : () => readTicketPhotoAttempt(user, ticketId),
     write: (attempt) => set(JSON.stringify(attempt)),
     clear,
-    capture: () =>
-      captureAndUploadImage({ authScope: scope, maxBytes: 10 * 1024 * 1024 }),
-    operationId: () => Crypto.randomUUID(),
+    capture: reviewedCapture ?? (() =>
+      captureAndUploadImage({ authScope: scope, maxBytes: 10 * 1024 * 1024 })
+    ),
+    operationId: () => requestId ?? Crypto.randomUUID(),
     get: (attempt) =>
       apiFetch(
         `/api/tickets/${ticketId}/photo-associations/${attempt.operationId}`,
@@ -171,6 +176,20 @@ export function createTicketPhotoClient(user: StoredUser, ticketId: number) {
   };
   return {
     pending: dependencies.read,
-    associate: () => associateTicketPhoto(account, ticketId, dependencies),
+    associate: async () => {
+      if (requestId) {
+        // A lost response after ticket save is reconciled before any new capture/upload.
+        try {
+          const receipt = await apiFetch<TicketPhotoReceipt>(`/api/tickets/${ticketId}/photo-associations/${requestId}`, {}, scope);
+          if (!isAuthScopeCurrent(scope)) throw new Error("Request authorization changed");
+          verifyReceipt({ account, ticketId, operationId: requestId, objectPath: receipt.objectPath }, receipt);
+          await clear();
+          return receipt;
+        } catch (error) {
+          if ((error as { status?: number }).status !== 404 || (error as { code?: string }).code !== "ticket.photo_association_not_found") throw error;
+        }
+      }
+      return associateTicketPhoto(account, ticketId, dependencies);
+    },
   };
 }

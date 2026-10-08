@@ -47,7 +47,11 @@ export function resolvePushCategory(msg: ExpoPushMessage): string | undefined {
   const raw = msg.data?.notificationId;
   const id = typeof raw === "number" ? raw : typeof raw === "string" && /^[1-9]\d*$/.test(raw) ? Number(raw) : NaN;
   if (!Number.isSafeInteger(id) || id < 1) return undefined;
-  return resolvePushType(msg) === "work_hub_meeting_invite" ? "vndrly_meeting" : "vndrly_record";
+  const type=resolvePushType(msg);
+  if(type==="work_hub_meeting_invite")return "vndrly_meeting";
+  if(type==="work_hub_shift_assigned")return "vndrly_assignment";
+  if(["work_hub_message","work_hub_mention"].includes(type??""))return "vndrly_message";
+  return "vndrly_record";
 }
 
 function resolveInterruptionLevel(msg: ExpoPushMessage): ExpoPushMessage["interruptionLevel"] {
@@ -62,7 +66,7 @@ async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
   const type = resolvePushType(msg);
   const messages = tokens.map((to) => ({
     to,
-    sound: VNDRLY_PUSH_NOTIFICATION_SOUND,
+    sound: interruptionLevel === "passive" ? null : VNDRLY_PUSH_NOTIFICATION_SOUND,
     title: msg.title,
     body: msg.body,
     data: msg.data ?? {},

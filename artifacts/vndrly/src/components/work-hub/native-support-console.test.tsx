@@ -1,0 +1,22 @@
+import {describe,it,expect,vi,afterEach} from "vitest";
+import {render,screen,fireEvent,waitFor,cleanup} from "@testing-library/react";
+import {QueryClient,QueryClientProvider} from "@tanstack/react-query";
+const request=vi.hoisted(()=>vi.fn());
+vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:"en"}})}));
+vi.mock("@/components/png-pill-rollover",()=>({PngPillButton:({children,...props}:any)=><button {...props}>{children}</button>}));
+vi.mock("@/lib/native-operations-client",async original=>({...await original<object>(),nativeOperationsRequest:request}));
+import NativeSupportConsole from "./native-support-console";
+afterEach(()=>{cleanup();vi.unstubAllGlobals();request.mockReset();});
+describe("native support content authority",()=>{it("keeps technical reads content-free and discards a grant response after company switch",async()=>{
+ vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify([{id:3,name:"Synthetic A"},{id:4,name:"Synthetic B"}]),{status:200})));
+ let complete:(value:unknown)=>void=()=>{};
+ request.mockImplementation((path:string)=>path.endsWith("/requests/request-a")?new Promise(resolve=>{complete=resolve;}):Promise.resolve({vendorId:Number(path.split("/").at(-1)),devices:[],diagnostics:[],requests:path.endsWith("/3")?[{id:"request-a",kind:"photo",state:"saved",createdAt:new Date().toISOString()}]:[],contentIncluded:false}));
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><NativeSupportConsole identity="admin"/></QueryClientProvider>);
+ await screen.findByRole("option",{name:"Synthetic A"});fireEvent.change(screen.getByLabelText("Company"),{target:{value:"3"}});
+ const button=await screen.findByRole("button",{name:"Read with company grant"});
+ expect(request.mock.calls.some(([path])=>String(path).includes("/requests/"))).toBe(false);
+ fireEvent.click(button);fireEvent.change(screen.getByLabelText("Company"),{target:{value:"4"}});
+ complete({request:{id:"request-a",state:"saved",purpose:"PRIVATE COMPANY A",result:null},grant:{purpose:"Specific support grant",expiresAt:new Date(Date.now()+60000).toISOString()}});
+ await waitFor(()=>expect(request).toHaveBeenCalledWith("/support/vendors/4",expect.anything()));
+ expect(screen.queryByText("PRIVATE COMPANY A")).toBeNull();
+});});

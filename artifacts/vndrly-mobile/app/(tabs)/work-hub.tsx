@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions, type DimensionValue } from "react-native";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
+import NativeOperations from "@/components/work-hub/NativeOperations";
+import NativeJournal from "@/components/work-hub/NativeJournal";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -82,6 +84,8 @@ export default function WorkHubScreen() {
     Boolean(home?.capabilities?.canViewExports && home.capabilities.allowedExportDatasets.length > 0));
   return <ScreenSafeArea style={{ backgroundColor: colors.background }}><ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
     <WorkHubPageTitle title="Work Hub" />
+    <NativeOperations />
+    <NativeJournal />
     {!home && !error ? <ActivityIndicator color={colors.primary} accessibilityLabel="Loading Work Hub summaries" /> : null}
     {error ? <Text accessibilityRole="alert" style={{ color: colors.mutedForeground }}>{error}</Text> : null}
     <View style={{ flexDirection: width >= 768 ? "row" : "column", flexWrap: "wrap", gap: 12 }}>

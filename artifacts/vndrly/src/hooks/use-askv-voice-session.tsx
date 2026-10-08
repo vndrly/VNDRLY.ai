@@ -182,7 +182,7 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
     else void startConversation('unmute');
   }, [startConversation, stop]);
   const sendText = useCallback(async (text: string) => {
-    if (latest.current.voice.sendText(text)) return;
+    if (!latestAssistant.current.cooperativeContextActive && latest.current.voice.sendText(text)) return;
     stop();
     try { await saveQueue.current.flush(); await latestAssistant.current.send(text); }
     catch { setHistoryError('Your previous voice turn is still waiting to save. Reconnect and retry your message.'); }

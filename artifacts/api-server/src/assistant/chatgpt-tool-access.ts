@@ -34,7 +34,14 @@ export function chatGptReadToolDescription(tool: AskVToolDefinition): string {
     ? `${tool.description} In ChatGPT this returns draft fields and matching candidates only. No VNDRLY form is populated and no entry or checkout is submitted. Use the authenticated VNDRLY approval flow to submit a change; device location must come from the approval device.`
     : tool.description;
 }
-export function chatGptReadToolOutput(name: string, output: unknown): unknown {
+export function chatGptReadToolOutput(name: string, output: unknown, scopes: readonly string[] = []): unknown {
+  if (["query_native_work_status", "query_native_device_requests", "request_native_location"].includes(name) && !scopes.includes("crew:read")) {
+    const privateFields = new Set(["location", "lastKnown", "lastLocation", "latitude", "longitude", "accuracy", "lat", "lng"]);
+    const redact = (value: unknown): unknown => Array.isArray(value) ? value.map(redact)
+      : value && typeof value === "object" && !(value instanceof Date)
+        ? Object.fromEntries(Object.entries(value).filter(([key]) => !privateFields.has(key)).map(([key, item]) => [key, redact(item)])) : value;
+    return redact(output);
+  }
   if (name === 'draft_safety_report' && output && typeof output === 'object' && !Array.isArray(output)) {
   const { intent: _intent, execution: _execution, ...draft } = output as Record<string, unknown>;
     return { ...draft, execution: 'draft_only', submitted: false, formPopulated: false, siteAccessVerified: false,
@@ -66,7 +73,7 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
   if (!session.userId || !["admin", "partner", "vendor", "field_employee"].includes(session.role ?? "")) return [];
   const gate = scopes.includes("gate:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/gate", workflow: "gate" }).filter((tool) => GATE_ACTIONS.has(tool.name)) : [];
   if (scopes.includes("gate:write")) gate.push(...ASK_V_TOOL_REGISTRY.filter(tool => tool.name === "manage_gate_shift" && tool.roles.includes(session.role as never)));
-  const hub = scopes.includes("work_hub:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/work-hub/askv" }).filter((tool) => Boolean(tool.workHubFamily) && tool.mutating) : [];
+  const hub = scopes.includes("work_hub:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/work-hub/askv" }).filter((tool) => Boolean(tool.workHubFamily) && tool.mutating && (tool.name !== "request_native_location" || scopes.includes("crew:read"))) : [];
   const names = new Set<string>(Object.entries(CHATGPT_WRITE_CAPABILITIES).filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
   const additional = ASK_V_TOOL_REGISTRY.filter(tool => names.has(tool.name)
     && (tool.name !== "confirm_operations_displays_action" || ((session.role === "admin" || session.membershipRole === "admin") && Boolean(session.vendorId || session.partnerId)))

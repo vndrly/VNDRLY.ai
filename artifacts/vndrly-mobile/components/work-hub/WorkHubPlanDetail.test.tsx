@@ -1,8 +1,9 @@
 import React from "react";
-import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
+import { render, screen, waitFor, act, cleanup, fireEvent } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const env = vi.hoisted(() => ({
   api: vi.fn(),
+  navigate: vi.fn(),
   user: {
     id: 1,
     role: "vendor",
@@ -15,6 +16,7 @@ const env = vi.hoisted(() => ({
   invalidators: new Set<() => void>(),
 }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
+vi.mock("expo-router", () => ({ router: { push: env.navigate } }));
 vi.mock("@/lib/api", () => ({ apiFetch: env.api }));
 vi.mock("@/lib/auth", () => ({
   captureAuthScope: () => ({ generation: 1 }),
@@ -105,6 +107,8 @@ it("reads exact canonical projection without writes and distinguishes recorded f
   expect(env.api).toHaveBeenCalledTimes(1);
   expect(env.api.mock.calls[0][0]).toBe(`/api/work-hub/tasks/${taskId}/plan`);
   expect(env.api.mock.calls[0][1].method).toBeUndefined();
+  fireEvent.click(screen.getByRole("button", { name: "nativeCooperation.resumeTask" }));
+  expect(env.navigate).toHaveBeenCalledWith(`/work-hub/askv?taskId=${taskId}`);
 });
 it("clears displayed private plan immediately on account change and ignores old response", async () => {
   let resolve!: (value: unknown) => void;

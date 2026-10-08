@@ -7,6 +7,12 @@ import {
 } from "../assistant-sse";
 
 describe("consumeAssistantSseFromText", () => {
+  it("retains bounded cooperative recovery and provider events without treating them as completion", () => {
+    const events: unknown[] = [];
+    const result = consumeAssistantSseFromText('event: provider_usage\ndata: {"provider":"openai","status":"consulted"}\n\nevent: recovery\ndata: {"completed":["saved exact note"],"remaining":["confirm arrival"],"needed":"Current permission is required","taskId":null}\n\n', event => events.push(event));
+    expect(events).toEqual([{ type: "provider_usage", provider: "openai", status: "consulted" }, { type: "recovery", completed: ["saved exact note"], remaining: ["confirm arrival"], needed: ["Current permission is required"], taskId: null }]);
+    expect(result.receivedDone).toBe(false);
+  });
   it("parses token, tool, and done events", () => {
     const events: string[] = [];
     const result = consumeAssistantSseFromText(

@@ -18,6 +18,8 @@ import { InventoryRecovery } from "./InventoryRecovery";
 import { InventoryTransfer } from "./InventoryTransfer";
 import NativeNoteDraft from "./NativeNoteDraft";
 import BackgroundWorkHubUpload from "./BackgroundWorkHubUpload";
+import { enqueueNativeOperation } from "@/lib/native-operation-journal-runtime";
+import { isOfflineWorkHubFailure } from "@/lib/work-hub-queue-runtime";
 
 type Owner = { type: "vendor" | "partner"; id: number };
 type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null; contentType?: string; byteSize?: number }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
@@ -151,7 +153,14 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     const payload = { title: noteTitle.trim(), body: noteBody };
     const key = JSON.stringify({ path, ...target, payload, version: editing?.version ?? null });
     if (noteAttempt.current?.key !== key) noteAttempt.current = { key, body: command(target.owner, payload, editing?.version ?? null, target.context) };
-    await apiFetch(path, { method: editing ? "PATCH" : "POST", body: JSON.stringify(noteAttempt.current.body), signal: scope.signal }, scope.authScope);
+    try { await apiFetch(path, { method: editing ? "PATCH" : "POST", body: JSON.stringify(noteAttempt.current.body), signal: scope.signal }, scope.authScope); }
+    catch (cause) {
+      scope.assertCurrent();
+      if (!isOfflineWorkHubFailure(cause)) throw cause;
+      const user = await getUser(); scope.assertCurrent(); if (!user) throw cause;
+      await enqueueNativeOperation(user, { domain: "note", operationId: noteAttempt.current.body.operationId, capturedAt: new Date().toISOString(), payload: { path, method: editing ? "PATCH" : "POST", command: noteAttempt.current.body } });
+      scope.assertCurrent(); noteAttempt.current = null; setNoteOpen(false); setEditing(null); setNoteTitle(""); setNoteBody(""); setNotice(t("nativeJournal.pending")); return;
+    }
     scope.assertCurrent(); noteAttempt.current = null;
     setNoteOpen(false); setEditing(null); setNoteTitle(""); setNoteBody(""); setNotice(t(editing ? "filesInventory.noteUpdated" : "filesInventory.noteAdded"));
     await onRefresh();
@@ -210,6 +219,12 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
       try { await onRefresh(); } catch { scope.assertCurrent(); setNotice(t("inventoryCustody.savedRefresh")); }
     } catch (cause) {
       scope.assertCurrent();
+      if (isOfflineWorkHubFailure(cause) && custodyAttempt.current) {
+        const user = await getUser(); scope.assertCurrent(); if (!user) throw cause;
+        const attempt = custodyAttempt.current;
+        await enqueueNativeOperation(user, { domain: "custody", operationId: attempt.input.operationId, capturedAt: new Date().toISOString(), payload: { assetId: attempt.assetId, action: attempt.action, actorUserId: attempt.actorUserId, holderUserId: attempt.holderUserId, input: attempt.input, fingerprint: attempt.fingerprint } });
+        scope.assertCurrent(); custodyAttempt.current = null; setCustodyUnknown(false); setCustody(null); setNotice(t("nativeJournal.inventoryPending")); return;
+      }
       if (cause instanceof CustodyAbsentConflict) {
         custodyAttempt.current = null; setCustodyUnknown(false); setCustody(null);
         await onRefresh(); scope.assertCurrent(); setNotice(t("filesInventory.assetChanged")); return;
@@ -318,5 +333,3 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     </View>
   </View>;
 }
-
-

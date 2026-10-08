@@ -1,5 +1,17 @@
+import { withNativeLocationCollection } from "../services/native-operations";
+import { NativeOperationError } from "../services/native-operations-policy";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, eq, isNull, inArray, sql, desc, gte, or, isNotNull } from "drizzle-orm";
+import {
+  and,
+  eq,
+  isNull,
+  inArray,
+  sql,
+  desc,
+  gte,
+  or,
+  isNotNull,
+} from "drizzle-orm";
 import crypto from "crypto";
 import {
   db,
@@ -22,7 +34,10 @@ import { logger } from "../lib/logger";
 
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { createFieldTripService } from "../services/field-trips";
-import { databaseFieldTripRepository, findActiveTripForDriver } from "../services/field-trip-database-repository";
+import {
+  databaseFieldTripRepository,
+  findActiveTripForDriver,
+} from "../services/field-trip-database-repository";
 import { enforceLiveLocationsRateLimit } from "../lib/live-locations-rate-limit";
 import { resolveLiveLocationsScope } from "../lib/live-locations-scope";
 import { resolveRecentTripsScope } from "../lib/recent-trips-scope";
@@ -32,9 +47,7 @@ import {
   computeTravelMinutes,
   pickReplayDate,
 } from "../lib/recent-trips-format";
-import {
-  LIVE_TRACKED_LIFECYCLE_STATES,
-} from "@workspace/ticket-status-meta";
+import { LIVE_TRACKED_LIFECYCLE_STATES } from "@workspace/ticket-status-meta";
 import {
   resolveSiteMapRadiusMeters,
   QUARTER_MILE_METERS,
@@ -67,26 +80,44 @@ export const CRITICAL_BATTERY_THRESHOLD = parseCriticalBatteryThreshold(
   process.env.CRITICAL_BATTERY_THRESHOLD,
 );
 
-type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null };
+type Session = {
+  userId: number;
+  role: string;
+  vendorId: number | null;
+  partnerId: number | null;
+};
 
 // ── Heading helpers ─────────────────────────────────────────────────────────
 // Distance below which a computed bearing is unreliable (GPS jitter dominates),
 // so we report a neutral heading instead of pointing in a random direction.
 const STATIONARY_DIST_M = 8;
 
-function toRad(d: number): number { return (d * Math.PI) / 180; }
+function toRad(d: number): number {
+  return (d * Math.PI) / 180;
+}
 
-function bearingDeg(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function bearingDeg(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
   const φ1 = toRad(lat1);
   const φ2 = toRad(lat2);
   const Δλ = toRad(lon2 - lon1);
   const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const x =
+    Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   const θ = Math.atan2(y, x);
   return ((θ * 180) / Math.PI + 360) % 360;
 }
 
-function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function haversineMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
   const R = 6371000;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -101,7 +132,14 @@ function computeHeading(
   cur: { latitude: number; longitude: number },
 ): number | null {
   if (!prev) return null;
-  if (haversineMeters(prev.latitude, prev.longitude, cur.latitude, cur.longitude) < STATIONARY_DIST_M) {
+  if (
+    haversineMeters(
+      prev.latitude,
+      prev.longitude,
+      cur.latitude,
+      cur.longitude,
+    ) < STATIONARY_DIST_M
+  ) {
     return null;
   }
   return bearingDeg(prev.latitude, prev.longitude, cur.latitude, cur.longitude);
@@ -133,9 +171,18 @@ function getSession(req: Request): Session | null {
   if (lastDot === -1) return null;
   const payload = cookie.slice(0, lastDot);
   const sig = cookie.slice(lastDot + 1);
-  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
+  const expected = crypto
+    .createHmac("sha256", SESSION_SECRET)
+    .update(payload)
+    .digest("hex");
   try {
-    if (!crypto.timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expected, "hex"))) return null;
+    if (
+      !crypto.timingSafeEqual(
+        Buffer.from(sig, "hex"),
+        Buffer.from(expected, "hex"),
+      )
+    )
+      return null;
   } catch {
     return null;
   }
@@ -157,29 +204,42 @@ const router: IRouter = Router();
 router.get("/location-consents/me", async (req: Request, res: Response) => {
   const session = getSession(req);
   if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+    res
+      .status(401)
+      .json({ code: "auth.unauthenticated", error: "unauthenticated" });
     return;
   }
   const rows = await db
     .select()
     .from(locationConsentsTable)
-    .where(and(eq(locationConsentsTable.userId, session.userId), isNull(locationConsentsTable.revokedAt)));
+    .where(
+      and(
+        eq(locationConsentsTable.userId, session.userId),
+        isNull(locationConsentsTable.revokedAt),
+      ),
+    );
   res.json({ consents: rows });
 });
 
 router.post("/location-consents", async (req: Request, res: Response) => {
   const session = getSessionFromRequest(req);
   if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+    res
+      .status(401)
+      .json({ code: "auth.unauthenticated", error: "unauthenticated" });
     return;
   }
   const deviceId = String(req.body?.deviceId || "").slice(0, 200);
   if (!deviceId) {
-    res.status(400).json({ code: "visitor.device_id_required", error: "deviceId required" });
+    res
+      .status(400)
+      .json({ code: "visitor.device_id_required", error: "deviceId required" });
     return;
   }
   if (session.userId == null) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+    res
+      .status(401)
+      .json({ code: "auth.unauthenticated", error: "unauthenticated" });
     return;
   }
   const [row] = await db
@@ -196,11 +256,16 @@ router.post("/location-consents", async (req: Request, res: Response) => {
 router.delete("/location-consents", async (req: Request, res: Response) => {
   const session = getSession(req);
   if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+    res
+      .status(401)
+      .json({ code: "auth.unauthenticated", error: "unauthenticated" });
     return;
   }
   const deviceId = req.query.deviceId ? String(req.query.deviceId) : null;
-  const filters = [eq(locationConsentsTable.userId, session.userId), isNull(locationConsentsTable.revokedAt)];
+  const filters = [
+    eq(locationConsentsTable.userId, session.userId),
+    isNull(locationConsentsTable.revokedAt),
+  ];
   if (deviceId) filters.push(eq(locationConsentsTable.deviceId, deviceId));
   await db
     .update(locationConsentsTable)
@@ -213,22 +278,36 @@ router.delete("/location-consents", async (req: Request, res: Response) => {
 router.post("/location-pings", async (req: Request, res: Response) => {
   const session = getSession(req);
   if (!session || session.role !== "field_employee") {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+    res
+      .status(401)
+      .json({ code: "auth.unauthenticated", error: "unauthenticated" });
     return;
   }
   const ticketId = Number(req.body?.ticketId);
   const lat = Number(req.body?.latitude);
   const lng = Number(req.body?.longitude);
-  const battery = req.body?.batteryLevel == null ? null : Number(req.body.batteryLevel);
+  const battery =
+    req.body?.batteryLevel == null ? null : Number(req.body.batteryLevel);
   const deviceHeading = sanitizeHeading(req.body?.heading);
   const speedMps = sanitizeSpeed(req.body?.speedMps);
-  const deviceId = req.body?.deviceId ? String(req.body.deviceId).slice(0, 200) : "";
-  if (!Number.isFinite(ticketId) || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-    res.status(400).json({ code: "visitor.coords_required", error: "ticketId, latitude, longitude required" });
+  const deviceId = req.body?.deviceId
+    ? String(req.body.deviceId).slice(0, 200)
+    : "";
+  if (
+    !Number.isFinite(ticketId) ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    res.status(400).json({
+      code: "visitor.coords_required",
+      error: "ticketId, latitude, longitude required",
+    });
     return;
   }
   if (!deviceId) {
-    res.status(400).json({ code: "visitor.device_id_required", error: "deviceId required" });
+    res
+      .status(400)
+      .json({ code: "visitor.device_id_required", error: "deviceId required" });
     return;
   }
 
@@ -236,14 +315,18 @@ router.post("/location-pings", async (req: Request, res: Response) => {
   const [consent] = await db
     .select()
     .from(locationConsentsTable)
-    .where(and(
-      eq(locationConsentsTable.userId, session.userId),
-      eq(locationConsentsTable.deviceId, deviceId),
-      isNull(locationConsentsTable.revokedAt),
-    ))
+    .where(
+      and(
+        eq(locationConsentsTable.userId, session.userId),
+        eq(locationConsentsTable.deviceId, deviceId),
+        isNull(locationConsentsTable.revokedAt),
+      ),
+    )
     .limit(1);
   if (!consent) {
-    res.status(403).json({ code: "visitor.no_active_consent", error: "no_active_consent" });
+    res
+      .status(403)
+      .json({ code: "visitor.no_active_consent", error: "no_active_consent" });
     return;
   }
 
@@ -254,7 +337,10 @@ router.post("/location-pings", async (req: Request, res: Response) => {
     .where(eq(fieldEmployeesTable.userId, session.userId))
     .limit(1);
   if (!emp) {
-    res.status(403).json({ code: "visitor.no_employee_profile", error: "no_employee_profile" });
+    res.status(403).json({
+      code: "visitor.no_employee_profile",
+      error: "no_employee_profile",
+    });
     return;
   }
   const employeeId = emp.id;
@@ -265,11 +351,19 @@ router.post("/location-pings", async (req: Request, res: Response) => {
     .where(eq(ticketsTable.id, ticketId))
     .limit(1);
   if (!ticket || ticket.fieldEmployeeId !== employeeId) {
-    res.status(403).json({ code: "visitor.not_ticket_owner", error: "not_ticket_owner" });
+    res
+      .status(403)
+      .json({ code: "visitor.not_ticket_owner", error: "not_ticket_owner" });
     return;
   }
-  if (!ticket.lifecycleState || !ACTIVE_LIFECYCLE_STATES.includes(ticket.lifecycleState as any)) {
-    res.status(409).json({ code: "visitor.ticket_not_on_shift", error: "ticket_not_on_shift" });
+  if (
+    !ticket.lifecycleState ||
+    !ACTIVE_LIFECYCLE_STATES.includes(ticket.lifecycleState as any)
+  ) {
+    res.status(409).json({
+      code: "visitor.ticket_not_on_shift",
+      error: "ticket_not_on_shift",
+    });
     return;
   }
 
@@ -287,21 +381,39 @@ router.post("/location-pings", async (req: Request, res: Response) => {
       batteryLevel: gpsLogsTable.batteryLevel,
     })
     .from(gpsLogsTable)
-    .where(and(eq(gpsLogsTable.ticketId, ticketId), eq(gpsLogsTable.eventType, LIVE_PING_EVENT)))
+    .where(
+      and(
+        eq(gpsLogsTable.ticketId, ticketId),
+        eq(gpsLogsTable.eventType, LIVE_PING_EVENT),
+      ),
+    )
     .orderBy(desc(gpsLogsTable.id))
     .limit(1);
 
-  const [created] = await db
-    .insert(gpsLogsTable)
-    .values({
-      ticketId,
-      latitude: lat,
-      longitude: lng,
-      eventType: LIVE_PING_EVENT,
-      batteryLevel: battery == null || Number.isNaN(battery) ? null : battery,
-      speedMps,
-    })
-    .returning();
+  const [created] = await withNativeLocationCollection(
+    session,
+    req.header("x-vndrly-device-id"),
+    async () =>
+      db
+        .insert(gpsLogsTable)
+        .values({
+          ticketId,
+          latitude: lat,
+          longitude: lng,
+          eventType: LIVE_PING_EVENT,
+          batteryLevel:
+            battery == null || Number.isNaN(battery) ? null : battery,
+          speedMps,
+        })
+        .returning(),
+  ).catch((error) => {
+    if (error instanceof NativeOperationError) {
+      res.status(error.status).json({ code: error.code, error: error.code });
+      return [];
+    }
+    throw error;
+  });
+  if (!created) return;
 
   // Mirror the existing field ping into an active Implementation A trip.
   // This is best-effort so trip state can never make the established GPS log fail.
@@ -319,16 +431,25 @@ router.post("/location-pings", async (req: Request, res: Response) => {
       });
     }
   } catch (err) {
-    logger.warn({ err, ticketId, employeeId }, "active trip location mirror failed");
+    logger.warn(
+      { err, ticketId, employeeId },
+      "active trip location mirror failed",
+    );
   }
   const headingForEvent =
     deviceHeading != null
       ? deviceHeading
       : computeHeading(
           prevPing
-            ? { latitude: Number(prevPing.latitude), longitude: Number(prevPing.longitude) }
+            ? {
+                latitude: Number(prevPing.latitude),
+                longitude: Number(prevPing.longitude),
+              }
             : null,
-          { latitude: Number(created.latitude), longitude: Number(created.longitude) },
+          {
+            latitude: Number(created.latitude),
+            longitude: Number(created.longitude),
+          },
         );
 
   // Fan out a live event so subscribers (e.g. Crew Map) can move the pin
@@ -374,7 +495,8 @@ router.post("/location-pings", async (req: Request, res: Response) => {
         .limit(1);
       if (coords) {
         siteLatitude = coords.latitude == null ? null : Number(coords.latitude);
-        siteLongitude = coords.longitude == null ? null : Number(coords.longitude);
+        siteLongitude =
+          coords.longitude == null ? null : Number(coords.longitude);
       }
     } catch {
       // Continue with null site coords.
@@ -474,7 +596,9 @@ router.post("/location-pings", async (req: Request, res: Response) => {
 router.get("/live-locations", async (req: Request, res: Response) => {
   const session = getSession(req);
   if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+    res
+      .status(401)
+      .json({ code: "auth.unauthenticated", error: "unauthenticated" });
     return;
   }
   // Per-session, role-aware rate limit on the polled fleet-map
@@ -483,11 +607,16 @@ router.get("/live-locations", async (req: Request, res: Response) => {
   // ping per ticket" query so an attacker sweeping vendor or site
   // filters also gets throttled rather than triggering the aggregate
   // four-table join on every probe.
-  if (!await enforceLiveLocationsRateLimit(req, res, session)) return;
+  if (!(await enforceLiveLocationsRateLimit(req, res, session))) return;
   const filterVendorId = req.query.vendorId ? Number(req.query.vendorId) : null;
-  const filterSiteLocationId = req.query.siteLocationId ? Number(req.query.siteLocationId) : null;
+  const filterSiteLocationId = req.query.siteLocationId
+    ? Number(req.query.siteLocationId)
+    : null;
   if (req.query.siteLocationId && !Number.isFinite(filterSiteLocationId)) {
-    res.status(400).json({ code: "visitor.invalid_site_location_id", error: "invalid_siteLocationId" });
+    res.status(400).json({
+      code: "visitor.invalid_site_location_id",
+      error: "invalid_siteLocationId",
+    });
     return;
   }
   const scope = resolveLiveLocationsScope(session, filterVendorId);
@@ -500,11 +629,17 @@ router.get("/live-locations", async (req: Request, res: Response) => {
 
   const sinceTs = new Date(Date.now() - LIVE_PING_FRESH_MS);
   const ticketFilters = [
-    inArray(ticketsTable.lifecycleState, ACTIVE_LIFECYCLE_STATES as unknown as string[]),
+    inArray(
+      ticketsTable.lifecycleState,
+      ACTIVE_LIFECYCLE_STATES as unknown as string[],
+    ),
   ];
-  if (scopedVendorId) ticketFilters.push(eq(ticketsTable.vendorId, scopedVendorId));
-  if (scopedPartnerId) ticketFilters.push(eq(siteLocationsTable.partnerId, scopedPartnerId));
-  if (filterSiteLocationId) ticketFilters.push(eq(ticketsTable.siteLocationId, filterSiteLocationId));
+  if (scopedVendorId)
+    ticketFilters.push(eq(ticketsTable.vendorId, scopedVendorId));
+  if (scopedPartnerId)
+    ticketFilters.push(eq(siteLocationsTable.partnerId, scopedPartnerId));
+  if (filterSiteLocationId)
+    ticketFilters.push(eq(ticketsTable.siteLocationId, filterSiteLocationId));
 
   // Latest live_ping per ticket in freshness window — proper "latest per group"
   // via inner join against per-ticket max(id), filtered to live_ping events only.
@@ -524,12 +659,18 @@ router.get("/live-locations", async (req: Request, res: Response) => {
          group by ticket_id
       ) latest on latest.ticket_id = g.ticket_id and latest.max_id = g.id
   `);
-  const byTicket = new Map<number, {
-    ticketId: number; latitude: number; longitude: number;
-    batteryLevel: number | null; speedMps: number | null;
-    recordedAt: Date;
-    heading: number | null;
-  }>();
+  const byTicket = new Map<
+    number,
+    {
+      ticketId: number;
+      latitude: number;
+      longitude: number;
+      batteryLevel: number | null;
+      speedMps: number | null;
+      recordedAt: Date;
+      heading: number | null;
+    }
+  >();
   for (const r of latestPings.rows as any[]) {
     byTicket.set(Number(r.ticketId), {
       ticketId: Number(r.ticketId),
@@ -595,8 +736,14 @@ router.get("/live-locations", async (req: Request, res: Response) => {
       siteLongitude: siteLocationsTable.longitude,
     })
     .from(ticketsTable)
-    .leftJoin(fieldEmployeesTable, eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId))
-    .leftJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
+    .leftJoin(
+      fieldEmployeesTable,
+      eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId),
+    )
+    .leftJoin(
+      siteLocationsTable,
+      eq(siteLocationsTable.id, ticketsTable.siteLocationId),
+    )
     .where(and(inArray(ticketsTable.id, ticketIds), ...ticketFilters));
 
   const out = tickets
@@ -605,7 +752,9 @@ router.get("/live-locations", async (req: Request, res: Response) => {
       if (!ping || !t.fieldEmployeeId) return null;
       return {
         employeeId: t.fieldEmployeeId,
-        employeeName: [t.empFirst, t.empLast].filter(Boolean).join(" ") || `Employee #${t.fieldEmployeeId}`,
+        employeeName:
+          [t.empFirst, t.empLast].filter(Boolean).join(" ") ||
+          `Employee #${t.fieldEmployeeId}`,
         ticketId: t.ticketId,
         vendorId: t.vendorId,
         lifecycleState: t.lifecycleState,
@@ -634,388 +783,458 @@ router.get("/live-locations", async (req: Request, res: Response) => {
 });
 
 // ── Live location stream (SSE) ──
-router.get("/live-locations/events", async (req: Request, res: Response): Promise<void> => {
-  const session = getSession(req);
-  if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
-    return;
-  }
-  // Per-session, role-aware rate limit on the SSE live-locations
-  // stream (Task #698, registered into the multi-endpoint admin
-  // readout by Task #697). Enforced once per (re)connect — the
-  // limiter charges one hit per `connect` attempt, not per streamed
-  // event, so a healthy long-lived stream costs exactly one slot;
-  // only a tab stuck in a reconnect loop trips the budget, just
-  // like the REST fallback above.
-  if (!await enforceLiveLocationsRateLimit(req, res, session)) return;
-  const filterVendorId = req.query.vendorId ? Number(req.query.vendorId) : null;
-  const filterSiteLocationId = req.query.siteLocationId
-    ? Number(req.query.siteLocationId)
-    : null;
-  if (req.query.siteLocationId && !Number.isFinite(filterSiteLocationId)) {
-    res.status(400).json({ code: "visitor.invalid_site_location_id", error: "invalid_siteLocationId" });
-    return;
-  }
-  // Mirror /api/live-locations role gating exactly so the SSE stream and
-  // the REST fallback expose the same set of pings to a given session.
-  const scope = resolveLiveLocationsScope(session, filterVendorId);
-  if (!scope.ok) {
-    res.status(scope.status).json(scope.body);
-    return;
-  }
-  const scopedVendorId = scope.scopedVendorId;
-  const scopedPartnerId = scope.scopedPartnerId;
-
-  const visible = (ev: PublishedLocationEvent): boolean => {
-    const loc = ev.location;
-    if (!ACTIVE_LIFECYCLE_STATES.includes(loc.lifecycleState as any)) return false;
-    if (scopedVendorId && loc.vendorId !== scopedVendorId) return false;
-    if (scopedPartnerId != null && loc.sitePartnerId !== scopedPartnerId) return false;
-    if (filterSiteLocationId && loc.siteLocationId !== filterSiteLocationId) return false;
-    return true;
-  };
-
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache, no-transform");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no");
-  if (typeof res.flushHeaders === "function") res.flushHeaders();
-  res.write(`: connected\n\n`);
-
-  // EventSource auto-includes Last-Event-ID on reconnect when prior events
-  // wrote `id:` lines. Compare the client's last seen seq against the current
-  // global seq so we can warn the client they may have missed pings while
-  // disconnected. (Only set the gap flag when we actually have a prior id —
-  // an initial connection with no history isn't a gap.)
-  const lastEventIdHeader = req.header("Last-Event-ID");
-  const lastSeenSeqRaw = lastEventIdHeader != null ? Number(lastEventIdHeader) : NaN;
-  const lastSeenSeq = Number.isFinite(lastSeenSeqRaw) ? lastSeenSeqRaw : null;
-  void getCurrentLocationEventSeq()
-    .then((currentSeq) => {
-      const gap = lastSeenSeq != null && currentSeq > lastSeenSeq;
-      const hello = {
-        type: "location.hello" as const,
-        currentSeq,
-        lastSeenSeq,
-        gap,
-      };
-      try {
-        res.write(`event: location.hello\n`);
-        res.write(`data: ${JSON.stringify(hello)}\n\n`);
-      } catch {
-        /* client gone */
-      }
-    })
-    .catch(() => {
-      /* swallow — clients still get live events */
-    });
-
-  const heartbeat = setInterval(() => {
-    try { res.write(`: ping\n\n`); } catch { /* ignore */ }
-  }, 25000);
-
-  const unsubscribe = subscribeLocationEvents((ev) => {
-    if (!visible(ev)) return;
-    try {
-      // Always advance Last-Event-ID for visible events so reconnect-time
-      // gap detection can compare against this client's actual progress.
-      if (typeof ev.seq === "number") {
-        res.write(`id: ${ev.seq}\n`);
-      }
-      res.write(`event: ${ev.type}\n`);
-      res.write(`data: ${JSON.stringify(ev)}\n\n`);
-    } catch {
-      /* client gone — cleanup happens on close */
-    }
-  });
-
-  req.on("close", () => {
-    clearInterval(heartbeat);
-    unsubscribe();
-    try { res.end(); } catch { /* already ended */ }
-  });
-});
-
-// ── Per-employee day playback ──
-router.get("/field-employees/:id/day-track", async (req: Request, res: Response) => {
-  const session = getSession(req);
-  if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
-    return;
-  }
-  const employeeId = Number(req.params.id);
-  if (!Number.isFinite(employeeId)) {
-    res.status(400).json({ code: "visitor.invalid_id", error: "invalid_id" });
-    return;
-  }
-  const dateStr = req.query.date ? String(req.query.date) : new Date().toISOString().slice(0, 10);
-  const start = new Date(`${dateStr}T00:00:00.000Z`);
-  if (Number.isNaN(start.getTime())) {
-    res.status(400).json({ code: "visitor.invalid_date", error: "invalid_date" });
-    return;
-  }
-  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-
-  const [emp] = await db
-    .select()
-    .from(fieldEmployeesTable)
-    .where(eq(fieldEmployeesTable.id, employeeId))
-    .limit(1);
-  if (!emp) {
-    res.status(404).json({ code: "visitor.not_found", error: "not_found" });
-    return;
-  }
-  if (session.role === "vendor") {
-    if (!session.vendorId || session.vendorId !== emp.vendorId) {
-      res.status(403).json({ code: "visitor.wrong_vendor", error: "wrong_vendor" });
+router.get(
+  "/live-locations/events",
+  async (req: Request, res: Response): Promise<void> => {
+    const session = getSession(req);
+    if (!session) {
+      res
+        .status(401)
+        .json({ code: "auth.unauthenticated", error: "unauthenticated" });
       return;
     }
-  } else if (session.role === "field_employee") {
-    const isForeman =
-      (session as { vendorRole?: string | null }).vendorRole === "foreman" ||
-      (session as { vendorRole?: string | null }).vendorRole === "both";
-    if (!isForeman || !session.vendorId || session.vendorId !== emp.vendorId) {
+    // Per-session, role-aware rate limit on the SSE live-locations
+    // stream (Task #698, registered into the multi-endpoint admin
+    // readout by Task #697). Enforced once per (re)connect — the
+    // limiter charges one hit per `connect` attempt, not per streamed
+    // event, so a healthy long-lived stream costs exactly one slot;
+    // only a tab stuck in a reconnect loop trips the budget, just
+    // like the REST fallback above.
+    if (!(await enforceLiveLocationsRateLimit(req, res, session))) return;
+    const filterVendorId = req.query.vendorId
+      ? Number(req.query.vendorId)
+      : null;
+    const filterSiteLocationId = req.query.siteLocationId
+      ? Number(req.query.siteLocationId)
+      : null;
+    if (req.query.siteLocationId && !Number.isFinite(filterSiteLocationId)) {
+      res.status(400).json({
+        code: "visitor.invalid_site_location_id",
+        error: "invalid_siteLocationId",
+      });
+      return;
+    }
+    // Mirror /api/live-locations role gating exactly so the SSE stream and
+    // the REST fallback expose the same set of pings to a given session.
+    const scope = resolveLiveLocationsScope(session, filterVendorId);
+    if (!scope.ok) {
+      res.status(scope.status).json(scope.body);
+      return;
+    }
+    const scopedVendorId = scope.scopedVendorId;
+    const scopedPartnerId = scope.scopedPartnerId;
+
+    const visible = (ev: PublishedLocationEvent): boolean => {
+      const loc = ev.location;
+      if (!ACTIVE_LIFECYCLE_STATES.includes(loc.lifecycleState as any))
+        return false;
+      if (scopedVendorId && loc.vendorId !== scopedVendorId) return false;
+      if (scopedPartnerId != null && loc.sitePartnerId !== scopedPartnerId)
+        return false;
+      if (filterSiteLocationId && loc.siteLocationId !== filterSiteLocationId)
+        return false;
+      return true;
+    };
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    if (typeof res.flushHeaders === "function") res.flushHeaders();
+    res.write(`: connected\n\n`);
+
+    // EventSource auto-includes Last-Event-ID on reconnect when prior events
+    // wrote `id:` lines. Compare the client's last seen seq against the current
+    // global seq so we can warn the client they may have missed pings while
+    // disconnected. (Only set the gap flag when we actually have a prior id —
+    // an initial connection with no history isn't a gap.)
+    const lastEventIdHeader = req.header("Last-Event-ID");
+    const lastSeenSeqRaw =
+      lastEventIdHeader != null ? Number(lastEventIdHeader) : NaN;
+    const lastSeenSeq = Number.isFinite(lastSeenSeqRaw) ? lastSeenSeqRaw : null;
+    void getCurrentLocationEventSeq()
+      .then((currentSeq) => {
+        const gap = lastSeenSeq != null && currentSeq > lastSeenSeq;
+        const hello = {
+          type: "location.hello" as const,
+          currentSeq,
+          lastSeenSeq,
+          gap,
+        };
+        try {
+          res.write(`event: location.hello\n`);
+          res.write(`data: ${JSON.stringify(hello)}\n\n`);
+        } catch {
+          /* client gone */
+        }
+      })
+      .catch(() => {
+        /* swallow — clients still get live events */
+      });
+
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(`: ping\n\n`);
+      } catch {
+        /* ignore */
+      }
+    }, 25000);
+
+    const unsubscribe = subscribeLocationEvents((ev) => {
+      if (!visible(ev)) return;
+      try {
+        // Always advance Last-Event-ID for visible events so reconnect-time
+        // gap detection can compare against this client's actual progress.
+        if (typeof ev.seq === "number") {
+          res.write(`id: ${ev.seq}\n`);
+        }
+        res.write(`event: ${ev.type}\n`);
+        res.write(`data: ${JSON.stringify(ev)}\n\n`);
+      } catch {
+        /* client gone — cleanup happens on close */
+      }
+    });
+
+    req.on("close", () => {
+      clearInterval(heartbeat);
+      unsubscribe();
+      try {
+        res.end();
+      } catch {
+        /* already ended */
+      }
+    });
+  },
+);
+
+// ── Per-employee day playback ──
+router.get(
+  "/field-employees/:id/day-track",
+  async (req: Request, res: Response) => {
+    const session = getSession(req);
+    if (!session) {
+      res
+        .status(401)
+        .json({ code: "auth.unauthenticated", error: "unauthenticated" });
+      return;
+    }
+    const employeeId = Number(req.params.id);
+    if (!Number.isFinite(employeeId)) {
+      res.status(400).json({ code: "visitor.invalid_id", error: "invalid_id" });
+      return;
+    }
+    const dateStr = req.query.date
+      ? String(req.query.date)
+      : new Date().toISOString().slice(0, 10);
+    const start = new Date(`${dateStr}T00:00:00.000Z`);
+    if (Number.isNaN(start.getTime())) {
+      res
+        .status(400)
+        .json({ code: "visitor.invalid_date", error: "invalid_date" });
+      return;
+    }
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+
+    const [emp] = await db
+      .select()
+      .from(fieldEmployeesTable)
+      .where(eq(fieldEmployeesTable.id, employeeId))
+      .limit(1);
+    if (!emp) {
+      res.status(404).json({ code: "visitor.not_found", error: "not_found" });
+      return;
+    }
+    if (session.role === "vendor") {
+      if (!session.vendorId || session.vendorId !== emp.vendorId) {
+        res
+          .status(403)
+          .json({ code: "visitor.wrong_vendor", error: "wrong_vendor" });
+        return;
+      }
+    } else if (session.role === "field_employee") {
+      const isForeman =
+        (session as { vendorRole?: string | null }).vendorRole === "foreman" ||
+        (session as { vendorRole?: string | null }).vendorRole === "both";
+      if (
+        !isForeman ||
+        !session.vendorId ||
+        session.vendorId !== emp.vendorId
+      ) {
+        res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+        return;
+      }
+    } else if (session.role === "partner") {
+      if (!session.partnerId) {
+        res
+          .status(403)
+          .json({ code: "visitor.no_partner", error: "no_partner" });
+        return;
+      }
+      const [scoped] = await db
+        .select({ id: gpsLogsTable.id })
+        .from(gpsLogsTable)
+        .innerJoin(ticketsTable, eq(ticketsTable.id, gpsLogsTable.ticketId))
+        .innerJoin(
+          siteLocationsTable,
+          eq(siteLocationsTable.id, ticketsTable.siteLocationId),
+        )
+        .where(
+          and(
+            eq(ticketsTable.fieldEmployeeId, employeeId),
+            eq(siteLocationsTable.partnerId, session.partnerId),
+            gte(gpsLogsTable.recordedAt, start),
+            sql`${gpsLogsTable.recordedAt} < ${end}`,
+          ),
+        )
+        .limit(1);
+      if (!scoped) {
+        res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+        return;
+      }
+    } else if (session.role !== "admin") {
       res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
       return;
     }
-  } else if (session.role === "partner") {
-    if (!session.partnerId) {
-      res.status(403).json({ code: "visitor.no_partner", error: "no_partner" });
-      return;
-    }
-    const [scoped] = await db
-      .select({ id: gpsLogsTable.id })
+
+    const pings = await db
+      .select({
+        id: gpsLogsTable.id,
+        ticketId: gpsLogsTable.ticketId,
+        latitude: gpsLogsTable.latitude,
+        longitude: gpsLogsTable.longitude,
+        eventType: gpsLogsTable.eventType,
+        batteryLevel: gpsLogsTable.batteryLevel,
+        recordedAt: gpsLogsTable.recordedAt,
+      })
       .from(gpsLogsTable)
       .innerJoin(ticketsTable, eq(ticketsTable.id, gpsLogsTable.ticketId))
-      .innerJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
+      .innerJoin(
+        siteLocationsTable,
+        eq(siteLocationsTable.id, ticketsTable.siteLocationId),
+      )
       .where(
         and(
           eq(ticketsTable.fieldEmployeeId, employeeId),
-          eq(siteLocationsTable.partnerId, session.partnerId),
+          ...(session.role === "partner"
+            ? [eq(siteLocationsTable.partnerId, session.partnerId!)]
+            : []),
+          ...(["vendor", "field_employee"].includes(session.role)
+            ? [eq(ticketsTable.vendorId, session.vendorId!)]
+            : []),
           gte(gpsLogsTable.recordedAt, start),
           sql`${gpsLogsTable.recordedAt} < ${end}`,
         ),
       )
-      .limit(1);
-    if (!scoped) {
-      res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
-      return;
-    }
-  } else if (session.role !== "admin") {
-    res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
-    return;
-  }
+      .orderBy(gpsLogsTable.recordedAt);
 
-  const pings = await db
-    .select({
-      id: gpsLogsTable.id,
-      ticketId: gpsLogsTable.ticketId,
-      latitude: gpsLogsTable.latitude,
-      longitude: gpsLogsTable.longitude,
-      eventType: gpsLogsTable.eventType,
-      batteryLevel: gpsLogsTable.batteryLevel,
-      recordedAt: gpsLogsTable.recordedAt,
-    })
-    .from(gpsLogsTable)
-    .innerJoin(ticketsTable, eq(ticketsTable.id, gpsLogsTable.ticketId))
-    .innerJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
-    .where(
-      and(
-        eq(ticketsTable.fieldEmployeeId, employeeId),
-        ...(session.role === "partner" ? [eq(siteLocationsTable.partnerId, session.partnerId!)] : []),
-        ...(["vendor", "field_employee"].includes(session.role) ? [eq(ticketsTable.vendorId, session.vendorId!)] : []),
-        gte(gpsLogsTable.recordedAt, start),
-        sql`${gpsLogsTable.recordedAt} < ${end}`,
-      ),
-    )
-    .orderBy(gpsLogsTable.recordedAt);
-
-  res.json({
-    employee: { id: emp.id, name: `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() },
-    date: dateStr,
-    pings,
-  });
-});
+    res.json({
+      employee: {
+        id: emp.id,
+        name: `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim(),
+      },
+      date: dateStr,
+      pings,
+    });
+  },
+);
 
 // ── Recent site trips (role-scoped audit / dispute reference) ───────────────
-router.get("/map/recent-trips", async (req: Request, res: Response): Promise<void> => {
-  const session = getSession(req);
-  if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
-    return;
-  }
-
-  const filterVendorId = req.query.vendorId ? Number(req.query.vendorId) : null;
-  const filterSiteLocationId = req.query.siteLocationId
-    ? Number(req.query.siteLocationId)
-    : null;
-  if (req.query.siteLocationId && !Number.isFinite(filterSiteLocationId)) {
-    res.status(400).json({ code: "visitor.invalid_site_location_id", error: "invalid_siteLocationId" });
-    return;
-  }
-
-  let limit = req.query.limit ? Number(req.query.limit) : 100;
-  if (!Number.isFinite(limit) || limit <= 0) limit = 100;
-  if (limit > 100) limit = 100;
-
-  const scope = resolveRecentTripsScope(session, {
-    vendorId: filterVendorId,
-    siteLocationId: filterSiteLocationId,
-  });
-  if (!scope.ok) {
-    res.status(scope.status).json(scope.body);
-    return;
-  }
-
-  if (scope.partnerId && filterSiteLocationId) {
-    const [site] = await db
-      .select({ partnerId: siteLocationsTable.partnerId })
-      .from(siteLocationsTable)
-      .where(eq(siteLocationsTable.id, filterSiteLocationId));
-    if (!site || site.partnerId !== scope.partnerId) {
-      res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+router.get(
+  "/map/recent-trips",
+  async (req: Request, res: Response): Promise<void> => {
+    const session = getSession(req);
+    if (!session) {
+      res
+        .status(401)
+        .json({ code: "auth.unauthenticated", error: "unauthenticated" });
       return;
     }
-  }
 
-  const tripActivity = or(
-    isNotNull(ticketsTable.enRouteAt),
-    isNotNull(ticketsTable.arrivedAt),
-    isNotNull(ticketsTable.checkInTime),
-    isNotNull(ticketsTable.onLocationAt),
-  );
+    const filterVendorId = req.query.vendorId
+      ? Number(req.query.vendorId)
+      : null;
+    const filterSiteLocationId = req.query.siteLocationId
+      ? Number(req.query.siteLocationId)
+      : null;
+    if (req.query.siteLocationId && !Number.isFinite(filterSiteLocationId)) {
+      res.status(400).json({
+        code: "visitor.invalid_site_location_id",
+        error: "invalid_siteLocationId",
+      });
+      return;
+    }
 
-  const filters = [
-    isNotNull(ticketsTable.fieldEmployeeId),
-    tripActivity,
-  ];
-  if (scope.vendorId) filters.push(eq(ticketsTable.vendorId, scope.vendorId));
-  if (scope.partnerId) {
-    filters.push(eq(siteLocationsTable.partnerId, scope.partnerId));
-  }
-  if (filterSiteLocationId) {
-    filters.push(eq(ticketsTable.siteLocationId, filterSiteLocationId));
-  }
+    let limit = req.query.limit ? Number(req.query.limit) : 100;
+    if (!Number.isFinite(limit) || limit <= 0) limit = 100;
+    if (limit > 100) limit = 100;
 
-  const rows = await db
-    .select({
-      ticketId: ticketsTable.id,
-      employeeId: ticketsTable.fieldEmployeeId,
-      empFirst: fieldEmployeesTable.firstName,
-      empLast: fieldEmployeesTable.lastName,
-      vendorId: ticketsTable.vendorId,
-      vendorName: vendorsTable.name,
-      siteLocationId: ticketsTable.siteLocationId,
-      siteName: siteLocationsTable.name,
-      siteCode: siteLocationsTable.siteCode,
-      workTypeName: workTypesTable.name,
-      lifecycleState: ticketsTable.lifecycleState,
-      status: ticketsTable.status,
-      enRouteAt: ticketsTable.enRouteAt,
-      onLocationAt: ticketsTable.onLocationAt,
-      arrivedAt: ticketsTable.arrivedAt,
-      checkInTime: ticketsTable.checkInTime,
-      checkOutTime: ticketsTable.checkOutTime,
-      checkInLatitude: ticketsTable.checkInLatitude,
-      checkInLongitude: ticketsTable.checkInLongitude,
-      checkOutLatitude: ticketsTable.checkOutLatitude,
-      checkOutLongitude: ticketsTable.checkOutLongitude,
-      siteLatitude: siteLocationsTable.latitude,
-      siteLongitude: siteLocationsTable.longitude,
-      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-      updatedAt: ticketsTable.updatedAt,
-    })
-    .from(ticketsTable)
-    .innerJoin(fieldEmployeesTable, eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId))
-    .leftJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
-    .leftJoin(vendorsTable, eq(vendorsTable.id, ticketsTable.vendorId))
-    .leftJoin(workTypesTable, eq(workTypesTable.id, ticketsTable.workTypeId))
-    .where(and(...filters))
-    .orderBy(
-      desc(ticketsTable.checkOutTime),
-      desc(ticketsTable.checkInTime),
-      desc(ticketsTable.arrivedAt),
-      desc(ticketsTable.enRouteAt),
-      desc(ticketsTable.updatedAt),
-    )
-    .limit(limit);
+    const scope = resolveRecentTripsScope(session, {
+      vendorId: filterVendorId,
+      siteLocationId: filterSiteLocationId,
+    });
+    if (!scope.ok) {
+      res.status(scope.status).json(scope.body);
+      return;
+    }
 
-  const ticketIds = rows.map((r) => r.ticketId);
-  const pingCounts = new Map<number, number>();
-  if (ticketIds.length > 0) {
-    const counts = await db.execute(sql`
+    if (scope.partnerId && filterSiteLocationId) {
+      const [site] = await db
+        .select({ partnerId: siteLocationsTable.partnerId })
+        .from(siteLocationsTable)
+        .where(eq(siteLocationsTable.id, filterSiteLocationId));
+      if (!site || site.partnerId !== scope.partnerId) {
+        res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+        return;
+      }
+    }
+
+    const tripActivity = or(
+      isNotNull(ticketsTable.enRouteAt),
+      isNotNull(ticketsTable.arrivedAt),
+      isNotNull(ticketsTable.checkInTime),
+      isNotNull(ticketsTable.onLocationAt),
+    );
+
+    const filters = [isNotNull(ticketsTable.fieldEmployeeId), tripActivity];
+    if (scope.vendorId) filters.push(eq(ticketsTable.vendorId, scope.vendorId));
+    if (scope.partnerId) {
+      filters.push(eq(siteLocationsTable.partnerId, scope.partnerId));
+    }
+    if (filterSiteLocationId) {
+      filters.push(eq(ticketsTable.siteLocationId, filterSiteLocationId));
+    }
+
+    const rows = await db
+      .select({
+        ticketId: ticketsTable.id,
+        employeeId: ticketsTable.fieldEmployeeId,
+        empFirst: fieldEmployeesTable.firstName,
+        empLast: fieldEmployeesTable.lastName,
+        vendorId: ticketsTable.vendorId,
+        vendorName: vendorsTable.name,
+        siteLocationId: ticketsTable.siteLocationId,
+        siteName: siteLocationsTable.name,
+        siteCode: siteLocationsTable.siteCode,
+        workTypeName: workTypesTable.name,
+        lifecycleState: ticketsTable.lifecycleState,
+        status: ticketsTable.status,
+        enRouteAt: ticketsTable.enRouteAt,
+        onLocationAt: ticketsTable.onLocationAt,
+        arrivedAt: ticketsTable.arrivedAt,
+        checkInTime: ticketsTable.checkInTime,
+        checkOutTime: ticketsTable.checkOutTime,
+        checkInLatitude: ticketsTable.checkInLatitude,
+        checkInLongitude: ticketsTable.checkInLongitude,
+        checkOutLatitude: ticketsTable.checkOutLatitude,
+        checkOutLongitude: ticketsTable.checkOutLongitude,
+        siteLatitude: siteLocationsTable.latitude,
+        siteLongitude: siteLocationsTable.longitude,
+        siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
+        updatedAt: ticketsTable.updatedAt,
+      })
+      .from(ticketsTable)
+      .innerJoin(
+        fieldEmployeesTable,
+        eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId),
+      )
+      .leftJoin(
+        siteLocationsTable,
+        eq(siteLocationsTable.id, ticketsTable.siteLocationId),
+      )
+      .leftJoin(vendorsTable, eq(vendorsTable.id, ticketsTable.vendorId))
+      .leftJoin(workTypesTable, eq(workTypesTable.id, ticketsTable.workTypeId))
+      .where(and(...filters))
+      .orderBy(
+        desc(ticketsTable.checkOutTime),
+        desc(ticketsTable.checkInTime),
+        desc(ticketsTable.arrivedAt),
+        desc(ticketsTable.enRouteAt),
+        desc(ticketsTable.updatedAt),
+      )
+      .limit(limit);
+
+    const ticketIds = rows.map((r) => r.ticketId);
+    const pingCounts = new Map<number, number>();
+    if (ticketIds.length > 0) {
+      const counts = await db.execute(sql`
       select ticket_id as "ticketId", count(*)::int as "cnt"
         from ${gpsLogsTable}
-       where ticket_id in (${sql.join(ticketIds.map((id) => sql`${id}`), sql`, `)})
+       where ticket_id in (${sql.join(
+         ticketIds.map((id) => sql`${id}`),
+         sql`, `,
+       )})
        group by ticket_id
     `);
-    for (const r of counts.rows as any[]) {
-      pingCounts.set(Number(r.ticketId), Number(r.cnt));
+      for (const r of counts.rows as any[]) {
+        pingCounts.set(Number(r.ticketId), Number(r.cnt));
+      }
     }
-  }
 
-  const trips = rows.map((r) => {
-    const lastActivityAt =
-      r.checkOutTime ??
-      r.checkInTime ??
-      r.arrivedAt ??
-      r.onLocationAt ??
-      r.enRouteAt ??
-      r.updatedAt;
-    const checkInLat = r.checkInLatitude == null ? null : Number(r.checkInLatitude);
-    const checkInLng = r.checkInLongitude == null ? null : Number(r.checkInLongitude);
-    const siteLat = r.siteLatitude == null ? null : Number(r.siteLatitude);
-    const siteLng = r.siteLongitude == null ? null : Number(r.siteLongitude);
-    return {
-      ticketId: r.ticketId,
-      employeeId: r.employeeId,
-      employeeName:
-        [r.empFirst, r.empLast].filter(Boolean).join(" ") ||
-        `Employee #${r.employeeId}`,
-      vendorId: r.vendorId,
-      vendorName: r.vendorName,
-      siteLocationId: r.siteLocationId,
-      siteName: r.siteName,
-      siteCode: r.siteCode,
-      workTypeName: r.workTypeName,
-      lifecycleState: r.lifecycleState,
-      status: r.status,
-      enRouteAt: r.enRouteAt?.toISOString() ?? null,
-      onLocationAt: r.onLocationAt?.toISOString() ?? null,
-      arrivedAt: r.arrivedAt?.toISOString() ?? null,
-      checkInTime: r.checkInTime?.toISOString() ?? null,
-      checkOutTime: r.checkOutTime?.toISOString() ?? null,
-      checkInLatitude: checkInLat,
-      checkInLongitude: checkInLng,
-      checkOutLatitude:
-        r.checkOutLatitude == null ? null : Number(r.checkOutLatitude),
-      checkOutLongitude:
-        r.checkOutLongitude == null ? null : Number(r.checkOutLongitude),
-      siteLatitude: siteLat,
-      siteLongitude: siteLng,
-      siteRadiusMeters:
-        r.siteRadiusMeters == null ? null : Number(r.siteRadiusMeters),
-      lastActivityAt: lastActivityAt?.toISOString() ?? null,
-      onSiteMinutes: computeOnSiteMinutes(r),
-      travelMinutes: computeTravelMinutes(r),
-      checkInDistanceMeters: checkInDistanceMeters({
+    const trips = rows.map((r) => {
+      const lastActivityAt =
+        r.checkOutTime ??
+        r.checkInTime ??
+        r.arrivedAt ??
+        r.onLocationAt ??
+        r.enRouteAt ??
+        r.updatedAt;
+      const checkInLat =
+        r.checkInLatitude == null ? null : Number(r.checkInLatitude);
+      const checkInLng =
+        r.checkInLongitude == null ? null : Number(r.checkInLongitude);
+      const siteLat = r.siteLatitude == null ? null : Number(r.siteLatitude);
+      const siteLng = r.siteLongitude == null ? null : Number(r.siteLongitude);
+      return {
+        ticketId: r.ticketId,
+        employeeId: r.employeeId,
+        employeeName:
+          [r.empFirst, r.empLast].filter(Boolean).join(" ") ||
+          `Employee #${r.employeeId}`,
+        vendorId: r.vendorId,
+        vendorName: r.vendorName,
+        siteLocationId: r.siteLocationId,
+        siteName: r.siteName,
+        siteCode: r.siteCode,
+        workTypeName: r.workTypeName,
+        lifecycleState: r.lifecycleState,
+        status: r.status,
+        enRouteAt: r.enRouteAt?.toISOString() ?? null,
+        onLocationAt: r.onLocationAt?.toISOString() ?? null,
+        arrivedAt: r.arrivedAt?.toISOString() ?? null,
+        checkInTime: r.checkInTime?.toISOString() ?? null,
+        checkOutTime: r.checkOutTime?.toISOString() ?? null,
         checkInLatitude: checkInLat,
         checkInLongitude: checkInLng,
+        checkOutLatitude:
+          r.checkOutLatitude == null ? null : Number(r.checkOutLatitude),
+        checkOutLongitude:
+          r.checkOutLongitude == null ? null : Number(r.checkOutLongitude),
         siteLatitude: siteLat,
         siteLongitude: siteLng,
-      }),
-      replayDate: pickReplayDate(
-        r.checkInTime,
-        r.enRouteAt,
-        r.arrivedAt,
-        r.updatedAt,
-      ),
-      gpsPingCount: pingCounts.get(r.ticketId) ?? 0,
-    };
-  });
+        siteRadiusMeters:
+          r.siteRadiusMeters == null ? null : Number(r.siteRadiusMeters),
+        lastActivityAt: lastActivityAt?.toISOString() ?? null,
+        onSiteMinutes: computeOnSiteMinutes(r),
+        travelMinutes: computeTravelMinutes(r),
+        checkInDistanceMeters: checkInDistanceMeters({
+          checkInLatitude: checkInLat,
+          checkInLongitude: checkInLng,
+          siteLatitude: siteLat,
+          siteLongitude: siteLng,
+        }),
+        replayDate: pickReplayDate(
+          r.checkInTime,
+          r.enRouteAt,
+          r.arrivedAt,
+          r.updatedAt,
+        ),
+        gpsPingCount: pingCounts.get(r.ticketId) ?? 0,
+      };
+    });
 
-  res.json({ trips, limit });
-});
+    res.json({ trips, limit });
+  },
+);
 
 // ── Site Map: nearby field employees (partner / admin) ─────────────────────
 // Returns the latest live ping per field employee whose most recent reported
@@ -1027,66 +1246,71 @@ router.get("/map/recent-trips", async (req: Request, res: Response): Promise<voi
 // Auth: admin sees any site; partner sees only sites they own (matched by
 // session.partnerId == site.partnerId). All other roles get 403.
 
-router.get("/site-map/overview", async (req: Request, res: Response): Promise<void> => {
-  const session = getSession(req);
-  if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
-    return;
-  }
-  if (session.role === "partner") {
-    if (!session.partnerId) {
+router.get(
+  "/site-map/overview",
+  async (req: Request, res: Response): Promise<void> => {
+    const session = getSession(req);
+    if (!session) {
+      res
+        .status(401)
+        .json({ code: "auth.unauthenticated", error: "unauthenticated" });
+      return;
+    }
+    if (session.role === "partner") {
+      if (!session.partnerId) {
+        res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+        return;
+      }
+    } else if (session.role !== "admin") {
       res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
       return;
     }
-  } else if (session.role !== "admin") {
-    res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
-    return;
-  }
 
-  const siteRows = await db
-    .select({
-      id: siteLocationsTable.id,
-      partnerId: siteLocationsTable.partnerId,
-      name: siteLocationsTable.name,
-      address: siteLocationsTable.address,
-      latitude: siteLocationsTable.latitude,
-      longitude: siteLocationsTable.longitude,
-      siteCode: siteLocationsTable.siteCode,
-      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-    })
-    .from(siteLocationsTable)
-    .where(
-      session.role === "partner"
-        ? eq(siteLocationsTable.partnerId, session.partnerId!)
-        : sql`true`,
-    );
+    const siteRows = await db
+      .select({
+        id: siteLocationsTable.id,
+        partnerId: siteLocationsTable.partnerId,
+        name: siteLocationsTable.name,
+        address: siteLocationsTable.address,
+        latitude: siteLocationsTable.latitude,
+        longitude: siteLocationsTable.longitude,
+        siteCode: siteLocationsTable.siteCode,
+        siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
+      })
+      .from(siteLocationsTable)
+      .where(
+        session.role === "partner"
+          ? eq(siteLocationsTable.partnerId, session.partnerId!)
+          : sql`true`,
+      );
 
-  const sites = siteRows
-    .map((s) => ({
-      id: s.id,
-      name: s.name,
-      address: s.address,
-      latitude: s.latitude == null ? null : Number(s.latitude),
-      longitude: s.longitude == null ? null : Number(s.longitude),
-      siteCode: s.siteCode,
-      partnerId: s.partnerId,
-      siteRadiusMeters: s.siteRadiusMeters == null ? null : Number(s.siteRadiusMeters),
-    }))
-    .filter(
-      (s) =>
-        s.latitude != null &&
-        s.longitude != null &&
-        Number.isFinite(s.latitude) &&
-        Number.isFinite(s.longitude),
-    );
+    const sites = siteRows
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        address: s.address,
+        latitude: s.latitude == null ? null : Number(s.latitude),
+        longitude: s.longitude == null ? null : Number(s.longitude),
+        siteCode: s.siteCode,
+        partnerId: s.partnerId,
+        siteRadiusMeters:
+          s.siteRadiusMeters == null ? null : Number(s.siteRadiusMeters),
+      }))
+      .filter(
+        (s) =>
+          s.latitude != null &&
+          s.longitude != null &&
+          Number.isFinite(s.latitude) &&
+          Number.isFinite(s.longitude),
+      );
 
-  if (sites.length === 0) {
-    res.json({ sites: [], employees: [] });
-    return;
-  }
+    if (sites.length === 0) {
+      res.json({ sites: [], employees: [] });
+      return;
+    }
 
-  const sinceTs = new Date(Date.now() - LIVE_PING_FRESH_MS);
-  const latestPings = await db.execute(sql`
+    const sinceTs = new Date(Date.now() - LIVE_PING_FRESH_MS);
+    const latestPings = await db.execute(sql`
     select g.ticket_id        as "ticketId",
            g.latitude         as "latitude",
            g.longitude        as "longitude",
@@ -1103,200 +1327,214 @@ router.get("/site-map/overview", async (req: Request, res: Response): Promise<vo
       ) latest on latest.ticket_id = g.ticket_id and latest.max_id = g.id
   `);
 
-  type Ping = {
-    ticketId: number;
-    latitude: number;
-    longitude: number;
-    batteryLevel: number | null;
-    speedMps: number | null;
-    recordedAt: Date;
-  };
-  const byTicket = new Map<number, Ping>();
-  for (const r of latestPings.rows as any[]) {
-    byTicket.set(Number(r.ticketId), {
-      ticketId: Number(r.ticketId),
-      latitude: Number(r.latitude),
-      longitude: Number(r.longitude),
-      batteryLevel: r.batteryLevel == null ? null : Number(r.batteryLevel),
-      speedMps: r.speedMps == null ? null : Number(r.speedMps),
-      recordedAt: new Date(r.recordedAt),
-    });
-  }
+    type Ping = {
+      ticketId: number;
+      latitude: number;
+      longitude: number;
+      batteryLevel: number | null;
+      speedMps: number | null;
+      recordedAt: Date;
+    };
+    const byTicket = new Map<number, Ping>();
+    for (const r of latestPings.rows as any[]) {
+      byTicket.set(Number(r.ticketId), {
+        ticketId: Number(r.ticketId),
+        latitude: Number(r.latitude),
+        longitude: Number(r.longitude),
+        batteryLevel: r.batteryLevel == null ? null : Number(r.batteryLevel),
+        speedMps: r.speedMps == null ? null : Number(r.speedMps),
+        recordedAt: new Date(r.recordedAt),
+      });
+    }
 
-  const ticketIds = Array.from(byTicket.keys());
-  if (ticketIds.length === 0) {
+    const ticketIds = Array.from(byTicket.keys());
+    if (ticketIds.length === 0) {
+      res.json({
+        sites: sites.map((s) => ({
+          ...s,
+          nearbyCount: 0,
+          radiusMeters: resolveSiteMapRadiusMeters(s.siteRadiusMeters),
+        })),
+        employees: [],
+      });
+      return;
+    }
+
+    const tickets = await db
+      .select({
+        ticketId: ticketsTable.id,
+        lifecycleState: ticketsTable.lifecycleState,
+        fieldEmployeeId: ticketsTable.fieldEmployeeId,
+        empFirst: fieldEmployeesTable.firstName,
+        empLast: fieldEmployeesTable.lastName,
+      })
+      .from(ticketsTable)
+      .leftJoin(
+        fieldEmployeesTable,
+        eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId),
+      )
+      .where(inArray(ticketsTable.id, ticketIds));
+
+    type EmpRow = {
+      employeeId: number;
+      employeeName: string;
+      latitude: number;
+      longitude: number;
+      nearestSiteId: number;
+      distanceMeters: number;
+      batteryLevel: number | null;
+      speedMps: number | null;
+      recordedAt: string;
+      lifecycleState: string | null;
+      ticketId: number;
+    };
+    const byEmp = new Map<number, EmpRow>();
+
+    for (const t of tickets) {
+      const ping = byTicket.get(t.ticketId);
+      if (!ping || !t.fieldEmployeeId) continue;
+      let nearestSiteId = sites[0]!.id;
+      let nearestDist = Infinity;
+      for (const site of sites) {
+        const d = haversineMeters(
+          ping.latitude,
+          ping.longitude,
+          site.latitude!,
+          site.longitude!,
+        );
+        const radius = resolveSiteMapRadiusMeters(site.siteRadiusMeters);
+        if (d <= radius && d < nearestDist) {
+          nearestDist = d;
+          nearestSiteId = site.id;
+        }
+      }
+      if (nearestDist === Infinity) continue;
+      const candidate: EmpRow = {
+        employeeId: t.fieldEmployeeId,
+        employeeName:
+          [t.empFirst, t.empLast].filter(Boolean).join(" ") ||
+          `Employee #${t.fieldEmployeeId}`,
+        latitude: ping.latitude,
+        longitude: ping.longitude,
+        nearestSiteId,
+        distanceMeters: nearestDist,
+        batteryLevel: ping.batteryLevel,
+        speedMps: ping.speedMps,
+        recordedAt: ping.recordedAt.toISOString(),
+        lifecycleState: t.lifecycleState,
+        ticketId: t.ticketId,
+      };
+      const existing = byEmp.get(candidate.employeeId);
+      if (
+        !existing ||
+        new Date(candidate.recordedAt) > new Date(existing.recordedAt)
+      ) {
+        byEmp.set(candidate.employeeId, candidate);
+      }
+    }
+
+    const employees = Array.from(byEmp.values()).sort(
+      (a, b) => a.distanceMeters - b.distanceMeters,
+    );
+
+    const nearbyCountBySite = new Map<number, number>();
+    for (const emp of employees) {
+      nearbyCountBySite.set(
+        emp.nearestSiteId,
+        (nearbyCountBySite.get(emp.nearestSiteId) ?? 0) + 1,
+      );
+    }
+
     res.json({
       sites: sites.map((s) => ({
         ...s,
-        nearbyCount: 0,
+        nearbyCount: nearbyCountBySite.get(s.id) ?? 0,
         radiusMeters: resolveSiteMapRadiusMeters(s.siteRadiusMeters),
       })),
-      employees: [],
+      employees,
     });
-    return;
-  }
+  },
+);
 
-  const tickets = await db
-    .select({
-      ticketId: ticketsTable.id,
-      lifecycleState: ticketsTable.lifecycleState,
-      fieldEmployeeId: ticketsTable.fieldEmployeeId,
-      empFirst: fieldEmployeesTable.firstName,
-      empLast: fieldEmployeesTable.lastName,
-    })
-    .from(ticketsTable)
-    .leftJoin(fieldEmployeesTable, eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId))
-    .where(inArray(ticketsTable.id, ticketIds));
+router.get(
+  "/site-map/:siteLocationId/nearby",
+  async (req: Request, res: Response): Promise<void> => {
+    const session = getSession(req);
+    if (!session) {
+      res
+        .status(401)
+        .json({ code: "auth.unauthenticated", error: "unauthenticated" });
+      return;
+    }
+    const siteId = Number(req.params.siteLocationId);
+    if (!Number.isFinite(siteId) || siteId <= 0) {
+      res.status(400).json({
+        code: "visitor.invalid_site_location_id",
+        error: "invalid_siteLocationId",
+      });
+      return;
+    }
+    let radiusMeters = req.query.radiusMeters
+      ? Number(req.query.radiusMeters)
+      : NaN;
 
-  type EmpRow = {
-    employeeId: number;
-    employeeName: string;
-    latitude: number;
-    longitude: number;
-    nearestSiteId: number;
-    distanceMeters: number;
-    batteryLevel: number | null;
-    speedMps: number | null;
-    recordedAt: string;
-    lifecycleState: string | null;
-    ticketId: number;
-  };
-  const byEmp = new Map<number, EmpRow>();
-
-  for (const t of tickets) {
-    const ping = byTicket.get(t.ticketId);
-    if (!ping || !t.fieldEmployeeId) continue;
-    let nearestSiteId = sites[0]!.id;
-    let nearestDist = Infinity;
-    for (const site of sites) {
-      const d = haversineMeters(
-        ping.latitude,
-        ping.longitude,
-        site.latitude!,
-        site.longitude!,
+    // Load the site so we can authorize and use its coords as the center.
+    const [site] = await db
+      .select({
+        id: siteLocationsTable.id,
+        partnerId: siteLocationsTable.partnerId,
+        name: siteLocationsTable.name,
+        address: siteLocationsTable.address,
+        latitude: siteLocationsTable.latitude,
+        longitude: siteLocationsTable.longitude,
+        siteCode: siteLocationsTable.siteCode,
+        siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
+      })
+      .from(siteLocationsTable)
+      .where(eq(siteLocationsTable.id, siteId));
+    if (!site) {
+      res.status(404).json({ code: "site.not_found", error: "site_not_found" });
+      return;
+    }
+    if (!Number.isFinite(radiusMeters) || radiusMeters <= 0) {
+      radiusMeters = resolveSiteMapRadiusMeters(
+        site.siteRadiusMeters == null ? null : Number(site.siteRadiusMeters),
       );
-      const radius = resolveSiteMapRadiusMeters(site.siteRadiusMeters);
-      if (d <= radius && d < nearestDist) {
-        nearestDist = d;
-        nearestSiteId = site.id;
+    }
+    if (radiusMeters > MAX_RADIUS_METERS) radiusMeters = MAX_RADIUS_METERS;
+    if (session.role === "partner") {
+      if (!session.partnerId || session.partnerId !== site.partnerId) {
+        res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+        return;
       }
-    }
-    if (nearestDist === Infinity) continue;
-    const candidate: EmpRow = {
-      employeeId: t.fieldEmployeeId,
-      employeeName:
-        [t.empFirst, t.empLast].filter(Boolean).join(" ") ||
-        `Employee #${t.fieldEmployeeId}`,
-      latitude: ping.latitude,
-      longitude: ping.longitude,
-      nearestSiteId,
-      distanceMeters: nearestDist,
-      batteryLevel: ping.batteryLevel,
-      speedMps: ping.speedMps,
-      recordedAt: ping.recordedAt.toISOString(),
-      lifecycleState: t.lifecycleState,
-      ticketId: t.ticketId,
-    };
-    const existing = byEmp.get(candidate.employeeId);
-    if (!existing || new Date(candidate.recordedAt) > new Date(existing.recordedAt)) {
-      byEmp.set(candidate.employeeId, candidate);
-    }
-  }
-
-  const employees = Array.from(byEmp.values()).sort(
-    (a, b) => a.distanceMeters - b.distanceMeters,
-  );
-
-  const nearbyCountBySite = new Map<number, number>();
-  for (const emp of employees) {
-    nearbyCountBySite.set(
-      emp.nearestSiteId,
-      (nearbyCountBySite.get(emp.nearestSiteId) ?? 0) + 1,
-    );
-  }
-
-  res.json({
-    sites: sites.map((s) => ({
-      ...s,
-      nearbyCount: nearbyCountBySite.get(s.id) ?? 0,
-      radiusMeters: resolveSiteMapRadiusMeters(s.siteRadiusMeters),
-    })),
-    employees,
-  });
-});
-
-router.get("/site-map/:siteLocationId/nearby", async (req: Request, res: Response): Promise<void> => {
-  const session = getSession(req);
-  if (!session) {
-    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
-    return;
-  }
-  const siteId = Number(req.params.siteLocationId);
-  if (!Number.isFinite(siteId) || siteId <= 0) {
-    res.status(400).json({ code: "visitor.invalid_site_location_id", error: "invalid_siteLocationId" });
-    return;
-  }
-  let radiusMeters = req.query.radiusMeters
-    ? Number(req.query.radiusMeters)
-    : NaN;
-
-  // Load the site so we can authorize and use its coords as the center.
-  const [site] = await db
-    .select({
-      id: siteLocationsTable.id,
-      partnerId: siteLocationsTable.partnerId,
-      name: siteLocationsTable.name,
-      address: siteLocationsTable.address,
-      latitude: siteLocationsTable.latitude,
-      longitude: siteLocationsTable.longitude,
-      siteCode: siteLocationsTable.siteCode,
-      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-    })
-    .from(siteLocationsTable)
-    .where(eq(siteLocationsTable.id, siteId));
-  if (!site) {
-    res.status(404).json({ code: "site.not_found", error: "site_not_found" });
-    return;
-  }
-  if (!Number.isFinite(radiusMeters) || radiusMeters <= 0) {
-    radiusMeters = resolveSiteMapRadiusMeters(
-      site.siteRadiusMeters == null ? null : Number(site.siteRadiusMeters),
-    );
-  }
-  if (radiusMeters > MAX_RADIUS_METERS) radiusMeters = MAX_RADIUS_METERS;
-  if (session.role === "partner") {
-    if (!session.partnerId || session.partnerId !== site.partnerId) {
+    } else if (session.role !== "admin") {
       res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
       return;
     }
-  } else if (session.role !== "admin") {
-    res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
-    return;
-  }
-  const siteLat = site.latitude == null ? null : Number(site.latitude);
-  const siteLng = site.longitude == null ? null : Number(site.longitude);
-  if (siteLat == null || siteLng == null) {
-    // Site has no coordinates — nothing to spatially compare against.
-    res.json({
-      site: {
-        id: site.id,
-        name: site.name,
-        address: site.address,
-        latitude: null,
-        longitude: null,
-        siteCode: site.siteCode,
-        partnerId: site.partnerId,
-      },
-      radiusMeters,
-      employees: [],
-    });
-    return;
-  }
+    const siteLat = site.latitude == null ? null : Number(site.latitude);
+    const siteLng = site.longitude == null ? null : Number(site.longitude);
+    if (siteLat == null || siteLng == null) {
+      // Site has no coordinates — nothing to spatially compare against.
+      res.json({
+        site: {
+          id: site.id,
+          name: site.name,
+          address: site.address,
+          latitude: null,
+          longitude: null,
+          siteCode: site.siteCode,
+          partnerId: site.partnerId,
+        },
+        radiusMeters,
+        employees: [],
+      });
+      return;
+    }
 
-  // Pull the latest live_ping per ticket within the freshness window.
-  // Identical pattern to /api/live-locations so behavior stays consistent.
-  const sinceTs = new Date(Date.now() - LIVE_PING_FRESH_MS);
-  const latestPings = await db.execute(sql`
+    // Pull the latest live_ping per ticket within the freshness window.
+    // Identical pattern to /api/live-locations so behavior stays consistent.
+    const sinceTs = new Date(Date.now() - LIVE_PING_FRESH_MS);
+    const latestPings = await db.execute(sql`
     select g.ticket_id        as "ticketId",
            g.latitude         as "latitude",
            g.longitude        as "longitude",
@@ -1313,27 +1551,31 @@ router.get("/site-map/:siteLocationId/nearby", async (req: Request, res: Respons
       ) latest on latest.ticket_id = g.ticket_id and latest.max_id = g.id
   `);
 
-  type Ping = {
-    ticketId: number; latitude: number; longitude: number;
-    batteryLevel: number | null; speedMps: number | null;
-    recordedAt: Date; heading: number | null;
-  };
-  const byTicket = new Map<number, Ping>();
-  for (const r of latestPings.rows as any[]) {
-    byTicket.set(Number(r.ticketId), {
-      ticketId: Number(r.ticketId),
-      latitude: Number(r.latitude),
-      longitude: Number(r.longitude),
-      batteryLevel: r.batteryLevel == null ? null : Number(r.batteryLevel),
-      speedMps: r.speedMps == null ? null : Number(r.speedMps),
-      recordedAt: new Date(r.recordedAt),
-      heading: null,
-    });
-  }
-  // Compute heading from the previous ping (same approach as live-locations).
-  if (byTicket.size > 0) {
-    try {
-      const prevPings = await db.execute(sql`
+    type Ping = {
+      ticketId: number;
+      latitude: number;
+      longitude: number;
+      batteryLevel: number | null;
+      speedMps: number | null;
+      recordedAt: Date;
+      heading: number | null;
+    };
+    const byTicket = new Map<number, Ping>();
+    for (const r of latestPings.rows as any[]) {
+      byTicket.set(Number(r.ticketId), {
+        ticketId: Number(r.ticketId),
+        latitude: Number(r.latitude),
+        longitude: Number(r.longitude),
+        batteryLevel: r.batteryLevel == null ? null : Number(r.batteryLevel),
+        speedMps: r.speedMps == null ? null : Number(r.speedMps),
+        recordedAt: new Date(r.recordedAt),
+        heading: null,
+      });
+    }
+    // Compute heading from the previous ping (same approach as live-locations).
+    if (byTicket.size > 0) {
+      try {
+        const prevPings = await db.execute(sql`
         select g.ticket_id     as "ticketId",
                g.latitude      as "latitude",
                g.longitude     as "longitude"
@@ -1347,21 +1589,139 @@ router.get("/site-map/:siteLocationId/nearby", async (req: Request, res: Respons
              group by ticket_id
           ) prev on prev.ticket_id = g.ticket_id and prev.prev_id = g.id
       `);
-      for (const r of prevPings.rows as any[]) {
-        const tid = Number(r.ticketId);
-        const cur = byTicket.get(tid);
-        if (!cur) continue;
-        cur.heading = computeHeading(
-          { latitude: Number(r.latitude), longitude: Number(r.longitude) },
-          { latitude: cur.latitude, longitude: cur.longitude },
-        );
+        for (const r of prevPings.rows as any[]) {
+          const tid = Number(r.ticketId);
+          const cur = byTicket.get(tid);
+          if (!cur) continue;
+          cur.heading = computeHeading(
+            { latitude: Number(r.latitude), longitude: Number(r.longitude) },
+            { latitude: cur.latitude, longitude: cur.longitude },
+          );
+        }
+      } catch {
+        // Heading is best-effort; skip on failure.
       }
-    } catch {
-      // Heading is best-effort; skip on failure.
     }
-  }
-  const ticketIds = Array.from(byTicket.keys());
-  if (ticketIds.length === 0) {
+    const ticketIds = Array.from(byTicket.keys());
+    if (ticketIds.length === 0) {
+      res.json({
+        site: {
+          id: site.id,
+          name: site.name,
+          address: site.address,
+          latitude: siteLat,
+          longitude: siteLng,
+          siteCode: site.siteCode,
+          partnerId: site.partnerId,
+        },
+        radiusMeters,
+        employees: [],
+      });
+      return;
+    }
+
+    // Resolve each ping's ticket to (employeeId, vendorId, optional active
+    // visit info). We pull ALL tickets that produced a recent ping — not only
+    // active ones — so we can locate employees who are still reporting GPS
+    // even when their last ticket is closed. The "current visit" details
+    // (ticketNumber, lifecycleState, siteName) are populated only when the
+    // ticket is in an active lifecycle state.
+    const tickets = await db
+      .select({
+        ticketId: ticketsTable.id,
+        vendorId: ticketsTable.vendorId,
+        lifecycleState: ticketsTable.lifecycleState,
+        fieldEmployeeId: ticketsTable.fieldEmployeeId,
+        ticketSiteLocationId: ticketsTable.siteLocationId,
+        empFirst: fieldEmployeesTable.firstName,
+        empLast: fieldEmployeesTable.lastName,
+        empVendorId: fieldEmployeesTable.vendorId,
+        ticketSiteName: siteLocationsTable.name,
+        ticketSiteCode: siteLocationsTable.siteCode,
+      })
+      .from(ticketsTable)
+      .leftJoin(
+        fieldEmployeesTable,
+        eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId),
+      )
+      .leftJoin(
+        siteLocationsTable,
+        eq(siteLocationsTable.id, ticketsTable.siteLocationId),
+      )
+      .where(inArray(ticketsTable.id, ticketIds));
+
+    type Row = {
+      employeeId: number;
+      employeeName: string;
+      vendorId: number | null;
+      latitude: number;
+      longitude: number;
+      distanceMeters: number;
+      batteryLevel: number | null;
+      heading: number | null;
+      speedMps: number | null;
+      recordedAt: Date;
+      activeTicket: {
+        ticketId: number;
+        lifecycleState: string | null;
+        siteLocationId: number | null;
+        siteName: string | null;
+        siteCode: string | null;
+      } | null;
+    };
+
+    // Reduce to one entry per employee using their MOST RECENT ping. If the
+    // most-recent ping is tied to an active-lifecycle ticket, attach the
+    // current-visit info. We then filter by radius.
+    const byEmp = new Map<number, Row>();
+    for (const t of tickets) {
+      const ping = byTicket.get(t.ticketId);
+      if (!ping || !t.fieldEmployeeId) continue;
+      const distanceMeters = haversineMeters(
+        ping.latitude,
+        ping.longitude,
+        siteLat,
+        siteLng,
+      );
+      const isActiveLifecycle =
+        t.lifecycleState != null &&
+        (ACTIVE_LIFECYCLE_STATES as readonly string[]).includes(
+          t.lifecycleState,
+        );
+      const candidate: Row = {
+        employeeId: t.fieldEmployeeId,
+        employeeName:
+          [t.empFirst, t.empLast].filter(Boolean).join(" ") ||
+          `Employee #${t.fieldEmployeeId}`,
+        vendorId: t.vendorId ?? t.empVendorId ?? null,
+        latitude: ping.latitude,
+        longitude: ping.longitude,
+        distanceMeters,
+        batteryLevel: ping.batteryLevel,
+        heading: ping.heading,
+        speedMps: ping.speedMps,
+        recordedAt: ping.recordedAt,
+        activeTicket: isActiveLifecycle
+          ? {
+              ticketId: t.ticketId,
+              lifecycleState: t.lifecycleState,
+              siteLocationId: t.ticketSiteLocationId,
+              siteName: t.ticketSiteName,
+              siteCode: t.ticketSiteCode,
+            }
+          : null,
+      };
+      const existing = byEmp.get(candidate.employeeId);
+      if (!existing || candidate.recordedAt > existing.recordedAt) {
+        byEmp.set(candidate.employeeId, candidate);
+      }
+    }
+
+    const employees = Array.from(byEmp.values())
+      .filter((r) => r.distanceMeters <= radiusMeters)
+      .sort((a, b) => a.distanceMeters - b.distanceMeters)
+      .map((r) => ({ ...r, recordedAt: r.recordedAt.toISOString() }));
+
     res.json({
       site: {
         id: site.id,
@@ -1371,123 +1731,14 @@ router.get("/site-map/:siteLocationId/nearby", async (req: Request, res: Respons
         longitude: siteLng,
         siteCode: site.siteCode,
         partnerId: site.partnerId,
+        siteRadiusMeters:
+          site.siteRadiusMeters == null ? null : Number(site.siteRadiusMeters),
       },
       radiusMeters,
-      employees: [],
+      employees,
     });
-    return;
-  }
-
-  // Resolve each ping's ticket to (employeeId, vendorId, optional active
-  // visit info). We pull ALL tickets that produced a recent ping — not only
-  // active ones — so we can locate employees who are still reporting GPS
-  // even when their last ticket is closed. The "current visit" details
-  // (ticketNumber, lifecycleState, siteName) are populated only when the
-  // ticket is in an active lifecycle state.
-  const tickets = await db
-    .select({
-      ticketId: ticketsTable.id,
-      vendorId: ticketsTable.vendorId,
-      lifecycleState: ticketsTable.lifecycleState,
-      fieldEmployeeId: ticketsTable.fieldEmployeeId,
-      ticketSiteLocationId: ticketsTable.siteLocationId,
-      empFirst: fieldEmployeesTable.firstName,
-      empLast: fieldEmployeesTable.lastName,
-      empVendorId: fieldEmployeesTable.vendorId,
-      ticketSiteName: siteLocationsTable.name,
-      ticketSiteCode: siteLocationsTable.siteCode,
-    })
-    .from(ticketsTable)
-    .leftJoin(fieldEmployeesTable, eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId))
-    .leftJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
-    .where(inArray(ticketsTable.id, ticketIds));
-
-  type Row = {
-    employeeId: number;
-    employeeName: string;
-    vendorId: number | null;
-    latitude: number;
-    longitude: number;
-    distanceMeters: number;
-    batteryLevel: number | null;
-    heading: number | null;
-    speedMps: number | null;
-    recordedAt: Date;
-    activeTicket: {
-      ticketId: number;
-      lifecycleState: string | null;
-      siteLocationId: number | null;
-      siteName: string | null;
-      siteCode: string | null;
-    } | null;
-  };
-
-  // Reduce to one entry per employee using their MOST RECENT ping. If the
-  // most-recent ping is tied to an active-lifecycle ticket, attach the
-  // current-visit info. We then filter by radius.
-  const byEmp = new Map<number, Row>();
-  for (const t of tickets) {
-    const ping = byTicket.get(t.ticketId);
-    if (!ping || !t.fieldEmployeeId) continue;
-    const distanceMeters = haversineMeters(
-      ping.latitude,
-      ping.longitude,
-      siteLat,
-      siteLng,
-    );
-    const isActiveLifecycle =
-      t.lifecycleState != null &&
-      (ACTIVE_LIFECYCLE_STATES as readonly string[]).includes(t.lifecycleState);
-    const candidate: Row = {
-      employeeId: t.fieldEmployeeId,
-      employeeName:
-        [t.empFirst, t.empLast].filter(Boolean).join(" ") ||
-        `Employee #${t.fieldEmployeeId}`,
-      vendorId: t.vendorId ?? t.empVendorId ?? null,
-      latitude: ping.latitude,
-      longitude: ping.longitude,
-      distanceMeters,
-      batteryLevel: ping.batteryLevel,
-      heading: ping.heading,
-      speedMps: ping.speedMps,
-      recordedAt: ping.recordedAt,
-      activeTicket: isActiveLifecycle
-        ? {
-            ticketId: t.ticketId,
-            lifecycleState: t.lifecycleState,
-            siteLocationId: t.ticketSiteLocationId,
-            siteName: t.ticketSiteName,
-            siteCode: t.ticketSiteCode,
-          }
-        : null,
-    };
-    const existing = byEmp.get(candidate.employeeId);
-    if (!existing || candidate.recordedAt > existing.recordedAt) {
-      byEmp.set(candidate.employeeId, candidate);
-    }
-  }
-
-  const employees = Array.from(byEmp.values())
-    .filter((r) => r.distanceMeters <= radiusMeters)
-    .sort((a, b) => a.distanceMeters - b.distanceMeters)
-    .map((r) => ({ ...r, recordedAt: r.recordedAt.toISOString() }));
-
-  res.json({
-    site: {
-      id: site.id,
-      name: site.name,
-      address: site.address,
-      latitude: siteLat,
-      longitude: siteLng,
-      siteCode: site.siteCode,
-      partnerId: site.partnerId,
-      siteRadiusMeters:
-        site.siteRadiusMeters == null ? null : Number(site.siteRadiusMeters),
-    },
-    radiusMeters,
-    employees,
-  });
-});
+  },
+);
 
 /** GET /api/site-map/:siteLocationId/compliance-issues — cert gaps for on-site crew. */
 router.get(
@@ -1495,12 +1746,17 @@ router.get(
   async (req: Request, res: Response): Promise<void> => {
     const session = getSession(req);
     if (!session) {
-      res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+      res
+        .status(401)
+        .json({ code: "auth.unauthenticated", error: "unauthenticated" });
       return;
     }
     const siteId = Number(req.params.siteLocationId);
     if (!Number.isFinite(siteId) || siteId <= 0) {
-      res.status(400).json({ code: "visitor.invalid_site_location_id", error: "invalid_siteLocationId" });
+      res.status(400).json({
+        code: "visitor.invalid_site_location_id",
+        error: "invalid_siteLocationId",
+      });
       return;
     }
     const limit = req.query.limit ? Math.min(Number(req.query.limit), 50) : 5;
@@ -1516,9 +1772,8 @@ router.get(
       res.status(404).json({ code: "site.not_found", error: "site_not_found" });
       return;
     }
-    const { assertSiteMapPartnerAccess, buildSiteMapComplianceIssues } = await import(
-      "../lib/site-map-compliance"
-    );
+    const { assertSiteMapPartnerAccess, buildSiteMapComplianceIssues } =
+      await import("../lib/site-map-compliance");
     const allowed = await assertSiteMapPartnerAccess(session, site.partnerId);
     if (!allowed) {
       res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
@@ -1534,7 +1789,10 @@ router.get(
         vendorName: vendorsTable.name,
       })
       .from(ticketsTable)
-      .innerJoin(fieldEmployeesTable, eq(ticketsTable.fieldEmployeeId, fieldEmployeesTable.id))
+      .innerJoin(
+        fieldEmployeesTable,
+        eq(ticketsTable.fieldEmployeeId, fieldEmployeesTable.id),
+      )
       .leftJoin(vendorsTable, eq(ticketsTable.vendorId, vendorsTable.id))
       .where(
         and(

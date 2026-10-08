@@ -2,7 +2,7 @@
   "expo": {
     "name": "VNDRLY Field Mobile",
     "slug": "vndrly-mobile",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./assets/icons/vndrly.png",
     "scheme": "vndrly-mobile",
@@ -30,8 +30,9 @@
         "NSLocationWhenInUseUsageDescription": "VNDRLY records your GPS location at check-in and check-out to verify on-site work.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "VNDRLY shares your live location with your vendor while you are en route or on site, even when the app is in the background.",
         "NSLocationAlwaysUsageDescription": "VNDRLY shares your live location with your vendor while you are en route or on site, even when the app is in the background.",
-        "UIBackgroundModes": ["location", "fetch"],
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"],
         "NSFaceIDUsageDescription": "VNDRLY uses Face ID to sign you in quickly and securely.",
+        "NSSpeechRecognitionUsageDescription": "VNDRLY transcribes recordings you choose on this device into drafts for your review. Unavailable local recognition has a manual fallback.",
         "NSMicrophoneUsageDescription": "VNDRLY uses the microphone for AskV voice commands and crew push-to-talk voice messages on active tickets.",
         "NSMotionUsageDescription": "VNDRLY uses motion signals during an authorized driving shift to identify a possible crash and offer safety assistance.",
         "ITSAppUsesNonExemptEncryption": false

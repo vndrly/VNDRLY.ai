@@ -11,6 +11,8 @@ import { isExpoGo } from "./runtime";
 import { isWorkHubMessagePush } from "./work-hub-message-sound";
 import { handleWorkHubMessageSound } from "./work-hub-message-sound-native";
 import { notificationCategoryDefinitions } from "./notification-actions";
+import { getDeviceId } from "./deviceId";
+import { captureAuthScope, isAuthScopeCurrent } from "./auth";
 
 export async function registerNotificationActions(): Promise<void> {
   if (isExpoGo || Platform.OS === "web") return;
@@ -32,6 +34,7 @@ try {
       // of the system notification chime.
       const isForeground = AppState.currentState === "active";
       const data = notification.request.content.data as Record<string, unknown> | undefined;
+      if (typeof data?.nativeRequestId === "string" && Object.keys(data).every(key => key === "nativeRequestId")) return { shouldShowAlert:false,shouldPlaySound:false,shouldSetBadge:false,shouldShowBanner:false,shouldShowList:false };
       if (isForeground) {
         if (isWorkHubMessagePush(data)) void handleWorkHubMessageSound(data);
         else handleForegroundNotificationSound();
@@ -53,6 +56,15 @@ try {
 export { PUSH_NOTIFICATION_SOUND };
 
 const LAST_PUSH_TOKEN_KEY = "vndrly_last_push_token";
+/** Rebind only an already registered token. Never asks for notification permission. */
+export async function rebindRegisteredPushToken(): Promise<void> {
+  const scope = captureAuthScope();
+  const token = await SecureStore.getItemAsync(LAST_PUSH_TOKEN_KEY);
+  if (!token || !isAuthScopeCurrent(scope) || Platform.OS === "web" || isExpoGo) return;
+  const deviceId = await getDeviceId();
+  if (!isAuthScopeCurrent(scope)) return;
+  await apiFetch("/api/field/push-token", { method:"POST",body:JSON.stringify({token,platform:Platform.OS,deviceId}) }, scope);
+}
 
 export async function unregisterStoredPushToken(): Promise<void> {
   try {
@@ -66,6 +78,7 @@ export async function unregisterStoredPushToken(): Promise<void> {
 }
 
 export async function registerForPushNotifications(): Promise<string | null> {
+  const scope = captureAuthScope();
   // Expo Go on SDK 54 cannot deliver remote push tokens. Calling
   // getExpoPushTokenAsync there throws a non-recoverable native error
   // on iOS that surfaces as a red screen. Skip cleanly.
@@ -96,11 +109,13 @@ export async function registerForPushNotifications(): Promise<string | null> {
       projectId ? { projectId } : undefined,
     );
     const token = tokenResult.data;
+    if (!isAuthScopeCurrent(scope)) return null;
     await apiFetch("/api/field/push-token", {
       method: "POST",
       body: JSON.stringify({ token, platform: Platform.OS }),
-    });
+    }, scope);
     await SecureStore.setItemAsync(LAST_PUSH_TOKEN_KEY, token);
+    await rebindRegisteredPushToken().catch(() => undefined);
     return token;
   } catch (err) {
     console.warn("Push token registration failed", err);

@@ -16,6 +16,8 @@ import {
 } from "react-native";
 
 import AmberButton from "@/components/AmberButton";
+import NativeDictation from "@/components/work-hub/NativeDictation";
+import NativeNoteDraft from "@/components/work-hub/NativeNoteDraft";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useColors } from "@/hooks/useColors";
@@ -106,6 +108,7 @@ export default function CommentsPanel({
   const [content, setContent] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
+  const [preparingNativeDraft, setPreparingNativeDraft] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   // Task #699 — gate comment-list refetches when /api/.../comments
   // returns 429 with code "comments.rate_limited". Surfaces a friendly
@@ -243,7 +246,7 @@ export default function CommentsPanel({
             : [];
         const isPtt = isPttComment(c.content);
         const pttUrl =
-          !c.deletedAt && c.attachments?.[0] && (isPtt || /\.m4a|\.mp3|audio/i.test(c.attachments[0]))
+          !c.deletedAt && c.attachments?.[0] && (isPtt || c.content.startsWith("[dictation-audio:") || /\.m4a|\.mp3|audio/i.test(c.attachments[0]))
             ? c.attachments[0]
             : null;
         const isAuthor = c.createdById === me?.id;
@@ -252,7 +255,7 @@ export default function CommentsPanel({
         const showText = c.attachments && c.attachments.length
           ? isPtt
             ? null
-            : c.content
+            : c.content.replace(/^\[dictation-audio:[^\]]+\]\s*/, "")
           : legacyPhotoUrl(c.content)
             ? null
             : isPtt
@@ -301,7 +304,7 @@ export default function CommentsPanel({
                     </Text>
                   </Pressable>
                 ) : null}
-                {photoUrls.length > 0 && !c.deletedAt && (
+                {photoUrls.length > 0 && !c.deletedAt && !pttUrl && (
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
                     {photoUrls.map((u) => (
                       <Pressable key={u} onPress={() => setPreviewPhoto(u)}>
@@ -345,11 +348,16 @@ export default function CommentsPanel({
             placeholderTextColor={colors.mutedForeground}
             style={[styles.input, { borderColor: colors.border, color: colors.foreground, minHeight: 60, textAlignVertical: "top" }]}
           />
+          <NativeNoteDraft value={content} onChange={setContent} disabled={posting || preparingNativeDraft} onBusy={setPreparingNativeDraft} includeDictation={false} />
+          <NativeDictation value={content} onChange={setContent} disabled={posting || preparingNativeDraft} onAudio={(objectPath, duration) => {
+            setAttachments(current => [objectUrl(objectPath), ...current]);
+            setContent(current => `[dictation-audio:${Math.max(1, Math.round(duration))}s] ${current}`);
+          }} />
           {attachments.length > 0 && (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-              {attachments.map((u) => (
+              {attachments.map((u, index) => (
                 <View key={u} style={{ position: "relative" }}>
-                  <Image source={{ uri: u }} style={{ width: 60, height: 60, borderRadius: 4 }} resizeMode="cover" />
+                  {index === 0 && content.startsWith("[dictation-audio:") ? <Text style={{ color: colors.text }}>{t("nativeDictation.attach")}</Text> : <Image source={{ uri: u }} style={{ width: 60, height: 60, borderRadius: 4 }} resizeMode="cover" />}
                   <TouchableOpacity
                     onPress={() => setAttachments((a) => a.filter((x) => x !== u))}
                     style={{ position: "absolute", top: -6, right: -6, backgroundColor: colors.background, borderRadius: 10, padding: 2 }}
@@ -377,7 +385,7 @@ export default function CommentsPanel({
             </TouchableOpacity>
             <LayeredPillButton
               onPress={post}
-              disabled={posting}
+              disabled={posting || preparingNativeDraft}
               loading={posting}
               height={32}
               style={{ marginLeft: "auto" }}

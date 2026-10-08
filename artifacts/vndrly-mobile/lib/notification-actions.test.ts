@@ -7,7 +7,7 @@ import { handleNotificationAction, NOTIFICATION_ACTIONS, notificationCategoryDef
 const meeting = "11111111-1111-4111-8111-111111111111";
 describe("authorized notification actions", () => {
  it("offers foreground review/read actions without RSVP, capture or consent acceptance",()=>{
-  expect(notificationCategoryDefinitions.map(category=>category.identifier)).toEqual(["vndrly_record","vndrly_meeting"]);
+  expect(notificationCategoryDefinitions.map(category=>category.identifier)).toEqual(["vndrly_record","vndrly_meeting","vndrly_assignment","vndrly_message"]);
   expect(notificationCategoryDefinitions.every(category=>category.actions.every(action=>action.options.opensAppToForeground))).toBe(true);
   expect(notificationCategoryDefinitions[1].actions.map(action=>action.identifier)).toEqual([NOTIFICATION_ACTIONS.meeting,NOTIFICATION_ACTIONS.read]);
  });

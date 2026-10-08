@@ -1,3 +1,4 @@
+import { NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
 import { WORK_HUB_AVAILABILITY_TOOLS } from "./work-hub-availability-tools";
 import { AWAY_RESPONDER_TOOLS } from "./away-responder-tools";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
@@ -118,6 +119,7 @@ function write(
 }
 
 const entries: Entry[] = [
+ ...NATIVE_OPERATIONS_TOOL_ENTRIES,
  read(WORK_HUB_AVAILABILITY_TOOLS[0].name,"scheduling",WORK_HUB_AVAILABILITY_TOOLS[0].description,WORK_HUB_AVAILABILITY_TOOLS[0].inputSchema),
  write(WORK_HUB_AVAILABILITY_TOOLS[1].name,"scheduling",WORK_HUB_AVAILABILITY_TOOLS[1].description,WORK_HUB_AVAILABILITY_TOOLS[1].inputSchema),
   read(AWAY_RESPONDER_TOOLS[0].name,"collaboration",AWAY_RESPONDER_TOOLS[0].description,{...AWAY_RESPONDER_TOOLS[0].inputSchema,type:"object"}),

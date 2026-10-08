@@ -1,3 +1,5 @@
+import nativeOperationsRouter from "./nativeOperations";
+import gateIdentityRouter from "./gateIdentity";
 import workHubAvailabilityRouter from "./workHubAvailability";
 import fleetRouter from "./fleet";
 import { organizationSubscriptionRouter } from "./organizationSubscription";
@@ -166,6 +168,8 @@ router.use(workHubFinanceRouter);
 router.use(workHubCallsRouter);
 router.use(workHubSchedulingRouter);
 router.use(workHubAvailabilityRouter);
+router.use(nativeOperationsRouter);
+router.use(gateIdentityRouter);
 router.use(workHubTransfersRouter);
 router.use(workHubCollaborationRouter);
 router.use(workHubChannelsRouter);

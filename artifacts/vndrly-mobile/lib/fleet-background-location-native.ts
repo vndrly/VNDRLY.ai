@@ -35,6 +35,7 @@ async function permission(){return (await Location.getForegroundPermissionsAsync
 export async function startFleetBackgroundLocation(account:FleetVerifiedAccount,run:FleetRun){
   const request=++generation;
   return exclusive(async()=>{
+    if (!await import("./native-operations").then(module => module.nativeLocationCollectionAllowed())) throw new Error("Current duty or designated phone was refused.");
     if(isExpoGo || !await TaskManager.isAvailableAsync())throw new Error("Background phone sharing requires an installed native build.");
     await stopOS();await getUser();await getToken();const scope=captureAuthScope();
     const current=()=>request===generation && isAuthScopeCurrent(scope);
@@ -58,7 +59,8 @@ export function handleFleetBackgroundSample(sample:FleetBackgroundSample){const 
     if(user?.id!==value.account.userId || user.activeMembershipId!==value.account.membershipId)throw Object.assign(new Error("Background account context changed."),{status:403});
     const current=()=>request===generation && isAuthScopeCurrent(scope);
     const saved=value;
-    const result=await deliverFleetBackgroundSample(saved,sample,{readCurrent:()=>authority(saved.runId),consent:hasActiveConsentForThisDevice,permission,contextCurrent:current,operationId:Crypto.randomUUID,persist:async binding=>{if(!current())throw Object.assign(new Error("Background account context changed."),{status:403});value={...binding,enabled:true};await store(value);},post:input=>apiFetch(`/api/fleet/runs/${saved.runId}/location`,{method:"POST",body:JSON.stringify(input)})});
+    if (!await import("./native-operations").then(module => module.nativeLocationCollectionAllowed())) throw Object.assign(new Error("Current duty or designated phone was refused."), { status: 403 });
+    const result=await deliverFleetBackgroundSample(saved,sample,{readCurrent:()=>authority(saved.runId),consent:hasActiveConsentForThisDevice,permission,contextCurrent:current,operationId:Crypto.randomUUID,persist:async binding=>{if(!current())throw Object.assign(new Error("Background account context changed."),{status:403});value={...binding,enabled:true};await store(value);},post:async input=>apiFetch(`/api/fleet/runs/${saved.runId}/location`,{method:"POST",headers:{"x-vndrly-device-id":await getDeviceId()},body:JSON.stringify(input)})});
     emit("accepted","An OS-delivered driver-phone report was accepted. It is not truck telemetry or arrival proof.",result.recordedAt);
   }catch(error){
     await stopOS();const code=(error as {status?:number}).status;

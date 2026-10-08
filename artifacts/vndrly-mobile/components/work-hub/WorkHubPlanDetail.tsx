@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import TogglePillButton from "@/components/TogglePillButton";
+import { router } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
@@ -101,6 +102,7 @@ export default function WorkHubPlanDetail({ taskId }: { taskId: string }) {
       ) : null}
       {projection ? (
         <>
+          <TogglePillButton disabled={loading} onPress={() => router.push(`/work-hub/askv?taskId=${encodeURIComponent(projection.taskId)}` as never)}>{t("nativeCooperation.resumeTask")}</TogglePillButton>
           <Text style={secondary}>
             {t("workPlan.revision", {
               task: projection.taskVersion,

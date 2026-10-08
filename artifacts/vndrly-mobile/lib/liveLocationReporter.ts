@@ -137,6 +137,7 @@ async function getBatteryLevel(): Promise<number | null> {
 
 async function flushLocationPing() {
   if (activeTicketIds.length === 0) return;
+  if (!await import("./native-operations").then(module => module.nativeLocationCollectionAllowed())) { await stopBackgroundUpdates(); return; }
   const allowed = await hasActiveConsentForThisDevice();
   if (!allowed) return;
   try {
@@ -175,6 +176,7 @@ async function postPing(
   speedMps: number | null,
 ) {
   if (activeTicketIds.length === 0) return;
+  if (!await import("./native-operations").then(module => module.nativeLocationCollectionAllowed())) { await stopBackgroundUpdates(); return; }
   const allowed = await hasActiveConsentForThisDevice();
   if (!allowed) {
     await stopBackgroundUpdates();
@@ -185,6 +187,7 @@ async function postPing(
   for (const ticketId of activeTicketIds) {
     try {
       await apiFetch("/api/location-pings", {
+        headers: { "x-vndrly-device-id": await getDeviceId() },
         method: "POST",
         body: JSON.stringify({
           ticketId,
@@ -265,6 +268,7 @@ if (!isExpoGo && !TaskManager.isTaskDefined(LIVE_LOCATION_TASK)) {
 }
 
 async function ensureBackgroundUpdates() {
+  if (!await import("./native-operations").then(module => module.nativeLocationCollectionAllowed())) { await stopBackgroundUpdates(); return; }
   if (backgroundActive) return;
   if (activeTicketIds.length === 0) return;
   const allowed = await hasActiveConsentForThisDevice();
@@ -326,6 +330,7 @@ async function ensureBackgroundUpdates() {
 let foregroundSub: Location.LocationSubscription | null = null;
 async function ensureForegroundWatcher() {
   if (foregroundSub) return;
+  if (!await import("./native-operations").then(module => module.nativeLocationCollectionAllowed())) return;
   try {
     foregroundSub = await Location.watchPositionAsync(
       {

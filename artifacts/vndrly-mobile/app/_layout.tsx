@@ -1,6 +1,8 @@
 import "@/lib/fleet-evidence-device-native";
 import {isFleetPushNotification,openFleetPushNotification} from "@/lib/fleet-push-notification";
 import "@/lib/fleet-background-location-native";
+import { startNativeOperationsRuntime } from "@/lib/native-operations-runtime";
+import { nativeRequestRoute } from "@/lib/native-operations-policy";
 import "react-native-gesture-handler";
 
 import {
@@ -241,10 +243,29 @@ function AuthGate() {
   // Deep-link from push notifications: route by payload.type / link.
   useEffect(() => {
     if (!checked || !hasAuth) return;
+    let stopped = false;
+    let cleanup: (() => void) | undefined;
+    void startNativeOperationsRuntime().then(value => { if (stopped) value(); else cleanup = value; }).catch(() => undefined);
+    return () => { stopped = true; cleanup?.(); };
+  }, [checked, hasAuth]);
+  useEffect(() => {
+    if (!checked || !hasAuth) return;
     if (Platform.OS === "web") return;
     let active = true;
 
     async function handlePushOpen(data: unknown, action?: string) {
+      if (data && typeof data === "object" && "type" in data && ["native_operation", "native_operations_request", "native_photo_request", "native_location_request"].includes(String(data.type))) {
+        const path = nativeRequestRoute("nativeRequestId" in data ? data.nativeRequestId : "requestId" in data ? data.requestId : null);
+        if (path && action === NOTIFICATION_ACTIONS.acknowledge) {
+          const id = "nativeRequestId" in data ? data.nativeRequestId : "requestId" in data ? data.requestId : null;
+          const scope = captureAuthScope();
+          try { await import("@/lib/api").then(({ apiFetch }) => apiFetch(`/api/native-operations/requests/${id}/acknowledge`, { method: "POST", body: "{}" }, scope)); }
+          catch { if (active) router.push(path as never); return; }
+          if (!isAuthScopeCurrent(scope)) return;
+        }
+        if (path && active) router.push(path as never);
+        return;
+      }
       const canonicalAction = action && action !== Notifications.DEFAULT_ACTION_IDENTIFIER
         ? action : notificationIdFromPushData(data) ? NOTIFICATION_ACTIONS.open : null;
       if (canonicalAction) {

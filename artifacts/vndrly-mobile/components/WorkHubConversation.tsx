@@ -19,7 +19,7 @@ export default function WorkHubConversation({ channel, onClose }: { channel: Rec
 function Conversation({ channel, onClose }: { channel: Record<string, any>; onClose: () => void }) {
   const colors = useColors(); const { user } = useAuth();
   const [messages, setMessages] = useState<any[]>([]), [draft, setDraft] = useState(""), [error, setError] = useState("");
-  const [reply, setReply] = useState<any>(null), [editing, setEditing] = useState<any>(null), [busy, setBusy] = useState(false);
+  const [reply, setReply] = useState<any>(channel.initialReplyMessage ?? null), [editing, setEditing] = useState<any>(null), [busy, setBusy] = useState(false);
   const attempt = useRef<{ path: string; method: "POST" | "PATCH" | "DELETE"; requestBody: ReturnType<typeof envelope> } | null>(null);
   const scope = useRef(captureAuthScope()).current;
   const alive = useRef(true);

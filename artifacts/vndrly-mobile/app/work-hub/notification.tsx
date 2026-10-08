@@ -23,6 +23,10 @@ import { syncAppIconBadge } from "@/lib/notificationBadge";
 import { captureAuthScope, subscribeToken, subscribeUser } from "@/lib/auth";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useFleetCopy } from "@/lib/fleet-copy";
+import WorkHubConversation from "@/components/WorkHubConversation";
+import NativeShiftResponse from "@/components/work-hub/NativeShiftResponse";
+import { isAuthScopeCurrent } from "@/lib/auth";
+import type { NotificationTarget } from "@/lib/notification-destination";
 
 function subscribeAuthScope(listener: () => void) {
   const user = subscribeUser(listener);
@@ -44,6 +48,7 @@ export default function NotificationDestinationScreen() {
     requestId: string;
     generation: number;
     record: NotificationDestinationContent;
+    target: NotificationTarget;
   } | null>(null);
   const invalidated = loaded !== null && loaded.generation !== generation;
   // Guard during render, even after acknowledgement removes the transient request.
@@ -51,11 +56,13 @@ export default function NotificationDestinationScreen() {
     loaded?.requestId === requestId && !invalidated ? loaded.record : null;
   const mountedRequest = useRef<{ requestId: string } | null>(null);
   const [unavailable, setUnavailable] = useState(false);
+  const [conversation, setConversation] = useState<Record<string, any> | null>(null);
   useEffect(() => {
     let active = true;
     const mount = { requestId };
     mountedRequest.current = mount;
     setLoaded(null);
+    setConversation(null);
     setUnavailable(false);
     const request = getNotificationOpenRequest(requestId);
     if (!request) setUnavailable(true);
@@ -73,6 +80,7 @@ export default function NotificationDestinationScreen() {
               requestId,
               generation: request.scope.generation,
               record: value,
+              target: request.target,
             });
           else if (active) setUnavailable(true);
         })
@@ -157,7 +165,15 @@ export default function NotificationDestinationScreen() {
                 {record.kind==="fleet"?fleetCopy(line):line}
               </Text>
             ))}
+            {record.kind === "shift" && loaded?.target.kind === "shift" ? <NativeShiftResponse key={`${generation}.${loaded.target.id}`} shiftId={loaded.target.id} /> : null}
             {record.kind==="fleet"&&<TogglePillButton onPress={()=>router.push({pathname:"/fleet-run/[id]",params:{id:record.subjectId}} as never)}>{fleetCopy("Open exact Fleet run")}</TogglePillButton>}
+            {record.kind === "channel" && loaded?.target.kind === "channel" ? <TogglePillButton onPress={() => {
+              const target = loaded.target, scope = captureAuthScope();
+              void loadNotificationDestination({ kind: "channel", id: target.id }).then(value => {
+                if (isAuthScopeCurrent(scope) && value.channel?.id === target.id) setConversation({ ...value.channel, ...(record.replyMessage ? { initialReplyMessage: record.replyMessage } : {}) });
+              }).catch(() => setUnavailable(true));
+            }}>{t("nativeNotifications.reply")}</TogglePillButton> : null}
+            {conversation && !invalidated ? <WorkHubConversation channel={conversation} onClose={() => setConversation(null)} /> : null}
           </View>
         ) : (
           <ActivityIndicator color={colors.primary} />

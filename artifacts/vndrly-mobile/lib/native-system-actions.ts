@@ -4,6 +4,10 @@ export const NATIVE_WORK_ACTIONS = [
   "assignments",
   "gate",
   "messages",
+  "current-task",
+  "scan",
+  "start-duty",
+  "end-duty",
 ] as const;
 export type NativeWorkAction = (typeof NATIVE_WORK_ACTIONS)[number];
 
@@ -47,6 +51,11 @@ export function parseNativeWorkActionUrl(
 /** Authenticated destination screens still resolve current roles and records. */
 export function nativeWorkDestination(action: NativeWorkAction): string {
   switch (action) {
+    case "current-task":
+    case "scan":
+    case "start-duty":
+    case "end-duty":
+      return `/work-hub/native-operations?action=${action}`;
     case "workday":
       return "/work-hub";
     case "assignments":

@@ -3,6 +3,8 @@ export type StreamEvent =
   | { type: "tool"; name: string; status: "start" | "end" }
   | { type: "client_intent"; intent: import("./askv-client-tools").AskVClientIntent }
   | { type: "mutation" }
+  | { type: "recovery"; completed: string[]; remaining: string[]; needed: string[]; taskId: string | null }
+  | { type: "provider_usage"; provider: string; status: string }
   | { type: "done"; content: string; assistantMessageId?: number }
   | { type: "error"; message: string };
 
@@ -40,6 +42,13 @@ function dispatchSseBlock(raw: string, onEvent: (evt: StreamEvent) => void): voi
     }
   } else if (eventName === "mutation") {
     if (parsed && typeof parsed === "object" && (parsed as { mutation?: unknown }).mutation) onEvent({ type: "mutation" });
+  } else if (eventName === "recovery" && parsed && typeof parsed === "object") {
+    const value = parsed as Record<string, unknown>;
+    const list = (raw: unknown) => typeof raw === "string" ? [raw.slice(0, 10000)] : Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.length <= 10000).slice(0, 100) : [];
+    onEvent({ type: "recovery", completed: list(value.completed), remaining: list(value.remaining), needed: list(value.needed), taskId: typeof value.taskId === "string" ? value.taskId : null });
+  } else if (eventName === "provider_usage" && parsed && typeof parsed === "object") {
+    const value = parsed as Record<string, unknown>;
+    onEvent({ type: "provider_usage", provider: typeof value.provider === "string" ? value.provider : "V", status: typeof value.status === "string" ? value.status : "consulted" });
   } else if (eventName === "done") {
     const payload = parsed as { content: string; assistantMessageId?: number };
     onEvent({

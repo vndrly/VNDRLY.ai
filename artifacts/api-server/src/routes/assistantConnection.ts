@@ -472,7 +472,7 @@ router.post("/mcp", async (req, res) => {
               ? await handleInvoiceActivityTool(request.arguments, session, authorized.scopes)
               : invoiceCandidates ? await handleTicketInvoiceCandidatesTool(request.arguments, session, authorized.scopes)
               : opportunity ? await handleWorkdayOpportunityTool(opportunity.name, request.arguments, session, authorized.scopes)
-              : chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")));
+              : chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")), authorized.scopes);
           } catch {
             // Preserve earlier reads without exposing internal/provider exception details.
             result = { ok: false, error: "This planned lookup failed. Its result is unavailable; retry this lookup before treating the step as complete." };
@@ -528,7 +528,7 @@ router.post("/mcp", async (req, res) => {
         await validateAssistantSession(grant.session, database);
         return structuredClone(candidate);
       });
-      const result = saved.result ? JSON.parse(saved.result) : null;
+      const result = (saved.result ? chatGptReadToolOutput(saved.toolName, JSON.parse(saved.result), authorized.scopes) : null) as { error?: unknown; ok?: boolean } | null;
       const outcome = { reference: args.reference, status: saved.state, ok: saved.state === "completed" && !result?.error && result?.ok !== false, result };
       return reply({ structuredContent: outcome, content: [{ type: "text", text: JSON.stringify(outcome) }], isError: saved.state === "completed" && !outcome.ok });
     }
@@ -540,11 +540,12 @@ router.post("/mcp", async (req, res) => {
       const missing = upgrades.find(item => item.tool.name === request.sourceTool);
       if (missing) return reply(fleetConsentChallenge(ASSISTANT_ISSUER, authorized.scopes, missing.scope));
       const source = requireChatGptReadableTool(authorized.session, authorized.scopes, request.sourceTool);
-      const raw = chatGptReadToolOutput(source.name, JSON.parse(await runTool(source.name, request.sourceArguments, authorized.session, "")));
+      const raw = chatGptReadToolOutput(source.name, JSON.parse(await runTool(source.name, request.sourceArguments, authorized.session, "")), authorized.scopes);
       const output = workspaceOutput(request.view, source.name, request.sourceArguments, raw);
       if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
       output.availableViews = [];
       if (allowedNames.has("get_work_hub_briefing")) output.availableViews.push("my_workday");
+      if (allowedNames.has("query_native_work_status")) output.availableViews.push("native_work");
       if (allowedNames.has("get_work_hub_calendar")) output.availableViews.push("work_calendar");
       if (allowedNames.has("lookup_user_progress")) output.availableViews.push("onboarding");
       if (allowedNames.has("query_tickets")) output.availableViews.push("tickets");
@@ -653,7 +654,7 @@ router.post("/mcp", async (req, res) => {
       return reply({ content: [{ type: "text", text }], structuredContent: JSON.parse(text), isError: false, ...(prepared.state === "pending" && prepared.panelProof ? { _meta: { componentApproval: { toolName: tool.name, reference: prepared.reference, proof: needsLocation(tool.name, input) ? undefined : prepared.panelProof, arguments: input, requiresLocation: needsLocation(tool.name, input), approvalUrl: `${ASSISTANT_ISSUER}/actions/${prepared.reference}` } } } : {}) });
     }
     const tool = requireChatGptReadableTool(authorized.session, authorized.scopes, name);
-    let readOutput = chatGptReadToolOutput(name, JSON.parse(await runTool(name, args, authorized.session, "")));
+    let readOutput = chatGptReadToolOutput(name, JSON.parse(await runTool(name, args, authorized.session, "")), authorized.scopes);
     if (name === "deep_link_to" && args.screen === "work-hub-files" && (readOutput as { url?: string })?.url === "/work-hub/files") {
       if (!authorized.grantConsentHash) throw new AssistantOAuthError("access_denied");
       readOutput = { ...(readOutput as object), url: `${ASSISTANT_ISSUER}/device/files/${envelope(fileDeviceHandoff(authorized.session, authorized.grantConsentHash))}`,

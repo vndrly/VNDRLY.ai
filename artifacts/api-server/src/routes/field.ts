@@ -2,6 +2,9 @@ import { Router, type IRouter } from "express";
 import { eq, and, desc, gte, lte, inArray, ne, or, sql, isNull, isNotNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { z } from "zod/v4";
+import { bindNativePushToken } from "../services/native-push-token";
+import { NativeOperationError } from "../services/native-operations-policy";
 import {
   db,
   vendorPeopleTable,
@@ -1535,6 +1538,11 @@ router.post("/field/push-token", async (req, res): Promise<void> => {
     return;
   }
   const { token, platform } = req.body ?? {};
+  if (req.body?.deviceId != null) {
+    try { await bindNativePushToken(session, { token, platform, deviceId: req.body.deviceId }); res.status(204).send(); }
+    catch(error) { if(error instanceof NativeOperationError){res.status(error.status).json({code:error.code});return;} if(error instanceof z.ZodError){res.status(400).json({code:"native.push_token_invalid"});return;} throw error; }
+    return;
+  }
   if (!token || typeof token !== "string") {
     res.status(400).json({
       code: "field.token_required",

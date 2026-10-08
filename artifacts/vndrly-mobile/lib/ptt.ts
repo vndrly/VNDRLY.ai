@@ -5,6 +5,7 @@ import {
 } from "react-native";
 
 import { apiFetch, getApiBase } from "./api";
+import { captureAuthScope, getToken, isAuthScopeCurrent, type AuthScope } from "./auth";
 import { askVMicrophone } from "@workspace/askv-wake";
 
 export type UploadResult = {
@@ -170,7 +171,10 @@ function resolveUploadUrl(uploadURL: string): string {
 export async function uploadAudioBlob(
   uri: string,
   durationSeconds: number,
+  authScope?: AuthScope,
 ): Promise<UploadResult> {
+  const current = () => { if (authScope && !isAuthScopeCurrent(authScope)) throw Object.assign(new Error("Audio authorization changed"), { name: "AbortError" }); };
+  current();
   const contentType = "audio/mp4";
   const name = `ptt-${Date.now()}.m4a`;
 
@@ -179,27 +183,32 @@ export async function uploadAudioBlob(
     {
       method: "POST",
       body: JSON.stringify({ name, size: 0, contentType }),
-    },
+    }, authScope,
   );
+  current();
 
   const blob = await fetch(uri).then((r) => r.blob());
+  current();
   const putUrl = resolveUploadUrl(presigned.uploadURL);
   const putRes = await fetch(putUrl, {
     method: "PUT",
     headers: { "content-type": contentType },
     body: blob,
   });
+  current();
   if (!putRes.ok) {
     throw new Error(`Upload failed (HTTP ${putRes.status})`);
   }
 
-  await apiFetch("/api/storage/uploads/finalize", {
+  const finalized = await apiFetch<{ objectPath: string }>("/api/storage/uploads/finalize", {
     method: "POST",
     body: JSON.stringify({
       objectURL: presigned.uploadURL,
-      visibility: "public",
+      visibility: authScope ? "private" : "public",
     }),
-  });
+  }, authScope);
+  current();
+  if (authScope && finalized.objectPath !== presigned.objectPath) throw new Error("Audio finalization was not verified");
 
   return {
     objectPath: presigned.objectPath,
@@ -370,6 +379,11 @@ export async function createPttRecorder(options: PttRecorderOptions = {}): Promi
 }
 
 export async function playPttUri(uri: string): Promise<void> {
+  const account = captureAuthScope();
+  const parsed = new URL(uri, getApiBase());
+  const origin = new URL(getApiBase()).origin;
+  const privateAudio = parsed.origin === origin && parsed.pathname.startsWith("/api/storage/objects/");
+  const token = privateAudio ? await getToken() : null;
   let cancelled = false;
   let sound: import("expo-av").Audio.Sound | null = null;
   let nativeOperation: Promise<unknown> | null = null;
@@ -381,7 +395,7 @@ export async function playPttUri(uri: string): Promise<void> {
     try { await owned?.unloadAsync(); } catch { /* Already unloaded. */ }
     endPlayback?.();
   };
-  const check = () => { if (cancelled) throw cancelledRecording(); };
+  const check = () => { if (cancelled || (privateAudio && !isAuthScopeCurrent(account))) throw cancelledRecording(); };
   // Playback changes the shared iOS audio mode, so it participates in the same ownership handoff.
   const release = await askVMicrophone.acquire("ptt-playback", stopOwned);
   try {
@@ -394,7 +408,7 @@ export async function playPttUri(uri: string): Promise<void> {
         shouldDuckAndroid: true, playThroughEarpieceAndroid: false,
       });
       check();
-      const result = await Audio.Sound.createAsync({ uri });
+      const result = await Audio.Sound.createAsync({ uri, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) });
       sound = result.sound;
       check();
     }, 4, check);

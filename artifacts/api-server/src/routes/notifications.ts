@@ -457,6 +457,7 @@ export async function fanOutPushToUser(
     category?: NotificationCategory;
     pushData?: Record<string, unknown>;
     notificationId?: number;
+    quiet?: boolean;
   },
 ): Promise<void> {
   const category = notif.category ?? categoryForType(notif.type);
@@ -469,6 +470,7 @@ export async function fanOutPushToUser(
   const { sendPushToUser } = await import("../lib/expo-push");
   await sendPushToUser(userId, {
     title: notif.title,
+    interruptionLevel:notif.quiet?"passive":undefined,
     body: notif.body ?? "",
     badge,
     data: {
