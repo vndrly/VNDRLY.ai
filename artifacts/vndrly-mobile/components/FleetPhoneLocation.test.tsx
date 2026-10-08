@@ -1,3 +1,5 @@
+// Native duty eligibility is verified separately; this collector fixture is an enrolled on-duty phone.
+vi.mock("@/lib/native-operations",()=>({nativeLocationCollectionAllowed:vi.fn(async()=>true)}));
 vi.mock("@/lib/fleet-background-location-native",()=>({startFleetBackgroundLocation:vi.fn(async()=>{}),stopFleetBackgroundLocation:vi.fn(async()=>{}),subscribeFleetBackgroundLocation:()=>()=>{}}));
 import React from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -31,4 +33,14 @@ it("opens the existing consent screen with only the exact run return route",()=>
   fireEvent.click(screen.getByRole("button",{name:"Review device location consent"}));
   expect(mocks.route).toHaveBeenCalledWith({pathname:"/location-consent",params:{returnTo:`/fleet-run/${run.id}`}});
   expect(mocks.api).not.toHaveBeenCalled();
+});
+
+it("does not send phone coordinates when native duty consent is unavailable",async()=>{
+ const native=await import("@/lib/native-operations"); vi.mocked(native.nativeLocationCollectionAllowed).mockResolvedValueOnce(false);
+ mocks.api.mockImplementation(async(path)=>path.endsWith("overview")?{accountScope:account,capabilities:{canDrive:true}}:run);
+ render(<FleetPhoneLocation run={run} account={account} disabled={false}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Start foreground phone sharing"}));
+ expect(await screen.findByText("Device consent is required. No phone position was sent.")).toBeTruthy();
+ expect(mocks.api.mock.calls.some(([,options])=>Boolean(options))).toBe(false);
+ expect(screen.queryByText(/This driver's phone position was accepted/)).toBeNull();
 });

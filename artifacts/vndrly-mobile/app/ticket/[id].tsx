@@ -42,6 +42,7 @@ import TicketFlagPanel from "@/components/TicketFlagPanel";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import CommentsPanel from "@/components/CommentsPanel";
 import NativeTicketPhoto from "@/components/work-hub/NativeTicketPhoto";
+import { requestedPhotoBackgroundAvailable } from "@/lib/requested-photo-upload";
 import { cacheAssignedRead, readAssignedCache, denyAssignedCache } from "@/lib/native-assigned-cache";
 import { readNativeOperations } from "@/lib/native-operations";
 import TicketRecovery from "@/components/TicketRecovery";
@@ -4257,7 +4258,7 @@ export default function TicketDetailScreen() {
       {photoPending ? <Text style={{ color: colors.mutedForeground }}>{t("ticketPhoto.pending")}</Text> : null}
       <CommentsPanel source="ticket" parentId={Number(ticketId)} />
       {offlineSnapshotAt ? <Text accessibilityRole="alert" style={{ color: colors.text }}>{t("nativeTicketPhoto.offline", { time: new Date(offlineSnapshotAt).toLocaleString() })}</Text> : null}
-      <NativeTicketPhoto ticketId={Number(ticketId)} />
+      {requestedPhotoBackgroundAvailable() ? <NativeTicketPhoto ticketId={Number(ticketId)} /> : null}
 
       <View
         style={[

@@ -50,11 +50,11 @@ describe("Implementation A mobile journey", () => {
       location: "stale",
     });
 
-    let serialized: string | null = null;
+    const serialized = new Map<string,string>();
     const queue = createImplementationAQueue({
-      getItem: async () => serialized,
-      setItem: async (_key, value) => {
-        serialized = value;
+      getItem: async key => serialized.get(key) ?? null,
+      setItem: async (key, value) => {
+        serialized.set(key,value);
       },
     });
     const scope: ImplementationAScope = {

@@ -1,3 +1,5 @@
+// OS background file handling is outside ordinary Gate check-in/out screen tests.
+vi.mock("@/lib/work-hub-background-upload-native",()=>({discardScannedWorkPages:vi.fn(async()=>{})}));
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0 }));
@@ -92,6 +94,7 @@ vi.mock("expo-location", () => ({
 }));
 
 vi.mock("expo-secure-store", () => ({
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY: "when-unlocked-this-device-only",
   getItemAsync: vi.fn(async () => null),
   setItemAsync: vi.fn(async () => {}),
   deleteItemAsync: vi.fn(async () => {}),
@@ -102,6 +105,10 @@ vi.mock("@/lib/auth", () => ({
   setToken: vi.fn(),
   setUser: vi.fn(),
   getToken: vi.fn(),
+  subscribeToken: vi.fn(() => () => {}),
+  subscribeUser: vi.fn(() => () => {}),
+  captureAuthScope: vi.fn(() => ({generation:1})),
+  isAuthScopeCurrent: vi.fn(() => true),
 }));
 
 const {

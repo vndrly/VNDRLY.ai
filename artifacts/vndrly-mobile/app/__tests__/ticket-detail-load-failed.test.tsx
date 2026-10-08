@@ -73,6 +73,9 @@ vi.mock("expo-linear-gradient", async () => {
 });
 
 vi.mock("@/lib/auth", () => ({
+  // One stable authenticated context for the ticket load/error-shell scenario.
+  captureAuthScope: () => Object.freeze({ generation: 1 }),
+  isAuthScopeCurrent: () => true,
   getUser: vi.fn(async () => ({
     id: 99,
     role: "partner",
