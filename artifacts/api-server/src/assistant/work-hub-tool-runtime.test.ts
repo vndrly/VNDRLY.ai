@@ -762,3 +762,8 @@ it("lets canonical saved parent ancestry determine the reply root", () => {
   expect(result.body).toHaveProperty("payload.parentMessageId", "reply-B");
   expect(result.body).not.toHaveProperty("payload.rootMessageId");
 });
+it("routes only exact reviewed existing shift claim-window updates", () => {
+  const input = { ...command, action: "update", shiftId: "22222222-2222-4222-8222-222222222222", expectedVersion: 2, payload: { open: true } };
+  expect(resolveExecutableWorkHubToolRequest("manage_work_hub_shift", input, true)).toMatchObject({ method: "PATCH", path: `/work-hub/shifts/${input.shiftId}`, body: { operationId: command.operationId, expectedVersion: 2, payload: { action: "update", open: true } } });
+  for (const change of [{action:"cancel"}, {action:"reschedule"}, {expectedVersion:null}, {payload:{open:"true"}}, {payload:{open:true,title:"unreviewed"}}]) expect(resolveExecutableWorkHubToolRequest("manage_work_hub_shift", {...input,...change}, true)).toHaveProperty("error");
+});

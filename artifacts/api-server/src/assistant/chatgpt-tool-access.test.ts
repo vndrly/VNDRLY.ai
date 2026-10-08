@@ -216,3 +216,6 @@ it("offers requester continuations only with write consent and keeps platform me
  expect(actions({userId:1,role:"admin"},["assets:write"])).not.toContain("respond_identifier_claim");
  expect(actions(requester,["assets:write"])).not.toContain("resolve_identifier_claim");
 });
+
+import { plannedReadOperationTools } from './plan-operation-tools';
+it('describes context preparation reads without bound actions',()=>{const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin'};for(const [scope,name,word] of [['crew:read','prepare_field_trips_action','recorded field trips'],['operations:read','prepare_operations_displays_action','saved routing']]){const t=requireChatGptReadableTool(session,[scope],name);expect(chatGptReadToolDescription(t)).toContain(word);expect(chatGptReadToolDescription(t)).toContain('No bound action');expect(plannedReadOperationTools([t])[0].description).toContain(word);}});

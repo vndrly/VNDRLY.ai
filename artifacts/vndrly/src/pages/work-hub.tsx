@@ -1,4 +1,5 @@
 import WorkHubAvailability from "@/components/work-hub/work-availability";
+import ShiftOpening from "@/components/work-hub/shift-opening";
 import { ManagedCrews } from "@/components/implementation-a/managed-crews";
 import { WorkforceCoverage } from "@/components/implementation-a/workforce-coverage";
 import { Assets } from "@/components/implementation-a/assets";
@@ -675,6 +676,7 @@ function CalendarModule() {
   return (
     <Shell module="calendar">
       <WorkHubAvailability />
+      <ShiftOpening shifts={calendar.data?.shifts ?? []} onSaved={() => calendar.refetch()} />
       <div className="mb-4">
         <CalendarSummaryCards shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
       </div>

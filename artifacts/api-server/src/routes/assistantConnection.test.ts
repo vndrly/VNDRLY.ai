@@ -43,6 +43,33 @@ it("recovers exact Fleet availability after an interrupted approved write withou
   expect(mocks.bound).toHaveBeenCalledTimes(1);
 });
 
+it("recovers own Work Hub availability after an interrupted approved write without resending", async () => {
+  const credentials = await tokens("work_hub:write");
+  const actor = { ...session, activeMembershipId: 8, membershipRole: "field_employee", role: "field_employee", vendorPeopleId: 969 };
+  grants[0].session = actor;
+  const fields = { recordId: null, expectedFingerprint: "a".repeat(64), window: { plannedStartAt: "2026-10-09T10:00:00.000Z", plannedEndAt: "2026-10-09T12:00:00.000Z", timezone: "UTC" }, available: true };
+  const call = (name: string, args: unknown) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } });
+  const prepared = JSON.parse((await call("manage_work_hub_availability", fields)).body.result.content[0].text);
+  expect(prepared.status).toBe("pending");
+  const actionPath = new URL(prepared.approvalUrl).pathname;
+  const approval = await request(app).get(actionPath).set("Cookie", cookie(actor));
+  const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+  const approvalCookie = approval.headers["set-cookie"][0].split(";")[0];
+  mocks.bound.mockRejectedValueOnce(Error("Interrupted after availability saved"));
+  expect((await request(app).post(actionPath).set("Cookie", `${cookie(actor)}; ${approvalCookie}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce })).status).toBe(503);
+  const hex = grants[0].actions![0].tokenHash.slice(0, 32);
+  const operationId = `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-8${hex.slice(17,20)}-${hex.slice(20,32)}`;
+  const { createHash } = await import("node:crypto");
+  const { workHubAvailabilityFingerprintValues } = await import("@workspace/api-zod");
+  const receipt = { operationId, actorUserId: 17, companyId: 4, userId: 17, actorMembershipId: 8, actorSessionVersion: actor.sv, commandFingerprint: createHash("sha256").update(JSON.stringify(workHubAvailabilityFingerprintValues(17, 4, { operationId, ...fields }))).digest("hex"), previousFingerprint: fields.expectedFingerprint, resultingFingerprint: "b".repeat(64), record: { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", startsAt: fields.window.plannedStartAt, endsAt: fields.window.plannedEndAt, available: true, recurring: false }, recordedAt: "2026-10-07T15:00:00.000Z", physicalReadinessVerified: false };
+  mocks.taskRead.mockResolvedValueOnce({ receipt: { ...receipt, userId: 19 } });
+  expect(JSON.parse((await call("v_action_status", { reference: prepared.reference })).body.result.content[0].text)).toMatchObject({ state: "outcome_unknown" });
+  mocks.taskRead.mockResolvedValueOnce({ receipt });
+  expect(JSON.parse((await call("v_action_status", { reference: prepared.reference })).body.result.content[0].text)).toMatchObject({ state: "completed", result: { receipt: { operationId, physicalReadinessVerified: false } } });
+  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/availability/operations/${operationId}`, "GET", {}, expect.objectContaining({ userId: 17, vendorId: 4 }));
+  expect(mocks.bound).toHaveBeenCalledTimes(1);
+});
+
 it("checks the immutable shift creation receipt after interruption without creating a second shift", async () => {
   const credentials = await tokens("work_hub:write");
   const payload = { title: "Synthetic recovery shift", startsAt: "2026-10-07T10:00:00Z", endsAt: "2026-10-07T11:00:00Z", timezone: "UTC", assigneeUserIds: [18] };
@@ -1224,6 +1251,26 @@ it("recovers an interrupted approved room message without resending and refuses 
  mocks.taskRead.mockResolvedValueOnce({receipt});expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"completed",result:receipt});
  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/meetings/${occurrenceId}/chat/operations/${id}`,"GET",{},expect.objectContaining({userId:17}));expect(mocks.bound).toHaveBeenCalledTimes(1);expect(mocks.run).not.toHaveBeenCalled();
 });
+it("recovers an interrupted speak request only from its exact receipt without another host alert", async () => {
+ const credentials=await tokens("work_hub:write"),occurrenceId="11111111-1111-4111-8111-111111111111";
+ const call=(name:string,args:unknown)=>request(app).post(`${base}/mcp`).set("Authorization",`Bearer ${credentials.access_token}`).send({jsonrpc:"2.0",id:1,method:"tools/call",params:{name,arguments:args}});
+ const prepared=JSON.parse((await call("moderate_work_hub_meeting",{action:"request_to_speak",occurrenceId,payload:{}})).body.result.content[0].text);
+ expect(prepared.status).toBe("pending");
+ const path=new URL(prepared.approvalUrl).pathname,approval=await request(app).get(path).set("Cookie",cookie()),nonce=/name="nonce" value="([^"]+)"/.exec(approval.text)![1],actionCookie=approval.headers["set-cookie"][0].split(";")[0];
+ mocks.bound.mockRejectedValueOnce(Error("Interrupted after saved speak request"));
+ expect((await request(app).post(path).set("Cookie",`${cookie()}; ${actionCookie}`).set("Origin","https://vndrly.ai").type("form").send({nonce})).status).toBe(503);
+ const h=grants[0].actions![0].tokenHash.slice(0,32),operationId=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`;
+ const receipt={operationId,occurrenceId,actorUserId:17,actorMembershipId:null,actorSessionVersion:1,ownerOrgType:"vendor",ownerOrgId:4,requestId:"33333333-3333-4333-8333-333333333333",requestedAt:"2026-10-07T10:00:00Z",status:"saved",microphoneOpened:false,consentAccepted:false};
+ for(const value of [null,{...receipt,actorUserId:18},{...receipt,actorSessionVersion:2},{...receipt,operationId:receipt.requestId},{...receipt,occurrenceId:receipt.requestId}]){
+  mocks.taskRead.mockResolvedValueOnce({receipt:value});
+  expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"outcome_unknown"});
+ }
+ mocks.taskRead.mockResolvedValueOnce({receipt});
+ expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"completed",result:receipt});
+ expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/meetings/${occurrenceId}/request-to-speak/operations/${operationId}`,"GET",{},expect.objectContaining({userId:17}));
+ expect(mocks.bound).toHaveBeenCalledTimes(1);expect(mocks.run).not.toHaveBeenCalled();
+});
+
 it('advertises typed planned reads and executes only the exact saved operation with current scope', async () => {
  const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
  const taskId='11111111-1111-4111-8111-111111111111';
@@ -1248,25 +1295,6 @@ it('advertises typed planned reads and executes only the exact saved operation w
  expect((await invoke('tools/call',params)).body.result.isError).toBe(true);
  expect(mocks.run).not.toHaveBeenCalled();
 });
-it("recovers an interrupted speak request only from its exact receipt without another host alert", async () => {
- const credentials=await tokens("work_hub:write"),occurrenceId="11111111-1111-4111-8111-111111111111";
- const call=(name:string,args:unknown)=>request(app).post(`${base}/mcp`).set("Authorization",`Bearer ${credentials.access_token}`).send({jsonrpc:"2.0",id:1,method:"tools/call",params:{name,arguments:args}});
- const prepared=JSON.parse((await call("moderate_work_hub_meeting",{action:"request_to_speak",occurrenceId,payload:{}})).body.result.content[0].text);
- expect(prepared.status).toBe("pending");
- const path=new URL(prepared.approvalUrl).pathname,approval=await request(app).get(path).set("Cookie",cookie()),nonce=/name="nonce" value="([^"]+)"/.exec(approval.text)![1],actionCookie=approval.headers["set-cookie"][0].split(";")[0];
- mocks.bound.mockRejectedValueOnce(Error("Interrupted after saved speak request"));
- expect((await request(app).post(path).set("Cookie",`${cookie()}; ${actionCookie}`).set("Origin","https://vndrly.ai").type("form").send({nonce})).status).toBe(503);
- const h=grants[0].actions![0].tokenHash.slice(0,32),operationId=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`;
- const receipt={operationId,occurrenceId,actorUserId:17,actorMembershipId:null,actorSessionVersion:1,ownerOrgType:"vendor",ownerOrgId:4,requestId:"33333333-3333-4333-8333-333333333333",requestedAt:"2026-10-07T10:00:00Z",status:"saved",microphoneOpened:false,consentAccepted:false};
- for(const value of [null,{...receipt,actorUserId:18},{...receipt,actorSessionVersion:2},{...receipt,operationId:receipt.requestId},{...receipt,occurrenceId:receipt.requestId}]){
-  mocks.taskRead.mockResolvedValueOnce({receipt:value});
-  expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"outcome_unknown"});
- }
- mocks.taskRead.mockResolvedValueOnce({receipt});
- expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"completed",result:receipt});
- expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/meetings/${occurrenceId}/request-to-speak/operations/${operationId}`,"GET",{},expect.objectContaining({userId:17}));
- expect(mocks.bound).toHaveBeenCalledTimes(1);expect(mocks.run).not.toHaveBeenCalled();
-});
 
 it.each([{savedName:'prepare_workforce_coverage_action_assign',legacy:false},{savedName:'prepare_workforce_coverage_action',legacy:false},{savedName:'prepare_workforce_coverage_action_assign',legacy:true}])('executes and checkpoints workforce reference $savedName (legacy $legacy) without substitution', async ({savedName,legacy}) => {
  const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
@@ -1287,30 +1315,26 @@ it.each([{savedName:'prepare_workforce_coverage_action_assign',legacy:false},{sa
  expect((await invoke({action:'escalate'})).body.result.isError).toBe(true);
  grants[0].scopes=grants[0].scopes.filter(x=>x!=='workforce:read');mocks.run.mockClear();
  expect((await invoke()).body.result.isError).toBe(true);expect(mocks.run).not.toHaveBeenCalled();
+});it('prepares a signed fixed background operation through actual MCP without executing or granting approval',async()=>{
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const previous=process.env.ASSISTANT_PLAN_EXECUTION_ENABLED;process.env.ASSISTANT_PLAN_EXECUTION_ENABLED='1';
+ try{
+ const credentials=await tokens('work_hub:read work_hub:write operations:read');grants[0].session={...session,activeMembershipId:8};
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'custody',specialist:'Inventory',toolNames:['query_asset_custody'],dependsOn:[]}]);
+ mocks.taskRead.mockResolvedValue({id:taskId,subjectType:'task',ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',description:encodePlanDescription(plan)});
+ const call=(args:unknown)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_plan_step__read_query_asset_custody',arguments:args}});
+ const input={taskId,expectedTaskVersion:1,expectedPlanVersion:1,id:'custody',arguments:{checkedOutLongerThanDays:90}};
+ const output=(await call(input)).body.result;expect(output.isError).not.toBe(true);expect(output.structuredContent).toMatchObject({executionStarted:false,approvalGranted:false,step:{adapter:'authorized_read',toolName:'query_asset_custody'}});expect(output.structuredContent.fragmentReference.split('.')).toHaveLength(2);expect(mocks.bound).not.toHaveBeenCalled();
+ expect((await call({...input,operationId:taskId})).body.result.isError).toBe(true);
+ grants[0].scopes=['work_hub:read','work_hub:write'];expect((await call(input)).body.result.isError).toBe(true);expect(mocks.bound).not.toHaveBeenCalled();
+ }finally{if(previous===undefined)delete process.env.ASSISTANT_PLAN_EXECUTION_ENABLED;else process.env.ASSISTANT_PLAN_EXECUTION_ENABLED=previous;}
+});it("recovers interrupted approved claim-window opening without repeating PATCH or accepting substituted owner", async () => {
+ const credentials=await tokens("work_hub:write"),actor={...session,membershipRole:"admin"};grants[0].session=actor;
+ const shiftId="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+ const call=(name:string,args:unknown)=>request(app).post(`${base}/mcp`).set("Authorization",`Bearer ${credentials.access_token}`).send({jsonrpc:"2.0",id:1,method:"tools/call",params:{name,arguments:args}});
+ const prepared=JSON.parse((await call("manage_work_hub_shift",{action:"update",shiftId,expectedVersion:2,payload:{open:true}})).body.result.content[0].text);expect(prepared.status).toBe("pending");const actionPath=new URL(prepared.approvalUrl).pathname,approval=await request(app).get(actionPath).set("Cookie",cookie(actor)),nonce=/name="nonce" value="([^"]+)"/.exec(approval.text)![1],actionCookie=approval.headers["set-cookie"][0].split(";")[0];mocks.bound.mockRejectedValueOnce(Error("Lost after opening saved"));expect((await request(app).post(actionPath).set("Cookie",`${cookie(actor)}; ${actionCookie}`).set("Origin","https://vndrly.ai").type("form").send({nonce})).status).toBe(503);
+ const hex=grants[0].actions![0].tokenHash.slice(0,32),operationId=`${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-8${hex.slice(17,20)}-${hex.slice(20,32)}`,{createHash}=await import("node:crypto"),{workHubShiftOpeningFingerprintValues}=await import("@workspace/api-zod");const receipt={operationId,actorUserId:17,ownerOrgType:"vendor",ownerOrgId:4,shiftId,previousVersion:2,resultingVersion:3,open:true,commandFingerprint:createHash("sha256").update(JSON.stringify(workHubShiftOpeningFingerprintValues(shiftId,17,"vendor",4,{operationId,expectedVersion:2,open:true}))).digest("hex"),recordedAt:"2026-10-07T10:00:00.000Z",physicalAttendanceVerified:false};
+ mocks.taskRead.mockResolvedValueOnce({receipt:null});expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"outcome_unknown"});mocks.taskRead.mockResolvedValueOnce({receipt:{...receipt,ownerOrgId:5}});expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"outcome_unknown"});mocks.taskRead.mockResolvedValueOnce({receipt});expect(JSON.parse((await call("v_action_status",{reference:prepared.reference})).body.result.content[0].text)).toMatchObject({state:"completed",result:{open:true,physicalAttendanceVerified:false}});expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/shifts/${shiftId}/open/operations/${operationId}`,"GET",{},expect.objectContaining({userId:17}));expect(mocks.bound).toHaveBeenCalledTimes(1);expect(mocks.run).not.toHaveBeenCalled();
 });
-it("recovers own Work Hub availability after an interrupted approved write without resending", async () => {
-  const credentials = await tokens("work_hub:write");
-  const actor = { ...session, activeMembershipId: 8, membershipRole: "field_employee", role: "field_employee", vendorPeopleId: 969 };
-  grants[0].session = actor;
-  const fields = { recordId: null, expectedFingerprint: "a".repeat(64), window: { plannedStartAt: "2026-10-09T10:00:00.000Z", plannedEndAt: "2026-10-09T12:00:00.000Z", timezone: "UTC" }, available: true };
-  const call = (name: string, args: unknown) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } });
-  const prepared = JSON.parse((await call("manage_work_hub_availability", fields)).body.result.content[0].text);
-  expect(prepared.status).toBe("pending");
-  const actionPath = new URL(prepared.approvalUrl).pathname;
-  const approval = await request(app).get(actionPath).set("Cookie", cookie(actor));
-  const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
-  const approvalCookie = approval.headers["set-cookie"][0].split(";")[0];
-  mocks.bound.mockRejectedValueOnce(Error("Interrupted after availability saved"));
-  expect((await request(app).post(actionPath).set("Cookie", `${cookie(actor)}; ${approvalCookie}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce })).status).toBe(503);
-  const hex = grants[0].actions![0].tokenHash.slice(0, 32);
-  const operationId = `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-8${hex.slice(17,20)}-${hex.slice(20,32)}`;
-  const { createHash } = await import("node:crypto");
-  const { workHubAvailabilityFingerprintValues } = await import("@workspace/api-zod");
-  const receipt = { operationId, actorUserId: 17, companyId: 4, userId: 17, actorMembershipId: 8, actorSessionVersion: actor.sv, commandFingerprint: createHash("sha256").update(JSON.stringify(workHubAvailabilityFingerprintValues(17, 4, { operationId, ...fields }))).digest("hex"), previousFingerprint: fields.expectedFingerprint, resultingFingerprint: "b".repeat(64), record: { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", startsAt: fields.window.plannedStartAt, endsAt: fields.window.plannedEndAt, available: true, recurring: false }, recordedAt: "2026-10-07T15:00:00.000Z", physicalReadinessVerified: false };
-  mocks.taskRead.mockResolvedValueOnce({ receipt: { ...receipt, userId: 19 } });
-  expect(JSON.parse((await call("v_action_status", { reference: prepared.reference })).body.result.content[0].text)).toMatchObject({ state: "outcome_unknown" });
-  mocks.taskRead.mockResolvedValueOnce({ receipt });
-  expect(JSON.parse((await call("v_action_status", { reference: prepared.reference })).body.result.content[0].text)).toMatchObject({ state: "completed", result: { receipt: { operationId, physicalReadinessVerified: false } } });
-  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/availability/operations/${operationId}`, "GET", {}, expect.objectContaining({ userId: 17, vendorId: 4 }));
-  expect(mocks.bound).toHaveBeenCalledTimes(1);
-});
+

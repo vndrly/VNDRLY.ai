@@ -255,7 +255,7 @@ const entries: Entry[] = [
     announcementId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("manage_work_hub_shift", "tasks", "Create, claim, update, reschedule, or cancel an authorized shift after confirmation.", writeSchema({
+  write("manage_work_hub_shift", "tasks", "Create, claim, update, reschedule, or cancel an authorized shift after confirmation. To open or close claims on an existing future unassigned shift, use update with payload {open:boolean}, its exact current expectedVersion and owner. Cancelled or completed shifts cannot reopen. This changes planning availability, not attendance.", writeSchema({
     action: { type: "string", enum: ["create", "claim", "update", "reschedule", "cancel"] },
     shiftId: identifier(),
     payload: { type: "object" },

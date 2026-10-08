@@ -716,6 +716,11 @@ export function resolveWorkHubToolRequest(
           ? request("POST", `/work-hub/shifts/${target}/claim`, command.data)
           : { error: "Supply the exact current shift version and trusted operation." };
       }
+      if (Object.prototype.hasOwnProperty.call(payload, "open")) {
+        if (input.action !== "update" || Object.keys(payload).some(key => key !== "open") || typeof payload.open !== "boolean" || !Number.isInteger(input.expectedVersion) || Number(input.expectedVersion) < 1)
+          return { error: "Review only the desired claim window and exact current shift version." };
+        return request("PATCH", `/work-hub/shifts/${target}`, envelope(input, { action: "update", open: payload.open }));
+      }
       if (["update", "reschedule", "cancel"].includes(String(input.action)))
         return request("PATCH", `/work-hub/shifts/${target}`, envelope(input, {
           ...payload,

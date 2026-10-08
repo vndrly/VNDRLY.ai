@@ -17,7 +17,7 @@ export function operationToolAnnotations(tool: AskVToolDefinition) {
   return { readOnlyHint: !tool.mutating, destructiveHint: tool.mutating && (
     canonical === 'manage_ticket_record' || canonical === 'confirm_asset_custody_action' || tool.name === 'manage_gate_shift_cancel_handoff' ||
     canonical === 'manage_work_hub_away_responder' || canonical === 'confirm_operations_displays_action' ||
-    canonical === 'confirm_workforce_coverage_action' || ['cancel_fleet_cargo_transfer','cancel_fleet_equipment_replacement'].includes(tool.name)
+    canonical === 'confirm_workforce_coverage_action' || canonical === 'reschedule_work_hub_meeting' || ['cancel_fleet_cargo_transfer','cancel_fleet_equipment_replacement'].includes(tool.name)
   ), openWorldHint: false };
 }
 function operationDescription(tool: AskVToolDefinition, operation: string): string {
@@ -26,6 +26,15 @@ function operationDescription(tool: AskVToolDefinition, operation: string): stri
     : `Prepare approval to ${operation} your exact own current-company away rule using ruleId and expectedVersion. This stops future replies and cannot undo previously recorded replies. Current account/channel authority is rechecked; no provider delivery claim.`;
   if (tool.name === 'confirm_operations_displays_action') return `Prepare approval only to ${operation === 'route' ? 'replace the exact saved monitor routing with the selected view/site' : operation === 'join_room' ? 'replace the exact saved monitor view with the selected meeting occurrence' : 'revoke the exact saved display routing'}. Requires current displayId/expectedUpdatedAt and reason. Current company administrator, registered device and exact site/room authority are rechecked. No pairing, media activation or physical-screen proof.`;
   if (tool.name === 'prepare_workforce_coverage_action') return `Read current authorized workforce coverage context for a proposed ${operation} operation. This observation creates no bound action, approval, assignment or escalation; use the separately exposed matching write operation for authenticated approval.`;
+  if (tool.name === 'confirm_workforce_coverage_action') {
+    const effects: Record<string,string> = {
+      assign: 'record a worker assignment to the exact saved shift using reviewed workerUserId, shiftId and canonical assignment fields; current scheduling authority and eligibility are rechecked',
+      acknowledge: 'record your own acceptance or refusal of the exact assignment resourceId using its current expectedVersion; this does not record attendance or duty',
+      evaluate: 'update the exact coverage resourceId from reviewed shiftId, assignedCount, requiredCount and expectedVersion; this evaluates recorded coverage, not physical presence',
+      escalate: 'mark the exact saved coverage resourceId as escalated at its current expectedVersion; this records state and timestamp only, without contacting workers, sending messages or proving notification delivery',
+    };
+    return `Prepare authenticated approval to ${effects[operation]}. Preparation does not execute the change or grant permissions.`;
+  }
   return `Prepare only the ${operation.replace(/_/g, ' ')} operation. ${tool.description}`;
 }
 function operationSchema(tool: AskVToolDefinition, operation: string) {

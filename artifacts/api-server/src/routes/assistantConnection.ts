@@ -1,3 +1,4 @@
+import { recoverWorkHubShiftOpeningAction } from "../assistant/work-hub-shift-opening-recovery";
 import { z } from "zod/v4";
 import { recoverMeetingSpeakRequestAction } from "../assistant/meeting-speak-request-recovery";
 import { recoverMeetingMessageAction } from "../assistant/meeting-message-recovery";
@@ -37,7 +38,7 @@ import { fleetDeviceHandoff, requireMatchingFleetDevice, type FleetDeviceHandoff
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, plannedSingleReadRequest, preparePlanMetadataTool, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
-import { plannedReadOperationTools, resolvePlannedReadOperation, backgroundStepOperationTools, defineBackgroundStepOperation } from "../assistant/plan-operation-tools";
+import { plannedReadOperationTools, resolvePlannedReadOperation, backgroundStepOperationTools } from "../assistant/plan-operation-tools";
 import { PLAN_READ_CHECKPOINT_TOOL, preparePlanReadCheckpoint, planReadReceiptSchema, combinePlanReadReceipts } from "../assistant/chatgpt-plan-read-checkpoint";
 import { PLAN_COMPLETION_TOOL, planCompletionRequestSchema, preparePlanCompletion } from "../assistant/chatgpt-plan-completion";
 import { verifiedPlanCompletionIds } from "../assistant/plan-completion-proof";
@@ -391,7 +392,8 @@ router.post("/mcp", async (req, res) => {
       requireChatGptReadableTool(authorized.session,authorized.scopes,'list_work_hub_tasks');
       const actions=chatGptActionTools(authorized.session,authorized.scopes);
       if(!actions.some(tool=>tool.name==='manage_work_hub_task'))throw Error('Background plan unavailable');
-      const output=defineBackgroundStepOperation(name,args,new Set([...availablePlanReadNames(authorized.session,authorized.scopes),...actions.map(tool=>tool.name)]));
+      if (!authorized.grantConsentHash) throw new AssistantOAuthError('access_denied');
+      const output=await handlePlanExecutionTool(name,args,authorized.session,authorized.scopes,authorized.grantConsentHash);
       return reply({content:[{type:'text',text:JSON.stringify(output)}],structuredContent:output,isError:false});
     }
     if ([PLAN_EXECUTION_PREPARE_TOOL.name, PLAN_EXECUTION_STATUS_TOOL.name, PLAN_EXECUTION_CANCEL_TOOL.name, PLAN_EXECUTION_CALENDAR_TOOL.name].includes(name)) {
@@ -736,6 +738,10 @@ const unresolved = (action: AssistantPreparedAction) => action.state === "runnin
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">, scopes: string[]) {
   if (!unresolved(action) || !action.executionFingerprint) return;
   let result = await readPersistentAskVMutationResult({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${action.turnId}`, key: `chatgpt:${action.tokenHash}`, fingerprint: action.executionFingerprint }, database);
+  if (result === null && action.toolName === "manage_work_hub_shift" && action.arguments.action === "update") {
+    const receipt = await recoverWorkHubShiftOpeningAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
   if (result === null && action.toolName === "manage_work_hub_availability") {
     const receipt = await recoverWorkHubAvailabilityAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import MeetingScheduling from "@/components/MeetingScheduling";
 import ShiftScheduling from "@/components/ShiftScheduling";
+import WorkHubShiftOpening from "@/components/WorkHubShiftOpening";
 import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
@@ -438,6 +439,7 @@ function WorkHubModuleContent() {
         {module === "meetings" && <MeetingScheduling onSaved={() => load("")} />}
         {module === "calendar" && <WorkHubAvailability />}
         {module === "calendar" && <ShiftScheduling onSaved={() => load("")} />}
+              {module === "calendar" && <WorkHubShiftOpening shifts={data?.shifts ?? []} onSaved={() => load("")} />}
         {owner &&
           canManage &&
           ["channels", "tasks-forms"].includes(

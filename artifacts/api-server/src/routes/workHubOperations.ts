@@ -1,3 +1,4 @@
+import { setWorkHubShiftOpening, readWorkHubShiftOpening } from "../services/work-hub-shift-opening";
 import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID, createHash } from "node:crypto";
@@ -2016,12 +2017,20 @@ router.post("/work-hub/gate/attendance/:id/resolve", async (req, res) => {
     return res.json(await resolveAttendanceException(session, z.string().uuid().parse(req.params.id), payload));
   } catch (error) { return failure(res, error); }
 });
+router.get("/work-hub/shifts/:id/open/operations/:operationId", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try { return res.json({ receipt: await readWorkHubShiftOpening(session, z.uuid().parse(req.params.id), z.uuid().parse(req.params.operationId)) }); }
+  catch (error) { return failure(res, error); }
+});
 router.patch("/work-hub/shifts/:id", async (req, res) => {
   const session = actor(req);
   if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     await ownAccess(session, envelope.owner, "shift.manage", envelope.context);
+    if (envelope.payload && typeof envelope.payload === "object" && Object.prototype.hasOwnProperty.call(envelope.payload, "open")) return res.json(await setWorkHubShiftOpening(session, z.uuid().parse(req.params.id), envelope, clientSource(req)));
     const payload = z.object({
       action: z.enum(["update", "reschedule", "cancel"]).optional(),
       title: z.string().trim().min(1).max(200).optional(),

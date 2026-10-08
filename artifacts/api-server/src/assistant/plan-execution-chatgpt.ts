@@ -7,17 +7,15 @@ import { availableWorkdayOpportunityTools } from "./workday-opportunity-chatgpt"
 import { readExactPlanTask } from "./coordinated-plan-exact-task";
 import { decodePlanDescription } from "./coordinated-plan";
 import { callNaturalVoiceDomainApi } from "./natural-voice-write-tools";
-import { prepareBoundExecutionProposal, planExecutionProposalInputSchema } from "./plan-execution-approval";
 import { createPlanExecutionConsentService } from "./plan-execution-consent";
 import type { PlanExecutionRun } from "./plan-execution";
 import { ASSISTANT_ISSUER } from "./chatgpt-oauth";
-import { typedPlanProposalStepSchema } from "./plan-operation-inputs";
+import { backgroundAssemblyInputSchema, backgroundFragmentInputSchema, prepareBackgroundFragment, assembleBackgroundFragments } from "./background-plan-fragments";
 
 export const PLAN_EXECUTION_PREPARE_TOOL = {
   name: "v_prepare_background_work",
-  description: "Prepare exact saved-plan reads and supported effects for separate authenticated whole-plan approval: selected eligible ticket invoice drafts under the strict >15-day recorded-history condition; exact saved-occurrence calendar reschedule; your own bounded away responder configure/pause/revoke; or a self-assigned company review draft. Each step requires current permissions, originating grant and exact saved intent; preparation grants no authority. Payment-queue reads use query_tickets approved/awaiting_payment with bounded sinceDays/limit; approved alone or a capped window is not the full queue. Unknown eligibility/history/availability must remain unknown. Never starts execution. The same-account human must approve the exact proposal within five minutes. Company drafts have normal company visibility. No payment transfer, invoice issue/email, generic outgoing messages, Gate assignment, Hotlist bid, external attendee acceptance, device capture or continuous monitoring. Notifications do not prove delivery.",
-  inputSchema: { ...z.toJSONSchema(planExecutionProposalInputSchema), type: "object" as const,
-    properties: { ...z.toJSONSchema(planExecutionProposalInputSchema).properties, steps: { type: "array", minItems: 1, maxItems: 20, items: z.toJSONSchema(typedPlanProposalStepSchema) } } },
+  description: "Assemble signed fragmentReferences returned by the individually exposed v_plan_step__ operations into one exact saved-plan proposal for separate authenticated whole-plan approval. No business operation, read, assignment or message is executed by this preparation. Every prerequisite and current grant/account/plan version is rechecked. The same-account human must approve the complete graph in the browser within five minutes; only that later approval authorizes bounded execution. Typed operations cover authorized reads, conditional invoice drafts, exact calendar reschedule, own away responder, participant-response observation and company review drafts. Requires current permissions. Never starts execution. No payment transfer, invoice delivery, physical attendance or external acceptance is inferred. Payment reads may use awaiting_payment with bounded sinceDays/limit. References expire after five minutes.",
+  inputSchema: { ...z.toJSONSchema(backgroundAssemblyInputSchema), type: "object" as const },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
 };
 export const PLAN_EXECUTION_STATUS_TOOL = {
@@ -37,8 +35,8 @@ export function planExecutionPublicRun(run: PlanExecutionRun) {
 }
 export async function handlePlanExecutionTool(name: string, input: unknown, session: SessionPayload, scopes: string[], grantReference: string) {
   if (process.env.ASSISTANT_PLAN_EXECUTION_ENABLED !== "1") throw Error("Background work unavailable");
-  const service = createPlanExecutionConsentService({ secret: SESSION_SECRET });
-  if (name !== PLAN_EXECUTION_PREPARE_TOOL.name) {
+  if (name !== PLAN_EXECUTION_PREPARE_TOOL.name && !name.startsWith("v_plan_step__")) {
+    const service = createPlanExecutionConsentService({ secret: SESSION_SECRET });
     const { reference } = z.object({ reference: z.uuid() }).strict().parse(input);
     if (name === PLAN_EXECUTION_STATUS_TOOL.name) {
       if (!chatGptReadableTools(session, scopes).some(tool => tool.name === "list_work_hub_tasks")) throw Error("Current plan read unavailable");
@@ -60,8 +58,8 @@ export async function handlePlanExecutionTool(name: string, input: unknown, sess
     }
     throw Error("Unsupported background operation");
   }
-  const request = planExecutionProposalInputSchema.parse(input);
-  for (const step of request.steps) typedPlanProposalStepSchema.parse(step);
+  const definition = name.startsWith("v_plan_step__");
+  const request = definition ? backgroundFragmentInputSchema.parse(input) : backgroundAssemblyInputSchema.parse(input);
   const organizationKey = session.role === "partner" && session.partnerId ? `partner:${session.partnerId}` : session.vendorId ? `vendor:${session.vendorId}` : null;
   if (!organizationKey || !session.userId || !session.activeMembershipId || !session.sv || !grantReference) throw Error("Current connection unavailable");
   const available = new Set([...chatGptReadableTools(session, scopes), ...chatGptActionTools(session, scopes)].map(tool => tool.name));
@@ -72,10 +70,11 @@ export async function handlePlanExecutionTool(name: string, input: unknown, sess
   const identity = { userId: session.userId, organizationKey };
   const task = await readExactPlanTask(path => callNaturalVoiceDomainApi(path, "GET", {}, session), request.taskId, identity);
   if (["completed", "cancelled"].includes(task.status)) throw Error("Saved plan is terminal");
-  const proposal = prepareBoundExecutionProposal(decodePlanDescription(task.description, identity), {
-    requester: { ...identity, membershipId: session.activeMembershipId, sessionVersion: session.sv }, grantReference,
-    taskId: task.id, taskVersion: task.version, availableTools: available,
-  }, request);
+  const context = { requester: { ...identity, membershipId: session.activeMembershipId, sessionVersion: session.sv }, grantReference, taskId: task.id, taskVersion: task.version, availableTools: available };
+  const plan = decodePlanDescription(task.description, identity);
+  if (definition) return prepareBackgroundFragment(name, input, plan, context, SESSION_SECRET);
+  const proposal = assembleBackgroundFragments(input, plan, context, SESSION_SECRET);
+  const service = createPlanExecutionConsentService({ secret: SESSION_SECRET });
   const prepared = await service.prepare(proposal, session);
   const { token, ...review } = prepared;
   return { ...review, reference: proposal.id, approvalUrl: `${ASSISTANT_ISSUER}/executions/review?token=${encodeURIComponent(token)}` };

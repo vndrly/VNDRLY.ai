@@ -70,3 +70,9 @@ it('exposes only current permitted away/display/workforce operations with fixed 
   expect(display.inputSchema.required).toEqual(['displayId','expectedUpdatedAt','reason']);expect(display.inputSchema.properties).not.toHaveProperty('view');
   expect(exposedOperationTools(chatGptActionTools({...session,membershipRole:'member'},['operations:write'])).some(tool=>tool.name.startsWith('confirm_operations_displays_action'))).toBe(false);
 });
+
+it('describes exact public workforce effects and schedule invalidation',()=>{
+ const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin',activeMembershipId:8,sv:2};const exposed=exposedOperationTools(chatGptActionTools(session,['workforce:write','work_hub:write']));
+ for(const [action,word] of [['assign','workerUserId'],['acknowledge','your own'],['evaluate','assignedCount'],['escalate','state and timestamp only']])expect(exposed.find(t=>t.name==='confirm_workforce_coverage_action_'+action)?.description).toContain(word);
+ expect(operationToolAnnotations(exposed.find(t=>t.name==='reschedule_work_hub_meeting')!)).toMatchObject({destructiveHint:true});
+});
