@@ -16,7 +16,8 @@ function harness(mode?: string) {
   const requestDisplayMode = mode ? vi.fn().mockResolvedValue({ mode }) : undefined;
   const context: any = {
     document: { body: { getBoundingClientRect: () => ({ height: 84 }), classList: { add: vi.fn(), remove: vi.fn() } }, documentElement: { scrollHeight: 500 }, visibilityState: "visible", createElement: node },
-    window: { openai: { requestDisplayMode, notifyIntrinsicHeight: vi.fn() }, parent: { postMessage: vi.fn() } },
+    window: { addEventListener: vi.fn(), openai: { requestDisplayMode, notifyIntrinsicHeight: vi.fn() }, parent: { postMessage: vi.fn() } },
+    request: vi.fn().mockResolvedValue({ mode: "pip" }),
     current: { view: "my_workday" }, navigationPending: false, load,
     el: () => content, add: (parent: any, tag: string, text: string, css: string) => { const child = node(tag, text, css); parent.append(child); return child; },
     setInterval: (callback: () => void) => timers.push(callback),
@@ -48,6 +49,21 @@ describe("compact workday dashboard", () => {
   it("does not claim pinning without host support", async () => {
     const { nodes } = harness();
     await nodes.find(n => n.textContent === "Pin").onclick();
+    expect(nodes.find(n => n.className === "dashboard-status").textContent).toContain("unavailable");
+  });
+  it("uses the standard bridge when the host advertises PiP", async () => {
+    const { context, nodes } = harness();
+    context.updateDashboardHost({ availableDisplayModes: ["inline", "pip"] });
+    await nodes.find(n => n.textContent === "Pin").onclick();
+    expect(context.request).toHaveBeenCalledWith("ui/request-display-mode", { mode: "pip" });
+    expect(nodes.find(n => n.className === "dashboard-status").textContent).toBe("Pinned by ChatGPT");
+  });
+  it("respects a host that advertises inline only", async () => {
+    const { context, nodes, requestDisplayMode } = harness("pip");
+    context.updateDashboardHost({ availableDisplayModes: ["inline"] });
+    await nodes.find(n => n.textContent === "Pin").onclick();
+    expect(context.request).not.toHaveBeenCalled();
+    expect(requestDisplayMode).not.toHaveBeenCalled();
     expect(nodes.find(n => n.className === "dashboard-status").textContent).toContain("unavailable");
   });
   it("refreshes through authorized workspace reads and skips hidden or pending views", () => {

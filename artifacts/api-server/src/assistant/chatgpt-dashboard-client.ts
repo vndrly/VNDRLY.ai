@@ -1,5 +1,8 @@
 /** Compact host-pinning experiment. Never replaces the host conversation/composer. */
 export const DASHBOARD_CLIENT = String.raw`
+let dashboardHostContext={};
+function updateDashboardHost(context){dashboardHostContext={...dashboardHostContext,...context};}
+window.addEventListener('message',event=>{if(event.source===window.parent&&event.data?.method==='ui/notifications/host-context-changed')updateDashboardHost(event.data.params||{});});
 function renderDashboard(output){
  if(output.view!=='my_workday') { document.body?.classList?.remove('dashboard-mode');return false; }
  document.body.classList.add('dashboard-mode');
@@ -20,9 +23,11 @@ function renderDashboard(output){
  const date=new Date(output.generatedAt);status.textContent='Updated '+(Number.isFinite(date.getTime())?date.toLocaleTimeString():'time unavailable')+' · Counts cover returned records';
  pin.onclick=async()=>{pin.disabled=true;try{
   const host=window.openai;
-  if(!host?.requestDisplayMode)throw Error('Pinning is unavailable in this ChatGPT client.');
-  const granted=await host.requestDisplayMode({mode:'pip'});
-  const mode=granted?.mode||host.displayMode;
+  const available=dashboardHostContext.availableDisplayModes;
+  if(Array.isArray(available)&&!available.includes('pip'))throw Error('Pinning is unavailable in this ChatGPT client.');
+  if(!Array.isArray(available)&&!host?.requestDisplayMode)throw Error('Pinning is unavailable in this ChatGPT client.');
+  const granted=Array.isArray(available)?await request('ui/request-display-mode',{mode:'pip'}):await host.requestDisplayMode({mode:'pip'});
+  const mode=granted?.mode||host?.displayMode;
   status.textContent=mode==='pip'?'Pinned by ChatGPT':mode==='fullscreen'?'ChatGPT opened fullscreen instead of pinning':mode==='inline'?'ChatGPT kept this dashboard inline':'Pin requested; host mode not confirmed';
  }catch(error){status.textContent=error.message;}finally{pin.disabled=false;}};
  const refresh=add(controls,'button','Refresh');refresh.type='button';refresh.onclick=()=>load('my_workday',true);
@@ -32,6 +37,10 @@ function renderDashboard(output){
  return true;
 }
 setInterval(()=>{if(current?.view==='my_workday'&&!navigationPending&&document.visibilityState==='visible')load('my_workday',true);},30000);
+if(typeof ResizeObserver==='function'){
+ let lastHeight=0;
+ new ResizeObserver(()=>{if(!document.body.classList.contains('dashboard-mode'))return;const height=Math.ceil(document.body.getBoundingClientRect().height);if(height===lastHeight)return;lastHeight=height;window.openai?.notifyIntrinsicHeight?.(height);window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/size-changed',params:{height}},'*');}).observe(document.body);
+}
 `;
 export const DASHBOARD_CSS = String.raw`
 body.dashboard-mode{padding:8px}body.dashboard-mode>header,body.dashboard-mode>nav,body.dashboard-mode>footer,body.dashboard-mode>#status:empty{display:none}
