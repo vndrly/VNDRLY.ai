@@ -14,7 +14,7 @@ function harness(mode?: string) {
   const timers: (() => void)[] = [];
   const requestDisplayMode = mode ? vi.fn().mockResolvedValue({ mode }) : undefined;
   const context: any = {
-    document: { body: { classList: { add: vi.fn(), remove: vi.fn() } }, documentElement: { scrollHeight: 84 }, visibilityState: "visible", createElement: node },
+    document: { body: { getBoundingClientRect: () => ({ height: 84 }), classList: { add: vi.fn(), remove: vi.fn() } }, documentElement: { scrollHeight: 500 }, visibilityState: "visible", createElement: node },
     window: { openai: { requestDisplayMode, notifyIntrinsicHeight: vi.fn() }, parent: { postMessage: vi.fn() } },
     current: { view: "my_workday" }, navigationPending: false, load,
     el: () => content, add: (parent: any, tag: string, text: string, css: string) => { const child = node(tag, text, css); parent.append(child); return child; },
