@@ -1,3 +1,6 @@
+import { db, vendorsTable, partnersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { dashboardBrand } from "../assistant/chatgpt-dashboard-brand";
 import { recoverWorkHubShiftOpeningAction } from "../assistant/work-hub-shift-opening-recovery";
 import { z } from "zod/v4";
 import { recoverMeetingSpeakRequestAction } from "../assistant/meeting-speak-request-recovery";
@@ -333,7 +336,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "resources/read") {
     if ([ACTION_PANEL_URI, ATTENDANCE_ACTION_PANEL_URI, RECOVERY_ACTION_PANEL_URI, RECENT_ACTION_PANEL_URI, PREVIOUS_ACTION_PANEL_URI, LEGACY_ACTION_PANEL_URI].includes(message.params?.uri)) return reply({ contents: [{ uri: message.params.uri, mimeType: "text/html;profile=mcp-app", text: ACTION_PANEL_HTML, _meta: { "openai/widgetDescription": "VNDRLY action authorization panel. Shows the exact prepared change, current saved status, and actual result after submission. Location-dependent changes use the secure device authorization link.", ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
     if (message.params?.uri !== WORKSPACE_URI) return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32602, message: "Unknown resource" } });
-    return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: (authorized.scopes.includes("crew:read") || authorized.scopes.includes("fleet:read")) ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
+    return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: ["https://vndrly.ai", "https://bihjmgbdzbhcnsuhzzwo.supabase.co", ...((authorized.scopes.includes("crew:read") || authorized.scopes.includes("fleet:read")) ? ["https://api.mapbox.com"] : [])] }, prefersBorder: true } } }] });
   }
   if (message.method === "tools/list") {
     const fleetUpgrades = await fleetUpgradeDiscovery(authorized.session, authorized.scopes);
@@ -542,6 +545,14 @@ router.post("/mcp", async (req, res) => {
       const source = requireChatGptReadableTool(authorized.session, authorized.scopes, request.sourceTool);
       const raw = chatGptReadToolOutput(source.name, JSON.parse(await runTool(source.name, request.sourceArguments, authorized.session, "")), authorized.scopes);
       const output = workspaceOutput(request.view, source.name, request.sourceArguments, raw);
+      if(request.view === "my_workday") {
+        const table = authorized.session.vendorId ? vendorsTable : authorized.session.partnerId ? partnersTable : null;
+        const organizationId = authorized.session.vendorId ?? authorized.session.partnerId;
+        if(table && organizationId) {
+          const [brand] = await db.select({name:table.name,primaryColor:table.brandPrimaryColor,logoUrl:table.logoUrl,logoSquareUrl:table.logoSquareUrl}).from(table).where(eq(table.id,organizationId)).limit(1);
+            if(brand) output.branding = dashboardBrand(brand, ASSISTANT_ISSUER);
+        }
+      }
       if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
       output.availableViews = [];
       if (allowedNames.has("get_work_hub_briefing")) output.availableViews.push("my_workday");
