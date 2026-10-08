@@ -80,7 +80,7 @@ import {
 import { markdownToSpeechText, transcribeAudioBuffer } from "../lib/openai-whisper";
 import { normalizeBuiltInTtsVoice, synthesizeSpeechBuffer } from "../lib/openai-tts";
 import { CooperativeVTurn, selectVProvider, shouldVConsult, savedVTaskMutationBlock } from "../assistant/cooperative-v";
-import { requestAnthropicVRound, requestOpenAIVRound, type VModelRound, type VModelRoundInput } from "../assistant/cooperative-v-providers";
+import { buildVReviewInput, isAnthropicVConfigured, requestOptionalVReview, requestAnthropicVRound, requestOpenAIVRound, type VModelRound, type VModelRoundInput } from "../assistant/cooperative-v-providers";
 import { parseVConnectionSelection, SELECTED_EXTERNAL_CALENDAR_TOOL } from "../assistant/cooperative-v-connections";
 import { bindVConversationCompany, resolveVTurnPolicy, readSelectedVConnection, readSelectedVCalendar, listVConnections, readVTaskRecovery, readCompanyVUsage } from "../assistant/cooperative-v-runtime";
 import { estimateVCost } from "../assistant/cooperative-v-usage";
@@ -93,7 +93,7 @@ router.get("/assistant/cooperation", async (req, res) => {
   try {
     const policy = await resolveVTurnPolicy(session);
     res.json({ assistant: "V", enabled: policy.enabled, approvedProviders: policy.approvedAiProviders,
-      providers: { anthropic: { configured: Boolean(process.env.ANTHROPIC_API_KEY?.trim()) }, openai: { configured: policy.openaiAvailable } },
+      providers: { anthropic: { configured: isAnthropicVConfigured() }, openai: { configured: policy.openaiAvailable } },
       maximumSecondConsultations: 1, privateChatGPTStateInherited: false, externalConnectionsRequireSelection: true, hardCompanySpendCap: false });
   } catch { res.status(403).json({ code: "assistant.company_context_unavailable", error: "Current company membership is required." }); }
 });
@@ -1541,12 +1541,14 @@ async function handleConversationMessage(
       if (aborted) break;
       await recordProviderRound(finalMsg);
       if (finalMsg.stop_reason !== "tool_use" && shouldVConsult(userMessage)) {
-        const reviewed = await vTurn.consult({ system: systemPrompt + "\nReview the preceding draft against the saved tool results. Return one final answer in V's voice. Do not request tools or claim any additional action was executed.",
-          maxTokens: MAX_TOKENS, tools: [], messages: [...messages, { role: "assistant" as const, content: finalMsg.content }] }, {
+        const reviewResult = await requestOptionalVReview(finalMsg, () => vTurn.consult(buildVReviewInput({ system: systemPrompt,
+          maxTokens: MAX_TOKENS, tools: [], messages }, finalMsg), {
           anthropic: input => authorizedProviderRound("anthropic", input),
           openai: input => authorizedProviderRound("openai", input),
-        });
-        if (reviewed) { await recordProviderRound(reviewed); finalMsg = reviewed; }
+        }));
+        if (reviewResult.review) await recordProviderRound(reviewResult.review);
+        if (reviewResult.reviewUnavailable) send("review_unavailable", { message: "The second engine's review was unavailable. V retained the completed draft.", draftRetained: true });
+        finalMsg = reviewResult.answer;
       }
       if (round === 0 && (session.vendorId || session.partnerId)) {
         try {

@@ -5,6 +5,41 @@ import { VProviderError } from "./cooperative-v";
 export type VModelRoundInput = { system: string; messages: Anthropic.MessageParam[]; tools: Anthropic.Tool[]; maxTokens: number };
 export type VModelRound = Pick<Anthropic.Message, "content" | "stop_reason" | "usage"> & { model: string };
 
+export function isAnthropicVConfigured(environment: Record<string, string | undefined> = process.env): boolean {
+  return Boolean(environment.AI_INTEGRATIONS_ANTHROPIC_API_KEY?.trim() && environment.AI_INTEGRATIONS_ANTHROPIC_BASE_URL?.trim());
+}
+
+export function buildVReviewInput(input: VModelRoundInput, draft: VModelRound): VModelRoundInput {
+  return { ...input, tools: [], messages: [...input.messages,
+    { role: "assistant", content: draft.content },
+    { role: "user", content: "Review the preceding draft against this same authorized context and saved tool results. Return the complete final answer in V's voice, even if no changes are needed. Do not request tools or claim additional actions were executed." },
+  ] };
+}
+
+export function hasUsableVReview(review: VModelRound): boolean {
+  return review.stop_reason !== "tool_use" && !review.content.some(block => block.type === "tool_use")
+    && review.content.some(block => block.type === "text" && Boolean(block.text.trim()));
+}
+
+export function selectVReviewedRound(draft: VModelRound, review: VModelRound): VModelRound {
+  return hasUsableVReview(review) ? review : draft;
+}
+
+export async function requestOptionalVReview(draft: VModelRound, request: () => Promise<VModelRound | null>): Promise<{
+  answer: VModelRound; review: VModelRound | null; reviewUnavailable: boolean;
+}> {
+  try {
+    const review = await request();
+    return { answer: review ? selectVReviewedRound(draft, review) : draft, review,
+      reviewUnavailable: Boolean(review && !hasUsableVReview(review)) };
+  } catch (error) {
+    // Provider failures cannot erase an already completed draft. Live company
+    // authority checks throw other errors and must still fail closed.
+    if (!(error instanceof VProviderError)) throw error;
+    return { answer: draft, review: null, reviewUnavailable: true };
+  }
+}
+
 /** Keep one deliberately shared transcript. No ChatGPT conversation/subscription/app
  * credentials or remotely stored response state is inferred from an OpenAI API key.
  */
