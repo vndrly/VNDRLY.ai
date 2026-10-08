@@ -1,5 +1,5 @@
-# VNDRLY.ai 1.10.0
+# VNDRLY.ai 1.10.1
 
-Native work requests and saved-result guidance, permission-scoped embedded Native Work view, cooperative V provider/connection boundaries, and offline Gate/inventory rules. Includes the prior approved saved-plan and signed background guidance.
+Corrects the previously omitted user-approved product skills with exact labels: VNDRLY/work hub, VNDRLY/gate, VNDRLY/field ops, VNDRLY/fleet, VNDRLY/inventory. V remains the common assistant. Preserves scoped tools, signed action recovery, native device boundaries, existing plugin identity, branding and linked-account grants.
 
-Preserves the existing plugin identity, app reference, branding, linked accounts and grants. Deploy matching API tools before refreshing definitions and installing this update. Installed, submitted, approved and publicly available are separate states. Physical device execution, camera capture, delivery and public approval require their own evidence.
+Verify installation through both version 1.10.1 and all five exact skill labels; a version label alone is insufficient. This is a package-only correction; API/native runtime unchanged.

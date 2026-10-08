@@ -20,5 +20,5 @@
   "description": "V for authorized VNDRLY work, tickets, Gate, Work Hub, onboarding, inventory and Fleet operations",
   "name": "dev-6ac4f61e0aac8191b7f7b4fbbc5822b0",
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "version": "1.10.0"
+  "version": "1.10.1"
 }

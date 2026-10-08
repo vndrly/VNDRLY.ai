@@ -1,0 +1,11 @@
+interface:
+  display_name: "VNDRLY/inventory"
+  short_description: "Assets, custody, checkout, returns and history"
+  default_prompt: "Use $vndrly-inventory for my authorized VNDRLY/inventory work."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "vndrly-assistant"
+      description: "Permission-scoped VNDRLY work tools"
+      transport: "streamable_http"
+      url: "https://vndrly.ai/api/assistant-connection/mcp"

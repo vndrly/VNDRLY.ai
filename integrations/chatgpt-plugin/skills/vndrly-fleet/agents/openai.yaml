@@ -1,7 +1,7 @@
 interface:
-  display_name: "V — VNDRLY workday"
-  short_description: "Handle permission-scoped VNDRLY work"
-  default_prompt: "Use $vndrly-workday to give me my VNDRLY work briefing."
+  display_name: "VNDRLY/fleet"
+  short_description: "Vehicles, drivers, dispatch, runs and maintenance"
+  default_prompt: "Use $vndrly-fleet for my authorized VNDRLY/fleet work."
 dependencies:
   tools:
     - type: "mcp"
