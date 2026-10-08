@@ -2,6 +2,7 @@ import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import { DASHBOARD_CLIENT } from "./chatgpt-dashboard-client";
 import { dashboardBrand } from "./chatgpt-dashboard-brand";
+import { workspaceOutput } from "./chatgpt-workspace";
 
 function harness(mode?: string) {
   const nodes: any[] = [];
@@ -26,6 +27,10 @@ function harness(mode?: string) {
 }
 
 describe("compact workday dashboard", () => {
+  it("counts canonical workday records and outstanding attention", () => {
+    const output = workspaceOutput("my_workday", "get_work_hub_briefing", {}, { shifts: [{ shift: { title: "Shift" } }], tasks: [{ title: "Overdue", status: "open", dueAt: "2026-10-01T00:00:00Z" }], meetings: [], announcements: [{ announcement: { title: "Required", acknowledgementRequired: true }, recipient: {} }] }, new Date("2026-10-08T00:00:00Z"));
+    expect(output.metrics).toEqual([{ label: "Shifts", value: 1 }, { label: "Tasks", value: 1 }, { label: "Meetings", value: 0 }, { label: "Need attention", value: 2 }]);
+  });
   it("renders saved branding and sourced counts without another composer", () => {
     const { nodes, context } = harness();
     expect(nodes.find(n => n.tag === "img").src).toBe("https://vndrly.ai/uploads/logo.png");

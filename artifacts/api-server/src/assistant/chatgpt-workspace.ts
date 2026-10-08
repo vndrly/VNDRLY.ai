@@ -119,6 +119,12 @@ export function workspaceOutput(view: WorkspaceView, sourceTool: string, sourceA
       { title: "Meetings", rows: list(data.meetings).map(row => ({ title: text(object(row.meeting).title, "Meeting"), time: moment(object(row.occurrence).startsAt) })), empty: "No meetings returned." },
       { title: "Announcements", rows: announcements, empty: "No announcements returned." },
     ];
+    result.metrics = [
+      { label: "Shifts", value: data.shifts.length },
+      { label: "Tasks", value: data.tasks.length },
+      { label: "Meetings", value: data.meetings.length },
+      { label: "Need attention", value: result.attention.length },
+    ];
   } else if (view === "work_calendar") {
     result.sections = ["shifts", "meetings", "tasks"].map(kind => ({ title: kind[0].toUpperCase() + kind.slice(1), rows: list(data[kind]).map(row => { const item = object(row.item); const record = kind === "meetings" ? object(item.meeting) : item; const timing = kind === "meetings" ? object(item.occurrence) : item; return { title: text(record.title, kind === "tasks" ? "Task" : "Scheduled work"), detail: text(record.status), time: moment(timing.startsAt ?? timing.dueAt), ...(kind === "tasks" ? { attention: taskRow(item, now.getTime()).attention } : {}) }; }), empty: `No ${kind} in this window.` }));
     result.attention = result.sections.flatMap(section => section.rows.filter(row => row.attention));
