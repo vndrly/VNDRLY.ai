@@ -471,6 +471,11 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     }
 
     const isPublic = obj.acl?.visibility === "public";
+    // Public images such as organization logos also render in authorized
+    // cross-origin embeds. Private objects retain Helmet's same-origin policy.
+    if (isPublic && obj.contentType.startsWith("image/")) {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    }
     res.setHeader("Content-Type", obj.contentType);
     res.setHeader(
       "Cache-Control",
