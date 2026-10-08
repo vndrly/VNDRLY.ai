@@ -1,5 +1,5 @@
-# VNDRLY.ai 1.10.1
+# VNDRLY plugin 1.10.2
 
-Corrects the previously omitted user-approved product skills with exact labels: VNDRLY/work hub, VNDRLY/gate, VNDRLY/field ops, VNDRLY/fleet, VNDRLY/inventory. V remains the common assistant. Preserves scoped tools, signed action recovery, native device boundaries, existing plugin identity, branding and linked-account grants.
+Correct developer branding to VNDRLY.ai and describe the commercial service offerings. Preserve existing connected app identity and grants. Helpers remain inside service skills; the five supplied names are formatting examples, not an exhaustive service catalog. SafePass naming and proprietary credential development remain proposed.
 
-Verify installation through both version 1.10.1 and all five exact skill labels; a version label alone is insufficient. This is a package-only correction; API/native runtime unchanged.
+ChatGPT About may display connector development mode and platform-generated IDs independently of this package version. The MCP URL is a functional transport address and must not be changed to the homepage.

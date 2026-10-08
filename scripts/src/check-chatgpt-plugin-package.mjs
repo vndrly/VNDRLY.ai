@@ -10,14 +10,13 @@ for (const manifest of manifests) {
   assert.equal(manifest.version, manifests[0].version, 'Manifest versions must agree');
 }
 assert.equal(JSON.parse(fs.readFileSync(path.join(root,'.app.json'),'utf8')).apps['vndrly-assistant'].id,'asdk_app_6ac4f61e0aac8191b7f7b4fbbc5822b0');
-const expected = new Map([
-  ['vndrly-work-hub','VNDRLY/work hub'], ['vndrly-gate','VNDRLY/gate'],
-  ['vndrly-field-ops','VNDRLY/field ops'], ['vndrly-fleet','VNDRLY/fleet'],
-  ['vndrly-inventory','VNDRLY/inventory'],
-]);
+
 const installed = fs.readdirSync(path.join(root,'skills')).filter(id=>fs.existsSync(path.join(root,'skills',id,'SKILL.md')));
-assert.deepEqual(installed.sort(), [...expected.keys()].sort(), 'Exactly the five approved product skills must ship');
+const expected = new Map(installed.map(id=>[id,JSON.parse(fs.readFileSync(path.join(root,'skills',id,'agents/openai.yaml'),'utf8').match(/display_name: (".*")/)[1])]));
+assert(expected.size > 0);
+for (const manifest of manifests) assert.equal((manifest.interface || manifest.extensions['com.openai'].interface).developerName, 'VNDRLY.ai');
 for (const [id,label] of expected) {
+  assert(new RegExp('^VNDRLY/[a-z][a-z ]*$').test(label));
   const dir = path.join(root,'skills',id);
   const skill = fs.readFileSync(path.join(dir,'SKILL.md'),'utf8');
   const metadata = fs.readFileSync(path.join(dir,'agents/openai.yaml'),'utf8');

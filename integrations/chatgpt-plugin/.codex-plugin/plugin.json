@@ -10,18 +10,21 @@
     "logo": "./assets/icon.png",
     "displayName": "VNDRLY.ai",
     "composerIcon": "./assets/icon.png",
-    "developerName": "VNDRLY",
-    "shortDescription": "Your VNDRLY work desk",
-    "longDescription": "V for authorized VNDRLY work, tickets, Gate, Work Hub, onboarding, inventory and Fleet operations",
-    "category": "Other",
-    "capabilities": []
+    "developerName": "VNDRLY.ai",
+    "shortDescription": "Connected field operations, fleet operations and gatekeeping",
+    "longDescription": "VNDRLY.ai provides connected field operations, fleet operations, gatekeeping, inventory management, and work coordination for operators, vendors, and field teams. Ask V helps users carry out work within the VNDRLY services their company uses, with access governed by their role and permissions.",
+    "category": "Productivity",
+    "capabilities": [],
+    "websiteURL": "https://vndrly.ai"
   },
   "name": "dev-6ac4f61e0aac8191b7f7b4fbbc5822b0",
-  "version": "1.10.1",
-  "description": "V for authorized VNDRLY work, tickets, Gate, Work Hub, onboarding, inventory and Fleet operations",
+  "version": "1.10.2",
+  "description": "VNDRLY.ai provides connected field operations, fleet operations, gatekeeping, inventory management, and work coordination for operators, vendors, and field teams. Ask V helps users carry out work within the VNDRLY services their company uses, with access governed by their role and permissions.",
   "author": {
-    "name": "Workspace upload"
+    "name": "VNDRLY.ai",
+    "url": "https://vndrly.ai"
   },
   "keywords": [],
-  "skills": "./skills"
+  "skills": "./skills",
+  "homepage": "https://vndrly.ai"
 }
