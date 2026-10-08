@@ -4224,7 +4224,15 @@
       "email_exists": "An account with that email already exists.",
       "create_failed": "Couldn't create the account. Please try again."
     },
+    "native": {
+      "push_token_invalid": "This phone could not be registered for notifications. Open VNDRLY and try again.",
+      "arrival_invalid": "Arrival could not be verified. Review your location and confirm arrival manually."
+    },
     "assistant": {
+      "company_context_unavailable": "Your company context is unavailable. Refresh or select your company again.",
+      "connection_context_unavailable": "This connection is unavailable in your current account. Choose an authorized connection.",
+      "task_context_unavailable": "This saved task is unavailable in your current company. Refresh and select an available task.",
+      "usage_unavailable": "Assistant usage could not be verified. Try again.",
       "audio_too_large": "That audio clip is too large. Try a shorter recording.",
       "feedback_assistant_only": "Only AskV answers can be rated.",
       "invalid_audio": "That audio file isn't valid. Try recording again.",

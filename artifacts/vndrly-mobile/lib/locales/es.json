@@ -1205,7 +1205,15 @@
       "vendor_no_catalog": "El proveedor aún no tiene tipos de trabajo en su catálogo.",
       "eula_not_accepted": "El proveedor debe aceptar el EULA antes de aprobarlo."
     },
+    "native": {
+      "push_token_invalid": "No se pudo registrar este teléfono para notificaciones. Abra VNDRLY e intente de nuevo.",
+      "arrival_invalid": "No se pudo verificar la llegada. Revise su ubicación y confirme la llegada manualmente."
+    },
     "assistant": {
+      "company_context_unavailable": "El contexto de su empresa no está disponible. Actualice o seleccione su empresa de nuevo.",
+      "connection_context_unavailable": "Esta conexión no está disponible en su cuenta actual. Elija una conexión autorizada.",
+      "task_context_unavailable": "Esta tarea guardada no está disponible en su empresa actual. Actualice y seleccione una tarea disponible.",
+      "usage_unavailable": "No se pudo verificar el uso del asistente. Intente de nuevo.",
       "audio_too_large": "Ese clip de audio es demasiado grande. Graba uno más corto.",
       "feedback_assistant_only": "Solo se pueden calificar respuestas de AskV.",
       "invalid_audio": "Ese archivo de audio no es válido. Graba de nuevo.",

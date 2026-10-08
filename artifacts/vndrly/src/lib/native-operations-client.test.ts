@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nativeRequestEvidence, nativeRequestLabel, nativeOperationsRequest } from "./native-operations-client";
+import { nativeRequestEvidence, nativeRequestLabel, nativeOperationsRequest, nativeOperationErrorMessage } from "./native-operations-client";
 
 describe("native operations canonical result presentation", () => {
   it("does not equate photo upload or delivery with a saved ticket result", () => {
@@ -24,3 +24,5 @@ describe("native operations canonical result presentation", () => {
     await expect(nativeOperationsRequest("/status", {}, async () => new Response("denied", { status: 403 }))).rejects.toThrow();
   });
 });
+
+it("shows localized guidance instead of internal operation codes",()=>{expect(nativeOperationErrorMessage(new Error("native.worker_off_duty"),"en")).not.toContain("native.");expect(nativeOperationErrorMessage(new Error("native.worker_off_duty"),"es")).toContain("Consulte");expect(nativeOperationErrorMessage(new Error("Worker ended duty"),"en")).toBe("Worker ended duty");});

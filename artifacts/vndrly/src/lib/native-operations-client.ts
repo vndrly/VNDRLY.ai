@@ -5,6 +5,12 @@ export type NativeOperationRequest = {
   result: Record<string, unknown> | null;
 };
 
+export function nativeOperationErrorMessage(error: unknown, language: "en" | "es"): string {
+  const message = error instanceof Error ? error.message : "";
+  if (message && !/^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+$/.test(message)) return message;
+  return language === "es" ? "No se pudo completar la acción. Consulte el resultado guardado antes de volver a intentarlo." : "The action could not be completed. Check the saved result before trying again.";
+}
+
 export async function nativeOperationsRequest<T = unknown>(
   path: string, init: RequestInit = {}, http: typeof fetch = fetch,
 ): Promise<T> {

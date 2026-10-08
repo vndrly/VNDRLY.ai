@@ -1,3 +1,5 @@
+// Ordinary ticket attachments never grant access to reserved Gate identity objects.
+vi.mock("../services/gate-identity",()=>({canReadGateIdentityObject:vi.fn(async()=>false)}));
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import express from "express";
 import request from "supertest";

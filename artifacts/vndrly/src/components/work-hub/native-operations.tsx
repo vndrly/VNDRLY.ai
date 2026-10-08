@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import NativeSupportConsole from "./native-support-console";
-import { nativeOperationsRequest, nativeRequestLabel, nativeRequestEvidence, type NativeOperationRequest } from "@/lib/native-operations-client";
+import { nativeOperationErrorMessage, nativeOperationsRequest, nativeRequestLabel, nativeRequestEvidence, type NativeOperationRequest } from "@/lib/native-operations-client";
 
 type Policy = { enabled: boolean; locationRequests: boolean; photoRequests: boolean; automaticArrival?:boolean; usageAlertUsd?:number; usageAlertTokens?:number; escalation?:{assignedContactUserId:number|null;backupContactUserId:number|null;intervalMinutes:number}; supportGrants?:Array<{userId:number;purpose:string;expiresAt:string;workerUserIds:number[];siteIds:number[]}>; dutyModes: string[]; approvedAiProviders?: string[]; grants: Array<{ requesterUserId: number; workerUserId: number; siteId?: number; ticketId?: number }>; [key: string]: unknown };
 type Status = {
@@ -66,7 +66,7 @@ function Panel({ identity }: { identity: string }) {
       saved?.(result);
       setMessage(c("Change recorded. Device work may still be pending.", "Cambio registrado. El trabajo del dispositivo puede seguir pendiente."));
       await queryClient.invalidateQueries({ queryKey: key });
-    } catch (e) { if (alive.current) setError(e instanceof Error ? e.message : c("Request failed", "Solicitud fallida")); }
+    } catch (e) { if (alive.current) setError(nativeOperationErrorMessage(e, lang)); }
     finally { busyRef.current = false; if (alive.current) setBusy(false); }
   }
   async function sendRequest() {
@@ -80,7 +80,7 @@ function Panel({ identity }: { identity: string }) {
   }
   const data = status.data;
   if (status.isPending) return <p role="status">{c("Loading native work…", "Cargando trabajo nativo…")}</p>;
-  if (!data) return <section className="rounded-lg border p-4"><p role="alert">{status.error instanceof Error ? status.error.message : c("Native work unavailable", "Trabajo nativo no disponible")}</p><PngPillButton onClick={() => void status.refetch()}>{c("Retry", "Reintentar")}</PngPillButton></section>;
+  if (!data) return <section className="rounded-lg border p-4"><p role="alert">{status.error instanceof Error ? nativeOperationErrorMessage(status.error, lang) : c("Native work unavailable", "Trabajo nativo no disponible")}</p><PngPillButton onClick={() => void status.refetch()}>{c("Retry", "Reintentar")}</PngPillButton></section>;
   const ownVendor = Boolean(data.vendorId) && data.canWorkerOperate !== false;
   const enabled = data.policy.enabled;
   const fieldsDisabled = busy || Boolean(attempt);

@@ -61,7 +61,12 @@ export default function NativeOperations({ requestId, action, systemRequestId }:
     working.current = true; setBusy(true); setError("");
     const captured = captureAuthScope();
     try { await operation(); if (isAuthScopeCurrent(captured)) await refresh(); }
-    catch (e) { if (isAuthScopeCurrent(captured)) setError(e instanceof Error ? e.message : t("nativeOperations.unavailable")); }
+    catch (e) {
+      if (isAuthScopeCurrent(captured)) {
+        const message = e instanceof Error ? e.message : "";
+        setError(message && !/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/i.test(message) ? message : t("nativeOperations.unavailable"));
+      }
+    }
     finally { working.current = false; if (isAuthScopeCurrent(captured)) setBusy(false); }
   }
   async function finishSystemAction(saved: boolean) {

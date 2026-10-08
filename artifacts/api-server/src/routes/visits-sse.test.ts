@@ -1,3 +1,8 @@
+// These suites exercise ordinary visit categories/SSE, not native offline mutation.
+vi.mock("../services/gate-offline-observation",()=>({
+ offlineGateObservationService:{execute:vi.fn(async()=>{throw new Error("Unexpected native offline observation");})},
+ OfflineGateError:class extends Error {},
+}));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import express from "express";
 import { attachTestErrorMiddleware, expectStatus } from "../test-utils/route-app";
