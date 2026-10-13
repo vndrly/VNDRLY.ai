@@ -7,6 +7,7 @@ vi.mock("@workspace/integrations-anthropic-ai", () => ({ anthropic: {} }));
 describe("Ask V open-invoice company boundary", () => {
   let runTool: typeof import("./assistant").runTool;
   let database: typeof import("@workspace/db");
+  let selectSpy: import("vitest").MockInstance;
   const where = vi.fn();
   const limit = vi.fn(async () => []);
   const query = { from: () => query, where: (predicate: unknown) => { where(predicate); return query; }, orderBy: () => query, limit };
@@ -17,7 +18,8 @@ describe("Ask V open-invoice company boundary", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     where.mockClear(); limit.mockClear();
-    vi.spyOn(database.db, "select").mockImplementation(() => query as never);
+    // Realm dispatch binds methods on access; assert the original spy handle.
+    selectSpy = vi.spyOn(database.db, "select").mockImplementation(() => query as never);
   });
   const read = (identity: object) => runTool("lookup_open_invoices", {}, { userId: 17, ...identity } as SessionPayload, "").then(JSON.parse);
   it("does not query global invoices for missing or invalid company context", async () => {
@@ -27,7 +29,7 @@ describe("Ask V open-invoice company boundary", () => {
         expect(await read({ role, [key]: value })).toHaveProperty("error", "No authorized invoice scope on this session.");
       }
     }
-    expect(database.db.select).not.toHaveBeenCalled();
+    expect(selectSpy).not.toHaveBeenCalled();
   });
   it.each([["vendor", "vendorId"], ["partner", "partnerId"]])("scopes %s reads to its trusted company without a creation-age cutoff", async (role, key) => {
     expect(await read({ role, [key]: 42 })).toEqual({ invoices: [] });
@@ -39,7 +41,7 @@ describe("Ask V open-invoice company boundary", () => {
   });
   it("preserves the administrative capped lookup and field-worker denial", async () => {
     expect(await read({ role: "field_employee", vendorId: 42 })).toHaveProperty("note");
-    expect(database.db.select).not.toHaveBeenCalled();
+    expect(selectSpy).not.toHaveBeenCalled();
     expect(await read({ role: "admin" })).toEqual({ invoices: [] });
     const sql = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
     expect(sql.params).toEqual(["paid"]);

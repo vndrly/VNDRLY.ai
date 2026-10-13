@@ -16,6 +16,9 @@ const env = vi.hoisted(() => ({
   listeners: new Set<() => void>(),
 }));
 vi.mock("@/lib/api", () => ({ apiFetch: env.api }));
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({ user: { id: 1, vendorId: 7, activeMembershipId: 10 }, activeMembershipId: 10 }),
+}));
 vi.mock("@/lib/auth", () => ({
   captureAuthScope: () => ({ generation: env.generation }),
   isAuthScopeCurrent: (scope: any) => scope.generation === env.generation,

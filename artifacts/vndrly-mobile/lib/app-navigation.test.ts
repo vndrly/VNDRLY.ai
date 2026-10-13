@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { StoredUser } from "@/lib/auth";
-import { buildAppNavigation, gateLandingRoute, isGatekeeperRouteAllowed, type AppNavigationLabels } from "./app-navigation";
+import { activeNavigationKey, buildAppNavigation, gateLandingRoute, isGatekeeperRouteAllowed, type AppNavigationLabels } from "./app-navigation";
+
+describe("nested Work Hub route classification",()=>{
+  it.each(["calendar","payroll-documents","activity","tasks-forms","chat","calls","meetings","search","files-notes","implementation-exports","site-presence","operations-health"])("keeps %s within shared Work Hub navigation",module=>{expect(activeNavigationKey(`/work-hub/${module}`)).toBe("work-hub");expect(activeNavigationKey(`/(tabs)/work-hub/${module}`)).toBe("work-hub");});
+  it("preserves other company operations routes",()=>{expect(activeNavigationKey("/fleet")).toBe("fleet");expect(activeNavigationKey("/fleet-run/run-id")).toBe("fleet");expect(activeNavigationKey("/gate")).toBe("gate");expect(activeNavigationKey("/")).toBe("index");});
+});
 
 const labels: AppNavigationLabels = {
   askv: "AskV",
@@ -29,6 +34,25 @@ const user = (role: string, vendorRole?: string): StoredUser => ({
 });
 
 describe("buildAppNavigation", () => {
+  it("keeps Fleet companies out of Field and Gate workspaces even for office staff", () => {
+    const keys = buildAppNavigation({ user: user("vendor", "admin"), labels, badges, companyOperationsCategories: ["fleet"], fleetEnabled: true }).map(item => item.key);
+    expect(keys).toEqual(["askv", "fleet", "fleet-log", "fleet-map", "work-hub", "profile"]);
+    expect(buildAppNavigation({ user: user("vendor", "admin"), labels, badges, companyOperationsCategories: ["fleet"], fleetEnabled: false }).some(item => item.key === "fleet")).toBe(false);
+  });
+  it("keeps Field companies out of Fleet and Gate even when broader grants exist", () => {
+    const keys = buildAppNavigation({ user: user("vendor", "admin"), labels, badges, companyOperationsCategories: ["field"], fleetEnabled: true }).map(item => item.key);
+    expect(keys).toContain("index");
+    expect(keys).not.toContain("fleet");
+    expect(keys).not.toContain("gate-mode");
+  });
+  it("gives Gate office staff the Gate workspace and preserves worker-specific Gate navigation", () => {
+    const keys = buildAppNavigation({ user: user("vendor", "office"), labels, badges, companyOperationsCategories: ["gate"], fleetEnabled: true }).map(item => item.key);
+    expect(keys).toEqual(["askv", "change-over", "gate", "gate-history", "gate-map", "work-hub", "profile"]);
+    const workerKeys = buildAppNavigation({ user: user("vendor", "gatekeeper"), labels, badges, companyOperationsCategories: ["gate"], fleetEnabled: true }).map(item => item.key);
+    expect(workerKeys).toContain("gate");
+    expect(workerKeys).not.toContain("index");
+    expect(workerKeys).not.toContain("fleet");
+  });
   it("exposes Fleet only after scoped server authorization, including a separately granted Gate worker", () => {
     for (const person of [user("vendor", "admin"), user("vendor", "gatekeeper"), user("field_employee")]) {
       expect(buildAppNavigation({ user: person, labels, badges }).some(item => item.key === "fleet")).toBe(false);
@@ -198,4 +222,11 @@ it("shows partner site activity only from its separate server capability without
   expect(items.find(entry=>entry.key==="fleet-site-activity")?.href).toBe("/(tabs)/fleet-site-activity");
   expect(items.some(entry=>entry.key==="fleet")).toBe(false);
   expect(buildAppNavigation({user:user("partner"),labels,badges}).some(entry=>entry.key==="fleet-site-activity")).toBe(false);
+});
+
+it("combines only the operations explicitly selected for a multi-service company", () => {
+ const keys=buildAppNavigation({user:user("vendor","admin"),labels,badges,companyOperationsCategories:["field","gate"],fleetEnabled:true}).map(item=>item.key);
+ expect(keys).toContain("index");expect(keys).toContain("gate");expect(keys).toContain("gate-history");expect(keys).not.toContain("fleet");
+ const all=buildAppNavigation({user:user("vendor","admin"),labels,badges,companyOperationsCategories:["field","fleet","gate"],fleetEnabled:true}).map(item=>item.key);
+ expect(all).toEqual(expect.arrayContaining(["index","fleet","gate"]));
 });

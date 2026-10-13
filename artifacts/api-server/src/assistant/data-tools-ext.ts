@@ -32,6 +32,7 @@ import { crewHoursBilledVsCost } from "../lib/reports/crew-cost";
 import { k1099Rows, thresholdForYear } from "../lib/reports/k1099";
 import { misc1099Rows } from "../lib/reports/misc1099";
 import { buildTicketProofPacket } from "../lib/ticket-proof-packet";
+import { fieldAssistantProofPacket } from "./field-proof-projection";
 import {
   blockFieldEmployee,
   clampLimit,
@@ -278,7 +279,9 @@ async function queryTicketProofPacket(
       ),
     );
 
-  const proofPacket = buildTicketProofPacket(row, lineItems, noteRows);
+  const fullProofPacket = buildTicketProofPacket(row, lineItems, noteRows);
+  const fieldView = session.role === "field_employee";
+  const proofPacket = fieldView ? fieldAssistantProofPacket(fullProofPacket, row.status) : fullProofPacket;
   const noteLogAttachmentCount = noteRows.reduce(
     (sum, note) => sum + (note.attachments?.length ?? 0),
     0,
@@ -301,16 +304,16 @@ async function queryTicketProofPacket(
     checkOutTime: row.checkOutTime,
     startingMileage: row.startingMileage,
     endingMileage: row.endingMileage,
-    approvedAt: row.approvedAt,
+    ...(fieldView ? {} : { approvedAt: row.approvedAt,
     paymentDispersedAt: row.paymentDispersedAt,
     paymentReference: row.paymentReference,
-    hasPaymentReceipt: !!row.paymentReceiptUrl,
+    hasPaymentReceipt: !!row.paymentReceiptUrl }),
     lineItemCount: lineItems.length,
     noteLogCount: noteRows.length,
     noteLogAttachmentCount,
     proofPacket,
     recommendation: proofPacket.status === "complete"
-      ? "Ticket has the core proof-to-pay evidence captured."
+      ? (fieldView ? "Field evidence and office handoff recorded; approval and payment belong to the office." : "Ticket has the core proof-to-pay evidence captured.")
       : `Ticket needs: ${proofPacket.missingEvidence.join(", ")}.`,
   });
 }

@@ -317,8 +317,8 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
     // Banner is not yet showing.
     expect(screen.queryAllByTestId("banner-assignment-removed").length).toBe(0);
 
-    // Check-out is initially the amber (live) variant.
-    expect(firstByTestId("button-check-out").getAttribute("data-variant")).toBe("amber");
+    // The compact work action remains available before an assignment denial.
+    expect(firstByTestId("button-check-out").getAttribute("aria-disabled")).not.toBe("true");
 
     // Tap check-out — POST rejects with the assignment code.
     await tapThroughMileagePrompt("button-check-out");
@@ -341,7 +341,7 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
     expect(screen.queryAllByTestId("inline-error-check_out").length).toBe(0);
 
     // The state-change buttons that always render (check-in / check-out /
-    // close-for-review) collapse to their disabled grey variant so the
+    // close-for-review) become disabled so the
     // operator can't keep retrying a doomed action. (En Route uses a
     // visibility gate based on the ticket's lifecycle state and isn't
     // present at all on an "on_site" ticket — it has its own dedicated
@@ -349,12 +349,9 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
     const checkIn = firstByTestId("button-check-in") as HTMLButtonElement;
     const checkOut = firstByTestId("button-check-out") as HTMLButtonElement;
     const close = firstByTestId("button-close-for-review") as HTMLButtonElement;
-    expect(checkIn.getAttribute("data-variant")).toBe("grey");
-    expect(checkOut.getAttribute("data-variant")).toBe("grey");
-    expect(close.getAttribute("data-variant")).toBe("grey");
-    expect(checkIn.disabled).toBe(true);
-    expect(checkOut.disabled).toBe(true);
-    expect(close.disabled).toBe(true);
+    for (const button of [checkIn, checkOut, close]) {
+      expect(button.disabled || button.getAttribute("aria-disabled") === "true").toBe(true);
+    }
   });
 
   it("shows the work-type variant of the banner when POST returns work_type_not_allowed", async () => {

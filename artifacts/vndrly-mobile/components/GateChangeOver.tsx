@@ -317,7 +317,7 @@ export default function GateChangeOver({
     disabled = false,
     inactive = false,
   ) => (
-    <TogglePillButton
+    <TogglePillButton compactOnTablet
       disabled={busy || disabled}
       inactive={inactive}
       askVInactiveStyle={inactive}
@@ -389,7 +389,7 @@ export default function GateChangeOver({
         </View>
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
         {params.gateMode === "1" && (
-          <TogglePillButton onPress={() => router.replace("/(tabs)" as never)}>
+          <TogglePillButton compactOnTablet onPress={() => router.replace("/(tabs)" as never)}>
             {t("gateDuty.returnToAdmin")}
           </TogglePillButton>
         )}
@@ -402,7 +402,7 @@ export default function GateChangeOver({
             <View style={{ flex: 1, gap: 8 }}>
             {sectionHeading(t("changeOver.site"))}
             {sites.data?.sites.filter((site) => site.id === siteId).map((s) => (
-              <TogglePillButton
+              <TogglePillButton compactOnTablet
                 key={`blank-site-${s.id}`}
                 solid
                 accessibilityState={{ expanded: siteMenuOpen }}
@@ -414,7 +414,7 @@ export default function GateChangeOver({
               </TogglePillButton>
             ))}
             {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((s) => (
-              <TogglePillButton
+              <TogglePillButton compactOnTablet
                 key={`blank-site-option-${s.id}`}
                 onPress={() => {
                   setSite(s.id);
@@ -430,7 +430,7 @@ export default function GateChangeOver({
             <View style={{ flex: 1, gap: 8 }}>
             {sectionHeading(t("changeOver.gate"))}
             {stations.data?.stations.filter((station) => station.id === stationId).map((s) => (
-              <TogglePillButton
+              <TogglePillButton compactOnTablet
                 key={`blank-gate-${s.id}`}
                 solid
                 accessibilityState={{ expanded: gateMenuOpen }}
@@ -442,7 +442,7 @@ export default function GateChangeOver({
               </TogglePillButton>
             ))}
             {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((s) => (
-              <TogglePillButton
+              <TogglePillButton compactOnTablet
                 key={`blank-gate-option-${s.id}`}
                 onPress={() => {
                   setGate(s.id);
@@ -511,13 +511,13 @@ export default function GateChangeOver({
             <View testID="shift-notes-report-selectors" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>
               <View style={{ flex: 1, gap: 8 }}>
                 {sectionHeading(t("changeOver.site"))}
-                {sites.data?.sites.filter((site) => site.id === siteId).map((site) => <TogglePillButton key={site.id} solid accessibilityState={{ expanded: siteMenuOpen }} onPress={() => { if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open); }}>{site.name}</TogglePillButton>)}
-                {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((site) => <TogglePillButton key={site.id} onPress={() => { setSite(site.id); setGate(""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}
+                {sites.data?.sites.filter((site) => site.id === siteId).map((site) => <TogglePillButton compactOnTablet key={site.id} solid accessibilityState={{ expanded: siteMenuOpen }} onPress={() => { if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open); }}>{site.name}</TogglePillButton>)}
+                {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((site) => <TogglePillButton compactOnTablet key={site.id} onPress={() => { setSite(site.id); setGate(""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}
               </View>
               <View style={{ flex: 1, gap: 8 }}>
                 {sectionHeading(t("changeOver.gate"))}
-                {stations.data?.stations.filter((station) => station.id === stationId).map((station) => <TogglePillButton key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
-                {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((station) => <TogglePillButton key={station.id} onPress={() => { setGate(station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}
+                {stations.data?.stations.filter((station) => station.id === stationId).map((station) => <TogglePillButton compactOnTablet key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
+                {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((station) => <TogglePillButton compactOnTablet key={station.id} onPress={() => { setGate(station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}
               </View>
             </View>
             <View style={{ backgroundColor: colors.border, height: 1 }} />
@@ -540,7 +540,7 @@ export default function GateChangeOver({
               </Pressable>
               {recipientsOpen ? (
                 <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-                  {reportRecipients.data?.recipients.filter(isVisibleGateReportRecipient).map((recipient) => <TogglePillButton key={recipient.userId} solid={reportRecipientIds.includes(recipient.userId)} onPress={() => setReportRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}
+                  {reportRecipients.data?.recipients.filter(isVisibleGateReportRecipient).map((recipient) => <TogglePillButton compactOnTablet key={recipient.userId} solid={reportRecipientIds.includes(recipient.userId)} onPress={() => setReportRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}
                 </View>
               ) : null}
             </View>
@@ -573,7 +573,7 @@ export default function GateChangeOver({
               </Pressable>
               {timeframeOpen ? <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
                 {[7, 30, 90, 365].map((n) => (
-                  <TogglePillButton
+                  <TogglePillButton compactOnTablet
                     key={n}
                     solid={days === n}
                     onPress={() => {
@@ -588,13 +588,13 @@ export default function GateChangeOver({
             <View style={{ backgroundColor: colors.border, height: 1 }} />
             <View testID="shift-notes-export-row" style={{ flexDirection: "row", gap: 8 }}>
               {(["pdf", "excel", "word"] as const).map((format) => (
-                <TogglePillButton key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid={reportFormat === format} accessibilityState={{ selected: reportFormat === format }} style={{ flex: 1 }} onPress={() => setReportFormat(format)}>
+                <TogglePillButton compactOnTablet key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid={reportFormat === format} accessibilityState={{ selected: reportFormat === format }} style={{ flex: 1 }} onPress={() => setReportFormat(format)}>
                   {format === "excel" ? "CSV" : format === "word" ? "DOC" : "PDF"}
                 </TogglePillButton>
               ))}
             </View>
-            <TogglePillButton testID="shift-notes-save" color="brand" solid disabled={!reportFormat} onPress={() => void act(exportShiftNotes)}>{t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}</TogglePillButton>
-            <TogglePillButton testID="shift-notes-email" color="brand" solid disabled={!reportFormat} onPress={() => void act(emailShiftNotes)}>{t("gateHistory.emailReport", { defaultValue: "Email Report" })}</TogglePillButton>
+            <TogglePillButton compactOnTablet testID="shift-notes-save" color="brand" solid disabled={!reportFormat} onPress={() => void act(exportShiftNotes)}>{t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}</TogglePillButton>
+            <TogglePillButton compactOnTablet testID="shift-notes-email" color="brand" solid disabled={!reportFormat} onPress={() => void act(emailShiftNotes)}>{t("gateHistory.emailReport", { defaultValue: "Email Report" })}</TogglePillButton>
             </View>
           </>
         ) : (
@@ -611,8 +611,8 @@ export default function GateChangeOver({
               <View style={cardStyle}>
                 {sectionHeading(t("changeOver.shiftFollowUps"))}
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                  <TogglePillButton solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.openItems")}</TogglePillButton>
-                  <TogglePillButton inactive askVInactiveStyle accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
+                  <TogglePillButton compactOnTablet solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.openItems")}</TogglePillButton>
+                  <TogglePillButton compactOnTablet inactive askVInactiveStyle accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
                 </View>
                 {current.items.filter((item) => item.status === itemView).length === 0 && label(t("changeOver.none"))}
                 {current.items.filter((item) => item.status === itemView).map((i) => (

@@ -60,6 +60,7 @@ Thumbs.db
 # Environment (secrets)
 .env
 .env.local
+.env.production
 .env.*.local
 camera-gateway.json
 

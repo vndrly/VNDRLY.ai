@@ -202,7 +202,7 @@ export default function ForemanCrewMapScreen() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : (
-          <MapboxNativeMap
+          <MapboxNativeMap controls
             points={mapPoints}
             lines={mapLines}
             circles={mapCircles}

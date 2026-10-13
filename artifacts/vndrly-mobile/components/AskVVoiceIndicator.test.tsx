@@ -19,7 +19,7 @@ vi.mock("expo-router", () => ({
   usePathname: () => env.pathname,
 }));
 vi.mock("react-native-safe-area-context", () => ({
-  useSafeAreaInsets: () => ({ bottom: 0 }),
+  useSafeAreaInsets: () => ({ bottom: 0, top: 24 }),
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -133,7 +133,7 @@ describe("AskVVoiceIndicator", () => {
     expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
   });
 
-  it.each(["/gate-history", "/notifications", "/gate-notifications", "/notification-preferences", "/gate-notification-preferences", "/profile", "/edit-profile", "/compliance"])("moves the AskV voice control into the %s header without leaving a duplicate overlay", (pathname) => {
+  it.each(["/", "/fleet", "/fleet/run/1", "/fleet-site-activity", "/fleet-support", "/fleet-run/1", "/gate-history", "/notifications", "/gate-notifications", "/notification-preferences", "/gate-notification-preferences", "/profile", "/edit-profile", "/compliance"])("moves the AskV voice control into the %s header without leaving a duplicate overlay", (pathname) => {
     env.pathname = pathname;
     const globalScreen = render(<AskVVoiceIndicator />);
     expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();

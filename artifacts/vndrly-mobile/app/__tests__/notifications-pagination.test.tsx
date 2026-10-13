@@ -180,7 +180,7 @@ it("uses server categories above the list and pages 25 rows with the exact compo
       .map((n) => n.textContent?.replace(/ \(\d+\)$/, "")),
   ).toEqual([
     "All",
-    "Schedule",
+    "Calendar",
     "Gate Crew",
     "Messages",
     "Handoffs",

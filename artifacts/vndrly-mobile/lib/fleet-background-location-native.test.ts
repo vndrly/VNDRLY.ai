@@ -1,6 +1,6 @@
 import { beforeEach,expect,it,vi } from "vitest";
 const mocks=vi.hoisted(()=>({records:new Map<string,string>(),api:vi.fn(),start:vi.fn(),stop:vi.fn(),running:false,permission:true,consent:true,nativeDuty:true,epoch:0,token:null as null|(()=>void),task:null as any}));
-vi.mock("expo-secure-store",()=>({AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:"device-only",getItemAsync:async(k:string)=>mocks.records.get(k)??null,setItemAsync:async(k:string,v:string)=>{mocks.records.set(k,v);},deleteItemAsync:async(k:string)=>{mocks.records.delete(k);}}));
+vi.mock("./fleet-device-storage",()=>({AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:"device-only",getItemAsync:async(k:string)=>mocks.records.get(k)??null,setItemAsync:async(k:string,v:string)=>{mocks.records.set(k,v);},deleteItemAsync:async(k:string)=>{mocks.records.delete(k);}}));
 vi.mock("expo-location",()=>({Accuracy:{Balanced:1},ActivityType:{Other:1},getForegroundPermissionsAsync:async()=>({status:mocks.permission?"granted":"denied"}),getBackgroundPermissionsAsync:async()=>({status:mocks.permission?"granted":"denied"}),hasStartedLocationUpdatesAsync:async()=>mocks.running,startLocationUpdatesAsync:async(...args:any[])=>{mocks.running=true;mocks.start(...args);},stopLocationUpdatesAsync:async(...args:any[])=>{mocks.running=false;mocks.stop(...args);}}));
 vi.mock("expo-task-manager",()=>({isTaskDefined:()=>false,isAvailableAsync:async()=>true,defineTask:(name:string,callback:any)=>{mocks.task={name,callback};}}));
 vi.mock("expo-crypto",()=>({randomUUID:()=>"10000000-0000-4000-8000-000000000001"}));

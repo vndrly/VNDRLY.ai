@@ -121,7 +121,10 @@ function queueUserStorage(work: () => Promise<void>): Promise<void> {
 function webStorage(): Storage | null {
   if (typeof window === "undefined") return null;
   try {
-    return window.localStorage ?? null;
+    // Browser previews may show different companies in different tabs.
+    // Keep credentials and their user identity together within this tab;
+    // never import an account from another tab's shared localStorage.
+    return window.sessionStorage ?? null;
   } catch {
     return null;
   }

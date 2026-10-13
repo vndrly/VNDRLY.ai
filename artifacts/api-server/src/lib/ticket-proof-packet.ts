@@ -34,7 +34,8 @@ export type ProofPacketSectionId =
   | "mileage"
   | "cost"
   | "approval"
-  | "payment";
+  | "payment"
+  | "submission";
 
 export type ProofPacketSection = {
   id: ProofPacketSectionId;
@@ -42,6 +43,7 @@ export type ProofPacketSection = {
   complete: boolean;
   detail: string;
   missingLabel: string;
+  optional?: boolean;
 };
 
 export type ProofPacketSummary = {
@@ -141,11 +143,12 @@ export function buildTicketProofPacket(
     },
     {
       id: "mileage",
-      label: "Mileage",
+      label: "Mileage (optional)",
+      optional: true,
       complete: mileageDelta != null,
       detail: mileageDelta != null
         ? `${mileageDelta.toFixed(1)} mi logged`
-        : "Needs starting and ending mileage",
+        : "Optional — reimbursement follows vendor billing settings",
       missingLabel: startingMileage == null ? "starting mileage" : "ending mileage",
     },
     {
@@ -172,16 +175,29 @@ export function buildTicketProofPacket(
   ];
 
   const missingEvidence = sections
-    .filter((section) => !section.complete)
+    .filter((section) => !section.optional && !section.complete)
     .map((section) => section.missingLabel);
-  const completedCount = sections.length - missingEvidence.length;
+  const requiredSections = sections.filter(section => !section.optional);
+  const completedCount = requiredSections.length - missingEvidence.length;
 
   return {
     status: missingEvidence.length === 0 ? "complete" : "needs_attention",
     completedCount,
-    totalCount: sections.length,
+    totalCount: requiredSections.length,
     sections,
     missingEvidence,
     lineItemTotal,
   };
+}
+
+/** Field workers own evidence and office handoff, never approval or collection. */
+export function fieldProofPacket(packet: ProofPacketSummary, status?: string | null): ProofPacketSummary {
+  const sections = packet.sections.filter(section => section.id !== "approval" && section.id !== "payment");
+  const submitted = ["submitted", "approved", "awaiting_payment", "funds_dispersed", "completed"].includes(status ?? "");
+  sections.push({ id: "submission", label: "Submitted to Office", complete: submitted,
+    detail: status === "kicked_back" ? "Corrections requested — review office feedback and resubmit" : submitted ? "Field packet handed to the office for review" : "Finish field evidence, then submit to the office for review",
+    missingLabel: status === "kicked_back" ? "requested corrections and resubmission" : "submission to office" });
+  const required = sections.filter(section => !section.optional);
+  const missingEvidence = required.filter(section => !section.complete).map(section => section.missingLabel);
+  return { ...packet, sections, missingEvidence, totalCount: required.length, completedCount: required.length - missingEvidence.length, status: missingEvidence.length ? "needs_attention" : "complete" };
 }

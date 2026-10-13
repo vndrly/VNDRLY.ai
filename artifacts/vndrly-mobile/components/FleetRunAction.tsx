@@ -7,7 +7,7 @@ import { FleetActionInputSchema, checkFleetInspectionRequirements, checkFleetMan
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
 export default function FleetRunAction({ run, action, disabled, onSubmit, tickets = [] }: {
-    run: Pick<FleetRun, "version" | "currentStopId" | "stops" | "labels" | "operationalProfile"> & { loads: { id: string; commodity: string; quantity: number; unit: string; manifestReference: string; deliveredAt?: string | null; delivered?: boolean; transferOut?: unknown }[] };
+    run: Pick<FleetRun, "version" | "currentStopId" | "stops" | "labels" | "operationalProfile" | "commercial"> & { loads: { id: string; commodity: string; quantity: number; unit: string; manifestReference: string; deliveredAt?: string | null; delivered?: boolean; transferOut?: unknown }[] };
     action: FleetActionInput["action"];
     disabled: boolean;
     onSubmit: (fields: Partial<FleetActionInput>) => void;
@@ -22,12 +22,15 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
     const [decision, setDecision] = useState<"accept" | "return">("return");
     const [unit, setUnit] = useState("");
     const [ticketId, setTicketId] = useState<number | null>(null);
+    const [destinationId,setDestinationId]=useState<string>(run.commercial?.destinationId??"");
     const [error, setError] = useState("");
     const [responses,setResponses]=useState<FleetInspectionResponses>([]);
     const [manifest,setManifest]=useState<Record<string,string>>({});
     const fields = action === "inspect" || action === "submit_closeout" ? ["notes"] : action === "record_load" ? ["commodity", "quantity", "unit", "manifestReference"] : action === "record_delivery" ? ["deliveryReference"] : ["cancel", "review", "pause"].includes(action) ? ["reason"] : action === "record_fuel" ? ["quantity", "notes"] : action === "record_meter" ? ["reading", "notes"] : [];
     function submit() {
+        if(disabled)return;
         const input: Partial<FleetActionInput> = {};
+        if(action==="start"&&run.commercial){if(!run.commercial.approvedDestinations.some(destination=>destination.active&&destination.id===destinationId)){setError("Choose an approved active destination before starting.");return;}input.destinationId=destinationId;}
         for (const field of fields)
             Object.assign(input, { [field]: ["quantity", "reading", "ticketId"].includes(field) ? Number(values[field]) : values[field] });
         if (["record_fuel", "record_meter"].includes(action))
@@ -67,9 +70,10 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
     {action === "record_load" && run.operationalProfile?.manifestFields.map(item=><TextInput key={item.id} accessibilityLabel={item.label} placeholder={`${item.label} · ${copy(item.required?"Required":"Optional")}`} value={manifest[item.id]??""} onChangeText={value=>setManifest(current=>{const next={...current};if(value.trim())next[item.id]=value;else delete next[item.id];return next;})} style={{color:colors.text,padding:12,borderWidth:1,borderColor:colors.border}}/>)}
     {action === "review" && <><TogglePillButton solid={decision === "return"} onPress={() => setDecision("return")}>{copy("Return for correction")}</TogglePillButton><TogglePillButton solid={decision === "accept"} onPress={() => setDecision("accept")}>{copy("Accept Fleet closeout")}</TogglePillButton><Text style={{ color: colors.text }}>{copy("Fleet review does not approve a commercial ticket or record payment.")}</Text></>}
     {action === "submit_closeout" && <Text style={{ color: colors.text }}>{copy("Submit recorded stops and load/delivery references for review. This does not approve billing or verify physical proof.")}</Text>}
+    {action === "start" && run.commercial && <><Text style={{color:colors.text}}>{copy("Choose the approved destination for this run. Capacity remains unconfirmed.")}</Text>{run.commercial.approvedDestinations.filter(destination=>destination.active).map(destination=><TogglePillButton key={destination.id} compactOnTablet disabled={disabled} solid={destinationId===destination.id} onPress={()=>setDestinationId(destination.id)}>{destination.name}{copy(" · ")}{destination.address}</TogglePillButton>)}</>}
     {action === "link_ticket" && <><Text style={{ color: colors.text }}>{copy("Choose an authorized existing ticket for this run's sites. Linking does not change ticket status or approve billing.")}</Text>{tickets.length === 0 && <Text style={{ color: colors.text }}>{copy("No eligible existing tickets are available.")}</Text>}{tickets.map(ticket => <TogglePillButton key={ticket.id} solid={ticketId === ticket.id} onPress={() => setTicketId(ticket.id)}>{copy("Ticket #")}{ticket.id}{copy(" \u00B7 site ")}{ticket.siteId}{copy(" \u00B7 ")}{ticket.status}</TogglePillButton>)}</>}
     {(["record_fuel", "record_meter"].includes(action)) && (action === "record_fuel" ? ["gallons", "liters"] : ["miles", "kilometers", "engine_hours"]).map(value => <TogglePillButton key={value} solid={unit === value} onPress={() => setUnit(value)}>{copy(value.replaceAll("_", " "))}</TogglePillButton>)}
-    {["arrive_stop", "depart_stop"].includes(action) && run.stops.map(stop => <TogglePillButton key={stop.id} solid={stopId === stop.id} onPress={() => setStopId(stop.id)}>{stop.sequence + 1}{copy(". ")}{copy(stop.kind)}{copy(" \u00B7 ")}{run.labels?.sites.find(site => site.siteId === stop.siteId)?.name ?? `site ${stop.siteId}`}</TogglePillButton>)}
+    {["arrive_stop", "depart_stop"].includes(action) && run.stops.map(stop => <TogglePillButton key={stop.id} solid={stopId === stop.id} onPress={() => setStopId(stop.id)}>{stop.sequence + 1}{copy(". ")}{copy(stop.kind)}{copy(" \u00B7 ")}{stop.destination?.name ?? run.labels?.sites.find(site => site.siteId === stop.siteId)?.name ?? `site ${stop.siteId}`}</TogglePillButton>)}
     {action === "record_delivery" && run.loads.filter(load => !load.deliveredAt && !load.delivered && !load.transferOut).map(load => <TogglePillButton key={load.id} solid={loadId === load.id} onPress={() => setLoadId(load.id)}>{load.commodity}{copy(" \u00B7 ")}{load.quantity} {load.unit}{copy(" \u00B7 ")}{load.manifestReference}</TogglePillButton>)}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     <TogglePillButton disabled={disabled} onPress={submit}>{copy(action.replaceAll("_", " "))}</TogglePillButton>

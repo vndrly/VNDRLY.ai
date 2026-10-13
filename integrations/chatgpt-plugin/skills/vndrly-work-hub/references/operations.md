@@ -266,3 +266,10 @@ Use ordinary language and present one assistant, V. Authenticated AskV may selec
 ## Native work and one V
 
 Native-only work opens the exact task on the designated phone. Siri, Live Activities, device permissions, on-device drafts, scanner availability and background delivery require actual compatible-device support. On-device AI produces reviewed drafts only. Gate identity images are restricted to current assigned Gate staff and expire thirty days after the visit; do not expose images, full document numbers or raw OCR through conversation. Offline Gate entries are observed, authorization unverified and awaiting review. Conflicting inventory attempts remain pending for authorized reconciliation.
+
+
+## October 13 iOS surface parity
+
+Calendar, My Work, Needs Attention and Safety share native navigation aliases. Notification read does not resolve the underlying task or safety report. Use set_my_shift_status and set_my_on_call_status for own confirmed persisted availability changes; never alter location consent. query_company_operations reads selected Field/Fleet/Gate categories. set_company_operations requires current company administrator and exact confirmed replacement selection; ChatGPT needs separate company:settings consent. Calendar may combine Work Hub shifts/meetings, field schedules and Fleet planned runs; state which sources were actually read.
+
+Embedded view company_operations shows saved company categories and current administrator capability. Editing still requires company:settings consent and the existing authenticated action panel; the panel itself grants no scope.

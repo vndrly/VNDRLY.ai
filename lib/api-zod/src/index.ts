@@ -37,3 +37,5 @@ export * from "./work-hub-availability";
 export * from "./work-hub-availability-client";
 export { WorkHubShiftOpeningInputSchema, WorkHubShiftOpeningReceiptSchema, WorkHubShiftOpeningReadbackSchema, workHubShiftOpeningFingerprintValues, type WorkHubShiftOpeningInput, type WorkHubShiftOpeningReceipt } from "./work-hub-shift-opening";
 export { WorkHubShiftOpeningAttemptSchema, validateWorkHubShiftOpeningAttempt, makeWorkHubShiftOpeningAttempt, exactWorkHubShiftOpeningReceipt, submitWorkHubShiftOpeningAttempt, type WorkHubShiftOpeningAttempt } from "./work-hub-shift-opening-client";
+
+export * from "./fleet-commercial";

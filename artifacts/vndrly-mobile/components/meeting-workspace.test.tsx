@@ -147,11 +147,15 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <div>{children}</div>,
 }));
 vi.mock("expo-router", () => ({
+  useRouter: () => ({ push: env.push }),
   Stack: Object.assign(({ children }: any) => <>{children}</>, {
     Screen: () => null,
   }),
   useLocalSearchParams: () => ({ module: env.moduleName }),
   router: { push: env.push },
+}));
+vi.mock("@/lib/use-unified-work-calendar", () => ({
+  useUnifiedWorkCalendar: () => ({ data: { items: [], unavailable: [], capabilities: {} }, isPending: false, isError: false, refetch: vi.fn() }),
 }));
 vi.mock("react-i18next", () => {
     const t = (key: string, values?: any) => {
@@ -1437,7 +1441,7 @@ describe("meeting list routing", () => {
 });
 
 describe("Work Hub calendar routing", () => {
-  it("keeps the weekly shift calendar visible above an empty authorized-record list", async () => {
+  it("keeps the unified work calendar visible for an empty schedule", async () => {
     env.moduleName = "calendar";
     env.moduleData = { shifts: [], tasks: [], meetings: [] };
 
@@ -1446,10 +1450,10 @@ describe("Work Hub calendar routing", () => {
       for (let index = 0; index < 10; index += 1) await Promise.resolve();
     });
 
-    expect(screen.getByLabelText("Shift calendar")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Week" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Month" })).toBeTruthy();
-    expect(screen.getByText("No shifts scheduled this week.")).toBeTruthy();
+    expect(screen.getByText("Work calendar")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Previous month" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Next month" })).toBeTruthy();
+    expect(screen.getByText("No scheduled records for this day.")).toBeTruthy();
     expect(screen.queryByText("No authorized records yet.")).toBeNull();
   });
 });

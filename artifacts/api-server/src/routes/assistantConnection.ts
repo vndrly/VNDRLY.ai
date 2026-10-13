@@ -555,6 +555,11 @@ router.post("/mcp", async (req, res) => {
       }
       if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
       output.availableViews = [];
+      if (allowedNames.has("query_gate_coverage_map")) output.availableViews.push("gate_coverage");
+      if (allowedNames.has("query_fleet_location_history")) output.availableViews.push("fleet_history");
+      if (allowedNames.has("query_fleet_ticket_plan")) output.availableViews.push("fleet_plan");
+      if (allowedNames.has("query_fleet_commercial_settings")) output.availableViews.push("fleet_settings");
+      if (allowedNames.has("query_company_operations")) output.availableViews.push("company_operations");
       if (allowedNames.has("get_work_hub_briefing")) output.availableViews.push("my_workday");
       if (allowedNames.has("query_native_work_status")) output.availableViews.push("native_work");
       if (allowedNames.has("get_work_hub_calendar")) output.availableViews.push("work_calendar");

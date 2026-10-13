@@ -80,7 +80,7 @@ export function createFleetEtaOperations(
         "SELECT id,name,latitude,longitude FROM site_locations WHERE id=$1 AND is_active=true AND COALESCE(hidden,false)=false FOR SHARE",
         [stop.siteId],
       );
-      const row = site.rows[0];
+      const row = stop.destination ? {id:stop.siteId,name:stop.destination.name,latitude:stop.destination.latitude,longitude:stop.destination.longitude} : site.rows[0];
       if (
         !row ||
         !Number.isFinite(row.latitude) ||

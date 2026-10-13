@@ -1,3 +1,4 @@
+import { TicketFieldActions } from "@/components/ticket-field-actions";
 import TicketLaborFinalization from "@/components/ticket-labor-finalization";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { TicketVoiceEntry } from "@/components/ticket-voice-entry";
@@ -49,7 +50,7 @@ import { CrewTimeSection } from "@/components/crew-time-section";
 import { TicketNudgePanel } from "@/components/ticket-nudge-panel";
 import { TicketFlagPanel } from "@/components/ticket-flag-panel";
 import { getGoogleMapsUrl } from "@/lib/maps";
-import { buildTicketProofPacket } from "@/lib/proof-packet";
+import { buildTicketProofPacket, fieldProofPacket } from "@/lib/proof-packet";
 import { forwardRef, useState, useEffect, useMemo, useRef, useCallback, type ButtonHTMLAttributes } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -1339,8 +1340,8 @@ export default function TicketDetail({ id }: { id: number }) {
   const taxAmount = taxPreview.taxAmount;
   const grandTotal = taxPreview.grandTotal;
   const proofPacket = useMemo(
-    () => buildTicketProofPacket(ticket ?? {}, lineItems ?? [], noteLogs ?? []),
-    [ticket, lineItems, noteLogs],
+    () => { const packet = buildTicketProofPacket(ticket ?? {}, lineItems ?? [], noteLogs ?? []); return user?.role === "field_employee" || isForemanPersona(user) ? fieldProofPacket(packet, ticket?.status) : packet; },
+    [ticket, lineItems, noteLogs, user],
   );
   const combinedTaxRateValue = siteLocation?.combinedTaxRate
     ? parseFloat(String(siteLocation.combinedTaxRate))
@@ -1830,11 +1831,12 @@ export default function TicketDetail({ id }: { id: number }) {
         <TicketSiteVisitSummaryCard ticketId={id} />
       </div>
 
+      {user?.role === "field_employee" && ticket && !assignmentRemoved && <TicketFieldActions id={id} status={ticket.status} lifecycleState={ticket.lifecycleState} onSaved={invalidate} />}
       <Card data-testid="ticket-proof-packet-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />
-            {t("ticketDetail.proofPacketTitle", { defaultValue: "Proof-to-Pay Packet" })}
+            {user?.role === "field_employee" || isForemanPersona(user) ? "Field Proof Packet" : t("ticketDetail.proofPacketTitle", { defaultValue: "Proof-to-Pay Packet" })}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

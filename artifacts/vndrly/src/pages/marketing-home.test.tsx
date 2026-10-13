@@ -117,7 +117,7 @@ describe("VNDRLY public homepage", () => {
     expect(signInLayers[1]?.className).not.toContain("group-hover:opacity-90");
     expect(within(navigation).queryByRole("link", { name: /get started/i })).toBeNull();
     expect(screen.getAllByRole("link", { name: /get started/i }).length).toBeGreaterThan(1);
-    expect(screen.getAllByRole("link", { name: /request a demo/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /^demo$/i }).length).toBeGreaterThan(0);
   });
 
   it("uses the approved compact amber homepage treatment", () => {
@@ -202,7 +202,7 @@ describe("VNDRLY public homepage", () => {
     const primaryActions = screen.getAllByTestId("marketing-primary-cta");
     const demoActions = screen.getAllByTestId("marketing-demo-cta");
     expect(primaryActions).toHaveLength(2);
-    expect(demoActions).toHaveLength(2);
+    expect(demoActions).toHaveLength(3);
 
     for (const action of [...primaryActions, ...demoActions]) {
       expect(action.style.height).toBe("30px");
@@ -242,7 +242,7 @@ describe("VNDRLY public homepage", () => {
       expect(within(navigation).getByRole("link", { name: label }).className).toContain("hover:text-[var(--vndrly-amber)]");
     }
 
-    for (const link of screen.getAllByRole("link", { name: /request a demo/i })) {
+    for (const link of screen.getAllByRole("button", { name: /^demo$/i })) {
       expect(link.className).toContain("hover:text-[var(--vndrly-amber)]");
       if (link.className.includes("rounded-full")) {
         expect(link.className).toContain("hover:border-[var(--vndrly-amber)]");

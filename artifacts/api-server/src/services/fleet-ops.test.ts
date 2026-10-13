@@ -5,6 +5,7 @@ beforeEach(() => {notifications.mockReset().mockResolvedValue(1);});
 import {
   previewFleetRunActions,
   FleetActionInputSchema,
+  FleetRunSchema,
 } from "@workspace/api-zod";
 import type { PoolClient } from "pg";
 import { createFleetService } from "./fleet-ops";
@@ -602,3 +603,4 @@ describe("Fleet durable service authority contract", () => {
     expect(overview.capabilities.canDispatch).toBe(false);
   });
 });
+it("projects commercial routing without financial fields unless the current scoped finance grant permits it",async()=>{const f=fixture();const created=await f.service.create(manager,createInput);const destination={id:crypto.randomUUID(),revision:1,name:"Synthetic yard",kind:"yard" as const,address:"123 Test Road",latitude:35,longitude:-97,materials:[],hours:"",instructions:"",active:true,ownerType:"vendor" as const,ownerId:7};const saved=f.state().runs[0];saved.commercial={ticketId:88,originSiteId:9,mode:"batch",rateCents:12500,currency:"USD",approvedDestinations:[destination],destinationId:destination.id,billedLineId:123};const own=await f.service.detail(driver,created.id);expect(own.commercial).toMatchObject({ticketId:88,originSiteId:9,mode:"batch",approvedDestinations:[destination],destinationId:destination.id});expect(own.commercial).not.toHaveProperty("rateCents");expect(own.commercial).not.toHaveProperty("billedLineId");expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty("billedLineId");expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty("rateCents");expect(f.state().runs[0].commercial?.rateCents).toBe(12500);expect((await f.service.detail(manager,created.id)).commercial).not.toHaveProperty("rateCents");f.state().grants.find(g=>g.userId===1)!.financeRead=true;expect((await f.service.detail(manager,created.id)).commercial).toMatchObject({rateCents:12500,billedLineId:123});f.state().grants.find(g=>g.userId===1)!.financeRead=false;expect((await f.service.detail({...manager,role:"vendor",membershipRole:"admin"},created.id)).commercial).not.toHaveProperty("rateCents");});

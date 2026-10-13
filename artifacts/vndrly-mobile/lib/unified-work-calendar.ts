@@ -1,0 +1,21 @@
+export type UnifiedCalendarKind="shift"|"meeting"|"field_ticket"|"fleet_run";
+export type UnifiedCalendarItem={id:string;recordId:string;kind:UnifiedCalendarKind;title:string;startsAt:string;endsAt:string|null;timezone:string|null;status:string|null;route:string|null;readPath:string};
+type RecordItem={id:string|number;title?:string|null;startsAt?:string|null;endsAt?:string|null;timezone?:string|null;status?:string|null};
+export type UnifiedCalendarSources={
+ calendar?:{shifts?:{item:RecordItem}[];meetings?:{item:{occurrence:RecordItem;meeting:{title?:string|null;timezone?:string|null}}}[]};
+ tickets?:{tickets?:{id:number;scheduledStartAt:string|null;scheduledDurationMinutes:number|null;status?:string;siteName?:string|null;workTypeName?:string|null}[];recentTickets?:{id:number;scheduledStartAt:string|null;scheduledDurationMinutes:number|null;status?:string;siteName?:string|null;workTypeName?:string|null}[]};
+ fleet?:{runs?:{id:string;title:string;status:string;schedule?:{plannedStartAt:string;plannedEndAt:string;timezone:string}|null}[]};
+};
+function iso(value:string|null|undefined){if(!value)return null;const time=Date.parse(value);return Number.isFinite(time)?new Date(time).toISOString():null;}
+/** Normalize only records returned by permission-scoped sources; never invent a schedule. */
+export function normalizeUnifiedCalendar(sources:UnifiedCalendarSources):UnifiedCalendarItem[]{
+ const found=new Map<string,UnifiedCalendarItem>();
+ const add=(item:UnifiedCalendarItem)=>{if(item.endsAt&&Date.parse(item.endsAt)<Date.parse(item.startsAt))return;found.set(item.id,item);};
+ for(const {item} of sources.calendar?.shifts??[]){const start=iso(item.startsAt);if(!start)continue;const id=String(item.id);add({id:`shift:${id}`,recordId:id,kind:"shift",title:item.title??"Shift",startsAt:start,endsAt:iso(item.endsAt),timezone:item.timezone??null,status:item.status??null,route:null,readPath:`/api/work-hub/calendar/items/shift/${encodeURIComponent(id)}`});}
+ for(const {item} of sources.calendar?.meetings??[]){const occurrence=item.occurrence,start=iso(occurrence.startsAt);if(!start)continue;const id=String(occurrence.id);add({id:`meeting:${id}`,recordId:id,kind:"meeting",title:item.meeting.title??"Meeting",startsAt:start,endsAt:iso(occurrence.endsAt),timezone:occurrence.timezone??item.meeting.timezone??null,status:occurrence.status??null,route:`/work-hub/meeting/${encodeURIComponent(id)}`,readPath:`/api/work-hub/calendar/items/meeting/${encodeURIComponent(id)}`});}
+ for(const ticket of [...(sources.tickets?.recentTickets??[]),...(sources.tickets?.tickets??[])]){const start=iso(ticket.scheduledStartAt);if(!start)continue;const id=String(ticket.id),duration=ticket.scheduledDurationMinutes;add({id:`field_ticket:${id}`,recordId:id,kind:"field_ticket",title:[ticket.workTypeName,ticket.siteName].filter(Boolean).join(" · ")||`Ticket #${id}`,startsAt:start,endsAt:duration!==null&&Number.isFinite(duration)&&duration>=0?new Date(Date.parse(start)+duration*60000).toISOString():null,timezone:null,status:ticket.status??null,route:`/ticket/${id}`,readPath:`/api/tickets/${id}`});}
+ for(const run of sources.fleet?.runs??[]){const start=iso(run.schedule?.plannedStartAt);if(!start||!run.schedule)continue;const id=run.id;add({id:`fleet_run:${id}`,recordId:id,kind:"fleet_run",title:run.title,startsAt:start,endsAt:iso(run.schedule.plannedEndAt),timezone:run.schedule.timezone,status:run.status,route:`/fleet-run/${encodeURIComponent(id)}`,readPath:`/api/fleet/runs/${encodeURIComponent(id)}`});}
+ return [...found.values()].sort((a,b)=>Date.parse(a.startsAt)-Date.parse(b.startsAt)||a.id.localeCompare(b.id));
+}
+export function calendarDayItems(items:readonly UnifiedCalendarItem[],day:Date){const start=new Date(day.getFullYear(),day.getMonth(),day.getDate()),end=new Date(start);end.setDate(end.getDate()+1);return items.filter(item=>Date.parse(item.startsAt)<end.getTime()&&(item.endsAt?Date.parse(item.endsAt)>start.getTime():Date.parse(item.startsAt)>=start.getTime()));}
+export function calendarMonthRange(day:Date){const start=new Date(day.getFullYear(),day.getMonth(),1);start.setDate(start.getDate()-start.getDay());const end=new Date(start);end.setDate(end.getDate()+42);return{start:start.toISOString(),end:end.toISOString()};}

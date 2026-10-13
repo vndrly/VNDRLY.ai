@@ -14,6 +14,8 @@ export default defineConfig({
     __DEV__: "true",
   },
   test: {
+    // Bound concurrent jsdom workers to avoid CPU/memory contention during full-ship gates.
+    maxWorkers: 4,
     // node for pure logic tests; jsdom for component tests. We use jsdom
     // for everything since the helper tests don't touch the DOM and the
     // overhead is negligible.

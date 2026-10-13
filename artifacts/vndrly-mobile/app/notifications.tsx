@@ -32,7 +32,7 @@ import {
 } from "@/lib/notifications-ui";
 
 // Task 7 supplies localized gate labels and empty copy; defaults keep the staged UI readable.
-const CATEGORY_LABELS: Record<string, string> = { all: "All", schedule: "Schedule", gate_crew: "Gate Crew", messages: "Messages", handoffs: "Handoffs", tasks: "Tasks", compliance: "Compliance", alerts: "Alerts" };
+const CATEGORY_LABELS: Record<string, string> = { all: "All", schedule: "Calendar", gate_crew: "Gate Crew", messages: "Messages", handoffs: "Handoffs", tasks: "Tasks", compliance: "Compliance", alerts: "Alerts" };
 
 export default function NotificationsScreen() {
   const colors = useColors();

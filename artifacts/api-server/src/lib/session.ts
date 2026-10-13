@@ -35,6 +35,10 @@ function verifyPayload(signed: string): string | null {
 export type GateRole = "gatekeeper" | "gate_supervisor";
 
 export interface SessionPayload {
+  /** Signed, server-derived database boundary. Legacy real sessions default to production. */
+  realm?: 'production'|'demo';
+  /** Public demo sessions are read-only and cannot change shared account context. */
+  publicDemo?: boolean;
   /** Signed operational grants; never an employee payroll relationship. */
   managedSubcontractor?: { siteGrants: { siteId: number; role: GateRole }[] };
   userId?: number;

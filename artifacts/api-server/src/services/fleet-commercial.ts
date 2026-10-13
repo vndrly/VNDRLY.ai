@@ -1,0 +1,663 @@
+import { estimateMapboxDrivingRoute } from "../lib/mapbox-routing";
+import { randomUUID, createHash } from "node:crypto";
+import { z } from "zod/v4";
+import {
+  FleetCommercialSettingsSchema,
+  FleetDestinationSchema,
+  FleetTicketPlanSchema,
+  type FleetRun,
+  type FleetTicketPlan,
+  type FleetDestination,
+} from "@workspace/api-zod";
+import type { PoolClient } from "pg";
+import type { FleetActor } from "./fleet-ops";
+import { ACTIVE_APPROVAL_STATUSES } from "@workspace/db";
+import { FleetError, type FleetState } from "./fleet-repository";
+const terminal = new Set([
+  "submitted",
+  "approved",
+  "awaiting_payment",
+  "funds_dispersed",
+  "denied",
+  "cancelled",
+]);
+export const commercialFingerprint = (value: unknown) =>
+  createHash("sha256").update(JSON.stringify(value)).digest("hex");
+function managing(state: FleetState, actor: FleetActor) {
+  return (
+    state.enabled &&
+    (actor.membershipRole === "admin" ||
+      state.grants.some(
+        (g) =>
+          g.userId === actor.userId &&
+          g.roles.some((role) =>
+            ["dispatcher", "fleet_manager"].includes(role),
+          ) &&
+          g.siteIds.some((id) => actor.currentSiteIds?.includes(id)) &&
+          g.fleetIds.some((id) =>
+            state.fleets.some(
+              (f) =>
+                f.id === id &&
+                f.siteIds.some(
+                  (site) =>
+                    g.siteIds.includes(site) &&
+                    actor.currentSiteIds?.includes(site),
+                ),
+            ),
+          ),
+      ))
+  );
+}
+async function sites(c: PoolClient, a: FleetActor, state: FleetState) {
+  const ids = a.membershipRole === "admin" ? null : (a.currentSiteIds ?? []);
+  return (
+    await c.query(
+      "SELECT s.id,s.name,s.partner_id,s.latitude,s.longitude,s.fleet_ticket_policy FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND r.status=ANY($2::text[]) AND s.is_active=true AND COALESCE(s.hidden,false)=false AND ($3::int[] IS NULL OR s.id=ANY($3)) ORDER BY s.name",
+      [a.companyId, [...ACTIVE_APPROVAL_STATUSES], ids],
+    )
+  ).rows;
+}
+async function settings(c: PoolClient, a: FleetActor) {
+  const row = (
+    await c.query("SELECT fleet_commercial_settings FROM vendors WHERE id=$1", [
+      a.companyId,
+    ])
+  ).rows[0];
+  if (!row) throw new FleetError("fleet.company_not_found", 404);
+  return FleetCommercialSettingsSchema.parse(
+    row.fleet_commercial_settings ?? {},
+  );
+}
+export async function readFleetTicketPlan(
+  c: PoolClient,
+  a: FleetActor,
+  state: FleetState,
+  ticketId: number,
+  lock = false,
+) {
+  const ticket = (
+    await c.query(
+      "SELECT t.id,t.site_location_id,t.vendor_id,t.partner_id,t.status,t.lifecycle_state,t.fleet_plan FROM tickets t WHERE t.id=$1 AND t.vendor_id=$2" +
+        (lock ? " FOR UPDATE" : ""),
+      [ticketId, a.companyId],
+    )
+  ).rows[0];
+  if (!ticket) throw new FleetError("fleet.ticket_not_found", 404);
+  if (
+    !(await sites(c, a, state)).some(
+      (site) => site.id === ticket.site_location_id,
+    )
+  )
+    throw new FleetError("fleet.ticket_site_forbidden", 403);
+  return ticket;
+}
+function assertOrigin(ticket: any, plan: FleetTicketPlan) {
+  if (
+    ticket.site_location_id !== plan.siteId ||
+    ticket.vendor_id !== plan.vendorId ||
+    ticket.partner_id !== plan.partnerId
+  )
+    throw new FleetError("fleet.ticket_origin_locked", 409);
+}
+export async function bindFleetRunTicket(
+  c: PoolClient,
+  a: FleetActor,
+  state: FleetState,
+  run: FleetRun,
+  ticketId: number,
+) {
+  if (run.companyId !== a.companyId)
+    throw new FleetError("fleet.ticket_company_forbidden", 403);
+  const ticket = await readFleetTicketPlan(c, a, state, ticketId, true);
+  if (terminal.has(ticket.status))
+    throw new FleetError("fleet.ticket_closed", 409);
+  if (!ticket.fleet_plan)
+    throw new FleetError("fleet.ticket_plan_required", 400);
+  const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
+  assertOrigin(ticket, plan);
+  if (
+    plan.closedAt ||
+    (plan.closesAt && Date.parse(plan.closesAt) <= Date.now())
+  )
+    throw new FleetError("fleet.ticket_closed", 409);
+  if (
+    run.stops[0]?.kind !== "pickup" ||
+    run.stops[0].siteId !== plan.siteId ||
+    run.siteIds.some((site) => site !== plan.siteId)
+  )
+    throw new FleetError("fleet.ticket_origin_locked", 409);
+  if (
+    run.commercial &&
+    (run.commercial.ticketId !== ticketId ||
+      run.commercial.originSiteId !== plan.siteId)
+  )
+    throw new FleetError("fleet.ticket_origin_locked", 409);
+  if (plan.mode === "singles") {
+    const current = state.runs.some(
+      (other) => other.id !== run.id && other.linkedTicketId === ticketId,
+    );
+    const stored =
+      (
+        await c.query(
+          "SELECT 1 FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' AND target_id<>$2 AND (tool_output->>'linkedTicketId')::int=$3 LIMIT 1",
+          [a.companyId, run.id, ticketId],
+        )
+      ).rows.length > 0;
+    if (current || stored)
+      throw new FleetError("fleet.singles_requires_new_ticket", 409);
+  }
+  if (run.commercial) {
+    validateCommercialStops(run);
+    return;
+  }
+  run.linkedTicketId = ticketId;
+  run.commercial = {
+    ticketId,
+    originSiteId: plan.siteId,
+    mode: plan.mode,
+    rateCents: plan.rateCents,
+    currency: plan.currency,
+    approvedDestinations: structuredClone(plan.destinations),
+    destinationId: null,
+    billedLineId: null,
+  };
+  // A destination stop belongs to the ticket origin for authorization; its physical destination is a separate immutable snapshot.
+  run.stops = [
+    run.stops[0],
+    { id: randomUUID(), siteId: plan.siteId, kind: "delivery", sequence: 1 },
+  ];
+  if (plan.destinations.length === 1) {
+    run.commercial.destinationId = plan.destinations[0].id;
+    run.stops[1].destination = structuredClone(plan.destinations[0]);
+  }
+}
+export async function selectFleetRunDestination(
+  c: PoolClient,
+  a: FleetActor,
+  state: FleetState,
+  run: FleetRun,
+  id?: string,
+) {
+  if (!run.commercial) return;
+  const ticket = await readFleetTicketPlan(
+    c,
+    a,
+    state,
+    run.commercial.ticketId,
+    true,
+  );
+  const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
+  assertOrigin(ticket, plan);
+  if (
+    terminal.has(ticket.status) ||
+    plan.closedAt ||
+    (plan.closesAt && Date.parse(plan.closesAt) <= Date.now())
+  )
+    throw new FleetError("fleet.ticket_closed", 409);
+  const chosen = run.commercial.approvedDestinations.find(
+    (d) => d.id === (id ?? run.commercial!.destinationId),
+  );
+  if (!chosen) throw new FleetError("fleet.choose_approved_destination", 400);
+  const owner = chosen.ownerType === "vendor" ? "vendors" : "partners";
+  const data = (
+    await c.query(
+      `SELECT fleet_commercial_settings FROM ${owner} WHERE id=$1`,
+      [chosen.ownerId],
+    )
+  ).rows[0];
+  const current = FleetCommercialSettingsSchema.parse(
+    data?.fleet_commercial_settings ?? {},
+  ).destinations.find((d) => d.id === chosen.id);
+  if (!current?.active)
+    throw new FleetError("fleet.destination_unavailable", 409);
+  run.commercial.destinationId = chosen.id;
+  const delivery = run.stops.find((stop) => stop.kind === "delivery");
+  if (!delivery) throw new FleetError("fleet.approved_delivery_required", 400);
+  delivery.destination = structuredClone(chosen);
+}
+export async function recordFleetRunCharge(
+  c: PoolClient,
+  a: FleetActor,
+  run: FleetRun,
+) {
+  if (!run.commercial || run.commercial.billedLineId) return;
+  if (run.commercial.rateCents === undefined)
+    throw new FleetError("fleet.billing_rate_missing", 409);
+  const ticket = (
+    await c.query(
+      "SELECT id,site_location_id,vendor_id,partner_id,status,fleet_plan FROM tickets WHERE id=$1 AND vendor_id=$2 FOR UPDATE",
+      [run.commercial.ticketId, a.companyId],
+    )
+  ).rows[0];
+  if (!ticket || terminal.has(ticket.status))
+    throw new FleetError("fleet.ticket_closed", 409);
+  const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
+  assertOrigin(ticket, plan);
+  if (
+    run.companyId !== a.companyId ||
+    run.commercial.originSiteId !== plan.siteId
+  )
+    throw new FleetError("fleet.ticket_origin_locked", 409);
+  const description = `Fleet run ${run.id}`;
+  const existing = (
+    await c.query(
+      "SELECT id FROM ticket_line_items WHERE ticket_id=$1 AND type='other' AND description=$2",
+      [ticket.id, description],
+    )
+  ).rows[0];
+  const row =
+    existing ??
+    (
+      await c.query(
+        "INSERT INTO ticket_line_items(ticket_id,type,description,quantity,unit_price) VALUES($1,'other',$2,1,$3) RETURNING id",
+        [ticket.id, description, (run.commercial.rateCents / 100).toFixed(2)],
+      )
+    ).rows[0];
+  run.commercial.billedLineId = row.id;
+}
+export function validateCommercialStops(run: FleetRun) {
+  if (!run.commercial) return;
+  if (
+    run.siteIds.some((id) => id !== run.commercial!.originSiteId) ||
+    run.stops.some((stop) => stop.siteId !== run.commercial!.originSiteId) ||
+    run.stops.length !== 2 ||
+    run.stops[0].kind !== "pickup" ||
+    run.stops[1].kind !== "delivery"
+  )
+    throw new FleetError("fleet.ticket_origin_locked", 409);
+  if (
+    run.stops.some(
+      (stop) =>
+        stop.destination &&
+        !run.commercial!.approvedDestinations.some(
+          (d) =>
+            d.id === stop.destination!.id &&
+            JSON.stringify(d) === JSON.stringify(stop.destination),
+        ),
+    )
+  )
+    throw new FleetError("fleet.destination_not_approved", 409);
+}
+const destinationInput = FleetDestinationSchema.omit({
+  revision: true,
+  ownerType: true,
+  ownerId: true,
+}).extend({ id: z.uuid().optional() });
+export function createFleetCommercialOperations(
+  transaction: <T>(
+    actor: FleetActor,
+    work: (state: FleetState, c: PoolClient) => Promise<T>,
+  ) => Promise<T>,
+) {
+  return {
+    closeTicketPlan: (a: FleetActor, ticketId: number, input: unknown) =>
+      transaction(a, async (state, c) => {
+        if (!managing(state, a))
+          throw new FleetError("fleet.dispatch_required", 403);
+        const body = z
+            .object({ expectedVersion: z.number().int().positive() })
+            .strict()
+            .parse(input),
+          ticket = await readFleetTicketPlan(c, a, state, ticketId, true);
+        if (!ticket.fleet_plan)
+          throw new FleetError("fleet.ticket_plan_required", 400);
+        const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
+        assertOrigin(ticket, plan);
+        if (plan.closedAt) return plan;
+        if (plan.version !== body.expectedVersion)
+          throw new FleetError("fleet.version_conflict", 409);
+        plan.version++;
+        plan.closedAt = new Date().toISOString();
+        await c.query("UPDATE tickets SET fleet_plan=$2::jsonb WHERE id=$1", [
+          ticketId,
+          JSON.stringify(plan),
+        ]);
+        return plan;
+      }),
+    mapContext: (a: FleetActor) =>
+      transaction(a, async (state, c) => {
+        const company = (
+          await c.query(
+            "SELECT id,name,physical_address AS address,latitude,longitude FROM vendors WHERE id=$1",
+            [a.companyId],
+          )
+        ).rows[0];
+        const choices = await sites(c, a, state);
+        return {
+          company,
+          sites: choices.map((s) => ({
+            siteId: s.id,
+            name: s.name,
+            latitude: s.latitude,
+            longitude: s.longitude,
+          })),
+          canManage: managing(state, a),
+        };
+      }),
+    commercialSettings: (a: FleetActor, siteId?: number) =>
+      transaction(a, async (state, c) => {
+        const value = await settings(c, a),
+          choices = await sites(c, a, state);
+        const site = choices.find((s) => s.id === siteId);
+        if (siteId && !site)
+          throw new FleetError("fleet.site_unavailable", 403);
+        const partner = site
+          ? (
+              await c.query(
+                "SELECT fleet_commercial_settings FROM partners WHERE id=$1",
+                [site.partner_id],
+              )
+            ).rows[0]
+          : null;
+        const shared = FleetCommercialSettingsSchema.parse(
+          partner?.fleet_commercial_settings ?? {},
+        ).destinations;
+        return {
+          version: value.version,
+          defaultMode: value.defaultMode,
+          destinations: [...value.destinations, ...shared],
+          sitePolicy: site?.fleet_ticket_policy ?? null,
+          canManage: managing(state, a),
+          sites: choices.map((s) => ({ siteId: s.id, name: s.name })),
+        };
+      }),
+    recommendDestinations: async (
+      a: FleetActor,
+      siteId: number,
+      material?: string,
+    ) => {
+      const snapshot = await transaction(a, async (state, c) => {
+        const site = (await sites(c, a, state)).find((s) => s.id === siteId);
+        if (!site) throw new FleetError("fleet.site_unavailable", 403);
+        const value = await settings(c, a),
+          partner = (
+            await c.query(
+              "SELECT fleet_commercial_settings FROM partners WHERE id=$1",
+              [site.partner_id],
+            )
+          ).rows[0];
+        return {
+          site,
+          destinations: [
+            ...value.destinations,
+            ...FleetCommercialSettingsSchema.parse(
+              partner?.fleet_commercial_settings ?? {},
+            ).destinations,
+          ],
+        };
+      });
+      const radians = Math.PI / 180;
+      const distance = (d: FleetDestination) => {
+        const lat = snapshot.site.latitude,
+          lng = snapshot.site.longitude,
+          x =
+            Math.sin(((d.latitude - lat) * radians) / 2) ** 2 +
+            Math.cos(lat * radians) *
+              Math.cos(d.latitude * radians) *
+              Math.sin(((d.longitude - lng) * radians) / 2) ** 2;
+        return 3958.7613 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+      };
+      const eligible = snapshot.destinations
+        .filter(
+          (d) =>
+            d.active &&
+            (!material?.trim() ||
+              !d.materials.length ||
+              d.materials.some(
+                (value) =>
+                  value.toLowerCase() === material.trim().toLowerCase(),
+              )),
+        )
+        .sort((a, b) => distance(a) - distance(b))
+        .slice(0, 5);
+      const recommendations = await Promise.all(
+        eligible.map(async (destination) => {
+          const route = await estimateMapboxDrivingRoute({
+            origin: {
+              latitude: snapshot.site.latitude,
+              longitude: snapshot.site.longitude,
+            },
+            destination,
+          });
+          return {
+            destination,
+            distanceMiles: route.ok
+              ? route.distanceMiles
+              : distance(destination),
+            durationMinutes: route.ok ? route.durationMinutes : null,
+            basis: route.ok ? "driving" : "straight_line",
+            availability: "capacity_unconfirmed",
+            materialEligibility:
+              material?.trim() &&
+              destination.materials.some(
+                (value) =>
+                  value.toLowerCase() === material.trim().toLowerCase(),
+              )
+                ? "matched"
+                : "unconfirmed",
+          };
+        }),
+      );
+      return {
+        recommendations: recommendations.sort(
+          (a, b) => a.distanceMiles - b.distanceMiles,
+        ),
+      };
+    },
+    saveDestination: (a: FleetActor, input: unknown) =>
+      transaction(a, async (state, c) => {
+        if (!managing(state, a))
+          throw new FleetError("fleet.dispatch_required", 403);
+        const body = z
+            .object({
+              operationId: z.uuid(),
+              expectedVersion: z.number().int().positive(),
+              destination: destinationInput,
+            })
+            .strict()
+            .parse(input),
+          value = await settings(c, a),
+          fingerprint = commercialFingerprint(body),
+          replay = value.operations.find((op) => op.id === body.operationId);
+        if (replay) {
+          if (
+            replay.fingerprint !== fingerprint ||
+            replay.actorUserId !== a.userId
+          )
+            throw new FleetError("fleet.operation_conflict");
+          return { version: value.version, destinations: value.destinations };
+        }
+        if (value.version !== body.expectedVersion)
+          throw new FleetError("fleet.version_conflict");
+        const previous = value.destinations.find(
+          (d) => d.id === body.destination.id,
+        );
+        if (body.destination.id && !previous)
+          throw new FleetError("fleet.destination_not_found", 404);
+        const duplicate = value.destinations.find(
+          (d) =>
+            d.id !== body.destination.id &&
+            d.name.toLowerCase() === body.destination.name.toLowerCase() &&
+            d.address.toLowerCase() === body.destination.address.toLowerCase(),
+        );
+        if (duplicate) throw new FleetError("fleet.destination_duplicate", 409);
+        if (
+          (!previous && value.destinations.length >= 500) ||
+          value.operations.length >= 1000
+        )
+          throw new FleetError("fleet.store_capacity_reached");
+        const next = FleetDestinationSchema.parse({
+          ...body.destination,
+          id: previous?.id ?? randomUUID(),
+          revision: (previous?.revision ?? 0) + 1,
+          ownerType: "vendor",
+          ownerId: a.companyId,
+        });
+        value.destinations = previous
+          ? value.destinations.map((d) => (d.id === next.id ? next : d))
+          : [...value.destinations, next];
+        value.version++;
+        value.operations.push({
+          id: body.operationId,
+          actorUserId: a.userId,
+          fingerprint,
+        });
+        await c.query(
+          "UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",
+          [a.companyId, JSON.stringify(value)],
+        );
+        return { version: value.version, destination: next };
+      }),
+    saveCommercialDefault: (a: FleetActor, input: unknown) =>
+      transaction(a, async (state, c) => {
+        if (a.membershipRole !== "admin")
+          throw new FleetError("fleet.company_admin_required", 403);
+        const body = z
+            .object({
+              expectedVersion: z.number().int().positive(),
+              mode: z.enum(["batch", "singles"]),
+            })
+            .strict()
+            .parse(input),
+          value = await settings(c, a);
+        if (value.version !== body.expectedVersion)
+          throw new FleetError("fleet.version_conflict");
+        value.defaultMode = body.mode;
+        value.version++;
+        await c.query(
+          "UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",
+          [a.companyId, JSON.stringify(value)],
+        );
+        return value;
+      }),
+    ticketPlan: (a: FleetActor, ticketId: number) =>
+      transaction(a, async (state, c) => {
+        if (
+          !managing(state, a) ||
+          (a.membershipRole !== "admin" &&
+            !state.grants.some(
+              (g) =>
+                g.userId === a.userId &&
+                g.financeRead &&
+                g.roles.includes("fleet_manager"),
+            ))
+        )
+          throw new FleetError("fleet.finance_required", 403);
+        const ticket = await readFleetTicketPlan(c, a, state, ticketId);
+        const plan = ticket.fleet_plan
+          ? FleetTicketPlanSchema.parse(ticket.fleet_plan)
+          : null;
+        const charges = (
+          await c.query(
+            "SELECT count(*)::int AS runs,COALESCE(sum(quantity*unit_price),0)::text AS total FROM ticket_line_items WHERE ticket_id=$1 AND type='other' AND description LIKE 'Fleet run %'",
+            [ticketId],
+          )
+        ).rows[0];
+        return {
+          ticketId,
+          siteId: ticket.site_location_id,
+          partnerId: ticket.partner_id,
+          plan,
+          charges,
+          canManage: managing(state, a),
+        };
+      }),
+    saveTicketPlan: (a: FleetActor, ticketId: number, input: unknown) =>
+      transaction(a, async (state, c) => {
+        if (!managing(state, a))
+          throw new FleetError("fleet.dispatch_required", 403);
+        const body = z
+            .object({
+              operationId: z.uuid(),
+              expectedVersion: z.number().int().nonnegative(),
+              mode: z.enum(["batch", "singles"]).optional(),
+              rateCents: z.number().int().min(0).max(100000000),
+              closure: z.enum(["shift", "day", "manual"]),
+              closesAt: z.iso.datetime().nullable(),
+              destinationIds: z.array(z.uuid()).min(1).max(30),
+            })
+            .strict()
+            .parse(input),
+          ticket = await readFleetTicketPlan(c, a, state, ticketId, true),
+          previous = ticket.fleet_plan
+            ? FleetTicketPlanSchema.parse(ticket.fleet_plan)
+            : null,
+          fingerprint = commercialFingerprint(body),
+          replay = previous?.operations.find(
+            (op) => op.id === body.operationId,
+          );
+        if (replay) {
+          if (
+            replay.fingerprint !== fingerprint ||
+            replay.actorUserId !== a.userId
+          )
+            throw new FleetError("fleet.operation_conflict");
+          return previous;
+        }
+        if (
+          terminal.has(ticket.status) ||
+          previous ||
+          !["initiated", "awaiting_acceptance"].includes(ticket.status) ||
+          (ticket.lifecycle_state &&
+            !["pending_arrival", "off_site"].includes(ticket.lifecycle_state))
+        )
+          throw new FleetError("fleet.ticket_plan_locked", 409);
+        if (body.expectedVersion !== 0)
+          throw new FleetError("fleet.version_conflict");
+        if (
+          body.closure !== "manual" &&
+          (!body.closesAt || Date.parse(body.closesAt) <= Date.now())
+        )
+          throw new FleetError("fleet.ticket_closing_time_required", 400);
+        const site = (await sites(c, a, state)).find(
+          (s) => s.id === ticket.site_location_id,
+        )!;
+        const value = await settings(c, a),
+          partner = (
+            await c.query(
+              "SELECT fleet_commercial_settings FROM partners WHERE id=$1",
+              [ticket.partner_id],
+            )
+          ).rows[0],
+          directory = [
+            ...value.destinations,
+            ...FleetCommercialSettingsSchema.parse(
+              partner?.fleet_commercial_settings ?? {},
+            ).destinations,
+          ];
+        const destinations = body.destinationIds.map((id) =>
+          directory.find((d) => d.id === id && d.active),
+        );
+        if (
+          destinations.some((d) => !d) ||
+          new Set(body.destinationIds).size !== body.destinationIds.length
+        )
+          throw new FleetError("fleet.destination_not_approved", 400);
+        const mode =
+          site.fleet_ticket_policy?.mode ?? body.mode ?? value.defaultMode;
+        const plan = FleetTicketPlanSchema.parse({
+          version: 1,
+          siteId: ticket.site_location_id,
+          vendorId: a.companyId,
+          partnerId: ticket.partner_id,
+          mode,
+          rateCents: body.rateCents,
+          currency: "USD",
+          closure: body.closure,
+          closesAt: body.closesAt,
+          destinations,
+          closedAt: null,
+          createdByUserId: a.userId,
+          createdAt: new Date().toISOString(),
+          operations: [
+            { id: body.operationId, fingerprint, actorUserId: a.userId },
+          ],
+        });
+        await c.query("UPDATE tickets SET fleet_plan=$2::jsonb WHERE id=$1", [
+          ticketId,
+          JSON.stringify(plan),
+        ]);
+        return plan;
+      }),
+  };
+}

@@ -71,7 +71,7 @@ describe("PrintTicketPage proof packet", () => {
     expect(screen.getByTestId("proof-packet-summary").textContent).toContain(
       "Proof-to-Pay Packet",
     );
-    expect(screen.getByTestId("proof-packet-progress").textContent).toContain("6 of 6");
+    expect(screen.getByTestId("proof-packet-progress").textContent).toContain("5 of 5");
     expect(screen.getByTestId("proof-packet-gps_time").textContent).toContain("GPS / Time");
     expect(screen.getByTestId("proof-packet-field_notes").textContent).toContain("Field Notes");
     expect(screen.getByTestId("proof-packet-mileage").textContent).toContain("54.5 mi logged");

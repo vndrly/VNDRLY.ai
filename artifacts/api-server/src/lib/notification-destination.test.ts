@@ -1,0 +1,13 @@
+import {it,expect,vi,beforeEach} from "vitest";
+const mock=vi.hoisted(()=>({read:vi.fn(),row:vi.fn(),membership:vi.fn()}));
+vi.mock("./field-ticket-access",()=>({canReadTicket:mock.read,loadFieldTicketAccessRow:mock.row}));
+vi.mock("@workspace/db",async(importOriginal)=>{const actual=await importOriginal<Record<string,unknown>>();return{...actual,db:{select:()=>({from:()=>({where:()=>({limit:mock.membership})})})}};});
+import {resolveNotificationDestination} from "./notification-destination";
+const actor={userId:1,role:"field_employee",vendorId:7,activeMembershipId:3};
+beforeEach(()=>{mock.read.mockReset().mockResolvedValue(true);mock.row.mockReset().mockResolvedValue({vendorId:7});mock.membership.mockReset().mockResolvedValue([{role:"field_employee"}]);});
+it.each(["/tickets/41","/ticket/41","/(tabs)/tickets/41"])("rechecks exact ticket authority and returns canonical pointer %s",async link=>{expect(await resolveNotificationDestination(actor,link)).toBe("/tickets/41");expect(mock.read).toHaveBeenCalledWith(actor,41);expect(mock.row).toHaveBeenCalledWith(41);});
+it("does not treat notification possession as current ticket authority",async()=>{mock.read.mockResolvedValue(false);expect(await resolveNotificationDestination(actor,"/tickets/41")).toBeNull();mock.read.mockRejectedValue({status:403});expect(await resolveNotificationDestination(actor,"/tickets/41")).toBeNull();});
+it("rejects a field ticket from another current vendor before canonical permission check",async()=>{mock.row.mockResolvedValue({vendorId:99});expect(await resolveNotificationDestination(actor,"/tickets/41")).toBeNull();expect(mock.read).not.toHaveBeenCalled();});
+it("defers vendor and partner tenancy decisions to existing ticket authorization",async()=>{for(const session of [{...actor,role:"vendor"},{...actor,role:"partner",vendorId:null,partnerId:8}]){expect(await resolveNotificationDestination(session,"/tickets/41")).toBe("/tickets/41");expect(mock.read).toHaveBeenCalledWith(session,41);}expect(mock.row).not.toHaveBeenCalled();});
+it.each(["/tickets/0","/tickets/-1","/tickets/41?task=x","/tickets/9007199254740992","/tickets/41#data","/tickets/41/delete"])("rejects ambiguous or malformed pointer %s",async link=>{expect(await resolveNotificationDestination(actor,link)).toBeNull();expect(mock.read).not.toHaveBeenCalled();});
+it("propagates operational failure without falsely reporting permission denial",async()=>{mock.read.mockRejectedValue(new Error("Reader unavailable"));await expect(resolveNotificationDestination(actor,"/tickets/41")).rejects.toThrow("Reader unavailable");});

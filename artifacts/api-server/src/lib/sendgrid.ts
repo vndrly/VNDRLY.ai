@@ -2,6 +2,7 @@
 // Password reset email is live when SENDGRID_* env vars are configured.
 import { type PushWarning } from "@workspace/api-zod";
 import { logger } from "./logger";
+import {assertExternalEffectsAllowed} from '@workspace/db/realm';
 
 const SKIP = "Outbound email skipped (email delivery disabled)";
 const SENDGRID_MAIL_SEND_URL = "https://api.sendgrid.com/v3/mail/send";
@@ -39,6 +40,7 @@ async function sendSendGridMail(input: {
   fromName?: string;
   attachments?: Array<{ content: string; type: string; filename: string; disposition: "attachment" }>;
 }): Promise<{ messageId: string | undefined }> {
+  assertExternalEffectsAllowed();
   const cfg = sendGridConfig();
   if (!cfg.apiKey || !cfg.fromEmail) {
     throw new Error("SendGrid is not configured");

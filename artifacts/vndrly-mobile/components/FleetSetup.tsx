@@ -85,20 +85,20 @@ export default function FleetSetup({ onSaved }: {
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {setup && <>
       <Text style={{ color: colors.text }}>{copy("Draft changes are unsaved. Fleet roles grant operational access only; safety release and finance remain separate.")}</Text>
-      <TogglePillButton solid={setup.enabled} onPress={() => setSetup({ ...setup, enabled: !setup.enabled })}>{copy(setup.enabled ? "Fleet enabled" : "Fleet disabled")}</TogglePillButton>
-      {setup.fleets.map(fleet => <TogglePillButton key={fleet.id} solid={selectedFleet === fleet.id} onPress={() => setSelectedFleet(fleet.id)}>{fleet.name}{copy(" \u00B7 sites ")}{fleet.siteIds.join(", ")}</TogglePillButton>)}
-      {setup.fleets.filter(fleet=>fleet.id===selectedFleet).map(fleet=><FleetProfileEditor key={fleet.id} profile={fleet.operationalProfile} disabled={busy} onChange={profile=>setSetup(current=>current?{...current,fleets:current.fleets.map(item=>{if(item.id!==fleet.id)return item;const next={...item};if(profile)next.operationalProfile=profile;else delete next.operationalProfile;return next;})}:current)}/>)} 
+      <TogglePillButton compactOnTablet solid={setup.enabled} onPress={() => setSetup({ ...setup, enabled: !setup.enabled })}>{copy(setup.enabled ? "Fleet enabled" : "Fleet disabled")}</TogglePillButton>
+      {setup.fleets.map(fleet => <TogglePillButton compactOnTablet key={fleet.id} solid={selectedFleet === fleet.id} onPress={() => setSelectedFleet(fleet.id)}>{fleet.name}{copy(" \u00B7 sites ")}{fleet.siteIds.join(", ")}</TogglePillButton>)}
+      {setup.fleets.filter(fleet=>fleet.id===selectedFleet).map(fleet=><FleetProfileEditor key={fleet.id} profile={fleet.operationalProfile} disabled={busy} onChange={profile=>setSetup(current=>current?{...current,fleets:current.fleets.map(item=>{if(item.id!==fleet.id)return item;const next={...item};if(profile)next.operationalProfile=profile;else delete next.operationalProfile;return next;})}:current)}/>)}
       <TextInput accessibilityLabel={copy("New Fleet name")} placeholder={copy("New fleet name")} value={name} onChangeText={setName} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border }}/>
       <TextInput accessibilityLabel={copy("Required Fleet certifications")} placeholder={copy("Required certification names, separated by commas")} value={certifications} onChangeText={setCertifications} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border }}/>
-      {setup.sites.map(site => <TogglePillButton key={site.siteId} solid={sites.includes(site.siteId)} onPress={() => setSites(current => current.includes(site.siteId) ? current.filter(id => id !== site.siteId) : [...current, site.siteId])}>{site.name}</TogglePillButton>)}
-      <TogglePillButton onPress={addFleet}>{copy("Add fleet to draft")}</TogglePillButton>
+      {setup.sites.map(site => <TogglePillButton compactOnTablet key={site.siteId} solid={sites.includes(site.siteId)} onPress={() => setSites(current => current.includes(site.siteId) ? current.filter(id => id !== site.siteId) : [...current, site.siteId])}>{site.name}</TogglePillButton>)}
+      <TogglePillButton compactOnTablet onPress={addFleet}>{copy("Add fleet to draft")}</TogglePillButton>
       <Text style={{ color: colors.text }}>{copy("Grant selected fleet access to an existing company member")}</Text>
-      {setup.members.map(member => <TogglePillButton key={member.userId} solid={memberId === member.userId} onPress={() => { setMemberId(member.userId); setRoles([]); }}>{member.name}</TogglePillButton>)}
-      {(["fleet_manager", "dispatcher", "driver"] as const).map(role => <TogglePillButton key={role} solid={roles.includes(role)} onPress={() => setRoles(current => current.includes(role) ? current.filter(item => item !== role) : [...current, role])}>{copy(role.replaceAll("_", " "))}</TogglePillButton>)}
-      <TogglePillButton onPress={setGrant}>{copy("Add grant to draft")}</TogglePillButton>
-      <TogglePillButton disabled={!memberId} color="red" onPress={() => setSetup({ ...setup, grants: setup.grants.filter(grant => grant.userId !== memberId) })}>{copy("Remove selected member's Fleet grant from draft")}</TogglePillButton>
+      {setup.members.map(member => <TogglePillButton compactOnTablet key={member.userId} solid={memberId === member.userId} onPress={() => { setMemberId(member.userId); setRoles([]); }}>{member.name}</TogglePillButton>)}
+      {(["fleet_manager", "dispatcher", "driver"] as const).map(role => <TogglePillButton compactOnTablet key={role} solid={roles.includes(role)} onPress={() => setRoles(current => current.includes(role) ? current.filter(item => item !== role) : [...current, role])}>{copy(role.replaceAll("_", " "))}</TogglePillButton>)}
+      <TogglePillButton compactOnTablet onPress={setGrant}>{copy("Add grant to draft")}</TogglePillButton>
+      <TogglePillButton compactOnTablet disabled={!memberId} color="red" onPress={() => setSetup({ ...setup, grants: setup.grants.filter(grant => grant.userId !== memberId) })}>{copy("Remove selected member's Fleet grant from draft")}</TogglePillButton>
       {setup.grants.map(grant => <Text key={grant.userId} style={{ color: colors.text }}>{setup.members.find(m => m.userId === grant.userId)?.name ?? `Member ${grant.userId}`}{copy(": ")}{grant.roles.map(role => copy(role.replaceAll("_", " "))).join(", ")}{copy(" \u00B7 ")}{grant.fleetIds.length}{copy(" fleets \u00B7 ")}{grant.siteIds.length}{copy(" sites")}</Text>)}
-      <TogglePillButton disabled={busy} onPress={() => void save()}>{copy("Save Fleet setup")}</TogglePillButton>
+      <TogglePillButton compactOnTablet disabled={busy} onPress={() => void save()}>{copy("Save Fleet setup")}</TogglePillButton>
     </>}
   </View>;
 }

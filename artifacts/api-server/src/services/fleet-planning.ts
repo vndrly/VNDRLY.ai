@@ -1,3 +1,4 @@
+import {validateCommercialStops} from "./fleet-commercial";
 import { FleetDraftEditSchema, type FleetRun } from "@workspace/api-zod";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
@@ -76,6 +77,7 @@ export function createFleetPlanningOperations(
           next.stops.some((row, index) => row.sequence !== index)
         )
           throw new FleetError("fleet.invalid_stops", 400);
+        validateCommercialStops(next);
         await eligible(state, client, next);
         Object.assign(run, next);
         run.version++;

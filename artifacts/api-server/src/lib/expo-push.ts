@@ -1,4 +1,5 @@
 import { db, fieldPushTokensTable, vendorPeopleTable } from "@workspace/db";
+import {assertExternalEffectsAllowed} from '@workspace/db/realm';
 import { and, eq } from "drizzle-orm";
 import { logger } from "./logger";
 
@@ -61,6 +62,7 @@ function resolveInterruptionLevel(msg: ExpoPushMessage): ExpoPushMessage["interr
 }
 
 async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
+  assertExternalEffectsAllowed();
   if (tokens.length === 0) return false;
   const interruptionLevel = resolveInterruptionLevel(msg);
   const type = resolvePushType(msg);
@@ -106,6 +108,7 @@ async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
 export async function sendExpoPushDestination(token: string, msg: ExpoPushMessage): Promise<{
   status: "accepted" | "retryable" | "failed" | "unknown"; providerMessageId?: string; errorCode?: string;
 }> {
+  assertExternalEffectsAllowed();
   try {
     const res = await fetch(EXPO_PUSH_URL, {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },

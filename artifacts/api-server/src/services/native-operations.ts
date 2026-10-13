@@ -265,7 +265,7 @@ async function notice(
   const targetDuty =
     r && userId === r.workerUserId ? await state(c, userId, r.vendorId) : null;
   const quiet = targetDuty
-    ? !effectiveDuty(targetDuty.duty, Date.now()) &&
+    ? !effectiveDuty(targetDuty.duty, Date.now()) && targetDuty.onCallActive !== true &&
       !targetDuty.onCallWindows?.some(
         (w) =>
           Date.parse(w.startsAt) <= Date.now() &&
@@ -530,6 +530,11 @@ async function projections(
     tasks,
   };
 }
+/** Shared duty authority for continuous work-phone reporting; revalidates ticket/schedule bindings. */
+export async function nativeWorkDutyActive(c: PoolClient, s: SessionPayload) {
+  if (!s.userId || !s.vendorId) return false;
+  return effectiveDuty((await state(c, s.userId, s.vendorId)).duty, Date.now());
+}
 async function status(c: PoolClient, s: SessionPayload) {
   const a = await current(c, s),
     p = await policy(c, a.owner);
@@ -718,7 +723,7 @@ export const nativeOperationsService = {
     }),
   onCall: (s: SessionPayload, raw: unknown) =>
     transaction(s, async (c) => {
-      const input = z
+      const input = z.union([z.object({ active: z.boolean(), consent: z.literal(true) }).strict(), z
         .object({
           windows: z
             .array(
@@ -733,11 +738,11 @@ export const nativeOperationsService = {
             .max(30),
         })
         .strict()
-        .parse(raw);
+        ]).parse(raw);
       const a = await current(c, s);
       if (a.owner.type !== "vendor")
         throw new NativeOperationError("native.worker_company_required", 403);
-      for (const w of input.windows)
+      for (const w of ("windows" in input ? input.windows : []))
         if (
           Date.parse(w.endsAt) <= Date.parse(w.startsAt) ||
           Date.parse(w.endsAt) - Date.parse(w.startsAt) > 7 * 86400000
@@ -745,11 +750,12 @@ export const nativeOperationsService = {
           throw new NativeOperationError("native.on_call_window_invalid", 400);
       await lock(c, s.userId!, a.owner.id);
       const st = await state(c, s.userId!, a.owner.id);
-      st.onCallWindows = input.windows;
+      if ("active" in input) { st.onCallActive = input.active; st.onCallWindows = []; }
+      else { st.onCallActive = false; st.onCallWindows = input.windows; }
       await saveState(c, s.userId!, a.owner.id, st);
       await event(c, s.userId!, a.owner.id, {
         action: "on_call.saved",
-        windows: input.windows,
+        ...( "active" in input ? { active: input.active } : { windows: input.windows }),
       });
       return status(c, s);
     }),
@@ -947,6 +953,7 @@ export const nativeOperationsService = {
       const value = await state(c, s.userId!, o.id);
       const locationSharing =
         typeof input === "boolean" ? input : input.locationSharing;
+      const previousSharing = value.consent.locationSharing;
       value.consent = {
         ...value.consent,
         locationSharing,
@@ -955,6 +962,7 @@ export const nativeOperationsService = {
           : {}),
       };
       await saveState(c, s.userId!, o.id, value);
+      if (previousSharing !== locationSharing) await (await import("./gate-post-coverage")).recordGateSharingChange(c, s, locationSharing);
       await event(c, s.userId!, o.id, {
         action: "consent.updated",
         ...value.consent,

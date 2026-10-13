@@ -1,7 +1,8 @@
 import React from "react";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
-import { cleanup, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FleetRun } from "@workspace/api-zod";
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
@@ -24,10 +25,11 @@ afterEach(async () => { cleanup(); mocks.api.mockReset(); await i18next.changeLa
 describe("Fleet existing language choice", () => {
   it("shows driver controls and source limits in Spanish", async () => {
     mocks.api.mockResolvedValue({ companyId: 609, enabled: true, roles: ["driver"], capabilities: { canDrive: true, canDispatch: false, canManage: false, canSetup: false }, runs: [], fleets: [], observations: [], unavailableIntegrations: [], generatedAt: "2026-10-07T12:00:00Z" });
-    render(<FleetWorkspace />);
+    render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><FleetWorkspace /></QueryClientProvider>);
     expect(await screen.findByText("Mi jornada de flota")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Actualizar flota" })).toBeTruthy();
-    expect(screen.getByText(/No hay ubicación de flota procedente/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ajustes de flota" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", {name:"Map"}));
+    expect(await screen.findByText(/Las ubicaciones de teléfonos identifican al conductor/)).toBeTruthy();
   });
   it("localizes inspection fields without changing the supplied values", () => {
     render(<FleetRunAction run={{ version: 1, stops: [], loads: [], currentStopId: null } as unknown as FleetRun} action="inspect" disabled={false} onSubmit={vi.fn()} />);

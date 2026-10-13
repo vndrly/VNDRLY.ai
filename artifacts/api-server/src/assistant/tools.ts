@@ -1121,7 +1121,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "open_screen",
-    description: "Client capability: open a permitted VNDRLY screen. Returns an intent; the client performs navigation.",
+    description: "Client capability: open a permitted VNDRLY screen. Native screens include fleet, fleet-log, fleet-map, gate-map, company-operations, work-hub-calendar, work-hub-attention, work-hub-safety and work-hub-my-work. Return an intent; the client performs navigation and each page enforces company categories and employee permissions. Opening a page never changes its records.",
     input_schema: {
       type: "object",
       properties: {

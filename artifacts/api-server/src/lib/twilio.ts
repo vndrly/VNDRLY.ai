@@ -1,4 +1,5 @@
 import { logger } from "./logger";
+import {assertExternalEffectsAllowed} from '@workspace/db/realm';
 
 const TWILIO_API_BASE = "https://api.twilio.com/2010-04-01";
 
@@ -37,6 +38,7 @@ function twilioAuthHeader(apiKey: string, apiSecret: string): string {
 export async function sendTransactionalSms(
   input: SendTransactionalSmsInput,
 ): Promise<SendTransactionalSmsResult> {
+  assertExternalEffectsAllowed();
   if (!isE164Phone(input.to)) {
     throw new Error("SMS recipient must be an E.164 phone number");
   }

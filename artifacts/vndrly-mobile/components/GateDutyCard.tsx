@@ -57,13 +57,13 @@ export default function GateDutyCard({
     {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
     {!own ? <>
       <View style={{ flexDirection: "row", gap: 8 }}>
-        {onStartShift ? <TogglePillButton solid disabled={busy || startShiftDisabled} style={{ flex: 1 }} onPress={onStartShift}>{t("changeOver.start")}</TogglePillButton> : null}
-        <TogglePillButton disabled={busy} style={{ flex: 1 }} onPress={() => void run(() => post("duty/assume", { workHubShiftId, source: "manual", idempotencyKey: Crypto.randomUUID() }))}>{t("gateDuty.assume")}</TogglePillButton>
+        {onStartShift ? <TogglePillButton compactOnTablet solid disabled={busy || startShiftDisabled} style={{ flex: 1 }} onPress={onStartShift}>{t("changeOver.start")}</TogglePillButton> : null}
+        <TogglePillButton compactOnTablet disabled={busy} style={{ flex: 1 }} onPress={() => void run(() => post("duty/assume", { workHubShiftId, source: "manual", idempotencyKey: Crypto.randomUUID() }))}>{t("gateDuty.assume")}</TogglePillButton>
       </View>
-      {workHubShiftId ? <TogglePillButton disabled={busy} onPress={() => void run(() => post("work-sessions/start", { workHubShiftId, source: "manual", idempotencyKey: Crypto.randomUUID(), locationSharingActive: false }))}>{t("gateDuty.startPaidTravel")}</TogglePillButton> : null}
+      {workHubShiftId ? <TogglePillButton compactOnTablet disabled={busy} onPress={() => void run(() => post("work-sessions/start", { workHubShiftId, source: "manual", idempotencyKey: Crypto.randomUUID(), locationSharingActive: false }))}>{t("gateDuty.startPaidTravel")}</TogglePillButton> : null}
     </> : <>
       <TextInput accessibilityLabel={t("gateDuty.signOffReason")} placeholder={t("gateDuty.signOffReason")} placeholderTextColor={colors.mutedForeground} value={reason} onChangeText={setReason} style={{ backgroundColor: colors.background, borderColor: colors.border, borderRadius: 18, borderWidth: 1, color: colors.foreground, paddingHorizontal: 12, paddingVertical: 10 }} />
-      <TogglePillButton inactive askVInactiveStyle disabled={busy || !reason.trim()} onPress={() => void run(() => post(`duty/${own.id}/end`, { reason: reason.trim(), handoffCompleted: (roster.data?.roster.length ?? 0) > 1 }))}>{t("gateDuty.signOff")}</TogglePillButton>
+      <TogglePillButton compactOnTablet inactive askVInactiveStyle disabled={busy || !reason.trim()} onPress={() => void run(() => post(`duty/${own.id}/end`, { reason: reason.trim(), handoffCompleted: (roster.data?.roster.length ?? 0) > 1 }))}>{t("gateDuty.signOff")}</TogglePillButton>
     </>}
   </View>;
 }

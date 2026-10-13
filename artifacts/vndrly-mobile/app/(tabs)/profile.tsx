@@ -1,3 +1,4 @@
+import NativeOperations from "@/components/work-hub/NativeOperations";
 import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
@@ -458,11 +459,12 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <View style={[styles.settingsDivider, { backgroundColor: colors.border }]} />
+          <NativeOperations settingsOnly />
           <WorkHubDeviceSettings />
         </View>
       ) : null}
 
-      <LayeredPillButton onPress={() => router.push("/onboarding")} height={40} style={styles.actionBtn} testID="button-onboarding">
+      {user?.vendorId && availableMemberships.some(m => m.id === activeMembershipId && m.role === "admin") ? <LayeredPillButton onPress={() => router.push("/company-operations")} height={40} style={styles.actionBtn}><Text style={styles.actionText}>Company operations</Text></LayeredPillButton> : null}<LayeredPillButton onPress={() => router.push("/onboarding")} height={40} style={styles.actionBtn} testID="button-onboarding">
         <Text style={[styles.actionText, styles.pillTextShadow]}>{t("onboardingNative.title")}</Text>
       </LayeredPillButton>
       <LayeredPillButton

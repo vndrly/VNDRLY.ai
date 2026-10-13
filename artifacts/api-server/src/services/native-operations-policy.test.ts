@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   initialNativeState,
+  nativeDutyContactAvailable,
   locationEligibility,
   requestExpiry,
   responseDisposition,
@@ -92,3 +93,5 @@ describe("native operations authority", () => {
     ).toThrow();
   });
 });
+
+it("keeps on-call independent of shift state without bypassing consent or phone readiness",()=>{const s=initialNativeState();s.onCallActive=true;expect(s.duty.active).toBe(false);expect(nativeDutyContactAvailable(s,now)).toBe(true);expect(locationEligibility(s,true,now)).toBe("sharing_off");s.consent.locationSharing=true;expect(locationEligibility(s,true,now)).toBe("no_work_phone");s.designatedDeviceId="phone";expect(locationEligibility(s,true,now)).toBeNull();s.onCallActive=false;expect(nativeDutyContactAvailable(s,now)).toBe(false);s.duty.active=true;expect(nativeDutyContactAvailable(s,now)).toBe(true);});

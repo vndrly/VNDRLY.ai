@@ -1,3 +1,4 @@
+import { FleetRouteReplay } from "@/components/fleet-route-replay";
 import { useEffect, useRef, useState } from "react";
 import {
   useInfiniteQuery,
@@ -790,6 +791,7 @@ function FleetWorkspace({
           </fieldset>
         </section>
       )}
+      <FleetRouteReplay identity={identity} runs={runs} />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
         <section className="overflow-hidden rounded-xl border">
           <h2 className="p-3 font-semibold">{c.map}</h2>

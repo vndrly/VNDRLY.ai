@@ -14,6 +14,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import { NotificationsModalProvider } from "@/components/notifications-modal-context";
 import Layout from "@/components/layout";
+import DemoGuide from "@/components/demo-guide";
 import ContextPickerModal from "@/components/context-picker-modal";
 import ChangePasswordModal from "@/components/change-password-modal";
 import { FieldPortalLayout } from "@/components/field-portal-layout";
@@ -347,6 +348,7 @@ function AuthenticatedRouter() {
       {/* Picker self-gates on requiresContextChoice + memberships >= 2,
           so render it for every authed user — including field-employee
           default contexts that may also have a partner/admin membership. */}
+      {user && <DemoGuide />}
       {user && <ContextPickerModal />}
       {user && <ChangePasswordModal />}
       {/* Global assistant launcher: shown on every authenticated surface

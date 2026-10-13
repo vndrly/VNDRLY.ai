@@ -1,0 +1,5 @@
+import {it,expect} from "vitest";
+import {gateVisitState,gateVisitDuration,groupGateVisits} from "./gate-log-view";
+it("does not treat denied, pending or reconciled records as live on-site time",()=>{for(const row of [{admissionStatus:"pending"},{admissionStatus:"denied"},{reconciliationState:"confirmed_off_site"}]){expect(gateVisitState(row)).not.toBe("on_site");expect(gateVisitDuration({...row,checkInTime:"2026-10-12T12:00:00Z"})).toBeNull();}});
+it("calculates completed durations and rejects inconsistent timestamps",()=>{expect(gateVisitDuration({checkInTime:"2026-10-12T12:00:00Z",checkOutTime:"2026-10-12T14:30:00Z"})).toBe(150);expect(gateVisitDuration({checkInTime:"invalid"})).toBeNull();expect(gateVisitDuration({checkInTime:"2026-10-12T14:00:00Z",checkOutTime:"2026-10-12T12:00:00Z"})).toBeNull();});
+it("groups newest visits first without changing source rows",()=>{const rows=[{id:1,checkInTime:"2026-10-10T12:00:00Z"},{id:2,checkInTime:"2026-10-12T12:00:00Z"}];expect(groupGateVisits(rows)[0][1][0].id).toBe(2);expect(rows[0].id).toBe(1);});

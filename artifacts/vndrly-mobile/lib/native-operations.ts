@@ -1,11 +1,16 @@
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import { apiFetch } from "./api";
 import { captureAuthScope, getUser, isAuthScopeCurrent, type AuthScope } from "./auth";
 import { getDeviceId } from "./deviceId";
 import { maySupplyFreshLocation, requestIsActionable, type NativeDeviceRequest, type NativeOperationsStatus } from "./native-operations-policy";
 const base = "/api/native-operations";
+const stopStore = {
+ getItemAsync: async (key: string) => Platform.OS === "web" ? window.localStorage.getItem(key) : SecureStore.getItemAsync(key),
+ setItemAsync: async (key: string, value: string, options?: SecureStore.SecureStoreOptions) => { if (Platform.OS === "web") window.localStorage.setItem(key,value); else await SecureStore.setItemAsync(key,value,options); },
+ deleteItemAsync: async (key: string) => { if (Platform.OS === "web") window.localStorage.removeItem(key); else await SecureStore.deleteItemAsync(key); },
+};
 // End Duty / revoke consent blocks in-flight responses locally before network acknowledgment.
 const suppressed = new Set<number>();
 const locationRequests = new Set<string>();
@@ -13,11 +18,12 @@ async function suppressionKey() {
   const user = await getUser();
   return user ? `vndrly.duty-stop.${user.id}.${user.activeMembershipId ?? 0}` : null;
 }
-async function locallyStopped() { const key = await suppressionKey(); return key ? await SecureStore.getItemAsync(key) === "true" || await SecureStore.getItemAsync(`${key}.consent`) === "true" : true; }
+async function locallyStopped() { const key = await suppressionKey(); return key ? await stopStore.getItemAsync(key) === "true" || await stopStore.getItemAsync(`${key}.consent`) === "true" : true; }
+export async function nativeLocationLocallyAllowed() { return !suppressed.has(captureAuthScope().generation) && !await locallyStopped(); }
 export async function nativeLocationCollectionAllowed() {
   const scope = captureAuthScope();
   if (suppressed.has(scope.generation) || await locallyStopped()) return false;
-  try { const status = await readNativeOperations(scope); return isAuthScopeCurrent(scope) && status.duty?.active === true && maySupplyFreshLocation(status, await getDeviceId()); }
+  try { const status = await readNativeOperations(scope); return isAuthScopeCurrent(scope) && maySupplyFreshLocation(status, await getDeviceId()); }
   catch { return false; }
 }
 export function readNativeOperations(scope = captureAuthScope()) {
@@ -27,12 +33,13 @@ export async function updateNativeConsent(locationSharing: boolean, automaticArr
   const scope = captureAuthScope();
   if (!locationSharing) {
     suppressed.add(scope.generation);
+    void import("./duty-background-location").then(module => module.stopDutyBackgroundLocation()).catch(() => undefined);
     const key = await suppressionKey();
-    if (key) await SecureStore.setItemAsync(`${key}.consent`, "true", { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY });
+    if (key) await stopStore.setItemAsync(`${key}.consent`, "true", { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY });
   }
   const result = await apiFetch(`${base}/consent`, { method: "PUT", body: JSON.stringify({ locationSharing, ...(automaticArrival === undefined ? {} : { automaticArrival }) }) }, scope);
   if (locationSharing && isAuthScopeCurrent(scope)) {
-    const key = await suppressionKey(); if (key) await SecureStore.deleteItemAsync(`${key}.consent`);
+    const key = await suppressionKey(); if (key) await stopStore.deleteItemAsync(`${key}.consent`);
     if (!await locallyStopped()) suppressed.delete(scope.generation);
   }
   return result;
@@ -46,13 +53,14 @@ export async function changeNativeDuty(action: "start" | "end", options: { mode:
   const scope = captureAuthScope();
   if (action === "end") suppressed.add(scope.generation);
   if (action === "end") {
+    void import("./duty-background-location").then(module => module.stopDutyBackgroundLocation()).catch(() => undefined);
     void import("./liveLocationReporter").then(module => module.stopLiveLocationReporter()).catch(() => undefined);
     void import("./fleet-background-location-native").then(module => module.stopFleetBackgroundLocation(false)).catch(() => undefined);
   }
   const key = await suppressionKey();
-  if (action === "end" && key) await SecureStore.setItemAsync(key, "true", { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY });
-  const result = await apiFetch(`${base}/duty`, { method: "POST", body: JSON.stringify({ action, ...options }) }, scope);
-  if (action === "start" && isAuthScopeCurrent(scope)) { if (key) await SecureStore.deleteItemAsync(key); if (!await locallyStopped()) suppressed.delete(scope.generation); }
+  if (action === "end" && key) await stopStore.setItemAsync(key, "true", { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY });
+  const result = await apiFetch<NativeOperationsStatus>(`${base}/duty`, { method: "POST", body: JSON.stringify({ action, ...options }) }, scope);
+  if ((action === "start" || result.onCallActive === true) && isAuthScopeCurrent(scope)) { if (key) await stopStore.deleteItemAsync(key); if (!await locallyStopped()) suppressed.delete(scope.generation); }
   return result;
 }
 export async function respondNativeRequest(id: string, body: Record<string, unknown>, scope = captureAuthScope(), startedBinding?: { deviceId: string; bindingVersion: number }) {
@@ -103,4 +111,19 @@ async function collectFreshLocation(request: NativeDeviceRequest, scope: AuthSco
   } catch {
     if (isAuthScopeCurrent(scope)) await respondNativeRequest(request.id, { state: "unavailable", note: "Fresh location could not be obtained" }, scope);
   }
+}
+
+export async function changeNativeOnCall(active: boolean, shiftActive = false) {
+ const scope = captureAuthScope();
+ if (!active && !shiftActive) { suppressed.add(scope.generation); const key = await suppressionKey(); if(key) await stopStore.setItemAsync(key,"true"); await stopNativeBackgroundCollection(); }
+ const result = await apiFetch<NativeOperationsStatus>(base + "/on-call", {method:"PUT",body:JSON.stringify({active,consent:true})}, scope);
+ if (!isAuthScopeCurrent(scope)) return result;
+ const key = await suppressionKey();
+ if (active || result.duty?.active) { if(key) await stopStore.deleteItemAsync(key); if (!await locallyStopped()) suppressed.delete(scope.generation); }
+ else { suppressed.add(scope.generation); if(key) await stopStore.setItemAsync(key,"true"); await stopNativeBackgroundCollection(); }
+ return result;
+}
+async function stopNativeBackgroundCollection() {
+ await import("./liveLocationReporter").then(module => module.stopLiveLocationReporter());
+ await import("./fleet-background-location-native").then(module => module.stopFleetBackgroundLocation(false));
 }

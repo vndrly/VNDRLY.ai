@@ -582,10 +582,11 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           )
         ).rows[0].n,
       ).toBe(1);
-      expect(
-        (await request(app).get("/fleet/overview").set("Cookie", cookies[1]))
-          .body.observations,
-      ).toEqual([]);
+      // Completed runs retain authorized last-known history, visibly stale.
+      // This never permits collecting a new off-duty driver-phone location.
+      const completedObservations = (await request(app).get("/fleet/overview").set("Cookie", cookies[1])).body.observations;
+      expect(completedObservations).toEqual([{ ...location.body, freshness: "stale" }]);
+      expect((await request(app).post(`/fleet/runs/${id}/location`).set("Cookie", cookies[1]).send({ ...locationInput, operationId: randomUUID(), expectedVersion: version, recordedAt: new Date().toISOString() })).status).toBe(403);
       const [unrelatedHold] = await db
         .insert(assetHoldsTable)
         .values({

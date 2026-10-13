@@ -38,6 +38,8 @@ vi.mock("expo-crypto", () => ({
 }));
 vi.mock("@/components/MapboxNativeMap", () => ({ default: () => null }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00adb5", name: "MidCon" }) }));
+vi.mock("@/components/LayeredPillButton", () => ({ default: ({ children, onPress, disabled }: any) => <button onClick={onPress} disabled={disabled} aria-disabled={disabled}>{children}</button> }));
+vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 import GateLocationsCard from "./GateLocationsCard";
 async function press(name: string) {
   const button = await screen.findByRole("button", { name });
@@ -49,6 +51,7 @@ describe("Gate Locations profile card", () => {
     mocks.auth.user = { id: 33, role: "vendor", vendorId: 41, partnerId: null };
     mocks.auth.activeMembershipId = 1;
     mocks.api.mockReset();
+    mocks.permission.mockReset();
     mocks.permission.mockResolvedValue({ status: "granted" });
     mocks.location.mockResolvedValue({
       coords: { latitude: 35.2, longitude: -97.2 },
@@ -68,6 +71,7 @@ describe("Gate Locations profile card", () => {
   it("immediately hides and clears a vendor draft when switching to a partner admin and back", async () => {
     const view = render(<GateLocationsCard />);
     await press("Gate Locations");
+    await press("Choose site");
     await press("Partner wellhead");
     await press("Add gate");
     fireEvent.change(screen.getByLabelText("Gate name"), { target: { value: "Unsaved private gate" } });
@@ -83,6 +87,16 @@ describe("Gate Locations profile card", () => {
     expect(screen.queryByDisplayValue("Unsaved private gate")).toBeNull();
     expect(screen.queryByText("Partner wellhead")).toBeNull();
   });
+  it("searches authorized sites and keeps the list collapsed after selection", async()=>{
+    const original=mocks.api.getMockImplementation()!;mocks.api.mockImplementation((path:string,init:any)=>path==="/api/gate-locations/sites"?Promise.resolve({sites:[{id:22,name:"Partner wellhead"},{id:23,name:"North pad"}]}):original(path,init));
+    render(<GateLocationsCard/>);await press("Gate Locations");expect(screen.queryByRole("button",{name:"North pad"})).toBeNull();await press("Choose site");fireEvent.change(screen.getByLabelText("Search sites"),{target:{value:"North"}});expect(screen.queryByRole("button",{name:"Partner wellhead"})).toBeNull();await press("North pad");await screen.findByRole("button",{name:"Add gate"});expect(screen.queryByLabelText("Search sites")).toBeNull();
+  });
+  it("cancels the popup without writing or requesting GPS",async()=>{
+    render(<GateLocationsCard/>);await press("Gate Locations");await press("Choose site");await press("Partner wellhead");await press("Add gate");fireEvent.change(screen.getByLabelText("Gate name"),{target:{value:"Unsaved gate"}});await press("Cancel gate edit");expect(screen.queryByLabelText("Gate name")).toBeNull();expect(mocks.permission).not.toHaveBeenCalled();expect(mocks.api.mock.calls.some(call=>call[0]==="/api/gate-locations")).toBe(false);
+  });
+  it("keeps the editor usable while GPS waits and can cancel the request",async()=>{
+    mocks.permission.mockReturnValue(new Promise(()=>{}));render(<GateLocationsCard/>);await press("Gate Locations");await press("Choose site");await press("Partner wellhead");await press("Add gate");await press("Use my current location");await screen.findByRole("button",{name:"Cancel location request"});expect((screen.getByLabelText("Gate name") as HTMLInputElement).readOnly).toBe(false);await press("Cancel gate edit");expect(screen.queryByLabelText("Gate name")).toBeNull();await press("Add gate");expect(screen.queryByRole("button",{name:"Cancel location request"})).toBeNull();
+  });
   it("hides management without the server capability", async () => {
     mocks.api.mockResolvedValue({
       capabilities: { canManageGateLocations: false },
@@ -94,12 +108,14 @@ describe("Gate Locations profile card", () => {
   it("captures a separate gate position, reviews exact values, and only saves after confirmation", async () => {
     render(<GateLocationsCard />);
     await press("Gate Locations");
+    await press("Choose site");
     await press("Partner wellhead");
     await press("Add gate");
     fireEvent.change(screen.getByLabelText("Gate name"), {
       target: { value: "West gate" },
     });
     await press("Use my current location");
+    await press("Enter coordinates");
     await waitFor(() =>
       expect(
         (screen.getByLabelText("Latitude") as HTMLInputElement).value,
@@ -124,11 +140,13 @@ describe("Gate Locations profile card", () => {
   it("provides a named gate map with exact position and 44-point input targets", async () => {
     render(<GateLocationsCard />);
     await press("Gate Locations");
+    await press("Choose site");
     await press("Partner wellhead");
     await press("Add gate");
     fireEvent.change(screen.getByLabelText("Gate name"), { target: { value: "West gate" } });
     await press("Use my current location");
     expect(await screen.findByRole("img", { name: "Gate map: West gate. Latitude 35.2, longitude -97.2, radius 500 meters." })).toBeTruthy();
+    await press("Enter coordinates");
     for (const label of ["Gate name", "Latitude", "Longitude", "Radius in meters"]) {
       expect(Number.parseFloat(getComputedStyle(screen.getByLabelText(label)).minHeight)).toBeGreaterThanOrEqual(44);
     }
@@ -158,6 +176,7 @@ describe("Gate Locations profile card", () => {
     });
     render(<GateLocationsCard />);
     await press("Gate Locations");
+    await press("Choose site");
     await press("Partner wellhead");
     const editButton = await screen.findByRole("button", { name: "Edit gate: West gate" });
     expect(editButton.getAttribute("aria-label")).toBe("Edit gate: West gate");

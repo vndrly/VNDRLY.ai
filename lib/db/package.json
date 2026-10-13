@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./realm": "./src/database-realm.ts",
     "./schema": "./src/schema/index.ts",
     "./format": "./src/format/index.ts",
     "./line-types": "./src/line-types/index.ts",
@@ -16,7 +17,11 @@
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
     "check-schema": "tsx src/scripts/check-schema-drift.ts",
     "backfill:status-history": "tsx src/scripts/backfill-ticket-status-history.ts",
-    "migrate:implementation-a": "tsx src/scripts/apply-implementation-a.ts"
+    "migrate:company-operations": "tsx src/scripts/apply-company-operations.ts",
+    "migrate:implementation-a": "tsx src/scripts/apply-implementation-a.ts",
+    "migrate:gate-post-coverage": "tsx src/scripts/apply-gate-post-coverage.ts",
+    "migrate:fleet-commercial": "tsx src/scripts/apply-fleet-commercial.ts",
+    "migrate:ios-parity-demo": "tsx src/scripts/apply-ios-parity-demo.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

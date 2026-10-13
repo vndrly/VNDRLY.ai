@@ -167,6 +167,8 @@ export default function NotificationDestinationScreen() {
             ))}
             {record.kind === "shift" && loaded?.target.kind === "shift" ? <NativeShiftResponse key={`${generation}.${loaded.target.id}`} shiftId={loaded.target.id} /> : null}
             {record.kind==="fleet"&&<TogglePillButton onPress={()=>router.push({pathname:"/fleet-run/[id]",params:{id:record.subjectId}} as never)}>{fleetCopy("Open exact Fleet run")}</TogglePillButton>}
+            {record.kind==="ticket"&&<TogglePillButton compactOnTablet onPress={()=>router.push({pathname:"/ticket/[id]",params:{id:record.subjectId}})}>Open ticket</TogglePillButton>}
+            {record.kind==="safety"&&<TogglePillButton compactOnTablet onPress={()=>router.push({pathname:"/safety-event/[id]",params:{id:record.subjectId}})}>Open safety report</TogglePillButton>}
             {record.kind === "channel" && loaded?.target.kind === "channel" ? <TogglePillButton onPress={() => {
               const target = loaded.target, scope = captureAuthScope();
               void loadNotificationDestination({ kind: "channel", id: target.id }).then(value => {

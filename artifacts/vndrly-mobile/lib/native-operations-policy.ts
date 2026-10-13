@@ -16,6 +16,7 @@ export type NativeOperationsStatus = {
   tasks?: NativePrimaryTask[];
   selectedTask?: { kind: "ticket" | "gate" | "fleet"; id: string } | null;
   shifts?: { id: string; title: string; startsAt: string; endsAt: string; siteLocationId: number | null }[];
+  onCallActive?: boolean;
   onCallWindows?: { startsAt: string; endsAt: string; consent: true }[];
 };
 export type NativePrimaryTask = { kind: "ticket" | "gate" | "fleet"; id: string; identifier: string; status: string; lastUpdate?: string; site?: string; startedAt?: string; eta?: string };
@@ -25,7 +26,7 @@ export function requestIsActionable(request: NativeDeviceRequest, now = Date.now
 }
 export function maySupplyFreshLocation(status: NativeOperationsStatus, deviceId: string) {
   const agreedWindow = status.onCallWindows?.some(window => window.consent && Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now());
-  return status.policy.enabled && (status.duty?.active === true || agreedWindow === true) && status.consent.locationSharing
+  return status.policy.enabled && (status.duty?.active === true || status.onCallActive === true || agreedWindow === true) && status.consent.locationSharing
     && status.designatedDeviceId === deviceId;
 }
 export function arrivalMayBeAutomatic(status: NativeOperationsStatus) {

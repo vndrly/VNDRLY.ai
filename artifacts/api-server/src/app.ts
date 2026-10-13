@@ -27,6 +27,7 @@ import { isAllowedCorsOrigin } from "./lib/corsOrigins";
 import helmet from "helmet";
 import assistantConnectionRouter from "./routes/assistantConnection";
 import { organizationSubscriptionWebhook } from "./routes/organizationSubscription";
+import {demoRequestBoundary} from './lib/demo-request-boundary';
 
 const app: Express = express();
 
@@ -44,6 +45,7 @@ app.set("trust proxy", "loopback");
 // also prevents stolen tokens from being used to repeatedly increment
 // sessionVersion (DoS via forced global logout).
 const SESSION_VERSION_SKIP: { method: string; pattern: RegExp }[] = [
+  { method: "POST", pattern: /^\/api\/auth\/demo-entry$/ },
   ...ACCOUNT_ACTIVATION_ALLOWLIST,
   { method: "POST", pattern: /^\/api\/auth\/login\/?$/ },
   { method: "GET", pattern: /^\/api\/health\/?$/ },
@@ -91,6 +93,7 @@ app.use("/api/organization-subscription/webhook", organizationSubscriptionWebhoo
 app.post(/^\/api\/work-hub\/meetings\/[^/]+\/transcribe-audio\/?$/, express.json({ limit: "6mb" }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(demoRequestBoundary);
 
 // Scoped assistant credentials must never become general staff session cookies.
 app.use("/api/assistant-connection", assistantConnectionRouter);

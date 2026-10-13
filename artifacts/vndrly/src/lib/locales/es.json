@@ -4378,6 +4378,7 @@
       "object_url_required": "Sube el archivo primero.",
       "persist_failed": "No pudimos guardar tu progreso. Inténtalo de nuevo.",
       "required_fields_missing": "Faltan algunos campos obligatorios. Complétalos.",
+      "operations_categories_required": "Seleccione la categoría de operaciones de su empresa antes de completar la configuración inicial.",
       "refer_invalid_email": "Ingresa una dirección de correo válida.",
       "refer_send_failed": "No se pudo enviar la referencia. Inténtalo de nuevo."
     },

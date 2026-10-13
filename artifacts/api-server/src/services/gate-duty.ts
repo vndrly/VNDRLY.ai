@@ -198,8 +198,8 @@ async function insertDuty(
   const result = (
     await client.query(
       `INSERT INTO gate_duty_sessions(
-        station_id,user_id,work_hub_shift_id,work_session_id,started_at,source,idempotency_key
-      ) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+        station_id,user_id,work_hub_shift_id,work_session_id,started_at,source,idempotency_key,post_coverage
+      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb) RETURNING *`,
       [
         input.stationId,
         userId,
@@ -208,6 +208,7 @@ async function insertDuty(
         input.at ?? new Date(),
         input.source,
         input.idempotencyKey,
+        JSON.stringify(session.vendorId ? { vendorId: session.vendorId } : {}),
       ],
     )
   ).rows[0];

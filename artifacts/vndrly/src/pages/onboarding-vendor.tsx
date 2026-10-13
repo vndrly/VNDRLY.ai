@@ -1,3 +1,4 @@
+import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -767,6 +768,7 @@ export default function OnboardingVendor() {
             className="mb-8"
           />
 
+          {orgId ? <CompanyOperationsChoice key={orgId} /> : null}
           {currentStep.key === "company-basics" && (
             <div className="space-y-4" data-testid="step-company-basics-body">
               <h2 className="text-lg font-semibold text-gray-900">Tell us about your company</h2>

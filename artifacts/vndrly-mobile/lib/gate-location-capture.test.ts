@@ -1,0 +1,9 @@
+import {afterEach,it,expect,vi} from "vitest";
+const mocks=vi.hoisted(()=>({permission:vi.fn(),position:vi.fn()}));
+vi.mock("expo-location",()=>({requestForegroundPermissionsAsync:mocks.permission,getCurrentPositionAsync:mocks.position}));
+import {captureGatePosition} from "./gate-location-capture";
+afterEach(()=>{vi.useRealTimers();vi.resetAllMocks();});
+it("times out a permission request that never responds",async()=>{vi.useFakeTimers();mocks.permission.mockReturnValue(new Promise(()=>{}));const result=captureGatePosition(new AbortController().signal);const check=expect(result).rejects.toThrow("timeout");await vi.advanceTimersByTimeAsync(15000);await check;expect(mocks.position).not.toHaveBeenCalled();});
+it("cancels and does not start GPS after a late permission grant",async()=>{let grant:any;mocks.permission.mockReturnValue(new Promise(resolve=>{grant=resolve;}));const controller=new AbortController(),result=captureGatePosition(controller.signal);const check=expect(result).rejects.toThrow("cancelled");controller.abort();await check;grant({status:"granted"});await Promise.resolve();expect(mocks.position).not.toHaveBeenCalled();});
+it("times out an unresponsive GPS lookup",async()=>{vi.useFakeTimers();mocks.permission.mockResolvedValue({status:"granted"});mocks.position.mockReturnValue(new Promise(()=>{}));const result=captureGatePosition(new AbortController().signal);const check=expect(result).rejects.toThrow("timeout");await vi.advanceTimersByTimeAsync(15000);await check;});
+it("returns valid coordinates from the shared native/browser capture path",async()=>{mocks.permission.mockResolvedValue({status:"granted"});mocks.position.mockResolvedValue({coords:{latitude:35.2,longitude:-97.2}});expect(await captureGatePosition(new AbortController().signal)).toEqual({latitude:35.2,longitude:-97.2});});

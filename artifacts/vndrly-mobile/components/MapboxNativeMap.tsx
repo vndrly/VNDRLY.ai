@@ -1,9 +1,15 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, Text, View, type DimensionValue } from "react-native";
-import Mapbox from "@rnmapbox/maps";
+import Mapbox, { type Camera as CameraHandle } from "@rnmapbox/maps";
 
 import { useColors } from "@/hooks/useColors";
 import { readMapboxAccessToken, type MapboxMapStyle } from "@/lib/maps";
+import {
+  MapControls,
+  clampMapZoom,
+  useMapLocation,
+  type MapCamera,
+} from "./MapCameraControls";
 
 export type NativeMapPoint = {
   id: string;
@@ -40,6 +46,8 @@ type Props = {
   styleKind?: MapboxMapStyle;
   selectedPointId?: string | null;
   onPointPress?: (id: string) => void;
+  controls?: boolean;
+  viewKey?: string;
 };
 
 const token = readMapboxAccessToken();
@@ -58,7 +66,9 @@ function isValidPoint(point: { latitude: number; longitude: number }): boolean {
   );
 }
 
-function circlePolygon(circle: NativeMapCircle): GeoJSON.Feature<GeoJSON.Polygon> {
+function circlePolygon(
+  circle: NativeMapCircle,
+): GeoJSON.Feature<GeoJSON.Polygon> {
   const steps = 64;
   const coords: Array<[number, number]> = [];
   const latRad = (circle.latitude * Math.PI) / 180;
@@ -67,8 +77,10 @@ function circlePolygon(circle: NativeMapCircle): GeoJSON.Feature<GeoJSON.Polygon
   for (let i = 0; i <= steps; i += 1) {
     const angle = (i / steps) * Math.PI * 2;
     coords.push([
-      circle.longitude + (Math.cos(angle) * circle.radiusMeters) / metersPerDegreeLng,
-      circle.latitude + (Math.sin(angle) * circle.radiusMeters) / metersPerDegreeLat,
+      circle.longitude +
+        (Math.cos(angle) * circle.radiusMeters) / metersPerDegreeLng,
+      circle.latitude +
+        (Math.sin(angle) * circle.radiusMeters) / metersPerDegreeLat,
     ]);
   }
   return {
@@ -84,7 +96,11 @@ function circlePolygon(circle: NativeMapCircle): GeoJSON.Feature<GeoJSON.Polygon
   };
 }
 
-function boundsFromPoints(points: NativeMapPoint[], lines: NativeMapLine[], circles: NativeMapCircle[]) {
+function boundsFromPoints(
+  points: NativeMapPoint[],
+  lines: NativeMapLine[],
+  circles: NativeMapCircle[],
+) {
   const coords: Array<[number, number]> = [];
   for (const point of points) coords.push([point.longitude, point.latitude]);
   for (const line of lines) {
@@ -114,6 +130,8 @@ export default function MapboxNativeMap({
   styleKind = "satellite",
   selectedPointId,
   onPointPress,
+  controls = false,
+  viewKey,
 }: Props) {
   const colors = useColors();
   const validPoints = useMemo(() => points.filter(isValidPoint), [points]);
@@ -155,16 +173,71 @@ export default function MapboxNativeMap({
     [validCircles],
   );
   const cameraBounds = useMemo(
-    () => boundsFromPoints(validPoints, validLines, validCircles),
-    [validCircles, validLines, validPoints],
+    () =>
+      center ? null : boundsFromPoints(validPoints, validLines, validCircles),
+    [center, validCircles, validLines, validPoints],
   );
   const cameraCenter =
     center ??
     (validPoints[0]
-      ? ([validPoints[0].longitude, validPoints[0].latitude] as [number, number])
+      ? ([validPoints[0].longitude, validPoints[0].latitude] as [
+          number,
+          number,
+        ])
       : ([-98.35, 39.5] as [number, number]));
   const styleURL =
-    styleKind === "street" ? Mapbox.StyleURL.Street : Mapbox.StyleURL.SatelliteStreet;
+    styleKind === "street"
+      ? Mapbox.StyleURL.Street
+      : Mapbox.StyleURL.SatelliteStreet;
+  const camera = useRef<CameraHandle>(null);
+  const currentCamera = useRef<MapCamera>({ center: cameraCenter, zoom });
+  const resetKey = `${viewKey}:${center?.[0]}:${center?.[1]}`;
+  const location = useMapLocation((point) => {
+    currentCamera.current = {
+      center: point,
+      zoom: Math.max(14, currentCamera.current.zoom),
+    };
+    camera.current?.setCamera({
+      centerCoordinate: point,
+      zoomLevel: currentCamera.current.zoom,
+      animationDuration: 300,
+    });
+  }, resetKey);
+  useEffect(() => {
+    if (!controls) return;
+    currentCamera.current = { center: cameraCenter, zoom };
+    camera.current?.setCamera(
+      cameraBounds
+        ? {
+            bounds: {
+              ne: cameraBounds.ne,
+              sw: cameraBounds.sw,
+              paddingTop: 48,
+              paddingBottom: 48,
+              paddingLeft: 48,
+              paddingRight: 48,
+            },
+            animationDuration: 0,
+          }
+        : {
+            centerCoordinate: cameraCenter,
+            zoomLevel: zoom,
+            animationDuration: 0,
+          },
+    );
+  }, [resetKey, controls]);
+  function changeZoom(delta: number) {
+    const next = {
+      ...currentCamera.current,
+      zoom: clampMapZoom(currentCamera.current.zoom + delta),
+    };
+    currentCamera.current = next;
+    camera.current?.setCamera({
+      centerCoordinate: next.center,
+      zoomLevel: next.zoom,
+      animationDuration: 150,
+    });
+  }
 
   if (!token) {
     return (
@@ -177,13 +250,41 @@ export default function MapboxNativeMap({
   }
 
   return (
-    <View style={[styles.root, { height }]}>
-      <Mapbox.MapView style={styles.map} styleURL={styleURL} logoEnabled={false}>
+    <View
+      style={[
+        styles.root,
+        {
+          height,
+          borderWidth: 2,
+          borderColor: colors.primary,
+          borderRadius: 14,
+        },
+      ]}
+    >
+      <Mapbox.MapView
+        style={styles.map}
+        styleURL={styleURL}
+        logoEnabled={false}
+        onCameraChanged={(event) => {
+          const c = event.properties.center;
+          if (c.length >= 2)
+            currentCamera.current = {
+              center: [c[0], c[1]],
+              zoom: event.properties.zoom,
+            };
+        }}
+      >
         <Mapbox.Camera
-          zoomLevel={zoom}
-          centerCoordinate={cameraCenter}
+          ref={camera}
+          defaultSettings={
+            controls
+              ? { centerCoordinate: cameraCenter, zoomLevel: zoom }
+              : undefined
+          }
+          zoomLevel={controls ? undefined : zoom}
+          centerCoordinate={controls ? undefined : cameraCenter}
           bounds={
-            cameraBounds
+            !controls && cameraBounds
               ? {
                   ne: cameraBounds.ne,
                   sw: cameraBounds.sw,
@@ -195,6 +296,21 @@ export default function MapboxNativeMap({
               : undefined
           }
         />
+        {controls && location.location ? (
+          <Mapbox.PointAnnotation
+            id="current-device-location"
+            coordinate={location.location}
+          >
+            <View
+              style={[
+                styles.pin,
+                { backgroundColor: "#2563eb", borderColor: "#fff" },
+              ]}
+            >
+              <Text style={styles.pinText}>Me</Text>
+            </View>
+          </Mapbox.PointAnnotation>
+        ) : null}
         {validCircles.length > 0 ? (
           <Mapbox.ShapeSource id="mapbox-native-circles" shape={circleShape}>
             <Mapbox.FillLayer
@@ -206,7 +322,11 @@ export default function MapboxNativeMap({
             />
             <Mapbox.LineLayer
               id="mapbox-native-circle-line"
-              style={{ lineColor: ["get", "color"], lineWidth: 1.5, lineOpacity: 0.85 }}
+              style={{
+                lineColor: ["get", "color"],
+                lineWidth: 1.5,
+                lineOpacity: 0.85,
+              }}
             />
           </Mapbox.ShapeSource>
         ) : null}
@@ -237,7 +357,9 @@ export default function MapboxNativeMap({
                   styles.pin,
                   {
                     backgroundColor: color,
-                    borderColor: selected ? "#ffffff" : "rgba(255,255,255,0.92)",
+                    borderColor: selected
+                      ? "#ffffff"
+                      : "rgba(255,255,255,0.92)",
                     transform: [{ scale: selected ? 1.18 : 1 }],
                   },
                 ]}
@@ -250,6 +372,13 @@ export default function MapboxNativeMap({
           );
         })}
       </Mapbox.MapView>
+      {controls ? (
+        <MapControls
+          zoomIn={() => changeZoom(1)}
+          zoomOut={() => changeZoom(-1)}
+          location={location}
+        />
+      ) : null}
     </View>
   );
 }

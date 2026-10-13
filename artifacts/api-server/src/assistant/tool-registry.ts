@@ -110,7 +110,7 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
         workHubFamily: metadata.family,
         companyAdminOnly: metadata.companyAdminOnly,
         authorityCapability: ["query_work_hub_availability","manage_work_hub_availability"].includes(name) ? "events.subscribe" : authorityCapabilityForWorkHubTool(metadata),
-        ...(["query_work_hub_availability","manage_work_hub_availability"].includes(name) ? {roles:["field_employee"]} : name === "confirm_work_hub_profile" ? { roles: ["field_employee"] } : name === "prepare_work_hub_profile" ? { roles: ["vendor", "field_employee", "partner", "admin"] } : name.includes("gate_location") ? { roles: ["vendor"], companyAdminOnly: true } : {}),
+        ...(["query_work_hub_availability","manage_work_hub_availability"].includes(name) ? {roles:["field_employee"]} : name === "confirm_work_hub_profile" ? { roles: ["field_employee"] } : name === "prepare_work_hub_profile" ? { roles: ["vendor", "field_employee", "partner", "admin"] } : ["query_company_operations","set_company_operations"].includes(name) ? { roles: ["vendor", "field_employee", "admin"], companyAdminOnly: name === "set_company_operations" } : name.includes("gate_location") ? { roles: ["vendor"], companyAdminOnly: true } : {}),
       },
     ]),
   ),

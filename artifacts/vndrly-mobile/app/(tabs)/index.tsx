@@ -26,6 +26,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { useSidebarNotifications } from "@/components/SidebarNotificationsContext";
 import ForemanQuickActions from "@/components/ForemanQuickActions";
 import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModal";
+import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
@@ -80,6 +81,23 @@ export default function HomeScreen() {
     },
   } = useAuth();
   const topPadding = useScreenTopPadding();
+  const [jobView, setJobView] = useState<"active" | "stale" | "history">("active");
+  const [recentJobs, setRecentJobs] = useState<OpenTicket[]>([]);
+  const [historyBusy, setHistoryBusy] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const historyGeneration = React.useRef(0);
+  useEffect(() => { historyGeneration.current++; setRecentJobs([]); setJobView("active"); setHistoryBusy(false); setHistoryError(null); }, [me?.id, activeMembershipId]);
+  const loadRecentJobs = useCallback(async () => {
+    const generation = ++historyGeneration.current;
+    setHistoryBusy(true); setHistoryError(null);
+    try {
+      const rows = await apiFetch<Array<OpenTicket & {checkOutTime: string | null}>>("/api/field/history");
+      if (generation !== historyGeneration.current) return;
+      const now = Date.now();
+      setRecentJobs(rows.filter(row => { const ended = Date.parse(row.checkOutTime ?? ""); return row.status !== "cancelled" && Number.isFinite(ended) && ended <= now && now-ended <= 30*86400000; }).map(row => ({...row, unreadCommentCount: 0})));
+    } catch { if (generation === historyGeneration.current) setHistoryError("Could not load recent history. Tap Refresh to retry."); }
+    finally { if (generation === historyGeneration.current) setHistoryBusy(false); }
+  }, []);
   const [tickets, setTickets] = useState<OpenTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -841,6 +859,10 @@ export default function HomeScreen() {
       </View>
 
       <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+        <AskVVoiceIndicator inline />
+      </View>
+
+      <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
         <SafetyTrainingBanner />
       </View>
 
@@ -859,7 +881,21 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      {isFieldEmployee ? (
+      {isForemanEmployee ? (
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+          {([ ["active", "Active Jobs"], ["stale", "Stale Jobs"], ["history", "Recent History"] ] as const).map(([key, label], index) => <React.Fragment key={key}>
+            {index > 0 ? <Text style={{color: colors.mutedForeground}}>|</Text> : null}
+            <TouchableOpacity accessibilityRole="button" accessibilityState={{selected: jobView===key}} onPress={() => {setJobView(key); if(key==="history") void loadRecentJobs();}} style={{paddingVertical:8}}>
+              <Text style={{color:jobView===key ? brand.primary : colors.foreground, fontFamily:"Inter_600SemiBold"}}>{label}</Text>
+            </TouchableOpacity>
+          </React.Fragment>)}
+          <Text style={{color:colors.mutedForeground}}>|</Text>
+          <TouchableOpacity accessibilityRole="button" disabled={historyBusy || headerRefreshing || refreshing || rateLimited} onPress={() => jobView==="history" ? void loadRecentJobs() : onHeaderRefresh()} style={{paddingVertical:8}}>
+            <Text style={{color:brand.primary}}>{historyBusy || headerRefreshing ? "Refreshing…" : "Refresh"}</Text>
+          </TouchableOpacity>
+          {historyError && jobView==="history" ? <Text style={{color:colors.foreground,width:"100%"}}>{historyError}</Text> : null}
+        </View>
+      ) : isFieldEmployee ? (
         <View style={styles.activeJobsHeader}>
           <Text style={[styles.heading, { color: colors.foreground }]}>
             {isForemanEmployee ? t("foremanHome.activeJobs") : t("tickets.title")}
@@ -1148,11 +1184,11 @@ export default function HomeScreen() {
         <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
-          data={tickets}
+          data={isForemanEmployee ? jobView === "history" ? recentJobs : jobView === "stale" ? tickets.filter(row => Date.now()-Date.parse(row.createdAt)>30*86400000) : tickets : tickets}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing || historyBusy} onRefresh={isForemanEmployee && jobView === "history" ? () => void loadRecentJobs() : onRefresh} />
           }
           ListEmptyComponent={
             <Text style={[styles.empty, { color: colors.mutedForeground }]}>

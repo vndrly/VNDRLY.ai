@@ -84,7 +84,9 @@
     "confirm": "Confirm gate",
     "back": "Back to editing",
     "saved": "Gate saved",
-    "error": "Unable to complete this action. Check your access and refresh the gate before retrying an outdated edit."
+    "error": "Unable to complete this action. Check your access and refresh the gate before retrying an outdated edit.",
+    "cancelLocation": "Cancel location request",
+    "locationTimeout": "This device could not return a location. Try again or enter the gate coordinates manually."
   },
   "filesInventory": {
     "confirmHoldRelease": "Confirm hold release",
@@ -287,7 +289,6 @@
     "voiceCheckOutRecord": "Check out {{name}} · {{plate}}",
     "voiceNoCheckoutMatch": "No active gate entry matched that name or plate.",
     "voiceConfirm": "Confirm",
-    "tab": "Gate",
     "portal": "Gate Portal",
     "subtitle": "Track vehicle and visitor traffic at site locations.",
     "activeNow": "On site now",
@@ -303,9 +304,7 @@
     "checkedInBody": "Gate entry recorded.",
     "tagPhoto": "Tag photo",
     "vehiclePhoto": "Vehicle photo",
-    "historyTitle": "History",
     "historySearch": "Search by name, plate, company, or site",
-    "historyEmpty": "No visits in the last 30 days.",
     "currentLocation": "Current location",
     "handsFreeHint": "Tap the microphone to talk. Say the plate and name, then confirm. GPS must be locked inside the site fence to submit.",
     "notes": "Notes",
@@ -385,10 +384,10 @@
     "history": "History",
     "checkIn": "Check In",
     "checkOut": "Check Out",
-    "enRoute": "En Route",
-    "updateEnRoute": "Update En Route",
-    "onLocation": "On Location",
-    "updateOnLocation": "Update On Location",
+    "enRoute": "Start Travel",
+    "updateEnRoute": "Traveling",
+    "onLocation": "Arrived",
+    "updateOnLocation": "On Location",
     "startingMileageTitle": "Starting Mileage",
     "endingMileageTitle": "Ending Mileage",
     "mileageHelp": "Enter the odometer reading. Leave blank and tap Skip if unavailable.",
@@ -410,7 +409,7 @@
     "couldntCheckIn": "Couldn't check in",
     "pleaseTryAgain": "Please try again",
     "askvActions": {
-      "title": "AskV map tools",
+      "title": "Ask V about this visit",
       "eta": "ETA",
       "route": "Route",
       "mileage": "Mileage",
@@ -1314,7 +1313,8 @@
       "persist_failed": "Couldn't save onboarding. Please try again.",
       "refer_invalid_email": "Please enter a valid email address.",
       "refer_send_failed": "Couldn't send the referral. Please try again.",
-      "required_fields_missing": "Some required fields are missing. Please complete them."
+      "required_fields_missing": "Some required fields are missing. Please complete them.",
+      "operations_categories_required": "Choose your company operations category before completing onboarding."
     },
     "partner": {
       "duplicate_name": "A partner with that name already exists.",
@@ -2030,14 +2030,15 @@
     "comms": "Comms",
     "scan": "Scan",
     "profile": "Profile",
-    "history": "History"
+    "history": "History",
+    "gateLog": "Gate Log",
+    "gateOps": "Gate Ops",
+    "gateMap": "Gate Map"
   },
   "foremanHome": {
     "portal": "Foreman Portal",
     "quickActions": "Quick actions",
     "startJob": "Start job",
-    "schedule": "Schedule",
-    "alerts": "Alerts",
     "activeJobs": "Active jobs",
     "crewCommsTitle": "Crew comms",
     "crewCommsSubtitle": "Hold to talk with crew on an active ticket. Voice clips are stored in Supabase and crew get push + email alerts.",
@@ -2590,7 +2591,7 @@
   },
   "gateHistory": {
     "sendReports": "Send Reports",
-    "subtitle": "Query Gate activity and export exactly what you see.",
+    "subtitle": "Browse arrivals, departures, and visits that need attention.",
     "emailReport": "Email Report",
     "saveCopy": "Save a Copy",
     "noFormat": "Choose PDF, CSV, or DOC first.",
@@ -2601,7 +2602,6 @@
     "toggleTimePeriod": "Expand or collapse time period",
     "chooseRecordType": "Choose record type",
     "toggleRecordType": "Expand or collapse record type",
-    "searchTitle": "Search History",
     "emailed": "Report emailed.",
     "share": "Share Gate report",
     "shareUnavailable": "Report sharing is unavailable on this device.",
@@ -2630,7 +2630,28 @@
       "vehicles_on_site": "Vehicles on site",
       "pending": "Pending",
       "needs_review": "Needs review"
-    }
+    },
+    "viewCount": "{{count}} records in this view",
+    "notRecorded": "Not recorded",
+    "openVisit": "View visit for {{name}}",
+    "arrived": "Arrived",
+    "plate": "Vehicle plate",
+    "newer": "Newer",
+    "older": "Older",
+    "closeDetails": "Close visit details",
+    "state": {
+      "on_site": "On site",
+      "departed": "Departed",
+      "pending": "Pending admission",
+      "denied": "Admission denied",
+      "reconciled": "Reconciled off site",
+      "review": "Needs review"
+    },
+    "logTitle": "Gate Log",
+    "empty": "No visits match this site, period, and search.",
+    "company": "Company",
+    "departed": "Departed",
+    "duration": "Time on site"
   },
   "changeOver": {
     "title": "Dashboard",
@@ -3144,9 +3165,9 @@
     "workPhone": "This is your designated work phone",
     "viewer": "This device is a viewer",
     "designate": "Use this as my work phone",
-    "start": "Start Duty",
-    "startConfirm": "Confirm that you are starting duty. Location sharing requires your saved consent and device permission.",
-    "end": "End Duty",
+    "start": "Start Shift",
+    "startConfirm": "Confirm that you are starting your shift. Location sharing uses your saved consent and device permission.",
+    "end": "End Shift",
     "sharingOff": "Turn location sharing off",
     "sharingOn": "Allow location during active duty",
     "freshness": "Location requests require the designated phone, active duty and consent. iOS background delivery is not guaranteed.",
@@ -3179,7 +3200,13 @@
     "chooseTime": "Choose date and time",
     "onCallSave": "Agree to this on-call window",
     "onCallInvalid": "Choose an end after the start.",
-    "onCallClear": "Remove on-call agreement"
+    "onCallClear": "Remove on-call agreement",
+    "onCallOn": "On Call",
+    "onCallOff": "Off Call",
+    "onShift": "On Shift",
+    "shiftStarted": "Shift Started",
+    "shiftEnded": "Shift Ended",
+    "endConfirm": "Are you sure you want to end your shift?"
   },
   "nativeDictation": {
     "start": "Dictate reviewed text on this device",
@@ -3293,5 +3320,8 @@
     "decline": "Decline assignment",
     "saved": "Assignment response saved: {{state}}",
     "accept": "Accept assignment"
+  },
+  "gateMap": {
+    "locations": "Authorized gate locations"
   }
 }

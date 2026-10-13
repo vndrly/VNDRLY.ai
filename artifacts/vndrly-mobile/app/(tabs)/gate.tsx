@@ -895,175 +895,6 @@ export default function GatekeeperScreen() {
             ]}
           >
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              {t("gatekeeper.activeNow")}
-            </Text>
-            {activeVisits.isLoading ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : pendingVisits.length === 0 && onSiteVisits.length === 0 ? (
-              <Text style={[styles.muted, { color: colors.mutedForeground }]}>
-                {t("gatekeeper.noActive")}
-              </Text>
-            ) : (
-              <>
-                {pendingVisits.length > 0 ? (
-                  <Text style={[styles.label, { color: colors.foreground }]}>
-                    {t("gatekeeper.pendingAdmit")}
-                  </Text>
-                ) : null}
-                {pendingVisits.map((visit) => (
-                  <View
-                    key={visit.id}
-                    style={[styles.visitRow, { borderColor: colors.border }]}
-                  >
-                    <View style={styles.visitText}>
-                      <Text
-                        style={[styles.visitName, { color: colors.foreground }]}
-                      >
-                        {visit.firstName} {visit.lastName}
-                      </Text>
-                      <Text
-                        style={[styles.muted, { color: colors.mutedForeground }]}
-                      >
-                        {[
-                          visit.company,
-                          formatPlateForDisplay(
-                            visit.plateState,
-                            visit.vehiclePlate,
-                            t("gatekeeper.plateStateUnconfirmed"),
-                          ),
-                          visit.siteName,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      testID={`gate-admit-${visit.id}`}
-                      disabled={busy}
-                      onPress={() => onAdmit(visit.id)}
-                      style={[styles.iconButton, { borderColor: colors.primary }]}
-                    >
-                      <Text style={[styles.admitLabel, { color: colors.primary }]}>
-                        {t("gatekeeper.admit")}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-                {onSiteVisits.map((visit) => {
-                  const dwell = onSiteDwell({
-                    checkInTime: visit.checkInTime,
-                    expectedDurationMinutes: visit.expectedDurationMinutes,
-                  });
-                  return (
-                    <View
-                      key={visit.id}
-                      style={[styles.visitRow, { borderColor: colors.border }]}
-                    >
-                      <View style={styles.visitText}>
-                        <Text
-                          style={[styles.visitName, { color: colors.foreground }]}
-                        >
-                          {visit.firstName} {visit.lastName}
-                          {visit.reconciliationState === "observed" ||
-                          visit.reconciliationState === "needs_supervisor_review"
-                            ? " · " +
-                              t(
-                                visit.reconciliationState === "needs_supervisor_review"
-                                  ? "gatekeeper.reconciliationReview"
-                                  : "gatekeeper.reconciliationObserved",
-                              )
-                            : ""}
-                        </Text>
-                        <Text
-                          style={[styles.muted, { color: colors.mutedForeground }]}
-                        >
-                          {[
-                            visit.company,
-                            formatPlateForDisplay(
-                              visit.plateState,
-                              visit.vehiclePlate,
-                              t("gatekeeper.plateStateUnconfirmed"),
-                            ),
-                            visit.siteName,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </Text>
-                        <Text
-                          style={[styles.muted, { color: colors.mutedForeground }]}
-                        >
-                          {t("gatekeeper.minutesOnSite", {
-                            minutes: dwell.minutesOnSite,
-                          })}
-                          {dwell.overdue
-                            ? ` · ${t("gatekeeper.overdue", { minutes: dwell.overdueMinutes })}`
-                            : ""}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        testID={`gate-checkout-${visit.id}`}
-                        disabled={busy}
-                        onPress={() => onCheckOut(visit.id)}
-                        style={[styles.iconButton, { borderColor: colors.primary }]}
-                      >
-                        <Feather name="log-out" size={18} color={colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
-              </>
-            )}
-            <Text style={[styles.label, { color: colors.foreground }]}>
-              {t("gatekeeper.checkOutNotes")}
-            </Text>
-            <TextInput
-              testID="gate-checkout-notes"
-              value={checkOutNotes}
-              onChangeText={setCheckOutNotes}
-              style={inputStyle}
-              placeholder={t("gatekeeper.notesPlaceholder")}
-              placeholderTextColor={colors.mutedForeground}
-            />
-            {voiceCheckoutMatches.length > 0 ? (
-              <View style={[styles.voiceConfirm, { borderColor: colors.primary }]}>
-                <Text style={[styles.voiceConfirmTitle, { color: colors.foreground }]}>
-                  {voiceCheckoutMatches.length === 1
-                    ? t("gatekeeper.voiceConfirmCheckOut")
-                    : t("gatekeeper.voiceChooseCheckout")}
-                </Text>
-                {voiceCheckoutMatches.map((visit) => (
-                  <TouchableOpacity
-                    key={visit.id}
-                    testID={`gate-voice-confirm-checkout-${visit.id}`}
-                    disabled={busy}
-                    onPress={() => {
-                      setVoiceCheckoutMatches([]);
-                      void onCheckOut(visit.id);
-                    }}
-                    style={[styles.voiceActionButton, { backgroundColor: colors.primary }]}
-                  >
-                    <Text style={styles.voiceActionText}>
-                      {t("gatekeeper.voiceCheckOutRecord", {
-                        name: `${visit.firstName ?? ""} ${visit.lastName ?? ""}`.trim(),
-                        plate: visit.vehiclePlate ?? "",
-                      })}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity testID="gate-voice-cancel-checkout" onPress={() => setVoiceCheckoutMatches([])}>
-                  <Text style={[styles.voiceCancelText, { color: colors.mutedForeground }]}>{t("common.cancel")}</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
-          </View>
-
-          <View
-            style={[
-              styles.card,
-              { borderColor: colors.primary, backgroundColor: colors.card },
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
               {t("gatekeeper.newEntry")}
             </Text>
             {voiceListening ? (
@@ -1399,6 +1230,175 @@ export default function GatekeeperScreen() {
               </AmberButton>
             </View>
           </View>
+          <View
+            style={[
+              styles.card,
+              { borderColor: colors.primary, backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              {t("gatekeeper.activeNow")}
+            </Text>
+            {activeVisits.isLoading ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : pendingVisits.length === 0 && onSiteVisits.length === 0 ? (
+              <Text style={[styles.muted, { color: colors.mutedForeground }]}>
+                {t("gatekeeper.noActive")}
+              </Text>
+            ) : (
+              <>
+                {pendingVisits.length > 0 ? (
+                  <Text style={[styles.label, { color: colors.foreground }]}>
+                    {t("gatekeeper.pendingAdmit")}
+                  </Text>
+                ) : null}
+                {pendingVisits.map((visit) => (
+                  <View
+                    key={visit.id}
+                    style={[styles.visitRow, { borderColor: colors.border }]}
+                  >
+                    <View style={styles.visitText}>
+                      <Text
+                        style={[styles.visitName, { color: colors.foreground }]}
+                      >
+                        {visit.firstName} {visit.lastName}
+                      </Text>
+                      <Text
+                        style={[styles.muted, { color: colors.mutedForeground }]}
+                      >
+                        {[
+                          visit.company,
+                          formatPlateForDisplay(
+                            visit.plateState,
+                            visit.vehiclePlate,
+                            t("gatekeeper.plateStateUnconfirmed"),
+                          ),
+                          visit.siteName,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      testID={`gate-admit-${visit.id}`}
+                      disabled={busy}
+                      onPress={() => onAdmit(visit.id)}
+                      style={[styles.iconButton, { borderColor: colors.primary }]}
+                    >
+                      <Text style={[styles.admitLabel, { color: colors.primary }]}>
+                        {t("gatekeeper.admit")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {onSiteVisits.map((visit) => {
+                  const dwell = onSiteDwell({
+                    checkInTime: visit.checkInTime,
+                    expectedDurationMinutes: visit.expectedDurationMinutes,
+                  });
+                  return (
+                    <View
+                      key={visit.id}
+                      style={[styles.visitRow, { borderColor: colors.border }]}
+                    >
+                      <View style={styles.visitText}>
+                        <Text
+                          style={[styles.visitName, { color: colors.foreground }]}
+                        >
+                          {visit.firstName} {visit.lastName}
+                          {visit.reconciliationState === "observed" ||
+                          visit.reconciliationState === "needs_supervisor_review"
+                            ? " · " +
+                              t(
+                                visit.reconciliationState === "needs_supervisor_review"
+                                  ? "gatekeeper.reconciliationReview"
+                                  : "gatekeeper.reconciliationObserved",
+                              )
+                            : ""}
+                        </Text>
+                        <Text
+                          style={[styles.muted, { color: colors.mutedForeground }]}
+                        >
+                          {[
+                            visit.company,
+                            formatPlateForDisplay(
+                              visit.plateState,
+                              visit.vehiclePlate,
+                              t("gatekeeper.plateStateUnconfirmed"),
+                            ),
+                            visit.siteName,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </Text>
+                        <Text
+                          style={[styles.muted, { color: colors.mutedForeground }]}
+                        >
+                          {t("gatekeeper.minutesOnSite", {
+                            minutes: dwell.minutesOnSite,
+                          })}
+                          {dwell.overdue
+                            ? ` · ${t("gatekeeper.overdue", { minutes: dwell.overdueMinutes })}`
+                            : ""}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        testID={`gate-checkout-${visit.id}`}
+                        disabled={busy}
+                        onPress={() => onCheckOut(visit.id)}
+                        style={[styles.iconButton, { borderColor: colors.primary }]}
+                      >
+                        <Feather name="log-out" size={18} color={colors.primary} />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </>
+            )}
+            <Text style={[styles.label, { color: colors.foreground }]}>
+              {t("gatekeeper.checkOutNotes")}
+            </Text>
+            <TextInput
+              testID="gate-checkout-notes"
+              value={checkOutNotes}
+              onChangeText={setCheckOutNotes}
+              style={inputStyle}
+              placeholder={t("gatekeeper.notesPlaceholder")}
+              placeholderTextColor={colors.mutedForeground}
+            />
+            {voiceCheckoutMatches.length > 0 ? (
+              <View style={[styles.voiceConfirm, { borderColor: colors.primary }]}>
+                <Text style={[styles.voiceConfirmTitle, { color: colors.foreground }]}>
+                  {voiceCheckoutMatches.length === 1
+                    ? t("gatekeeper.voiceConfirmCheckOut")
+                    : t("gatekeeper.voiceChooseCheckout")}
+                </Text>
+                {voiceCheckoutMatches.map((visit) => (
+                  <TouchableOpacity
+                    key={visit.id}
+                    testID={`gate-voice-confirm-checkout-${visit.id}`}
+                    disabled={busy}
+                    onPress={() => {
+                      setVoiceCheckoutMatches([]);
+                      void onCheckOut(visit.id);
+                    }}
+                    style={[styles.voiceActionButton, { backgroundColor: colors.primary }]}
+                  >
+                    <Text style={styles.voiceActionText}>
+                      {t("gatekeeper.voiceCheckOutRecord", {
+                        name: `${visit.firstName ?? ""} ${visit.lastName ?? ""}`.trim(),
+                        plate: visit.vehiclePlate ?? "",
+                      })}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity testID="gate-voice-cancel-checkout" onPress={() => setVoiceCheckoutMatches([])}>
+                  <Text style={[styles.voiceCancelText, { color: colors.mutedForeground }]}>{t("common.cancel")}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenSafeArea>

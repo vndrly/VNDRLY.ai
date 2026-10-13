@@ -76,7 +76,7 @@ export function CalendarTimeGrid({
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
-            {["All", "Shift", "Task", "Meeting"].map((k) => (
+            {["All", "Shift", "Task", "Meeting", "Field Ticket", "Fleet Run"].map((k) => (
               <option key={k}>{k}</option>
             ))}
           </BrandedSelect>
@@ -127,11 +127,11 @@ export function CalendarTimeGrid({
                       <a
                         key={`${item.kind}-${item.id}`}
                         href={
-                          item.kind === "Meeting"
+                          item.route ?? (item.kind === "Meeting"
                             ? `/work-hub/meetings?meeting=${item.id}`
                             : item.kind === "Task"
                               ? `/work-hub/tasks?task=${item.id}`
-                              : "#shift-schedule"
+                              : "#shift-schedule")
                         }
                         className="block rounded border-l-4 border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary)_10%,transparent)] p-2 text-xs"
                       >

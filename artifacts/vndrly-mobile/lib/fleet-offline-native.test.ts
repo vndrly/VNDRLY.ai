@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FleetRunSchema, previewFleetRunActions, type FleetOverview, type FleetActionInput } from "@workspace/api-zod";
 const records = vi.hoisted(() => new Map<string, string>());
 const failure = vi.hoisted(() => ({ suffix: "" }));
-vi.mock("expo-secure-store", () => ({ WHEN_UNLOCKED_THIS_DEVICE_ONLY: "device-only", getItemAsync: async (key: string) => records.get(key) ?? null, setItemAsync: async (key: string, value: string) => { if (failure.suffix && key.endsWith(failure.suffix)) throw new Error("Interrupted device write"); records.set(key, value); }, deleteItemAsync: async (key: string) => { records.delete(key); } }));
+vi.mock("./fleet-device-storage", () => ({ WHEN_UNLOCKED_THIS_DEVICE_ONLY: "device-only", getItemAsync: async (key: string) => records.get(key) ?? null, setItemAsync: async (key: string, value: string) => { if (failure.suffix && key.endsWith(failure.suffix)) throw new Error("Interrupted device write"); records.set(key, value); }, deleteItemAsync: async (key: string) => { records.delete(key); } }));
 import { clearFleetOfflineOnSignOut, nativeFleetOffline } from "./fleet-offline-native";
 import { fleetOfflineByteLength } from "./fleet-offline";
 const scope = { userId: 1, companyId: 2, membershipId: 3, sessionVersion: 7 };

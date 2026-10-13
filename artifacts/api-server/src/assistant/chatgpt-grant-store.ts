@@ -5,10 +5,12 @@ import * as schema from "@workspace/db/schema";
 import { resolveContext } from "../routes/auth";
 import type { SessionPayload } from "../lib/session";
 import { AssistantOAuthError, type AssistantOAuthGrant } from "./chatgpt-oauth";
+import {isDemoUserId} from '../lib/demo-boundary';
 
 const CONTEXT_FIELDS = ["role", "membershipRole", "partnerId", "vendorId", "vendorRole", "vendorPeopleId", "activeMembershipId"] as const;
 /** Re-resolve current database authority; a stored grant is never authority itself. */
 export async function validateAssistantSession(session: SessionPayload, database: Omit<typeof db, "$client"> = db): Promise<SessionPayload> {
+  if(isDemoUserId(session.userId)||session.realm==='demo')throw new AssistantOAuthError('access_denied');
   if (!session.userId || !session.sv) throw new AssistantOAuthError("access_denied");
   const [user] = await database.select().from(usersTable).where(eq(usersTable.id, session.userId)).limit(1);
   if (!user || user.suspendedAt || user.mustChangePassword || user.sessionVersion !== session.sv) throw new AssistantOAuthError("access_denied");
@@ -24,6 +26,7 @@ export async function validateAssistantSession(session: SessionPayload, database
  * The additive migration provisions this dedicated column. All writes lock the owner row.
  */
 export async function withAssistantGrants<T>(userId: number, operation: (grants: AssistantOAuthGrant[], database: Omit<typeof db, "$client">) => Promise<T>, connectionPool: typeof pool = pool): Promise<T> {
+  if(isDemoUserId(userId))throw new AssistantOAuthError('access_denied');
   const client = await connectionPool.connect();
   try {
     await client.query("BEGIN");

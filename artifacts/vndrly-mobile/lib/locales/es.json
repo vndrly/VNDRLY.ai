@@ -84,7 +84,9 @@
     "confirm": "Confirmar puerta",
     "back": "Volver a editar",
     "saved": "Puerta guardada",
-    "error": "No se pudo completar la acción. Verifique su acceso y actualice la puerta antes de reintentar una edición desactualizada."
+    "error": "No se pudo completar la acción. Verifique su acceso y actualice la puerta antes de reintentar una edición desactualizada.",
+    "cancelLocation": "Cancelar solicitud de ubicación",
+    "locationTimeout": "Este dispositivo no pudo obtener una ubicación. Inténtalo de nuevo o introduce las coordenadas de la puerta manualmente."
   },
   "filesInventory": {
     "confirmHoldRelease": "Confirmar liberación",
@@ -287,7 +289,6 @@
     "voiceCheckOutRecord": "Registrar salida de {{name}} · {{plate}}",
     "voiceNoCheckoutMatch": "Ninguna entrada activa coincide con ese nombre o matrícula.",
     "voiceConfirm": "Confirmar",
-    "tab": "Entrada",
     "portal": "Portal de Entrada",
     "subtitle": "Registra el trafico de vehiculos y visitantes en las ubicaciones.",
     "activeNow": "En sitio ahora",
@@ -303,9 +304,7 @@
     "checkedInBody": "Registro de entrada guardado.",
     "tagPhoto": "Foto de placa",
     "vehiclePhoto": "Foto del vehículo",
-    "historyTitle": "Historial",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",
-    "historyEmpty": "No hay visitas en los últimos 30 días.",
     "currentLocation": "Ubicación actual",
     "handsFreeHint": "Toque el micrófono para hablar. Diga la placa y el nombre, luego confirme. El GPS debe estar fijo dentro de la cerca del sitio para enviar.",
     "notes": "Notas",
@@ -385,10 +384,10 @@
     "history": "Historial",
     "checkIn": "Marcar Entrada",
     "checkOut": "Marcar Salida",
-    "enRoute": "En Camino",
-    "updateEnRoute": "Actualizar En Camino",
-    "onLocation": "En el Sitio",
-    "updateOnLocation": "Actualizar En el Sitio",
+    "enRoute": "Iniciar viaje",
+    "updateEnRoute": "En camino",
+    "onLocation": "Llegué",
+    "updateOnLocation": "En el sitio",
     "startingMileageTitle": "Kilometraje Inicial",
     "endingMileageTitle": "Kilometraje Final",
     "mileageHelp": "Ingrese la lectura del odómetro. Déjelo en blanco y toque Omitir si no está disponible.",
@@ -410,7 +409,7 @@
     "couldntCheckIn": "No se pudo registrar la entrada",
     "pleaseTryAgain": "Por favor, inténtalo de nuevo",
     "askvActions": {
-      "title": "Herramientas de mapa AskV",
+      "title": "Preguntar a V sobre esta visita",
       "eta": "ETA",
       "route": "Ruta",
       "mileage": "Millas",
@@ -1314,7 +1313,8 @@
       "persist_failed": "No se pudo guardar el registro. Inténtelo de nuevo.",
       "refer_invalid_email": "Ingrese una dirección de correo válida.",
       "refer_send_failed": "No se pudo enviar la referencia. Inténtelo de nuevo.",
-      "required_fields_missing": "Faltan campos requeridos. Complételos."
+      "required_fields_missing": "Faltan campos requeridos. Complételos.",
+      "operations_categories_required": "Seleccione la categoría de operaciones de su empresa antes de completar la configuración inicial."
     },
     "partner": {
       "duplicate_name": "Ya existe un socio con ese nombre.",
@@ -2030,14 +2030,15 @@
     "comms": "Comunicación",
     "scan": "Escanear",
     "profile": "Perfil",
-    "history": "Historial"
+    "history": "Historial",
+    "gateLog": "Registro de acceso",
+    "gateOps": "Operaciones de acceso",
+    "gateMap": "Mapa de acceso"
   },
   "foremanHome": {
     "portal": "Portal de capataz",
     "quickActions": "Acciones rápidas",
     "startJob": "Iniciar trabajo",
-    "schedule": "Agenda",
-    "alerts": "Alertas",
     "activeJobs": "Trabajos activos",
     "crewCommsTitle": "Comunicación de cuadrilla",
     "crewCommsSubtitle": "Mantenga pulsado para hablar con la cuadrilla en un ticket activo. Los clips se guardan en Supabase y la cuadrilla recibe alertas push y correo.",
@@ -2590,7 +2591,7 @@
   },
   "gateHistory": {
     "sendReports": "Enviar informes",
-    "subtitle": "Consulte la actividad y exporte exactamente lo que ve.",
+    "subtitle": "Consulta llegadas, salidas y visitas que requieren atención.",
     "emailReport": "Enviar informe",
     "saveCopy": "Guardar una copia",
     "noFormat": "Primero elija PDF, CSV o DOC.",
@@ -2601,7 +2602,6 @@
     "toggleTimePeriod": "Expandir o contraer período",
     "chooseRecordType": "Elegir tipo de registro",
     "toggleRecordType": "Expandir o contraer tipo de registro",
-    "searchTitle": "Buscar en el historial",
     "emailed": "Informe enviado por correo.",
     "share": "Compartir informe de portería",
     "shareUnavailable": "No se puede compartir el informe en este dispositivo.",
@@ -2630,7 +2630,28 @@
       "vehicles_on_site": "Vehículos en sitio",
       "pending": "Pendientes",
       "needs_review": "Requiere revisión"
-    }
+    },
+    "viewCount": "{{count}} registros en esta vista",
+    "notRecorded": "Sin registro",
+    "openVisit": "Ver visita de {{name}}",
+    "arrived": "Llegada",
+    "plate": "Matrícula del vehículo",
+    "newer": "Más recientes",
+    "older": "Más antiguos",
+    "closeDetails": "Cerrar detalles de la visita",
+    "state": {
+      "on_site": "En el sitio",
+      "departed": "Salió",
+      "pending": "Entrada pendiente",
+      "denied": "Entrada denegada",
+      "reconciled": "Salida conciliada",
+      "review": "Requiere revisión"
+    },
+    "logTitle": "Registro de puerta",
+    "empty": "No hay visitas que coincidan con este sitio, período y búsqueda.",
+    "company": "Empresa",
+    "departed": "Salida",
+    "duration": "Tiempo en el sitio"
   },
   "changeOver": {
     "title": "Panel",
@@ -3144,9 +3165,9 @@
     "workPhone": "Este es tu teléfono de trabajo designado",
     "viewer": "Este dispositivo es un visor",
     "designate": "Usar como mi teléfono de trabajo",
-    "start": "Iniciar servicio",
-    "startConfirm": "Confirma que inicias servicio. Compartir ubicación requiere tu consentimiento guardado y permiso del dispositivo.",
-    "end": "Finalizar servicio",
+    "start": "Iniciar turno",
+    "startConfirm": "Confirma el inicio de tu turno. La ubicación utiliza tu consentimiento y permisos guardados.",
+    "end": "Finalizar turno",
     "sharingOff": "Desactivar ubicación compartida",
     "sharingOn": "Permitir ubicación durante el servicio",
     "freshness": "La ubicación requiere el teléfono designado, servicio activo y consentimiento. iOS no garantiza entrega en segundo plano.",
@@ -3179,7 +3200,13 @@
     "chooseTime": "Elegir fecha y hora",
     "onCallSave": "Aceptar esta ventana de guardia",
     "onCallInvalid": "Elija un final posterior al inicio.",
-    "onCallClear": "Eliminar acuerdo de guardia"
+    "onCallClear": "Eliminar acuerdo de guardia",
+    "onCallOn": "De guardia",
+    "onCallOff": "Fuera de guardia",
+    "onShift": "En turno",
+    "shiftStarted": "Turno iniciado",
+    "shiftEnded": "Turno finalizado",
+    "endConfirm": "¿Seguro que quieres finalizar tu turno?"
   },
   "nativeDictation": {
     "start": "Dictar texto revisado en este dispositivo",
@@ -3293,5 +3320,8 @@
     "decline": "Rechazar asignación",
     "saved": "Respuesta de asignación guardada: {{state}}",
     "accept": "Aceptar asignación"
+  },
+  "gateMap": {
+    "locations": "Ubicaciones de acceso autorizadas"
   }
 }

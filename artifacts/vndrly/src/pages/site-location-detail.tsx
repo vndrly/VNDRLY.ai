@@ -57,6 +57,7 @@ import SphereBackButton from "@/components/sphere-back-button";
 import AfePill from "@/components/afe-pill";
 import SiteStatusToggle from "@/components/site-status-toggle";
 import SiteSafetyReactivateDialog from "@/components/site-safety-reactivate-dialog";
+import FleetSiteTicketPolicy from "@/components/fleet-site-ticket-policy";
 
 export default function SiteLocationDetail({ id }: { id: number }) {
   const { data: site, isLoading } = useGetSiteLocation(id, { query: { enabled: !!id, queryKey: getGetSiteLocationQueryKey(id) } });
@@ -1167,6 +1168,8 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           </CardContent>
         </Card>
       </div>
+
+      <FleetSiteTicketPolicy siteId={id} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

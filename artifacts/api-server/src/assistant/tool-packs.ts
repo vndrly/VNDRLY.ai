@@ -222,6 +222,9 @@ export function toolsForRealtime(args: {
       : voiceWorkflowForPath(path);
   if (workflow !== "auto")
     for (const name of WORKFLOW_TOOLS[workflow]) allowed.add(name);
+  if (/\/(fleet(?:-map|-log)?|gate-map|company-operations)(?:\/|$)/i.test(path)) {
+    for(const tool of ASK_V_TOOL_REGISTRY) if(tool.name.startsWith("query_fleet_") || ["recommend_fleet_destinations","save_fleet_ticket_plan","save_fleet_destination"].includes(tool.name) || tool.name === "query_gate_coverage_map" || tool.name === "query_company_operations" || tool.name === "set_company_operations") allowed.add(tool.name);
+  }
   const inWorkHub = /\/work-hub(?:\/|$)/i.test(path);
   if (/\/(?:profile|compliance)(?:\/|$)/i.test(path)) {
     for (const name of ["get_work_hub_settings", "set_work_hub_language", "get_work_hub_connections", "prepare_work_hub_profile", "confirm_work_hub_profile", "get_work_hub_gate_locations", "prepare_work_hub_gate_location", "confirm_work_hub_gate_location"]) allowed.add(name);

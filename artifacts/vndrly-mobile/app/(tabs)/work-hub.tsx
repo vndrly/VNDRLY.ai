@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions, type DimensionValue } from "react-native";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
+import {useDailySummary} from "@/lib/daily-workspace";
+type DailyWorkHubSummary={calendarCount:number|null;myWorkCount:number|null;attentionCount:number|null;safetyCount:number|null};
 import NativeOperations from "@/components/work-hub/NativeOperations";
 import NativeJournal from "@/components/work-hub/NativeJournal";
 import { useAuth } from "@/hooks/use-auth";
@@ -24,30 +26,31 @@ function TodayItem({ icon, label, value, onPress }: TodayItemProps) {
   </Pressable>;
 }
 
-function TodayCard({ title, width, myWorkTitle, shifts, meetings, announcements, tasks }: { title: string; width: DimensionValue; myWorkTitle: string; shifts: number; meetings: number; announcements: number; tasks: number }) {
+function TodayCard({ title, width, myWorkTitle, daily, tasks }: { title: string; width: DimensionValue; myWorkTitle: string; daily?: DailyWorkHubSummary; tasks?: number }) {
   const colors = useColors();
-  return <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 16, borderWidth: 2, paddingHorizontal: 16, paddingTop: 16, width }}>
+  return <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 16, borderWidth: 2, paddingHorizontal: 16, paddingTop: 16, ...(width === "100%" ? { width } : { flex: 1, minWidth: 0 }) }}>
     <View style={{ alignItems: "center", flexDirection: "row", gap: 10, paddingBottom: 14 }}>
       <View style={{ alignItems: "center", backgroundColor: `${colors.primary}22`, borderRadius: 12, height: 40, justifyContent: "center", width: 40 }}><Feather name="sun" size={21} color={colors.primary} /></View>
       <View><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{title}</Text><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Your schedule, work, and priorities</Text></View>
     </View>
-    <TodayItem label="Calendar" icon="calendar" value={`${shifts + meetings} upcoming`} onPress={() => openModule("calendar")} />
-    <TodayItem label={myWorkTitle} icon="clock" value={`${shifts} shifts`} onPress={() => openModule("payroll-documents")} />
-    <TodayItem label="Activity" icon="bell" value={`${announcements} updates`} onPress={() => openModule("activity")} />
-    <TodayItem label="Tasks & Forms" icon="check-square" value={`${tasks} items`} onPress={() => openModule("tasks-forms")} />
+    <TodayItem label="Calendar" icon="calendar" value={daily?.calendarCount != null ? `${daily.calendarCount} upcoming` : "Unavailable"} onPress={() => openModule("calendar")} />
+    <TodayItem label={myWorkTitle} icon="clock" value={daily?.myWorkCount != null ? `${daily.myWorkCount} items` : "Unavailable"} onPress={() => openModule("my-work")} />
+    <TodayItem label="Needs Attention" icon="bell" value={daily?.attentionCount != null ? `${daily.attentionCount} items` : "Unavailable"} onPress={() => openModule("attention")} />
+    <TodayItem label="Safety" icon="shield" value={daily?.safetyCount != null ? `${daily.safetyCount} items` : "Unavailable"} onPress={() => openModule("safety")} />
+    <TodayItem label="Tasks & Forms" icon="check-square" value={tasks === undefined ? "Unavailable" : `${tasks} items`} onPress={() => openModule("tasks-forms")} />
   </View>;
 }
 
-function CommunicationsCard({ title, width, companyName, meetings }: { title: string; width: DimensionValue; companyName: string; meetings: number }) {
+function CommunicationsCard({ title, width, companyName, meetings }: { title: string; width: DimensionValue; companyName: string; meetings?: number }) {
   const colors = useColors();
-  return <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 16, borderWidth: 2, paddingHorizontal: 16, paddingTop: 16, width }}>
+  return <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 16, borderWidth: 2, paddingHorizontal: 16, paddingTop: 16, ...(width === "100%" ? { width } : { flex: 1, minWidth: 0 }) }}>
     <View style={{ alignItems: "center", flexDirection: "row", gap: 10, paddingBottom: 14 }}>
       <View style={{ alignItems: "center", backgroundColor: `${colors.primary}22`, borderRadius: 12, height: 40, justifyContent: "center", width: 40 }}><Feather name="message-circle" size={21} color={colors.primary} /></View>
       <View><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{title}</Text><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Messages, calls, and invitations</Text></View>
     </View>
     <TodayItem label="Chats" icon="message-square" value="Open" onPress={() => openModule("chat")} />
     <TodayItem label="Calls" icon="phone" value="Recent" onPress={() => openModule("calls")} />
-    <TodayItem label="Invitations" icon="mail" value={`${meetings} upcoming`} onPress={() => openModule("meetings")} />
+    <TodayItem label="Invitations" icon="mail" value={meetings === undefined ? "Unavailable" : `${meetings} upcoming`} onPress={() => openModule("meetings")} />
     <TodayItem label={`${companyName} Conversations`} icon="users" value="Recent" onPress={() => openModule("chat")} />
   </View>;
 }
@@ -57,39 +60,41 @@ function openModule(key: string) { router.push({ pathname: "/work-hub/[module]",
 export default function WorkHubScreen() {
   const { t } = useTranslation();
   const colors = useColors();
-  const { user } = useAuth();
+  const { user, activeMembershipId: selectedMembershipId, activeMembership } = useAuth();
   const { width } = useWindowDimensions();
-  const membership = user?.availableMemberships?.find(item => item.id === user.activeMembershipId);
+  const summary = useDailySummary();
+  const daily = summary.data;
+  const identity = `${user?.id}:${selectedMembershipId ?? user?.activeMembershipId}:${activeMembership?.orgId ?? user?.vendorId}`;
+  const membership = activeMembership ?? user?.availableMemberships?.find(item => item.id === (selectedMembershipId ?? user.activeMembershipId));
   const companyAdmin = user?.role === "admin" || membership?.role === "admin";
-  const activeMembershipId = user?.activeMembershipId;
-  const [homeState, setHomeState] = useState<{ membershipId: number | null | undefined; data: HomeData } | null>(null);
-  const home = homeState && homeState.membershipId === activeMembershipId ? homeState.data : null;
+  const [homeState, setHomeState] = useState<{ identity: string; data: HomeData } | null>(null);
+  const home = homeState && homeState.identity === identity ? homeState.data : null;
   const modules = mobileWorkHubModules(width >= 768, companyAdmin, membership?.orgName, home?.capabilities, t("filesInventory.title"));
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true; setError("");
-    void apiFetch<HomeData>("/api/work-hub/home").then(value => { if (active) setHomeState({ membershipId: activeMembershipId, data: value }); }).catch(() => { if (active) setError("Unable to load current Work Hub summaries. Tap any card to open its records."); });
+    void apiFetch<HomeData>("/api/work-hub/home").then(value => { if (active) setHomeState({ identity, data: value }); }).catch(() => { if (active) setError("Unable to load current Work Hub summaries. Tap any card to open its records."); });
     return () => { active = false; };
-  }, [activeMembershipId]);
-  const cardWidth = width >= 768 ? "48.5%" : "100%";
-  const tasks = home?.tasks?.length ?? 0, announcements = home?.announcements?.length ?? 0, shifts = home?.shifts?.length ?? 0, meetings = home?.meetings?.length ?? 0;
+  }, [identity]);
+  const cardWidth = width >= 768 ? "auto" : "100%";
+  const tasks = home?.tasks?.length, meetings = home?.meetings?.length;
   const myWorkTitle = user?.managedSubcontractor ? "My Hours" : "My Work";
   const utilityModules = [
     { key: "search", label: "Search", icon: "search" },
     { key: "files-notes", label: t("filesInventory.title"), icon: "folder" },
     { key: "implementation-exports", label: "Exports", icon: "download" },
-    { key: "site-presence", label: "Site & Safety", icon: "shield" },
+    { key: "site-presence", label: "Site Presence", icon: "map-pin" },
     ...modules.filter(({ key }) => key === "operations-health"),
   ].filter(({ key }) => key !== "implementation-exports" ||
     Boolean(home?.capabilities?.canViewExports && home.capabilities.allowedExportDatasets.length > 0));
   return <ScreenSafeArea style={{ backgroundColor: colors.background }}><ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
     <WorkHubPageTitle title="Work Hub" />
-    <NativeOperations />
+    <NativeOperations compact />
     <NativeJournal />
     {!home && !error ? <ActivityIndicator color={colors.primary} accessibilityLabel="Loading Work Hub summaries" /> : null}
     {error ? <Text accessibilityRole="alert" style={{ color: colors.mutedForeground }}>{error}</Text> : null}
     <View style={{ flexDirection: width >= 768 ? "row" : "column", flexWrap: "wrap", gap: 12 }}>
-      <TodayCard title="Today" width={cardWidth} myWorkTitle={myWorkTitle} shifts={shifts} meetings={meetings} announcements={announcements} tasks={tasks} />
+      <TodayCard title="Today" width={cardWidth} myWorkTitle={myWorkTitle} daily={daily} tasks={tasks} />
       <CommunicationsCard title="Communications" width={cardWidth} companyName={membership?.orgName?.trim() || "Company"} meetings={meetings} />
     </View>
     {utilityModules.length ? <View style={{ gap: 10 }}><Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>More tools</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>{utilityModules.map(({ key, icon, label }) => <Pressable key={key} accessibilityRole="button" accessibilityLabel={`Open ${label}`} onPress={() => openModule(key)} style={({ pressed }) => ({ alignItems: "center", backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 14, borderWidth: 2, flexDirection: "row", gap: 8, opacity: pressed ? .72 : 1, paddingHorizontal: 14, paddingVertical: 11 })}><Feather name={icon as React.ComponentProps<typeof Feather>["name"]} size={18} color={colors.primary} /><Text style={{ color: colors.text, fontWeight: "600" }}>{label}</Text></Pressable>)}</View></View> : null}

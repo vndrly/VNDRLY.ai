@@ -34,6 +34,10 @@ const GATE_TYPE_CATEGORY: Readonly<Record<string, GateNotificationCategory>> = {
   safety_stop_work: "alerts",
   safety_event_hipo: "alerts",
   gate_closed: "alerts",
+  gate_post_departure: "alerts",
+  gate_post_escalation: "alerts",
+  gate_sharing_disabled: "alerts",
+  gate_sharing_escalation: "alerts",
   gate_access_changed_urgent: "alerts",
 };
 

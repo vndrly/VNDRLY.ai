@@ -70,7 +70,6 @@ describe("buildTicketProofPacket", () => {
     expect(packet.missingEvidence).toEqual([
       "checkout GPS/time",
       "field notes/photos",
-      "ending mileage",
       "parts/labor/equipment line items",
       "partner/admin approval",
       "payment record",

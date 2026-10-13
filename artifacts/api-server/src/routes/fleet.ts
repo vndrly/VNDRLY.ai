@@ -19,6 +19,16 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/runs/:id/location-history",endpoint(req=>service.locationHistory(actor(req),z.uuid().parse(req.params.id))));
+router.get("/fleet/map-context",endpoint(req=>service.mapContext(actor(req))));
+router.get("/fleet/commercial",endpoint(req=>service.commercialSettings(actor(req),req.query.siteId?z.coerce.number().int().positive().parse(req.query.siteId):undefined)));
+router.get("/fleet/destinations/recommend",endpoint(req=>service.recommendDestinations(actor(req),z.coerce.number().int().positive().parse(req.query.siteId),z.string().trim().max(80).optional().parse(req.query.material))));
+router.post("/fleet/destinations",endpoint(req=>service.saveDestination(actor(req),req.body)));
+router.post("/fleet/commercial/default",endpoint(req=>service.saveCommercialDefault(actor(req),req.body)));
+router.get("/fleet/tickets/:ticketId/plan",endpoint(req=>service.ticketPlan(actor(req),z.coerce.number().int().positive().parse(req.params.ticketId))));
+router.post("/fleet/tickets/:ticketId/plan",endpoint(req=>service.saveTicketPlan(actor(req),z.coerce.number().int().positive().parse(req.params.ticketId),req.body)));
+router.post("/fleet/tickets/:ticketId/plan/close",endpoint(req=>service.closeTicketPlan(actor(req),z.coerce.number().int().positive().parse(req.params.ticketId),req.body)));
+
 router.get(
   "/fleet/drivers/:driverUserId/availability",
   endpoint((req) =>

@@ -144,6 +144,16 @@ export async function resolveNotificationDestination(
     return true;
   };
   try {
+    const ticketId=path.match(/^\/tickets?\/([1-9]\d*)$/)?.[1];
+    if(ticketId){
+      const id=positiveId(ticketId);if(keys.length||!id)return null;
+      const {canReadTicket,loadFieldTicketAccessRow}=await import("./field-ticket-access");
+      if(session.role==="field_employee"){
+        const ticket=await loadFieldTicketAccessRow(id);
+        if(!ticket||!session.vendorId||ticket.vendorId!==session.vendorId)return null;
+      }
+      return await canReadTicket(session,id)?`/tickets/${id}`:null;
+    }
     // Legacy office rows carry exact subjects in their durable dedupe key.
     // Keep their original href/response shape; never authorize a whole page
     // merely because the recipient once had a notification for it.

@@ -1,0 +1,17 @@
+import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
+import {render,screen,waitFor,cleanup} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import {QueryClient,QueryClientProvider} from "@tanstack/react-query";
+const auth=vi.hoisted(()=>({user:{id:1} as {id:number}|null}));
+vi.mock("@/hooks/use-auth",()=>({useAuth:()=>auth}));
+vi.mock("@/components/brand-pill-button",()=>({default:({children,onClick,disabled}:{children:React.ReactNode;onClick:()=>void;disabled:boolean})=><button disabled={disabled} onClick={onClick}>{children}</button>}));
+import FleetSiteTicketPolicy from "./fleet-site-ticket-policy";
+const response=(body:unknown,status=200)=>({ok:status>=200&&status<300,status,json:async()=>body}) as Response;
+function mount(){return render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><FleetSiteTicketPolicy siteId={9}/></QueryClientProvider>);}
+beforeEach(()=>{auth.user={id:1};});afterEach(()=>{cleanup();vi.unstubAllGlobals();});
+describe("Fleet site ticket requirement",()=>{
+ it("does not fetch without an authenticated user",()=>{auth.user=null;const fetcher=vi.fn();vi.stubGlobal("fetch",fetcher);mount();expect(fetcher).not.toHaveBeenCalled();expect(screen.queryByText("Fleet ticket requirement")).toBeNull();});
+ it("shows the server requirement without editing for read-only viewers",async()=>{const fetcher=vi.fn().mockResolvedValue(response({version:1,mode:"singles",canManage:false}));vi.stubGlobal("fetch",fetcher);mount();await screen.findByText("Singles");expect(screen.queryByRole("combobox")).toBeNull();expect(screen.queryByRole("button",{name:"Save requirement"})).toBeNull();expect(fetcher).toHaveBeenCalledTimes(1);});
+ it("saves only explicitly and submits the server version",async()=>{const fetcher=vi.fn().mockResolvedValueOnce(response({version:3,mode:null,canManage:true})).mockResolvedValueOnce(response({version:4,mode:"batch",canManage:true}));vi.stubGlobal("fetch",fetcher);mount();const selector=await screen.findByRole("combobox");await userEvent.selectOptions(selector,"batch");expect(fetcher).toHaveBeenCalledTimes(1);await userEvent.click(screen.getByRole("button",{name:"Save requirement"}));await screen.findByText("Fleet ticket requirement saved.");expect(fetcher.mock.calls[1][1]).toMatchObject({method:"PATCH",credentials:"include",body:JSON.stringify({expectedVersion:3,mode:"batch"})});});
+ it("preserves a draft on version conflict, refetches, and retries using the new version",async()=>{const fetcher=vi.fn().mockResolvedValueOnce(response({version:1,mode:null,canManage:true})).mockResolvedValueOnce(response({},409)).mockResolvedValueOnce(response({version:2,mode:"singles",canManage:true})).mockResolvedValueOnce(response({version:3,mode:"batch",canManage:true}));vi.stubGlobal("fetch",fetcher);mount();const selector=await screen.findByRole("combobox");await userEvent.selectOptions(selector,"batch");await userEvent.click(screen.getByRole("button",{name:"Save requirement"}));await screen.findByText(/Your selection is preserved/);await waitFor(()=>expect(screen.getByText("Singles",{selector:"strong"}).tagName).toBe("STRONG"));expect((selector as HTMLSelectElement).value).toBe("batch");await userEvent.click(screen.getByRole("button",{name:"Save requirement"}));await screen.findByText("Fleet ticket requirement saved.");expect(fetcher.mock.calls[3][1].body).toBe(JSON.stringify({expectedVersion:2,mode:"batch"}));});
+});

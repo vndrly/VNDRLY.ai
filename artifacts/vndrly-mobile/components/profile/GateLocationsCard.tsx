@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View, Pressable, ScrollView, Modal, useWindowDimensions } from "react-native";
 import { useTranslation } from "react-i18next";
-import * as Location from "expo-location";
+import { captureGatePosition } from "@/lib/gate-location-capture";
 import { randomUUID } from "expo-crypto";
+import { Feather } from "@expo/vector-icons";
+import LayeredPillButton from "@/components/LayeredPillButton";
 import TogglePillButton from "@/components/TogglePillButton";
 import MapboxNativeMap from "@/components/MapboxNativeMap";
 import { useColors } from "@/hooks/useColors";
@@ -44,6 +46,8 @@ export default function GateLocationsCard() {
 function GateLocationsPanel() {
   const { t } = useTranslation(),
     colors = useColors();
+  const { width } = useWindowDimensions();
+  const [sitePicker, setSitePicker] = useState(false), [siteSearch, setSiteSearch] = useState(""), [manualPosition, setManualPosition] = useState(false);
   const [allowed, setAllowed] = useState(false),
     [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false);
@@ -55,6 +59,18 @@ function GateLocationsPanel() {
   const [error, setError] = useState(""),
     [saved, setSaved] = useState(false);
   const inFlight = useRef(false);
+  const locationRequest = useRef<AbortController|null>(null);
+  const [locating,setLocating] = useState(false);
+  useEffect(()=>()=>{locationRequest.current?.abort();locationRequest.current=null;},[]);
+  function cancelLocation(){locationRequest.current?.abort();locationRequest.current=null;setLocating(false);}
+  function closeEditor(){cancelLocation();setDraft(null);setReview(null);setError("");}
+  async function locate(){
+    if(locationRequest.current){cancelLocation();return;}
+    const controller=new AbortController();locationRequest.current=controller;setLocating(true);setError("");
+    try{const coords=await captureGatePosition(controller.signal);if(locationRequest.current===controller)setDraft(current=>current?{...current,latitude:String(coords.latitude),longitude:String(coords.longitude)}:null);}
+    catch(error){if(locationRequest.current===controller&&!controller.signal.aborted){setError(t(error instanceof Error&&error.message==="denied"?"gateLocations.locationDenied":"gateLocations.locationTimeout"));setManualPosition(true);}}
+    finally{if(locationRequest.current===controller){locationRequest.current=null;setLocating(false);}}
+  }
   useEffect(() => {
     let live = true;
     apiFetch<{ capabilities?: { canManageGateLocations?: boolean } }>(
@@ -90,6 +106,8 @@ function GateLocationsPanel() {
     );
   }
   function edit(gate?: Gate) {
+    cancelLocation();
+    setManualPosition(false);
     setReview(null);
     setSaved(false);
     setDraft(
@@ -149,7 +167,7 @@ function GateLocationsPanel() {
   if (!allowed) return null;
   return (
     <View style={styles.card} testID="gate-locations-card">
-      <TogglePillButton
+      <LayeredPillButton height={40} style={{ alignSelf: "stretch" }}
         disabled={busy}
         onPress={() =>
           run(async () => {
@@ -165,13 +183,15 @@ function GateLocationsPanel() {
           })
         }
       >
-        {t("gateLocations.title")}
-      </TogglePillButton>
+        <Feather name="map-pin" size={16} color="#ffffff" />
+        <Text style={styles.actionText}>{t("gateLocations.title")}</Text>
+        <Feather name="chevron-right" size={18} color="#ffffff" style={{ marginLeft: "auto" }} />
+      </LayeredPillButton>
       {open ? (
         <View
           style={[
             styles.panel,
-            { backgroundColor: colors.card, borderColor: colors.border },
+            { backgroundColor: colors.card, borderColor: colors.primary },
           ]}
         >
           <Text style={{ color: colors.text }}>
@@ -182,55 +202,16 @@ function GateLocationsPanel() {
               {t("gateLocations.noSites")}
             </Text>
           ) : null}
-          {sites.map((site) => (
-            <TogglePillButton
-              key={site.id}
-              disabled={busy}
-              onPress={() =>
-                run(async () => {
-                  setSiteId(site.id);
-                  setDraft(null);
-                  setReview(null);
-                  await loadGates(site.id);
-                })
-              }
-            >
-              {site.name}
-            </TogglePillButton>
-          ))}
-          {siteId ? (
-            <>
-              <Text style={{ color: colors.text }}>
-                {sites.find((s) => s.id === siteId)?.name}
-              </Text>
-              {gates.map((gate) => (
-                <View key={gate.id}>
-                  <Text style={{ color: colors.text }}>
-                    {gate.name} ·{" "}
-                    {t(
-                      gate.active
-                        ? "gateLocations.active"
-                        : "gateLocations.inactive",
-                    )}
-                  </Text>
-                  <TogglePillButton disabled={busy} onPress={() => edit(gate)}>
-                    {`${t("gateLocations.edit")}: ${gate.name}`}
-                  </TogglePillButton>
-                </View>
-              ))}
-              <TogglePillButton disabled={busy} onPress={() => edit()}>
-                {t("gateLocations.add")}
-              </TogglePillButton>
-            </>
-          ) : null}
+          <Pressable accessibilityRole="button" accessibilityLabel="Choose site" accessibilityState={{expanded:sitePicker}} disabled={busy} onPress={()=>setSitePicker(!sitePicker)} style={[styles.input,{borderColor:colors.primary,flexDirection:"row",justifyContent:"space-between",alignItems:"center"}]}><View style={{gap:4}}><Text style={{color:colors.mutedForeground,fontSize:12}}>Site location</Text><Text style={{color:colors.text,fontWeight:"700"}}>{sites.find(site=>site.id===siteId)?.name??"Choose a site"}</Text></View><Feather name={sitePicker?"chevron-up":"chevron-down"} size={18} color={colors.primary}/></Pressable>
+          {sitePicker&&<View style={{gap:8}}><TextInput accessibilityLabel="Search sites" placeholder="Search authorized sites" placeholderTextColor={colors.mutedForeground} value={siteSearch} onChangeText={setSiteSearch} style={[styles.input,{borderColor:colors.primary,color:colors.text}]}/><ScrollView style={{maxHeight:240}}>{sites.filter(site=>site.name.toLowerCase().includes(siteSearch.trim().toLowerCase())).map(site=><Pressable key={site.id} accessibilityRole="button" accessibilityLabel={site.name} disabled={busy} onPress={()=>run(async()=>{await loadGates(site.id);setSiteId(site.id);setDraft(null);setReview(null);setSitePicker(false);})} style={{padding:14,minHeight:44,borderBottomWidth:1,borderBottomColor:colors.border}}><Text style={{color:site.id===siteId?colors.primary:colors.text}}>{site.name}</Text></Pressable>)}</ScrollView></View>}
+          {siteId&&<><View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:10}}><Text style={{color:colors.mutedForeground}}>{gates.length} {gates.length===1?"gate":"gates"}</Text><TogglePillButton compactOnTablet solid disabled={busy} onPress={()=>edit()}>{t("gateLocations.add")}</TogglePillButton></View>{!gates.length&&<Text style={{color:colors.mutedForeground}}>No gates yet. Add the first entry point for this site.</Text>}{gates.map(gate=><View key={gate.id} style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center",gap:12,padding:14,borderWidth:2,borderColor:colors.primary,borderRadius:14}}><View style={{flex:1,gap:5}}><Text style={{color:colors.text,fontWeight:"700",fontSize:16}}>{gate.name}</Text><Text style={{color:colors.mutedForeground,fontSize:12}}>{t(gate.active?"gateLocations.active":"gateLocations.inactive")} · {gate.latitude==null||gate.longitude==null?"Position needed":gate.geofenceRadiusM+" m boundary"}</Text></View><TogglePillButton compactOnTablet accessibilityLabel={t("gateLocations.edit")+": "+gate.name} disabled={busy} onPress={()=>edit(gate)}>{t("gateLocations.edit")}</TogglePillButton></View>)}</>}
+          <Modal visible={!!draft} transparent animationType="fade" onRequestClose={()=>{if(!busy)closeEditor();}}><View style={{flex:1,backgroundColor:"rgba(0,0,0,0.65)",justifyContent:"center",alignItems:"center",padding:16}}><View style={{width:"100%",maxWidth:780,maxHeight:"94%",borderWidth:2,borderColor:colors.primary,borderRadius:18,backgroundColor:colors.card,overflow:"hidden"}}><View style={{padding:18,flexDirection:"row",justifyContent:"space-between",alignItems:"center",borderBottomWidth:1,borderBottomColor:colors.border}}><View style={{gap:4}}><Text style={{color:colors.text,fontSize:20,fontWeight:"700"}}>{review?"Review gate":draft?.id?"Edit gate":"Add gate"}</Text><Text style={{color:colors.mutedForeground}}>{sites.find(site=>site.id===siteId)?.name}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cancel gate edit" disabled={busy} onPress={closeEditor} style={{padding:10}}><Feather name="x" size={22} color={colors.text}/></Pressable></View><ScrollView contentContainerStyle={{padding:18,gap:14}}>
           {draft && !review ? (
             <>
               {(
                 [
                   ["name", "name"],
-                  ["latitude", "latitude"],
-                  ["longitude", "longitude"],
-                  ["radius", "radius"],
+                                    ["radius", "radius"],
                 ] as const
               ).map(([key, label]) => (
                 <View key={key}>
@@ -246,35 +227,25 @@ function GateLocationsPanel() {
                     }
                     style={[
                       styles.input,
-                      { color: colors.text, borderColor: colors.border },
+                      { color: colors.text, borderColor: colors.primary },
                     ]}
                   />
                 </View>
               ))}
-              <TogglePillButton
+              <Text style={{color:colors.mutedForeground}}>Stand at the gate to capture its position, or enter coordinates.</Text>
+              <View style={{flexDirection:"row",gap:10,flexWrap:"wrap"}}>
+              <TogglePillButton compactOnTablet solid
                 disabled={busy}
-                onPress={() =>
-                  run(async () => {
-                    const permission =
-                      await Location.requestForegroundPermissionsAsync();
-                    if (permission.status !== "granted") {
-                      setError(t("gateLocations.locationDenied"));
-                      return;
-                    }
-                    const { coords } = await Location.getCurrentPositionAsync(
-                      {},
-                    );
-                    setDraft({
-                      ...draft,
-                      latitude: String(coords.latitude),
-                      longitude: String(coords.longitude),
-                    });
-                  })
-                }
+                onPress={locate}
               >
-                {t("gateLocations.currentLocation")}
+                {locating?t("gateLocations.cancelLocation"):t("gateLocations.currentLocation")}
               </TogglePillButton>
-              <TogglePillButton
+              <TogglePillButton compactOnTablet disabled={busy} onPress={()=>{cancelLocation();setManualPosition(!manualPosition);}}>{manualPosition?"Hide coordinates":"Enter coordinates"}</TogglePillButton>
+              </View>
+              {manualPosition&&<View style={{flexDirection:width>=768?"row":"column",gap:10}}>{(["latitude","longitude"] as const).map(key=><View key={key} style={{flex:1,gap:6}}><Text style={{color:colors.text}}>{t("gateLocations."+key)}</Text><TextInput accessibilityLabel={t("gateLocations."+key)} value={draft[key]} editable={!busy} keyboardType="numbers-and-punctuation" onChangeText={value=>setDraft({...draft,[key]:value})} style={[styles.input,{borderColor:colors.primary,color:colors.text}]}/></View>)}</View>}
+              {!!draft.latitude&&!!draft.longitude&&!manualPosition&&<Text style={{color:colors.mutedForeground}}>Position: {Number(draft.latitude).toFixed(5)}, {Number(draft.longitude).toFixed(5)}</Text>}
+
+              <View style={{flexDirection:"row",gap:10,flexWrap:"wrap",justifyContent:"space-between"}}><TogglePillButton compactOnTablet
                 disabled={busy}
                 color={draft.active ? "red" : "green"}
                 onPress={() => setDraft({ ...draft, active: !draft.active })}
@@ -285,8 +256,8 @@ function GateLocationsPanel() {
                     : "gateLocations.reactivate",
                 )}
               </TogglePillButton>
-              <TogglePillButton
-                disabled={busy || !values()}
+              <TogglePillButton compactOnTablet
+                disabled={busy || locating || !values()}
                 onPress={() =>
                   run(async () => {
                     const input = values();
@@ -303,7 +274,7 @@ function GateLocationsPanel() {
                 }
               >
                 {t("gateLocations.review")}
-              </TogglePillButton>
+              </TogglePillButton></View>
             </>
           ) : null}
           {previewValues ? (
@@ -334,7 +305,7 @@ function GateLocationsPanel() {
                     : "gateLocations.inactive",
                 )}
               </Text>
-              <TogglePillButton
+              <TogglePillButton compactOnTablet
                 disabled={busy}
                 onPress={() =>
                   run(async () => {
@@ -360,6 +331,8 @@ function GateLocationsPanel() {
               </TogglePillButton>
             </>
           ) : null}
+          {error&&<Text accessibilityRole="alert" style={{color:colors.destructive}}>{error}</Text>}
+          </ScrollView></View></View></Modal>
           {saved ? (
             <Text accessibilityRole="alert" style={{ color: colors.text }}>
               {t("gateLocations.saved")}
@@ -367,7 +340,7 @@ function GateLocationsPanel() {
           ) : null}
         </View>
       ) : null}
-      {error ? (
+      {error && !draft ? (
         <Text accessibilityRole="alert" style={{ color: colors.text, backgroundColor: colors.card, borderColor: colors.destructive, borderWidth: 1, borderRadius: 6, padding: 8 }}>
           {error}
         </Text>
@@ -376,13 +349,14 @@ function GateLocationsPanel() {
   );
 }
 const styles = StyleSheet.create({
-  card: { marginBottom: 12 },
+  card: { marginHorizontal: 16, marginTop: 12, alignSelf: "stretch" },
+  actionText: { color: "#ffffff", fontFamily: "Inter_600SemiBold", fontSize: 15, textShadowColor: "rgba(0, 0, 0, 0.63)", textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
   panel: {
     padding: 12,
     gap: 10,
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 2,
+    borderRadius: 14,
     marginTop: 8,
   },
-  input: { borderWidth: 1, padding: 10, borderRadius: 6, minHeight: 44 },
+  input: { borderWidth: 2, padding: 10, borderRadius: 10, minHeight: 44 },
 });

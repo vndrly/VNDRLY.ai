@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import pg from "pg";
 import { logger } from "./logger";
+import {currentDatabaseRealm} from '@workspace/db/realm';
 
 // ── Notification events pub/sub — Task #48 ──────────────────────────────────
 //
@@ -267,6 +268,7 @@ export function publishNotificationStateChanged(input: {
 }
 
 function publishNotificationEvent(ev: NotificationEvent): void {
+  if(currentDatabaseRealm()==='demo')return;
   void publishViaPool(ev).catch((err) => {
     if (!(err instanceof PoolUnavailableError)) {
       logger.error(

@@ -25,3 +25,5 @@ describe("native operations authority", () => {
     expect(nativeRequestRoute("1b5f6fa0-f191-427a-aee8-11541a44c4e3")).toBe("/work-hub/native-operations?requestId=1b5f6fa0-f191-427a-aee8-11541a44c4e3");
   });
 });
+
+it("honors on-call independently while retaining company, consent, and work-phone boundaries",()=>{const onCall={...status,duty:{active:false},onCallActive:true};expect(maySupplyFreshLocation(onCall,"phone")).toBe(true);expect(maySupplyFreshLocation({...onCall,onCallActive:false},"phone")).toBe(false);expect(maySupplyFreshLocation({...onCall,consent:{locationSharing:false}},"phone")).toBe(false);expect(maySupplyFreshLocation({...onCall,policy:{enabled:false}},"phone")).toBe(false);expect(maySupplyFreshLocation(onCall,"viewer")).toBe(false);});

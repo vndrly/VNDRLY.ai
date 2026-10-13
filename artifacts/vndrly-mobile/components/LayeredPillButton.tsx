@@ -5,6 +5,7 @@ import {
   StyleSheet,
   View,
   type ImageSourcePropType,
+  type PressableProps,
   type GestureResponderEvent,
   type StyleProp,
   type ViewStyle,
@@ -80,7 +81,7 @@ export const LAYERED_PILL_BUTTON_TEXT = {
   ...TEXT_SHADOW.deep,
 } as const;
 
-export interface LayeredPillButtonProps {
+export interface LayeredPillButtonProps extends Pick<PressableProps, "accessibilityState" | "accessibilityLabel" | "accessibilityHint"> {
   children: React.ReactNode;
   onPress?: (e: GestureResponderEvent) => void;
   disabled?: boolean;
@@ -114,6 +115,9 @@ export default function LayeredPillButton({
   color,
   inactive,
   source,
+  accessibilityState,
+  accessibilityLabel,
+  accessibilityHint,
 }: LayeredPillButtonProps) {
   const brand = useBrand();
   const targetHex = color ?? brand.primary ?? "#1f9a3d";
@@ -128,6 +132,10 @@ export default function LayeredPillButton({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ ...accessibilityState, disabled: !!(disabled || loading), busy: !!loading }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       onPress={onPress}
       disabled={disabled || loading}
       testID={testID}

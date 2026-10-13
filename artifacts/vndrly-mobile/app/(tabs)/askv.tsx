@@ -565,7 +565,7 @@ export default function AskVScreen() {
               styles.input,
               {
                 color: colors.foreground,
-                borderColor: colors.border,
+                borderColor: brand.primary,
                 backgroundColor: colors.card,
               },
             ]}
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 64,
     maxHeight: 120,
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 10,

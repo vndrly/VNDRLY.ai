@@ -546,7 +546,7 @@ describe("TicketDetailScreen — proof-to-pay packet", () => {
 
     expect(screen.getByTestId("ticket-proof-packet-card")).toBeTruthy();
     expect(screen.getByTestId("ticket-proof-packet-progress").textContent)
-      .toContain("6 of 6 complete");
+      .toContain("5 of 5 complete");
     expect(screen.getByTestId("ticket-proof-packet-section-field_notes").textContent)
       .toContain("Field Notes");
     expect(screen.getByTestId("ticket-proof-packet-section-mileage").textContent)

@@ -2,7 +2,9 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import request from "supertest";
 import Stripe from "stripe";
 const mocks = vi.hoisted(() => ({ accept: vi.fn(), db: vi.fn() }));
-vi.mock("@workspace/db", () => ({
+vi.mock("@workspace/db", async () => ({
+  ...(await import("@workspace/db/realm")),
+  initializeDemoDatabase: vi.fn(async () => { throw Error("Anonymous billing requests must not initialize demo storage"); }),
   db: { select: mocks.db },
   usersTable: { id: "id" },
 }));

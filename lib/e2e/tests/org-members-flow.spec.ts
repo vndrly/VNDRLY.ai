@@ -307,11 +307,16 @@ test("partner members flow: add → AP → member → remove (AP option visible)
   await partnerEditDialog
     .locator('[data-testid="select-edit-partner-member-role"]')
     .click();
+  const apRoleResponse = page.waitForResponse(response =>
+    response.url().endsWith(`/api/orgs/partner/${seed.partnerId}/members/${membershipId}`)
+    && response.request().method() === "PATCH",
+  );
   await page
     .locator(
       '[data-testid="select-edit-partner-member-role-ap"]',
     )
     .click();
+  expect((await apRoleResponse).ok()).toBeTruthy();
   await expect(page.getByText(/Role updated/i).first()).toBeVisible();
   // Verify persistence at the DB level so the assertion does not race
   // a stale UI cache.
@@ -321,17 +326,20 @@ test("partner members flow: add → AP → member → remove (AP option visible)
   );
   expect(apCheck.rows[0].role).toBe("ap");
 
-  // Wait for the previous "Role updated" toast to dismiss so the next
-  // assertion below can't race-match it before the AP→member request
-  // has finished. Sonner stacks toasts in DOM order, so .first() can
-  // otherwise satisfy itself against the still-visible old one.
-  await expect(page.getByText(/Role updated/i)).toHaveCount(0);
-
-  // AP -> member via the edit-member modal.
+  // Synchronize on the exact saved role and next PATCH, rather than waiting
+  // for a toast timer or accidentally matching the previous success toast.
+  await expect(partnerEditDialog).toBeVisible();
+  await expect(partnerEditDialog.locator('[data-testid="select-edit-partner-member-role"]'))
+    .toContainText(/Accounts Payable/i);
+  const memberRoleResponse = page.waitForResponse(response =>
+    response.url().endsWith(`/api/orgs/partner/${seed.partnerId}/members/${membershipId}`)
+    && response.request().method() === "PATCH",
+  );
   await partnerEditDialog
     .locator('[data-testid="select-edit-partner-member-role"]')
     .click();
   await page.getByRole("option", { name: "Member", exact: true }).click();
+  expect((await memberRoleResponse).ok()).toBeTruthy();
   await expect(page.getByText(/Role updated/i).first()).toBeVisible();
   const memberCheck = await pool.query<{ role: string }>(
     `SELECT role FROM user_org_memberships WHERE id = $1`,

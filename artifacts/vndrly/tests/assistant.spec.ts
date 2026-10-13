@@ -1591,6 +1591,7 @@ describe("knowledge corpus references the live app", () => {
     "ask-vndrly": null,
     // Concept docs introduced when askV got read-only DB tools — they
     // describe a capability set, not a single page.
+    "ios-unified-operations": null, // Cross-surface capabilities, not a single page title.
     "data-tools-overview": null,
     "data-tools-field": null,
     "metrics-collected": null,

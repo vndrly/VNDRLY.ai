@@ -8,13 +8,15 @@ import { View, Text, TouchableOpacity, ActivityIndicator, AppState, type AppStat
 // no longer imported here.
 import { Feather } from "@expo/vector-icons";
 import AmberButton from "@/components/AmberButton";
-import BluePillButton from "@/components/BluePillButton";
+import LayeredPillButton from "@/components/LayeredPillButton";
+import { useBrand } from "@/hooks/use-brand";
+import { pickTogglePillSrc } from "@/lib/pick-toggle-pill";
 import Pill9Slice from "@/components/Pill9Slice";
 import { apiFetch } from "@/lib/api";
 import { getApiErrorCode, inlineErrorForTicketAction } from "@/lib/apiErrors";
 import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
-const BLUE_PILL = require("@/assets/pill-stack/blue-hot.png");
+
 
 type RosterEntry = {
   id: number;
@@ -36,10 +38,11 @@ function CrewChip({
   removeLabel?: string;
   testID?: string;
 }) {
+  const brand = useBrand();
   const height = PILL_HEIGHT_PX;
   return (
     <View style={[chipStyles.chip, { height }]} testID={testID}>
-      <Pill9Slice source={BLUE_PILL} height={height} borderRadius={height / 2} />
+      <Pill9Slice source={pickTogglePillSrc(brand.primary, brand.name)} height={height} borderRadius={height / 2} />
       <View style={chipStyles.contentRow}>
         <Text style={chipStyles.label} numberOfLines={1}>{name}</Text>
         {onRemove && (
@@ -59,18 +62,17 @@ function CrewChip({
 
 function AddChip({ label, onPress, disabled, testID }: { label: string; onPress: () => void; disabled?: boolean; testID?: string }) {
   return (
-    <BluePillButton
+    <LayeredPillButton
       onPress={onPress}
       disabled={disabled}
       testID={testID}
       style={chipStyles.chip}
-      textStyle={chipStyles.label}
     >
       <>
         <Feather name="plus" size={12} color="#ffffff" />
         <Text style={chipStyles.label} numberOfLines={1}>{label}</Text>
       </>
-    </BluePillButton>
+    </LayeredPillButton>
   );
 }
 
@@ -149,6 +151,7 @@ export default function CrewTimeSection({
   colors: import("@/hooks/useColors").AppColors;
   refreshHandleRef?: React.MutableRefObject<CrewTimeSectionHandle | null>;
 }) {
+  const brand = useBrand();
   const { t } = useTranslation();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [summary, setSummary] = useState<LaborSummary | null>(null);
@@ -552,7 +555,7 @@ export default function CrewTimeSection({
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: brand.primary }]}>
       <View style={styles.header}>
         <Feather name="users" size={16} color={colors.primary} />
         <Text style={[styles.title, { color: colors.foreground }]}>{t("crew.title")}</Text>
@@ -616,7 +619,7 @@ export default function CrewTimeSection({
           onPress={() => { setPickerOpen(false); setPickerError(null); }}
         >
           <Pressable
-            style={[modalStyles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={[modalStyles.sheet, { backgroundColor: colors.card, borderColor: brand.primary }]}
             onPress={(e) => e.stopPropagation()}
           >
             <Text style={[modalStyles.title, { color: colors.foreground }]}>{t("crew.addToRoster")}</Text>
@@ -859,7 +862,7 @@ export default function CrewTimeSection({
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 12, padding: 12, marginVertical: 8 },
+  card: { borderWidth: 2, borderRadius: 14, padding: 12, marginVertical: 8 },
   header: { flexDirection: "row", alignItems: "center", gap: 6 },
   title: { fontSize: 15, fontWeight: "600", marginLeft: 4 },
   warn: { flexDirection: "row", alignItems: "center", padding: 8, borderRadius: 6, borderWidth: 1, marginTop: 8 },
@@ -915,7 +918,7 @@ const modalStyles = StyleSheet.create({
     justifyContent: "center", alignItems: "center", padding: 20,
   },
   sheet: {
-    width: "100%", maxWidth: 380, borderRadius: 12, borderWidth: 1, padding: 16,
+    width: "100%", maxWidth: 380, borderRadius: 14, borderWidth: 2, padding: 16,
   },
   title: { fontSize: 16, fontWeight: "700", marginBottom: 8 },
   option: {

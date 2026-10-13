@@ -7,6 +7,7 @@ vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0,
 // Dedicated Fleet module tests cover the real account and permission callbacks.
 vi.mock("@/lib/fleet-background-location-native", () => ({}));
 vi.mock("@/lib/fleet-evidence-device-native", () => ({}));
+vi.mock("@/lib/native-operations-runtime", () => ({ startNativeOperationsRuntime: vi.fn(async () => () => undefined) }));
 
 // Task #186 originally proved ActiveOrgIndicator was wired into the
 // native Expo Router header. The mobile shell no longer uses a root
@@ -207,6 +208,8 @@ vi.mock("@/lib/api", () => ({
 }));
 
 vi.mock("@/lib/auth", () => ({
+  captureAuthScope: () => ({ userId: 1, token: "token", generation: 0 }),
+  isAuthScopeCurrent: () => true,
   getCachedToken: () => "token",
   getCachedRole: () => "field_employee",
   getToken: vi.fn(async () => "token"),
@@ -255,5 +258,8 @@ describe("ActiveOrgIndicator wiring (Task #186)", () => {
     render(<RootLayout />);
     expect(tabsCalls).toEqual([]);
     expect(stackCalls).toEqual([]);
-  }, 15_000);
+  // Like the tab shell above, this includes a cold dynamic import of the real
+  // shell graph. Concurrent full-suite transforms can exceed 15 seconds; keep
+  // the same bounded import allowance while retaining the render assertions.
+  }, 30_000);
 });

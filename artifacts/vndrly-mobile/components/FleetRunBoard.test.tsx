@@ -1,0 +1,11 @@
+import React from "react";
+import {render,screen,fireEvent,cleanup} from "@testing-library/react";
+import {afterEach,it,expect,vi} from "vitest";
+vi.mock("@expo/vector-icons",()=>({Feather:()=>null}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({primary:"#16abb8",foreground:"white",card:"black",mutedForeground:"grey"})}));
+vi.mock("@/lib/fleet-copy",()=>({useFleetCopy:()=>((text:string)=>text)}));
+import FleetRunBoard from "./FleetRunBoard";
+afterEach(cleanup);
+const runs=[{id:"a",title:"Pickup run",status:"dispatched"},{id:"b",title:"Review run",status:"submitted_for_review"},{id:"c",title:"Finished run",status:"completed"}].map(run=>({...run,stops:[],driverUserId:1,vehicleAssetId:"truck"})) as any;
+it("filters canonical run stages and opens the exact run without mutating it",()=>{const open=vi.fn();render(<FleetRunBoard runs={runs} onOpen={open}/>);fireEvent.click(screen.getByRole("button",{name:"Review"}));expect(screen.queryByRole("button",{name:"Pickup run"})).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Review run"}));expect(open).toHaveBeenCalledWith(runs[1]);fireEvent.click(screen.getByRole("button",{name:"Finished"}));expect(screen.getByRole("button",{name:"Finished run"})).toBeTruthy();});
+it("gives a driver a useful empty assignment state",()=>{render(<FleetRunBoard runs={[]} driverView onOpen={vi.fn()}/>);expect(screen.getByText("No run assigned")).toBeTruthy();});

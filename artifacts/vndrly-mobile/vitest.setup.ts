@@ -344,3 +344,28 @@ vi.mock("expo-sharing", () => ({
   isAvailableAsync: vi.fn(async () => true),
   shareAsync: vi.fn(async () => undefined),
 }));
+
+// Expo AV publishes untransformed JSX in Video.js. Component tests import
+// audio helpers transitively; model unavailable native media rather than
+// transform or initialize a device recorder in jsdom. Audio tests override it.
+vi.mock("expo-av", () => ({
+  Audio: {
+    getPermissionsAsync: vi.fn(async () => ({ granted: false })),
+    requestPermissionsAsync: vi.fn(async () => ({ granted: false })),
+    setAudioModeAsync: vi.fn(async () => undefined),
+    Sound: { createAsync: vi.fn(async () => { throw new Error("Native audio unavailable in jsdom"); }) },
+    Recording: class {},
+    RecordingOptionsPresets: { HIGH_QUALITY: {} },
+  },
+  Video: () => null,
+  ResizeMode: { CONTAIN: "contain", COVER: "cover", STRETCH: "stretch" },
+}));
+
+// Icon fonts cannot load through Node's extensionless native package imports.
+// Keep icon identity available to assertions without loading a native font.
+vi.mock("@expo/vector-icons", async () => {
+  const ReactLib = (await import("react")).default;
+  const Icon = ({ name, testID }: { name?: string; testID?: string }) =>
+    ReactLib.createElement("span", { "data-icon": name, "data-testid": testID, "aria-hidden": true });
+  return { Feather: Icon, AntDesign: Icon, Ionicons: Icon, MaterialIcons: Icon, MaterialCommunityIcons: Icon, FontAwesome: Icon };
+});

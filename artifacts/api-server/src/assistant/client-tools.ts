@@ -38,6 +38,11 @@ export function runClientTool(
       : {};
   if (name === "open_screen") {
     if (typeof args.screen !== "string") return fail("Choose a screen.");
+    const nativeScreens: Record<string,string> = {"gate-map":"/gate-map","fleet":"/fleet","fleet-map":"/fleet-map","fleet-log":"/fleet-log","company-operations":"/company-operations","work-hub-attention":"/work-hub/attention","work-hub-safety":"/work-hub/safety","work-hub-my-work":"/work-hub/my-work"};
+    if(Object.hasOwn(nativeScreens,args.screen)) {
+      if(session.role === "partner" && !args.screen.startsWith("work-hub")) return fail("Use your current company portal.");
+      return JSON.stringify({ok:true,execution:"client",intent:{name,arguments:{screen:args.screen,mobilePath:nativeScreens[args.screen]}},message:"Open the native screen; its server permissions still apply. No settings or records were changed."});
+    }
     const gate = gateDeepLinkScreen(session.role as AssistantRole, args.screen);
     if (!gate.ok) return fail(gate.error);
     if (args.id != null && (!Number.isSafeInteger(args.id) || Number(args.id) <= 0)) return fail("Choose a valid record.");

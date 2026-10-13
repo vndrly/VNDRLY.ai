@@ -4378,6 +4378,7 @@
       "object_url_required": "Please upload the file first.",
       "persist_failed": "We couldn't save your progress. Please try again.",
       "required_fields_missing": "Some required fields are missing. Please complete them.",
+      "operations_categories_required": "Choose your company operations category before completing onboarding.",
       "refer_invalid_email": "Please enter a valid email address.",
       "refer_send_failed": "Couldn't send the referral. Please try again."
     },

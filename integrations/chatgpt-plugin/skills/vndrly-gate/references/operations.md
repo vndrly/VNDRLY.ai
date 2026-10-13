@@ -73,3 +73,10 @@ For uncovered Gate work, query_gate_staffing_candidates takes the exact authoriz
 ## Native work and one V
 
 Native-only work opens the exact task on the designated phone. Siri, Live Activities, device permissions, on-device drafts, scanner availability and background delivery require actual compatible-device support. On-device AI produces reviewed drafts only. Gate identity images are restricted to current assigned Gate staff and expire thirty days after the visit; do not expose images, full document numbers or raw OCR through conversation. Offline Gate entries are observed, authorization unverified and awaiting review. Conflicting inventory attempts remain pending for authorized reconciliation.
+
+
+## October 13 iOS surface parity
+
+query_gate_coverage_map reads authorized current or historical duty coverage, saved locations and incident status. Missing or stale GPS remains unavailable; no fabricated locations or inferred abandonment. Reading an alert is not acknowledgement or resolution. Native Gate Map opens through open_screen; existing Gate history and confirmed location tools remain canonical.
+
+Embedded view gate_coverage accepts an optional exact historical at timestamp. It displays authorized duties, saved gates, explicit missing/stale locations and saved incident acknowledgement/resolution state. Reading the view never acknowledges or resolves an incident.

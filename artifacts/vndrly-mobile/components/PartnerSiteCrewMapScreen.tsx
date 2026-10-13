@@ -459,7 +459,7 @@ export default function PartnerSiteCrewMapScreen() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : (
-          <MapboxNativeMap
+          <MapboxNativeMap controls
             points={mapPoints}
             lines={mapLines}
             circles={mapCircles}

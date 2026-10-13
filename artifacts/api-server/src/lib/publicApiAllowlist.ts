@@ -20,6 +20,7 @@ export const ACCOUNT_ACTIVATION_ALLOWLIST: ApiAllowRule[] = [
 ];
 
 export const GUEST_ALLOWLIST: ApiAllowRule[] = [
+  { method: "POST", pattern: /^\/api\/auth\/demo-entry$/ },
   ...ACCOUNT_ACTIVATION_ALLOWLIST,
   { method: "POST", pattern: /^\/api\/auth\/guest\/?$/ },
   { method: "GET", pattern: /^\/api\/auth\/guest\/me\/?$/ },
@@ -60,6 +61,7 @@ const DEV_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] =
     : [];
 
 export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
+  { method: "POST", pattern: /^\/api\/auth\/demo-entry$/ },
   // Authenticated by Twilio's request signature inside the handler.
   { method: "POST", pattern: /^\/api\/twilio\/gate-alert-status$/ },
   {

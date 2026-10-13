@@ -1,10 +1,11 @@
-import { pgTable, text, serial, timestamp, integer, doublePrecision, boolean, uniqueIndex, numeric } from "drizzle-orm/pg-core";
+import { pgTable, jsonb, text, serial, timestamp, integer, doublePrecision, boolean, uniqueIndex, numeric } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { partnersTable } from "./partners";
 
 export const siteLocationsTable = pgTable("site_locations", {
+  fleetTicketPolicy: jsonb("fleet_ticket_policy"),
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id").notNull().references(() => partnersTable.id),
   name: text("name").notNull(),

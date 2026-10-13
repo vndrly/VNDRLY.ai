@@ -1,3 +1,4 @@
+import { DailyWorkspace } from "./daily-workspace";
 import { MessageReactions } from "./message-reactions";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -143,6 +144,7 @@ export function ActivityWorkspace() {
       <WorkHubPageHeading module="activity" title="Activity" description="Recent conversations across your company and shared Crews." backFallbackHref="/" />
       <div data-testid="activity-primary-card" data-work-hub-card className={`w-full p-5 md:p-6 ${WORK_HUB_CARD_CLASS}`}>
         <HubError error={home.error ?? acknowledge.error} />
+        <DailyWorkspace />
         <ActivityDashboard home={home.data} channels={channels.data} onAcknowledge={(id) => acknowledge.mutate(id)} acknowledging={acknowledge.isPending} />
         {!!stale.length && <section aria-label="Activity inactive for thirty days" className="mb-5 grid gap-3"><h2 className="text-lg font-semibold">No action for 30 days</h2>{stale.map((task: Row) => <a key={task.id} href={`/work-hub/tasks?task=${task.id}`} className={`${WORK_HUB_SUBCARD_CLASS} p-4 text-sm`}>{task.title}</a>)}</section>}
         <div className="mb-5 grid gap-5 lg:grid-cols-2">

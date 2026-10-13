@@ -1,36 +1,38 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Image, Platform, Text, TextInput, View } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
+import ShiftPill from "@/components/ShiftPill";
+import { useBrand } from "@/hooks/use-brand";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { getDeviceId } from "@/lib/deviceId";
-import { changeNativeDuty, designateNativeWorkPhone, readNativeOperations, readNativeRequest, respondNativeRequest, selectNativePrimaryTask, updateNativeConsent } from "@/lib/native-operations";
+import { changeNativeDuty, changeNativeOnCall, designateNativeWorkPhone, readNativeOperations, readNativeRequest, respondNativeRequest, selectNativePrimaryTask, updateNativeConsent } from "@/lib/native-operations";
 import { requestIsActionable, type NativeDeviceRequest, type NativeOperationsStatus } from "@/lib/native-operations-policy";
 import { beginRequestedPhoto, requestedPhotoBackgroundAvailable, resumeRequestedPhoto, saveRequestedPhotoForeground } from "@/lib/requested-photo-upload";
 import PendingRequestedPhotos from "./PendingRequestedPhotos";
 import { refreshSelectedNativeWorkActivity, stopNativeWorkActivity } from "@/lib/native-live-work";
 import NativeNoteDraft from "./NativeNoteDraft";
 import { scanWorkTextDraft } from "@/lib/native-work-capture";
-import { readNativeDeviceReadiness, requestNativeLocationPermissions } from "@/lib/native-device-readiness";
-import * as Notifications from "expo-notifications";
+
+
 import NativeSystem from "../../modules/vndrly-system-surfaces/src/VndrlySystemSurfacesModule";
 
-export default function NativeOperations({ requestId, action, systemRequestId }: { requestId?: string; action?: string; systemRequestId?: string }) {
+export default function NativeOperations({ requestId, action, systemRequestId, compact = false, settingsOnly = false }: { compact?: boolean; settingsOnly?: boolean; requestId?: string; action?: string; systemRequestId?: string }) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const colors = useColors();
+  const brand = useBrand();
   const [status, setStatus] = useState<NativeOperationsStatus | null>(null);
+  const [shiftNotice, setShiftNotice] = useState<"start" | "end" | null>(null);
+  useEffect(() => { if (!shiftNotice) return; const timer = setTimeout(() => setShiftNotice(null), 2500); return () => clearTimeout(timer); }, [shiftNotice]);
   const [deviceId, setDeviceId] = useState("");
   const [draft, setDraft] = useState("");
-  const [onCallStart, setOnCallStart] = useState(""), [onCallEnd, setOnCallEnd] = useState("");
-  const [onCallPicker, setOnCallPicker] = useState<"start" | "end" | null>(null);
-  const [readiness, setReadiness] = useState<Awaited<ReturnType<typeof readNativeDeviceReadiness>> | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [review, setReview] = useState<{ request: NativeDeviceRequest; asset: ImagePicker.ImagePickerAsset; source: "camera" | "library"; capturedAt: string | null } | null>(null);
   const working = useRef(false), handledAction = useRef("");
@@ -43,9 +45,8 @@ export default function NativeOperations({ requestId, action, systemRequestId }:
     return value;
   }, []);
   useEffect(() => {
-    scope.current = captureAuthScope(); setStatus(null); setReview(null);
+    scope.current = captureAuthScope(); setStatus(null); setReview(null); setShiftNotice(null);
     let alive = true;
-    void readNativeDeviceReadiness().then(value => { if (alive) setReadiness(value); }).catch(() => undefined);
     const poll = async () => {
       if (!alive || AppState.currentState !== "active") return;
       try {
@@ -73,26 +74,34 @@ export default function NativeOperations({ requestId, action, systemRequestId }:
     if (systemRequestId && /^[0-9a-f-]{36}$/i.test(systemRequestId)) await NativeSystem?.completeSystemAction(systemRequestId, saved).catch(() => undefined);
   }
   async function dutyAction(action: "start" | "end", options?: Parameters<typeof changeNativeDuty>[1]) {
+    const captured = captureAuthScope();
     try {
       if (action === "end") await Promise.all([changeNativeDuty(action), stopNativeWorkActivity()]);
       else await changeNativeDuty(action, options);
-      const canonical = await readNativeOperations();
+      const canonical = await readNativeOperations(captured);
       const saved = canonical.duty?.active === (action === "start");
       await finishSystemAction(saved);
       if (!saved) throw new Error(t("nativeOperations.unavailable"));
+      if (isAuthScopeCurrent(captured)) { setStatus(canonical); setShiftNotice(action); }
     } catch (error) { await finishSystemAction(false); throw error; }
   }
   function startDuty(options?: Parameters<typeof changeNativeDuty>[1]) {
-    Alert.alert(t("nativeOperations.start"), t("nativeOperations.startConfirm"), [
+    void run(() => dutyAction("start", options));
+  }
+  function endDuty() {
+    const captured = captureAuthScope();
+    const confirm = () => { if (isAuthScopeCurrent(captured)) void run(() => dutyAction("end")); };
+    if (Platform.OS === "web") { if (window.confirm(t("nativeOperations.endConfirm"))) confirm(); else void finishSystemAction(false); return; }
+    Alert.alert(t("nativeOperations.end"), t("nativeOperations.endConfirm"), [
       { text: t("nativeOperations.cancel"), style: "cancel", onPress: () => { void finishSystemAction(false); } },
-      { text: t("nativeOperations.start"), onPress: () => { void run(() => dutyAction("start", options)); } },
+      { text: t("nativeOperations.end"), onPress: confirm },
     ]);
   }
   useEffect(() => {
     if (!status || busy || !action || handledAction.current === action) return;
     handledAction.current = action;
     if (action === "start-duty") startDuty();
-    if (action === "end-duty") void run(() => dutyAction("end"));
+    if (action === "end-duty") endDuty();
     if (action === "scan") void run(async () => { const result = await scanWorkTextDraft(); if (isAuthScopeCurrent(scope.current)) setDraft(result.text); });
   }, [status, action]);
   async function capture(request: NativeDeviceRequest, source: "camera" | "library") {
@@ -140,45 +149,24 @@ export default function NativeOperations({ requestId, action, systemRequestId }:
   const textStyle = { color: colors.text, fontSize: 15 };
   const button = (label: string, onPress: () => void) => <TogglePillButton accessibilityLabel={label} onPress={onPress} disabled={busy}>{label}</TogglePillButton>;
   if (!user) return null;
+  const onCall = status?.onCallActive === true || status?.onCallWindows?.some(window => Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now()) === true;
+  const controls = <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+    <ShiftPill active={status?.duty?.active === true} disabled={busy || !status} label={t(shiftNotice === "start" && status?.duty?.active ? "nativeOperations.shiftStarted" : shiftNotice === "end" && !status?.duty?.active ? "nativeOperations.shiftEnded" : status?.duty?.active ? "nativeOperations.onShift" : "nativeOperations.start")} onPress={() => status?.duty?.active ? endDuty() : startDuty()} />
+    <ShiftPill active={onCall} disabled={busy || !status} label={t("nativeOperations.onCallOn")} onPress={() => { void run(() => changeNativeOnCall(!onCall, status?.duty?.active === true)); }} />
+  </View>;
+  if (compact) return <View style={{ backgroundColor: colors.card, borderColor: brand.primary, borderWidth: 1, borderRadius: 12, padding: 12 }}>{status ? controls : <ActivityIndicator accessibilityLabel={t("nativeOperations.loading")} />}{error ? <Text accessibilityRole="alert" style={textStyle}>{error}</Text> : null}</View>;
+  if (settingsOnly) return <View style={{ gap: 10 }}>{status ? <>
+    <Text style={textStyle}>{t(status.designatedDeviceId === deviceId ? "nativeOperations.workPhone" : "nativeOperations.viewer")}</Text>
+    {button(t("nativeOperations.designate"), () => { void run(designateNativeWorkPhone); })}
+    {button(t(status.consent.locationSharing ? "nativeOperations.sharingOff" : "nativeOperations.sharingOn"), () => { void run(() => updateNativeConsent(!status.consent.locationSharing)); })}
+    {status.policy.automaticArrival ? button(t(status.consent.automaticArrival ? "nativeArrival.disable" : "nativeArrival.enable"), () => { void run(() => updateNativeConsent(status.consent.locationSharing, !status.consent.automaticArrival)); }) : null}
+  </> : <ActivityIndicator />}{error ? <Text accessibilityRole="alert" style={textStyle}>{error}</Text> : null}</View>;
   return <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 16, gap: 12 }}>
     <Text accessibilityRole="header" style={{ ...textStyle, fontSize: 19, fontWeight: "700" }}>{t("nativeOperations.title")}</Text>
     {error ? <Text accessibilityRole="alert" style={textStyle}>{error}</Text> : null}
     <PendingRequestedPhotos />
     {!status ? <ActivityIndicator accessibilityLabel={t("nativeOperations.loading")} /> : !status.policy.enabled ? <Text style={textStyle}>{t("nativeOperations.disabled")}</Text> : <>
-      <Text style={textStyle}>{t(status.duty?.active ? "nativeOperations.onDuty" : "nativeOperations.offDuty")}</Text>
-      <Text style={textStyle}>{t(status.designatedDeviceId === deviceId ? "nativeOperations.workPhone" : "nativeOperations.viewer")}</Text>
-      {readiness ? <>
-        <Text style={textStyle}>{t(readiness.notifications ? "nativeOperations.notificationsReady" : "nativeOperations.notificationsMissing")}</Text>
-        {readiness.lowPower || readiness.backgroundRefresh === false ? <Text accessibilityRole="alert" style={textStyle}>{t("nativeOperations.degraded")}</Text> : null}
-        {!readiness.notifications ? button(t("nativeOperations.enableNotifications"), () => { void run(async () => { await Notifications.requestPermissionsAsync(); setReadiness(await readNativeDeviceReadiness()); }); }) : null}
-        {status.consent.locationSharing && (!readiness.location || !readiness.backgroundLocation) ? button(t("nativeOperations.enableLocation"), () => { void run(async () => { await requestNativeLocationPermissions(true); setReadiness(await readNativeDeviceReadiness()); }); }) : null}
-      </> : null}
-      {status.designatedDeviceId !== deviceId ? button(t("nativeOperations.designate"), () => { void run(designateNativeWorkPhone); }) : null}
-      {status.duty?.active ? button(t("nativeOperations.end"), () => { void run(() => dutyAction("end")); }) : <>
-        {button(t("nativeOperations.start"), () => startDuty())}
-        {status.policy.dutyModes?.includes("ticket") ? status.tasks?.filter(task => task.kind === "ticket" && ["in_progress", "on_site"].includes(task.status)).map(task => <View key={`duty:${task.id}`}>{button(t("nativeOperations.ticketDuty", { id: task.identifier }), () => startDuty({ mode: "ticket", ticketId: Number(task.id) }))}</View>) : null}
-        {status.policy.dutyModes?.includes("scheduled") ? status.shifts?.filter(shift => Date.parse(shift.startsAt) <= Date.now() && Date.parse(shift.endsAt) > Date.now()).map(shift => <View key={`shift:${shift.id}`}>{button(t("nativeOperations.shiftDuty", { title: shift.title }), () => startDuty({ mode: "scheduled", shiftId: shift.id }))}</View>) : null}
-      </>}
-      {button(t(status.consent.locationSharing ? "nativeOperations.sharingOff" : "nativeOperations.sharingOn"), () => { void run(() => updateNativeConsent(!status.consent.locationSharing)); })}
-      {status.policy.automaticArrival ? button(t(status.consent.automaticArrival ? "nativeArrival.disable" : "nativeArrival.enable"), () => { void run(() => updateNativeConsent(status.consent.locationSharing, !status.consent.automaticArrival)); }) : null}
-      <Text style={textStyle}>{t("nativeOperations.onCallExplanation")}</Text>
-      {Platform.OS === "ios" ? <>
-        {button(`${t("nativeOperations.onCallStart")}: ${onCallStart ? new Date(onCallStart).toLocaleString() : t("nativeOperations.chooseTime")}`, () => setOnCallPicker("start"))}
-        {button(`${t("nativeOperations.onCallEnd")}: ${onCallEnd ? new Date(onCallEnd).toLocaleString() : t("nativeOperations.chooseTime")}`, () => setOnCallPicker("end"))}
-        {onCallPicker ? <DateTimePicker accessibilityLabel={t(onCallPicker === "start" ? "nativeOperations.onCallStart" : "nativeOperations.onCallEnd")} mode="datetime" value={new Date((onCallPicker === "start" ? onCallStart : onCallEnd) || Date.now())} onChange={(_, date) => { if (date) (onCallPicker === "start" ? setOnCallStart : setOnCallEnd)(date.toISOString()); }} /> : null}
-      </> : <>
-        <TextInput accessibilityLabel={t("nativeOperations.onCallStart")} placeholder={t("nativeOperations.onCallStart")} value={onCallStart} onChangeText={setOnCallStart} style={{ ...textStyle, borderWidth: 1, borderColor: colors.border, padding: 10 }} />
-        <TextInput accessibilityLabel={t("nativeOperations.onCallEnd")} placeholder={t("nativeOperations.onCallEnd")} value={onCallEnd} onChangeText={setOnCallEnd} style={{ ...textStyle, borderWidth: 1, borderColor: colors.border, padding: 10 }} />
-      </>}
-      {button(t("nativeOperations.onCallSave"), () => {
-        if (!Number.isFinite(Date.parse(onCallStart)) || !Number.isFinite(Date.parse(onCallEnd)) || Date.parse(onCallEnd) <= Date.parse(onCallStart)) { setError(t("nativeOperations.onCallInvalid")); return; }
-        Alert.alert(t("nativeOperations.onCallSave"), t("nativeOperations.onCallExplanation"), [
-          { text: t("nativeOperations.cancel"), style: "cancel" },
-          { text: t("nativeOperations.onCallSave"), onPress: () => { void run(() => import("@/lib/api").then(({ apiFetch }) => apiFetch("/api/native-operations/on-call", { method: "PUT", body: JSON.stringify({ windows: [{ startsAt: new Date(onCallStart).toISOString(), endsAt: new Date(onCallEnd).toISOString(), consent: true }] }) }))); } },
-        ]);
-      })}
-      {button(t("nativeOperations.onCallClear"), () => { void run(() => import("@/lib/api").then(({ apiFetch }) => apiFetch("/api/native-operations/on-call", { method: "PUT", body: JSON.stringify({ windows: [] }) }))); })}
-      <Text style={{ color: colors.mutedForeground }}>{t("nativeOperations.freshness")}</Text>
+      {controls}
       {status.tasks?.map(task => <View key={`${task.kind}:${task.id}`} style={{ gap: 8 }}>
         <Text style={textStyle}>{task.identifier} · {task.site} · {task.status}</Text>
         {button(t(status.selectedTask?.kind === task.kind && status.selectedTask.id === task.id ? "nativeOperations.selectedTask" : "nativeOperations.selectTask"), () => { void run(async () => { await selectNativePrimaryTask(task.kind, task.id); await refreshSelectedNativeWorkActivity(); }); })}

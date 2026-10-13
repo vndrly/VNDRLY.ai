@@ -5,6 +5,7 @@ import type { KnowledgeDoc } from "./index";
 // When adding a new feature to the app, add (or update) the matching doc
 // here so the assistant can answer questions about it.
 export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
+  {id:"ios-unified-operations",title:"Current iOS operations, maps and field proof",roles:["any"],body:"Company administrators select Field, Fleet and Gate categories; employee authority is checked separately. Open the native Fleet Map, Fleet Log, Gate Map, company-operations, Calendar, My Work, Needs Attention or Safety through open_screen. Shift and On Call are independent persisted own-user states, changed with confirmation. Ticket arrival is distinct from check-in/work time. Field Proof Packet ends at Submitted to Office; office approval and payment belong to the office. Mileage is optional and follows vendor reimbursement settings. Ticket visit maps show recorded evidence, not fresh live positions. Fleet replay preserves GPS gaps; a nearest destination recommendation does not approve it for a ticket. Read notifications do not resolve pending tasks or safety reports."},
   {
     id: "nav-overview",
     title: "App navigation overview",

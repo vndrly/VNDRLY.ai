@@ -1,3 +1,4 @@
+import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
@@ -707,7 +708,8 @@ export default function VendorDetail({ id }: { id: number }) {
               />
               <DialogHeader><DialogTitle>{t("vendors.editVendor")}</DialogTitle></DialogHeader>
               <form onSubmit={handleEdit} className="space-y-4">
-                <div>
+                <CompanyOperationsChoice vendorId={id} />
+<div>
                   <Label>{t("vendors.companyName")}</Label>
                   <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} data-testid="input-vendor-name" />
                   {isAdmin && renameMatches.length > 0 && (

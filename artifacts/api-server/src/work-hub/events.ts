@@ -1,4 +1,5 @@
 import type { WorkHubContextRef, WorkHubEventEnvelope, WorkHubOwner } from "@workspace/api-zod";
+import {currentDatabaseRealm} from '@workspace/db/realm';
 
 type PendingEvent = Omit<WorkHubEventEnvelope, "version" | "sequence" | "occurredAt">;
 type Subscriber = (event: WorkHubEventEnvelope) => void;
@@ -65,6 +66,7 @@ export function publishWorkHubEvent(input: {
   type: string; owner: WorkHubOwner; context: WorkHubContextRef;
   subject: { type: string; id: string | number }; recipientUserIds: number[];
 }): WorkHubEventEnvelope[] {
+  if(currentDatabaseRealm()==='demo')return [];
   return [...new Set(input.recipientUserIds)].map((recipientUserId) => workHubEventBus.publish({
     type: input.type, owner: input.owner, context: input.context, subject: input.subject, recipientUserId,
   }));

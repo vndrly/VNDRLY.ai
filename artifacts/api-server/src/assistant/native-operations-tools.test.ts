@@ -32,3 +32,22 @@ describe("native device work uses the canonical authority", () => {
     expect(resolveExecutableWorkHubToolRequest("request_native_ticket_photo", input, false)).toMatchObject({ requiresConfirmation: true });
   });
 });
+
+describe("own shift and on-call commands", () => {
+ it("rejects model confirmation and arbitrary worker or consent overrides", () => {
+  expect(nativeOperationsToolRequest("set_my_shift_status", {action:"end",confirmed:true})).toMatchObject({requiresConfirmation:true});
+  expect(nativeOperationsToolRequest("set_my_shift_status", {action:"start",workerUserId:5},true)).toHaveProperty("error");
+  expect(nativeOperationsToolRequest("set_my_on_call_status", {active:true,locationSharing:true},true)).toHaveProperty("error");
+ });
+ it("routes all four confirmed actions to canonical own-user endpoints", () => {
+  for(const action of ["start","end"]) expect(resolveExecutableWorkHubToolRequest("set_my_shift_status",{action,confirmed:true,idempotencyKey:"server-owned"},true,{userId:1,role:"field_employee",vendorId:3})).toEqual({method:"POST",path:"/native-operations/duty",body:{action,mode:"manual"}});
+  for(const active of [true,false]) expect(resolveExecutableWorkHubToolRequest("set_my_on_call_status",{active},true,{userId:1,role:"vendor",vendorId:3})).toEqual({method:"PUT",path:"/native-operations/on-call",body:{active,consent:true}});
+ });
+});
+
+import { toolsForRealtime } from "./tool-packs";
+it("keeps own work-status actions available from mobile and web Work Hub AskV", () => {
+ for(const role of ["vendor","field_employee"]) for(const path of ["/mobile/work-hub","/mobile/work-hub/askv","/work-hub/askv","/work-hub"]){
+ expect(toolsForRealtime({role,path}).map(tool=>tool.name)).toEqual(expect.arrayContaining(["query_native_work_status","set_my_shift_status","set_my_on_call_status"]));
+ }
+});

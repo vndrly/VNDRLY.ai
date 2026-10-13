@@ -1,0 +1,18 @@
+import React from "react";
+import {render,screen,fireEvent,cleanup} from "@testing-library/react";
+import {beforeEach,afterEach,it,expect,vi} from "vitest";
+const mock=vi.hoisted(()=>({request:vi.fn(),data:{gates:[{id:"gate",name:"Main gate",siteName:"Demo site",latitude:35,longitude:-97}],staff:[{userId:2,name:"Demo Gatekeeper",email:"demo@example.invalid",role:"gatekeeper",dutyStartedAt:"2026-10-12T08:00:00Z",gateDutyIds:["duty"],location:null,fresh:false,locationReason:"sharing_off",assignment:"Main gate",reliefCandidate:false},{userId:3,name:"Demo Relief",role:"gatekeeper",dutyStartedAt:"2026-10-12T09:00:00Z",gateDutyIds:[],location:null,fresh:false,assignment:"No active assignment recorded",reliefCandidate:true}],duties:[{id:"duty",userId:2,stationId:"gate",startTiming:{state:"on_time",minutes:0}}],companyAdmin:true}}));
+vi.mock("@tanstack/react-query",()=>({useQuery:()=>({data:mock.data,isLoading:false,isError:false})}));
+vi.mock("react-i18next",()=>({useTranslation:()=>({t:(key:string)=>key})}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({primary:"cyan",foreground:"white",mutedForeground:"grey",card:"black"})}));
+vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:{id:1},activeMembershipId:1})}));
+vi.mock("@/lib/change-over-api",()=>({changeOverRequest:mock.request}));
+vi.mock("@/components/ScreenSafeArea",()=>({default:({children}:any)=><div>{children}</div>}));
+vi.mock("@/components/WorkHubPageTitle",()=>({default:()=>null}));
+vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress}:any)=><button onClick={onPress}>{children}</button>}));
+vi.mock("@/components/MapboxNativeMap",()=>({default:({points}:any)=><div data-testid="map">{JSON.stringify(points)}</div>}));
+import GateMap from "../app/(tabs)/gate-map";
+afterEach(cleanup);
+it("opens a real duty summary without inventing a GPS marker",()=>{render(<GateMap/>);fireEvent.click(screen.getByRole("button",{name:"View Demo Gatekeeper shift"}));expect(screen.getByText("Location sharing is off")).toBeTruthy();expect(screen.getByTestId("map").textContent).not.toContain("staff-2");expect(screen.getByText("Started on time")).toBeTruthy();});
+it("shows only potential relief when chosen",()=>{render(<GateMap/>);fireEvent.click(screen.getByRole("button",{name:"Potential relief"}));expect(screen.getByRole("button",{name:"View Demo Relief shift"})).toBeTruthy();expect(screen.queryByRole("button",{name:"View Demo Gatekeeper shift"})).toBeNull();});
+it("offers a history time and return to live",()=>{render(<GateMap/>);fireEvent.click(screen.getByRole("button",{name:"Calendar"}));expect(screen.getByLabelText("History date YYYY-MM-DD")).toBeTruthy();expect(screen.getByRole("button",{name:"Live"})).toBeTruthy();});

@@ -19,18 +19,18 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
   const voiceLabel = voiceStatus === "active" ? "Click to Stop V" : voiceStatus === "muted" ? "Click to Start V" : "AskV is Unavailable";
   if (
     !voice.preferencesReady ||
-    (!inline && pathname.endsWith("/askv")) ||
-    (!inline && (pathname.endsWith("/change-over") || pathname.endsWith("/shift-notes") || pathname.endsWith("/gate") || pathname.endsWith("/gate-history") || pathname.endsWith("/notifications") || pathname.endsWith("/gate-notifications") || pathname.endsWith("/notification-preferences") || pathname.endsWith("/gate-notification-preferences") || pathname.endsWith("/profile") || pathname.endsWith("/edit-profile") || pathname.endsWith("/compliance") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))
+    (!inline && (pathname.endsWith("/askv") || pathname === "/" || pathname === "/company-operations" || pathname === "/fleet" || pathname.startsWith("/fleet/") || pathname.startsWith("/fleet-"))) ||
+    (!inline && (pathname.endsWith("/change-over") || pathname.endsWith("/shift-notes") || pathname.endsWith("/gate") || pathname.endsWith("/gate-history") || pathname.endsWith("/gate-map") || pathname.endsWith("/notifications") || pathname.endsWith("/gate-notifications") || pathname.endsWith("/notification-preferences") || pathname.endsWith("/gate-notification-preferences") || pathname.endsWith("/profile") || pathname.endsWith("/edit-profile") || pathname.endsWith("/compliance") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))
   ) return null;
   return (
     <View
       pointerEvents="box-none"
       style={inline
         ? { alignItems: "flex-end", flexShrink: 1, maxWidth: 260, minWidth: 0 }
-        : { position: "absolute", right: 12, bottom: Math.max(insets.bottom + 64, 80), width: 260, zIndex: 100 }}
+        : { alignItems: "flex-end", paddingHorizontal: 12, paddingTop: insets.top, paddingBottom: 8, flexShrink: 0 }}
       testID={inline ? "askv-inline-status" : "askv-global-status"}
     >
-      <LayeredPillButton color={voiceStatus === "active" ? "#1f9a3d" : undefined} source={voiceStatus === "active" ? GREEN_APPROVAL_PILL : undefined} height={40} style={{ alignSelf: inline ? "flex-end" : "stretch" }} onPress={() => {
+      <LayeredPillButton color={voiceStatus === "active" ? "#1f9a3d" : undefined} source={voiceStatus === "active" ? GREEN_APPROVAL_PILL : undefined} height={40} style={{ alignSelf: "flex-end", width: inline ? undefined : 260 }} onPress={() => {
         voice.setMuted(voiceActive);
       }} inactive={voiceStatus !== "active"} testID="askv-global-mute">
         <View style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "center" }}>

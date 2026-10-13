@@ -64,4 +64,9 @@ describe("Fleet device-reported location",()=>{
    f.setConsent(true);f.run.vehicleAssetId=randomUUID();expect(await f.service.observations(f.actor)).toEqual([]);
    f.run.status="completed";expect(await f.service.observations(f.actor)).toEqual([]);
  });
+ it("retains an authorized idle run's last-known position without collecting new off-duty locations",async()=>{
+  const f=fixture();await f.service.record(f.actor,f.run.id,f.input());f.run.status="completed";
+  expect((await f.service.observations(f.actor))[0].freshness).toBe("stale");
+  f.setConsent(false);expect(await f.service.observations(f.actor)).toEqual([]);
+ });
 });

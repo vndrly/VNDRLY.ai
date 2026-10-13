@@ -1,3 +1,4 @@
+import {startGatePostMonitor,stopGatePostMonitor} from "./services/gate-post-coverage";
 import app from "./app";
 import { createPlanExecutionLifecycle } from "./assistant/plan-execution-lifecycle";
 import { createCanonicalPlanExecutionWorker } from "./assistant/plan-execution-worker";
@@ -172,6 +173,7 @@ function onListening(): void {
   startImplementationARetentionWorker();
   startNativeOperationsWorker();
   startGateCoverageMonitor();
+  startGatePostMonitor();
   startInvoicePeriodWorker();
   startInvoiceAgingWorker();
   startApPaymentDigestWorker();
@@ -246,6 +248,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopImplementationARetentionWorker();
   stopNativeOperationsWorker();
   stopGateCoverageMonitor();
+  stopGatePostMonitor();
   stopInvoicePeriodWorker();
   stopInvoiceAgingWorker();
   stopApPaymentDigestWorker();

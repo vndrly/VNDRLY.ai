@@ -1,3 +1,5 @@
+// Home tests exercise ticket and membership flows; native voice has dedicated provider tests.
+vi.mock("@/components/AskVVoiceIndicator", () => ({ default: () => null }));
 import path from "node:path";
 import Module from "node:module";
 import React from "react";

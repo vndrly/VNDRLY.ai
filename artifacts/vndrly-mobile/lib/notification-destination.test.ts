@@ -1,0 +1,9 @@
+import {beforeEach,it,expect,vi} from "vitest";
+const fetcher=vi.hoisted(()=>vi.fn());
+vi.mock("./api",()=>({apiFetch:fetcher}));
+import {parseNotificationTarget,loadNotificationDestination} from "./notification-destination";
+beforeEach(()=>fetcher.mockReset());
+it.each(["/tickets/41","/ticket/41","/(tabs)/tickets/41"])("parses exact numeric ticket pointer %s",href=>{expect(parseNotificationTarget(href)).toEqual({kind:"ticket",id:"41"});});
+it.each(["/tickets","/tickets/0","/tickets/-1","/tickets/1.5","/tickets/9007199254740992","/tickets/41?siteId=99","/tickets/41#data","/tickets/41/delete","//evil.invalid/tickets/41","/tickets/%2e%2e/41"])("rejects noncanonical ticket link %s",href=>{expect(parseNotificationTarget(href)).toBeNull();});
+it("loads current ticket content via canonical reader without marking acknowledgement",async()=>{fetcher.mockResolvedValue({id:41,ticketNumber:"SYN-41",status:"initiated",siteName:"Synthetic site",workTypeName:"Repair",scheduledStartAt:"2026-10-13T12:00:00Z"});expect(await loadNotificationDestination({kind:"ticket",id:"41"})).toMatchObject({subjectId:"41",kind:"ticket",title:"SYN-41",lines:["initiated","Synthetic site","Repair","2026-10-13T12:00:00Z"]});expect(fetcher).toHaveBeenCalledExactlyOnceWith("/api/tickets/41");});
+it("rejects changed ticket identity, missing content, and revoked canonical read access",async()=>{fetcher.mockResolvedValueOnce({id:42});await expect(loadNotificationDestination({kind:"ticket",id:"41"})).rejects.toThrow("notification.unavailable");fetcher.mockResolvedValueOnce(null);await expect(loadNotificationDestination({kind:"ticket",id:"41"})).rejects.toThrow();fetcher.mockRejectedValueOnce(new Error("Current assignment removed"));await expect(loadNotificationDestination({kind:"ticket",id:"41"})).rejects.toThrow("Current assignment removed");});

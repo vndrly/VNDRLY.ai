@@ -27,9 +27,11 @@ import { computeTicketTaxPreview } from "@workspace/db/ticket-tax-preview";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
+import TicketWorkAction from "@/components/TicketWorkAction";
+import TicketWorkSection from "@/components/TicketWorkSection";
+import { useBrand } from "@/hooks/use-brand";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import Pill9Slice from "@/components/Pill9Slice";
-import BlueButton from "@/components/BlueButton";
 import FreshnessPill from "@/components/FreshnessPill";
 import InPageHeader from "@/components/InPageHeader";
 import TogglePill2 from "@/components/TogglePill2";
@@ -64,12 +66,11 @@ import {
 } from "@/lib/ticketsRateLimitGate";
 import { captureAuthScope, isAuthScopeCurrent, getUser, type StoredUser } from "@/lib/auth";
 import { createTicketPhotoClient, readTicketPhotoAttempt, ticketPhotoAccount } from "@/lib/ticket-photo-association";
-import { askVActionsForTicket, askVPromptRoute } from "@/lib/assistant-ticket-actions";
 import { nudgeLiveLocationReporter } from "@/lib/liveLocationReporter";
 import { MAP_TILE_SIZE, getOsmTile, openInMaps } from "@/lib/maps";
 import { captureAndUploadImage } from "@/lib/photos";
 import { registerAskVControl, subscribeAskVDataChanged } from "@/lib/askv-client-tools";
-import { buildTicketProofPacket } from "@/lib/proof-packet";
+import { buildTicketProofPacket, fieldProofPacket } from "@/lib/proof-packet";
 import { ticketStatusLabel, ticketStatusPillStyle } from "@/lib/ticketStatusLabels";
 import { PILL_CHIP_LAYOUT, PILL_TEXT, PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
@@ -258,6 +259,9 @@ const ITEM_TYPE_KEYS: Record<(typeof ITEM_TYPES)[number], string> = {
 
 export default function TicketDetailScreen() {
   const colors = useColors();
+  const brand = useBrand();
+  const [showOfficeProgress, setShowOfficeProgress] = useState(false);
+  const actionPosition = useRef(0);
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   useEffect(() => { getUser().then(setCurrentUser).catch(() => {}); }, []);
   useEffect(() => {
@@ -1862,10 +1866,11 @@ export default function TicketDetailScreen() {
   const subtotal = taxPreview.subtotal;
   const taxAmount = taxPreview.taxAmount;
   const grandTotal = taxPreview.grandTotal;
-  const proofPacket = useMemo(
-    () => buildTicketProofPacket(ticket ?? {}, items, notes),
-    [ticket, items, notes],
-  );
+  const isFieldPacket = currentUser?.role === "field_employee";
+  const proofPacket = useMemo(() => {
+    const full = buildTicketProofPacket(ticket ?? {}, items, notes);
+    return isFieldPacket ? fieldProofPacket(full, ticket?.status) : full;
+  }, [ticket, items, notes, isFieldPacket]);
 
   const ticketIdValid = Number.isFinite(ticketId) && ticketId > 0;
 
@@ -2029,7 +2034,7 @@ export default function TicketDetailScreen() {
       <View
         style={[
           styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
+          { backgroundColor: colors.card, borderColor: brand.primary },
         ]}
       >
         <Text style={[styles.title, { color: colors.foreground }]} testID="text-ticket-tracking-number">
@@ -2039,94 +2044,38 @@ export default function TicketDetailScreen() {
           {ticket.workTypeName || "—"}
           {ticket.partnerName ? ` · ${ticket.partnerName}` : ""}
         </Text>
-        {ticket.afe ? (
-          <View
-            style={{
-              alignSelf: "flex-start",
-              marginTop: 4,
-              paddingHorizontal: 12,
-              height: PILL_HEIGHT_PX,
-              justifyContent: "center",
-              borderRadius: 999,
-              overflow: "hidden",
-              position: "relative",
-            }}
-          >
-            <Pill9Slice
-              source={require("@/assets/pill-stack/blue-hot.png")}
-              height={PILL_HEIGHT_PX}
-            />
-            <Text
-              style={{
-                color: "#ffffff",
-                fontSize: 11,
-                fontFamily: "Inter_400Regular",
-                textShadowColor: "rgba(0,0,0,0.55)",
-                textShadowOffset: { width: 0, height: 1 },
-                textShadowRadius: 2,
-              }}
-            >
-              {ticket.afe}
-            </Text>
-          </View>
-        ) : null}
-        {(() => {
-          // Task: status pill switches to the layered blue pill image
-          // for the "hot" working states (initiated / in_progress) so
-          // the badge visually matches the action buttons. Other
-          // statuses keep the semantic color from `ticketStatusPillStyle`.
-          const isBlueHot =
-            ticket.status === "initiated" || ticket.status === "in_progress";
-          const label = ticketStatusLabel(ticket.status, t);
-          if (isBlueHot) {
-            return (
-              <View
-                style={[
-                  styles.statusPill,
-                  {
-                    paddingHorizontal: 12,
-                    height: PILL_HEIGHT_PX,
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    position: "relative",
-                  },
-                ]}
-                testID="badge-ticket-detail-status"
-              >
-                <Pill9Slice
-                  source={require("@/assets/pill-stack/blue-hot.png")}
-                  height={PILL_HEIGHT_PX}
-                />
-                <Text
-                  style={[
-                    styles.statusPillText,
-                    {
-                      color: "#ffffff",
-                      textShadowColor: "rgba(0,0,0,0.55)",
-                      textShadowOffset: { width: 0, height: 1 },
-                      textShadowRadius: 2,
-                    },
-                  ]}
-                >
-                  {label}
-                </Text>
-              </View>
-            );
+        <View style={{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12,marginBottom:12,alignItems:"center"}}>
+          {ticket.afe ? <LayeredPillButton height={32} onPress={() => Alert.alert("AFE authorization", ticket.afe ?? "")} testID="button-ticket-afe"><Text style={{color:"white"}}>AFE · {ticket.afe}</Text></LayeredPillButton> : null}
+          <LayeredPillButton height={32} testID="badge-ticket-detail-status" onPress={() => setShowOfficeProgress(value => !value)}><Text style={{color:"white"}}>Status · {ticketStatusLabel(ticket.status,t)}</Text></LayeredPillButton>
+      {ticket.siteLocationId ? (
+        <LayeredPillButton
+          testID="button-safety-report"
+          height={40}
+          style={{ marginLeft: "auto" }}
+          onPress={() =>
+            router.push(
+              `/safety-report?siteLocationId=${ticket.siteLocationId}&ticketId=${ticket.id}`,
+            )
           }
-          const pill = ticketStatusPillStyle(ticket.status);
-          return (
-            <View
-              style={[styles.statusPill, { backgroundColor: pill.background }]}
-              testID="badge-ticket-detail-status"
-            >
-              <Text style={[styles.statusPillText, { color: pill.foreground }]}>
-                {label}
-              </Text>
-            </View>
-          );
-        })()}
-        <View style={{ marginTop: 12, marginBottom: 4 }}>
-          <TicketStatusStepper status={ticket.status} />
+        >
+          <Feather name="shield" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
+          <Text style={[styles.actionBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]} numberOfLines={1}>
+            {t("ticketDetail.safetyReport")}
+          </Text>
+        </LayeredPillButton>
+      ) : null}
+        </View>
+        {showOfficeProgress ? <View style={{marginTop:12}}><Text style={{color:colors.mutedForeground}}>Office review and payment</Text><TicketStatusStepper status={ticket.status}/></View> : null}
+        <View testID="ticket-field-progress" style={{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:16}}>
+          {["Travel","Arrive","Work","Finish","Review"].map((label,index) => {
+            const phase = ["pending_arrival","en_route"].includes(ticket.lifecycleState ?? "") ? 0 : ticket.lifecycleState === "on_location" ? 1 : ticket.lifecycleState === "on_site" ? 2 : ticket.status === "pending_review" || ticket.status === "kicked_back" ? 3 : 4;
+            return <View key={label} style={{borderBottomWidth:2,borderColor:index<=phase?brand.primary:colors.border,paddingVertical:8}}><Text style={{color:index===phase?brand.primary:colors.mutedForeground,fontWeight:index===phase?"700":"400"}}>{index+1} · {label}</Text></View>;
+          })}
+        </View>
+        <View style={{marginTop:12,padding:12,borderWidth:2,borderColor:brand.primary,borderRadius:12}}>
+          <Text style={{color:colors.foreground,fontWeight:"700"}}>Next step</Text>
+          <Text style={{color:colors.mutedForeground,marginVertical:8}}>{ticket.status === "awaiting_acceptance" ? "Waiting for the vendor to accept this assignment." : ticket.status === "kicked_back" ? "Review the requested corrections before sending this ticket back." : ticket.lifecycleState === "on_site" ? "Record your work, labor, materials, and evidence. Check out when work is finished." : ticket.lifecycleState === "off_site" ? "Review the work record and any missing evidence before submission." : "Use the site directions, then record travel and arrival before checking in."}</Text>
+          <LayeredPillButton height={32} onPress={() => scrollRef.current?.scrollTo({y:actionPosition.current,animated:true})}><Text style={{color:"white"}}>View available actions</Text></LayeredPillButton>
         </View>
         {/* ── Task #56 — Live location status indicator ──
             Visible only while the ticket is en_route or on_site (the
@@ -2173,7 +2122,7 @@ export default function TicketDetailScreen() {
               paddingVertical: 4,
               borderRadius: 999,
               backgroundColor: "#fef2f2",
-              borderWidth: 1,
+              borderWidth: 2,
               borderColor: "#fecaca",
             }}
             testID="badge-site-inactive"
@@ -2187,7 +2136,7 @@ export default function TicketDetailScreen() {
 
       {automaticArrivalSaved && ticket.lifecycleState === "on_location" ? <View style={{ gap: 8, padding: 12, backgroundColor: colors.card }}>
         <Text style={{ color: colors.text }}>{t("nativeArrival.saved")}</Text>
-        <TextInput accessibilityLabel={t("nativeArrival.reason")} placeholder={t("nativeArrival.reason")} value={arrivalCorrectionReason} onChangeText={setArrivalCorrectionReason} editable={!arrivalCorrection.current} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 10 }} />
+        <TextInput accessibilityLabel={t("nativeArrival.reason")} placeholder={t("nativeArrival.reason")} value={arrivalCorrectionReason} onChangeText={setArrivalCorrectionReason} editable={!arrivalCorrection.current} style={{ color: colors.text, borderColor: brand.primary, borderWidth: 2, padding: 10 }} />
         <LayeredPillButton disabled={!arrivalCorrectionReason.trim()} onPress={() => { void (async () => {
           const { nativeUuid } = await import("@/lib/native-uuid");
           const command = arrivalCorrection.current ?? { operationId: nativeUuid(), reason: arrivalCorrectionReason.trim() };
@@ -2198,60 +2147,7 @@ export default function TicketDetailScreen() {
           } catch (error) { Alert.alert(t("nativeArrival.correction"), translateApiError(error, t, t("tickets.pleaseTryAgain"))); }
         })(); }}><Text style={{ color: "white" }}>{t("nativeArrival.correction")}</Text></LayeredPillButton>
       </View> : null}
-      {ticket.siteLocationId ? (
-        <LayeredPillButton
-          testID="button-safety-report"
-          inactive
-          height={40}
-          style={{ marginBottom: 12 }}
-          onPress={() =>
-            router.push(
-              `/safety-report?siteLocationId=${ticket.siteLocationId}&ticketId=${ticket.id}`,
-            )
-          }
-        >
-          <Feather name="shield" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-          <Text style={[styles.actionBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]} numberOfLines={1}>
-            {t("ticketDetail.safetyReport")}
-          </Text>
-        </LayeredPillButton>
-      ) : null}
 
-      <View
-        style={[
-          styles.askVActionPanel,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-        testID="ticket-askv-actions"
-      >
-        <View style={styles.askVActionHeader}>
-          <Feather name="zap" size={15} color={colors.primary} />
-          <Text style={[styles.askVActionTitle, { color: colors.foreground }]}>
-            {t("tickets.askvActions.title")}
-          </Text>
-        </View>
-        <View style={styles.askVActionGrid}>
-          {askVActionsForTicket(ticket.id).map((action) => (
-            <Pressable
-              key={action.key}
-              onPress={() => router.push(askVPromptRoute(action.prompt) as never)}
-              style={[
-                styles.askVActionButton,
-                { borderColor: colors.border, backgroundColor: colors.background },
-              ]}
-              testID={`button-ticket-askv-${action.key}`}
-            >
-              <Feather name={action.icon} size={14} color={colors.primary} />
-              <Text
-                style={[styles.askVActionButtonText, { color: colors.foreground }]}
-                numberOfLines={1}
-              >
-                {t(action.labelKey)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
 
       {siteLocation &&
       (siteLocation.status === "inactive" || siteLocation.isActive === false) &&
@@ -2328,13 +2224,13 @@ export default function TicketDetailScreen() {
               </Text>
             </View>
           </View>
-          <TouchableOpacity
+          <LayeredPillButton color="#dc2626"
             onPress={cancelFromAssignmentBanner}
             disabled={cancelInFlight}
             style={[
               styles.actionBtn,
               {
-                backgroundColor: "#dc2626",
+
                 marginTop: 12,
                 opacity: cancelInFlight ? 0.6 : 1,
               },
@@ -2351,7 +2247,7 @@ export default function TicketDetailScreen() {
                 </Text>
               </>
             )}
-          </TouchableOpacity>
+          </LayeredPillButton>
         </View>
       ) : null}
 
@@ -2439,7 +2335,7 @@ export default function TicketDetailScreen() {
         onRequestClose={() => setMileagePromptFor(null)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: brand.primary }]}>
             <Text style={[styles.title, { color: colors.foreground, fontSize: 18 }]}>
               {mileagePromptFor === "en_route"
                 ? t("tickets.startingMileageTitle")
@@ -2458,9 +2354,9 @@ export default function TicketDetailScreen() {
               maxLength={12}
               style={{
                 marginTop: 12,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 8,
+                borderWidth: 2,
+                borderColor: brand.primary,
+                borderRadius: 14,
                 padding: 10,
                 color: colors.foreground,
                 fontSize: 18,
@@ -2473,20 +2369,20 @@ export default function TicketDetailScreen() {
               </Text>
             ) : null}
             <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-              <TouchableOpacity
+              <LayeredPillButton inactive
                 onPress={skipMileagePrompt}
-                style={[styles.actionBtn, { backgroundColor: colors.muted, flex: 1 }]}
+                style={[styles.actionBtn, {  flex: 1 }]}
                 testID="button-mileage-skip"
               >
-                <Text style={[styles.actionBtnText, { color: colors.foreground }]}>{t("tickets.mileageSkip")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+                <Text style={[styles.actionBtnText, { color: "#ffffff" }]}>{t("tickets.mileageSkip")}</Text>
+              </LayeredPillButton>
+              <LayeredPillButton
                 onPress={submitMileagePrompt}
-                style={[styles.actionBtn, { backgroundColor: "#2563eb", flex: 1 }]}
+                style={[styles.actionBtn, {  flex: 1 }]}
                 testID="button-mileage-submit"
               >
                 <Text style={[styles.actionBtnText, { color: "#ffffff" }]}>{t("tickets.mileageSubmit")}</Text>
-              </TouchableOpacity>
+              </LayeredPillButton>
             </View>
           </View>
         </View>
@@ -2494,7 +2390,7 @@ export default function TicketDetailScreen() {
 
       <Modal visible={denyOpen} transparent animationType="fade" onRequestClose={() => setDenyOpen(false)}>
         <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: brand.primary }]}>
             <Text style={[styles.title, { color: colors.foreground, fontSize: 18 }]}>
               {t("tickets.denyInviteTitle")}
             </Text>
@@ -2509,9 +2405,9 @@ export default function TicketDetailScreen() {
               style={{
                 marginTop: 12,
                 minHeight: 90,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 8,
+                borderWidth: 2,
+                borderColor: brand.primary,
+                borderRadius: 14,
                 padding: 10,
                 color: colors.foreground,
                 textAlignVertical: "top",
@@ -2519,18 +2415,18 @@ export default function TicketDetailScreen() {
               testID="input-deny-reason"
             />
             <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-              <TouchableOpacity
+              <LayeredPillButton inactive
                 onPress={() => { setDenyOpen(false); setDenyReason(""); }}
-                style={[styles.actionBtn, { backgroundColor: colors.muted, flex: 1 }]}
+                style={[styles.actionBtn, {  flex: 1 }]}
               >
-                <Text style={[styles.actionBtnText, { color: colors.foreground }]}>{t("common.cancel")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+                <Text style={[styles.actionBtnText, { color: "#ffffff" }]}>{t("common.cancel")}</Text>
+              </LayeredPillButton>
+              <LayeredPillButton color="#dc2626"
                 onPress={denyInvite}
                 disabled={inviteAction === "deny" || !denyReason.trim()}
                 style={[
                   styles.actionBtn,
-                  { backgroundColor: "#dc2626", flex: 1, opacity: !denyReason.trim() ? 0.5 : 1 },
+                  {  flex: 1, opacity: !denyReason.trim() ? 0.5 : 1 },
                 ]}
                 testID="button-submit-deny"
               >
@@ -2541,7 +2437,7 @@ export default function TicketDetailScreen() {
                     {t("tickets.denyInvite")}
                   </Text>
                 )}
-              </TouchableOpacity>
+              </LayeredPillButton>
             </View>
             {fieldError && fieldError.field === "deny" ? (
               <Text style={styles.inlineError} testID="inline-error-deny-modal">
@@ -2628,22 +2524,12 @@ export default function TicketDetailScreen() {
           (status === "approved" || status === "awaiting_payment") &&
           ticket.viewerCanDisperseFunds === true;
         return (
-          <View style={styles.actionGroup}>
+          <View onLayout={event => { actionPosition.current = event.nativeEvent.layout.y; }} style={styles.actionGroup}>
+            <Text style={{color:colors.foreground,fontFamily:"Inter_600SemiBold"}}>Work Actions</Text>
+            {checkedIn ? <Text style={{color:brand.primary}}>Working · work time is being recorded</Text> : null}
+            <View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}>
             {canEnRoute ? (
-              <LayeredPillButton
-                inactive={lifecycle === "en_route"}
-                onPress={enRoute}
-                disabled={actionInFlight !== null}
-                loading={actionInFlight === "en_route"}
-                height={40}
-                style={styles.actionBtnFull}
-                testID="button-en-route"
-              >
-                <Feather name="navigation" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-                <Text style={[styles.actionBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]}>
-                  {lifecycle === "en_route" ? t("tickets.updateEnRoute") : t("tickets.enRoute")}
-                </Text>
-              </LayeredPillButton>
+              <TicketWorkAction label={lifecycle === "en_route" ? t("tickets.updateEnRoute") : t("tickets.enRoute")} icon="navigation" active={lifecycle === "en_route"} onPress={enRoute} disabled={actionInFlight !== null} loading={actionInFlight === "en_route"} testID="button-en-route"/>
             ) : null}
             {fieldError && fieldError.field === "en_route" ? (
               <Text style={styles.inlineError} testID="inline-error-en_route">
@@ -2651,77 +2537,25 @@ export default function TicketDetailScreen() {
               </Text>
             ) : null}
             {canOnLocation ? (
-              <LayeredPillButton
-                inactive={lifecycle === "on_location"}
-                onPress={onLocation}
-                disabled={actionInFlight !== null}
-                loading={actionInFlight === "on_location"}
-                height={40}
-                style={styles.actionBtnFull}
-                testID="button-on-location"
-              >
-                <Feather name="map-pin" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-                <Text style={[styles.actionBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]}>
-                  {lifecycle === "on_location"
-                    ? t("tickets.updateOnLocation")
-                    : t("tickets.onLocation")}
-                </Text>
-              </LayeredPillButton>
+              <TicketWorkAction label={lifecycle === "on_location" ? t("tickets.updateOnLocation") : t("tickets.onLocation")} icon="map-pin" active={lifecycle === "on_location"} onPress={onLocation} disabled={actionInFlight !== null} loading={actionInFlight === "on_location"} testID="button-on-location"/>
             ) : null}
             {fieldError && fieldError.field === "on_location" ? (
               <Text style={styles.inlineError} testID="inline-error-on_location">
                 {fieldError.message}
               </Text>
             ) : null}
-            <View style={styles.actionRow}>
-              <LayeredPillButton
-                onPress={checkIn}
-                disabled={!canCheckIn || actionInFlight !== null}
-                loading={actionInFlight === "check_in"}
-                inactive={!canCheckIn}
-                height={40}
-                style={styles.actionBtnHalf}
-                testID="button-check-in"
-              >
-                <Feather name="log-in" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-                <Text style={[styles.directionsBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]}>
-                  {t("tickets.checkIn")}
-                </Text>
-              </LayeredPillButton>
-              <LayeredPillButton
-                onPress={checkOut}
-                disabled={!canCheckOut || actionInFlight !== null}
-                loading={actionInFlight === "check_out"}
-                inactive={!canCheckOut}
-                height={40}
-                style={styles.actionBtnHalf}
-                testID="button-check-out"
-              >
-                <Feather name="log-out" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-                <Text style={[styles.directionsBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]}>
-                  {t("tickets.checkOut")}
-                </Text>
-              </LayeredPillButton>
+            <View style={{flexDirection:"row",gap:8,flexWrap:"wrap"}}>
+              <TicketWorkAction label={t("tickets.checkIn")} icon="log-in" onPress={checkIn} disabled={!canCheckIn || actionInFlight !== null} loading={actionInFlight === "check_in"} testID="button-check-in"/>
+              <TicketWorkAction label={t("tickets.checkOut")} icon="log-out" active={checkedIn} onPress={checkOut} disabled={!canCheckOut || actionInFlight !== null} loading={actionInFlight === "check_out"} testID="button-check-out"/>
+              <TicketWorkAction label={t("tickets.closeForReview")} icon="send" onPress={closeForReview} disabled={!canClose || actionInFlight !== null} loading={actionInFlight === "close"} testID="button-close-for-review"/>
             </View>
             {fieldError && (fieldError.field === "check_in" || fieldError.field === "check_out") ? (
               <Text style={styles.inlineError} testID={`inline-error-${fieldError.field}`}>
                 {fieldError.message}
               </Text>
             ) : null}
-            <LayeredPillButton
-              onPress={closeForReview}
-              disabled={!canClose || actionInFlight !== null}
-              loading={actionInFlight === "close"}
-              inactive={!canClose}
-              height={40}
-              style={styles.actionBtnFull}
-              testID="button-close-for-review"
-            >
-              <Feather name="send" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-              <Text style={[styles.directionsBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]}>
-                {t("tickets.closeForReview")}
-              </Text>
-            </LayeredPillButton>
+            </View>
+
             {fieldError && fieldError.field === "close" ? (
               <Text style={styles.inlineError} testID="inline-error-close">
                 {fieldError.message}
@@ -2881,7 +2715,7 @@ export default function TicketDetailScreen() {
                 <View
                   style={[
                     styles.modalCard,
-                    { backgroundColor: colors.card, borderColor: colors.border },
+                    { backgroundColor: colors.card, borderColor: brand.primary },
                   ]}
                 >
                   <Text style={[styles.title, { color: colors.foreground, fontSize: 18 }]}>
@@ -2903,9 +2737,9 @@ export default function TicketDetailScreen() {
                     style={{
                       marginTop: 12,
                       minHeight: 90,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
+                      borderWidth: 2,
+                      borderColor: brand.primary,
+                      borderRadius: 14,
                       padding: 10,
                       color: colors.foreground,
                       textAlignVertical: "top",
@@ -2913,20 +2747,20 @@ export default function TicketDetailScreen() {
                     testID="input-awaiting-payment-note"
                   />
                   <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-                    <TouchableOpacity
+                    <LayeredPillButton inactive
                       onPress={() => {
                         setAwaitingPaymentOpen(false);
                         setAwaitingPaymentNote("");
                       }}
                       disabled={actionInFlight === "awaiting_payment"}
-                      style={[styles.actionBtn, { backgroundColor: colors.muted, flex: 1 }]}
+                      style={[styles.actionBtn, {  flex: 1 }]}
                       testID="button-awaiting-payment-cancel"
                     >
-                      <Text style={[styles.actionBtnText, { color: colors.foreground }]}>
+                      <Text style={[styles.actionBtnText, { color: "#ffffff" }]}>
                         {t("common.cancel")}
                       </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </LayeredPillButton>
+                    <LayeredPillButton
                       onPress={markAwaitingPayment}
                       disabled={actionInFlight === "awaiting_payment"}
                       style={[
@@ -2946,7 +2780,7 @@ export default function TicketDetailScreen() {
                           {t("tickets.awaitingPaymentSubmit")}
                         </Text>
                       )}
-                    </TouchableOpacity>
+                    </LayeredPillButton>
                   </View>
                   {fieldError && fieldError.field === "awaiting_payment" ? (
                     <Text
@@ -2975,7 +2809,7 @@ export default function TicketDetailScreen() {
                 <View
                   style={[
                     styles.modalCard,
-                    { backgroundColor: colors.card, borderColor: colors.border },
+                    { backgroundColor: colors.card, borderColor: brand.primary },
                   ]}
                 >
                   <Text style={[styles.title, { color: colors.foreground, fontSize: 18 }]}>
@@ -3006,7 +2840,7 @@ export default function TicketDetailScreen() {
                             ? t("ticketDetail.disperseFundsMethodCheck", { defaultValue: "Check" })
                             : t("ticketDetail.disperseFundsMethodOther", { defaultValue: "Other" });
                       return (
-                        <TouchableOpacity
+                        <LayeredPillButton
                           key={m}
                           onPress={() => {
                             setDisperseMethod(m);
@@ -3040,7 +2874,7 @@ export default function TicketDetailScreen() {
                           >
                             {label}
                           </Text>
-                        </TouchableOpacity>
+                        </LayeredPillButton>
                       );
                     })}
                   </View>
@@ -3071,9 +2905,9 @@ export default function TicketDetailScreen() {
                     maxLength={120}
                     style={{
                       marginTop: 6,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
+                      borderWidth: 2,
+                      borderColor: brand.primary,
+                      borderRadius: 14,
                       padding: 10,
                       color: colors.foreground,
                     }}
@@ -3097,9 +2931,9 @@ export default function TicketDetailScreen() {
                     style={{
                       marginTop: 6,
                       minHeight: 70,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
+                      borderWidth: 2,
+                      borderColor: brand.primary,
+                      borderRadius: 14,
                       padding: 10,
                       color: colors.foreground,
                       textAlignVertical: "top",
@@ -3138,15 +2972,15 @@ export default function TicketDetailScreen() {
                         style={{
                           width: "100%",
                           height: 160,
-                          borderRadius: 8,
-                          borderWidth: 1,
-                          borderColor: colors.border,
+                          borderRadius: 14,
+                          borderWidth: 2,
+                          borderColor: brand.primary,
                         }}
                         resizeMode="cover"
                         testID="disperse-receipt-preview"
                       />
                       <View style={{ flexDirection: "row", gap: 8 }}>
-                        <TouchableOpacity
+                        <LayeredPillButton inactive
                           onPress={captureDisperseReceipt}
                           disabled={
                             disperseReceiptUploading ||
@@ -3155,7 +2989,7 @@ export default function TicketDetailScreen() {
                           style={[
                             styles.actionBtn,
                             {
-                              backgroundColor: colors.muted,
+
                               flex: 1,
                               opacity:
                                 disperseReceiptUploading ||
@@ -3167,18 +3001,18 @@ export default function TicketDetailScreen() {
                           testID="button-disperse-receipt-replace"
                         >
                           {disperseReceiptUploading ? (
-                            <ActivityIndicator color={colors.foreground} />
+                            <ActivityIndicator color="#ffffff" />
                           ) : (
                             <>
                               <Feather
                                 name="camera"
                                 size={16}
-                                color={colors.foreground}
+                                color="#ffffff"
                               />
                               <Text
                                 style={[
                                   styles.actionBtnText,
-                                  { color: colors.foreground },
+                                  { color: "#ffffff" },
                                 ]}
                               >
                                 {t("ticketDetail.disperseFundsReceiptReplace", {
@@ -3187,8 +3021,8 @@ export default function TicketDetailScreen() {
                               </Text>
                             </>
                           )}
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </LayeredPillButton>
+                        <LayeredPillButton inactive
                           onPress={() => setDisperseReceiptUrl(null)}
                           disabled={
                             disperseReceiptUploading ||
@@ -3197,7 +3031,7 @@ export default function TicketDetailScreen() {
                           style={[
                             styles.actionBtn,
                             {
-                              backgroundColor: colors.muted,
+
                               flex: 1,
                               opacity:
                                 disperseReceiptUploading ||
@@ -3208,22 +3042,22 @@ export default function TicketDetailScreen() {
                           ]}
                           testID="button-disperse-receipt-remove"
                         >
-                          <Feather name="trash-2" size={16} color={colors.foreground} />
+                          <Feather name="trash-2" size={16} color="#ffffff" />
                           <Text
                             style={[
                               styles.actionBtnText,
-                              { color: colors.foreground },
+                              { color: "#ffffff" },
                             ]}
                           >
                             {t("ticketDetail.disperseFundsReceiptRemove", {
                               defaultValue: "Remove",
                             })}
                           </Text>
-                        </TouchableOpacity>
+                        </LayeredPillButton>
                       </View>
                     </View>
                   ) : (
-                    <TouchableOpacity
+                    <LayeredPillButton inactive
                       onPress={captureDisperseReceipt}
                       disabled={
                         disperseReceiptUploading ||
@@ -3232,7 +3066,7 @@ export default function TicketDetailScreen() {
                       style={[
                         styles.actionBtn,
                         {
-                          backgroundColor: colors.muted,
+
                           marginTop: 8,
                           opacity:
                             disperseReceiptUploading ||
@@ -3244,14 +3078,14 @@ export default function TicketDetailScreen() {
                       testID="button-disperse-receipt-capture"
                     >
                       {disperseReceiptUploading ? (
-                        <ActivityIndicator color={colors.foreground} />
+                        <ActivityIndicator color="#ffffff" />
                       ) : (
                         <>
-                          <Feather name="camera" size={16} color={colors.foreground} />
+                          <Feather name="camera" size={16} color="#ffffff" />
                           <Text
                             style={[
                               styles.actionBtnText,
-                              { color: colors.foreground },
+                              { color: "#ffffff" },
                             ]}
                           >
                             {t("ticketDetail.disperseFundsReceiptAttach", {
@@ -3260,11 +3094,11 @@ export default function TicketDetailScreen() {
                           </Text>
                         </>
                       )}
-                    </TouchableOpacity>
+                    </LayeredPillButton>
                   )}
 
                   <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-                    <TouchableOpacity
+                    <LayeredPillButton inactive
                       onPress={() => {
                         setDisperseOpen(false);
                         resetDisperseForm();
@@ -3276,14 +3110,14 @@ export default function TicketDetailScreen() {
                         }
                       }}
                       disabled={actionInFlight === "disperse_funds"}
-                      style={[styles.actionBtn, { backgroundColor: colors.muted, flex: 1 }]}
+                      style={[styles.actionBtn, {  flex: 1 }]}
                       testID="button-disperse-cancel"
                     >
-                      <Text style={[styles.actionBtnText, { color: colors.foreground }]}>
+                      <Text style={[styles.actionBtnText, { color: "#ffffff" }]}>
                         {t("common.cancel")}
                       </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </LayeredPillButton>
+                    <LayeredPillButton
                       onPress={disperseFunds}
                       disabled={actionInFlight === "disperse_funds"}
                       style={[
@@ -3305,7 +3139,7 @@ export default function TicketDetailScreen() {
                           })}
                         </Text>
                       )}
-                    </TouchableOpacity>
+                    </LayeredPillButton>
                   </View>
                   {fieldError && fieldError.field === "disperse_funds" ? (
                     <Text
@@ -3333,10 +3167,10 @@ export default function TicketDetailScreen() {
             marginTop: 8,
             marginBottom: 8,
             padding: 12,
-            borderRadius: 8,
+            borderRadius: 14,
             backgroundColor: colors.card,
-            borderWidth: 1,
-            borderColor: colors.border,
+            borderWidth: 2,
+            borderColor: brand.primary,
             gap: 4,
           }}
           testID="payment-details-card"
@@ -3414,9 +3248,9 @@ export default function TicketDetailScreen() {
                 style={{
                   width: "100%",
                   height: 200,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: colors.border,
+                  borderRadius: 14,
+                  borderWidth: 2,
+                  borderColor: brand.primary,
                 }}
                 resizeMode="cover"
                 testID="payment-receipt-image"
@@ -3475,7 +3309,7 @@ export default function TicketDetailScreen() {
           <View
             style={[
               styles.modalCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
+              { backgroundColor: colors.card, borderColor: brand.primary },
             ]}
           >
             <Text style={[styles.title, { color: colors.foreground, fontSize: 18 }]}>
@@ -3516,9 +3350,9 @@ export default function TicketDetailScreen() {
               style={{
                 marginTop: 6,
                 minHeight: 70,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 8,
+                borderWidth: 2,
+                borderColor: brand.primary,
+                borderRadius: 14,
                 padding: 10,
                 color: colors.foreground,
                 textAlignVertical: "top",
@@ -3526,7 +3360,7 @@ export default function TicketDetailScreen() {
               testID="input-reverse-dispersal-reason"
             />
             <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-              <TouchableOpacity
+              <LayeredPillButton inactive
                 onPress={() => {
                   setReverseDispersalOpen(false);
                   resetReverseDispersalForm();
@@ -3538,14 +3372,14 @@ export default function TicketDetailScreen() {
                   }
                 }}
                 disabled={actionInFlight === "reverse_dispersal"}
-                style={[styles.actionBtn, { backgroundColor: colors.muted, flex: 1 }]}
+                style={[styles.actionBtn, {  flex: 1 }]}
                 testID="button-reverse-dispersal-cancel"
               >
-                <Text style={[styles.actionBtnText, { color: colors.foreground }]}>
+                <Text style={[styles.actionBtnText, { color: "#ffffff" }]}>
                   {t("common.cancel")}
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </LayeredPillButton>
+              <LayeredPillButton color="#dc2626"
                 onPress={reverseDispersal}
                 disabled={
                   actionInFlight === "reverse_dispersal" ||
@@ -3554,7 +3388,7 @@ export default function TicketDetailScreen() {
                 style={[
                   styles.actionBtn,
                   {
-                    backgroundColor: "#dc2626",
+
                     flex: 1,
                     opacity:
                       actionInFlight === "reverse_dispersal" ||
@@ -3574,7 +3408,7 @@ export default function TicketDetailScreen() {
                     })}
                   </Text>
                 )}
-              </TouchableOpacity>
+              </LayeredPillButton>
             </View>
             {fieldError && fieldError.field === "reverse_dispersal" ? (
               <Text
@@ -3588,23 +3422,24 @@ export default function TicketDetailScreen() {
         </View>
       </Modal>
 
+      <TicketWorkSection title="Visits & evidence" initiallyOpen={false}>
       <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
 
       <View
         style={[
           styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
+          { backgroundColor: colors.card, borderColor: brand.primary },
         ]}
         testID="ticket-proof-packet-card"
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Feather name="shield" size={18} color={colors.primary} />
           <Text style={[styles.section, { color: colors.foreground, marginTop: 0 }]}>
-            {t("ticketDetail.proofPacketTitle", { defaultValue: "Proof-to-Pay Packet" })}
+            {isFieldPacket ? "Field Proof Packet" : t("ticketDetail.proofPacketTitle", { defaultValue: "Proof-to-Pay Packet" })}
           </Text>
         </View>
         <Text style={{ color: colors.mutedForeground, marginBottom: 8 }}>
-          {proofPacket.status === "complete"
+          {isFieldPacket ? (ticket.status === "kicked_back" ? "Office corrections requested. Review the feedback and resubmit your field packet." : "Your field evidence and handoff to the office. Approval and payment are managed by the office.") : proofPacket.status === "complete"
             ? t("ticketDetail.proofPacketComplete", {
               defaultValue: "Core evidence is captured for ticket review, invoice defense, and payment history.",
             })
@@ -3636,7 +3471,7 @@ export default function TicketDetailScreen() {
               testID={`ticket-proof-packet-section-${section.id}`}
             >
               <Feather
-                name={section.complete ? "check-circle" : "alert-circle"}
+                name={section.optional ? "info" : section.complete ? "check-circle" : "alert-circle"}
                 size={16}
                 color={section.complete ? "#16a34a" : "#d97706"}
               />
@@ -3658,6 +3493,8 @@ export default function TicketDetailScreen() {
         ) : null}
       </View>
 
+      </TicketWorkSection>
+      <TicketWorkSection title="Team coordination" initiallyOpen={false}>
       <TicketNudgePanel
         ticketId={ticket.id}
         ticketStatus={ticket.status}
@@ -3685,12 +3522,12 @@ export default function TicketDetailScreen() {
               })}
             </Text>
           ) : null}
-          <BlueButton
+          <LayeredPillButton
             onPress={() => setScheduleOpen(true)}
             testID="button-schedule-ticket"
           >
             {t("scheduleTicket.button")}
-          </BlueButton>
+          </LayeredPillButton>
           {ticket.scheduledStartAt ? (
             <TouchableOpacity
               onPress={() => router.push(`/ticket/${ticket.id}/crew-tracker`)}
@@ -3705,6 +3542,8 @@ export default function TicketDetailScreen() {
         </View>
       ) : null}
 
+      </TicketWorkSection>
+      <TicketWorkSection title="Crew & labor" initiallyOpen>
       <CrewTimeSection
         ticketId={ticket.id}
         vendorId={ticket.vendorId ?? currentUser?.vendorId ?? null}
@@ -3723,6 +3562,8 @@ export default function TicketDetailScreen() {
         refreshHandleRef={crewHandleRef}
       />
 
+      </TicketWorkSection>
+      <TicketWorkSection title="Ticket history & corrections" initiallyOpen={false}>
       {transitions.length > 0 ? (
         <View>
           <Text style={[styles.section, { color: colors.foreground }]}>
@@ -3731,7 +3572,7 @@ export default function TicketDetailScreen() {
           <View
             style={[
               styles.historyCard,
-              { borderColor: colors.border, backgroundColor: colors.card },
+              { borderColor: brand.primary, backgroundColor: colors.card },
             ]}
             testID="audit-trail-timeline"
           >
@@ -3866,7 +3707,7 @@ export default function TicketDetailScreen() {
                         marginTop: 6,
                         padding: 8,
                         borderRadius: 6,
-                        borderWidth: 1,
+                        borderWidth: 2,
                         borderColor: isDenied ? "#fecaca" : "#e5e7eb",
                         backgroundColor: isDenied ? "#fef2f2" : "#f4f4f5",
                       }}
@@ -3913,7 +3754,7 @@ export default function TicketDetailScreen() {
           <View
             style={[
               styles.historyCard,
-              { borderColor: colors.border, backgroundColor: colors.card },
+              { borderColor: brand.primary, backgroundColor: colors.card },
             ]}
             testID="unlock-history-timeline"
           >
@@ -3975,7 +3816,7 @@ export default function TicketDetailScreen() {
         <View
           style={[
             styles.historyCard,
-            { borderColor: colors.border, backgroundColor: colors.card },
+            { borderColor: brand.primary, backgroundColor: colors.card },
           ]}
         >
           <ScrollView
@@ -4008,7 +3849,7 @@ export default function TicketDetailScreen() {
                       }
                       style={[
                         styles.mapThumb,
-                        { borderColor: colors.border, backgroundColor: colors.muted },
+                        { borderColor: brand.primary, backgroundColor: colors.muted },
                       ]}
                       accessibilityRole="button"
                       accessibilityLabel={`View ${evt.label} on map`}
@@ -4090,6 +3931,8 @@ export default function TicketDetailScreen() {
         </View>
       )}
 
+      </TicketWorkSection>
+      <TicketWorkSection title="Materials & charges" initiallyOpen>
       <Text style={[styles.section, { color: colors.foreground }]}>
         {t("tickets.partsAndLabor")}
       </Text>
@@ -4104,7 +3947,7 @@ export default function TicketDetailScreen() {
             key={it.id}
             style={[
               styles.lineItem,
-              { borderColor: colors.border, backgroundColor: colors.card },
+              { borderColor: brand.primary, backgroundColor: colors.card },
             ]}
           >
             <View style={{ flex: 1 }}>
@@ -4135,14 +3978,14 @@ export default function TicketDetailScreen() {
         onLayout={event => { itemFormY.current = event.nativeEvent.layout.y; }}
         style={[
           styles.formCard,
-          { borderColor: colors.border, backgroundColor: colors.card },
+          { borderColor: brand.primary, backgroundColor: colors.card },
         ]}
       >
         <TouchableOpacity
           onPress={() => setItemTypePickerOpen(true)}
           style={[
             styles.dropdown,
-            { borderColor: colors.border, backgroundColor: colors.background },
+            { borderColor: brand.primary, backgroundColor: colors.background },
           ]}
         >
           <Text
@@ -4168,7 +4011,7 @@ export default function TicketDetailScreen() {
             <Pressable
               style={[
                 styles.modalSheet,
-                { backgroundColor: colors.card, borderColor: colors.border },
+                { backgroundColor: colors.card, borderColor: brand.primary },
               ]}
               onPress={(e) => e.stopPropagation()}
             >
@@ -4211,7 +4054,7 @@ export default function TicketDetailScreen() {
           placeholderTextColor={colors.mutedForeground}
           style={[
             styles.input,
-            { borderColor: colors.border, color: colors.foreground },
+            { borderColor: brand.primary, color: colors.foreground },
           ]}
         />
         <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
@@ -4223,7 +4066,7 @@ export default function TicketDetailScreen() {
             placeholderTextColor={colors.mutedForeground}
             style={[
               styles.input,
-              { flex: 1, borderColor: colors.border, color: colors.foreground },
+              { flex: 1, borderColor: brand.primary, color: colors.foreground },
             ]}
           />
           <TextInput
@@ -4234,7 +4077,7 @@ export default function TicketDetailScreen() {
             placeholderTextColor={colors.mutedForeground}
             style={[
               styles.input,
-              { flex: 1, borderColor: colors.border, color: colors.foreground },
+              { flex: 1, borderColor: brand.primary, color: colors.foreground },
             ]}
           />
         </View>
@@ -4263,7 +4106,7 @@ export default function TicketDetailScreen() {
       <View
         style={[
           styles.totals,
-          { borderColor: colors.border, backgroundColor: colors.card },
+          { borderColor: brand.primary, backgroundColor: colors.card },
         ]}
       >
         {ticket?.effectiveTaxTreatment ? (
@@ -4333,8 +4176,9 @@ export default function TicketDetailScreen() {
         </View>
       </View>
 
+      </TicketWorkSection>
       {ticket.siteLocationId ? (
-        <TouchableOpacity
+        <LayeredPillButton
           onPress={() =>
             // Task #498: from a live ticket the FE is already on, the
             // "another job" CTA initiates an *adjacent* ticket — same
@@ -4349,9 +4193,9 @@ export default function TicketDetailScreen() {
           style={[
             styles.checkoutBtn,
             {
-              backgroundColor: "transparent",
-              borderWidth: 1,
-              borderColor: colors.border,
+
+              borderWidth: 2,
+              borderColor: brand.primary,
               flexDirection: "row",
               gap: 8,
               marginTop: 12,
@@ -4359,10 +4203,10 @@ export default function TicketDetailScreen() {
           ]}
           testID="button-initiate-adjacent-ticket"
         >
-          <Feather name="plus-circle" size={18} color={colors.foreground} />
+          <Feather name="plus-circle" size={18} color="#ffffff" />
           <Text
             style={{
-              color: colors.foreground,
+              color: "#ffffff",
               fontFamily: "Inter_600SemiBold",
               fontSize: 15,
             }}
@@ -4371,7 +4215,7 @@ export default function TicketDetailScreen() {
               defaultValue: "Initiate adjacent ticket",
             })}
           </Text>
-        </TouchableOpacity>
+        </LayeredPillButton>
       ) : null}
 
       <Modal
@@ -4515,7 +4359,7 @@ export default function TicketDetailScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  card: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 16 },
+  card: { borderWidth: 2, borderRadius: 14, padding: 14, marginBottom: 16 },
   // Task #623: assignment-restored toast. Pinned to the bottom of the
   // screen with `pointerEvents="none"` on the container so input passes
   // straight through — the worker can keep typing/tapping while it shows.
@@ -4559,7 +4403,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     alignSelf: "flex-start",
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -4592,8 +4436,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 8,
-    borderWidth: 1,
-    borderRadius: 10,
+    borderWidth: 2,
+    borderRadius: 14,
     padding: 10,
   },
   proofPacketLabel: {
@@ -4610,15 +4454,15 @@ const styles = StyleSheet.create({
   lineItem: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 10,
+    borderWidth: 2,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 8,
   },
   iconBtn: { padding: 6 },
   formCard: {
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 2,
+    borderRadius: 14,
     padding: 12,
     marginTop: 8,
     marginBottom: 16,
@@ -4627,8 +4471,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: 2,
   },
   dropdown: {
     flexDirection: "row",
@@ -4636,8 +4480,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 12,
     paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: 2,
     marginBottom: 8,
   },
   modalBackdrop: {
@@ -4650,13 +4494,13 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 480,
     alignSelf: "center",
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: 2,
     padding: 16,
   },
   modalSheet: {
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: 2,
     overflow: "hidden",
   },
   modalOption: {
@@ -4668,8 +4512,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: 8,
+    borderWidth: 2,
+    borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontFamily: "Inter_400Regular",
@@ -4680,7 +4524,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   actionGroup: {
     marginTop: 8,
@@ -4696,15 +4540,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    height: 48,
-    borderRadius: 10,
+    height: PILL_HEIGHT_PX,
+    borderRadius: 999,
   },
   actionBtnHalf: { flex: 1 },
   actionBtnFull: { width: "100%" },
   actionBtnText: { fontFamily: "Inter_400Regular", fontSize: 14 },
   askVActionPanel: {
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 2,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 12,
     gap: 10,
@@ -4726,8 +4570,8 @@ const styles = StyleSheet.create({
   askVActionButton: {
     width: "48%",
     minHeight: 40,
-    borderWidth: 1,
-    borderRadius: 10,
+    borderWidth: 2,
+    borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 8,
     flexDirection: "row",
@@ -4764,14 +4608,14 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   note: {
-    borderWidth: 1,
-    borderRadius: 10,
+    borderWidth: 2,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 8,
   },
   totals: {
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 2,
+    borderRadius: 14,
     padding: 14,
     marginTop: 8,
     marginBottom: 8,
@@ -4789,14 +4633,14 @@ const styles = StyleSheet.create({
   },
   checkoutBtn: {
     marginTop: 16,
-    height: 52,
-    borderRadius: 12,
+    height: PILL_HEIGHT_PX,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
   },
   historyCard: {
-    borderWidth: 1,
-    borderRadius: 12,
+    borderWidth: 2,
+    borderRadius: 14,
     marginBottom: 16,
     overflow: "hidden",
   },
@@ -4821,7 +4665,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   directionsBtnText: {
     fontFamily: "Inter_600SemiBold",
@@ -4830,8 +4674,8 @@ const styles = StyleSheet.create({
   mapThumb: {
     width: 64,
     height: 64,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: 2,
     overflow: "hidden",
     marginRight: 10,
     alignItems: "center",
@@ -4845,7 +4689,7 @@ const styles = StyleSheet.create({
   photoThumb: {
     width: "100%",
     height: 200,
-    borderRadius: 8,
+    borderRadius: 14,
     backgroundColor: "rgba(0,0,0,0.05)",
   },
   previewBackdrop: {

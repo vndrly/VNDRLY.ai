@@ -69,10 +69,10 @@ function Panel({ ticketId, updatedAt, canFinalize, actorId, identity, onRefresh,
   }
   if (!canFinalize && !attempt && !message) return null;
   return <View accessibilityLabel={t("tickets.closeTicket")}>
-    {review ? <Text>{t("tickets.closeTicketTitle")}</Text> : null}
-    <Text>{t("tickets.closeTicketBody")}</Text>
-    <Text>{es ? "Congela totales registrados; no envía el ticket ni verifica el trabajo físico." : "Freeze recorded totals; this does not submit the ticket or verify physical work."}</Text>
-    {message ? <Text accessibilityRole="text">{message}</Text> : null}
+    {review ? <Text style={{ color: "#d1d5db", lineHeight: 19 }}>{t("tickets.closeTicketTitle")}</Text> : null}
+    <Text style={{ color: "#d1d5db", lineHeight: 19 }}>{t("tickets.closeTicketBody")}</Text>
+    <Text style={{ color: "#d1d5db", lineHeight: 19 }}>{es ? "Congela totales registrados; no envía el ticket ni verifica el trabajo físico." : "Freeze recorded totals; this does not submit the ticket or verify physical work."}</Text>
+    {message ? <Text style={{ color: "#d1d5db", lineHeight: 19 }} accessibilityRole="text">{message}</Text> : null}
     {attempt || (canFinalize && !saved && conflictedAt === null) ? <TogglePillButton disabled={!ready || busy || disabled} onPress={() => attempt || review ? void save() : setReview(true)}>{attempt ? es ? "Comprobar solicitud guardada" : "Check saved request" : review ? es ? "Confirmar congelación" : "Confirm freeze" : es ? "Cerrar totales registrados" : "Finalize recorded labor"}</TogglePillButton> : null}
   </View>;
 }

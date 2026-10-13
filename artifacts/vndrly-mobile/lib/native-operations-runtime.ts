@@ -10,6 +10,7 @@ import { readNativeDeviceReadiness } from "./native-device-readiness";
 import { synchronizeNativeJournal } from "./native-operation-journal-runtime";
 import { readPendingRequestedPhotos, requestedPhotoBackgroundAvailable, resumeRequestedPhoto } from "./requested-photo-upload";
 import { readTicketPhotoDrafts, resumeTicketPhoto } from "./ticket-photo-journal";
+import { synchronizeDutyBackgroundLocation, stopDutyBackgroundLocation } from "./duty-background-location";
 
 export const NATIVE_OPERATIONS_PUSH_TASK = "vndrly-native-operations-request";
 let pending: Promise<void> | null = null;
@@ -36,6 +37,7 @@ async function pollCurrentRequests() {
     if (Date.now() - lastPoll < (readiness?.lowPower ? 60_000 : 10_000)) return;
     lastPoll = Date.now();
     const scope = captureAuthScope(), status = await readNativeOperations(scope);
+    if (isAuthScopeCurrent(scope)) await synchronizeDutyBackgroundLocation().catch(() => undefined);
     for (const request of status.requests.filter(item => item.kind === "location" && requestIsActionable(item))) {
       if (!isAuthScopeCurrent(scope)) return;
       await answerForegroundLocation(request, scope);
@@ -73,5 +75,5 @@ export async function startNativeOperationsRuntime() {
   void pollCurrentRequests().catch(() => undefined);
   const activityTimer = setInterval(() => { if (AppState.currentState === "active") void refreshSelectedNativeWorkActivity().catch(() => undefined); }, 60_000);
   void refreshSelectedNativeWorkActivity().catch(() => undefined);
-  return () => { receive.remove(); state.remove(); clearInterval(timer); clearInterval(activityTimer); };
+  return () => { receive.remove(); state.remove(); clearInterval(timer); clearInterval(activityTimer); void stopDutyBackgroundLocation().catch(() => undefined); };
 }

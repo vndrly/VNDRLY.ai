@@ -354,9 +354,9 @@ function RootLayout() {
                   <SafeKeyboardProvider>
                     <VndrlyPageBackground>
                       <MeetingCompanionProvider>
+                        <AskVVoiceIndicator />
                         <AuthGate />
                         <ContextPickerModal />
-                        <AskVVoiceIndicator />
                       </MeetingCompanionProvider>
                     </VndrlyPageBackground>
                   </SafeKeyboardProvider>

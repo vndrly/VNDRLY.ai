@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ActivityIndicator,
+  useWindowDimensions,
   Pressable,
   StyleSheet,
   Text,
@@ -28,6 +29,7 @@ export type TogglePillColor = "brand" | "blue" | "green" | "red";
 
 export interface TogglePillButtonProps {
   children: React.ReactNode;
+  compactOnTablet?: boolean;
   onPress?: (e: GestureResponderEvent) => void;
   disabled?: boolean;
   loading?: boolean;
@@ -57,6 +59,7 @@ function coloredSrc(color: TogglePillColor, brandPrimary: string, brandName: str
  */
 export default function TogglePillButton({
   children,
+  compactOnTablet = false,
   onPress,
   disabled,
   loading,
@@ -72,6 +75,7 @@ export default function TogglePillButton({
   solid,
 }: TogglePillButtonProps) {
   const brand = useBrand();
+  const { width } = useWindowDimensions();
   const isDisabled = disabled || loading;
   const resolvedAccessibilityLabel = accessibilityLabel ?? (typeof children === "string" ? children : undefined);
   const lockToRest = !!inactive || !!loading;
@@ -102,6 +106,7 @@ export default function TogglePillButton({
         { height: visualHeight, alignSelf: "stretch" },
         isDisabled && !inactive ? styles.dimmed : null,
         style,
+        compactOnTablet && width >= 768 ? { alignSelf: "flex-start", flexGrow: 0, flexBasis: "auto", minWidth: 160, maxWidth: 320 } : null,
       ]}
     >
       {({ pressed }) => {

@@ -72,7 +72,8 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
     body: [
       MESSAGING_DISCLOSURE.consent,
       `${MESSAGING_DISCLOSURE.summary} ${MESSAGING_DISCLOSURE.rates} ${MESSAGING_DISCLOSURE.stop} ${MESSAGING_DISCLOSURE.help} ${MESSAGING_DISCLOSURE.carriers}`,
-      "VNDRLY does not sell, rent, or share mobile phone numbers, text messaging opt-in records, or SMS consent with third parties for their marketing or promotional purposes.",
+      "VNDRLY does not sell, rent, share, or otherwise provide mobile phone numbers, text messaging opt-in records, or SMS consent to third parties or affiliates for marketing or promotional purposes.",
+      "The general information-sharing provisions below do not authorize sharing text messaging opt-in records or SMS consent for marketing or promotional purposes. Messaging service providers may process mobile numbers and consent records solely to deliver and administer VNDRLY messages on our behalf, including honoring opt-out requests; they may not use these records for their own marketing or promotions.",
     ],
   },
   {
@@ -80,6 +81,7 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
     body: [
       "We share information only as needed to operate VNDRLY, including with the partner, vendor, field employee, or administrator accounts authorized to view a workflow; service providers that host, secure, deliver, route, message, email, map, analyze, or support the platform; and government, legal, tax, or safety authorities where required by law or valid process.",
       "We do not sell personal information. We do not allow service providers to use VNDRLY data for their own marketing.",
+      "Mobile information and SMS consent remain subject to the restrictions in Text Messaging and Mobile Information above, including when we work with affiliates or service providers.",
     ],
   },
   {

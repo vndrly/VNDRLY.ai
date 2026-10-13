@@ -3,6 +3,7 @@ import { assertFreshLocalTestDatabaseEnvironment } from "../../../scripts/fresh-
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
+import {createRealmDispatcher} from './database-realm';
 
 const { Pool } = pg;
 
@@ -16,8 +17,41 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+const productionPool = new Pool({ connectionString: process.env.DATABASE_URL });
+const productionDb = drizzle(productionPool, { schema });
+const demoPool = process.env.DEMO_DATABASE_URL
+  ? new Pool({connectionString:process.env.DEMO_DATABASE_URL,connectionTimeoutMillis:10000})
+  : null;
+const demoDb = demoPool ? drizzle(demoPool,{schema}) : null;
+let demoReady=false;
+let demoInitialization:Promise<void>|undefined;
+
+/** Validate actual server/database identity before accepting any demo request. */
+export async function initializeDemoDatabase():Promise<void>{
+ if(demoReady)return;
+ if(!demoPool)throw Error('Demo database is not configured');
+ if(!demoInitialization)demoInitialization=(async()=>{
+  const sql="select current_database() name,host(inet_server_addr()) address,inet_server_port() port";
+  const [production,demo]=await Promise.all([productionPool.query(sql),demoPool.query(sql)]);
+  const a=production.rows[0],b=demo.rows[0];
+  if(b.name!=='vndrly_prairie_demo'||JSON.stringify(a)===JSON.stringify(b))throw Error('Demo database identity is not distinct');
+  const schemaReady=(await demoPool.query("select to_regclass('public.users') users,to_regclass('public.tickets') tickets")).rows[0];
+  if(!schemaReady.users||!schemaReady.tickets)throw Error('Demo database schema is unavailable');
+  demoReady=true;
+ })().catch(error=>{demoInitialization=undefined;throw error;});
+ return demoInitialization;
+}
+
+export const pool=createRealmDispatcher(productionPool,()=>{
+ if(!demoReady||!demoPool)throw Error('Demo database unavailable; production fallback prohibited');
+ return demoPool;
+});
+export const db=createRealmDispatcher(productionDb,()=>{
+ if(!demoReady||!demoDb)throw Error('Demo database unavailable; production fallback prohibited');
+ return demoDb;
+});
+export {currentDatabaseRealm,runInDatabaseRealm,assertExternalEffectsAllowed} from './database-realm';
+export type {DatabaseRealm} from './database-realm';
 
 export * from "./schema";
 export * from "./schema/workHubImports";

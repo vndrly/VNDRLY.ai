@@ -3,10 +3,11 @@ import * as Sharing from "expo-sharing";
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, Modal } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
+import {gateVisitState,gateVisitDuration,groupGateVisits} from "@/lib/gate-log-view";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
@@ -26,11 +27,13 @@ type RecordType = "all" | "check_ins" | "check_outs" | "visitors_on_site" | "emp
 type Format = "pdf" | "excel" | "word";
 type Row = Record<string, unknown> & { id?: string | number };
 
-export default function GateHistory() {
+export default function GateHistory(){const {user,activeMembershipId}=useAuth();return <GateHistoryPanel key={String(user?.id)+":"+String(activeMembershipId)}/>;}
+function GateHistoryPanel() {
   const colors = useColors(); const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const wideLandscape = width >= 768 && width > height;
-  const { user } = useAuth();
+  const { user,activeMembershipId } = useAuth();
+  const [selectedRow,setSelectedRow]=useState<Row|null>(null),[reportsOpen,setReportsOpen]=useState(false);
   const [siteId, setSiteId] = useState<number | null>(null); const [stationId, setStationId] = useState("");
   const [siteMenuOpen, setSiteMenuOpen] = useState(false); const [gateMenuOpen, setGateMenuOpen] = useState(false);
   const [recipientsOpen, setRecipientsOpen] = useState(false);
@@ -41,18 +44,18 @@ export default function GateHistory() {
   const [recipientIds, setRecipientIds] = useState<number[]>([]);
   const [historyPage, setHistoryPage] = useState(0);
   const [reviewReasons, setReviewReasons] = useState<Record<string, string>>({});
-  const sites = useQuery({ queryKey: ["gate-history-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
+  const sites = useQuery({ queryKey: ["gate-history-sites",user?.id,activeMembershipId], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
   const selectedSiteId = siteId ?? sites.data?.sites[0]?.id ?? null;
-  const stations = useQuery({ queryKey: ["gate-history-stations", selectedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${selectedSiteId}&mode=history`), enabled: Boolean(selectedSiteId), retry: false });
+  const stations = useQuery({ queryKey: ["gate-history-stations",user?.id,activeMembershipId, selectedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${selectedSiteId}&mode=history`), enabled: Boolean(selectedSiteId), retry: false });
   const selectedStationId = stationId || stations.data?.stations[0]?.id || "";
   const filters = useMemo(() => ({ siteId: selectedSiteId!, ...(selectedStationId ? { stationId: selectedStationId } : {}), range, recordType, ...(search.trim() ? { search: search.trim() } : {}) }), [range, recordType, search, selectedSiteId, selectedStationId]);
-  const report = useQuery({ queryKey: ["gate-history-report", filters], queryFn: () => apiFetch<{ rows: Row[] }>("/api/gate-report/query", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "history", filters }) }), enabled: Boolean(selectedSiteId), retry: false });
-  const liveFilters = useMemo(() => ({ siteId: selectedSiteId!, ...(selectedStationId ? { stationId: selectedStationId } : {}), range: "1y" as const, recordType: "all" as const }), [selectedSiteId, selectedStationId]);
-  const liveHistory = useQuery({ queryKey: ["gate-history-live", liveFilters], queryFn: () => apiFetch<{ rows: Row[] }>("/api/gate-report/query", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "history", filters: liveFilters }) }), enabled: Boolean(selectedSiteId), retry: false });
-  useEffect(() => setHistoryPage(0), [selectedSiteId, selectedStationId]);
-  const liveRows = liveHistory.data?.rows ?? [];
-  const visibleLiveRows = liveRows.slice(historyPage * 50, historyPage * 50 + 50);
-  const recipients = useQuery({ queryKey: ["gate-history-recipients", filters], queryFn: () => apiFetch<{ recipients: GateReportRecipient[] }>(`/api/gate-report/recipients?${new URLSearchParams({ reportKind: "history", siteId: String(filters.siteId), stationId: selectedStationId, range, recordType, search })}`), enabled: Boolean(selectedSiteId), retry: false });
+  const report = useQuery({ queryKey: ["gate-history-report",user?.id,activeMembershipId, filters], queryFn: () => apiFetch<{ rows: Row[] }>("/api/gate-report/query", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "history", filters }) }), enabled: Boolean(selectedSiteId), refetchInterval:15000, retry: false });
+  useEffect(()=>{setHistoryPage(0);setSelectedRow(null);},[selectedSiteId,selectedStationId,range,recordType,search,activeMembershipId]);
+  const rows=report.data?.rows??[],visibleRows=rows.slice(historyPage*50,historyPage*50+50);
+  const onSite=rows.filter(row=>gateVisitState(row)==="on_site").length,reviewCount=rows.filter(row=>gateVisitState(row)==="review").length;
+  const duration=(row:Row)=>{const minutes=gateVisitDuration(row);return minutes===null?t("gateHistory.notRecorded"):minutes>=1440?Math.floor(minutes/1440)+"d "+Math.floor(minutes%1440/60)+"h":minutes>=60?Math.floor(minutes/60)+"h "+minutes%60+"m":minutes+" min";};
+  const dateTime=(value:unknown)=>{const date=new Date(String(value??""));return Number.isFinite(date.getTime())?date.toLocaleString():t("gateHistory.notRecorded");};
+  const recipients = useQuery({ queryKey: ["gate-history-recipients",user?.id,activeMembershipId, filters], queryFn: () => apiFetch<{ recipients: GateReportRecipient[] }>(`/api/gate-report/recipients?${new URLSearchParams({ reportKind: "history", siteId: String(filters.siteId), stationId: selectedStationId, range, recordType, search })}`), enabled: Boolean(selectedSiteId), retry: false });
   useEffect(() => {
     const visibleRecipients = recipients.data?.recipients.filter(isVisibleGateReportRecipient) ?? [];
     const visibleIds = new Set(visibleRecipients.map((entry) => entry.userId));
@@ -98,9 +101,10 @@ export default function GateHistory() {
     if (!id || !Number.isSafeInteger(visitId) || visitId <= 0 || !reason) return;
     const reconciliationId = typeof row.reconciliationId === "string" ? row.reconciliationId : null;
     await apiFetch(reconciliationId ? `/api/visits/gate/${visitId}/reconciliations/${reconciliationId}/reverse` : `/api/visits/gate/${visitId}/resolve-stale`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reason, idempotencyKey: Crypto.randomUUID() }) });
-    setReviewReasons((current) => ({ ...current, [id]: "" })); await report.refetch();
+    setReviewReasons((current) => ({ ...current, [id]: "" })); await report.refetch();setSelectedRow(null);
   };
-  const field = { backgroundColor: colors.background, borderColor: colors.border, borderRadius: 18, borderWidth: 1, color: colors.foreground, paddingHorizontal: 12, paddingVertical: 10 } as const;
+  const field = { backgroundColor: colors.background, borderColor: colors.primary, borderRadius: 12, borderWidth: 2, color: colors.foreground, paddingHorizontal: 12, paddingVertical: 10 } as const;
+  function details(){if(!selectedRow)return null;const row=selectedRow,id=String(row.id??""),state=gateVisitState(row);return <><View style={{flexDirection:"row",justifyContent:"space-between",gap:10}}><Text style={{color:colors.foreground,fontSize:20,fontWeight:"700",flex:1}}>{String(row.name??row.driver??t("gateHistory.record"))}</Text><Pressable accessibilityRole="button" accessibilityLabel={t("gateHistory.closeDetails")} onPress={()=>setSelectedRow(null)} style={{padding:8}}><Text style={{color:colors.foreground}}>✕</Text></Pressable></View><Text style={{color:colors.primary}}>{t(({on_site:"gateHistory.state.on_site",departed:"gateHistory.state.departed",pending:"gateHistory.state.pending",denied:"gateHistory.state.denied",reconciled:"gateHistory.state.reconciled",review:"gateHistory.state.review"} as const)[state])}</Text>{[["company",row.company],["plate",[row.plateState,row.vehiclePlate].filter(Boolean).join(" ")],["arrived",dateTime(row.checkInTime)],["departed",dateTime(row.checkOutTime)],["duration",duration(row)]].map(([label,value])=><View key={String(label)} style={{gap:4}}><Text style={{color:colors.mutedForeground,fontSize:12}}>{t(({company:"gateHistory.company",plate:"gateHistory.plate",arrived:"gateHistory.arrived",departed:"gateHistory.departed",duration:"gateHistory.duration"} as Record<string,string>)[String(label)])}</Text><Text style={{color:colors.foreground}}>{String(value||t("gateHistory.notRecorded"))}</Text></View>)}{state==="review"&&<><TextInput accessibilityLabel={t("gateHistory.reviewReason")+" "+id} placeholder={t("gateHistory.reviewReason")} placeholderTextColor={colors.mutedForeground} value={reviewReasons[id]??""} onChangeText={value=>setReviewReasons(current=>({...current,[id]:value}))} style={field}/><TogglePillButton compactOnTablet disabled={!reviewReasons[id]?.trim()} onPress={()=>act(()=>resolveReview(row))}>{t(typeof row.reconciliationId==="string"?"gateHistory.reverse":"gateHistory.reconcile")}</TogglePillButton></>}</>;}
   return <ScreenSafeArea><ScrollView contentContainerStyle={{ gap: 14, padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
     <BrandTitleRow subtitle="iOS Portal" logoTestId="gate-history-brand-logo" platformLogoTestId="gate-history-vndrly-logo" />
     <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
@@ -111,7 +115,7 @@ export default function GateHistory() {
           testID="history-page-back"
         />
         <Text accessibilityRole="header" style={{ color: colors.foreground, flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 }}>
-          {t("gatekeeper.historyTitle")}
+          {t("gateHistory.logTitle")}
         </Text>
       </View>
       <AskVVoiceIndicator inline />
@@ -119,27 +123,59 @@ export default function GateHistory() {
     <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 }}>
       {t("gateHistory.subtitle")}
     </Text>
-    <View testID="gate-history-live-card" style={{ backgroundColor: "#28282a", borderColor: colors.primary, borderRadius: 12, borderWidth: 2, gap: 12, padding: 16 }}>
-      <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("gatekeeper.historyTitle")}</Text>
-      {liveHistory.isLoading ? <ActivityIndicator color={colors.primary} /> : visibleLiveRows.length === 0 ? <Text style={{ color: colors.mutedForeground }}>{t("gatekeeper.historyEmpty")}</Text> : visibleLiveRows.map((row, index) => <View key={String(row.id ?? index)} style={{ borderColor: colors.primary, borderRadius: 10, borderWidth: 2, gap: 4, padding: 10 }}><Text style={{ color: colors.foreground, fontWeight: "700" }}>{String(row.name ?? row.driver ?? row.vehiclePlate ?? t("gateHistory.record"))}</Text><Text style={{ color: colors.mutedForeground }}>{[row.vehiclePlate, row.company, row.checkInTime, row.checkOutTime].map((value) => String(value ?? "")).filter(Boolean).join(" · ")}</Text></View>)}
-      <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8 }}>
-        <TogglePillButton testID="gate-history-newer" inactive={historyPage === 0} disabled={historyPage === 0} onPress={() => setHistoryPage((page) => Math.max(0, page - 1))}>↑</TogglePillButton>
-        <TogglePillButton testID="gate-history-older" inactive={(historyPage + 1) * 50 >= liveRows.length} disabled={(historyPage + 1) * 50 >= liveRows.length} onPress={() => setHistoryPage((page) => page + 1)}>↓</TogglePillButton>
-      </View>
-    </View>
-    <View testID="gate-history-report-card" style={{ backgroundColor: "#28282a", borderColor: colors.primary, borderRadius: 12, borderWidth: 2, gap: 14, padding: 16 }}>
-    <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("gateHistory.sendReports", { defaultValue: "Send Reports" })}</Text>
-    <View style={{ backgroundColor: colors.border, height: 1 }} />
-    <View testID="gate-history-report-selectors" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>
+
+    <View testID="gate-history-filter-card" style={{borderWidth:2,borderColor:colors.primary,borderRadius:14,padding:14,gap:12,backgroundColor:colors.card}}>
+          <View testID="gate-history-report-selectors" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>
       <View style={{ flex: 1, gap: 8 }}><Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("changeOver.site")}</Text>
-      {sites.data?.sites.filter((site) => site.id === selectedSiteId).map((site) => <TogglePillButton key={site.id} solid accessibilityState={{ expanded: siteMenuOpen }} onPress={() => { if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open); }}>{site.name}</TogglePillButton>)}
-      {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== selectedSiteId).map((site) => <TogglePillButton key={site.id} onPress={() => { setSiteId(site.id); setStationId(""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}</View>
+      {sites.data?.sites.filter((site) => site.id === selectedSiteId).map((site) =><TogglePillButton compactOnTablet key={site.id} solid accessibilityState={{ expanded: siteMenuOpen }} onPress={() => { if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open); }}>{site.name}</TogglePillButton>)}
+      {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== selectedSiteId).map((site) =><TogglePillButton compactOnTablet key={site.id} onPress={() => { setSiteId(site.id); setStationId(""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}</View>
       <View style={{ flex: 1, gap: 8 }}><Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("changeOver.gate")}</Text>
-      {stations.data?.stations.filter((station) => station.id === selectedStationId).map((station) => <TogglePillButton key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
-      {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== selectedStationId).map((station) => <TogglePillButton key={station.id} onPress={() => { setStationId(station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}</View>
+      {stations.data?.stations.filter((station) => station.id === selectedStationId).map((station) =><TogglePillButton compactOnTablet key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
+      {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== selectedStationId).map((station) =><TogglePillButton compactOnTablet key={station.id} onPress={() => { setStationId(station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}</View>
     </View>
-    <View style={{ backgroundColor: colors.border, height: 1 }} />
-    <View testID="gate-history-recipients-card" style={{ gap: 12 }}>
+
+      <View testID="gate-history-search-card" style={{gap:10}}><TextInput accessibilityLabel={t("gatekeeper.historySearch")} value={search} onChangeText={setSearch} placeholder={t("gatekeeper.historySearch")} placeholderTextColor={colors.mutedForeground} style={[field, { backgroundColor: colors.card }]} />
+      <View style={{flexDirection:wideLandscape?"row":"column",gap:10}}><View style={{flex:1,gap:8}}><Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("gateHistory.toggleTimePeriod")}
+        accessibilityState={{ expanded: timePeriodOpen }}
+        onPress={() => setTimePeriodOpen((open) => !open)}
+        style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between", minHeight: 44, borderWidth:2,borderColor:colors.primary,borderRadius:12,padding:10 }}
+        testID="gate-history-time-period-toggle"
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "700" }}>{t("gateHistory.chooseTimePeriod")}</Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{t(`gateHistory.range.${range}`)}</Text>
+        </View>
+        <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{timePeriodOpen ? "⌃" : "⌄"}</Text>
+      </Pressable>
+      {timePeriodOpen ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"] as Range[]).map((value) =><TogglePillButton compactOnTablet key={value} solid={range === value} onPress={() => {setRange(value);setTimePeriodOpen(false);}}>{t(`gateHistory.range.${value}`)}</TogglePillButton>)}</View> : null}
+      </View><View style={{flex:1,gap:8}}><Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("gateHistory.toggleRecordType")}
+        accessibilityState={{ expanded: recordTypeOpen }}
+        onPress={() => setRecordTypeOpen((open) => !open)}
+        style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between", minHeight: 44, borderWidth:2,borderColor:colors.primary,borderRadius:12,padding:10 }}
+        testID="gate-history-record-type-toggle"
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "700" }}>{t("gateHistory.chooseRecordType")}</Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{t(`gateHistory.type.${recordType}`)}</Text>
+        </View>
+        <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{recordTypeOpen ? "⌃" : "⌄"}</Text>
+      </Pressable>
+      {recordTypeOpen ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["all", "check_ins", "check_outs", "visitors_on_site", "vehicles_on_site", "needs_review"] as RecordType[]).map((value) =><TogglePillButton compactOnTablet key={value} solid={recordType === value} onPress={() => {setRecordType(value);setRecordTypeOpen(false);}}>{t(`gateHistory.type.${value}`)}</TogglePillButton>)}</View> : null}</View></View>
+</View>
+      <View style={{flexDirection:"row",gap:10,flexWrap:"wrap",alignItems:"center"}}><TogglePillButton compactOnTablet testID="gate-history-reports-toggle" solid={reportsOpen} onPress={()=>setReportsOpen(!reportsOpen)}>{t("gateHistory.sendReports")}</TogglePillButton><Text style={{color:colors.mutedForeground}}>{t("gateHistory.viewCount",{count:rows.length})}</Text></View>
+    </View>
+    <View style={{flexDirection:"row",gap:10}}>{([["all",rows.length,"visits"],["visitors_on_site",onSite,"onSite"],["needs_review",reviewCount,"attention"]] as const).map(([type,count,label])=><View key={type} style={{flex:1,borderWidth:2,borderColor:colors.primary,borderRadius:14,padding:12,backgroundColor:colors.card}}><Text style={{color:colors.foreground,fontSize:24,fontWeight:"700"}}>{count}</Text><Text style={{color:colors.mutedForeground}}>{t("gateHistory."+label)}</Text></View>)}</View>
+    {!!message&&<Text accessibilityRole="alert" style={{color:colors.mutedForeground}}>{message}</Text>}
+    <View style={{flexDirection:wideLandscape?"row":"column",gap:12,alignItems:"flex-start"}}><View testID="gate-history-live-card" style={{flex:1,alignSelf:"stretch",borderWidth:2,borderColor:colors.primary,borderRadius:14,padding:14,gap:12,backgroundColor:colors.card}}>
+    {report.isLoading?<ActivityIndicator color={colors.primary}/>:report.isError?<Text accessibilityRole="alert" style={{color:colors.destructive}}>{t("gateHistory.failed")}</Text>:!rows.length?<Text style={{color:colors.mutedForeground}}>{t("gateHistory.empty")}</Text>:groupGateVisits(visibleRows).map(([day,visits])=><View key={day} style={{gap:6}}><Text style={{color:colors.primary,fontWeight:"700",paddingVertical:8}}>{day==="unknown"?t("gateHistory.notRecorded"):day}</Text>{visits.map((row,index)=>{const state=gateVisitState(row),id=String(row.id??index);return <Pressable key={id} accessibilityRole="button" accessibilityLabel={t("gateHistory.openVisit",{name:String(row.name??row.driver??row.vehiclePlate??t("gateHistory.record"))})} onPress={()=>setSelectedRow(row)} style={{borderLeftWidth:3,borderLeftColor:selectedRow?.id===row.id?colors.primary:colors.border,padding:12,gap:5,backgroundColor:colors.background,borderRadius:10}}><View style={{flexDirection:"row",justifyContent:"space-between",gap:10}}><Text style={{color:colors.foreground,fontWeight:"700",flex:1}}>{String(row.name??row.driver??row.vehiclePlate??t("gateHistory.record"))}</Text><Text style={{color:state==="on_site"?"#22a565":state==="review"?colors.destructive:colors.mutedForeground,fontWeight:"600"}}>{t(({on_site:"gateHistory.state.on_site",departed:"gateHistory.state.departed",pending:"gateHistory.state.pending",denied:"gateHistory.state.denied",reconciled:"gateHistory.state.reconciled",review:"gateHistory.state.review"} as const)[state])}</Text></View><Text style={{color:colors.mutedForeground}}>{[row.company,row.vehiclePlate].filter(Boolean).join(" · ")||t("gateHistory.record")}</Text><Text style={{color:colors.mutedForeground,fontSize:12}}>{t("gateHistory.arrived")}: {dateTime(row.checkInTime)} · {duration(row)}</Text></Pressable>})}</View>)}
+    <View style={{flexDirection:"row",justifyContent:"space-between",gap:8}}><TogglePillButton compactOnTablet testID="gate-history-newer" disabled={historyPage===0} onPress={()=>setHistoryPage(page=>Math.max(0,page-1))}>{t("gateHistory.newer")}</TogglePillButton><TogglePillButton compactOnTablet testID="gate-history-older" disabled={(historyPage+1)*50>=rows.length} onPress={()=>setHistoryPage(page=>page+1)}>{t("gateHistory.older")}</TogglePillButton></View></View>
+    {selectedRow&&wideLandscape&&<View style={{width:300,borderWidth:2,borderColor:colors.primary,borderRadius:14,padding:16,gap:10,backgroundColor:colors.card}}>{details()}</View>}</View>
+    <Modal visible={!!selectedRow&&!wideLandscape} transparent animationType="fade" onRequestClose={()=>setSelectedRow(null)}><View style={{flex:1,justifyContent:"center",padding:16,backgroundColor:"rgba(0,0,0,0.65)"}}><ScrollView style={{maxHeight:"85%",borderWidth:2,borderColor:colors.primary,borderRadius:14,backgroundColor:colors.card}} contentContainerStyle={{padding:16,gap:10}}>{details()}</ScrollView></View></Modal>
+    {reportsOpen&&<View testID="gate-history-report-card" style={{borderWidth:2,borderColor:colors.primary,borderRadius:14,padding:16,gap:14,backgroundColor:colors.card}}><Text style={{color:colors.foreground,fontWeight:"700"}}>{t("gateHistory.sendReports")}</Text><View testID="gate-history-recipients-card" style={{ gap: 12 }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("gateHistory.toggleRecipients")}
@@ -154,48 +190,12 @@ export default function GateHistory() {
         </View>
         <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{recipientsOpen ? "⌃" : "⌄"}</Text>
       </Pressable>
-      {recipientsOpen ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{recipients.data?.recipients.filter(isVisibleGateReportRecipient).map((recipient) => <TogglePillButton key={recipient.userId} solid={recipientIds.includes(recipient.userId)} onPress={() => setRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}</View> : null}
+      {recipientsOpen ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{recipients.data?.recipients.filter(isVisibleGateReportRecipient).map((recipient) =><TogglePillButton compactOnTablet key={recipient.userId} solid={recipientIds.includes(recipient.userId)} onPress={() => setRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}</View> : null}
     </View>
     <View style={{ backgroundColor: colors.border, height: 1 }} />
-    <View testID="gate-history-search-card" style={{ gap: 12 }}>
-      <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("gateHistory.searchTitle")}</Text>
-      <TextInput accessibilityLabel={t("gatekeeper.historySearch")} value={search} onChangeText={setSearch} placeholder={t("gatekeeper.historySearch")} placeholderTextColor={colors.mutedForeground} style={[field, { backgroundColor: colors.card }]} />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t("gateHistory.toggleTimePeriod")}
-        accessibilityState={{ expanded: timePeriodOpen }}
-        onPress={() => setTimePeriodOpen((open) => !open)}
-        style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between", minHeight: 30 }}
-        testID="gate-history-time-period-toggle"
-      >
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "700" }}>{t("gateHistory.chooseTimePeriod")}</Text>
-          <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{t(`gateHistory.range.${range}`)}</Text>
-        </View>
-        <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{timePeriodOpen ? "⌃" : "⌄"}</Text>
-      </Pressable>
-      {timePeriodOpen ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"] as Range[]).map((value) => <TogglePillButton key={value} solid={range === value} onPress={() => setRange(value)}>{t(`gateHistory.range.${value}`)}</TogglePillButton>)}</View> : null}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t("gateHistory.toggleRecordType")}
-        accessibilityState={{ expanded: recordTypeOpen }}
-        onPress={() => setRecordTypeOpen((open) => !open)}
-        style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between", minHeight: 30 }}
-        testID="gate-history-record-type-toggle"
-      >
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "700" }}>{t("gateHistory.chooseRecordType")}</Text>
-          <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{t(`gateHistory.type.${recordType}`)}</Text>
-        </View>
-        <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{recordTypeOpen ? "⌃" : "⌄"}</Text>
-      </Pressable>
-      {recordTypeOpen ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["all", "check_ins", "check_outs", "visitors_on_site", "vehicles_on_site", "needs_review"] as RecordType[]).map((value) => <TogglePillButton key={value} solid={recordType === value} onPress={() => setRecordType(value)}>{t(`gateHistory.type.${value}`)}</TogglePillButton>)}</View> : null}
-      {message ? <Text accessibilityRole="alert" style={{ color: colors.mutedForeground }}>{message}</Text> : null}
-      {report.isLoading ? <ActivityIndicator color={colors.primary} /> : (report.data?.rows ?? []).length === 0 ? <Text style={{ color: colors.mutedForeground }}>{t("gatekeeper.historyEmpty")}</Text> : report.data?.rows.map((row, index) => { const id = String(row.id ?? index); return <View key={id} style={{ borderColor: colors.border, borderRadius: 10, borderWidth: 1, gap: 8, padding: 12 }}><Text style={{ color: colors.foreground }}>{String(row.name ?? row.driver ?? row.vehiclePlate ?? t("gateHistory.record"))}</Text><Text style={{ color: colors.mutedForeground }}>{Object.entries(row).filter(([key]) => key !== "id").slice(0, 5).map(([, value]) => String(value ?? "")).filter(Boolean).join(" · ")}</Text>{recordType === "needs_review" ? <><TextInput accessibilityLabel={`${t("gateHistory.reviewReason")} ${id}`} value={reviewReasons[id] ?? ""} onChangeText={(value) => setReviewReasons((current) => ({ ...current, [id]: value }))} placeholder={t("gateHistory.reviewReason")} placeholderTextColor={colors.mutedForeground} style={field} /><TogglePillButton disabled={!reviewReasons[id]?.trim()} onPress={() => act(() => resolveReview(row))}>{t(typeof row.reconciliationId === "string" ? "gateHistory.reverse" : "gateHistory.reconcile")}</TogglePillButton></> : null}</View>; })}
-    </View>
-    <View testID="gate-history-export-row" style={{ flexDirection: "row", gap: 8 }}>{(["pdf", "excel", "word"] as Format[]).map((format) => <TogglePillButton key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid={emailFormat === format} accessibilityState={{ selected: emailFormat === format }} style={{ flex: 1 }} onPress={() => setEmailFormat(format)}>{format === "excel" ? "CSV" : format === "word" ? "DOC" : "PDF"}</TogglePillButton>)}</View>
-    <TogglePillButton testID="gate-history-save" color="brand" solid disabled={!emailFormat} onPress={() => act(exportReport)}>{t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}</TogglePillButton>
-    <TogglePillButton testID="gate-history-email" color="brand" solid disabled={!emailFormat} onPress={() => act(emailReport)}>{t("gateHistory.emailReport", { defaultValue: "Email Report" })}</TogglePillButton>
-    </View>
+    <View testID="gate-history-export-row" style={{ flexDirection: "row", gap: 8 }}>{(["pdf", "excel", "word"] as Format[]).map((format) =><TogglePillButton compactOnTablet key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid={emailFormat === format} accessibilityState={{ selected: emailFormat === format }} style={{ flex: 1 }} onPress={() => setEmailFormat(format)}>{format === "excel" ? "CSV" : format === "word" ? "DOC" : "PDF"}</TogglePillButton>)}</View>
+    <TogglePillButton compactOnTablet testID="gate-history-save" color="brand" solid disabled={!emailFormat} onPress={() => act(exportReport)}>{t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}</TogglePillButton>
+    <TogglePillButton compactOnTablet testID="gate-history-email" color="brand" solid disabled={!emailFormat} onPress={() => act(emailReport)}>{t("gateHistory.emailReport", { defaultValue: "Email Report" })}</TogglePillButton>
+</View>}
   </ScrollView></ScreenSafeArea>;
 }

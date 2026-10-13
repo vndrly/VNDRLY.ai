@@ -53,6 +53,7 @@ export const gateWorkSessionsTable = pgTable("gate_work_sessions", {
 }));
 
 export const gateDutySessionsTable = pgTable("gate_duty_sessions", {
+  postCoverage: jsonb("post_coverage").notNull().default({}),
   id: uuid("id").primaryKey().defaultRandom(),
   stationId: uuid("station_id").notNull().references(() => gateStationsTable.id),
   userId: integer("user_id").notNull().references(() => usersTable.id),

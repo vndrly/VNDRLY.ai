@@ -55,7 +55,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("AskV onboardi
 
   beforeEach(async () => {
     const tag = randomUUID();
-    const [vendor] = await database.db.insert(database.vendorsTable).values({ name: `AskV onboarding ${tag}`, contactName: "Synthetic user", contactEmail: `${tag}@example.invalid` }).returning();
+    const [vendor] = await database.db.insert(database.vendorsTable).values({ name: `AskV onboarding ${tag}`, contactName: "Synthetic user", contactEmail: `${tag}@example.invalid`, operationsCategories: ["field"] }).returning();
     const [user] = await database.db.insert(database.usersTable).values({ username: `askv-onboarding-${tag}`, passwordHash: "unused-synthetic-fixture", role: "vendor", displayName: "Synthetic user" }).returning();
     session = { userId: user.id, role: "vendor", vendorId: vendor.id, membershipRole: "admin" };
     cookie = buildTestCookie(session);
@@ -127,6 +127,15 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("AskV onboardi
       fetcher.mockRestore();
     }
     expect((await progress()).currentStep).toBe("first-employee");
+  });
+
+  it("requires an explicit company operations selection before canonical finalization", async () => {
+    await database.db.update(database.vendorsTable).set({ operationsCategories: [] }).where(eq(database.vendorsTable.id, session.vendorId!));
+    const fetcher = routeCanonicalRequests();
+    try {
+      expect(await domain("finalize_onboarding", {})).toMatchObject({ ok: false, status: 400, code: "onboarding.operations_categories_required" });
+      expect((await progress()).completedAt).toBeNull();
+    } finally { fetcher.mockRestore(); }
   });
 
   it("cannot choose another organization through model arguments", async () => {

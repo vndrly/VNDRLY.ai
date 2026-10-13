@@ -19,6 +19,8 @@ export type AppNavigationItem = {
 
 export type AppNavigationLabels = {
   fleet?: string;
+  fleetLog?: string;
+  fleetMap?: string;
   fleetSiteActivity?: string;
   fleetSupport?: string;
   askv: string;
@@ -27,6 +29,8 @@ export type AppNavigationLabels = {
   flagged: string;
   gate: string;
   gateMode?: string;
+  gateLog?: string;
+  gateMap?: string;
   history: string;
   home: string;
   map: string;
@@ -47,6 +51,7 @@ export type AppNavigationBadges = {
 };
 
 type Input = {
+  companyOperationsCategories?: readonly ("field" | "fleet" | "gate")[] | null;
   fleetEnabled?: boolean;
   fleetSiteActivityEnabled?: boolean;
   fleetSupportEnabled?: boolean;
@@ -56,6 +61,7 @@ type Input = {
 };
 
 export function buildAppNavigation({
+  companyOperationsCategories,
   fleetEnabled = false,
   fleetSiteActivityEnabled = false,
   fleetSupportEnabled = false,
@@ -63,6 +69,23 @@ export function buildAppNavigation({
   labels,
   badges,
 }: Input): AppNavigationItem[] {
+  if (companyOperationsCategories) {
+    if (!companyOperationsCategories.length) return [item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"), item("work-hub", "/work-hub", labels.workHub, "briefcase"), item("profile", "/(tabs)/profile", labels.profile, "user")];
+    const entries = buildAppNavigation({user, labels, badges, fleetEnabled: companyOperationsCategories.includes("fleet") && fleetEnabled, fleetSiteActivityEnabled: false, fleetSupportEnabled: false});
+    const fieldKeys = new Set(["index", "schedule", "flagged", "crew-map", "crews", "comms", "scan"]);
+    const gateKeys = new Set(["gate-mode", "change-over", "gate", "gate-history", "shift-notes"]);
+    const filtered = entries.filter(entry => (!fieldKeys.has(entry.key) || companyOperationsCategories.includes("field")) && (!gateKeys.has(entry.key) || companyOperationsCategories.includes("gate")));
+    if (companyOperationsCategories.includes("gate") && !filtered.some(entry => gateKeys.has(entry.key))) filtered.splice(1, 0, item("gate-mode", "/(tabs)/change-over?gateMode=1", labels.gateMode ?? "Gate Ops", "log-in"));
+    const navigation = filtered.map(entry => entry.key === "gate-mode" ? { ...entry, key: "change-over", label: labels.changeOver ?? "Dashboard", href: "/(tabs)/change-over" } : entry.key === "gate-history" ? { ...entry, label: labels.gateLog ?? "Gate Log" } : entry);
+    if (companyOperationsCategories.includes("gate") && !navigation.some(entry => entry.key === "gate")) {
+      const position = navigation.findIndex(entry => entry.key === "change-over") + 1;
+      navigation.splice(position, 0, item("gate", "/(tabs)/gate", labels.gate, "truck"), item("gate-history", "/(tabs)/gate-history", labels.gateLog ?? "Gate Log", "clock"));
+    }
+    if (companyOperationsCategories.includes("gate")) { const gateIndex = navigation.findIndex(entry => entry.key === "gate-history"); navigation.splice(gateIndex >= 0 ? gateIndex + 1 : 1, 0, item("gate-map", "/(tabs)/gate-map", labels.gateMap ?? "Gate Map", "map-pin")); }
+    const fleetIndex = navigation.findIndex(entry => entry.key === "fleet");
+    if (fleetIndex >= 0) navigation.splice(fleetIndex + 1, 0, item("fleet-log", "/(tabs)/fleet-log", labels.fleetLog ?? "Fleet Log", "list"), item("fleet-map", "/(tabs)/fleet-map", labels.fleetMap ?? "Fleet Map", "map-pin"));
+    return navigation;
+  }
   if (isGatekeeperUser(user)) {
     const gateItems = [
       item("change-over", "/(tabs)/change-over", labels.changeOver ?? "Dashboard", "grid"),
@@ -83,7 +106,7 @@ export function buildAppNavigation({
     { ...item("index", "/(tabs)", labels.home, "home"), badge: badges.home },
     item("work-hub", "/work-hub", labels.workHub, "briefcase"),
     {
-      ...item("schedule", "/(tabs)/schedule", labels.schedule, "calendar"),
+      ...item("schedule", "/work-hub/calendar", labels.schedule, "calendar"),
       badge: badges.schedule,
     },
     {
@@ -96,9 +119,9 @@ export function buildAppNavigation({
   if (fleetEnabled) result.splice(2, 0, item("fleet", "/(tabs)/fleet", labels.fleet ?? "Fleet Ops", "truck"));
 
   if (
-    user?.role === "admin" ||
+    (user?.role === "admin" ||
     (user?.role === "vendor" && ["admin", "office"].includes(user.vendorRole ?? ""))
-  ) {
+  )) {
     result.splice(2, 0, item("gate-mode", "/(tabs)/change-over?gateMode=1", labels.gateMode ?? "Gate Mode", "log-in"));
   }
 
@@ -121,6 +144,15 @@ export function gateLandingRoute(user: StoredUser | null | undefined): string {
   return isGatekeeperUser(user) ? "/(tabs)/change-over" : "/(tabs)";
 }
 
+/** Nested Work Hub pages share its sidebar selection and company-category access. */
+export function activeNavigationKey(pathname: string): string {
+  const segments=pathname.split(/[?#]/,1)[0].split("/").filter(Boolean).filter(segment=>segment!=="(tabs)");
+  if(segments[0]==="work-hub")return "work-hub";
+  if(segments.includes("fleet-run"))return "fleet";
+  if(!segments.length||segments[0]==="index")return "index";
+  return segments.at(-1)??"index";
+}
+
 /** Routes exposed by the focused gatekeeper navigation. */
 export function isGatekeeperRouteAllowed(
   user: StoredUser | null | undefined,
@@ -128,6 +160,7 @@ export function isGatekeeperRouteAllowed(
 ): boolean {
   const [root, child] = segments;
   const profileActionRoutes = new Set([
+    "company-operations",
     "edit-profile",
     "location-consent",
     "compliance",
@@ -136,7 +169,7 @@ export function isGatekeeperRouteAllowed(
     "onboarding",
   ]);
   return (
-    (root === "(tabs)" && (isGatekeeperTabKey(child) || child === "fleet" || child === "fleet-run" || child === "fleet-site-activity")) ||
+    (root === "(tabs)" && (isGatekeeperTabKey(child) || child === "gate-map" || child === "fleet" || child === "fleet-log" || child === "fleet-map" || child === "fleet-run" || child === "fleet-site-activity")) ||
     root === "work-hub" ||
     profileActionRoutes.has(root)
   );

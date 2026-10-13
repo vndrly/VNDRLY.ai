@@ -52,7 +52,11 @@ export function registerAskVControlAliases(paths: readonly string[], id: string,
   return () => remove.forEach((unregister) => unregister());
 }
 const screens: Record<string, string> = {
-  home: "/(tabs)", dashboard: "/(tabs)", tickets: "/(tabs)", schedule: "/(tabs)/schedule",
+  "gate-map": "/(tabs)/gate-map", "gate-log": "/(tabs)/gate-history",
+  fleet: "/(tabs)/fleet", "fleet-log": "/(tabs)/fleet-log", "fleet-map": "/(tabs)/fleet-map",
+  "company-operations": "/company-operations", "work-hub": "/(tabs)/work-hub",
+  "work-hub-calendar": "/work-hub/calendar", "work-hub-attention": "/work-hub/attention", "work-hub-safety": "/work-hub/safety", "work-hub-my-work": "/work-hub/my-work",
+  home: "/(tabs)", dashboard: "/(tabs)", tickets: "/(tabs)", schedule: "/work-hub/calendar",
   askv: "/(tabs)/askv", gate: "/(tabs)/gate", "gate-history": "/(tabs)/gate-history",
   "crew-map": "/(tabs)/crew-map", crews: "/(tabs)/crews", profile: "/(tabs)/profile",
   notifications: "/notifications", "safety-report": "/safety-report", "safety-my-reports": "/safety-my-reports",
@@ -120,6 +124,7 @@ export async function executeAskVClientIntent(intent: AskVClientIntent, path: st
     }
     if (intent.name === "open_screen") {
       if (typeof args.path === "string" && /^\/work-hub(?:\/|$)/.test(args.path)) return openAuthorizedAssistantLink(args.path);
+      if (screens[String(args.screen)] && ["work-hub-attention","work-hub-safety","work-hub-my-work"].includes(String(args.screen))) {router.push(screens[String(args.screen)] as never);return opened("Opened the requested Work Hub screen.");}
       if (String(args.screen).startsWith("work-hub") || args.screen === "shift-notes") return openAuthorizedAssistantLink(`vndrly-deep-link:${args.screen}`);
       let target = screens[String(args.screen)];
       const id = ticketId(args.id);

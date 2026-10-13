@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTicketProofPacket } from "./proof-packet";
+import { buildTicketProofPacket, fieldProofPacket } from "./proof-packet";
 
 const completeTicket = {
   status: "funds_dispersed",
@@ -32,8 +32,8 @@ describe("mobile buildTicketProofPacket", () => {
     );
 
     expect(packet.status).toBe("complete");
-    expect(packet.completedCount).toBe(6);
-    expect(packet.totalCount).toBe(6);
+    expect(packet.completedCount).toBe(5);
+    expect(packet.totalCount).toBe(5);
     expect(packet.sections.map((section) => section.id)).toEqual([
       "gps_time",
       "field_notes",
@@ -70,10 +70,18 @@ describe("mobile buildTicketProofPacket", () => {
     expect(packet.missingEvidence).toEqual([
       "checkout GPS/time",
       "field notes/photos",
-      "ending mileage",
       "parts/labor/equipment line items",
       "partner/admin approval",
       "payment record",
     ]);
   });
+});
+
+it("keeps mileage optional and field handoff separate from approval and payment", () => {
+  const full = buildTicketProofPacket({...completeTicket, startingMileage:null, endingMileage:null});
+  expect(full.missingEvidence).not.toContain("starting mileage");
+  const submitted = fieldProofPacket(full, "submitted");
+  expect(submitted.sections.some(s => s.id === "approval" || s.id === "payment")).toBe(false);
+  expect(submitted.sections.find(s => s.id === "submission")?.complete).toBe(true);
+  expect(fieldProofPacket(full, "kicked_back").missingEvidence).toContain("requested corrections and resubmission");
 });

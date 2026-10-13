@@ -10,7 +10,7 @@ type Permitted = (state: FleetState, actor: FleetActor, run: FleetRun, action: "
 type SavedLocation = {operationId: string; fingerprint: string; deviceId: string; assignment: string; observation: FleetLocationObservation};
 const assignment = (run: FleetRun) => JSON.stringify([run.id,run.companyId,run.driverUserId,run.vehicleAssetId,run.trailerAssetId]);
 const fingerprint = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-const currentObservation = (observation: FleetLocationObservation, run: FleetRun, now: Date): FleetLocationObservation => ({...observation, freshness: observation.accuracyMeters === null || observation.accuracyMeters > 1000 ? "unavailable" : run.phase === "paused" ? "paused" : now.getTime()-Date.parse(observation.recordedAt)>6*60*1000 ? "stale" : "recent"});
+const currentObservation = (observation: FleetLocationObservation, run: FleetRun, now: Date): FleetLocationObservation => ({...observation, freshness: run.status !== "in_progress" ? "stale" : observation.accuracyMeters === null || observation.accuracyMeters > 1000 ? "unavailable" : run.phase === "paused" ? "paused" : now.getTime()-Date.parse(observation.recordedAt)>6*60*1000 ? "stale" : "recent"});
 
 /** Called only from authenticated native-device routes, never an assistant GPS tool. */
 export function createFleetLocationOperations(transaction: Transaction, permitted: Permitted, clock: ()=>Date = ()=>new Date()) {
@@ -20,18 +20,25 @@ export function createFleetLocationOperations(transaction: Transaction, permitte
     return run;
   };
   const readObservations = async(state: FleetState, client: PoolClient, actor: FleetActor) => {
-    const runIds=state.runs.filter(run=>run.status==="in_progress"&&permitted(state,actor,run,"view")).map(run=>run.id);
+    const runIds=state.runs.filter(run=>permitted(state,actor,run,"view")).map(run=>run.id);
     if(!runIds.length)return [];
     const rows=await client.query("SELECT tool_output FROM (SELECT DISTINCT ON(target_id) target_id,tool_output,id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-location' AND target_id=ANY($2::text[]) ORDER BY target_id,(tool_output->'observation'->>'recordedAt')::timestamptz DESC,id DESC) latest WHERE EXISTS(SELECT 1 FROM location_consents c WHERE c.user_id=(tool_output->'observation'->>'driverUserId')::int AND c.device_id=tool_output->>'deviceId' AND c.revoked_at IS NULL)",[actor.companyId,runIds]);
     return rows.rows.flatMap(row=>{
       const saved=row.tool_output as SavedLocation, parsed=FleetLocationObservationSchema.safeParse(saved.observation);
       if(!parsed.success) return [];
       const run=state.runs.find(item=>item.id===parsed.data.runId);
-      if(!run || run.status!=="in_progress" || !permitted(state,actor,run,"view") || saved.assignment!==assignment(run))return [];
+      if(!run || !permitted(state,actor,run,"view") || saved.assignment!==assignment(run))return [];
       return [currentObservation(parsed.data,run,clock())];
     });
   };
   return {
+    history: (actor: FleetActor, runId: string) => {const bound={...actor,runId};return transaction(bound, async(state,client)=>{
+      const run=locate(state,bound,runId,"view");
+      // Reuse live-map authority and current device consent. Never expose another assignment's route.
+      const rows=await client.query("SELECT tool_output FROM assistant_action_audit a WHERE vendor_id=$1 AND target_type='fleet-location' AND target_id=$2 AND tool_output->>'assignment'=$3 AND EXISTS(SELECT 1 FROM location_consents c WHERE c.user_id=(a.tool_output->'observation'->>'driverUserId')::int AND c.device_id=a.tool_output->>'deviceId' AND c.revoked_at IS NULL) ORDER BY (tool_output->'observation'->>'recordedAt')::timestamptz ASC,id ASC LIMIT 5001",[actor.companyId,runId,assignment(run)]);
+      const parsed=rows.rows.flatMap(row=>{const saved=row.tool_output as SavedLocation, point=FleetLocationObservationSchema.safeParse(saved.observation);return point.success&&saved.assignment===assignment(run)&&point.data.runId===run.id?[currentObservation(point.data,run,clock())]:[];});
+      return {runId,points:parsed.slice(0,5000),truncated:rows.rows.length>5000,events:run.events.map((event,index)=>({id:event.id??String(index),recordedAt:event.recordedAt,label:event.type.replaceAll("_"," ")}))};
+    });},
     record: (actor: FleetActor, runId: string, input: unknown) => {
       const command=FleetLocationInputSchema.parse(input);
       const boundActor={...actor,runId};

@@ -1,3 +1,4 @@
+import {FleetDestinationSchema,FleetRunCommercialSchema} from "./fleet-commercial";
 import { FleetCargoMarkerSchema } from "./fleet-cargo";
 import { FleetReplacementMarkerSchema } from "./fleet-replacement";
 import { FleetScheduleSchema, FleetOperationalProfileSchema, FleetInspectionResponsesSchema, FleetManifestValuesSchema } from "./fleet-planning";
@@ -52,6 +53,7 @@ export const FleetDefinitionSchema = z
   .strict();
 export const FleetStopSchema = z
   .object({
+    destination: FleetDestinationSchema.optional(),
     id: z.uuid(),
     siteId: z.number().int().positive(),
     kind: z.enum(["pickup", "delivery", "return"]),
@@ -107,6 +109,7 @@ export const FleetRunRecordSchema = z
   })
   .strict();
 export const FleetRunSchema = z.object({
+  commercial: FleetRunCommercialSchema.optional(),
   activeReplacement: FleetReplacementMarkerSchema.optional(),
   canEditDraft: z.boolean().optional(),
   schedule: FleetScheduleSchema.nullable().optional(),
@@ -167,6 +170,7 @@ export const FleetRunSchema = z.object({
 });
 export const FleetActionInputSchema = z
   .object({
+    destinationId: z.uuid().optional(),
     capturedAt: z.iso.datetime().optional(),
     source: z.literal("user_report").optional(),
     operationId: z.uuid(),
@@ -194,6 +198,7 @@ export const FleetActionInputSchema = z
   .strict();
 export const CreateFleetRunSchema = z
   .object({
+    ticketId: z.number().int().positive().optional(),
     schedule: FleetScheduleSchema.nullable().optional(),
     operationId: z.uuid(),
     fleetId: z.uuid(),

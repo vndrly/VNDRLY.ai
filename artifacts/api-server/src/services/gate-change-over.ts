@@ -279,7 +279,7 @@ export type GateDiscoveryMode = "operational" | "history";
 export async function listChangeOverSites(session: SessionPayload, mode: GateDiscoveryMode = "operational") {
   const sites = (
     await pool.query(
-      `SELECT s.id, s.name FROM site_locations s WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
+      `SELECT s.id, s.name, s.latitude, s.longitude FROM site_locations s WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
     AND ($1='admin' OR ($1='partner' AND s.partner_id=$2) OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true))
     AND (
       $5::boolean OR $6::boolean OR $1 IN ('admin','partner')
@@ -322,7 +322,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
       ],
     )
   ).rows;
-  const allowed: { id: number; name: string; supervisor: boolean }[] = [];
+  const allowed: { id: number; name: string; latitude: number | null; longitude: number | null; supervisor: boolean }[] = [];
   for (const site of sites) {
     try {
       const access = await requireChangeOverAccess(pool, session, site.id);
@@ -345,12 +345,12 @@ export async function listChangeOverStations(
   // History navigation uses the same current site authorization as notes/reports,
   // without requiring an active gate or a future scheduled shift.
   if (mode === "history") return (await pool.query(
-    "SELECT id,name,site_id FROM gate_stations WHERE site_id=$1 ORDER BY created_at,id",
+    "SELECT id,name,site_id,latitude,longitude,active FROM gate_stations WHERE site_id=$1 ORDER BY created_at,id",
     [siteId],
   )).rows;
   return (
     await pool.query(
-      `SELECT station.id, station.name, station.site_id
+      `SELECT station.id, station.name, station.site_id, station.latitude, station.longitude, station.active
        FROM gate_stations station
        WHERE station.site_id=$1
          AND (station.active=true

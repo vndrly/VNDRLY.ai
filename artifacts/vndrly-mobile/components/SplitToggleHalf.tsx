@@ -17,6 +17,7 @@ type Props = {
   pillSrc: number;
   children: React.ReactNode;
   onPress?: () => void;
+  disabled?: boolean;
   textStyle?: StyleProp<TextStyle>;
   style?: StyleProp<ViewStyle>;
   testID?: string;
@@ -34,6 +35,7 @@ export default function SplitToggleHalf({
   pillSrc,
   children,
   onPress,
+  disabled = false,
   textStyle,
   style,
   testID,
@@ -47,9 +49,10 @@ export default function SplitToggleHalf({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       testID={testID}
       accessibilityRole="button"
-      accessibilityState={accessibilityState}
+      accessibilityState={{ ...accessibilityState, disabled }}
       onLayout={(e) => {
         const nw = e.nativeEvent.layout.width;
         if (nw !== halfW) setHalfW(nw);

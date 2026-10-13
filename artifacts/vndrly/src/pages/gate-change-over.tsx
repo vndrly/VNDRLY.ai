@@ -1,3 +1,4 @@
+import { GateCoverageMap } from "@/components/gate-coverage-map";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -253,6 +254,7 @@ export default function GateChangeOverPage({
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
       </div>
+      {!history && <GateCoverageMap />}
       <div
         className={history
           ? `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`

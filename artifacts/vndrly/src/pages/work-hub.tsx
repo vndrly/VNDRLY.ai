@@ -1,3 +1,4 @@
+import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
 import ShiftOpening from "@/components/work-hub/shift-opening";
@@ -595,6 +596,7 @@ function CalendarModule() {
         `/calendar?start=${start.toISOString()}&end=${end.toISOString()}`,
       ),
   });
+  const operations = useOperationalCalendar(start.toISOString(), end.toISOString());
   const channelSummary = useQuery<Row[]>({
     queryKey: ["work-hub", "channels"],
     queryFn: () => workHubRequest("/channels"),
@@ -631,6 +633,7 @@ function CalendarModule() {
   const items = useMemo(
     () =>
       [
+        ...(operations.data?.items ?? []).map(item => ({ ...item, kind: item.kind === "field_ticket" ? "Field Ticket" : "Fleet Run" })),
         ...(calendar.data?.shifts ?? []).map((x: Row) => ({
           ...x.item,
           kind: "Shift",
@@ -646,7 +649,7 @@ function CalendarModule() {
           kind: "Meeting",
         })),
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
-    [calendar.data],
+    [calendar.data, operations.data],
   );
   const filteredItems = useMemo(() => {
     const needle = calendarFilters.search.trim().toLowerCase();
@@ -676,6 +679,7 @@ function CalendarModule() {
   const selectedItems = filteredItems.filter((item) => dateKey(item.startsAt) === selectedDay);
   return (
     <Shell module="calendar">
+      {(operations.isError || operations.data?.unavailable.length) ? <p role="status" className="mb-4 text-amber-700">Some field or fleet schedule sources are unavailable. Displayed work is partial.</p> : null}
       <WorkHubAvailability />
       <ShiftOpening shifts={calendar.data?.shifts ?? []} onSaved={() => calendar.refetch()} />
       <div className="mb-4">
@@ -694,7 +698,7 @@ function CalendarModule() {
             <option value="all">All work</option>
             <option value="Shift">Shifts</option>
             <option value="Meeting">Meetings</option>
-            <option value="Task">Tasks</option>
+            <option value="Task">Tasks</option><option value="Field Ticket">Field Tickets</option><option value="Fleet Run">Fleet Runs</option>
           </BrandedSelect>
           <BrandedSelect aria-label="Filter by status" value={calendarFilters.status} onChange={(event) => setCalendarFilters({ ...calendarFilters, status: event.target.value })}>
             <option value="all">All statuses</option>
@@ -791,7 +795,7 @@ function CalendarModule() {
                     <span className="text-xs uppercase text-muted-foreground">
                       {i.kind}
                     </span>
-                    <h2 className="font-semibold">{i.title}</h2>
+                    <h2 className="font-semibold">{i.route ? <a className="underline" href={i.route}>{i.title}</a> : i.title}</h2>
                   </div>
                   <time className="text-sm">{displayDate(i.startsAt)}</time>
                 </article>

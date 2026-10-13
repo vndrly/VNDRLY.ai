@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
+import {currentDatabaseRealm} from '@workspace/db/realm';
+import {publicDemoAccount} from '../lib/public-demo';
+import {getDefaultBucketStore} from '../lib/bucket-store';
 import {
   usersTable,
   managedSubcontractorWorkerSponsorshipsTable,
@@ -340,11 +343,14 @@ export async function resolveContext(
 export function buildSessionCookie(
   user: typeof usersTable.$inferSelect,
   ctx: ResolvedContext,
+  publicDemo = false,
 ): string {
   const nowSecs = Math.floor(Date.now() / 1000);
   const payload = Buffer.from(
     JSON.stringify({
       userId: user.id,
+      realm: currentDatabaseRealm(),
+      publicDemo,
       role: ctx.role,
       membershipRole: ctx.membershipRole,
       displayName: user.displayName,
@@ -355,12 +361,29 @@ export function buildSessionCookie(
       vendorPeopleId: ctx.vendorPeopleId,
       activeMembershipId: ctx.activeMembershipId,
       iat: nowSecs,
-      exp: nowSecs + SESSION_TTL_SECS,
+      exp: nowSecs + (publicDemo ? 2*60*60 : SESSION_TTL_SECS),
       sv: user.sessionVersion ?? 1,
     }),
   ).toString("base64");
   return signPayload(payload);
 }
+
+router.post('/auth/demo-entry', async (req,res) => {
+  const account=publicDemoAccount(req.body?.persona);
+  if(!account)return res.status(400).json({message:'Choose partner, field, fleet or gate.'});
+  if(currentDatabaseRealm()!=='demo')return res.status(503).json({message:'Isolated demo unavailable.'});
+  if(req.headers.origin&&req.headers.origin!==`https://${req.headers.host}`&&!(process.env.NODE_ENV!=='production'&&/^http:\/\/localhost(:\d+)?$/.test(req.headers.origin)))return res.status(403).json({message:'Open the demo from VNDRLY.'});
+  try {
+    const bucket=await getDefaultBucketStore().increment('PUBLIC_DEMO_ENTRY',req.ip||'unknown',15*60*1000,Date.now());
+    if(bucket.count>40){res.setHeader('Retry-After',Math.max(1,Math.ceil((bucket.resetAt-Date.now())/1000)));return res.status(429).json({message:'Please wait before opening another demo.'});}
+    const [user]=await db.select().from(usersTable).where(and(eq(usersTable.id,account.userId),eq(usersTable.username,account.username))).limit(1);
+    if(!user||user.suspendedAt)return res.status(503).json({message:'This demo view is temporarily unavailable.'});
+    const ctx=await resolveContext(user);
+    if(ctx.role!==account.role||ctx.availableMemberships.length!==1)return res.status(503).json({message:'Demo account context is unavailable.'});
+    res.cookie(COOKIE_NAME,buildSessionCookie(user,ctx,true),{...COOKIE_OPTIONS,secure:process.env.NODE_ENV==='production',maxAge:2*60*60*1000});
+    return res.json({persona:req.body.persona,userId:user.id,role:ctx.role});
+  } catch(error){logger.error({error},'public demo entry failed');return res.status(503).json({message:'The demo is temporarily unavailable. Please try again.'});}
+});
 
 router.post("/auth/login", async (req, res) => {
   try {

@@ -1,0 +1,11 @@
+import {describe,it,expect} from "vitest";
+import {analyzeRoute,routePositionAt,routeTimecode,normalizeRoutePoints} from "./map-route-replay";
+const point=(seconds:number,longitude=seconds/10000)=>({latitude:35,longitude,recordedAt:new Date(Date.UTC(2026,0,1)+seconds*1000).toISOString()});
+describe("recorded route analysis",()=>{
+ it("excludes unavailable phone accuracy instead of replaying a reliable position",()=>{expect(normalizeRoutePoints([{...point(0),accuracyMeters:null},{...point(20),accuracyMeters:2000},{...point(40),accuracyMeters:15}])).toHaveLength(1);});
+ it("sorts, deduplicates timestamps and excludes invalid coordinates/time without modifying input",()=>{const input=[point(60),point(0),point(0,1),{...point(3),latitude:NaN},{...point(4),recordedAt:"unknown"}];expect(normalizeRoutePoints(input).map(p=>p.longitude)).toEqual([1,.006]);expect(input[0].recordedAt).toBe(point(60).recordedAt);});
+ it("splits gaps over 120 seconds and excludes their distance/speed",()=>{const route=analyzeRoute([point(0),point(60),point(300,100),point(360,100.006)]);expect(route.segments.map(s=>s.length)).toEqual([2,2]);expect(route.gapCount).toBe(1);expect(route.sampledDurationMs).toBe(120000);expect(route.durationMs).toBe(360000);expect(route.distanceMeters).toBeGreaterThan(1000);expect(route.distanceMeters).toBeLessThan(1200);expect(route.averageSampledSpeedMps).toBeCloseTo(route.distanceMeters/120);expect(routePositionAt(route.points,route.points[0].timeMs+180000)).toBeNull();});
+ it("interpolates short intervals but preserves recorded samples and the 120 second boundary",()=>{const r=analyzeRoute([point(0,0),point(120,1)]);expect(routePositionAt(r.points,r.startMs!+60000)).toEqual({latitude:35,longitude:.5,interpolated:true});expect(routePositionAt(r.points,r.startMs!)).toMatchObject({interpolated:false,longitude:0});expect(routePositionAt(r.points,r.endMs!+1)).toBeNull();});
+ it("crosses the dateline using the shortest longitude interval",()=>{const r=analyzeRoute([point(0,179),point(60,-179)]);expect(Math.abs(routePositionAt(r.points,r.startMs!+30000)!.longitude)).toBe(180);});
+ it("reports no measured speed for zero or one sample",()=>{expect(analyzeRoute([]).averageSampledSpeedMps).toBeNull();expect(analyzeRoute([point(0)]).maxSampledSpeedMps).toBeNull();expect(routeTimecode(3661000)).toBe("01:01:01");});
+});

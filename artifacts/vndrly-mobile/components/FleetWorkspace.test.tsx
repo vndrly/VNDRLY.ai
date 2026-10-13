@@ -12,6 +12,7 @@ vi.mock("@/components/ScreenSafeArea", () => ({ default: ({ children }: any) => 
 vi.mock("@/components/WorkHubPageTitle", () => ({ default: ({ title }: any) => <h1>{title}</h1> }));
 vi.mock("@/components/MapboxNativeMap", () => ({ default: () => <div>Fleet location map</div> }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, disabled }: any) => <button disabled={disabled} onClick={onPress}>{children}</button> }));
+vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 import FleetWorkspace from "./FleetWorkspace";
 const overview = { companyId: 609, enabled: true, roles: ["driver"], capabilities: { canDispatch: false, canManage: false, canDrive: true }, fleets: [], runs: [], observations: [], unavailableIntegrations: [], generatedAt: "2026-10-07T12:00:00Z" };
 afterEach(() => { cleanup(); mocks.api.mockReset(); mocks.membership = 1; mocks.actions = []; });
@@ -23,10 +24,10 @@ describe("mobile Fleet authorization", () => {
       if (path.endsWith("/actions")) { accepted = true; return { ...run, status: "acknowledged", version: 5 }; }
       return { ...overview, runs: [{ ...run, status: accepted ? "acknowledged" : "dispatched", version: accepted ? 5 : 4, allowedActions: accepted ? ["inspect"] : ["acknowledge"] }] };
     });
-    render(<FleetWorkspace />);
-    fireEvent.click(await screen.findByRole("button", { name: "Synthetic load · dispatched" }));
+    render(<FleetWorkspace initialRunId={run.id} />);
+    await screen.findByText("Synthetic load");
     fireEvent.click(screen.getByRole("button", { name: "acknowledge" }));
-    expect(await screen.findByRole("button", { name: "Synthetic load · acknowledged" })).toBeTruthy();
+    expect(await screen.findByRole("button", {name:"inspect"})).toBeTruthy();
     const request = mocks.api.mock.calls.find(call => call[0].endsWith("/actions"));
     expect(JSON.parse(request![1].body)).toMatchObject({ expectedVersion: 4, action: "acknowledge", operationId: "10000000-0000-4000-8000-000000000001", source: "user_report" });
     expect(screen.queryByText(/completed/)).toBeNull();
@@ -37,10 +38,11 @@ describe("mobile Fleet authorization", () => {
     expect(await screen.findByText("My Fleet Day")).toBeTruthy();
     expect(mocks.api).toHaveBeenCalledTimes(1);
     expect(mocks.api).toHaveBeenCalledWith("/api/fleet/overview");
-    expect(screen.getByText(/No sourced Fleet location/)).toBeTruthy();
+    expect(screen.getByText("No run assigned")).toBeTruthy();
+    expect(screen.queryByText(/No sourced Fleet location/)).toBeNull();
     expect(screen.queryByText("Create draft run")).toBeNull();
     expect(screen.queryByText(/vehicle_hardware|camera_playback/)).toBeNull();
-    expect(screen.getByText(/trackers, camera feeds/)).toBeTruthy();
+    expect(screen.queryByText(/trackers, camera feeds/)).toBeNull();
   });
   it("clears old company records immediately when active membership changes", async () => {
     mocks.api.mockResolvedValueOnce(overview).mockImplementation(() => new Promise(() => {}));
@@ -74,7 +76,7 @@ it("loads an exact authorized device run outside the first overview page",async(
   const run={id,companyId:609,title:"Historical authorized run",version:9,driverUserId:1,vehicleAssetId:"30000000-0000-4000-8000-000000000001",trailerAssetId:null,status:"completed",allowedActions:[],currentStopId:null,visitedStopIds:[],loads:[],inspections:[],records:[],events:[],stops:[],siteIds:[]};
   mocks.api.mockImplementation(async path=>path===`/api/fleet/runs/${id}`?run:overview);
   render(<FleetWorkspace initialRunId={id}/>);
-  expect(await screen.findByRole("button",{name:"Historical authorized run · completed"})).toBeTruthy();
+  expect(await screen.findByText("Historical authorized run")).toBeTruthy();
   expect(mocks.api).toHaveBeenCalledWith(`/api/fleet/runs/${id}`);
   expect(screen.queryByRole("button",{name:"start"})).toBeNull();
 });
@@ -83,11 +85,16 @@ it("shows only authorized resource projections and submitted runs in the review 
   const resources={drivers:[{userId:1,name:"Synthetic authorized driver",fleetIds:[]}],equipment:[{id:"30000000-0000-4000-8000-000000000001",name:"Synthetic held truck",category:"truck",status:"held",dispatchable:false}]};
   const run=(id:string,title:string,status:string)=>({id,title,status,version:1,driverUserId:1,vehicleAssetId:resources.equipment[0].id,trailerAssetId:null,allowedActions:[],stops:[],loads:[],inspections:[],records:[],events:[],currentStopId:null});
   mocks.api.mockImplementation(async path=>path==="/api/fleet/resources"?resources:{...overview,capabilities:{canDispatch:true,canManage:true,canDrive:false},runs:[run("20000000-0000-4000-8000-000000000001","Review candidate","submitted_for_review"),run("20000000-0000-4000-8000-000000000002","Active work","in_progress")]});
-  render(<FleetWorkspace/>);fireEvent.click(await screen.findByRole("button",{name:"Fleet directory / readiness"}));
-  expect(screen.getByText(/Synthetic held truck.*Not dispatchable/)).toBeTruthy();
-  expect(screen.getByText(/dispatch rechecks qualifications, holds and site access/)).toBeTruthy();
-  fireEvent.click(screen.getByRole("button",{name:"Fleet review"}));
-  expect(screen.getByRole("button",{name:"Review candidate · submitted for review"})).toBeTruthy();
-  expect(screen.queryByRole("button",{name:"Active work · in progress"})).toBeNull();
+  render(<FleetWorkspace/>);fireEvent.click(await screen.findByRole("button",{name:"Vehicles"}));
+  expect(screen.getByText("Synthetic held truck")).toBeTruthy();
+  expect(screen.getByText("Not ready for dispatch")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button",{name:"Today"}));
+  fireEvent.click(screen.getByRole("button",{name:"Review"}));
+  expect(screen.getByRole("button",{name:"Review candidate"})).toBeTruthy();
+  expect(screen.queryByRole("button",{name:"Active work"})).toBeNull();
   expect(mocks.api.mock.calls.some(call=>call[1]?.method==="POST")).toBe(false);
 });
+vi.mock("@/components/FleetDestinationDirectory",()=>({default:()=> <div>Reusable destination settings</div>}));
+vi.mock("@/components/FleetTicketPlan",()=>({default:({ticketId}:any)=> <div>Commercial plan for ticket {ticketId}</div>}));
+it("wires directory settings and ticket-specific plans into draft creation with locked origin",async()=>{const fleetId="60000000-0000-4000-8000-000000000001",vehicleId="30000000-0000-4000-8000-000000000001";const dispatch={...overview,roles:["dispatcher"],capabilities:{canDispatch:true,canDrive:false,canSetup:true},fleets:[{id:fleetId,name:"Synthetic Fleet",siteIds:[392],equipmentAssetIds:[vehicleId]}]};mocks.api.mockImplementation(async(path:string)=>path==="/api/fleet/resources"?{tickets:[{id:77,siteId:392,status:"initiated"},{id:78,siteId:999,status:"initiated"}],drivers:[{userId:5,name:"Synthetic Driver",fleetIds:[fleetId]}],equipment:[{id:vehicleId,name:"Synthetic Truck",category:"truck",status:"ready",dispatchable:true}]}:dispatch);render(<FleetWorkspace/>);await screen.findByRole("button",{name:"New run"});fireEvent.click(screen.getByRole("button",{name:"Fleet settings"}));expect(screen.getByText("Reusable destination settings")).toBeTruthy();fireEvent.click(screen.getByRole("button",{name:"New run"}));fireEvent.change(screen.getByLabelText("Fleet run title"),{target:{value:"Commercial synthetic haul"}});fireEvent.click(screen.getByRole("button",{name:"Synthetic Fleet"}));fireEvent.click(screen.getByRole("button",{name:"Synthetic Driver"}));fireEvent.click(screen.getByRole("button",{name:"Use as truck"}));expect(screen.queryByRole("button",{name:"Ticket #78 · site 999 · initiated"})).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Ticket #77 · site 392 · initiated"}));expect(screen.getByText("Commercial plan for ticket 77")).toBeTruthy();expect(screen.queryByRole("button",{name:"Add site 392"})).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Create draft run"}));await waitFor(()=>expect(mocks.api.mock.calls.some(c=>c[0]==="/api/fleet/runs"&&c[1]?.method==="POST")).toBe(true));const request=mocks.api.mock.calls.find(c=>c[0]==="/api/fleet/runs"&&c[1]?.method==="POST")!;expect(JSON.parse(request[1].body)).toMatchObject({ticketId:77,stops:[{siteId:392,kind:"pickup",sequence:0}]});});
+it("keeps operational driver details from opening the finance-only ticket plan",async()=>{const id="20000000-0000-4000-8000-000000000099";const run={id,title:"Driver commercial routing",version:1,driverUserId:1,vehicleAssetId:"30000000-0000-4000-8000-000000000001",trailerAssetId:null,status:"draft",allowedActions:[],currentStopId:null,loads:[],inspections:[],records:[],events:[],stops:[],commercial:{ticketId:88,originSiteId:392,mode:"batch",currency:"USD",approvedDestinations:[],destinationId:null}};mocks.api.mockResolvedValue({...overview,runs:[run]});render(<FleetWorkspace initialRunId={id}/>);await screen.findByText("Driver commercial routing");expect(screen.queryByText("Commercial plan for ticket 88")).toBeNull();});

@@ -1,3 +1,4 @@
+import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
 import { fleetRunNotificationRecipients, emitFleetRunNotification } from "./fleet-notifications";
@@ -77,7 +78,7 @@ function permitted(
   state: FleetState,
   actor: FleetActor,
   run: FleetRun,
-  action: "view" | "dispatch" | "perform_run",
+  action: "view" | "dispatch" | "perform_run" | "view_finance",
 ) {
   const grant = grantFor(state, actor);
   const current = actor.currentRunsById
@@ -178,8 +179,16 @@ function project(
 ): FleetRun {
   if (!permitted(state, actor, run, "view"))
     throw new FleetError("fleet.not_found", 404);
+  // Project commercial routing independently of the current finance grant.
+  // Never mutate the durable run when hiding amounts from an operational reader.
+  let commercial = run.commercial;
+  if (commercial && !permitted(state, actor, run, "view_finance")) {
+    const { rateCents: _rate, billedLineId: _line, ...routing } = commercial;
+    commercial = routing;
+  }
   return {
     ...run,
+    ...(commercial ? {commercial} : {}),
     labels: actor.labels?.get(labelKey(run)) ?? {
       driverName: null,
       vehicleName: null,
@@ -379,8 +388,10 @@ export function createFleetService(repository: FleetRepository) {
     );
   const locations = createFleetLocationOperations(transaction, permitted);
   return {
+    ...createFleetCommercialOperations(transaction),
     recordLocation: locations.record,
     locationObservations: locations.observations,
+    locationHistory: locations.history,
     ...createFleetEtaOperations(
       transaction,
       permitted,
@@ -794,7 +805,7 @@ export function createFleetService(repository: FleetRepository) {
             body.stops.some((s, i) => s.sequence !== i)
           )
             throw new FleetError("fleet.invalid_stops", 400);
-          const { operationId: _operationId, ...runFields } = body;
+          const { operationId: _operationId, ticketId: _ticketId, ...runFields } = body;
           const run: FleetRun = {
             ...runFields,
             id: randomUUID(),
@@ -814,6 +825,7 @@ export function createFleetService(repository: FleetRepository) {
             linkedTicketId: null,
             allowedActions: [],
           };
+          if(body.ticketId)await bindFleetRunTicket(client,actor,state,run,body.ticketId);
           await eligible(state, client, run);
           run.events.push({
             id: randomUUID(),
@@ -844,6 +856,7 @@ export function createFleetService(repository: FleetRepository) {
         }),
         async (state, client) => {
           const body = FleetActionInputSchema.parse(input);
+          if(body.destinationId&&body.action!=="start")throw new FleetError("fleet.unexpected_destination",400);
           if (body.capturedAt) {
             const age = Date.now() - Date.parse(body.capturedAt);
             if (age < -300_000 || age > 30 * 86_400_000)
@@ -989,7 +1002,7 @@ export function createFleetService(repository: FleetRepository) {
             );
             if (!ticket.rows.length)
               throw new FleetError("fleet.ticket_not_found", 404);
-            run.linkedTicketId = body.ticketId;
+            if(run.commercial|| (await client.query("SELECT fleet_plan FROM tickets WHERE id=$1",[body.ticketId])).rows[0]?.fleet_plan){await bindFleetRunTicket(client,actor,state,run,body.ticketId);}else run.linkedTicketId = body.ticketId;
           } else if (body.action === "cancel") {
             if (!body.reason)
               throw new FleetError("fleet.reason_required", 400);
@@ -1021,6 +1034,7 @@ export function createFleetService(repository: FleetRepository) {
               source: "user_report",
             });
           } else if (body.action === "start") {
+            await selectFleetRunDestination(client,actor,state,run,body.destinationId);
             await eligible(state, client, run);
             run.status = "in_progress";
             run.phase = "traveling_to_pickup";
@@ -1100,6 +1114,7 @@ export function createFleetService(repository: FleetRepository) {
             run.status =
               body.decision === "accept" ? "completed" : "in_progress";
             run.phase = null;
+            if(body.decision==="accept")await recordFleetRunCharge(client,actor,run);
           } else {
             if (body.action === "reassign") {
               run.driverUserId = body.driverUserId ?? run.driverUserId;
@@ -1113,6 +1128,7 @@ export function createFleetService(repository: FleetRepository) {
               requireFleetAvailability(await readFleetAvailability(client, actor.companyId, run.driverUserId, run.schedule));
             if (body.action === "dispatch") run.status = "dispatched";
           }
+          validateCommercialStops(run);
           run.version++;
           run.events.push({
             id: randomUUID(),

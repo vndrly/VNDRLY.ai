@@ -1,4 +1,4 @@
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "./fleet-device-storage";
 import { createFleetOfflineStore, fleetOfflineByteLength, FLEET_OFFLINE_MAX_BYTES } from "./fleet-offline";
 
 // Device-only encrypted chunks keep records out of unencrypted preferences.

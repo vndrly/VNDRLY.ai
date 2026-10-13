@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "./fleet-device-storage";
 import * as Crypto from "expo-crypto";
 import { z } from "zod/v4";
 import { FleetLocationInputSchema, type FleetOverview, type FleetRun } from "@workspace/api-zod";

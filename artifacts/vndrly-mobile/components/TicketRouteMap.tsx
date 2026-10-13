@@ -1,8 +1,11 @@
-import React, { useMemo } from "react";
+import MapRouteReplay from "./MapRouteReplay";
+import TogglePillButton from "./TogglePillButton";
+import React, { useMemo,useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Pressable } from "react-native";
 
 import MapboxNativeMap, { type NativeMapLine, type NativeMapPoint } from "@/components/MapboxNativeMap";
+import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 
 export type RoutePoint = {
@@ -24,6 +27,9 @@ type Props = {
   checkOut?: LatLngTime | null;
   tracking?: RoutePoint[];
   height?: number;
+  siteRadiusMeters?: number;
+  people?: NativeMapPoint[];
+  onPersonPress?: (id:string)=>void;
   selectedTrackingId?: number | string | null;
   onSelectTracking?: (id: number | string | null) => void;
 };
@@ -43,6 +49,9 @@ function isValidLatLng(lat: unknown, lng: unknown): boolean {
 
 export function TicketRouteMap({
   site,
+  siteRadiusMeters,
+  people = [],
+  onPersonPress,
   checkIn,
   checkOut,
   tracking,
@@ -50,6 +59,12 @@ export function TicketRouteMap({
   selectedTrackingId,
   onSelectTracking,
 }: Props) {
+  const brand = useBrand();
+  const [street,setStreet]=useState(false);
+  const [centerSite,setCenterSite]=useState(false);
+  const [cameraVersion,setCameraVersion]=useState(0);
+  const [replay,setReplay]=useState(false);
+  const replayPoints=useMemo(()=> (tracking??[]).flatMap(point=>{const time=point.recordedAt?new Date(point.recordedAt).getTime():NaN;return Number.isFinite(time)?[{latitude:point.latitude,longitude:point.longitude,recordedAt:new Date(time).toISOString()}]:[];}),[tracking]);
   const colors = useColors();
   const { t } = useTranslation();
 
@@ -73,7 +88,7 @@ export function TicketRouteMap({
   }, [tracking]);
 
   const points = useMemo<NativeMapPoint[]>(() => {
-    const items: NativeMapPoint[] = [];
+    const items: NativeMapPoint[] = people.filter(p => isValidLatLng(p.latitude,p.longitude));
     if (validSite) {
       items.push({
         id: "site",
@@ -117,7 +132,7 @@ export function TicketRouteMap({
       });
     }
     return items;
-  }, [colors.primary, selectedTrackingId, sortedTracking, t, validCheckIn, validCheckOut, validSite]);
+  }, [people, colors.primary, selectedTrackingId, sortedTracking, t, validCheckIn, validCheckOut, validSite]);
 
   const lines = useMemo<NativeMapLine[]>(() => {
     const coordinates: Array<[number, number]> = [];
@@ -148,31 +163,37 @@ export function TicketRouteMap({
   }
 
   return (
-    <View
+    <><View style={{flexDirection:"row",flexWrap:"wrap",gap:8,marginBottom:10}}>
+      {[ ["Center site",()=>{setCenterSite(true);setCameraVersion(v=>v+1);}], ["Fit visit",()=>{setCenterSite(false);setCameraVersion(v=>v+1);}], [street?"Satellite":"Streets",()=>setStreet(v=>!v)] ].map(([label,action])=><Pressable key={String(label)} accessibilityRole="button" onPress={action as () => void} style={{padding:10,borderRadius:12,borderWidth:2,borderColor:brand.primary}}><Text style={{color:colors.foreground}}>{String(label)}</Text></Pressable>)}
+    </View><View
       style={[
         styles.wrapper,
-        { height, borderColor: colors.primary, backgroundColor: colors.muted },
+        { height, borderColor: brand.primary, backgroundColor: colors.muted },
       ]}
     >
-      <MapboxNativeMap
+      <MapboxNativeMap controls
         points={points}
         lines={lines}
         height="100%"
-        styleKind="satellite"
+        styleKind={street ? "street" : "satellite"}
+        center={centerSite && validSite ? [validSite.longitude,validSite.latitude] : undefined}
+        viewKey={`ticket-camera-${cameraVersion}`}
+        circles={validSite && siteRadiusMeters ? [{id:"site-boundary",latitude:validSite.latitude,longitude:validSite.longitude,radiusMeters:siteRadiusMeters,color:brand.primary}] : []}
         selectedPointId={selectedTrackingId != null ? String(selectedTrackingId) : null}
         onPointPress={(id) => {
+          if (people.some(person=>person.id===id)) {onPersonPress?.(id);return;}
           if (id.startsWith("tracking-") || id === "site" || id === "check-in" || id === "check-out") return;
           onSelectTracking?.(id);
         }}
       />
-    </View>
+    </View><TogglePillButton compactOnTablet disabled={!replayPoints.length} onPress={()=>setReplay(!replay)}>{replay?"Close replay":"Replay recorded route"}</TogglePillButton>{replay&&<MapRouteReplay points={replayPoints} title="Ticket route replay"/>}</>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
     borderWidth: 2,
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: "hidden",
     marginBottom: 12,
   },

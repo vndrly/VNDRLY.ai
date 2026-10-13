@@ -1,3 +1,4 @@
+import CompanyOperationsChoice from "./CompanyOperationsChoice";
 import React, { useEffect, useRef, useState } from "react";
 import { Linking, ScrollView, Switch, View } from "react-native";
 import {
@@ -289,7 +290,7 @@ export default function NativeOnboarding({
             {t(`onboardingNative.sections.${section}`)}
           </Text>
           {section === "company-basics" ? (
-            <Text>{t("onboardingNative.companyCreated")}</Text>
+            <View><Text>{t("onboardingNative.companyCreated")}</Text>{organization.type === "vendor" ? <CompanyOperationsChoice /> : null}</View>
           ) : null}
           {(ONBOARDING_FIELDS[section] ?? []).map((field) => (
             <View key={field}>

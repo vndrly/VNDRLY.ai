@@ -18,7 +18,7 @@ for (const manifest of manifests) assert.equal((manifest.interface || manifest.e
 for (const [id,label] of expected) {
   assert(new RegExp('^VNDRLY/[a-z][a-z ]*$').test(label));
   const dir = path.join(root,'skills',id);
-  const skill = fs.readFileSync(path.join(dir,'SKILL.md'),'utf8');
+  const skill = fs.readFileSync(path.join(dir,'SKILL.md'),'utf8').replace(/\r\n/g,'\n');
   const metadata = fs.readFileSync(path.join(dir,'agents/openai.yaml'),'utf8');
   assert(skill.startsWith(`---\nname: ${id}\n`));
   assert(skill.includes(`# ${label}\n`));

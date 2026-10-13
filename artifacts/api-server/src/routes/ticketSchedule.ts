@@ -1030,18 +1030,21 @@ router.post("/tickets/:id/schedule/resend-notifications", async (req, res): Prom
 router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
   const session = getSession(req);
   if (!session) { res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" }); return; }
+  if(!session.vendorId){res.json({tickets:[],recentTickets:[]});return;}
   const days = Math.min(60, Math.max(1, Number(req.query.days) || 14));
   const historyDays = Math.min(60, Math.max(1, Number(req.query.historyDays) || 14));
   const now = new Date();
-  const horizon = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-  const historyStart = new Date(Date.now() - historyDays * 24 * 60 * 60 * 1000);
+  const hasRange=req.query.start!==undefined||req.query.end!==undefined;
+  const horizon = hasRange?new Date(String(req.query.end)):new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  const historyStart = hasRange?new Date(String(req.query.start)):new Date(Date.now() - historyDays * 24 * 60 * 60 * 1000);
+  if(hasRange&&(!Number.isFinite(horizon.getTime())||!Number.isFinite(historyStart.getTime())||horizon<=historyStart||horizon.getTime()-historyStart.getTime()>93*86400000)){res.status(400).json({error:"Select a valid calendar range of at most 93 days."});return;}
 
   // Find vendor_people row for this user (if any), so we can resolve which
   // tickets they are crewed onto.
   const [me] = await db
     .select({ id: vendorPeopleTable.id })
     .from(vendorPeopleTable)
-    .where(and(eq(vendorPeopleTable.userId, session.userId), isNull(vendorPeopleTable.deletedAt)));
+    .where(and(eq(vendorPeopleTable.userId, session.userId), eq(vendorPeopleTable.vendorId,session.vendorId), isNull(vendorPeopleTable.deletedAt)));
 
   const ticketIdSet = new Set<number>();
   if (me) {
@@ -1055,7 +1058,7 @@ router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
   const foremanRows = await db
     .select({ id: ticketsTable.id })
     .from(ticketsTable)
-    .where(eq(ticketsTable.foremanUserId, session.userId));
+    .where(and(eq(ticketsTable.foremanUserId, session.userId),eq(ticketsTable.vendorId,session.vendorId)));
   foremanRows.forEach(r => ticketIdSet.add(r.id));
 
   if (ticketIdSet.size === 0) { res.json({ tickets: [] }); return; }
@@ -1087,6 +1090,7 @@ router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
     .leftJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id))
     .where(and(
       inArray(ticketsTable.id, ticketIds),
+      eq(ticketsTable.vendorId,session.vendorId),
       // Schedule tab needs both upcoming work and a recent history window.
       gte(ticketsTable.scheduledStartAt, historyStart),
       lte(ticketsTable.scheduledStartAt, horizon),

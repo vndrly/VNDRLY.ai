@@ -142,3 +142,8 @@ For vendor opportunities, prefer query_qualified_hotlist_jobs when advertised. I
 ## Native work and one V
 
 request_native_ticket_photo sends a request for one exact ticket. The worker opens the camera, reviews and saves. A notification, opened request or running upload is not a saved attachment. Camera is default; existing-library photo needs explicit allowance. Keep the saved action reference after timeouts and read canonical status before repeating. Declined and expired requests remain distinct. Phone changes move pending work; an old-phone upload may finish its original record.
+
+
+## October 13 iOS surface parity
+
+Use the ticket lifecycle tools for Start Travel, Arrived, Check In, Check Out and Close for Review. Arrival does not start paid work. Field Proof Packet ends at Submitted to Office; kicked-back work requires corrections and resubmission. Mileage is optional, subject to vendor reimbursement settings. Do not expose office approval/payment evidence as a field-worker checklist. Ticket map positions are recorded unless a fresh authorized live observation is returned.

@@ -10,8 +10,12 @@ import {
   View,
 } from "react-native";
 
+import { useWindowDimensions } from "react-native";
+import { askVActionsForTicket, askVPromptRoute } from "@/lib/assistant-ticket-actions";
+import TicketWorkAction from "@/components/TicketWorkAction";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { TicketRouteMap } from "@/components/TicketRouteMap";
+import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { openInMaps } from "@/lib/maps";
@@ -111,10 +115,14 @@ type Props = {
 
 export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) {
   const { t, i18n } = useTranslation();
+  const { width } = useWindowDimensions();
   const colors = useColors();
+  const brand = useBrand();
   const [data, setData] = useState<SiteVisitSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [historyView,setHistoryView] = useState(false);
+  const [visitDate,setVisitDate] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -175,29 +183,14 @@ export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) 
         <Text style={{ color: colors.mutedForeground }}>{error}</Text>
       ) : !data ? null : (
         <>
-          <View style={styles.statsRow}>
-            <Stat
-              label={t("ticketDetail.siteVisitSummary.onSiteCount")}
-              value={String(data.totals.peopleCount)}
-              colors={colors}
-            />
-            <Stat
-              label={t("ticketDetail.siteVisitSummary.totalOnSite")}
-              value={fmtMinutes(data.totals.totalOnSiteMinutes, t)}
-              colors={colors}
-            />
-            <Stat
-              label={t("ticketDetail.siteVisitSummary.travel")}
-              value={fmtMinutes(data.totals.leadTravelMinutes, t)}
-              colors={colors}
-            />
-            <Stat
-              label={t("ticketDetail.siteVisitSummary.routePoints")}
-              value={String(data.totals.routePointCount)}
-              colors={colors}
-            />
+          <View style={{flexDirection:"row",flexWrap:"wrap",gap:8,marginBottom:12}}>
+            <TicketWorkAction label="Visit" icon="map-pin" active={!historyView} testID="ticket-map-visit" onPress={()=>setHistoryView(false)}/>
+            <TicketWorkAction label="History & Replay" icon="clock" active={historyView} testID="ticket-map-history" onPress={()=>setHistoryView(true)}/>
           </View>
-
+          {historyView ? <View style={{flexDirection:"row",flexWrap:"wrap",gap:8,marginBottom:12}}>
+            <TicketWorkAction label="All recorded days" icon="calendar" active={!visitDate} testID="ticket-map-all-days" onPress={()=>setVisitDate(null)}/>
+            {[...new Set(routePoints.map(point=>point.recordedAt.slice(0,10)))].sort().map(date=><TicketWorkAction key={date} label={date} icon="calendar" active={visitDate===date} testID={"ticket-map-date-"+date} onPress={()=>setVisitDate(date)}/>)}
+          </View> : null}
           <TicketRouteMap
             site={
               data.site
@@ -226,9 +219,40 @@ export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) 
                   }
                 : null
             }
-            tracking={routePoints}
-            height={260}
+            tracking={historyView && visitDate ? routePoints.filter(point=>point.recordedAt.startsWith(visitDate)) : routePoints}
+            people={data.people.flatMap(person=>person.checkInLatitude != null && person.checkInLongitude != null ? [{id:person.key,latitude:person.checkInLatitude,longitude:person.checkInLongitude,label:(person.employeeName ?? "Crew").slice(0,1),title:(person.employeeName ?? "Crew")+" · recorded check-in",color:brand.primary}] : [])}
+            onPersonPress={setSelectedKey}
+            height={width >= 768 ? 500 : 340}
+            siteRadiusMeters={data.site?.siteRadiusMeters}
           />
+
+          <Text style={{color:colors.mutedForeground,marginVertical:8}}>Recorded visit locations · these are not live crew positions</Text>
+          <Text style={{color:colors.foreground,fontFamily:"Inter_600SemiBold",marginVertical:8}}>{t("tickets.askvActions.title")}</Text>
+          <View testID="ticket-askv-actions" style={{flexDirection:"row",flexWrap:"wrap",gap:8,marginBottom:12}}>
+            {askVActionsForTicket(ticketId).filter(action => action.key !== "proof").map(action => <TicketWorkAction key={action.key} label={t(action.labelKey)} icon={action.icon} testID={`button-ticket-askv-${action.key}`} onPress={() => router.push(askVPromptRoute(action.prompt) as never)}/>)}
+          </View>
+          <View style={styles.statsRow}>
+            <Stat
+              label={t("ticketDetail.siteVisitSummary.onSiteCount")}
+              value={String(data.totals.peopleCount)}
+              colors={colors}
+            />
+            <Stat
+              label={t("ticketDetail.siteVisitSummary.totalOnSite")}
+              value={fmtMinutes(data.totals.totalOnSiteMinutes, t)}
+              colors={colors}
+            />
+            <Stat
+              label={t("ticketDetail.siteVisitSummary.travel")}
+              value={fmtMinutes(data.totals.leadTravelMinutes, t)}
+              colors={colors}
+            />
+            <Stat
+              label={t("ticketDetail.siteVisitSummary.routePoints")}
+              value={String(data.totals.routePointCount)}
+              colors={colors}
+            />
+          </View>
 
           {data.site ? (
             <LayeredPillButton
@@ -250,7 +274,7 @@ export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) 
             </LayeredPillButton>
           ) : null}
 
-          <View style={[styles.peopleCard, { borderColor: colors.border }]}>
+          <View style={[styles.peopleCard, { borderColor: brand.primary }]}>
             <Text style={[styles.peopleHeader, { color: colors.foreground }]}>
               {t("ticketDetail.siteVisitSummary.peopleOnSite")}
             </Text>
@@ -316,7 +340,7 @@ export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) 
                         <View style={styles.actionRow}>
                           {person.replayDate ? (
                             <Pressable
-                              style={[styles.actionBtn, { borderColor: colors.border }]}
+                              style={[styles.actionBtn, { borderColor: brand.primary }]}
                               onPress={() =>
                                 router.push(
                                   `/crew-replay/${person.employeeId}?date=${person.replayDate}`,
@@ -331,7 +355,7 @@ export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) 
                           ) : null}
                           {person.checkInLatitude != null && person.checkInLongitude != null ? (
                             <Pressable
-                              style={[styles.actionBtn, { borderColor: colors.border }]}
+                              style={[styles.actionBtn, { borderColor: brand.primary }]}
                               onPress={() =>
                                 openInMaps(person.checkInLatitude!, person.checkInLongitude!)
                               }
@@ -386,8 +410,9 @@ function Stat({
   value: string;
   colors: ReturnType<typeof useColors>;
 }) {
+  const brand = useBrand();
   return (
-    <View style={[styles.stat, { borderColor: colors.border }]}>
+    <View style={[styles.stat, { borderColor: brand.primary }]}>
       <Text style={{ color: colors.mutedForeground, fontSize: 10 }}>{label}</Text>
       <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 14 }}>{value}</Text>
     </View>
@@ -403,11 +428,11 @@ const styles = StyleSheet.create({
   stat: {
     flexGrow: 1,
     flexBasis: "45%",
-    borderWidth: 1,
-    borderRadius: 8,
+    borderWidth: 2,
+    borderRadius: 14,
     padding: 8,
   },
-  peopleCard: { borderWidth: 1, borderRadius: 10, overflow: "hidden", marginTop: 12 },
+  peopleCard: { borderWidth: 2, borderRadius: 14, overflow: "hidden", marginTop: 12 },
   peopleHeader: {
     fontFamily: "Inter_700Bold",
     fontSize: 12,
@@ -428,8 +453,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    borderWidth: 1,
-    borderRadius: 6,
+    borderWidth: 2,
+    borderRadius: 14,
     paddingHorizontal: 8,
     paddingVertical: 5,
   },

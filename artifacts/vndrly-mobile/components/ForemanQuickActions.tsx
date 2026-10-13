@@ -1,25 +1,13 @@
 import { Feather } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import LayeredPillButton from "@/components/LayeredPillButton";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
-import { apiFetch } from "@/lib/api";
-import type { NotificationRow } from "@/lib/notifications-ui";
-
-type UpcomingScheduleTicket = {
-  id: number;
-  scheduledStartAt: string | null;
-  siteName: string | null;
-  workTypeName: string | null;
-};
-
-type UpcomingScheduleResponse = {
-  tickets?: UpcomingScheduleTicket[];
-};
+import { useDailySummary } from "@/lib/daily-workspace";
 
 type TicketSummary = {
   id: number;
@@ -49,78 +37,25 @@ function formatTicketSummary(ticket?: TicketSummary | null): string {
   return `#${ticket.id}`;
 }
 
-function formatNotificationSummary(item?: NotificationRow): string {
-  if (!item) return "No recent alerts";
-  return item.title?.trim() || item.body?.trim() || "Latest alert";
-}
-
-function formatScheduleSummary(ticket?: UpcomingScheduleTicket): string {
-  if (!ticket?.scheduledStartAt) return "No tickets scheduled today";
-  const d = new Date(ticket.scheduledStartAt);
-  const when = Number.isNaN(d.getTime())
-    ? "Scheduled"
-    : d.toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      });
-  return `${when} · #${ticket.id}`;
-}
-
-function isToday(iso: string | null): boolean {
-  if (!iso) return false;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return false;
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
-export default function ForemanQuickActions({
-  latestTicket = null,
-  unreadAlerts = 0,
-  pendingSchedule = 0,
-  onSchedulePress,
-}: Props) {
+export default function ForemanQuickActions({ latestTicket = null }: Props) {
   const colors = useColors();
   const brand = useBrand();
   const { t } = useTranslation();
-  const { data: latestNotification } = useQuery({
-    queryKey: ["foreman-latest-notification"],
-    queryFn: async () => {
-      const rows = await apiFetch<NotificationRow[]>("/api/notifications?limit=1");
-      return rows[0] ?? null;
-    },
-    refetchInterval: 60_000,
-  });
-  const { data: nextSchedule } = useQuery({
-    queryKey: ["foreman-today-schedule"],
-    queryFn: async () => {
-      const response = await apiFetch<UpcomingScheduleResponse>(
-        "/api/me/upcoming-schedule?days=1",
-      );
-      return (response.tickets ?? [])
-        .filter((ticket) => isToday(ticket.scheduledStartAt))
-        .sort(
-          (a, b) =>
-            Date.parse(a.scheduledStartAt!) - Date.parse(b.scheduledStartAt!),
-        )[0] ?? null;
-    },
-    refetchInterval: 60_000,
-  });
+  const daily = useDailySummary();
+  const summary = daily.data;
 
   const tiles: Tile[] = [
     {
       key: "alerts",
       icon: "bell" as const,
-      label: t("foremanHome.alerts"),
-      badge: unreadAlerts,
-      onPress: () => router.push("/notifications"),
-      summary: formatNotificationSummary(latestNotification ?? undefined),
+      label: "Needs Attention",
+      badge: summary?.attentionCount ?? undefined,
+      onPress: () => router.push("/work-hub/attention" as never),
+      summary:
+        summary?.attentionCount != null
+          ? summary.topAttentionLabel ||
+            `${summary.attentionCount} need attention`
+          : "Summary unavailable",
       testID: "foreman-action-alerts",
     },
     {
@@ -134,18 +69,25 @@ export default function ForemanQuickActions({
     {
       key: "schedule",
       icon: "calendar" as const,
-      label: t("foremanHome.schedule"),
-      badge: pendingSchedule,
-      onPress: onSchedulePress ?? (() => router.push("/(tabs)/schedule")),
-      summary: formatScheduleSummary(nextSchedule ?? undefined),
+      label: "Calendar",
+      badge: summary?.calendarCount ?? undefined,
+      onPress: () => router.push("/work-hub/calendar" as never),
+      summary:
+        summary?.calendarCount != null
+          ? summary.nextCalendarLabel || `${summary.calendarCount} upcoming`
+          : "Summary unavailable",
       testID: "foreman-action-schedule",
     },
     {
       key: "safety",
       icon: "shield" as const,
-      label: "Safety Reports",
-      onPress: () => router.push("/safety-my-reports"),
-      summary: "Open safety reports",
+      label: "Safety",
+      onPress: () => router.push("/work-hub/safety" as never),
+      badge: summary?.safetyCount ?? undefined,
+      summary:
+        summary?.safetyCount != null
+          ? `${summary.safetyCount} safety items`
+          : "Summary unavailable",
       testID: "foreman-action-safety-reports",
     },
   ];
@@ -157,11 +99,11 @@ export default function ForemanQuickActions({
       </Text>
       <View style={styles.grid}>
         {tiles.map((tile) => (
+          <View key={tile.key} style={[styles.tile, {backgroundColor:colors.card,borderColor:brand.primary}]} >
           <TouchableOpacity
-            key={tile.key}
             onPress={tile.onPress}
             style={[
-              styles.tile,
+              {flex:1},
               {
                 backgroundColor: colors.card,
                 borderColor: brand.primary,
@@ -200,6 +142,8 @@ export default function ForemanQuickActions({
               {tile.summary}
             </Text>
           </TouchableOpacity>
+          {tile.key === "safety" ? <LayeredPillButton testID="button-safety-report" onPress={() => router.push("/safety-report")} height={32} style={{alignSelf:"flex-end",marginTop:8}}><Text style={{color:"#fff",fontSize:12}}>Report safety issue</Text></LayeredPillButton> : null}
+          </View>
         ))}
       </View>
     </View>

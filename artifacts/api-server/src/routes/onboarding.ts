@@ -890,6 +890,10 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
   if (!authorizeOrgAccess(req, res, orgType, orgId)) return;
   const session = getSessionFromRequest(req);
   const acceptingUserId = session?.userId;
+  if (orgType === "vendor") {
+    const categoryRow = await db.execute(sql`SELECT operations_categories FROM vendors WHERE id = ${orgId}`);
+    if (!Array.isArray(categoryRow.rows[0]?.operations_categories) || !(categoryRow.rows[0]?.operations_categories as string[]).length) { res.status(400).json({ error: "Choose your company operations category before completing onboarding.", code: "onboarding.operations_categories_required" }); return; }
+  }
   const existing = await ensureProgressRow({
     orgType,
     partnerId: orgType === "partner" ? orgId : null,

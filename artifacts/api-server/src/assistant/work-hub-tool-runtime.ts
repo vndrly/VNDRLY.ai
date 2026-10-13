@@ -14,6 +14,7 @@ import { ticketInvoicePreparationCommand } from "./ticket-invoice-preparation-to
 import { ticketInvoiceCandidatesPath } from "./ticket-invoice-candidates-tools";
 import { financeRecordAction } from "./work-hub-finance-actions";
 import { z } from "zod/v4";
+import { FleetDestinationSchema } from "@workspace/api-zod";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
@@ -269,6 +270,18 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if(name==="set_fleet_preferences"){const parsed=FleetWorkspacePreferenceInputSchema.safeParse({expectedVersion:input.expectedVersion,defaultWorkspace:input.defaultWorkspace,selectedFleetId:input.selectedFleetId});return parsed.success?request("POST","/fleet/preferences",parsed.data):{error:"Supply exact current preference version and accessible fleet choice."};}
     if(name==="query_fleet_settings")return request("GET","/fleet/setup");
     if(name==="manage_fleet_settings"){const body=FleetSetupInputSchema.safeParse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants,supportGrants:input.supportGrants});return body.success?request("POST","/fleet/setup",body.data):{error:"Supply the exact current Fleet settings and version."};}
+    if(name === "save_fleet_destination") {const {confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...business}=input;const value=z.object({operationId:z.uuid(),expectedVersion:z.number().int().positive(),destination:FleetDestinationSchema.omit({revision:true,ownerType:true,ownerId:true}).extend({id:z.uuid().optional()})}).strict().safeParse(business);return value.success?request("POST","/fleet/destinations",value.data):{error:"Supply the current directory revision and reviewed destination fields."};}
+    if(name === "save_fleet_ticket_plan") {const {ticketId,confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...fields}=input;const id=z.number().int().positive().safeParse(ticketId);const value=z.object({operationId:z.uuid(),expectedVersion:z.number().int().nonnegative(),mode:z.enum(["batch","singles"]).optional(),rateCents:z.number().int().min(0).max(100000000),closure:z.enum(["shift","day","manual"]),closesAt:z.string().datetime().nullable(),destinationIds:z.array(z.uuid()).min(1).max(30)}).strict().safeParse(fields);return id.success&&value.success?request("POST","/fleet/tickets/"+id.data+"/plan",value.data):{error:"Supply the exact ticket, current plan revision, explicit rate, closure and approved destinations."};}
+    if(name === "query_fleet_ticket_plan") {const id=z.number().int().positive().safeParse(input.ticketId);return id.success?request("GET","/fleet/tickets/"+id.data+"/plan"):{error:"Select an exact ticket."};}
+    if (name === "query_fleet_location_history") {
+      const id=z.uuid().safeParse(input.runId);return id.success?request("GET","/fleet/runs/"+id.data+"/location-history"):{error:"Select an exact run UUID."};
+    }
+    if (name === "query_fleet_commercial_settings" || name === "recommend_fleet_destinations") {
+      const values=z.object({siteId:z.number().int().positive().optional(),material:z.string().max(80).optional()}).strict().safeParse(input);
+      if(!values.success || name === "recommend_fleet_destinations" && !values.data.siteId)return {error:"Select an authorized origin site."};
+      const q=new URLSearchParams();if(values.data.siteId)q.set("siteId",String(values.data.siteId));if(values.data.material)q.set("material",values.data.material);
+      return request("GET",(name === "recommend_fleet_destinations"?"/fleet/destinations/recommend":"/fleet/commercial")+(q.size?"?"+q:""));
+    }
     if (name === "query_fleet_capabilities") return request("GET", "/fleet/overview");
     if (["query_fleet_briefing", "query_fleet_runs"].includes(name)) {
       if (input.limit !== undefined && (!Number.isInteger(input.limit) || Number(input.limit) < 1 || Number(input.limit) > 50)) return {error:"Fleet page limit must be an integer from 1 to 50."};
@@ -1101,7 +1114,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
-  if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName)) return input;
+  if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination"].includes(toolName ?? "")) return input;
   if (["query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any

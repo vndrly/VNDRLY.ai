@@ -1,3 +1,5 @@
+import DailyWorkPanel from "@/components/DailyWorkPanel";
+import UnifiedWorkCalendar from "@/components/UnifiedWorkCalendar";
 import WorkHubAvailability from "@/components/WorkHubAvailability";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -156,7 +158,7 @@ function WorkHubModuleContent() {
     [module, user, t],
   );
   useEffect(() => {
-    if (module !== "calls" && module !== "search" && module !== "safety-response" && module !== "implementation-exports") void load("");
+    if (!["attention","safety","my-work","calendar"].includes(module) && module !== "calls" && module !== "search" && module !== "safety-response" && module !== "implementation-exports") void load("");
   }, [module, load]);
   useEffect(() => {
     if (module !== "chat") return;
@@ -313,6 +315,7 @@ function WorkHubModuleContent() {
       setMeetingFileBusy(false);
     }
   };
+  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="calendar"?<UnifiedWorkCalendar/>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
   if (["managed-crews", "workforce-coverage", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>

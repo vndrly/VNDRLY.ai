@@ -10,6 +10,7 @@ type WorkKind =
   | "form"
   | "checklist";
 export type NotificationTarget =
+  | { kind: "ticket"; id: string }
   | { kind: "fleet"; id: string }
   | { kind: WorkKind; id: string; messageId?: string }
   | { kind: "credential"; id: string }
@@ -43,6 +44,8 @@ export function parseNotificationTarget(
     const params = url.searchParams;
     const keys = [...params.keys()];
     if (new Set(keys).size !== keys.length) return null;
+    const ticketId=path.match(/^\/tickets?\/([1-9]\d*)$/)?.[1];
+    if(ticketId)return !keys.length&&positiveId(ticketId)?{kind:"ticket",id:ticketId}:null;
     const fleetId=path.match(/^\/fleet\/runs\/([^/]+)$/)?.[1];
     if(fleetId)return !keys.length&&uuid.test(fleetId)?{kind:"fleet",id:fleetId}:null;
     const safetyId = path.match(/^\/safety\/([1-9]\d*)$/)?.[1];
@@ -196,6 +199,11 @@ function content(
 export async function loadNotificationDestination(
   target: NotificationTarget,
 ): Promise<NotificationDestinationContent> {
+  if(target.kind==="ticket"){
+    const ticket=await apiFetch<RecordData>(`/api/tickets/${target.id}`);
+    if(!ticket)throw new Error("notification.unavailable");
+    return content(target,ticket,ticket.title??ticket.ticketNumber??`Ticket #${target.id}`,[ticket.siteName,ticket.workTypeName,ticket.scheduledStartAt]);
+  }
   if(target.kind==="fleet"){
     const run=FleetRunSchema.parse(await apiFetch(`/api/fleet/runs/${target.id}`));
     return content(target,run,run.title,[run.phase??""]);

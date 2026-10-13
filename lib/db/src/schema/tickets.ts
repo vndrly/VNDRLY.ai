@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, doublePrecision, numeric } from "drizzle-orm/pg-core";
+import { pgTable, jsonb, text, serial, timestamp, integer, doublePrecision, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { siteLocationsTable } from "./siteLocations";
@@ -8,6 +8,7 @@ import { fieldEmployeesTable } from "./vendorPeople";
 import { workTypesTable } from "./workTypes";
 
 export const ticketsTable = pgTable("tickets", {
+  fleetPlan: jsonb("fleet_plan"),
   id: serial("id").primaryKey(),
   siteLocationId: integer("site_location_id").notNull().references(() => siteLocationsTable.id),
   vendorId: integer("vendor_id").notNull().references(() => vendorsTable.id),

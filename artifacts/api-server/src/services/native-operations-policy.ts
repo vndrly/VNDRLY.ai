@@ -79,6 +79,7 @@ export type NativeState = {
   bindingVersion: number;
   duty: NativeDuty;
   lastLocation?: LocationObservation;
+  onCallActive?: boolean;
   onCallWindows?: { startsAt: string; endsAt: string; consent: true }[];
 };
 export type LocationObservation = {
@@ -158,7 +159,7 @@ export function locationEligibility(
   online: boolean,
   now: number,
 ): string | null {
-  if (!effectiveDuty(state.duty, now)) return "off_duty";
+  if (!nativeDutyContactAvailable(state, now)) return "off_duty";
   if (!state.consent.locationSharing) return "sharing_off";
   if (!state.designatedDeviceId) return "no_work_phone";
   if (!online) return "phone_unavailable";
@@ -263,7 +264,7 @@ export const NativeResponseInputSchema = z
 
 export function nativeDutyContactAvailable(st: NativeState, now: number) {
   return (
-    effectiveDuty(st.duty, now) ||
+    effectiveDuty(st.duty, now) || st.onCallActive === true ||
     Boolean(
       st.onCallWindows?.some(
         (w) =>

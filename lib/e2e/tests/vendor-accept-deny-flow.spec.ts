@@ -439,7 +439,16 @@ test.describe.serial("Task #499 — vendor accept/deny round-trip", () => {
 
     // Vendor #1 logs in through the UI and navigates to the ticket.
     await loginAsVendor(page, seed.vendor1Username);
+    const ticketRead = page.waitForResponse(response =>
+      response.url().endsWith(`/api/tickets/${ticketId}`)
+      && response.request().method() === "GET",
+    );
     await page.goto(`/tickets/${ticketId}`);
+    const ticketResponse = await ticketRead;
+    expect(ticketResponse.ok(), `invited vendor ticket read failed: ${ticketResponse.status()}`).toBeTruthy();
+    const invitedTicket = await ticketResponse.json();
+    expect(invitedTicket.status).toBe("awaiting_acceptance");
+    expect(invitedTicket.vendorId).toBe(seed.vendor1Id);
 
     // The vendor invite banner renders with both actions wired up.
     const banner = page.locator('[data-testid="vendor-invite-banner"]');

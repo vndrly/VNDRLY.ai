@@ -41,48 +41,18 @@ it("defaults to Current Shift and drives the visible report with type and range 
   expect(env.api).toHaveBeenCalledWith("/api/gate-report/query", expect.objectContaining({ body: expect.stringContaining('"recordType":"check_ins"') }));
 });
 
-it("places the live history above Send Reports and moves Site and Gate into the report card", async () => {
-  mount();
-  const historyCard = await screen.findByTestId("gate-history-live-card");
-  const reportCard = screen.getByTestId("gate-history-report-card");
-  expect(await within(historyCard).findByText("Bob Villa")).not.toBeNull();
-  expect(await within(reportCard).findByRole("button", { name: "Big Cs Deep" })).not.toBeNull();
-  expect(await within(reportCard).findByRole("button", { name: "Main gate" })).not.toBeNull();
-  expect(screen.queryByTestId("gate-history-site-gate-card")).toBeNull();
-  expect(historyCard.compareDocumentPosition(reportCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-
-  const searchCard = screen.getByTestId("gate-history-search-card");
-  expect(within(searchCard).getByLabelText("gatekeeper.historySearch")).not.toBeNull();
-  expect(within(searchCard).getByText("gateHistory.range.current_shift")).not.toBeNull();
-  expect(within(searchCard).getByText("gateHistory.type.all")).not.toBeNull();
-  expect(within(searchCard).queryByRole("button", { name: "gateHistory.range.7d" })).toBeNull();
-  fireEvent.click(within(searchCard).getByTestId("gate-history-time-period-toggle"));
-  expect(within(searchCard).getByRole("button", { name: "gateHistory.range.7d" })).not.toBeNull();
-  expect(await within(searchCard).findByText("Bob Villa")).not.toBeNull();
-
-  const exportRow = screen.getByTestId("gate-history-export-row");
-  expect(searchCard.compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(within(exportRow).getByRole("button", { name: "PDF" }).getAttribute("data-color")).toBe("red");
-  expect(within(exportRow).getByRole("button", { name: "CSV" }).getAttribute("data-color")).toBe("green");
-  expect(within(exportRow).getByRole("button", { name: "DOC" }).getAttribute("data-color")).toBe("blue");
-  expect(within(exportRow).getAllByRole("button").every((button) => button.getAttribute("data-solid") === "false")).toBe(true);
-  expect(screen.getByTestId("gate-history-email").getAttribute("data-color")).toBe("brand");
-  expect(screen.getByTestId("gate-history-email").getAttribute("data-solid")).toBe("true");
+it("uses one filtered log and keeps reports out of the way until opened",async()=>{
+ mount();const history=await screen.findByTestId("gate-history-live-card");expect(await within(history).findByText("Bob Villa")).toBeTruthy();expect(screen.getAllByText("Bob Villa")).toHaveLength(1);expect(screen.queryByTestId("gate-history-report-card")).toBeNull();const filters=screen.getByTestId("gate-history-filter-card");expect(await within(filters).findByRole("button",{name:"Big Cs Deep"})).toBeTruthy();expect(within(filters).getByLabelText("gatekeeper.historySearch")).toBeTruthy();fireEvent.click(screen.getByTestId("gate-history-reports-toggle"));expect(screen.getByTestId("gate-history-report-card")).toBeTruthy();expect(screen.getAllByText("Bob Villa")).toHaveLength(1);
 });
-
-it("uses two-pixel brand outlines for both History cards", async () => {
-  mount();
-  const historyCard = await screen.findByTestId("gate-history-live-card");
-  const reportCard = screen.getByTestId("gate-history-report-card");
-  expect(historyCard.style.borderTopColor).toBe("rgb(0, 0, 255)");
-  expect(historyCard.style.borderTopWidth).toBe("2px");
-  expect(reportCard.style.borderTopColor).toBe("rgb(0, 0, 255)");
-  expect(reportCard.style.borderTopWidth).toBe("2px");
+it("keeps two-pixel brand borders on the filters, log and report drawer",async()=>{
+ mount();await screen.findByText("Bob Villa");fireEvent.click(screen.getByTestId("gate-history-reports-toggle"));for(const id of ["gate-history-live-card","gate-history-filter-card","gate-history-report-card"]){expect(screen.getByTestId(id).style.borderTopWidth).toBe("2px");expect(screen.getByTestId(id).style.borderTopColor).toBe("rgb(0, 0, 255)");}
 });
-
+it("opens only selected visit details and closes them",async()=>{
+ mount();await screen.findByText("Bob Villa");fireEvent.click(screen.getByRole("button",{name:"gateHistory.openVisit"}));expect(await screen.findByText("gateHistory.plate")).toBeTruthy();fireEvent.click(screen.getByRole("button",{name:"gateHistory.closeDetails"}));expect(screen.queryByText("gateHistory.plate")).toBeNull();
+});
 it("exports the selected view and emails only selected authorized recipients", async () => {
   vi.spyOn(Platform, "OS", "get").mockReturnValue("ios");
-  mount(); await screen.findAllByText("Bob Villa");
+  mount(); await screen.findAllByText("Bob Villa");fireEvent.click(screen.getByTestId("gate-history-reports-toggle"));
   fireEvent.click(screen.getByRole("button", { name: "PDF" }));
   fireEvent.click(screen.getByTestId("gate-history-save"));
   await waitFor(() => expect(env.share).toHaveBeenCalled());
@@ -102,6 +72,7 @@ it("downloads each filtered export in the browser with the correct file type", a
 
   mount();
   await screen.findAllByText("Bob Villa");
+  fireEvent.click(screen.getByTestId("gate-history-reports-toggle"));
   for (const label of ["PDF", "CSV", "DOC"]) {
     fireEvent.click(screen.getByRole("button", { name: label }));
     fireEvent.click(screen.getByTestId("gate-history-save"));

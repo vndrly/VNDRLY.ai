@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import React from "react";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/components/work-hub/NativeOperations", () => ({ default: () => null }));
 vi.mock("@/components/work-hub/NativeJournal", () => ({ default: () => null }));
 
-const { response, membership } = vi.hoisted(() => ({ response: { current: {} as Record<string, unknown> }, membership: { id: 1 } }));
+const { response, membership, daily } = vi.hoisted(() => ({ response: { current: {} as Record<string, unknown> }, membership: { id: 1 }, daily: {value: {calendarCount:2,myWorkCount:3,attentionCount:4,safetyCount:5} as any} }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
 vi.mock("@/components/ScreenSafeArea", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
@@ -16,9 +16,11 @@ vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { role: "field_empl
 vi.mock("@/lib/api", () => ({ apiFetch: () => Promise.resolve(response.current) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key === "filesInventory.title" ? "Files & Inventory" : key }) }));
 
+vi.mock("@/lib/daily-workspace",()=>({useDailySummary:()=>({data:daily.value,isError:!daily.value})}));
+import {router} from "expo-router";
 import WorkHubScreen from "../(tabs)/work-hub";
 
-afterEach(() => { cleanup(); membership.id = 1; });
+afterEach(() => { cleanup(); membership.id = 1; daily.value={calendarCount:2,myWorkCount:3,attentionCount:4,safetyCount:5}; vi.mocked(router.push).mockClear(); });
 
 describe("Work Hub home cards", () => {
   const source = fs.readFileSync(path.resolve(__dirname, "../(tabs)/work-hub.tsx"), "utf8");
@@ -29,7 +31,7 @@ describe("Work Hub home cards", () => {
     expect(source).toContain('title="Today"');
     expect(source).toContain('title="Communications"');
     expect(source).toContain('{ key: "files-notes", label: t("filesInventory.title")');
-    expect(source).toContain('{ key: "site-presence", label: "Site & Safety"');
+    expect(source).toContain('{ key: "site-presence", label: "Site Presence"');
   });
 
   it("orders compact tools as Search, Files and Inventory, Exports, then Site and Safety", () => {
@@ -54,7 +56,7 @@ describe("Work Hub home cards", () => {
     expect(source).toContain("function TodayCard");
     expect(source).toContain('label="Calendar"');
     expect(source).toContain('label={myWorkTitle}');
-    expect(source).toContain('label="Activity"');
+    expect(source).toContain('label="Needs Attention"');
     expect(source).toContain('label="Tasks & Forms"');
   });
 
@@ -97,3 +99,9 @@ describe("Work Hub home cards", () => {
     expect(screen.queryByRole("button", { name: "Open Exports" })).toBeNull();
   });
 });
+
+it("uses unified daily counts and routes Calendar, My Work, Needs Attention and Safety",async()=>{daily.value={calendarCount:2,myWorkCount:3,attentionCount:4,safetyCount:5};response.current={tasks:[],meetings:[]};render(<WorkHubScreen/>);await act(async()=>{});for(const[label,module]of [["Calendar","calendar"],["My Work","my-work"],["Needs Attention","attention"],["Safety","safety"]]){fireEvent.click(screen.getByRole("button",{name:`Open ${label}`}));expect(router.push).toHaveBeenLastCalledWith({pathname:"/work-hub/[module]",params:{module}});}expect(screen.getByText("2 upcoming")).toBeTruthy();expect(screen.getByText("3 items")).toBeTruthy();expect(screen.getByText("4 items")).toBeTruthy();expect(screen.getByText("5 items")).toBeTruthy();});
+it("preserves unavailable daily state instead of displaying zero",async()=>{daily.value=undefined;response.current={tasks:[],meetings:[]};render(<WorkHubScreen/>);await act(async()=>{});expect(screen.getAllByText("Unavailable")).toHaveLength(4);expect(screen.getByRole("button",{name:"Open Calendar"}).textContent).toContain("Unavailable");});
+
+
+it("shows unavailable for a single failed daily source without discarding healthy counts",async()=>{daily.value={calendarCount:null,myWorkCount:3,attentionCount:4,safetyCount:5};response.current={tasks:[],meetings:[]};render(<WorkHubScreen/>);await act(async()=>{});expect(screen.getByRole("button",{name:"Open Calendar"}).textContent).toContain("Unavailable");expect(screen.getByText("3 items")).toBeTruthy();expect(screen.getByText("4 items")).toBeTruthy();expect(screen.getByText("5 items")).toBeTruthy();});
