@@ -13,7 +13,7 @@ for(const persona of ['partner','field','fleet','gate']){
  if(persona==='fleet'){
   const fleet=await read('/fleet/overview');assert.equal(fleet.enabled,true);assert.equal(fleet.runs.length,30);assert.ok(fleet.fleets.length);result.runs=fleet.runs.length;
   const commercial=await read('/fleet/commercial');assert.ok(JSON.stringify(commercial).includes('Prairie Transfer Yard'));
-  const history=await read(`/fleet/runs/${fleet.runs[0].id}/location-history`);assert.equal(history.points.length,13);assert.ok(history.points.every(point=>point.physicalProofVerified===false));result.routeSamples=history.points.length;
+  const history=await read(`/fleet/runs/${fleet.runs[0].id}/location-history`);assert.equal(history.points.length,61);assert.ok(history.points.every(point=>point.physicalProofVerified===false));result.routeSamples=history.points.length;
   const foreign=await fetch(`${base}/tickets/100009`,{headers:{cookie}});assert.ok([403,404].includes(foreign.status));
  }
  if(persona==='gate'){const coverage=await read('/gate-change-over/coverage-map?at=2026-10-10T16%3A00%3A00Z');assert.ok(coverage.gates.length);assert.ok(coverage.duties.length);assert.ok(coverage.staff.some(person=>person.fresh));result.historicalDuties=coverage.duties.length;result.recordedStaffPositions=coverage.staff.filter(person=>person.fresh).length;}
