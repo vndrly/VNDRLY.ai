@@ -363,7 +363,7 @@ const en = {
   map: "Recorded Map",
   equipment: "Inventory",
   workHub: "Work Hub",
-  fieldOps: "Field Ops",
+  companyPortal: "Company portal",
   subtitle: "Authorized dispatch, assigned runs and recorded locations",
   refresh: "Refresh",
   loading: "Loading your authorized Fleet workspace…",
@@ -793,7 +793,7 @@ const es: Record<keyof typeof en, string> = {
   map: "Mapa registrado",
   equipment: "Inventario",
   workHub: "Centro de trabajo",
-  fieldOps: "Operaciones de campo",
+  companyPortal: "Portal de la empresa",
   subtitle:
     "Despacho autorizado, recorridos asignados y ubicaciones registradas",
   refresh: "Actualizar",

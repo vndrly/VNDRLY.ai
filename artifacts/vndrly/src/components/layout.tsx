@@ -254,7 +254,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { key: "fleet-settings", href: "/fleet/settings", label: fleetText.settings, icon: Gauge },
     { key: "fleet-reports", href: "/fleet/reports", label: fleetText.reports, icon: Receipt },
     { key: "fleet-work-hub", href: "/work-hub", label: fleetText.workHub, icon: BriefcaseBusiness },
-    { key: "fleet-standard", href: "/?workspace=standard", label: fleetText.fieldOps, icon: LayoutDashboard },
+    { key: "fleet-standard", href: "/?workspace=standard", label: fleetText.companyPortal, icon: LayoutDashboard },
   ];
   useWorkHubDevicePresence(location, Boolean(user?.vendorId || user?.partnerId), user?.userId, `${user?.vendorId ?? ""}:${user?.partnerId ?? ""}`);
 
