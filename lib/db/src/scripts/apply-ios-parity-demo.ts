@@ -17,6 +17,12 @@ try {
   else {
   await owner.query("BEGIN");
   for (const statement of [
+    "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS native_operations_policy jsonb NOT NULL DEFAULT '{}'::jsonb",
+    "ALTER TABLE partners ADD COLUMN IF NOT EXISTS native_operations_policy jsonb NOT NULL DEFAULT '{}'::jsonb",
+    "ALTER TABLE work_hub_device_preferences ADD COLUMN IF NOT EXISTS native_operations jsonb NOT NULL DEFAULT '{}'::jsonb",
+    "ALTER TABLE site_visits ADD COLUMN IF NOT EXISTS gate_identity_document jsonb",
+    "ALTER TABLE work_hub_user_events ADD COLUMN IF NOT EXISTS retention_until timestamptz",
+    "ALTER TABLE field_push_tokens ADD COLUMN IF NOT EXISTS native_device_id uuid",
     "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS operations_categories text[]",
     "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS fleet_commercial_settings jsonb",
     "ALTER TABLE partners ADD COLUMN IF NOT EXISTS fleet_commercial_settings jsonb",

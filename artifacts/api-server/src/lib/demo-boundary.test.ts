@@ -6,6 +6,13 @@ test('only the exact registry selects demo login',()=>{
  assert.equal(demoLoginIdentity(' '+DEMO_IDENTITIES[0].username.toUpperCase()+' ')?.userId,DEMO_IDENTITIES[0].userId);
  assert.equal(demoLoginIdentity('another@example.invalid'),undefined);
 });
+test('new demo map and fleet reads remain separate from mutations and provider access',()=>{
+ for(const path of ['/api/public-config','/api/native-operations/status','/api/tickets/12/site-visit-summary','/api/company-operations','/api/fleet/overview','/api/fleet/map-context','/api/fleet/runs/example/location-history','/api/fleet/tickets/12/plan','/api/gate-change-over/coverage-map']){
+  assert.equal(demoRouteAllowed('GET',path),true,path);
+  assert.equal(demoRouteAllowed('POST',path),false,path);
+ }
+ for(const path of ['/api/fleet/events','/api/fleet/runs/example/evidence/file','/api/gate-change-over/work-location','/api/fleet/unreviewed'])assert.equal(demoRouteAllowed('GET',path),false,path);
+});
 test('legacy demo and forged cross-realm identities are rejected',()=>{
  const id=DEMO_IDENTITIES[0].userId;
  assert.equal(sessionDatabaseRealm({userId:id}),'invalid');

@@ -10,10 +10,19 @@ export function sessionDatabaseRealm(session:{userId?:number;realm?:unknown}):'p
  return session.userId&&ids.has(session.userId)?'invalid':'production';
 }
 const reads=[
+ /^\/api\/public-config$/,
+ /^\/api\/native-operations\/(status|policy)$/,
+ /^\/api\/company-operations$/,
+ /^\/api\/fleet\/(overview|map-context|commercial|resources|setup|site-activity|reports|locations|views|maintenance)$/,
+ /^\/api\/fleet\/runs\/[^/]+(\/(location-history|review-packet|eta|gate-observations|evidence))?$/,
+ /^\/api\/fleet\/site-activity\/\d+$/,
+ /^\/api\/fleet\/tickets\/\d+\/plan$/,
+ /^\/api\/fleet\/destinations\/recommend$/,
+ /^\/api\/gate-change-over\/(coverage-map|map)$/,
  /^\/api\/auth\/me$/,
  /^\/api\/onboarding\/me$/,
  /^\/api\/dashboard\/(summary|awaiting-payment|recent-activity|ticket-stats)$/,
- /^\/api\/(tickets|partners|vendors|site-locations|work-types|vendor-people|vendor-contacts|invoices|assets|site-work-assignments)(\/[^/]+)?(\/(contacts|notes|assignments|qr-code|people-access|line-items|status-history|crew|transitions|unlocks|check-ins|nearby-vendors))?$/,
+ /^\/api\/(tickets|partners|vendors|site-locations|work-types|vendor-people|vendor-contacts|invoices|assets|site-work-assignments)(\/[^/]+)?(\/(contacts|notes|assignments|qr-code|people-access|line-items|status-history|crew|transitions|unlocks|check-ins|nearby-vendors|site-visit-summary))?$/,
  /^\/api\/notifications(\/(unread-count|preferences))?$/,
  /^\/api\/hotlist\/jobs(\/[^/]+)?(\/(bids|comments))?$/,
  /^\/api\/visits\/gate\/(ops|enabled)$/,

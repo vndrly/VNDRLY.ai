@@ -42,6 +42,14 @@ All names, contact addresses, plates, services, work, credential claims, and pay
 
 ## Reuse and verification
 
+### October 13 parity update
+
+Public entry opens the selected workspace: partner sites, field tickets, Fleet board, or Gate dashboard. The guide explains Close for Review, optional vendor-required mileage, site-locked Batch/Singles plans, destinations, and recorded map history. Specific authenticated read endpoints are allowed in the demo boundary; writes, provider operations, shared streams, and file downloads remain blocked for public visitors.
+
+`scripts/upgrade-demo-parity.ts` adds 30 modern Fleet run examples and ticket plans, a reusable fictional destination, and 390 historical route samples to the existing isolated Blue Horizon company. It bridges preserved Gate shifts into duty history and fills missing synthetic gate coordinates from synthetic sites. Existing records and passwords are preserved. The script is rerunnable and refuses any database except `vndrly_prairie_demo`. Pass the directory holding the existing private database configuration as `VNDRLY_DEMO_PRIVATE_ROOT`; the script never prints credentials. Synthetic consent fixtures belong only to fictional accounts and are not consent from real employees. Recorded route points are explicitly synthetic audit fixtures with physical proof unverified; they must not be presented as live GPS.
+
+The baseline dates remain September 11–October 10. Gate map history includes synthetic position samples during the recorded shifts, with inactive fixture work phones; no real device is tracked or enrolled. Rolling 30-day screens naturally display fewer baseline records as time advances; use historical dates for the full recorded shifts. Database totals remain 90 tickets and 90 gate visits. No demo reset, credential rotation, or real-company modification is required.
+
 `scripts/demo-ecosphere-template.mjs` defines the single deterministic baseline. The additive provisioner uses stable keys and a transaction; it never resets the database or replaces existing credentials. Enrichment and finalization also use stable keys and validate the marked demo owner before writing. Preserve the private credentials and report when reusing these identities.
 
 Provisioning sequence: `provision-demo-ecosphere.mjs --apply`, `enrich-demo-ecosphere.mjs`, then `finalize-demo-ecosphere.mjs`. These administrator scripts now require the isolated demo connection and cannot fall back to production. Preserve the existing credentials; do not re-provision against the production connection.
