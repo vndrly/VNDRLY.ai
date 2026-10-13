@@ -7,7 +7,13 @@ vi.mock('wouter',()=>({useLocation:()=>['/',navigate]}));
 vi.mock('@/components/png-pill-rollover',()=>({PngPillButton:({children,color,...props}:any)=><button {...props}>{children}</button>}));
 import DemoEntry from './demo-entry';
 import DemoGuide from './demo-guide';
-import {DEMO_STORAGE_KEY} from '@/lib/demo-guide';
+import {DEMO_STORAGE_KEY,DEMO_ENTRY_PATHS,DEMO_STEPS} from '@/lib/demo-guide';
+it('demo journeys start in their own workspaces and explain current handoff and map semantics',()=>{
+ expect(DEMO_ENTRY_PATHS).toEqual({partner:'/site-locations',field:'/tickets',fleet:'/fleet',gate:'/gate/change-over'});
+ expect(DEMO_STEPS.fleet.some(step=>step.path==='/fleet/history')).toBe(true);
+ expect(DEMO_STEPS.field.find(step=>step.title==='Submit the work')).toMatchObject({status:'pending_review',text:expect.stringContaining('Mileage is optional')});
+ expect(DEMO_STEPS.gate.some(step=>step.title==='Gate map and shift history')).toBe(true);
+});
 beforeEach(()=>{sessionStorage.clear();vi.clearAllMocks();auth.user={userId:1084};});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 it('public flyout selects a role and sends no credentials; failed entry stays on the page',async()=>{

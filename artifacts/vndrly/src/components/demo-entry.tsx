@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {Popover,PopoverTrigger,PopoverContent} from '@/components/ui/popover';
 import {PngPillButton} from '@/components/png-pill-rollover';
-import {DEMO_VIEWS,DEMO_STORAGE_KEY,type DemoPersona} from '@/lib/demo-guide';
+import {DEMO_VIEWS,DEMO_ENTRY_PATHS,DEMO_STORAGE_KEY,type DemoPersona} from '@/lib/demo-guide';
 
 export default function DemoEntry(){
  const [persona,setPersona]=useState<DemoPersona|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -11,7 +11,7 @@ export default function DemoEntry(){
    const response=await fetch(`${import.meta.env.BASE_URL.replace(/\/$/,'')}/api/auth/demo-entry`,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({persona})});
    if(!response.ok)throw Error('The demo is temporarily unavailable. Please try again.');
    sessionStorage.setItem(DEMO_STORAGE_KEY,JSON.stringify({persona,guided,step:0}));
-   window.location.assign(`${import.meta.env.BASE_URL}tickets`);
+   window.location.assign(`${import.meta.env.BASE_URL.replace(/\/$/,'')}${DEMO_ENTRY_PATHS[persona]}`);
   }catch(e){setError(e instanceof Error?e.message:'Unable to open demo.');setBusy(false);}
  }
  return <Popover><PopoverTrigger asChild><button type="button" data-testid="marketing-demo-cta" style={{height:30,minHeight:30,maxHeight:30,fontSize:13,fontWeight:700}} className="inline-flex h-[30px] items-center rounded-full border border-white/60 px-6 text-[13px] font-bold text-white hover:border-[var(--vndrly-amber)] hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Demo</button></PopoverTrigger>
