@@ -29,6 +29,14 @@ test('native Field reviewer reads are allowed without opening work mutations',()
  }
  for(const path of ['/api/field/location','/api/field/change-password','/api/field/unreviewed','/api/field/open-tickets/12/check-in'])assert.equal(demoRouteAllowed('GET',path),false,path);
 });
+
+test('native ticket detail evidence reads keep the ticket mutation boundary',()=>{
+ for(const path of ['/api/tickets/100096/note-logs','/api/tickets/100096/gps-logs','/api/tickets/100096/crew-sessions','/api/tickets/100096/comments']){
+  assert.equal(demoRouteAllowed('GET',path),true,path);
+  assert.equal(demoRouteAllowed('POST',path),false,path);
+ }
+ assert.equal(demoRouteAllowed('GET','/api/tickets/100096/note-logs/file/download'),false);
+});
 test('demo preserves ordinary reads but blocks providers, shared streams and storage',()=>{
  for(const path of ['/api/tickets','/api/work-hub/calendar','/api/implementation-a/trips','/api/gate-change-over/sites'])assert.equal(demoRouteAllowed('GET',path),true,path);
  for(const [method,path] of [['GET','/api/tickets/events'],['GET','/api/accounting/qb/connect'],['GET','/api/work-hub/file-library/x/download'],['POST','/api/payments'],['POST','/api/work-hub/calls'],['POST','/api/assistant-connection/mcp']])assert.equal(demoRouteAllowed(method,path),false,path);

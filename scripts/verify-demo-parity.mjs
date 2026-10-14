@@ -10,7 +10,7 @@ for(const persona of ['partner','field','fleet','gate']){
  const tickets=await read('/tickets');const rows=Array.isArray(tickets)?tickets:tickets.items??tickets.tickets;assert.equal(rows.length,persona==='partner'?90:30);
  const result={persona,tickets:rows.length};
  await read('/safety/events?limit=50');
- if(persona==='field'){const mobile=await read('/field/open-tickets');assert.ok(Array.isArray(mobile));assert.ok(mobile.length);result.mobileTickets=mobile.length;}
+ if(persona==='field'){const mobile=await read('/field/open-tickets');assert.ok(Array.isArray(mobile));assert.ok(mobile.length);result.mobileTickets=mobile.length;for(const evidence of ['note-logs','gps-logs','crew-sessions'])await read(`/tickets/${mobile[0].id}/${evidence}`);result.nativeTicketEvidence=true;}
  if(persona!=='partner'){const operations=await read('/company-operations');assert.deepEqual(operations.categories,[persona]);result.categories=operations.categories;}
  if(persona==='fleet'){
   const fleet=await read('/fleet/overview');assert.equal(fleet.enabled,true);assert.equal(fleet.runs.length,30);assert.ok(fleet.fleets.length);result.runs=fleet.runs.length;
