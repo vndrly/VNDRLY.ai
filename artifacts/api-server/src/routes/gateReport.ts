@@ -3,6 +3,7 @@ import { getSessionFromRequest } from "../lib/session";
 import { GateReportError, getGateReport } from "../lib/gate-report";
 import { enforceVisitsRateLimit } from "../lib/visits-rate-limit";
 import { z } from "zod/v4";
+import { queryGateHistoryForSession } from '../services/gate-history-query';
 import {
   deliverGateReports,
   emailGateReportAttachments,
@@ -11,7 +12,6 @@ import {
   listGateReportRecipients,
   openGateReport,
   parseGateReportFilters,
-  queryGateReport,
 } from "../services/gate-reports";
 
 const router = Router();
@@ -125,7 +125,7 @@ router.post("/gate-report/query", async (req, res) => {
         search: z.string().max(200).optional(),
       }),
     }).strict().parse(req.body);
-    const rows = await queryGateReport({ userId: session.userId, ...body, filters: parseGateReportFilters(body.filters) });
+    const rows = await queryGateHistoryForSession(session, { ...body, filters: parseGateReportFilters(body.filters) });
     res.setHeader("Cache-Control", "private, no-store");
     res.json({ rows });
   } catch (error) {

@@ -2590,6 +2590,9 @@
     "failed": "Unable to update Gate duty."
   },
   "gateHistory": {
+    "visits": "Visits",
+    "onSite": "On site",
+    "attention": "Needs attention",
     "sendReports": "Send Reports",
     "subtitle": "Browse arrivals, departures, and visits that need attention.",
     "emailReport": "Email Report",
