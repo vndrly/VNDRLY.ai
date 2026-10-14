@@ -10,7 +10,7 @@ for(const persona of ['partner','field','fleet','gate']){
  const tickets=await read('/tickets');const rows=Array.isArray(tickets)?tickets:tickets.items??tickets.tickets;assert.equal(rows.length,persona==='partner'?90:30);
  const result={persona,tickets:rows.length};
  await read('/safety/events?limit=50');
- if(persona==='field'){const mobile=await read('/field/open-tickets');assert.ok(Array.isArray(mobile));assert.ok(mobile.length);result.mobileTickets=mobile.length;for(const evidence of ['note-logs','gps-logs','crew-sessions'])await read(`/tickets/${mobile[0].id}/${evidence}`);result.nativeTicketEvidence=true;}
+ if(persona==='field'){const mobile=await read('/field/open-tickets');assert.ok(Array.isArray(mobile));assert.ok(mobile.length);result.mobileTickets=mobile.length;for(const evidence of ['note-logs','gps-logs','crew-sessions'])await read(`/tickets/${mobile[0].id}/${evidence}`);result.nativeTicketEvidence=true;const active=mobile.find(ticket=>ticket.status==='in_progress');if(active){const summary=await read(`/tickets/${active.id}/site-visit-summary`);assert.ok(summary.people.every(person=>person.sessionId!==null||!summary.people.some(other=>other.sessionId!==null&&other.employeeId===person.employeeId)),'Legacy lead duplicates recorded session');result.siteVisitPeople=summary.people.length;}}
  if(persona!=='partner'){const operations=await read('/company-operations');assert.deepEqual(operations.categories,[persona]);result.categories=operations.categories;}
  if(persona==='fleet'){
   const fleet=await read('/fleet/overview');assert.equal(fleet.enabled,true);assert.equal(fleet.runs.length,30);assert.ok(fleet.fleets.length);result.runs=fleet.runs.length;

@@ -14,6 +14,7 @@ import {
   gpsLogsTable,
 } from "@workspace/db";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
+import { canonicalSiteVisitPeople } from '../lib/site-visit-people';
 
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { createTicketLaborFinalizationService, TicketLaborFinalizationError } from "../services/ticket-labor-finalization";
@@ -901,11 +902,12 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
     });
   }
 
-  const totalOnSiteMinutes = people.reduce(
+  const visitPeople = canonicalSiteVisitPeople(people);
+  const totalOnSiteMinutes = visitPeople.reduce(
     (sum, p) => sum + (p.onSiteMinutes ?? 0),
     0,
   );
-  const leadTravel = people.find((p) => p.role === "lead")?.travelMinutes ?? null;
+  const leadTravel = visitPeople.find((p) => p.role === "lead")?.travelMinutes ?? null;
   const firstRoute = route[0]?.recordedAt ?? null;
   const lastRoute = route.length > 0 ? route[route.length - 1]!.recordedAt : null;
   const routeSpanMinutes =
@@ -934,9 +936,9 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
       checkOutTime: ticketRow.checkOutTime?.toISOString() ?? null,
     },
     route,
-    people,
+    people: visitPeople,
     totals: {
-      peopleCount: people.length,
+      peopleCount: visitPeople.length,
       totalOnSiteMinutes,
       leadTravelMinutes: leadTravel,
       routePointCount: route.length,
