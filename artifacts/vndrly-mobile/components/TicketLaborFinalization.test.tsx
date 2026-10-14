@@ -4,7 +4,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ api: vi.fn(), current: true, stored: new Map<string, string>(), operations: 0 }));
 vi.mock("@/lib/api", () => ({ apiFetch: (...args: unknown[]) => state.api(...args) }));
 vi.mock("@/lib/auth", () => ({ captureAuthScope: () => "account-scope", isAuthScopeCurrent: () => state.current }));
-vi.mock("expo-secure-store", () => ({ getItemAsync: async (key: string) => state.stored.get(key) ?? null, setItemAsync: async (key: string, value: string) => { state.stored.set(key, value); }, deleteItemAsync: async (key: string) => { state.stored.delete(key); } }));
+vi.mock("@/lib/fleet-device-storage", () => ({ getItemAsync: async (key: string) => state.stored.get(key) ?? null, setItemAsync: async (key: string, value: string) => { state.stored.set(key, value); }, deleteItemAsync: async (key: string) => { state.stored.delete(key); } }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => ++state.operations === 1 ? "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" : "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, disabled }: any) => <button onClick={onPress} disabled={disabled}>{children}</button> }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }) }));

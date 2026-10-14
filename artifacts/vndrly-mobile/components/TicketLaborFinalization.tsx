@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "@/lib/fleet-device-storage";
 import { useTranslation } from "react-i18next";
 import { TicketLaborFinalizationInputSchema, finalizeTicketLaborAttempt, type TicketLaborFinalizationInput } from "@workspace/api-zod";
 import { captureAuthScope, isAuthScopeCurrent, type StoredUser } from "@/lib/auth";
