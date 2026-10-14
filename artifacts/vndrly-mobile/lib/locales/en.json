@@ -2398,7 +2398,11 @@
       "connectionInterrupted": "Audio connection interrupted. Join audio again to continue.",
       "sessionEnded": "Audio session ended. Join audio again to continue.",
       "nativeUnavailable": "Native meeting audio is unavailable in this iOS build.",
-      "unavailable": "Internal audio is unavailable in this build."
+      "unavailable": "Internal audio is unavailable in this build.",
+      "failoverCountdown": "Audio device disconnected. This microphone will turn on in {{count}} seconds.",
+      "cancelFailover": "Keep microphone off",
+      "moveHere": "Move audio here",
+      "moving": "Moving audio…"
     },
     "workspaceLabel": "Meeting workspace",
     "transcriptionUnavailable": "Transcription unavailable on this device.",
@@ -3471,5 +3475,8 @@
     "e035": "Loading assigned form…",
     "e036": "Choose one option",
     "preview": "Current eligible audience: {{count}}. Estimated deadline if published now: {{date}} ({{timezone}}). Membership and deadline are rechecked at publication."
+  },
+  "workHub": {
+    "title": "Work Hub"
   }
 }

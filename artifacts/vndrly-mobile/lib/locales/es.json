@@ -2398,7 +2398,11 @@
       "connectionInterrupted": "La conexión de audio se interrumpió. Vuelve a unirte para continuar.",
       "sessionEnded": "La sesión de audio terminó. Vuelve a unirte para continuar.",
       "nativeUnavailable": "El audio nativo de la reunión no está disponible en esta compilación de iOS.",
-      "unavailable": "El audio interno no está disponible en esta compilación."
+      "unavailable": "El audio interno no está disponible en esta compilación.",
+      "failoverCountdown": "El dispositivo de audio se desconectó. Este micrófono se activará en {{count}} segundos.",
+      "cancelFailover": "Mantener el micrófono apagado",
+      "moveHere": "Mover el audio aquí",
+      "moving": "Moviendo el audio…"
     },
     "workspaceLabel": "Espacio de reunión",
     "transcriptionUnavailable": "La transcripción no está disponible en este dispositivo.",
@@ -3471,5 +3475,8 @@
     "e035": "Cargando formulario asignado…",
     "e036": "Elegir una opción",
     "preview": "Destinatarios elegibles actuales: {{count}}. Plazo estimado al publicar ahora: {{date}} ({{timezone}}). Se vuelven a verificar los miembros y el plazo al publicar."
+  },
+  "workHub": {
+    "title": "Centro de trabajo"
   }
 }
