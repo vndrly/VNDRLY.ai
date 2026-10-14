@@ -1,5 +1,12 @@
+import { installTransparentScenesStyle } from "@/lib/transparent-scenes";
 import React, { useEffect, type ReactNode } from "react";
-import { Image, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import {
+  Image,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 const BACKGROUND = "#3a3d42";
 
@@ -11,16 +18,7 @@ export default function VndrlyPageBackground({ children }: Props) {
   const { width } = useWindowDimensions();
   useEffect(() => {
     if (Platform.OS !== "web") return;
-    const styleId = "vndrly-mobile-transparent-scenes";
-    if (document.getElementById(styleId)) return;
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.textContent = `
-      div[class*="r-position-u8s1d"][class*="r-bottom-1p0dtai"][class*="r-top-ipm5af"] {
-        background-color: transparent !important;
-      }
-    `;
-    document.head.appendChild(style);
+    installTransparentScenesStyle(document);
   }, []);
 
   return (

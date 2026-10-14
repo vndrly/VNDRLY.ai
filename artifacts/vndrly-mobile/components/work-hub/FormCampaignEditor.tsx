@@ -1,6 +1,14 @@
 import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, Switch, Text, TextInput, View } from "react-native";
+import {
+  Modal,
+  Platform,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { z } from "zod/v4";
 import {
   FormCampaignConfigSchema,
@@ -147,9 +155,14 @@ export default function FormCampaignEditor({
         gap: 10,
       }}
     >
-      <Text style={label}>{name}</Text>
+      <Text style={[label, { flex: 1 }]}>{name}</Text>
       <Switch
         accessibilityLabel={name}
+        trackColor={{ false: colors.border, true: colors.primary }}
+        thumbColor={colors.text}
+        {...(Platform.OS === "web" ? { activeThumbColor: colors.text } : {})}
+        ios_backgroundColor={colors.border}
+        style={{ width: 48, height: 28 }}
         value={value}
         onValueChange={set}
         disabled={api.busy || api.uncertain}
