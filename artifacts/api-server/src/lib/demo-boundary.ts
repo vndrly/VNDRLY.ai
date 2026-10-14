@@ -10,6 +10,9 @@ export function sessionDatabaseRealm(session:{userId?:number;realm?:unknown}):'p
  return session.userId&&ids.has(session.userId)?'invalid':'production';
 }
 const reads=[
+ /^\/api\/field\/(me|history|sites|open-tickets(\/\d+)?)$/,
+ /^\/api\/field\/sites\/\d+\/work-types$/,
+ /^\/api\/safety\/events(\/\d+)?$/,
  /^\/api\/public-config$/,
  /^\/api\/native-operations\/(status|policy)$/,
  /^\/api\/company-operations$/,
@@ -36,7 +39,8 @@ const reads=[
 ];
 /** Deny unreviewed routes, storage and real provider operations at the boundary. */
 export function demoRouteAllowed(method:string,path:string):boolean{
- if(/\/(events|stream|download|token|connect|join|audio|replay)(\/|$)/.test(path))return false;
+ // Safety events are ordinary scoped records, not the shared event stream.
+ if(!/^\/api\/safety\/events(\/\d+)?$/.test(path)&&/\/(events|stream|download|token|connect|join|audio|replay)(\/|$)/.test(path))return false;
  if(method==='GET')return reads.some(pattern=>pattern.test(path));
  if(method==='POST'&&path==='/api/gate-report/query')return true;
  if(method==='POST'&&/^\/api\/auth\/(login|logout|switch-context)$/.test(path))return true;

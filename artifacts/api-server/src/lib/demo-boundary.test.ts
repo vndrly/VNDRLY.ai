@@ -21,6 +21,14 @@ test('legacy demo and forged cross-realm identities are rejected',()=>{
  assert.equal(sessionDatabaseRealm({userId:id,realm:'demo'}),'demo');
  assert.equal(sessionDatabaseRealm({userId:1}),'production');
 });
+
+test('native Field reviewer reads are allowed without opening work mutations',()=>{
+ for(const path of ['/api/field/me','/api/field/open-tickets','/api/field/open-tickets/100009','/api/field/history','/api/field/sites','/api/field/sites/12/work-types','/api/safety/events','/api/safety/events/12']){
+  assert.equal(demoRouteAllowed('GET',path),true,path);
+  assert.equal(demoRouteAllowed('POST',path),false,path);
+ }
+ for(const path of ['/api/field/location','/api/field/change-password','/api/field/unreviewed','/api/field/open-tickets/12/check-in'])assert.equal(demoRouteAllowed('GET',path),false,path);
+});
 test('demo preserves ordinary reads but blocks providers, shared streams and storage',()=>{
  for(const path of ['/api/tickets','/api/work-hub/calendar','/api/implementation-a/trips','/api/gate-change-over/sites'])assert.equal(demoRouteAllowed('GET',path),true,path);
  for(const [method,path] of [['GET','/api/tickets/events'],['GET','/api/accounting/qb/connect'],['GET','/api/work-hub/file-library/x/download'],['POST','/api/payments'],['POST','/api/work-hub/calls'],['POST','/api/assistant-connection/mcp']])assert.equal(demoRouteAllowed(method,path),false,path);

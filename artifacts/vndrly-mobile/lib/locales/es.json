@@ -2590,6 +2590,9 @@
     "failed": "No se pudo actualizar el servicio de portería."
   },
   "gateHistory": {
+    "visits": "Visitas",
+    "onSite": "En el sitio",
+    "attention": "Requiere atención",
     "sendReports": "Enviar informes",
     "subtitle": "Consulta llegadas, salidas y visitas que requieren atención.",
     "emailReport": "Enviar informe",
