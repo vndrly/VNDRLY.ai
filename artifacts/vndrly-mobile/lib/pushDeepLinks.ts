@@ -12,6 +12,10 @@ export type PushRoute =
 export function routeForPushData(data: unknown): PushRoute {
   if (!data || typeof data !== "object") return { type: "none" };
   const d = data as Record<string, unknown>;
+  if(typeof d.link === "string") {
+    const meeting=d.link.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+    if(meeting)return {type:"route",path:`/work-hub/meeting/${meeting[1]}`};
+  }
   if (["native_operation", "native_operations_request", "native_photo_request"].includes(String(d.type))) {
     const path = nativeRequestRoute(d.nativeRequestId ?? d.requestId);
     return path ? { type: "route", path } : { type: "none" };

@@ -70,25 +70,75 @@
   "workHubExports": {
     "title": "Export your authorized records",
     "description": "Create a complete private export from your current company context. Choose when access to the finished download expires.",
-    "dataset": "Export dataset", "format": "Export format", "expiry": "Export expiry",
-    "tasks": "Tasks", "calendar": "Calendar", "channels": "Channel directory",
-    "create": "Create export", "download": "Download export", "accessChanged": "Your access changed. Create a new export after access is restored.",
+    "dataset": "Export dataset",
+    "format": "Export format",
+    "expiry": "Export expiry",
+    "tasks": "Tasks",
+    "calendar": "Calendar",
+    "channels": "Channel directory",
+    "create": "Create export",
+    "download": "Download export",
+    "accessChanged": "Your access changed. Create a new export after access is restored.",
     "failedHelp": "The export could not be completed. Create a new export or narrow its scope.",
     "expiredHelp": "This export is no longer available. Create a new export if you still need it.",
-    "status": { "pending": "Queued", "running": "Preparing", "completed": "Ready", "failed": "Failed", "expired": "Expired" }
+    "status": {
+      "pending": "Queued",
+      "running": "Preparing",
+      "completed": "Ready",
+      "failed": "Failed",
+      "expired": "Expired"
+    }
   },
   "gateReport": {
     "title": "Gate Log Report",
-    "from": "From", "to": "Through", "partner": "Partner", "site": "Site", "company": "Company", "purpose": "Purpose", "category": "Activity category",
-    "allAccessiblePartners": "All accessible partners", "allSites": "All accessible sites", "all": "All",
-    "routine_vendor_work": "Routine vendor work", "unclassified": "Visitor role unrecorded", "visitor": "Visitor", "partner_admin": "Partner admin (recorded only)", "vendor_admin": "Vendor admin (recorded only)",
-    "run": "Run report", "print": "Print complete report", "loading": "Preparing complete report...", "error": "Report could not be loaded", "rangeError": "Choose a date range of at most 31 days",
-    "snapshot": "Snapshot", "open": "No checkout recorded", "entries": "Entries", "visitorEntries": "Visitor entries", "employeeCheckins": "Employee check-ins", "currentOnsiteEntries": "On-site entries at snapshot",
-    "uniqueRecordedIdentities": "Unique recorded identities", "unidentifiedEntries": "Unidentified entries", "incompleteEntries": "Incomplete entries", "pendingAdmissionEntries": "Awaiting admission",
+    "from": "From",
+    "to": "Through",
+    "partner": "Partner",
+    "site": "Site",
+    "company": "Company",
+    "purpose": "Purpose",
+    "category": "Activity category",
+    "allAccessiblePartners": "All accessible partners",
+    "allSites": "All accessible sites",
+    "all": "All",
+    "routine_vendor_work": "Routine vendor work",
+    "unclassified": "Visitor role unrecorded",
+    "visitor": "Visitor",
+    "partner_admin": "Partner admin (recorded only)",
+    "vendor_admin": "Vendor admin (recorded only)",
+    "run": "Run report",
+    "print": "Print complete report",
+    "loading": "Preparing complete report...",
+    "error": "Report could not be loaded",
+    "rangeError": "Choose a date range of at most 31 days",
+    "snapshot": "Snapshot",
+    "open": "No checkout recorded",
+    "entries": "Entries",
+    "visitorEntries": "Visitor entries",
+    "employeeCheckins": "Employee check-ins",
+    "currentOnsiteEntries": "On-site entries at snapshot",
+    "uniqueRecordedIdentities": "Unique recorded identities",
+    "unidentifiedEntries": "Unidentified entries",
+    "incompleteEntries": "Incomplete entries",
+    "pendingAdmissionEntries": "Awaiting admission",
     "coverage": "Totals cover every matching entry overlapping the selected dates. On-site counts are entries, not people. Identities use employee IDs and guest sessions; one person may have multiple sessions. Categories reflect explicit staff entries only; historical unclassified visits remain separate. Security screening is not recorded. Roles are never inferred from purpose text.",
     "saveCategory": "Save activity category",
-    "record": "Record", "name": "Name", "entered": "Entered", "exited": "Exited", "quality": "Record quality", "employee_checkin": "Employee check-in", "unknown": "Unrecorded", "complete": "Complete", "empty": "No matching recorded entries", "previous": "Previous page", "next": "Next page",
-    "identity_unrecorded": "Identity unrecorded", "name_unrecorded": "Name unrecorded", "category_unrecorded": "Role unrecorded", "purpose_unrecorded": "Purpose unrecorded", "invalid_time_order": "Invalid time order"
+    "record": "Record",
+    "name": "Name",
+    "entered": "Entered",
+    "exited": "Exited",
+    "quality": "Record quality",
+    "employee_checkin": "Employee check-in",
+    "unknown": "Unrecorded",
+    "complete": "Complete",
+    "empty": "No matching recorded entries",
+    "previous": "Previous page",
+    "next": "Next page",
+    "identity_unrecorded": "Identity unrecorded",
+    "name_unrecorded": "Name unrecorded",
+    "category_unrecorded": "Role unrecorded",
+    "purpose_unrecorded": "Purpose unrecorded",
+    "invalid_time_order": "Invalid time order"
   },
   "payrollDraft": {
     "title": "Payroll",
@@ -4029,8 +4079,7 @@
       "already_member": "That user is already on the Majik team."
     },
     "safety": {
-      "site_inactive": "This site is inactive due to a safety stop-work event."
-,
+      "site_inactive": "This site is inactive due to a safety stop-work event.",
       "unauthenticated": "Sign in to use safety response.",
       "invalid_request": "The safety request is invalid.",
       "response_not_found": "The safety response was not found.",
@@ -4698,8 +4747,7 @@
       "compliance_incomplete": "Compliance information is incomplete. Finish the required fields.",
       "empty_catalog": "Add at least one work type before publishing your catalog.",
       "publish_failed": "We couldn't publish your catalog. Please try again."
-    }
-,
+    },
     "fleet": {
       "evidence_required": "Required Fleet evidence is missing. Review the run packet and attach the actual records.",
       "invalid_request": "The Fleet request is invalid. Review the fields and try again.",
@@ -5107,75 +5155,98 @@
     "addFile": "Add File",
     "takePhoto": "Take photo",
     "send": "Send",
-    "meetingTools": "Meeting Tools"
-    ,"presentCount": "{{count}} present"
-    ,"live": "Live"
-    ,"transcribingMic": "Transcribing your microphone"
-    ,"transcriptionPaused": "Transcription paused"
-    ,"host": "Host"
-    ,"privateMessage": "Private Message"
-    ,"elapsed": "Elapsed"
-    ,"target": "Target"
-    ,"overtime": "Overtime"
-    ,"choosePrivate": "Choose someone to message privately"
-    ,"close": "Close"
-    ,"speakingState": "Speaking"
-    ,"present": "Present"
-    ,"notConnected": "Not connected"
-    ,"latestAnswer": "V's latest answer"
-    ,"privateWith": "Private with {{name}}"
-    ,"savedTranscript": "Saved in the transcript"
-    ,"attendee": "attendee"
-    ,"liveTranscript": "Live transcript"
-    ,"scrollFullMeeting": "Scroll for full meeting"
-    ,"jumpLatest": "Jump to latest"
-    ,"noMatches": "No matching entries."
-    ,"emptyPrivate": "Your private conversation starts here."
-    ,"emptyTimeline": "Spoken words, typed messages, and shared files appear here."
-    ,"sendHint": "Enter to send · Shift+Enter for a new line"
-    ,"tryAgain": "Please try again."
-    ,"sendFailed": "Message was not sent. Your draft is still here."
-    ,"fileAddFailed": "File could not be added. Please try again."
-    ,"fileAddUnable": "Unable to add file."
-    ,"fileRemoved": "File removed by host"
-    ,"captureUnavailable": "Transcription is unavailable. Your microphone is not being transcribed."
-    ,"retryTranscription": "Retry transcription"
-    ,"playAudio": "Play meeting audio"
-    ,"privateLabel": "Private · {{name}}"
-    ,"typed": "Typed"
-    ,"privatePrefix": "Private · "
-    ,"anAttendee": "An attendee"
-    ,"typing": "is typing a message…"
-    ,"addingFile": "is adding a file…"
-    ,"privateTo": "Private message to {{name}}"
-    ,"backMeeting": "Back to meeting"
-    ,"messageMeeting": "Message the meeting"
-    ,"privatePlaceholder": "Private message to {{name}}…"
-    ,"messagePlaceholder": "Message the meeting…"
-    ,"summaryEmpty": "The saved meeting summary will appear here when available."
-    ,"agendaEmpty": "No agenda was added."
-    ,"itemsEmpty": "No items have been published yet."
-    ,"searchMeeting": "Search meeting"
-    ,"searchPlaceholder": "Search text, names, or filenames"
-    ,"filterSpeaker": "Filter by speaker"
-    ,"everyone": "Everyone"
-    ,"clearSearch": "Clear search"
-    ,"searchPrivacy": "Results appear in the timeline. Private results are visible only to their two participants."
-    ,"removedByHost": "Removed by host"
-    ,"left": "Left"
-    ,"neverJoined": "Never joined"
-    ,"connected": "Connected"
-    ,"removeConfirm": "Remove {{name}} from this meeting? Their contributions remain in the record."
-    ,"removeMeeting": "Remove from meeting"
-    ,"mutedByHost": "Muted by host"
-    ,"hostMute": "Mute attendee"
-    ,"releaseHostMute": "Allow to speak"
-    ,"requestToSpeak": "Request to speak"
-    ,"speakRequested": "Request sent"
-    ,"endConfirm": "End this meeting for everyone? Saved transcript entries will remain available."
-    ,"endEveryone": "End meeting for everyone"
-    ,"tools": {"summary":"Summary"}
-    ,"webAudio": {"region":"Meeting audio controls","description":"VNDRLY internal audio · invited participants only","active":"Recording and transcription are active.","off":"Recording and transcription are off.","joining":"Joining…","join":"Join audio","unmute":"Unmute","mute":"Mute","lowerHand":"Lower hand","raiseHand":"Raise hand","resume":"Resume audio","withdraw":"Withdraw recording consent","consent":"Consent to recording","stop":"Stop recording","start":"Start recording","leave":"Leave","operationFailed":"Audio operation failed. Please retry.","playbackBlocked":"Audio playback was blocked. Use Resume audio.","connectionFailed":"Audio connection failed. Rejoin the call; restrictive networks require the VNDRLY relay.","browserRequired":"Use a current browser over HTTPS for internal audio."}
+    "meetingTools": "Meeting Tools",
+    "presentCount": "{{count}} present",
+    "live": "Live",
+    "transcribingMic": "Transcribing your microphone",
+    "transcriptionPaused": "Transcription paused",
+    "host": "Host",
+    "privateMessage": "Private Message",
+    "elapsed": "Elapsed",
+    "target": "Target",
+    "overtime": "Overtime",
+    "choosePrivate": "Choose someone to message privately",
+    "close": "Close",
+    "speakingState": "Speaking",
+    "present": "Present",
+    "notConnected": "Not connected",
+    "latestAnswer": "V's latest answer",
+    "privateWith": "Private with {{name}}",
+    "savedTranscript": "Saved in the transcript",
+    "attendee": "attendee",
+    "liveTranscript": "Live transcript",
+    "scrollFullMeeting": "Scroll for full meeting",
+    "jumpLatest": "Jump to latest",
+    "noMatches": "No matching entries.",
+    "emptyPrivate": "Your private conversation starts here.",
+    "emptyTimeline": "Spoken words, typed messages, and shared files appear here.",
+    "sendHint": "Enter to send · Shift+Enter for a new line",
+    "tryAgain": "Please try again.",
+    "sendFailed": "Message was not sent. Your draft is still here.",
+    "fileAddFailed": "File could not be added. Please try again.",
+    "fileAddUnable": "Unable to add file.",
+    "fileRemoved": "File removed by host",
+    "captureUnavailable": "Transcription is unavailable. Your microphone is not being transcribed.",
+    "retryTranscription": "Retry transcription",
+    "playAudio": "Play meeting audio",
+    "privateLabel": "Private · {{name}}",
+    "typed": "Typed",
+    "privatePrefix": "Private · ",
+    "anAttendee": "An attendee",
+    "typing": "is typing a message…",
+    "addingFile": "is adding a file…",
+    "privateTo": "Private message to {{name}}",
+    "backMeeting": "Back to meeting",
+    "messageMeeting": "Message the meeting",
+    "privatePlaceholder": "Private message to {{name}}…",
+    "messagePlaceholder": "Message the meeting…",
+    "summaryEmpty": "The saved meeting summary will appear here when available.",
+    "agendaEmpty": "No agenda was added.",
+    "itemsEmpty": "No items have been published yet.",
+    "searchMeeting": "Search meeting",
+    "searchPlaceholder": "Search text, names, or filenames",
+    "filterSpeaker": "Filter by speaker",
+    "everyone": "Everyone",
+    "clearSearch": "Clear search",
+    "searchPrivacy": "Results appear in the timeline. Private results are visible only to their two participants.",
+    "removedByHost": "Removed by host",
+    "left": "Left",
+    "neverJoined": "Never joined",
+    "connected": "Connected",
+    "removeConfirm": "Remove {{name}} from this meeting? Their contributions remain in the record.",
+    "removeMeeting": "Remove from meeting",
+    "mutedByHost": "Muted by host",
+    "hostMute": "Mute attendee",
+    "releaseHostMute": "Allow to speak",
+    "requestToSpeak": "Request to speak",
+    "speakRequested": "Request sent",
+    "endConfirm": "End this meeting for everyone? Saved transcript entries will remain available.",
+    "endEveryone": "End meeting for everyone",
+    "tools": {
+      "summary": "Summary"
+    },
+    "webAudio": {
+      "region": "Meeting audio controls",
+      "description": "VNDRLY internal audio · invited participants only",
+      "active": "Recording and transcription are active.",
+      "off": "Recording and transcription are off.",
+      "joining": "Joining…",
+      "join": "Join audio",
+      "unmute": "Unmute",
+      "mute": "Mute",
+      "lowerHand": "Lower hand",
+      "raiseHand": "Raise hand",
+      "resume": "Resume audio",
+      "withdraw": "Withdraw recording consent",
+      "consent": "Consent to recording",
+      "stop": "Stop recording",
+      "start": "Start recording",
+      "leave": "Leave",
+      "operationFailed": "Audio operation failed. Please retry.",
+      "playbackBlocked": "Audio playback was blocked. Use Resume audio.",
+      "connectionFailed": "Audio connection failed. Rejoin the call; restrictive networks require the VNDRLY relay.",
+      "browserRequired": "Use a current browser over HTTPS for internal audio."
+    }
   },
   "meetingReplay": {
     "unavailable": "Meeting replay is unavailable.",
@@ -5444,17 +5515,17 @@
     }
   },
   "meetingParticipants": {
-  "reviewHint": "Review the exact meeting schedule and selected company participants before saving. Delivery and acceptance are not verified.",
-  "save": "Save reviewed meeting",
-  "unavailable": "Participant choices unavailable. Refresh to review.",
-  "unknown": "Outcome unverified. Check saved meetings before preparing another request.",
-  "loading": "Loading participants…",
-  "review": "Review meeting",
-  "hint": "You are the host. Select names; delivery and acceptance are not confirmed.",
-  "hostOnly": "Host only",
-  "company": "Company participants"
-},
-"inventoryRegistration": {
+    "reviewHint": "Review the exact meeting schedule and selected company participants before saving. Delivery and acceptance are not verified.",
+    "save": "Save reviewed meeting",
+    "unavailable": "Participant choices unavailable. Refresh to review.",
+    "unknown": "Outcome unverified. Check saved meetings before preparing another request.",
+    "loading": "Loading participants…",
+    "review": "Review meeting",
+    "hint": "You are the host. Select names; delivery and acceptance are not confirmed.",
+    "hostOnly": "Host only",
+    "company": "Company participants"
+  },
+  "inventoryRegistration": {
     "register": "Register an asset",
     "addAlias": "Add an identifier",
     "hint": "Record an asset or identifier in your current organization. A saved matching record does not verify possession, condition or legal ownership.",
@@ -5568,5 +5639,42 @@
     "recorded_conflict": "Recorded scheduling conflict",
     "unknown_no_window": "Insufficient evidence: no covering available interval",
     "unknown_recurrence": "Insufficient evidence: recurring availability is unsupported"
+  },
+  "liveMeetings": {
+    "liveNow": "Live now",
+    "startNow": "Start meeting now",
+    "start": "Start meeting",
+    "starting": "Starting…",
+    "title": "Meeting title",
+    "description": "Meeting description",
+    "titleHint": "What are we meeting about?",
+    "descriptionHint": "Description or agenda (optional)",
+    "approval": "Host approval",
+    "members": "Company members",
+    "findInvitees": "Find people to invite",
+    "inviteHint": "Invite people (optional)",
+    "invite": "Invite people",
+    "sendInvites": "Send live invitations",
+    "waiting": "Waiting room · ",
+    "noRequests": "No pending requests.",
+    "admit": "Admit",
+    "decline": "Decline",
+    "ask": "Ask to join",
+    "join": "Join meeting",
+    "openMeeting": "Open meeting",
+    "joinShort": "Join",
+    "declined": "Request declined",
+    "waitingHost": "Waiting for host",
+    "copy": "Copy meeting link",
+    "copied": "Meeting link copied",
+    "noLive": "No meetings in progress.",
+    "unavailable": "Live meetings are unavailable right now.",
+    "close": "Close",
+    "closeWaiting": "Close waiting room",
+    "hostedBy": "Hosted by ",
+    "live": "LIVE",
+    "loading": "Loading meeting…",
+    "switchApproval": "Use host approval",
+    "switchOpen": "Open to company"
   }
 }

@@ -27,6 +27,8 @@
     "migrate:askv-greeting": "node scripts/apply-askv-greeting-migration.mjs",
     "migrate:assistant-action-audit": "node scripts/apply-assistant-action-audit-migration.mjs",
     "migrate:work-hub-flags": "node scripts/apply-work-hub-flags-migration.mjs",
+    "migrate:internal-call-transcripts": "node scripts/apply-internal-call-transcripts-migration.mjs",
+    "migrate:live-meeting-admission": "node scripts/apply-live-meeting-admission-migration.mjs",
     "migrate:work-hub-calls": "node scripts/apply-work-hub-calls-migration.mjs",
     "migrate:work-hub-scheduling": "node scripts/apply-work-hub-scheduling-migration.mjs",
     "migrate:work-hub-file-library": "tsx scripts/migrate-work-hub-file-library.ts",

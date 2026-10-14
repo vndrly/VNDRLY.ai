@@ -1,3 +1,4 @@
+import { startInternalVoicemailWorker, stopInternalVoicemailWorker } from "./work-hub/call-voicemail-worker";
 import {startGatePostMonitor,stopGatePostMonitor} from "./services/gate-post-coverage";
 import app from "./app";
 import { createPlanExecutionLifecycle } from "./assistant/plan-execution-lifecycle";
@@ -172,6 +173,7 @@ function onListening(): void {
   startReliableNotificationWorker();
   startImplementationARetentionWorker();
   startNativeOperationsWorker();
+  startInternalVoicemailWorker();
   startGateCoverageMonitor();
   startGatePostMonitor();
   startInvoicePeriodWorker();
@@ -247,6 +249,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopReliableNotificationWorker();
   stopImplementationARetentionWorker();
   stopNativeOperationsWorker();
+  stopInternalVoicemailWorker();
   stopGateCoverageMonitor();
   stopGatePostMonitor();
   stopInvoicePeriodWorker();

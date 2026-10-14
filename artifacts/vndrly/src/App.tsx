@@ -137,6 +137,7 @@ function ForemanRootRedirect() {
   }, [navigate]);
   return null;
 }
+function MeetingLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/meetings?meeting=${match[1]}`,{replace:true});},[navigate]);return null;}
 
 function LoginRedirect() {
   const [, navigate] = useLocation();
@@ -245,6 +246,8 @@ function AuthenticatedRouter() {
         <Route path="/operations-display" component={OperationsDisplayDirectory} />
         <Route path="/organization-subscription" component={OrganizationSubscription} />
         <Route path="/work-hub/administration/displays" component={OperationsDisplayDirectory} />
+        <Route path="/work-hub/meeting/:occurrenceId" component={MeetingLinkRedirect}/>
+        <Route path="/work-hub/meetings/:occurrenceId" component={MeetingLinkRedirect}/>
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />

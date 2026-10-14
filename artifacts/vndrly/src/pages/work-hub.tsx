@@ -47,6 +47,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import MeetingWorkspace from "@/components/meeting-workspace";
+import { LiveMeetingsPanel,LiveMeetingLobby } from "@/components/work-hub/live-meetings";
 import MeetingInvitationResponse from "@/components/meeting-invitation-response";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1746,10 +1747,10 @@ function MeetingsContent() {
       qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] }),
   });
   return (
-    <Shell module="meetings"><MeetingScheduling />
+    <Shell module="meetings"><LiveMeetingsPanel owner={owner} canManage={canManage} onOpen={setSelected}/><MeetingScheduling />
       {canManage && <div className="mb-4 flex flex-wrap gap-2">
+        {owner?.type === "partner" && <BrandPillButton tone="brand" disabled={startNow.isPending || startNow.isError || create.isPending || create.isError} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>}
         <BrandPillButton tone="brand" onClick={() => document.getElementById("schedule-meeting")?.scrollIntoView({ behavior: "smooth" })}>Schedule meeting</BrandPillButton>
-        <BrandPillButton tone="green" disabled={!owner || !participantsReady || create.isPending || create.isError || startNow.isPending || startNow.isError} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>
       </div>}
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
@@ -1863,7 +1864,7 @@ function MeetingsContent() {
           </Card>
         )}
       </div>
-      {selected && <div className="mt-4"><MeetingInvitationResponse occurrenceId={selected} /><MeetingWorkspace key={selected} occurrenceId={selected} /></div>}
+      {selected && <div className="mt-4"><LiveMeetingLobby occurrenceId={selected} owner={owner}><MeetingInvitationResponse occurrenceId={selected} /><MeetingWorkspace key={selected} occurrenceId={selected} /></LiveMeetingLobby></div>}
     </Shell>
   );
 }

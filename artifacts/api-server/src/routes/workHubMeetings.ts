@@ -1,4 +1,6 @@
 import { applyMeetingSpeakRequest, MeetingSpeakRequestError } from "../work-hub/meeting-speak-request";
+import { canManageLiveMeeting, requireRoomAdmission } from "../work-hub/live-meetings";
+import { queueLiveMeetingNotification } from "../work-hub/live-meeting-notifications";
 import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
 import { meetingMessageReceipt } from "../work-hub/meeting-message";
 import express, { Router, type Request, type Response, type NextFunction } from "express";
@@ -108,14 +110,16 @@ async function context(req: Request, tx: Tx, currentSession?: ReturnType<typeof 
     if (!call) throw new MeetingError(403, "You no longer have access to this meeting");
   }
   const runtime = (occurrence.runtime ?? {}) as MeetingRuntime;
-  return { session: { ...session, userId: session.userId }, id, meeting, occurrence, participant, all, runtime, source: clientSource(req) };
+  if(meeting.admissionMode) await requireRoomAdmission(tx,{...session,userId:session.userId},id);
+  const canManageLive = meeting.admissionMode ? await canManageLiveMeeting(tx,{...session,userId:session.userId},id) : false;
+  return { session: { ...session, userId: session.userId }, id, meeting, occurrence, participant, all, runtime, canManageLive, source: clientSource(req) };
 }
 type Context = Awaited<ReturnType<typeof context>>;
 function active(ctx: Context) {
   if (["ended", "cancelled"].includes(ctx.occurrence.status)) throw new MeetingError(409, "This meeting has ended");
 }
 function host(ctx: Context) {
-  if (ctx.participant.role !== "host") throw new MeetingError(403, "Only the meeting host can do this");
+  if (ctx.participant.role !== "host" && !ctx.canManageLive) throw new MeetingError(403, "Only the meeting host can do this");
 }
 const meetingConnectionFields = z.object({ deviceId: z.string().uuid().optional(), connectionId: z.string().uuid().optional() }).superRefine((value, issue) => {
   if (Boolean(value.deviceId) !== Boolean(value.connectionId)) issue.addIssue({ code: "custom", message: "Device and connection identity must be sent together" });
@@ -1469,6 +1473,7 @@ router.post("/:occurrenceId/end", route(async (req, _res, tx, ctx) => {
   await tx.update(artifacts).set({ state: "complete" }).where(and(eq(artifacts.occurrenceId, ctx.id), eq(artifacts.artifactType, "transcript")));
   await tx.insert(chat).values({ occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "system", body: "The host ended the meeting." });
   await audit(tx, ctx, "meeting.ended");
+  if(ctx.meeting.admissionMode) await queueLiveMeetingNotification(tx,{userIds:ctx.all.filter(p=>p.admissionState==="pending"&&p.admissionRequestedAt&&!p.removedAt).map(p=>p.userId),occurrenceId:ctx.id,identity:"ended",title:"Meeting ended",body:ctx.meeting.title});
   afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
   return { ended: true };
 }));

@@ -5,6 +5,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol WorkHubMeetingSessionDelegate
 - (void)meetingSessionDidEmitSignal:(NSDictionary<NSString *, id> *)signal;
 - (void)meetingSessionDidEmitPCMFrame:(NSDictionary<NSString *, id> *)frame;
+- (void)meetingSessionDidPauseTranscription:(NSString *)code generation:(uint64_t)generation;
 - (void)meetingSessionDidFail:(NSString *)code generation:(uint64_t)generation;
 @end
 

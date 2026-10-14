@@ -87,6 +87,26 @@ afterEach(async () => {
 });
 
 describe("native meeting microphone lifecycle", () => {
+  it("keeps voice connected when company transcription startup is refused", async () => {
+    const native = { start:vi.fn(async()=>undefined),setMuted:vi.fn(async()=>undefined),setTranscription:vi.fn(async(enabled:boolean)=>{if(enabled)throw Object.assign(new Error("policy changed"),{status:403});}),createOffer:vi.fn(async()=>undefined),applySignal:vi.fn(async()=>undefined),removePeer:vi.fn(async()=>undefined),stop:vi.fn(async()=>undefined) };
+    env.nativeFactory.mockReturnValue(native);
+    env.api.mockImplementation(async path=>path.endsWith("/transcription-state")?{enabled:true,policyVersion:2}:response(path));
+    render(<WorkHubAudioRoom occurrenceId="room-a" callId="call-a"/>); await join();
+    fireEvent.click(screen.getByRole("button",{name:"Unmute"}));await settle();await tick();await settle();
+    expect(native.setTranscription).toHaveBeenCalledWith(true,2);
+    expect(native.stop).not.toHaveBeenCalled();
+    expect(screen.getByText("Transcription paused. Voice call continues.")).toBeTruthy();
+  });
+  it("stops capture immediately when company transcription is disabled", async () => {
+    let enabled=true;
+    const native = { start:vi.fn(async()=>undefined),setMuted:vi.fn(async()=>undefined),setTranscription:vi.fn(async()=>undefined),createOffer:vi.fn(async()=>undefined),applySignal:vi.fn(async()=>undefined),removePeer:vi.fn(async()=>undefined),stop:vi.fn(async()=>undefined) };
+    env.nativeFactory.mockReturnValue(native);
+    env.api.mockImplementation(async path=>path.endsWith("/transcription-state")?{enabled,policyVersion:2}:response(path));
+    render(<WorkHubAudioRoom occurrenceId="room-a" callId="call-a"/>);await join();fireEvent.click(screen.getByRole("button",{name:"Unmute"}));await settle();await tick();await settle();
+    expect(native.setTranscription).toHaveBeenCalledWith(true,2);
+    enabled=false;await tick();await settle();
+    expect(native.setTranscription).toHaveBeenCalledWith(false,0);expect(native.stop).not.toHaveBeenCalled();
+  });
   it.each([null, undefined])("does not start native audio or claim joined with a denied or incomplete join timestamp %s",async(startedAt)=>{
     const native={start:vi.fn(async()=>{}),setMuted:vi.fn(async()=>{}),setTranscription:vi.fn(async()=>{}),createOffer:vi.fn(async()=>{}),applySignal:vi.fn(async()=>{}),removePeer:vi.fn(async()=>{}),stop:vi.fn(async()=>{})};
     env.nativeFactory.mockReturnValue(native);

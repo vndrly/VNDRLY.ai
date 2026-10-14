@@ -345,6 +345,13 @@ const entries: Entry[] = [
     targetUserId: { type: "number", description: "Required for host_mute, release_host_mute, remove, check_in, and check_out." },
   }, ["action", "occurrenceId"])),
   read("get_work_hub_meeting_catchup", "meetings", "Get the authorized meeting catch-up, transcript projection, decisions, and action items.", schema({ occurrenceId: identifier() }, ["occurrenceId"])),
+  read("list_live_meetings","meetings","List current company live meetings with admission state; no room audio, chat or transcript."),
+  read("get_live_meeting","meetings","Read the exact authorized company meeting lobby. Pending requests and invite candidates are host/admin only.",schema({occurrenceId:identifier()},["occurrenceId"])),
+  write("start_live_meeting","meetings","Start a company meeting now after confirmation. payload: title, optional agenda, admissionMode company_open or host_approval, participantUserIds. Does not activate a microphone or video.",writeSchema({payload:{type:"object"}},["payload"]),true),
+  write("request_meeting_admission","meetings","Request your own admission, or enter an open company room, after confirmation. Never admits other users or enables capture.",writeSchema({occurrenceId:identifier()},["occurrenceId"])),
+  write("decide_meeting_admission","meetings","Host/current company admin admits or declines one pending request after confirmation. Supply current expectedVersion and payload.decision admit or decline.",writeSchema({occurrenceId:identifier(),targetUserId:{type:"number"},payload:{type:"object"}},["occurrenceId","targetUserId","payload","expectedVersion"])),
+  write("invite_live_meeting_members","meetings","Host/current company admin sends live meeting invitations to exact company member IDs after confirmation. payload.participantUserIds; current expectedVersion. Queued notification is not verified push delivery.",writeSchema({occurrenceId:identifier(),payload:{type:"object"}},["occurrenceId","payload","expectedVersion"])),
+  write("change_meeting_admission","meetings","Host/current company admin changes admission after confirmation. payload.admissionMode company_open or host_approval; current expectedVersion. Removed people remain blocked.",writeSchema({occurrenceId:identifier(),payload:{type:"object"}},["occurrenceId","payload","expectedVersion"])),
   write("ask_work_hub_meeting", "meetings", "Answer an Ask V question from the caller's authorized saved meeting message or transcript segment.", writeSchema({
     occurrenceId: identifier(),
     sourceId: identifier("Saved chat-message or transcript-segment id."),

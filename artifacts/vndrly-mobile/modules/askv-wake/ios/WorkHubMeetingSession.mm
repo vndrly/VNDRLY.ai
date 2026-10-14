@@ -128,8 +128,9 @@ static OSStatus Capture(void *context, AudioUnitRenderActionFlags *flags, const 
     const int64_t sampleTime = (timestamp->mFlags & kAudioTimeStampSampleTimeValid) ? (int64_t)timestamp->mSampleTime : -1;
     const uint64_t hostTimeNanos = (timestamp->mFlags & kAudioTimeStampHostTimeValid)
       ? HostTimeToNanos(timestamp->mHostTime) : 0;
-    if (![device->_encoder enqueuePCM16:device->_captureSamples.data() frameCount:frames
-          sampleRate:device->_sampleRate.load(std::memory_order_acquire) sampleTime:sampleTime hostTimeNanos:hostTimeNanos]) return kAudio_ParamError;
+    // Encoder failures pause transcription; RTP capture has already succeeded.
+    [device->_encoder enqueuePCM16:device->_captureSamples.data() frameCount:frames
+          sampleRate:device->_sampleRate.load(std::memory_order_acquire) sampleTime:sampleTime hostTimeNanos:hostTimeNanos];
   }
   return noErr;
 }
@@ -274,7 +275,7 @@ static OSStatus Capture(void *context, AudioUnitRenderActionFlags *flags, const 
         WorkHubMeetingSession *strongSelf = weakSelf;
         if (strongSelf) [strongSelf->_delegate meetingSessionDidEmitPCMFrame:frame];
       }
-      errorHandler:^(NSString *code) { [weakSelf fail:code]; }];
+      errorHandler:^(NSString *code) { [weakSelf pauseTranscription:code]; }];
     _audioDevice = [[WorkHubAudioDevice alloc] initWithEncoder:_encoder errorHandler:^(NSString *code) { [weakSelf fail:code]; }];
     _factory = [[RTCPeerConnectionFactory alloc] initWithEncoderFactory:[[RTCDefaultVideoEncoderFactory alloc] init]
                                                           decoderFactory:[[RTCDefaultVideoDecoderFactory alloc] init]
@@ -293,6 +294,11 @@ static OSStatus Capture(void *context, AudioUnitRenderActionFlags *flags, const 
   return self;
 }
 
+- (void)pauseTranscription:(NSString *)code {
+  if (!_valid.load()) return;
+  [_encoder setEnabled:NO policyRevision:0];
+  dispatch_async(dispatch_get_main_queue(), ^{ [self->_delegate meetingSessionDidPauseTranscription:code generation:self->_generation]; });
+}
 - (void)fail:(NSString *)code {
   if (!_valid.load()) return;
   [self invalidate];

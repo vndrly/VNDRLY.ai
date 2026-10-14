@@ -26,7 +26,7 @@ public final class WorkHubMeetingModule: Module, WorkHubMeetingSessionDelegate {
 
   public func definition() -> ModuleDefinition {
     Name("WorkHubMeeting")
-    Events("onMeetingSignal", "onMeetingPCMFrame", "onMeetingError")
+    Events("onMeetingSignal", "onMeetingPCMFrame", "onMeetingError", "onMeetingTranscriptionError")
     OnCreate { self.observeLifecycle() }
     AsyncFunction("createSession") { (options: WorkHubCreateOptions) in
       self.invalidate()
@@ -77,6 +77,12 @@ public final class WorkHubMeetingModule: Module, WorkHubMeetingSessionDelegate {
   private func teardown() { invalidate(); observers.forEach(NotificationCenter.default.removeObserver); observers.removeAll() }
   public func meetingSessionDidEmitSignal(_ signal: [String : Any]) { sendEvent("onMeetingSignal", signal) }
   public func meetingSessionDidEmitPCMFrame(_ frame: [String : Any]) { sendEvent("onMeetingPCMFrame", frame) }
+  public func meetingSessionDidPauseTranscription(_ code: String, generation: UInt64) {
+    onMain {
+      guard self.generation == generation else { return }
+      self.sendEvent("onMeetingTranscriptionError", ["generation": generation, "code": code])
+    }
+  }
   public func meetingSessionDidFail(_ code: String, generation: UInt64) {
     guard self.generation == generation else { return }
     sendEvent("onMeetingError", ["generation": generation, "code": code])

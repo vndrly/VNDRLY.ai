@@ -91,6 +91,11 @@ describe("VNDRLY-owned native speech boundary", () => {
     await expect(transcribeNativeAudio(Buffer.from("audio"), "audio/webm")).rejects.toMatchObject({ code: "native_transcription_invalid" });
     expect(processMock.execFile).toHaveBeenCalledTimes(1);
   });
+  it("allows a bounded two-minute voicemail without weakening short meeting clips", async () => {
+    audioOutput = wav(119);
+    expect(await transcribeNativeAudio(Buffer.from("audio"), "audio/webm", undefined, 120)).toBe("The crew arrived at eleven.");
+    expect(processMock.execFile.mock.calls[0][1]).toEqual(expect.arrayContaining(["-t", "121"]));
+  });
   it("returns no text for silence without hallucinating through inference", async () => {
     audioOutput = wav(0.02, 0);
     expect(await transcribeNativeAudio(Buffer.from("audio"), "audio/webm")).toBe("");

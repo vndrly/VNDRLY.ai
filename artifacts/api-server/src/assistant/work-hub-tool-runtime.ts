@@ -479,6 +479,21 @@ export function resolveWorkHubToolRequest(
   let target: string | WorkHubToolRequest;
 
   switch (name) {
+    case "list_live_meetings": return request("GET","/work-hub/live-meetings");
+    case "get_live_meeting":
+    case "request_meeting_admission":
+    case "decide_meeting_admission":
+    case "invite_live_meeting_members":
+    case "change_meeting_admission": {
+      const parsed=z.uuid().safeParse(input.occurrenceId);if(!parsed.success)return {error:"Supply an exact meeting occurrence UUID."};
+      const base=`/work-hub/live-meetings/${parsed.data}`;
+      if(name==="get_live_meeting")return request("GET",base);
+      if(name==="request_meeting_admission")return request("POST",`${base}/request-admission`,envelope(input,{}));
+      if(name==="decide_meeting_admission") {const target=z.number().int().positive().safeParse(input.targetUserId);if(!target.success || !["admit","decline"].includes(String(payload.decision)))return {error:"Supply an exact requester ID and admit/decline decision."};return request("POST",`${base}/admission/${target.data}`,envelope(input));}
+      if(name==="invite_live_meeting_members")return request("POST",`${base}/invitations`,envelope(input));
+      return request("PATCH",`${base}/admission-mode`,envelope(input));
+    }
+    case "start_live_meeting": return request("POST","/work-hub/live-meetings",envelope(input));
     case "get_work_hub_settings": return request("GET", "/auth/me");
     case "get_work_hub_connections": return request("GET", "/work-hub/connectors/microsoft-365");
     case "set_work_hub_language":

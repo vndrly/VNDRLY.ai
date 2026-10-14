@@ -22,6 +22,14 @@ function balancedBraces(source: string) {
 }
 
 describe("native meeting source safety contracts", () => {
+  it("routes encoder failure to transcription without invalidating WebRTC audio", () => {
+    expect(session).toContain('errorHandler:^(NSString *code) { [weakSelf pauseTranscription:code]; }');
+    const begin=session.indexOf('- (void)pauseTranscription:');
+    const end=session.indexOf('- (void)fail:',begin);
+    expect(begin).toBeGreaterThan(0);
+    expect(session.slice(begin,end)).not.toContain('[self invalidate]');
+    expect(meetingModule).toContain('onMeetingTranscriptionError');
+  });
   it("closes every XCTest method before @end and has balanced source braces", () => {
     expect(xctest).toMatch(/XCTAssertEqualObjects\(failure, @"AUDIO_TIMESTAMP_INVALID"\);\s*}\s*@end/);
     expect(balancedBraces(xctest)).toBe(true);

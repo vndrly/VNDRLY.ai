@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { pendingMeetingDestination } from "@/lib/meeting-link-return";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -52,7 +53,7 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const user = await login(emailVal.trim(), passwordVal);
-      const landingRoute = gateLandingRoute(user);
+      const landingRoute = pendingMeetingDestination() ?? gateLandingRoute(user);
       if (options.offerEnable && capability?.available && capability.enrolled && !biometricEnabled) {
         Alert.alert(
           t("login.biometricEnableTitle", { label: capability.label }),

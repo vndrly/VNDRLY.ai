@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
+  Modal,
+  ScrollView,
+  useWindowDimensions,
   Pressable,
   Switch,
   Text,
@@ -14,10 +17,15 @@ import { apiFetch, getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useColors } from "@/hooks/useColors";
 import { nativeWorkHubDeviceIdentity } from "@/hooks/use-work-hub-device-presence";
+import TogglePillButton from "@/components/TogglePillButton";
+import { closeInternalCallAudio } from "@/lib/call-audio-control";
+import WorkHubCallPolicy from "@/components/WorkHubCallPolicy";
+import WorkHubCallTranscript from "@/components/WorkHubCallTranscript";
 import WorkHubAudioRoom from "@/components/WorkHubAudioRoom";
 type Call = {
   id: string;
   occurrenceId: string;
+  transcriptAvailable?: boolean;
   incoming: boolean;
   callerUserId: number;
   recipientUserId: number;
@@ -32,6 +40,7 @@ type Mail = {
   createdAt: string;
   readAt: string | null;
   transcript: string | null;
+  transcriptionState?: string;
   durationMs: number;
 };
 type Person = { id: number; displayName: string; email: string | null };
@@ -39,6 +48,7 @@ type Settings = { available: boolean; speedDial: number[] };
 const unavailable = ["missed", "declined", "busy", "unavailable"];
 export default function WorkHubCalls() {
   const colors = useColors();
+  const wide = useWindowDimensions().width >= 900;
   const [calls, setCalls] = useState<Call[]>([]),
     [mail, setMail] = useState<Mail[]>([]),
     [people, setPeople] = useState<Person[]>([]),
@@ -50,6 +60,8 @@ export default function WorkHubCalls() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
+  const [transcriptCall, setTranscriptCall] = useState<string | null>(null);
+  const [directoryOpen, setDirectoryOpen] = useState(false);
   const [filter, setFilter] = useState("all"),
     [search, setSearch] = useState(""),
     [selected, setSelected] = useState<string | null>(null),
@@ -288,6 +300,7 @@ export default function WorkHubCalls() {
     }
   };
   const respond = async (call: Call, response: string) => {
+    if (response === "end") await closeInternalCallAudio(call.id);
     setSelected(call.id);
     setVoicemailCall(null);
     const identity = response === "accept" ? await nativeWorkHubDeviceIdentity() : null;
@@ -441,21 +454,7 @@ export default function WorkHubCalls() {
     onPress: () => void,
     disabled = busy || recording,
   ) => (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      disabled={disabled}
-      onPress={onPress}
-      style={{
-        borderWidth: 1,
-        borderColor: colors.border,
-        padding: 10,
-        borderRadius: 8,
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <Text style={{ color: colors.primary, fontWeight: "600" }}>{label}</Text>
-    </Pressable>
+    <TogglePillButton color={/^(Delete|Decline|End|Remove)/.test(label) ? "red" : "brand"} compactOnTablet accessibilityLabel={label} disabled={disabled} onPress={onPress}>{label}</TogglePillButton>
   );
   const active = calls.find((c) => c.id === selected),
     filtered = calls.filter(
@@ -467,11 +466,28 @@ export default function WorkHubCalls() {
     );
   const box = {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
+    borderColor: colors.primary,
+    backgroundColor: colors.card,
+    borderRadius: 14,
     padding: 14,
     gap: 12,
   };
+  const callDetails = active && (
+        <View style={box}>
+          <Text style={{ color: colors.text, fontWeight: "700" }}>
+            {active.incoming ? active.callerName : active.recipientName} ·{" "}
+            {active.status}
+          </Text>
+          {active.status === "active" && (
+            <View style={{gap:12}}><WorkHubAudioRoom occurrenceId={active.occurrenceId} callId={active.id} /><WorkHubCallTranscript callId={active.id} live /></View>
+          )}
+          {["ringing", "active"].includes(active.status) &&
+            button("End call", () => respond(active, "end"))}
+          {!active.incoming &&
+            unavailable.includes(active.status) &&
+            button("Leave voicemail", () => setVoicemailCall(active.id))}
+        </View>
+      );
   return (
     <View style={{ gap: 18 }}>
       <View
@@ -481,7 +497,7 @@ export default function WorkHubCalls() {
           justifyContent: "space-between",
         }}
       >
-        <Text style={{ color: colors.text }}>Available for internal calls</Text>
+        <View><Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>Team calls</Text><Text style={{ color: colors.mutedForeground }}>Available for internal calls</Text></View>
         <Switch
           accessibilityLabel="Available for internal calls"
           disabled={busy || loading}
@@ -491,6 +507,8 @@ export default function WorkHubCalls() {
           }
         />
       </View>
+      <Modal visible={!!transcriptCall} transparent onRequestClose={() => setTranscriptCall(null)}><View style={{flex:1,justifyContent:"center",padding:20,backgroundColor:"rgba(0,0,0,0.65)"}}><View style={{backgroundColor:colors.card,padding:16,borderRadius:14,gap:12}}>{button("Close transcript",()=>setTranscriptCall(null))}{transcriptCall && <WorkHubCallTranscript callId={transcriptCall} />}</View></View></Modal>
+      <WorkHubCallPolicy />
       {!!error && (
         <Text accessibilityRole="alert" style={{ color: colors.destructive }}>
           {error}
@@ -518,22 +536,6 @@ export default function WorkHubCalls() {
             </View>
           </View>
         ))}
-      {active && (
-        <View style={box}>
-          <Text style={{ color: colors.text, fontWeight: "700" }}>
-            {active.incoming ? active.callerName : active.recipientName} ·{" "}
-            {active.status}
-          </Text>
-          {active.status === "active" && (
-            <WorkHubAudioRoom occurrenceId={active.occurrenceId} />
-          )}
-          {["ringing", "active"].includes(active.status) &&
-            button("End call", () => respond(active, "end"))}
-          {!active.incoming &&
-            unavailable.includes(active.status) &&
-            button("Leave voicemail", () => setVoicemailCall(active.id))}
-        </View>
-      )}
       {voicemailCall && (
         <View style={box}>
           <Text style={{ color: colors.text, fontWeight: "700" }}>
@@ -552,69 +554,22 @@ export default function WorkHubCalls() {
             button("Send voicemail", () => void sendVoicemail())}
         </View>
       )}
-      <View style={box}>
-        <Text style={{ color: colors.text, fontWeight: "700" }}>
-          Speed dial
-        </Text>
-        {settings.speedDial.length === 0 && (
-          <Text style={{ color: colors.mutedForeground }}>
-            Save a contact below.
-          </Text>
-        )}
-        {settings.speedDial.map((id) => (
-          <View key={id} style={{ gap: 8 }}>
-            <Text style={{ color: colors.text }}>
-              {people.find((p) => p.id === id)?.displayName ?? "Saved contact"}
-            </Text>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              {button("Call saved contact", () => void dial(id))}
-              {button(
-                "Remove speed dial",
-                () =>
-                  void saveSettings({
-                    ...settings,
-                    speedDial: settings.speedDial.filter((x) => x !== id),
-                  }),
-              )}
-            </View>
-          </View>
-        ))}
-        <TextInput
-          accessibilityLabel="Find a contact"
-          placeholder="Find a contact"
-          placeholderTextColor={colors.mutedForeground}
-          value={search}
-          onChangeText={setSearch}
-          style={{
-            borderWidth: 1,
-            borderColor: colors.border,
-            borderRadius: 8,
-            padding: 12,
-            color: colors.text,
-          }}
-        />
-        {people.slice(0, search ? 20 : 5).map((p) => (
-          <View key={p.id} style={{ gap: 6 }}>
-            <Text style={{ color: colors.text }}>{p.displayName}</Text>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              {button(`Call ${p.displayName}`, () => void dial(p.id))}
-              {!settings.speedDial.includes(p.id) &&
-                button(
-                  `Save ${p.displayName}`,
-                  () =>
-                    void saveSettings({
-                      ...settings,
-                      speedDial: [...settings.speedDial, p.id],
-                    }),
-                )}
-            </View>
-          </View>
-        ))}
-      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>Speed dial</Text><TogglePillButton color="brand" accessibilityLabel="New call" onPress={() => setDirectoryOpen(true)}>＋ Call</TogglePillButton></View>
+      <ScrollView horizontal contentContainerStyle={{ gap: 12 }}>
+        {settings.speedDial.map(id => <View key={id} style={{ ...box, minWidth: 160 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{people.find(p => p.id === id)?.displayName ?? "Saved contact"}</Text>{button("Call saved contact", () => void dial(id))}{button("Remove speed dial", () => void saveSettings({ ...settings, speedDial: settings.speedDial.filter(x => x !== id) }))}</View>)}
+        {!settings.speedDial.length && <Text style={{ color: colors.mutedForeground }}>Add your go-to contacts using ＋ Call.</Text>}
+      </ScrollView>
+      <Modal visible={directoryOpen} transparent animationType="fade" onRequestClose={() => setDirectoryOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", padding: 20, alignItems: "center", justifyContent: "center" }}><View style={{ ...box, borderWidth: 2, width: "100%", maxWidth: 540, maxHeight: "85%", padding: 20 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.text, fontSize: 22, fontWeight: "700" }}>New call</Text>{button("Close contacts", () => setDirectoryOpen(false), false)}</View>
+          <TextInput accessibilityLabel="Find a contact" placeholder="Search contacts" placeholderTextColor={colors.mutedForeground} value={search} onChangeText={setSearch} style={{ borderWidth: 2, borderColor: colors.primary, borderRadius: 12, padding: 12, color: colors.text, minHeight: 44 }} />
+          <ScrollView>{people.map(p => <View key={p.id} style={{ paddingVertical: 14, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}><Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>{p.displayName}</Text><View style={{ flexDirection: "row", gap: 8 }}>{button(`Call ${p.displayName}`, () => { setDirectoryOpen(false); void dial(p.id); })}{!settings.speedDial.includes(p.id) && button(`Save ${p.displayName}`, () => void saveSettings({ ...settings, speedDial: [...settings.speedDial, p.id] }))}</View></View>)}{!people.length && <Text style={{ color: colors.mutedForeground }}>No matching contacts.</Text>}</ScrollView>
+        </View></View>
+      </Modal>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {["all", "incoming", "outgoing", "missed", "voicemail"].map((f) => (
+        {["all", "missed", "voicemail"].map((f) => (
           <Pressable
-            key={f}
+            key={f === "all" ? "Recent" : f}
             accessibilityRole="button"
             accessibilityState={{ selected: f === filter }}
             onPress={() => setFilter(f)}
@@ -627,7 +582,7 @@ export default function WorkHubCalls() {
             <Text
               style={{ color: colors.primary, textTransform: "capitalize" }}
             >
-              {f}
+              {f === "all" ? "Recent" : f}
             </Text>
           </Pressable>
         ))}
@@ -656,43 +611,32 @@ export default function WorkHubCalls() {
                 <Text style={{ color: colors.text }}>{item.transcript}</Text>
               )}
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {!item.transcript &&
-                  button(
-                    "Transcribe",
-                    () =>
-                      void action(
-                        `/api/work-hub/voicemail/${item.id}/transcribe`,
-                        {},
-                      ),
-                  )}
+                {!item.transcript && <Text style={{ color: colors.mutedForeground }}>{item.transcriptionState === "processing" || item.transcriptionState === "pending" || item.transcriptionState === "retry" ? "Transcribing voicemail…" : item.transcriptionState === "no_speech" ? "No speech detected." : "Transcription unavailable. Audio playback is available."}</Text>}
                 {button("Delete voicemail", () => void removeMail(item))}
               </View>
             </View>
           ))}
         </View>
       ) : (
-        <View style={{ gap: 12 }}>
+        <View style={{ flexDirection: wide ? "row" : "column", gap: 20, alignItems: "flex-start" }}>
+        <View style={{ flex: 1, gap: 12 }}>
           {!loading && !filtered.length && (
             <Text style={{ color: colors.mutedForeground }}>
               No calls in this view.
             </Text>
           )}
           {filtered.map((c) => (
-            <Pressable
-              key={c.id}
-              accessibilityRole="button"
-              onPress={() => setSelected(c.id)}
-              style={box}
-            >
-              <Text style={{ color: colors.text, fontWeight: "600" }}>
-                {c.incoming ? c.callerName : c.recipientName} · {c.status}
-              </Text>
-              <Text style={{ color: colors.mutedForeground }}>
-                {c.incoming ? "Incoming" : "Outgoing"} ·{" "}
-                {new Date(c.createdAt).toLocaleString()}
-              </Text>
-            </Pressable>
+            <View key={c.id} style={{ ...box, flexDirection: "row", alignItems: "center" }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={`View call with ${c.incoming ? c.callerName : c.recipientName}`} onPress={() => setSelected(c.id)} style={{ flex: 1, gap: 8, minHeight: 44 }}>
+                <Text style={{ color: colors.text, fontWeight: "600" }}>{c.incoming ? c.callerName : c.recipientName} · {c.status}</Text>
+                <Text style={{ color: colors.mutedForeground }}>{c.incoming ? "↙ Incoming" : "↗ Outgoing"} · {new Date(c.createdAt).toLocaleString()}</Text>
+              </Pressable>
+              {filter === "all" && c.transcriptAvailable && button("View transcript", () => setTranscriptCall(c.id))}
+              {button(`Call back ${c.incoming ? c.callerName : c.recipientName}`, () => void dial(c.incoming ? c.callerUserId : c.recipientUserId), busy || recording || !Number.isInteger(c.incoming ? c.callerUserId : c.recipientUserId))}
+            </View>
           ))}
+        </View>
+          {active && <View style={{ width: wide ? 320 : "100%", gap: 12 }}>{callDetails}<Text style={{ color: colors.mutedForeground }}>{new Date(active.createdAt).toLocaleString()}</Text></View>}
         </View>
       )}
     </View>

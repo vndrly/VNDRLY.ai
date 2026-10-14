@@ -767,3 +767,9 @@ it("routes only exact reviewed existing shift claim-window updates", () => {
   expect(resolveExecutableWorkHubToolRequest("manage_work_hub_shift", input, true)).toMatchObject({ method: "PATCH", path: `/work-hub/shifts/${input.shiftId}`, body: { operationId: command.operationId, expectedVersion: 2, payload: { action: "update", open: true } } });
   for (const change of [{action:"cancel"}, {action:"reschedule"}, {expectedVersion:null}, {payload:{open:"true"}}, {payload:{open:true,title:"unreviewed"}}]) expect(resolveExecutableWorkHubToolRequest("manage_work_hub_shift", {...input,...change}, true)).toHaveProperty("error");
 });
+it("routes live meeting reads and admission commands through the shared server boundary",()=>{
+ const id="b04608be-31d4-40b0-a5d1-ab39bbde9195";
+ expect(resolveWorkHubToolRequest("list_live_meetings",{})).toMatchObject({method:"GET",path:"/work-hub/live-meetings"});
+ expect(resolveWorkHubToolRequest("get_live_meeting",{occurrenceId:id})).toMatchObject({method:"GET",path:`/work-hub/live-meetings/${id}`});
+ expect(resolveWorkHubToolRequest("decide_meeting_admission",{occurrenceId:id,targetUserId:12,payload:{decision:"admit"}})).toMatchObject({method:"POST",path:`/work-hub/live-meetings/${id}/admission/12`});
+});

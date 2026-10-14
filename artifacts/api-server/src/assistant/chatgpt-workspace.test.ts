@@ -271,3 +271,11 @@ it("shows continuous custody age without guessing unknown checkout dates", () =>
   expect(result.sections[0].rows[0].detail).toContain("91 days");
   expect(result.sections[0].rows[1].detail).toContain("Checkout date unknown");
 });
+it("renders authorized live meeting links and keeps admission actions host-only",()=>{
+ const id="b04608be-31d4-40b0-a5d1-ab39bbde9195";
+ expect(workspaceRequest({view:"meeting_lobby",occurrenceId:id})).toMatchObject({sourceTool:"get_live_meeting",sourceArguments:{occurrenceId:id}});
+ const meeting={occurrenceId:id,title:"Crew briefing",agenda:null,hostName:"Host",startedAt:null,plannedEndsAt:null,connectedCount:0,admissionMode:"host_approval",ownAdmissionState:"pending",requestedAt:null,canManage:false,canEnter:false,canRequest:true,status:"live",version:0};
+ const out=workspaceOutput("meeting_lobby","get_live_meeting",{occurrenceId:id},{meeting,requests:[],members:[]});
+ expect(out.sections[0].rows[0].href).toBe(`https://vndrly.ai/work-hub/meeting/${id}`);
+ expect(out.sections[1].rows).toEqual([]);
+});

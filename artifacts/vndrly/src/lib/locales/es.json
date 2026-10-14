@@ -70,25 +70,75 @@
   "workHubExports": {
     "title": "Exportar sus registros autorizados",
     "description": "Cree una exportación privada completa del contexto actual de su empresa. Elija cuándo vence el acceso a la descarga terminada.",
-    "dataset": "Conjunto de datos de exportación", "format": "Formato de exportación", "expiry": "Vencimiento de la exportación",
-    "tasks": "Tareas", "calendar": "Calendario", "channels": "Directorio de canales",
-    "create": "Crear exportación", "download": "Descargar exportación", "accessChanged": "Su acceso cambió. Cree una nueva exportación después de que se restablezca el acceso.",
+    "dataset": "Conjunto de datos de exportación",
+    "format": "Formato de exportación",
+    "expiry": "Vencimiento de la exportación",
+    "tasks": "Tareas",
+    "calendar": "Calendario",
+    "channels": "Directorio de canales",
+    "create": "Crear exportación",
+    "download": "Descargar exportación",
+    "accessChanged": "Su acceso cambió. Cree una nueva exportación después de que se restablezca el acceso.",
     "failedHelp": "No se pudo completar la exportación. Cree una nueva exportación o reduzca su alcance.",
     "expiredHelp": "Esta exportación ya no está disponible. Cree una nueva exportación si aún la necesita.",
-    "status": { "pending": "En cola", "running": "Preparando", "completed": "Lista", "failed": "Falló", "expired": "Vencida" }
+    "status": {
+      "pending": "En cola",
+      "running": "Preparando",
+      "completed": "Lista",
+      "failed": "Falló",
+      "expired": "Vencida"
+    }
   },
   "gateReport": {
     "title": "Informe del registro de acceso",
-    "from": "Desde", "to": "Hasta", "partner": "Socio", "site": "Sitio", "company": "Empresa", "purpose": "Motivo", "category": "Tipo de actividad",
-    "allAccessiblePartners": "Todos los socios accesibles", "allSites": "Todos los sitios accesibles", "all": "Todos",
-    "routine_vendor_work": "Trabajo habitual del proveedor", "unclassified": "Rol del visitante sin registrar", "visitor": "Visitante", "partner_admin": "Administrador del socio (registrado)", "vendor_admin": "Administrador del proveedor (registrado)",
-    "run": "Generar informe", "print": "Imprimir informe completo", "loading": "Preparando informe completo...", "error": "No se pudo cargar el informe", "rangeError": "Seleccione un periodo de hasta 31 dias",
-    "snapshot": "Instantanea", "open": "Sin salida registrada", "entries": "Entradas", "visitorEntries": "Entradas de visitantes", "employeeCheckins": "Entradas de empleados", "currentOnsiteEntries": "Entradas en sitio al generar",
-    "uniqueRecordedIdentities": "Identidades registradas unicas", "unidentifiedEntries": "Entradas sin identificar", "incompleteEntries": "Entradas incompletas", "pendingAdmissionEntries": "Esperando admision",
+    "from": "Desde",
+    "to": "Hasta",
+    "partner": "Socio",
+    "site": "Sitio",
+    "company": "Empresa",
+    "purpose": "Motivo",
+    "category": "Tipo de actividad",
+    "allAccessiblePartners": "Todos los socios accesibles",
+    "allSites": "Todos los sitios accesibles",
+    "all": "Todos",
+    "routine_vendor_work": "Trabajo habitual del proveedor",
+    "unclassified": "Rol del visitante sin registrar",
+    "visitor": "Visitante",
+    "partner_admin": "Administrador del socio (registrado)",
+    "vendor_admin": "Administrador del proveedor (registrado)",
+    "run": "Generar informe",
+    "print": "Imprimir informe completo",
+    "loading": "Preparando informe completo...",
+    "error": "No se pudo cargar el informe",
+    "rangeError": "Seleccione un periodo de hasta 31 dias",
+    "snapshot": "Instantanea",
+    "open": "Sin salida registrada",
+    "entries": "Entradas",
+    "visitorEntries": "Entradas de visitantes",
+    "employeeCheckins": "Entradas de empleados",
+    "currentOnsiteEntries": "Entradas en sitio al generar",
+    "uniqueRecordedIdentities": "Identidades registradas unicas",
+    "unidentifiedEntries": "Entradas sin identificar",
+    "incompleteEntries": "Entradas incompletas",
+    "pendingAdmissionEntries": "Esperando admision",
     "coverage": "Los totales incluyen cada entrada que coincide con las fechas seleccionadas. Los conteos en sitio son entradas, no personas. Las identidades usan IDs de empleados y sesiones de invitados; una persona puede tener varias sesiones. Las categorias reflejan solo registros explicitos del personal; las visitas historicas sin clasificar permanecen separadas. Los controles de seguridad no se registran. Los roles nunca se deducen del motivo.",
     "saveCategory": "Guardar tipo de actividad",
-    "record": "Registro", "name": "Nombre", "entered": "Entrada", "exited": "Salida", "quality": "Calidad del registro", "employee_checkin": "Entrada de empleado", "unknown": "Sin registrar", "complete": "Completo", "empty": "No hay entradas registradas coincidentes", "previous": "Pagina anterior", "next": "Pagina siguiente",
-    "identity_unrecorded": "Identidad sin registrar", "name_unrecorded": "Nombre sin registrar", "category_unrecorded": "Rol sin registrar", "purpose_unrecorded": "Motivo sin registrar", "invalid_time_order": "Orden de horas invalido"
+    "record": "Registro",
+    "name": "Nombre",
+    "entered": "Entrada",
+    "exited": "Salida",
+    "quality": "Calidad del registro",
+    "employee_checkin": "Entrada de empleado",
+    "unknown": "Sin registrar",
+    "complete": "Completo",
+    "empty": "No hay entradas registradas coincidentes",
+    "previous": "Pagina anterior",
+    "next": "Pagina siguiente",
+    "identity_unrecorded": "Identidad sin registrar",
+    "name_unrecorded": "Nombre sin registrar",
+    "category_unrecorded": "Rol sin registrar",
+    "purpose_unrecorded": "Motivo sin registrar",
+    "invalid_time_order": "Orden de horas invalido"
   },
   "payrollDraft": {
     "title": "Nómina",
@@ -4029,8 +4079,7 @@
       "already_member": "Ese usuario ya está en el equipo Majik."
     },
     "safety": {
-      "site_inactive": "Este sitio está inactivo por una orden de alto al trabajo de seguridad."
-,
+      "site_inactive": "Este sitio está inactivo por una orden de alto al trabajo de seguridad.",
       "unauthenticated": "Inicia sesión para usar la respuesta de seguridad.",
       "invalid_request": "La solicitud de seguridad no es válida.",
       "response_not_found": "No se encontró la respuesta de seguridad.",
@@ -4698,8 +4747,7 @@
       "compliance_incomplete": "La información de cumplimiento está incompleta. Termine los campos requeridos.",
       "empty_catalog": "Agregue al menos un tipo de trabajo antes de publicar su catálogo.",
       "publish_failed": "No pudimos publicar su catálogo. Inténtelo de nuevo."
-    }
-,
+    },
     "fleet": {
       "evidence_required": "Faltan evidencias requeridas de la flota. Revise el paquete del recorrido y adjunte los registros reales.",
       "invalid_request": "La solicitud de flota no es válida. Revisa los campos e inténtalo de nuevo.",
@@ -5107,75 +5155,98 @@
     "addFile": "Agregar archivo",
     "takePhoto": "Tomar foto",
     "send": "Enviar",
-    "meetingTools": "Herramientas de reunión"
-    ,"presentCount": "{{count}} presentes"
-    ,"live": "En vivo"
-    ,"transcribingMic": "Transcribiendo tu micrófono"
-    ,"transcriptionPaused": "Transcripción pausada"
-    ,"host": "Anfitrión"
-    ,"privateMessage": "Mensaje privado"
-    ,"elapsed": "Transcurrido"
-    ,"target": "Objetivo"
-    ,"overtime": "Tiempo extra"
-    ,"choosePrivate": "Elija a alguien para enviarle un mensaje privado"
-    ,"close": "Cerrar"
-    ,"speakingState": "Hablando"
-    ,"present": "Presente"
-    ,"notConnected": "Sin conexión"
-    ,"latestAnswer": "Última respuesta de V"
-    ,"privateWith": "Privado con {{name}}"
-    ,"savedTranscript": "Guardado en la transcripción"
-    ,"attendee": "asistente"
-    ,"liveTranscript": "Transcripción en vivo"
-    ,"scrollFullMeeting": "Desplácese para ver toda la reunión"
-    ,"jumpLatest": "Ir a lo más reciente"
-    ,"noMatches": "No hay resultados."
-    ,"emptyPrivate": "Su conversación privada comienza aquí."
-    ,"emptyTimeline": "Las palabras habladas, los mensajes escritos y los archivos compartidos aparecerán aquí."
-    ,"sendHint": "Intro para enviar · Mayús+Intro para una línea nueva"
-    ,"tryAgain": "Inténtelo de nuevo."
-    ,"sendFailed": "No se envió el mensaje. Su borrador sigue aquí."
-    ,"fileAddFailed": "No se pudo agregar el archivo. Inténtelo de nuevo."
-    ,"fileAddUnable": "No se puede agregar el archivo."
-    ,"fileRemoved": "Archivo eliminado por el anfitrión"
-    ,"captureUnavailable": "La transcripción no está disponible. Su micrófono no se está transcribiendo."
-    ,"retryTranscription": "Reintentar transcripción"
-    ,"playAudio": "Reproducir audio de la reunión"
-    ,"privateLabel": "Privado · {{name}}"
-    ,"typed": "Escrito"
-    ,"privatePrefix": "Privado · "
-    ,"anAttendee": "Un asistente"
-    ,"typing": "está escribiendo un mensaje…"
-    ,"addingFile": "está agregando un archivo…"
-    ,"privateTo": "Mensaje privado para {{name}}"
-    ,"backMeeting": "Volver a la reunión"
-    ,"messageMeeting": "Mensaje para la reunión"
-    ,"privatePlaceholder": "Mensaje privado para {{name}}…"
-    ,"messagePlaceholder": "Mensaje para la reunión…"
-    ,"summaryEmpty": "El resumen guardado aparecerá aquí cuando esté disponible."
-    ,"agendaEmpty": "No se agregó una agenda."
-    ,"itemsEmpty": "Aún no se han publicado elementos."
-    ,"searchMeeting": "Buscar en la reunión"
-    ,"searchPlaceholder": "Buscar texto, nombres o archivos"
-    ,"filterSpeaker": "Filtrar por participante"
-    ,"everyone": "Todos"
-    ,"clearSearch": "Borrar búsqueda"
-    ,"searchPrivacy": "Los resultados aparecen en la cronología. Los resultados privados solo son visibles para sus dos participantes."
-    ,"removedByHost": "Eliminado por el anfitrión"
-    ,"left": "Salió"
-    ,"neverJoined": "Nunca se unió"
-    ,"connected": "Conectado"
-    ,"removeConfirm": "¿Eliminar a {{name}} de esta reunión? Sus contribuciones permanecerán en el registro."
-    ,"removeMeeting": "Eliminar de la reunión"
-    ,"mutedByHost": "Silenciado por el anfitrión"
-    ,"hostMute": "Silenciar asistente"
-    ,"releaseHostMute": "Permitir hablar"
-    ,"requestToSpeak": "Solicitar hablar"
-    ,"speakRequested": "Solicitud enviada"
-    ,"endConfirm": "¿Finalizar esta reunión para todos? Las entradas guardadas permanecerán disponibles."
-    ,"endEveryone": "Finalizar la reunión para todos"
-    ,"tools": {"summary":"Resumen"}
-    ,"webAudio": {"region":"Controles de audio de la reunión","description":"Audio interno de VNDRLY · solo participantes invitados","active":"La grabación y la transcripción están activas.","off":"La grabación y la transcripción están desactivadas.","joining":"Conectando…","join":"Unirse al audio","unmute":"Activar micrófono","mute":"Silenciar","lowerHand":"Bajar la mano","raiseHand":"Levantar la mano","resume":"Reanudar audio","withdraw":"Retirar consentimiento de grabación","consent":"Consentir la grabación","stop":"Detener grabación","start":"Iniciar grabación","leave":"Salir","operationFailed":"Falló la operación de audio. Inténtelo de nuevo.","playbackBlocked":"La reproducción de audio fue bloqueada. Use Reanudar audio.","connectionFailed":"Falló la conexión de audio. Vuelva a unirse; las redes restrictivas requieren el relé de VNDRLY.","browserRequired":"Use un navegador actual mediante HTTPS para el audio interno."}
+    "meetingTools": "Herramientas de reunión",
+    "presentCount": "{{count}} presentes",
+    "live": "En vivo",
+    "transcribingMic": "Transcribiendo tu micrófono",
+    "transcriptionPaused": "Transcripción pausada",
+    "host": "Anfitrión",
+    "privateMessage": "Mensaje privado",
+    "elapsed": "Transcurrido",
+    "target": "Objetivo",
+    "overtime": "Tiempo extra",
+    "choosePrivate": "Elija a alguien para enviarle un mensaje privado",
+    "close": "Cerrar",
+    "speakingState": "Hablando",
+    "present": "Presente",
+    "notConnected": "Sin conexión",
+    "latestAnswer": "Última respuesta de V",
+    "privateWith": "Privado con {{name}}",
+    "savedTranscript": "Guardado en la transcripción",
+    "attendee": "asistente",
+    "liveTranscript": "Transcripción en vivo",
+    "scrollFullMeeting": "Desplácese para ver toda la reunión",
+    "jumpLatest": "Ir a lo más reciente",
+    "noMatches": "No hay resultados.",
+    "emptyPrivate": "Su conversación privada comienza aquí.",
+    "emptyTimeline": "Las palabras habladas, los mensajes escritos y los archivos compartidos aparecerán aquí.",
+    "sendHint": "Intro para enviar · Mayús+Intro para una línea nueva",
+    "tryAgain": "Inténtelo de nuevo.",
+    "sendFailed": "No se envió el mensaje. Su borrador sigue aquí.",
+    "fileAddFailed": "No se pudo agregar el archivo. Inténtelo de nuevo.",
+    "fileAddUnable": "No se puede agregar el archivo.",
+    "fileRemoved": "Archivo eliminado por el anfitrión",
+    "captureUnavailable": "La transcripción no está disponible. Su micrófono no se está transcribiendo.",
+    "retryTranscription": "Reintentar transcripción",
+    "playAudio": "Reproducir audio de la reunión",
+    "privateLabel": "Privado · {{name}}",
+    "typed": "Escrito",
+    "privatePrefix": "Privado · ",
+    "anAttendee": "Un asistente",
+    "typing": "está escribiendo un mensaje…",
+    "addingFile": "está agregando un archivo…",
+    "privateTo": "Mensaje privado para {{name}}",
+    "backMeeting": "Volver a la reunión",
+    "messageMeeting": "Mensaje para la reunión",
+    "privatePlaceholder": "Mensaje privado para {{name}}…",
+    "messagePlaceholder": "Mensaje para la reunión…",
+    "summaryEmpty": "El resumen guardado aparecerá aquí cuando esté disponible.",
+    "agendaEmpty": "No se agregó una agenda.",
+    "itemsEmpty": "Aún no se han publicado elementos.",
+    "searchMeeting": "Buscar en la reunión",
+    "searchPlaceholder": "Buscar texto, nombres o archivos",
+    "filterSpeaker": "Filtrar por participante",
+    "everyone": "Todos",
+    "clearSearch": "Borrar búsqueda",
+    "searchPrivacy": "Los resultados aparecen en la cronología. Los resultados privados solo son visibles para sus dos participantes.",
+    "removedByHost": "Eliminado por el anfitrión",
+    "left": "Salió",
+    "neverJoined": "Nunca se unió",
+    "connected": "Conectado",
+    "removeConfirm": "¿Eliminar a {{name}} de esta reunión? Sus contribuciones permanecerán en el registro.",
+    "removeMeeting": "Eliminar de la reunión",
+    "mutedByHost": "Silenciado por el anfitrión",
+    "hostMute": "Silenciar asistente",
+    "releaseHostMute": "Permitir hablar",
+    "requestToSpeak": "Solicitar hablar",
+    "speakRequested": "Solicitud enviada",
+    "endConfirm": "¿Finalizar esta reunión para todos? Las entradas guardadas permanecerán disponibles.",
+    "endEveryone": "Finalizar la reunión para todos",
+    "tools": {
+      "summary": "Resumen"
+    },
+    "webAudio": {
+      "region": "Controles de audio de la reunión",
+      "description": "Audio interno de VNDRLY · solo participantes invitados",
+      "active": "La grabación y la transcripción están activas.",
+      "off": "La grabación y la transcripción están desactivadas.",
+      "joining": "Conectando…",
+      "join": "Unirse al audio",
+      "unmute": "Activar micrófono",
+      "mute": "Silenciar",
+      "lowerHand": "Bajar la mano",
+      "raiseHand": "Levantar la mano",
+      "resume": "Reanudar audio",
+      "withdraw": "Retirar consentimiento de grabación",
+      "consent": "Consentir la grabación",
+      "stop": "Detener grabación",
+      "start": "Iniciar grabación",
+      "leave": "Salir",
+      "operationFailed": "Falló la operación de audio. Inténtelo de nuevo.",
+      "playbackBlocked": "La reproducción de audio fue bloqueada. Use Reanudar audio.",
+      "connectionFailed": "Falló la conexión de audio. Vuelva a unirse; las redes restrictivas requieren el relé de VNDRLY.",
+      "browserRequired": "Use un navegador actual mediante HTTPS para el audio interno."
+    }
   },
   "meetingReplay": {
     "unavailable": "La repetición de la reunión no está disponible.",
@@ -5444,17 +5515,17 @@
     }
   },
   "meetingParticipants": {
-  "reviewHint": "Revisa el horario exacto y los participantes seleccionados antes de guardar. No se verifica la entrega ni la aceptación.",
-  "save": "Guardar reunión revisada",
-  "unavailable": "Participantes no disponibles. Actualiza para revisar.",
-  "unknown": "Resultado no verificado. Consulta las reuniones guardadas antes de preparar otra solicitud.",
-  "loading": "Cargando participantes…",
-  "review": "Revisar reunión",
-  "hint": "Eres el anfitrión. Selecciona nombres; no se confirma la entrega ni la aceptación.",
-  "hostOnly": "Solo el anfitrión",
-  "company": "Participantes de tu empresa"
-},
-"inventoryRegistration": {
+    "reviewHint": "Revisa el horario exacto y los participantes seleccionados antes de guardar. No se verifica la entrega ni la aceptación.",
+    "save": "Guardar reunión revisada",
+    "unavailable": "Participantes no disponibles. Actualiza para revisar.",
+    "unknown": "Resultado no verificado. Consulta las reuniones guardadas antes de preparar otra solicitud.",
+    "loading": "Cargando participantes…",
+    "review": "Revisar reunión",
+    "hint": "Eres el anfitrión. Selecciona nombres; no se confirma la entrega ni la aceptación.",
+    "hostOnly": "Solo el anfitrión",
+    "company": "Participantes de tu empresa"
+  },
+  "inventoryRegistration": {
     "register": "Registrar un activo",
     "addAlias": "Agregar un identificador",
     "hint": "Registre un activo o identificador en su organización actual. Un registro coincidente no verifica posesión, condición ni propiedad legal.",
@@ -5568,5 +5639,42 @@
     "recorded_conflict": "Conflicto de horario registrado",
     "unknown_no_window": "Evidencia insuficiente: falta un intervalo disponible completo",
     "unknown_recurrence": "Evidencia insuficiente: disponibilidad recurrente no admitida"
+  },
+  "liveMeetings": {
+    "liveNow": "En vivo ahora",
+    "startNow": "Iniciar reunión ahora",
+    "start": "Iniciar reunión",
+    "starting": "Iniciando…",
+    "title": "Título de la reunión",
+    "description": "Descripción de la reunión",
+    "titleHint": "¿De qué vamos a hablar?",
+    "descriptionHint": "Descripción o agenda (opcional)",
+    "approval": "Aprobación del anfitrión",
+    "members": "Miembros de la empresa",
+    "findInvitees": "Buscar personas para invitar",
+    "inviteHint": "Invitar personas (opcional)",
+    "invite": "Invitar personas",
+    "sendInvites": "Enviar invitaciones",
+    "waiting": "Sala de espera · ",
+    "noRequests": "No hay solicitudes pendientes.",
+    "admit": "Admitir",
+    "decline": "Rechazar",
+    "ask": "Solicitar entrada",
+    "join": "Entrar a la reunión",
+    "openMeeting": "Abrir reunión",
+    "joinShort": "Entrar",
+    "declined": "Solicitud rechazada",
+    "waitingHost": "Esperando al anfitrión",
+    "copy": "Copiar enlace de la reunión",
+    "copied": "Enlace copiado",
+    "noLive": "No hay reuniones en curso.",
+    "unavailable": "Las reuniones en vivo no están disponibles ahora.",
+    "close": "Cerrar",
+    "closeWaiting": "Cerrar sala de espera",
+    "hostedBy": "Anfitrión: ",
+    "live": "EN VIVO",
+    "loading": "Cargando reunión…",
+    "switchApproval": "Usar aprobación del anfitrión",
+    "switchOpen": "Abrir a la empresa"
   }
 }

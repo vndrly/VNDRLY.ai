@@ -8,6 +8,8 @@ export const WorkHubCalendarSnapshotSchema = z
     ownerId: z.number().int().positive(),
     title: z.string().min(1).max(200),
     agenda: z.string().nullable(),
+    attendanceConfirmationRequired: z.boolean().optional(),
+    admissionMode: z.enum(["company_open","host_approval"]).nullable().optional(),
     timezone: z.string().min(1).max(80),
     createdById: z.number().int().positive(),
     startsAt: z.iso.datetime(),

@@ -1,4 +1,6 @@
 import { setWorkHubShiftOpening, readWorkHubShiftOpening } from "../services/work-hub-shift-opening";
+import { requireRoomAdmission } from "../work-hub/live-meetings";
+import { meetingCalendarProjection } from "../work-hub/meeting-lobby-projection";
 import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID, createHash } from "node:crypto";
@@ -544,7 +546,7 @@ router.get("/work-hub/home", async (req, res) => {
     tasks,
     announcements,
     shifts,
-    meetings,
+    meetings: meetings.map(meetingCalendarProjection),
   });
 });
 
@@ -1761,7 +1763,7 @@ router.get("/work-hub/calendar", async (req, res) => {
     meetings: meetings.map((item) => ({
       source: "vndrly",
       authority: "work_hub_meeting",
-      item,
+      item: meetingCalendarProjection(item),
     })),
     external: [],
   });
@@ -1794,7 +1796,7 @@ router.get("/work-hub/calendar/items/:kind/:id", async (req, res) => {
     const [participant] = await db.select({ id: workHubMeetingParticipantsTable.id }).from(workHubMeetingParticipantsTable)
       .where(and(eq(workHubMeetingParticipantsTable.occurrenceId, itemId), eq(workHubMeetingParticipantsTable.userId, session.userId))).limit(1);
     if (!participant && session.role !== "admin" && session.membershipRole !== "admin") throw new WorkHubAccessError("not_found");
-    return res.json({ source: "vndrly", authority: "work_hub_meeting", item });
+    return res.json({ source: "vndrly", authority: "work_hub_meeting", item: meetingCalendarProjection(item) });
   } catch (error) { return failure(res, error); }
 });
 router.post("/work-hub/shifts", async (req, res) => {
@@ -2155,6 +2157,8 @@ router.post("/work-hub/meetings", async (req, res) => {
         startsAt: z.iso.datetime(),
         endsAt: z.iso.datetime().nullable().optional(),
         timezone: z.string().min(3).max(80),
+        attendanceConfirmationRequired: z.boolean().default(false),
+        admissionMode: z.enum(["company_open","host_approval"]).nullable().optional(),
         recordingAllowed: z.boolean().default(false),
         participantUserIds: z
           .array(z.number().int().positive())
@@ -2210,8 +2214,10 @@ router.post("/work-hub/meetings", async (req, res) => {
             ownerOrgId: envelope.owner.id,
             title: payload.title,
             agenda: payload.agenda ?? null,
+            admissionMode: payload.admissionMode ?? null,
             timezone: payload.timezone,
             recurrence,
+            attendanceConfirmationRequired: payload.attendanceConfirmationRequired,
             recordingAllowed: payload.recordingAllowed,
             createdById: session.userId,
           })
@@ -2229,6 +2235,7 @@ router.post("/work-hub/meetings", async (req, res) => {
             occurrenceId: occurrence.id,
             userId,
             role: userId === session.userId ? "host" : "participant",
+            admissionState: payload.admissionMode ? (userId===session.userId?"admitted":"pending") : null,
           })),
         );
         return { meeting, occurrence };
@@ -2241,7 +2248,7 @@ router.post("/work-hub/meetings", async (req, res) => {
           type: "work_hub_meeting_invite",
           category: "system",
           title: "Meeting invitation",
-          body: payload.title,
+          body: payload.attendanceConfirmationRequired ? `${payload.title} · Please confirm attendance` : payload.title,
           link: `/work-hub/meetings/${result.resource.occurrence.id}`,
           dedupeKey: `work-hub-meeting:${result.resource.occurrence.id}:invite`,
         },
@@ -2341,6 +2348,8 @@ async function requireMeetingMember(
     )
     .limit(1);
   if (!member || member.removedAt) throw new MeetingMutationError(404, "Meeting not found");
+  const entry=await meetingEntry(tx,id);
+  if(entry.meeting.admissionMode && member.admissionState!=="admitted")throw new MeetingMutationError(403,"Host admission required");
   if (hostOnly && member.role !== "host")
     throw new MeetingMutationError(
       403,
@@ -3334,7 +3343,7 @@ router.get("/work-hub/search", async (req, res) => {
       await db
         .select({ occurrenceId: workHubMeetingParticipantsTable.occurrenceId })
         .from(workHubMeetingParticipantsTable)
-        .where(eq(workHubMeetingParticipantsTable.userId, session.userId))
+        .where(and(eq(workHubMeetingParticipantsTable.userId, session.userId),isNull(workHubMeetingParticipantsTable.removedAt),or(isNull(workHubMeetingParticipantsTable.admissionState),eq(workHubMeetingParticipantsTable.admissionState,"admitted"))))
     ).map((row) => row.occurrenceId),
   );
   const [forms, transcripts] = await Promise.all([
@@ -3636,6 +3645,7 @@ router.get("/work-hub/search/items/:type/:id", async (req, res) => {
   const [participant] = await db.select({ id: workHubMeetingParticipantsTable.id }).from(workHubMeetingParticipantsTable)
     .where(and(eq(workHubMeetingParticipantsTable.occurrenceId, row.occurrence.id), eq(workHubMeetingParticipantsTable.userId, session.userId))).limit(1);
   if (!participant) return notFound();
+  if(row.meeting.admissionMode!==null)try{await requireRoomAdmission(db,{...session,userId:session.userId},row.occurrence.id);}catch{return notFound();}
   return res.json({ id: row.segment.id, subjectType: "transcript", title: row.meeting.title, body: row.segment.text, occurrenceId: row.occurrence.id });
 });
 router.get("/work-hub/connectors/microsoft-365", async (req, res) => {

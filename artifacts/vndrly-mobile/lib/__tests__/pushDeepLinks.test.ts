@@ -6,6 +6,11 @@ import {
 } from "@/lib/pushDeepLinks";
 
 describe("routeForPushData", () => {
+  it("opens the exact validated meeting from push links",()=>{
+    const id="b04608be-31d4-40b0-a5d1-ab39bbde9195";
+    expect(routeForPushData({type:"work_hub_meeting_invite",link:`/work-hub/meetings/${id}`})).toEqual({type:"route",path:`/work-hub/meeting/${id}`});
+    expect(routeForPushData({link:"/work-hub/meetings/../../admin"})).toEqual({type:"none"});
+  });
   it("routes crew_removed to home", () => {
     expect(routeForPushData({ type: "crew_removed" })).toEqual({
       type: "route",

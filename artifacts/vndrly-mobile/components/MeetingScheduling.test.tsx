@@ -1,3 +1,5 @@
+vi.mock("expo-crypto", () => ({ randomUUID: () => globalThis.crypto.randomUUID() }));
+vi.mock("@react-native-community/datetimepicker", () => ({ default: () => null }));
 import en from "@/lib/locales/en.json";
 import es from "@/lib/locales/es.json";
 import React from "react";
@@ -54,16 +56,13 @@ vi.mock("@/components/TogglePillButton", () => ({
 }));
 const occurrence = "10000000-0000-4000-8000-000000000002";
 function fill() {
-  fireEvent.change(screen.getByLabelText("End time"), {
-    target: { value: "13:15" },
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "15" },
   });
   fireEvent.change(screen.getByLabelText("Meeting title"), {
     target: { value: "Synthetic planning" },
   });
-  fireEvent.change(screen.getByLabelText("Start date"), {
-    target: { value: "2026-10-08" },
-  });
-  fireEvent.change(screen.getByLabelText("End date"), {
+  fireEvent.change(screen.getByLabelText("Date"), {
     target: { value: "2026-10-08" },
   });
   fireEvent.change(screen.getByLabelText("Start time"), {
@@ -109,6 +108,7 @@ beforeEach(() => {
         ownerId: 11,
         title: "Synthetic planning",
         agenda: null,
+        admissionMode:"host_approval",
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         createdById: 7,
         startsAt: new Date(2026, 9, 8, 13, 0).toISOString(),
@@ -138,6 +138,9 @@ describe("native meeting scheduling", () => {
       m.api.mock.calls.find((c) => c[1]?.method === "POST")![1].body,
     );
     expect(body.payload).toEqual({
+      agenda: "",
+      attendanceConfirmationRequired: false,
+      admissionMode:"host_approval",
       title: "Synthetic planning",
       startsAt: new Date(2026, 9, 8, 13, 0).toISOString(),
       endsAt: new Date(2026, 9, 8, 13, 15).toISOString(),
@@ -179,8 +182,8 @@ describe("native meeting scheduling", () => {
     render(<MeetingScheduling />);
     await screen.findByText("Company coworker");
     fill();
-    fireEvent.change(screen.getByLabelText("End date"), {
-      target: { value: "2026-10-07" },
+    fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+      target: { value: "0" },
     });
     fireEvent.click(screen.getByText("Review meeting"));
     await screen.findByText(/Review unavailable/);
@@ -229,4 +232,32 @@ describe("native meeting scheduling", () => {
     expect(screen.getByLabelText("Hora de inicio")).toBeTruthy();
     expect(screen.queryByText("Schedule a meeting")).toBeNull();
   });
+});
+
+
+it("defaults to one hour and calculates an overnight end automatically", async () => {
+  render(<MeetingScheduling />);
+  await screen.findByText("Company coworker");
+  expect((screen.getByLabelText("Duration (minutes)") as HTMLInputElement).value).toBe("60");
+  fireEvent.change(screen.getByLabelText("Meeting title"), {target:{value:"Late briefing"}});
+  fireEvent.change(screen.getByLabelText("Date"), {target:{value:"2026-10-08"}});
+  fireEvent.change(screen.getByLabelText("Start time"), {target:{value:"23:30"}});
+  fireEvent.click(screen.getByText("Review meeting"));
+  await screen.findByText("Save reviewed meeting");
+  const request = m.api.mock.calls.find(c=>c[0].includes("/calendar?"));
+  const expectedEnd = new Date(2026,9,9,0,30).toISOString();
+  expect(decodeURIComponent(request![0])).toContain(expectedEnd);
+});
+
+
+it("leaves attendance confirmation optional and carries the chosen requirement into review", async () => {
+  render(<MeetingScheduling />); await screen.findByText("Company coworker"); fill();
+  const option=screen.getByRole("switch",{name:"Require attendance confirmation"});
+  expect((option as HTMLInputElement).checked).toBe(false);
+  fireEvent.click(option); fireEvent.click(screen.getByText("Company coworker")); fireEvent.click(screen.getByText("Review meeting"));
+  await screen.findByText("Save reviewed meeting");
+  fireEvent.click(screen.getByText("Save reviewed meeting"));
+  await waitFor(()=>expect(m.api.mock.calls.some(c=>c[1]?.method==="POST")).toBe(true));
+  const request=m.api.mock.calls.find(c=>c[1]?.method==="POST");
+  expect(JSON.parse(request![1].body).payload.attendanceConfirmationRequired).toBe(true);
 });

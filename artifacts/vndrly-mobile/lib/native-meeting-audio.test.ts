@@ -38,7 +38,7 @@ function nativeModule() {
 function streamingClient() {
   return {
     open: vi.fn(async () => ({ sessionId: "stream-1", sampleRate: 16000, frameDurationMs: 500 })),
-    sendBase64AndPersist: vi.fn(async () => undefined),
+    sendBase64AndPersist: vi.fn(async (_sequence: number, _pcm: string, _persist: unknown, _signal: AbortSignal): Promise<void> => undefined),
     persistTurn: vi.fn(async () => undefined),
     close: vi.fn(async () => undefined),
   };
@@ -47,6 +47,28 @@ function streamingClient() {
 beforeEach(() => { env.native = nativeModule(); env.platform = "ios"; });
 
 describe("native meeting audio adapter", () => {
+  it("drains accepted call frames before closing its authorized stream", async () => {
+    const stream=streamingClient(), first=deferred();
+    stream.sendBase64AndPersist.mockImplementationOnce(()=>first.promise);
+    const session=createNativeMeetingAudioSession({occurrenceId:"room",callId:"call",generation:11,streamingClient:stream as any})!;
+    await session.start({sourceId:"track-11",iceServers:[]});await session.setTranscription(true,4);
+    const frame=(sequence:number)=>({generation:11,sourceId:"track-11",policyRevision:4,sequence,pcmBase64:"AA==",sampleRate:16000,channels:1,sampleCount:8000,firstSample:sequence*8000});
+    env.native.emit("onMeetingPCMFrame",frame(0));env.native.emit("onMeetingPCMFrame",frame(1));
+    const stopped=session.stop();expect(stream.close).not.toHaveBeenCalled();first.resolve();await stopped;
+    expect(stream.sendBase64AndPersist.mock.calls.some(args=>args[0]===1)).toBe(true);expect(stream.close).toHaveBeenCalled();
+  });
+  it("keeps an internal voice call alive when speech processing fails", async () => {
+    const stream = streamingClient(), notice = vi.fn();
+    stream.open.mockRejectedValue(new Error("speech unavailable"));
+    const session = createNativeMeetingAudioSession({ occurrenceId: "room", callId: "call", generation: 11, streamingClient: stream as any, onTranscriptionError: notice })!;
+    await session.start({ sourceId: "track-11", iceServers: [] });
+    await expect(session.setTranscription(true, 4)).rejects.toThrow("speech unavailable");
+    expect(env.native.invalidateSession).not.toHaveBeenCalled();
+    expect(notice).toHaveBeenCalledWith("TRANSCRIPTION_UNAVAILABLE");
+    await session.setMuted(false,1,new Date(Date.now()+10000).toISOString());
+    expect(env.native.setMuted).toHaveBeenCalled();
+    await session.stop();
+  });
   it("fails visibly on iOS without the selected native module", () => {
     env.native = null;
     expect(() => createNativeMeetingAudioSession({ occurrenceId: "room", generation: 1 }))

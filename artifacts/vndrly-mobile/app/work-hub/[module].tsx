@@ -13,7 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import MeetingScheduling from "@/components/MeetingScheduling";
+import WorkHubMeetings from "@/components/WorkHubMeetings";
 import ShiftScheduling from "@/components/ShiftScheduling";
 import WorkHubShiftOpening from "@/components/WorkHubShiftOpening";
 import WorkHubCalls from "@/components/WorkHubCalls";
@@ -26,6 +26,7 @@ import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import { RoleExports } from "@/components/work-hub/RoleExports";
 import { OperationsHealth } from "@/components/implementation-a/OperationsHealth";
 import WorkHubConversation from "@/components/WorkHubConversation";
+import WorkHubChatInbox from "@/components/WorkHubChatInbox";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 import TogglePillButton from "@/components/TogglePillButton";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
@@ -194,6 +195,7 @@ function WorkHubModuleContent() {
         ...(x.occurrence ?? x.item?.occurrence),
         title: (x.meeting ?? x.item?.meeting)?.title,
         agenda: (x.meeting ?? x.item?.meeting)?.agenda,
+        attendanceConfirmationRequired: (x.meeting ?? x.item?.meeting)?.attendanceConfirmationRequired,
         kind: "Meeting",
       }));
     if (module === "search") return data?.results ?? [];
@@ -361,6 +363,7 @@ function WorkHubModuleContent() {
       </ScrollView>
     </ScreenSafeArea>;
   }
+  if (module === "chat") return <ScreenSafeArea style={{ backgroundColor: colors.background }}><Stack.Screen options={{ title }} /><ScrollView contentContainerStyle={{ padding: 20, gap: 14 }} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load()} />}><WorkHubPageTitle title={title} />{!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}{loading && !data && <ActivityIndicator color={colors.primary} />}<WorkHubChatInbox channels={rows} groups={chatGroups} people={chatPeople} selected={selectedChannel} onSelect={setSelectedChannel} target={selectedGroupId || selectedPersonId} onTarget={(kind, id) => { setSelectedGroupId(kind === "group" ? id : ""); setSelectedPersonId(kind === "person" ? id : ""); }} onStart={() => void startChat()} busy={chatActionBusy} notice={chatActionNotice} /></ScrollView></ScreenSafeArea>;
   return (
     <ScreenSafeArea style={{ backgroundColor: colors.background }}>
       <Stack.Screen options={{ title }} />
@@ -388,66 +391,7 @@ function WorkHubModuleContent() {
             {!!meetingFileError && <Text accessibilityRole="alert" style={{ color: colors.destructive, fontWeight: "700" }}>{meetingFileError}</Text>}
           </View>
         )}
-        {module === "chat" && !selectedChannel && (
-          <View accessibilityLabel="New Chat" style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 12, backgroundColor: colors.card }}>
-            <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>New Chat</Text>
-            <Text style={{ color: colors.text, fontWeight: "700" }}>Select Group</Text>
-            <View style={{ gap: 8 }}>
-              {chatGroups.map((group) => {
-                const selected = selectedGroupId === group.id;
-                return (
-                  <Pressable
-                    key={group.id}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={`Select group ${group.name}`}
-                    onPress={() => {
-                      setSelectedGroupId(group.id);
-                      setSelectedPersonId("");
-                    }}
-                    style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 10, minHeight: 44, padding: 12, justifyContent: "center", backgroundColor: selected ? colors.primary : colors.background }}
-                  >
-                    <Text style={{ color: selected ? colors.primaryForeground : colors.text, fontWeight: "600" }}>{group.name}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Text style={{ color: colors.text, fontWeight: "700" }}>Select Person</Text>
-            <View style={{ gap: 8 }}>
-              {chatPeople.map((person) => {
-                const selected = selectedPersonId === String(person.id);
-                const detail = [person.organizationName, person.role].filter(Boolean).join(" · ");
-                return (
-                  <Pressable
-                    key={person.id}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={`Select person ${person.displayName}`}
-                    onPress={() => {
-                      setSelectedPersonId(String(person.id));
-                      setSelectedGroupId("");
-                    }}
-                    style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 10, minHeight: 44, padding: 12, justifyContent: "center", backgroundColor: selected ? colors.primary : colors.background }}
-                  >
-                    <Text style={{ color: selected ? colors.primaryForeground : colors.text, fontWeight: "600" }}>{person.displayName}</Text>
-                    {!!detail && <Text style={{ color: selected ? colors.primaryForeground : colors.mutedForeground, fontSize: 12 }}>{detail}</Text>}
-                  </Pressable>
-                );
-              })}
-            </View>
-            <TogglePillButton
-              color="brand"
-              disabled={(!selectedGroupId && !selectedPersonId) || chatActionBusy}
-              loading={chatActionBusy}
-              accessibilityLabel={selectedGroupId ? "Start Chat" : "Send Invite"}
-              onPress={() => void startChat()}
-            >
-              {selectedGroupId ? "Start Chat" : "Send Invite"}
-            </TogglePillButton>
-            {!!chatActionNotice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text, fontWeight: "700" }}>{chatActionNotice}</Text>}
-          </View>
-        )}
-        {module === "meetings" && <MeetingScheduling onSaved={() => load("")} />}
+        {module === "meetings" && <WorkHubMeetings meetings={rows.map(row => ({ id: String(row.id), title: row.title, agenda: row.agenda, attendanceConfirmationRequired: row.attendanceConfirmationRequired, startsAt: row.startsAt, endsAt: row.endsAt, status: row.status }))} onOpen={(id) => router.push(`/work-hub/meeting/${id}` as never)} onSaved={() => load("")} />}
         {module === "calendar" && <WorkHubAvailability />}
         {module === "calendar" && <ShiftScheduling onSaved={() => load("")} />}
               {module === "calendar" && <WorkHubShiftOpening shifts={data?.shifts ?? []} onSaved={() => load("")} />}
@@ -539,7 +483,7 @@ function WorkHubModuleContent() {
             onClose={() => setSelectedChannel(null)}
           />
         )}
-        {!selectedChannel &&
+        {!selectedChannel && module !== "meetings" &&
           rows.map((row) => (
             <View
               key={row.id}
@@ -598,16 +542,6 @@ function WorkHubModuleContent() {
                   </Text>
                 </Pressable>
               )}
-              {module === "chat" && (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setSelectedChannel(row)}
-                >
-                  <Text style={{ color: colors.primary, padding: 10, minHeight: 44, textAlignVertical: "center" }}>
-                    Open conversation
-                  </Text>
-                </Pressable>
-              )}
               {module === "tasks-forms" && isCoordinatedPlanDescription(row.description) ? <TogglePillButton color="blue" onPress={() => router.push(`/work-hub/task/${row.id}` as never)}>{t("workPlan.open")}</TogglePillButton> : null}
               {module === "tasks-forms" && row.status !== "completed" && !isCoordinatedPlanDescription(row.description) && (
                 <Pressable
@@ -637,7 +571,7 @@ function WorkHubModuleContent() {
               )}
             </View>
           ))}
-        {!loading && module !== "settings-connections" && module !== "calendar" && module !== "files-notes" && !rows.length && (
+        {!loading && module !== "meetings" && module !== "settings-connections" && module !== "calendar" && module !== "files-notes" && !rows.length && (
           <Text
             style={{
               color: colors.mutedForeground,

@@ -11,6 +11,11 @@ export const workHubCallsTable = pgTable("work_hub_calls", {
 export const workHubVoicemailTable = pgTable("work_hub_voicemail", {
   id: uuid("id").primaryKey(), callId: uuid("call_id").notNull().references(() => workHubCallsTable.id), recipientUserId: integer("recipient_user_id").notNull().references(() => usersTable.id), senderUserId: integer("sender_user_id").notNull().references(() => usersTable.id),
   storageKey: text("storage_key").notNull(), contentType: text("content_type").notNull(), durationMs: integer("duration_ms").notNull(), transcript: text("transcript"),
+  transcriptionState: text("transcription_state").notNull().default("pending"),
+  transcriptionAttempts: integer("transcription_attempts").notNull().default(0),
+  transcriptionClaimToken: uuid("transcription_claim_token"),
+  transcriptionClaimedAt: timestamp("transcription_claimed_at", { withTimezone: true }),
+  transcriptionNextAttemptAt: timestamp("transcription_next_attempt_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(), readAt: timestamp("read_at", { withTimezone: true }), deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 export const workHubCallSettingsTable = pgTable("work_hub_call_settings", {

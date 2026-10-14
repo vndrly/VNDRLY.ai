@@ -44,12 +44,12 @@ describe("Work Hub home cards", () => {
     expect(exportsItem).toBeLessThan(safety);
   });
 
-  it("delineates the Communications card into its four destinations", () => {
+  it("shows three distinct Communications destinations", () => {
     expect(source).toContain("function CommunicationsCard");
     expect(source).toContain('label="Chats"');
     expect(source).toContain('label="Calls"');
-    expect(source).toContain('label="Invitations"');
-    expect(source).toContain('label={`${companyName} Conversations`}');
+    expect(source).toContain('label="Meetings"');
+    expect(source).not.toContain('label={`${companyName} Conversations`}');
   });
 
   it("groups the worker's schedule and action queue into one delineated Today card", () => {

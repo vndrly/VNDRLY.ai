@@ -12,6 +12,10 @@ import {
   workHubMeetingOccurrencesTable,
   workHubMeetingParticipantsTable,
   workHubAudioLeasesTable,
+  workHubMeetingArtifactsTable,
+  workHubTranscriptSegmentsTable,
+  vendorsTable,
+  userOrgMembershipsTable,
 } from "@workspace/db";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
@@ -21,12 +25,28 @@ import { executeWorkHubCommand } from "../work-hub/commands";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
 import { getObjectStore } from "../lib/objectStore";
 import { notifyUsers } from "./notifications";
-import { transcribeAudioBuffer } from "../lib/openai-whisper";
+import { transcribeCallVoicemail } from "../work-hub/call-voicemail-transcription";
 import {
   callCanTransition,
   validVoicemailAudio,
 } from "../work-hub/calls-policy";
-import { deviceCoordinator, WorkHubDeviceError, type DeviceActor } from "../work-hub/device-coordinator";
+import {
+  deviceCoordinator,
+  WorkHubDeviceError,
+  type DeviceActor,
+} from "../work-hub/device-coordinator";
+import {
+  meetingDeviceConnections,
+  type MeetingRuntime,
+} from "../work-hub/meeting-runtime";
+import { authorizeCallTranscript } from "../work-hub/call-transcript-access";
+import {
+  openCallStream,
+  appendCallStream,
+  closeCallStream,
+} from "../work-hub/call-transcript-stream";
+import { audioLeaseService } from "../work-hub/audio-lease-database";
+import { nativeTranscriptionAvailable } from "../work-hub/native-transcription";
 const router: IRouter = Router();
 type Actor = SessionPayload & { userId: number };
 const uuid = z.string().uuid();
@@ -53,7 +73,10 @@ async function ownedCall(a: Actor, id: string) {
   if (!call) throw new WorkHubAccessError("not_found");
   return call;
 }
-async function expireCalls(userId: number, owner: ReturnType<typeof ownerForActor>) {
+async function expireCalls(
+  userId: number,
+  owner: ReturnType<typeof ownerForActor>,
+) {
   const expired = await db.transaction(async (tx) => {
     const expired = await tx
       .update(workHubCallsTable)
@@ -82,23 +105,25 @@ async function expireCalls(userId: number, owner: ReturnType<typeof ownerForActo
     return expired;
   });
   if (owner && expired.length > 0) {
-    await Promise.allSettled(expired.flatMap((call) =>
-      [call.callerUserId, call.recipientUserId].map((recipientUserId) =>
-        deviceCoordinator.publishUserEvent(
-          { userId: recipientUserId, owner },
-          {
-            eventType: "work_hub.call.missed",
-            payload: {
-              context: { kind: "meeting", id: call.occurrenceId },
-              subject: { type: "work_hub_call", id: call.id },
-              callId: call.id,
-              occurrenceId: call.occurrenceId,
-              status: "missed",
+    await Promise.allSettled(
+      expired.flatMap((call) =>
+        [call.callerUserId, call.recipientUserId].map((recipientUserId) =>
+          deviceCoordinator.publishUserEvent(
+            { userId: recipientUserId, owner },
+            {
+              eventType: "work_hub.call.missed",
+              payload: {
+                context: { kind: "meeting", id: call.occurrenceId },
+                subject: { type: "work_hub_call", id: call.id },
+                callId: call.id,
+                occurrenceId: call.occurrenceId,
+                status: "missed",
+              },
             },
-          },
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 router.use("/work-hub", async (req, res, next) => {
@@ -130,7 +155,9 @@ router.put("/work-hub/calls/settings", async (req, res) => {
       available: z.boolean().optional(),
       speedDial: z.array(z.number().int().positive()).max(30).optional(),
     })
-    .refine((value) => value.available !== undefined || value.speedDial !== undefined)
+    .refine(
+      (value) => value.available !== undefined || value.speedDial !== undefined,
+    )
     .parse(req.body);
   const [current] = await db
     .select()
@@ -190,8 +217,32 @@ router.get("/work-hub/calls", async (req, res) => {
         .from(usersTable)
         .where(inArray(usersTable.id, ids))
     : [];
+  const transcriptCalls = rows.length
+    ? await db
+        .select({ occurrenceId: workHubMeetingArtifactsTable.occurrenceId })
+        .from(workHubMeetingArtifactsTable)
+        .innerJoin(
+          workHubTranscriptSegmentsTable,
+          eq(
+            workHubTranscriptSegmentsTable.artifactId,
+            workHubMeetingArtifactsTable.id,
+          ),
+        )
+        .where(
+          and(
+            inArray(
+              workHubMeetingArtifactsTable.occurrenceId,
+              rows.map((r) => r.occurrenceId),
+            ),
+            eq(workHubMeetingArtifactsTable.artifactType, "transcript"),
+          ),
+        )
+    : [];
   return res.json(
     rows.map((r) => ({
+      transcriptAvailable: transcriptCalls.some(
+        (t) => t.occurrenceId === r.occurrenceId,
+      ),
       ...r,
       incoming: r.recipientUserId === a.userId,
       callerName: people.find((p) => p.id === r.callerUserId)?.displayName,
@@ -304,14 +355,28 @@ router.post("/work-hub/calls", async (req, res) => {
 router.post("/work-hub/calls/:id/respond", async (req, res) => {
   const a = res.locals.callActor as Actor;
   const { action, deviceId, connectionId } = z
-    .object({ action: z.enum(["accept", "decline", "end"]), deviceId: uuid.optional(), connectionId: uuid.optional() })
-    .refine(value => (value.deviceId === undefined) === (value.connectionId === undefined), "Device and connection must be provided together")
+    .object({
+      action: z.enum(["accept", "decline", "end"]),
+      deviceId: uuid.optional(),
+      connectionId: uuid.optional(),
+    })
+    .refine(
+      (value) =>
+        (value.deviceId === undefined) === (value.connectionId === undefined),
+      "Device and connection must be provided together",
+    )
     .parse(req.body);
   const owner = ownerForActor(a);
-  const deviceActor: DeviceActor | null = owner ? { userId: a.userId, owner } : null;
+  const deviceActor: DeviceActor | null = owner
+    ? { userId: a.userId, owner }
+    : null;
   if (action === "accept" && deviceId && connectionId) {
     if (!deviceActor) throw new WorkHubAccessError("forbidden");
-    await deviceCoordinator.requireDeviceConnection(deviceActor, deviceId, connectionId);
+    await deviceCoordinator.requireDeviceConnection(
+      deviceActor,
+      deviceId,
+      connectionId,
+    );
   }
   await expireCalls(a.userId, owner);
   await ownedCall(a, req.params.id);
@@ -327,8 +392,17 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       call.status === "active" &&
       call.recipientUserId === a.userId
     )
-      return { call, selectedAudioOwner: Boolean(deviceId && call.answeredDeviceId === deviceId && call.answeredConnectionId === connectionId), transitioned: false };
-    if (action === "end" && call.endedAt) return { call, selectedAudioOwner: false, transitioned: false };
+      return {
+        call,
+        selectedAudioOwner: Boolean(
+          deviceId &&
+          call.answeredDeviceId === deviceId &&
+          call.answeredConnectionId === connectionId,
+        ),
+        transitioned: false,
+      };
+    if (action === "end" && call.endedAt)
+      return { call, selectedAudioOwner: false, transitioned: false };
     if (
       action === "decline" &&
       call.status === "declined" &&
@@ -339,7 +413,9 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       !callCanTransition(call.status, action, call.recipientUserId === a.userId)
     )
       throw new WorkHubAccessError("forbidden");
-    let audioLease: { token: string; generation: number; expiresAt: Date } | undefined;
+    let audioLease:
+      | { token: string; generation: number; expiresAt: Date }
+      | undefined;
     if (action === "accept") {
       await tx
         .insert(workHubMeetingParticipantsTable)
@@ -361,21 +437,29 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       if (deviceId) {
         const token = randomBytes(32).toString("base64url");
         const expiresAt = new Date(Date.now() + 20_000);
-        const [lease] = await tx.insert(workHubAudioLeasesTable).values({
-          occurrenceId: call.occurrenceId,
-          userId: a.userId,
-          deviceId,
-          generation: 1,
-          tokenHash: createHash("sha256").update(token).digest("hex"),
-          state: "active",
-          expiresAt,
-          pendingDeviceId: null,
-          offerTokenHash: null,
-          offerExpiresAt: null,
-          updatedAt: new Date(),
-        }).onConflictDoNothing().returning();
+        const [lease] = await tx
+          .insert(workHubAudioLeasesTable)
+          .values({
+            occurrenceId: call.occurrenceId,
+            userId: a.userId,
+            deviceId,
+            generation: 1,
+            tokenHash: createHash("sha256").update(token).digest("hex"),
+            state: "active",
+            expiresAt,
+            pendingDeviceId: null,
+            offerTokenHash: null,
+            offerExpiresAt: null,
+            updatedAt: new Date(),
+          })
+          .onConflictDoNothing()
+          .returning();
         if (!lease) throw new WorkHubAccessError("forbidden");
-        audioLease = { token, generation: lease.generation, expiresAt: lease.expiresAt };
+        audioLease = {
+          token,
+          generation: lease.generation,
+          expiresAt: lease.expiresAt,
+        };
       }
     } else
       await tx
@@ -391,7 +475,12 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       .update(workHubCallsTable)
       .set(
         action === "accept"
-          ? { status: "active", answeredAt: new Date(), answeredDeviceId: deviceId ?? null, answeredConnectionId: connectionId ?? null }
+          ? {
+              status: "active",
+              answeredAt: new Date(),
+              answeredDeviceId: deviceId ?? null,
+              answeredConnectionId: connectionId ?? null,
+            }
           : {
               status:
                 action === "decline"
@@ -404,7 +493,12 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       )
       .where(eq(workHubCallsTable.id, call.id))
       .returning();
-    return { call: updated, selectedAudioOwner: Boolean(deviceId), transitioned: true, ...(audioLease ? { audioLease } : {}) };
+    return {
+      call: updated,
+      selectedAudioOwner: Boolean(deviceId),
+      transitioned: true,
+      ...(audioLease ? { audioLease } : {}),
+    };
   });
   if (result.transitioned && owner) {
     const eventType = `work_hub.call.${action === "accept" ? "answered" : action === "decline" ? "declined" : "ended"}`;
@@ -416,7 +510,14 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       status: result.call.status,
       answeringDeviceId: result.call.answeredDeviceId ?? null,
     };
-    await Promise.allSettled([result.call.callerUserId, result.call.recipientUserId].map(userId => deviceCoordinator.publishUserEvent({ userId, owner }, { eventType, payload })));
+    await Promise.allSettled(
+      [result.call.callerUserId, result.call.recipientUserId].map((userId) =>
+        deviceCoordinator.publishUserEvent(
+          { userId, owner },
+          { eventType, payload },
+        ),
+      ),
+    );
   }
   return res.json({
     ...result.call,
@@ -435,6 +536,7 @@ router.get("/work-hub/voicemail", async (_req, res) => {
       senderName: usersTable.displayName,
       durationMs: workHubVoicemailTable.durationMs,
       transcript: workHubVoicemailTable.transcript,
+      transcriptionState: workHubVoicemailTable.transcriptionState,
       createdAt: workHubVoicemailTable.createdAt,
       readAt: workHubVoicemailTable.readAt,
     })
@@ -499,17 +601,15 @@ router.post(
         owner: `voicemail:${id}`,
         visibility: "private",
       });
-      await tx
-        .insert(workHubVoicemailTable)
-        .values({
-          id,
-          callId: call.id,
-          recipientUserId: call.recipientUserId,
-          senderUserId: a.userId,
-          storageKey,
-          contentType,
-          durationMs,
-        });
+      await tx.insert(workHubVoicemailTable).values({
+        id,
+        callId: call.id,
+        recipientUserId: call.recipientUserId,
+        senderUserId: a.userId,
+        storageKey,
+        contentType,
+        durationMs,
+      });
       return { id, replayed: false };
     });
     if (!result.replayed) {
@@ -535,6 +635,7 @@ router.post(
           },
         );
     }
+    void transcribeCallVoicemail(a, id).catch(() => undefined);
     return res.status(result.replayed ? 200 : 201).json(result);
   },
 );
@@ -555,10 +656,7 @@ async function privateVoicemail(userId: number, id: string) {
 }
 router.get("/work-hub/voicemail/:id/audio", async (req, res) => {
   const a = res.locals.callActor as Actor;
-  const row = await privateVoicemail(
-    a.userId,
-    req.params.id,
-  );
+  const row = await privateVoicemail(a.userId, req.params.id);
   const object = await getObjectStore().getObject(row.storageKey);
   if (!object)
     return sendApiError(
@@ -570,7 +668,12 @@ router.get("/work-hub/voicemail/:id/audio", async (req, res) => {
   const changed = await db
     .update(workHubVoicemailTable)
     .set({ readAt: new Date() })
-    .where(and(eq(workHubVoicemailTable.id, row.id), isNull(workHubVoicemailTable.readAt)))
+    .where(
+      and(
+        eq(workHubVoicemailTable.id, row.id),
+        isNull(workHubVoicemailTable.readAt),
+      ),
+    )
     .returning({ id: workHubVoicemailTable.id });
   const owner = ownerForActor(a);
   if (owner && changed[0])
@@ -626,30 +729,257 @@ router.post("/work-hub/voicemail/:id/transcribe", async (req, res) => {
     req.params.id,
   );
   if (row.transcript) return res.json({ text: row.transcript });
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey)
-    return sendApiError(
-      res,
-      503,
-      "work_hub.transcription_unavailable",
-      "Transcription is not configured",
-    );
-  const object = await getObjectStore().getObject(row.storageKey);
-  if (!object) throw new WorkHubAccessError("not_found");
-  const extension = row.contentType.split("/")[1];
-  const text = await transcribeAudioBuffer(
-    object.body,
-    `voicemail.${extension}`,
-    apiKey,
-    row.contentType,
+  await transcribeCallVoicemail(res.locals.callActor, row.id);
+  const updated = await privateVoicemail(res.locals.callActor.userId, row.id);
+  return res.json({
+    text: updated.transcript,
+    state: updated.transcriptionState,
+  });
+});
+async function callAudioAuthority(req: any, actor: Actor, callId: string) {
+  const row = await authorizeCallTranscript(actor, callId, "capture");
+  const identity = z
+    .object({
+      deviceId: uuid,
+      connectionId: uuid,
+      token: z.string().min(1),
+      generation: z.number().int().positive(),
+    })
+    .parse(req.body);
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(workHubMeetingParticipantsTable.occurrenceId, row.call.occurrenceId),
+        eq(workHubMeetingParticipantsTable.userId, actor.userId),
+        isNull(workHubMeetingParticipantsTable.removedAt),
+      ),
+    )
+    .limit(1);
+  const connections = Object.values(
+    meetingDeviceConnections(row.occurrence.runtime as MeetingRuntime),
   );
-  if (!text)
-    return sendApiError(res, 422, "work_hub.no_speech", "No speech detected");
-  await db
-    .update(workHubVoicemailTable)
-    .set({ transcript: text })
-    .where(eq(workHubVoicemailTable.id, row.id));
-  return res.json({ text });
+  if (
+    !participant ||
+    participant.muted ||
+    !connections.some(
+      (c) =>
+        c.userId === actor.userId &&
+        c.deviceId === identity.deviceId &&
+        c.connectionId === identity.connectionId &&
+        Date.now() - c.seenAt < 30000,
+    )
+  )
+    throw new WorkHubAccessError("forbidden");
+  if (
+    !(await audioLeaseService.validate(
+      {
+        occurrenceId: row.call.occurrenceId,
+        userId: actor.userId,
+        deviceId: identity.deviceId,
+      },
+      identity.token,
+      identity.generation,
+    ))
+  )
+    throw new WorkHubAccessError("forbidden");
+  return identity;
+}
+router.get("/work-hub/calls/:id/transcription-state", async (req, res) => {
+  const actor = res.locals.callActor as Actor;
+  try {
+    const row = await authorizeCallTranscript(
+      actor,
+      uuid.parse(req.params.id),
+      "capture",
+    );
+    return res.json({
+      enabled: nativeTranscriptionAvailable(),
+      policyVersion: row.policy?.version ?? 1,
+    });
+  } catch {
+    return res.json({ enabled: false, policyVersion: 1 });
+  }
+});
+router.get("/work-hub/calls/:id/transcript", async (req, res) => {
+  const actor = res.locals.callActor as Actor;
+  const row = await authorizeCallTranscript(
+    actor,
+    uuid.parse(req.params.id),
+    "read",
+  );
+  const result = await db
+    .select({
+      id: workHubTranscriptSegmentsTable.id,
+      speakerUserId: workHubTranscriptSegmentsTable.speakerUserId,
+      startsAtMs: workHubTranscriptSegmentsTable.startsAtMs,
+      endsAtMs: workHubTranscriptSegmentsTable.endsAtMs,
+      text: workHubTranscriptSegmentsTable.text,
+      speakerName: usersTable.displayName,
+    })
+    .from(workHubTranscriptSegmentsTable)
+    .innerJoin(
+      workHubMeetingArtifactsTable,
+      eq(
+        workHubMeetingArtifactsTable.id,
+        workHubTranscriptSegmentsTable.artifactId,
+      ),
+    )
+    .leftJoin(
+      usersTable,
+      eq(usersTable.id, workHubTranscriptSegmentsTable.speakerUserId),
+    )
+    .where(
+      and(
+        eq(workHubMeetingArtifactsTable.occurrenceId, row.call.occurrenceId),
+        eq(workHubMeetingArtifactsTable.artifactType, "transcript"),
+      ),
+    )
+    .orderBy(workHubTranscriptSegmentsTable.startsAtMs)
+    .limit(5000);
+  res.setHeader("Cache-Control", "private, no-store");
+  return res.json({ segments: result });
+});
+router.post("/work-hub/calls/:id/transcription-stream", async (req, res) => {
+  const actor = res.locals.callActor as Actor,
+    callId = uuid.parse(req.params.id),
+    identity = await callAudioAuthority(req, actor, callId);
+  return res.json(await openCallStream(actor, callId, identity));
+});
+router.post(
+  "/work-hub/calls/:id/transcription-stream/:sessionId/frame",
+  async (req, res) => {
+    const actor = res.locals.callActor as Actor,
+      callId = uuid.parse(req.params.id),
+      identity = await callAudioAuthority(req, actor, callId);
+    const p = z
+      .object({
+        sequence: z.number().int().nonnegative(),
+        pcmBase64: z.string().min(1).max(22000),
+      })
+      .parse(req.body);
+    const pcm = Buffer.from(p.pcmBase64, "base64");
+    if (pcm.length !== 16000 || pcm.toString("base64") !== p.pcmBase64)
+      throw new WorkHubAccessError("forbidden");
+    return res.json(
+      await appendCallStream(
+        actor,
+        callId,
+        uuid.parse(req.params.sessionId),
+        identity.deviceId,
+        p.sequence,
+        pcm,
+      ),
+    );
+  },
+);
+router.post(
+  "/work-hub/calls/:id/transcription-stream/:sessionId/close",
+  async (req, res) => {
+    const actor = res.locals.callActor as Actor,
+      deviceId = uuid.parse(req.body.deviceId);
+    return res.json(
+      await closeCallStream(
+        actor,
+        uuid.parse(req.params.id),
+        uuid.parse(req.params.sessionId),
+        deviceId,
+        z.enum(["hangup", "pause"]).default("pause").parse(req.body.reason),
+      ),
+    );
+  },
+);
+router.get("/work-hub/calls/transcription-policy", async (_req, res) => {
+  const actor = res.locals.callActor as Actor;
+  if (!actor.vendorId) throw new WorkHubAccessError("forbidden");
+  const [membership] = await db
+    .select()
+    .from(userOrgMembershipsTable)
+    .where(
+      and(
+        eq(userOrgMembershipsTable.userId, actor.userId),
+        eq(userOrgMembershipsTable.orgType, "vendor"),
+        eq(userOrgMembershipsTable.vendorId, actor.vendorId),
+      ),
+    )
+    .limit(1);
+  if (membership?.role !== "admin") throw new WorkHubAccessError("forbidden");
+  const [vendor] = await db
+    .select({ policy: vendorsTable.callTranscriptionPolicy })
+    .from(vendorsTable)
+    .where(eq(vendorsTable.id, actor.vendorId))
+    .limit(1);
+  return res.json({
+    policy: vendor?.policy ?? null,
+    available: nativeTranscriptionAvailable(),
+  });
+});
+router.put("/work-hub/calls/transcription-policy", async (req, res) => {
+  const actor = res.locals.callActor as Actor;
+  if (!actor.vendorId) throw new WorkHubAccessError("forbidden");
+  const [membership] = await db
+    .select()
+    .from(userOrgMembershipsTable)
+    .where(
+      and(
+        eq(userOrgMembershipsTable.userId, actor.userId),
+        eq(userOrgMembershipsTable.orgType, "vendor"),
+        eq(userOrgMembershipsTable.vendorId, actor.vendorId),
+      ),
+    )
+    .limit(1);
+  if (membership?.role !== "admin") throw new WorkHubAccessError("forbidden");
+  const input = z
+    .object({
+      enabled: z.boolean(),
+      expectedVersion: z.number().int().nonnegative(),
+      operationId: uuid,
+    })
+    .parse(req.body);
+  const result = await executeWorkHubCommand(
+    { userId: actor.userId, source: "web" },
+    "call.transcription_policy",
+    {
+      operationId: input.operationId,
+      owner: { type: "vendor", id: actor.vendorId },
+      context: { kind: "organization", id: actor.vendorId },
+      expectedVersion: input.expectedVersion,
+      payloadVersion: 1,
+      payload: input,
+    },
+    async (tx) => {
+      const [vendor] = await tx
+        .select()
+        .from(vendorsTable)
+        .where(eq(vendorsTable.id, actor.vendorId!))
+        .for("update")
+        .limit(1);
+      if (
+        !vendor ||
+        (vendor.callTranscriptionPolicy?.version ?? 0) !== input.expectedVersion
+      )
+        throw Object.assign(
+          new Error("Policy changed; refresh before saving"),
+          { status: 409 },
+        );
+      const next = {
+        enabled: input.enabled,
+        version: input.expectedVersion + 1,
+        verifiedByUserId: actor.userId,
+        effectiveAt: new Date().toISOString(),
+      };
+      await tx
+        .update(vendorsTable)
+        .set({ callTranscriptionPolicy: next })
+        .where(eq(vendorsTable.id, actor.vendorId!));
+      return next;
+    },
+  );
+  return res.json({
+    policy: result.resource,
+    available: nativeTranscriptionAvailable(),
+  });
 });
 router.use(
   (
@@ -661,13 +991,28 @@ router.use(
     if (error instanceof WorkHubAccessError)
       return sendApiError(res, error.status, error.code, error.message);
     if (error instanceof WorkHubDeviceError)
-      return sendApiError(res, error.code === "work_hub.not_found" ? 404 : 400, error.code, error.message);
+      return sendApiError(
+        res,
+        error.code === "work_hub.not_found" ? 404 : 400,
+        error.code,
+        error.message,
+      );
     if (error instanceof z.ZodError)
       return sendApiError(
         res,
         400,
         "work_hub.invalid_operation",
         "Invalid call request",
+      );
+    if (
+      error instanceof Error &&
+      [409, 429, 503].includes((error as any).status)
+    )
+      return sendApiError(
+        res,
+        (error as any).status,
+        "work_hub.transcription_unavailable",
+        error.message,
       );
     return next(error);
   },

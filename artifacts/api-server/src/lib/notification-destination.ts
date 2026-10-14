@@ -452,6 +452,7 @@ export async function resolveNotificationDestination(
         .where(eq(workHubMeetingsTable.id, occurrence.meetingId))
         .limit(1);
       if (!meeting || !ownerAllowed(meeting)) return null;
+      if(meeting.admissionMode){try{await getLiveMeeting({...session,userId:session.userId!},id);return link;}catch{return null;}}
       const [participant] = await db
         .select()
         .from(workHubMeetingParticipantsTable)
@@ -482,3 +483,4 @@ export async function resolveNotificationDestination(
     throw error;
   }
 }
+import { getLiveMeeting } from "../work-hub/live-meetings";

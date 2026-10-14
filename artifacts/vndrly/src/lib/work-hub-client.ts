@@ -111,11 +111,11 @@ export async function workHubRequest<T>(
   });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(
-      body?.error?.message ??
+    throw Object.assign(new Error(
+      (typeof body?.error === "string" ? body.error : body?.error?.message) ??
         body?.message ??
         `Request failed (${response.status})`,
-    );
+      ),{status:response.status});
   }
   return response.json();
   }, { signal: init?.signal, timeoutMs: 30_000, timeoutMessage:

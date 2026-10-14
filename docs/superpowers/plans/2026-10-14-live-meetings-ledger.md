@@ -1,0 +1,20 @@
+# Live meetings execution ledger
+
+- User approved written spec and direct implementation. Current preview worktree retained; unrelated prior changes preserved.
+- Implemented additive admission schema/migration, current membership policy, Start now, company-open/host-approval admission, durable requests/decisions/invitations, canonical receipts, live discovery and room guards.
+- Implemented mobile and web live lobby, host controls, copy links, login destination preservation and push route parsing. Communications now has Chats, Calls and Meetings. AskV/MCP registry, embedded views and plugin guidance use the same server commands.
+- Fresh review identified web cached-data exposure after revocation, delayed push recipient authorization, transcript session/context invalidation, uncertain web retry recovery and inconsistent admin host controls. Fixed all five code findings; focused regressions verify cached room hiding, current delayed-push membership/preferences, current session/context publication, original mobile retry identity and route conflict handling.
+- Ruling: defer implementation commits until final scoped handoff because both approved plans modify shared files already containing prior work; never stage unrelated scripts or reset existing changes.
+- Ruling: use installed expo-crypto for native UUIDs; browser-global crypto is not a reliable native contract. Scheduler test runtime now stubs that existing dependency.
+- Ruling: preserve legacy meeting behavior when admission_mode is NULL. New room controls retain current membership checks. Legacy participants remain admitted when switching to a new admission mode.
+- Ruling: bound the invitation picker to 500 current members, but resolve pending request identities separately so later members are not silently omitted from the waiting room.
+- Verification: DB/API-Zod declaration build passed; focused server 20 and 109 tests passed, route 4 passed, additional API regression 138 passed. Mobile broad run: 1835 passed, 3 failures; corrected those failures, affected 44-test rerun passed. Further 5 mobile admission/retry tests passed. Web cached-access regression passed. Locale parity and plugin package check passed. Typechecks passed before final small UI adjustments; final verification pending below.
+- User explicitly chose safe local checks and reporting the isolated PostgreSQL blocker. No transaction-backed lock-race/readback verification performed; configured dev/prod share Supabase and were not reset or migrated.
+- Native push foreground/background/cold-start delivery and two-device native audio remain unverified. HTTPS universal app links lack confirmed associated-domain/AASA setup; native notification paths and web destinations are implemented, but universal app launch is not claimed.
+- No production deployment, plugin installation, actual invitations, credential changes or shared database mutation performed.
+
+- Final safe checks: API/mobile/web typechecks passed. Broad web suite: 1604 passed, three failures; replaced custom popup with shared Dialog and restored existing partner Start now shortcut, then all seven affected tests passed. Broad mobile suite failures corrected; all 44 affected tests passed. Additional existing API routes: 138 passed. New push/session/fingerprint checks: five passed. git diff --check passed.
+- Ruling: preserve partner legacy Start now; new company admission is vendor scoped. Cost if wrong: partners keep their existing behavior rather than gaining undocumented vendor semantics.
+- Ruling: generic meeting recording is not implemented by the internal-call plan, which explicitly says to preserve meeting consent rules. This remains an outstanding product-policy parity item, not a completed recording feature.
+- Candidate plugin package version advanced to 1.12.0; not installed or published. Whole-feature fresh review completed and all five important findings addressed locally.
+- Task 6 remains partial only for isolated DB/e2e canonical transaction readback, native push/two-device audio and universal-link setup. User approved reporting the DB blocker. No claim of full release readiness.

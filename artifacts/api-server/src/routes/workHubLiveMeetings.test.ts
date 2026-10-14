@@ -1,0 +1,15 @@
+import express from "express";
+import request from "supertest";
+import { beforeEach, expect, it, vi } from "vitest";
+const m=vi.hoisted(()=>({session:null as any,start:vi.fn(),decide:vi.fn()}));
+vi.mock("../lib/session",()=>({getSessionFromRequest:()=>m.session}));
+vi.mock("../work-hub/live-meetings",()=>({startLiveMeeting:m.start,decideMeetingAdmission:m.decide,listLiveMeetings:vi.fn(),getLiveMeeting:vi.fn(),requestMeetingAdmission:vi.fn(),inviteLiveMeetingMembers:vi.fn(),changeMeetingAdmission:vi.fn()}));
+import router from "./workHubLiveMeetings";
+const app=express();app.use(express.json());app.use(router);
+const id="10000000-0000-4000-8000-000000000002";
+const body={operationId:"10000000-0000-4000-8000-000000000003",owner:{type:"vendor",id:12},context:{kind:"organization",id:12},expectedVersion:2,payloadVersion:1,payload:{decision:"admit"}};
+beforeEach(()=>{vi.clearAllMocks();m.session={userId:7,vendorId:12,sv:1};});
+it("rejects unauthenticated writes before invoking a service",async()=>{m.session=null;expect((await request(app).post("/work-hub/live-meetings").send(body)).status).toBe(401);expect(m.start).not.toHaveBeenCalled();});
+it("validates room and target before deciding",async()=>{expect((await request(app).post(`/work-hub/live-meetings/${id}/admission/0`).send(body)).status).toBe(400);expect(m.decide).not.toHaveBeenCalled();});
+it("uses signed actor and exact decision envelope, with private responses",async()=>{m.decide.mockResolvedValue({operationId:body.operationId});const r=await request(app).post(`/work-hub/live-meetings/${id}/admission/9`).send(body);expect(r.status).toBe(200);expect(r.headers["cache-control"]).toBe("private, no-store");expect(m.decide).toHaveBeenCalledWith(expect.objectContaining({userId:7,vendorId:12}),id,9,body);});
+it("preserves service conflict without leaking internal failures",async()=>{m.decide.mockRejectedValue(Object.assign(new Error("Meeting changed"),{status:409}));expect((await request(app).post(`/work-hub/live-meetings/${id}/admission/9`).send(body)).status).toBe(409);m.decide.mockRejectedValue(new Error("private database detail"));const r=await request(app).post(`/work-hub/live-meetings/${id}/admission/9`).send(body);expect(r.status).toBe(500);expect(r.body.error).toBe("Meeting request unavailable");});

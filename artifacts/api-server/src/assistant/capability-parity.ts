@@ -1,4 +1,6 @@
 export const USER_FACING_ACTIONS = [
+  { id:"live-meetings",route:"/work-hub/meetings",readTool:"list_live_meetings" },
+  { id:"meeting-lobby",route:"/work-hub/meeting/:occurrenceId",readTool:"get_live_meeting" },
   { id: "invitations", route: "/work-hub/administration/invitations", readTool: "query_account_invitations" },
   { id: "workforce", route: "/work-hub/calendar", readTool: "query_workforce_coverage" },
   { id: "assets", route: "/work-hub/inventory", readTool: "query_asset_custody" },
