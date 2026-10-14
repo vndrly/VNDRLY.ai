@@ -279,3 +279,14 @@ it("renders authorized live meeting links and keeps admission actions host-only"
  expect(out.sections[0].rows[0].href).toBe(`https://vndrly.ai/work-hub/meeting/${id}`);
  expect(out.sections[1].rows).toEqual([]);
 });
+
+it("campaign embedded results suppress individual anonymous answers and bind exact identifiers",()=>{
+ const id="00000000-0000-4000-8000-000000000002";
+ const request=workspaceRequest({view:"form_campaign",campaignId:id});
+ const data={campaignId:id,config:{kind:"poll",title:"Lunch",anonymous:true,choices:[{id:"a",label:"Park"},{id:"b",label:"Hall"}]},state:{status:"closed"},canManage:true,counts:{assigned:1,eligible:1,responded:1,pending:0,overdue:0,excluded:0},resultsVisible:true,totals:[{id:"a",label:"Park",votes:1}],receipts:[{instanceId:id,userId:7,name:"Private employee",email:"private@example.invalid",excluded:false,submittedAt:now.toISOString(),late:false,values:{choices:["a"]}}]};
+ const output=workspaceOutput("form_campaign",request.sourceTool,request.sourceArguments,data,now);
+ expect(JSON.stringify(output)).not.toMatch(/Private employee|private@example.invalid/);
+ expect(output.sections.find(x=>x.title==="Results")?.rows[0].title).toBe("Park");
+ expect(()=>workspaceOutput("form_campaign",request.sourceTool,{campaignId:"00000000-0000-4000-8000-000000000003"},data,now)).toThrow();
+ expect(()=>workspaceRequest({view:"assigned_form",instanceId:"invalid"})).toThrow();
+});

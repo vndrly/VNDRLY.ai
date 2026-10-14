@@ -52,7 +52,7 @@ export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown
     return null;
   }
   for (const source of [input, record(input.payload), record(result.resource), record(result.asset), result]) {
-    for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
+    for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "campaignId", "instanceId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
       const value = source[key];
       if (typeof value === "string" && value.trim() || typeof value === "number" && Number.isFinite(value)) return value as string | number;
     }
@@ -479,6 +479,23 @@ export function resolveWorkHubToolRequest(
   let target: string | WorkHubToolRequest;
 
   switch (name) {
+    case "list_form_campaigns": return request("GET","/work-hub/form-campaigns");
+    case "get_form_campaign_options": return request("GET","/work-hub/form-campaigns/options");
+    case "create_form_campaign": return request("POST","/work-hub/form-campaigns",envelope(input));
+    case "get_form_campaign":
+    case "update_form_campaign":
+    case "publish_form_campaign":
+    case "pause_form_campaign": {
+      const id=z.uuid().safeParse(input.campaignId);if(!id.success)return {error:"Supply an exact campaign UUID."};const base=`/work-hub/form-campaigns/${id.data}`;
+      if(name==="get_form_campaign")return request("GET",base);
+      if(name==="update_form_campaign")return request("PATCH",base,envelope(input));
+      return request("POST",`${base}/${name==="publish_form_campaign"?"publish":"pause"}`,envelope(input,{}));
+    }
+    case "get_assigned_form":
+    case "submit_form_campaign_response": {
+      const id=z.uuid().safeParse(input.instanceId);if(!id.success)return {error:"Supply your exact assigned form instance UUID."};const base=`/work-hub/form-campaigns/instances/${id.data}`;
+      return name==="get_assigned_form"?request("GET",base):request("POST",`${base}/respond`,envelope(input));
+    }
     case "list_live_meetings": return request("GET","/work-hub/live-meetings");
     case "get_live_meeting":
     case "request_meeting_admission":

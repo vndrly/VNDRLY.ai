@@ -1,3 +1,4 @@
+import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
@@ -1360,6 +1361,7 @@ function TasksModule() {
   });
   return (
     <Shell module="tasks">
+      <FormCampaignsArea/>
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader>
@@ -1501,7 +1503,7 @@ function TasksModule() {
               )}
             </article>
           ))}
-          {required.data?.forms?.map(({ instance, template }: Row) => (
+          {required.data?.forms?.filter(({template}:Row)=>!template.campaignConfig).map(({ instance, template }: Row) => (
             <article key={instance.id} className="rounded-lg border p-4">
               <span className="text-xs uppercase text-muted-foreground">
                 Form
@@ -1641,7 +1643,7 @@ function TasksModule() {
                   ...x,
                   kind: "Checklist",
                 })),
-                ...(admin.data?.forms ?? []).map((x: Row) => ({
+                ...(admin.data?.forms ?? []).filter((x:Row)=>!x.campaignConfig).map((x: Row) => ({
                   ...x,
                   kind: "Form",
                 })),

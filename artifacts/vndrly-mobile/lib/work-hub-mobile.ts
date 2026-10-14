@@ -124,3 +124,7 @@ export function mobileWorkHubModules(
     items.push({ key: "crews", label: "Manage Crews", icon: "users" });
   return items;
 }
+
+export function mobileCommandEnvelope(owner:{type:"vendor"|"partner";id:number},payload:unknown,expectedVersion:number|undefined,context:{kind:"organization"|"gate";id:number},operationId:string) {
+ return {operationId,owner,context,payloadVersion:1,expectedVersion:expectedVersion??null,payload};
+}

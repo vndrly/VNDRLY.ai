@@ -1,3 +1,5 @@
+import {workHubCommandEnvelopeSchema} from "@workspace/api-zod";
+import {mobileCommandEnvelope} from "./work-hub-mobile";
 import { describe, expect, it } from "vitest";
 import { loadFilesInventoryData, mobileOwner, mobileWorkHubModules, moduleEndpoint } from "./work-hub-mobile";
 
@@ -81,4 +83,9 @@ describe("combined files and inventory loading", () => {
     expect(result.capabilities).toMatchObject({ canCreateNote: true, canCheckOutAsset: true, canVerifyIssuedAsset: true });
     expect(requests.filter(path => path.startsWith("/api/work-hub/channels?"))).toHaveLength(2);
   });
+});
+
+it("builds a valid versioned completion command for the exact task owner", async()=>{
+ const command=mobileCommandEnvelope({type:"vendor",id:1054},{status:"completed"},3,{kind:"organization",id:1054},"10000000-0000-4000-8000-000000000003");
+ expect(workHubCommandEnvelopeSchema.parse(command)).toMatchObject({payloadVersion:1,expectedVersion:3,payload:{status:"completed"},owner:{type:"vendor",id:1054}});
 });

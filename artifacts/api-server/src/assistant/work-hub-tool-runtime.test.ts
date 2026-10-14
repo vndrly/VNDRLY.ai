@@ -773,3 +773,12 @@ it("routes live meeting reads and admission commands through the shared server b
  expect(resolveWorkHubToolRequest("get_live_meeting",{occurrenceId:id})).toMatchObject({method:"GET",path:`/work-hub/live-meetings/${id}`});
  expect(resolveWorkHubToolRequest("decide_meeting_admission",{occurrenceId:id,targetUserId:12,payload:{decision:"admit"}})).toMatchObject({method:"POST",path:`/work-hub/live-meetings/${id}/admission/12`});
 });
+
+it("maps campaign reads and confirmed writes to exact shared routes",()=>{
+ const campaignId="00000000-0000-4000-8000-000000000002",instanceId="00000000-0000-4000-8000-000000000003";
+ expect(resolveWorkHubToolRequest("list_form_campaigns",{})).toMatchObject({method:"GET",path:"/work-hub/form-campaigns"});
+ expect(resolveWorkHubToolRequest("get_assigned_form",{instanceId})).toMatchObject({method:"GET",path:`/work-hub/form-campaigns/instances/${instanceId}`});
+ expect(resolveExecutableWorkHubToolRequest("publish_form_campaign",{...command,campaignId,expectedVersion:0},false,{userId:7,role:"vendor",vendorId:42,membershipRole:"admin"})).toHaveProperty("requiresConfirmation",true);
+ expect(resolveWorkHubToolRequest("publish_form_campaign",{...command,campaignId,expectedVersion:0})).toMatchObject({method:"POST",path:`/work-hub/form-campaigns/${campaignId}/publish`,body:{payload:{}}});
+ expect(resolveWorkHubToolRequest("get_form_campaign",{campaignId:"../foreign"})).toHaveProperty("error");
+});

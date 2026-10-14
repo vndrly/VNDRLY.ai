@@ -1,4 +1,7 @@
 export const USER_FACING_ACTIONS = [
+  {id:"form-campaigns",route:"/work-hub/tasks-forms",readTool:"list_form_campaigns"},
+  {id:"form-campaign",route:"/work-hub/campaign/:campaignId",readTool:"get_form_campaign"},
+  {id:"assigned-form",route:"/work-hub/form/:instanceId",readTool:"get_assigned_form"},
   { id:"live-meetings",route:"/work-hub/meetings",readTool:"list_live_meetings" },
   { id:"meeting-lobby",route:"/work-hub/meeting/:occurrenceId",readTool:"get_live_meeting" },
   { id: "invitations", route: "/work-hub/administration/invitations", readTool: "query_account_invitations" },

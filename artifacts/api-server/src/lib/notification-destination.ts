@@ -76,6 +76,9 @@ export async function resolveNotificationDestination(
   if (new Set(keys).size !== keys.length) return null;
   const path = url.pathname.replace(/^\/\(tabs\)/, "");
   const params = url.searchParams;
+  const campaignPath=path.match(/^\/work-hub\/(form|campaign)\/([0-9a-f-]{36})$/i);
+  if(campaignPath){if(keys.length||!uuid.test(campaignPath[2]))return null;try{const service=await import("../work-hub/form-campaign-service");if(campaignPath[1]==="form")await service.getCampaignInstance(session,campaignPath[2]);else await service.getCampaign(session,campaignPath[2]);return path;}catch{return null;}}
+
   const permittedKeys = new Set([
     "section",
     "channel",

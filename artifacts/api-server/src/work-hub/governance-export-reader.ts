@@ -79,7 +79,7 @@ function directSource(dataset: WorkHubExportDataset, owner: WorkHubExportOwner):
       return {
         source: sql`SELECT s.submitted_at AS created_at, s.id::text AS id, s.submitted_at AS event_at, f.id AS selector_id,
           jsonb_build_object('formId', f.id, 'formName', f.name, 'instanceId', i.id, 'submissionId', s.id, 'version', s.version, 'submittedById', s.submitted_by_id, 'values', s.values, 'submittedAt', s.submitted_at) AS fields
-          FROM work_hub_form_submissions s JOIN work_hub_form_instances i ON i.id = s.instance_id JOIN work_hub_form_templates f ON f.id = i.template_id WHERE ${ownerClause(sql.raw("f"))}`,
+          FROM work_hub_form_submissions s JOIN work_hub_form_instances i ON i.id = s.instance_id JOIN work_hub_form_templates f ON f.id = i.template_id WHERE ${ownerClause(sql.raw("f"))} AND f.campaign_config IS NULL`,
         selector: sql.raw("selector_id"),
       };
     case "announcements":

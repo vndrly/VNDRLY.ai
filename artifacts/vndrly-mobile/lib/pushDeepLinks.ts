@@ -13,6 +13,8 @@ export function routeForPushData(data: unknown): PushRoute {
   if (!data || typeof data !== "object") return { type: "none" };
   const d = data as Record<string, unknown>;
   if(typeof d.link === "string") {
+    const campaign=d.link.match(/^\/work-hub\/(form|campaign)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+    if(campaign)return {type:"route",path:`/work-hub/${campaign[1]}/${campaign[2]}`};
     const meeting=d.link.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
     if(meeting)return {type:"route",path:`/work-hub/meeting/${meeting[1]}`};
   }

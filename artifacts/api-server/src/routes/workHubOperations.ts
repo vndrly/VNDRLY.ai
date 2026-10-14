@@ -1,3 +1,4 @@
+import { CampaignError, respondCampaign } from "../work-hub/form-campaign-service";
 import { setWorkHubShiftOpening, readWorkHubShiftOpening } from "../services/work-hub-shift-opening";
 import { requireRoomAdmission } from "../work-hub/live-meetings";
 import { meetingCalendarProjection } from "../work-hub/meeting-lobby-projection";
@@ -253,6 +254,7 @@ class MeetingAvailabilityConflictError extends Error {
   }
 }
 function failure(res: Response, error: unknown): void {
+  if(error instanceof CampaignError){sendApiError(res,error.status,"work_hub.invalid_operation",error.message);return;}
   if (error instanceof GateShiftAssignmentError) { sendApiError(res, error.status, error.code, "Review current Gate assignment eligibility"); return; }
   if (error instanceof Error && /^(gate_assignment|gate_candidates)\./.test(error.message)) { sendApiError(res, 409, "work_hub.invalid_operation", error.message); return; }
   if (error instanceof MeetingAvailabilityConflictError) {
@@ -655,7 +657,7 @@ router.get("/work-hub/admin", async (req, res) => {
     db
       .select()
       .from(workHubFormTemplatesTable)
-      .where(ownerFilterFor(session, workHubFormTemplatesTable))
+      .where(and(ownerFilterFor(session, workHubFormTemplatesTable),isNull(workHubFormTemplatesTable.campaignConfig)))
       .orderBy(desc(workHubFormTemplatesTable.createdAt))
       .limit(100),
     db
@@ -753,6 +755,7 @@ router.get("/work-hub/required-actions", async (req, res) => {
         and(
           eq(workHubFormInstancesTable.assigneeUserId, session.userId),
           ownerFilterFor(session, workHubFormTemplatesTable),
+          isNull(workHubFormTemplatesTable.campaignConfig),
         ),
       )
       .orderBy(desc(workHubFormInstancesTable.createdAt)),
@@ -931,6 +934,7 @@ async function assignTemplate(
               .limit(1)
           )[0];
     if (!template) throw new WorkHubAccessError("not_found");
+    if (kind === "form" && "campaignConfig" in template && template.campaignConfig) throw new CampaignError("Publish campaigns through the campaign workflow");
     if (payload.channelId)
       await resolveChannelAccess(session, payload.channelId, "task.assign");
     const result = await executeWorkHubCommand(
@@ -1110,6 +1114,12 @@ router.post("/work-hub/forms/:id/submit", async (req, res) => {
       )
       .limit(1);
     if (!record) throw new WorkHubAccessError("not_found");
+    if(record.template.campaignConfig){
+      const config=record.template.campaignConfig;
+      const campaignPayload=config.kind==="acknowledgement"?{acknowledged:payload.values.acknowledged}:config.kind==="poll"?{choices:payload.values.choices}:{values:payload.values};
+      return res.json(await respondCampaign({...session,userId:session.userId,source:clientSource(req)},record.instance.id,{...envelope,payload:campaignPayload}));
+    }
+
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       "form.submit",

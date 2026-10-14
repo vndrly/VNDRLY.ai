@@ -122,6 +122,7 @@ export async function runReliableNotificationDelivery(): Promise<number> {
   const results = await retryDueNotifications({
     repository: databaseNotificationDeliveryRepository,
     sender: async (notice) => {
+      if(notice.type==="work_hub_form_campaign" && notice.link){const {formCampaignPushAllowed}=await import("../work-hub/form-campaign-worker");if(!await formCampaignPushAllowed(notice.userId,notice.link))return {delivered:false,retryable:false,detail:"recipient_unavailable"};}
       if (notice.type === "work_hub_meeting_invite" && notice.link?.startsWith("/work-hub/meetings/")) {
         const { liveMeetingPushAllowed } = await import("../work-hub/live-meeting-notifications");
         if (!(await liveMeetingPushAllowed(notice.userId, notice.link.slice("/work-hub/meetings/".length)))) return {delivered:false,retryable:false,detail:"recipient_unavailable"};

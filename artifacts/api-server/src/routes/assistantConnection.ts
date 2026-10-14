@@ -555,6 +555,9 @@ router.post("/mcp", async (req, res) => {
       }
       if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
       output.availableViews = [];
+      if(allowedNames.has("list_form_campaigns"))output.availableViews.push("form_campaigns");
+      if(request.view==="form_campaign"&&allowedNames.has("get_form_campaign"))output.availableViews.push("form_campaign");
+      if(request.view==="assigned_form"&&allowedNames.has("get_assigned_form"))output.availableViews.push("assigned_form");
       if(allowedNames.has("list_live_meetings"))output.availableViews.push("live_meetings");
       if(request.view==="meeting_lobby"&&allowedNames.has("get_live_meeting"))output.availableViews.push("meeting_lobby");
       if (allowedNames.has("query_gate_coverage_map")) output.availableViews.push("gate_coverage");

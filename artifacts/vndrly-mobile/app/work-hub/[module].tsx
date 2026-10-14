@@ -1,3 +1,7 @@
+import FormCampaignList from "@/components/work-hub/FormCampaignList";
+import TaskAssignment from "@/components/work-hub/TaskAssignment";
+import * as Crypto from "expo-crypto";
+import { mobileCommandEnvelope } from "@/lib/work-hub-mobile";
 import DailyWorkPanel from "@/components/DailyWorkPanel";
 import UnifiedWorkCalendar from "@/components/UnifiedWorkCalendar";
 import WorkHubAvailability from "@/components/WorkHubAvailability";
@@ -72,13 +76,7 @@ function envelope(
   expectedVersion?: number,
   context: { kind: "organization" | "gate"; id: number } = { kind: "organization", id: owner.id },
 ) {
-  return {
-    operationId: crypto.randomUUID(),
-    owner,
-    context,
-    ...(expectedVersion === undefined ? {} : { expectedVersion }),
-    payload,
-  };
+  return mobileCommandEnvelope(owner,payload,expectedVersion,context,Crypto.randomUUID());
 }
 
 export default function WorkHubModuleScreen() {
@@ -236,7 +234,7 @@ function WorkHubModuleContent() {
     const target = targets[module];
     if (!target) return;
     const body = module === "channels"
-      ? { operationId: crypto.randomUUID(), owner, name: draft.trim() }
+      ? { operationId: Crypto.randomUUID(), owner, name: draft.trim() }
       : envelope(
           owner,
           target.payload,
@@ -273,7 +271,7 @@ function WorkHubModuleContent() {
             method: "POST",
             body: JSON.stringify({
               crewId: selectedGroupId,
-              operationId: crypto.randomUUID(),
+              operationId: Crypto.randomUUID(),
             }),
           })
         : await apiFetch<Row>("/api/work-hub/chats", {
@@ -395,11 +393,11 @@ function WorkHubModuleContent() {
         {module === "calendar" && <WorkHubAvailability />}
         {module === "calendar" && <ShiftScheduling onSaved={() => load("")} />}
               {module === "calendar" && <WorkHubShiftOpening shifts={data?.shifts ?? []} onSaved={() => load("")} />}
+        {owner && canManage && module === "tasks-forms" && <TaskAssignment onSaved={()=>load()} />}
+        {["tasks-forms","my-work"].includes(module) && <FormCampaignList/>}
         {owner &&
           canManage &&
-          ["channels", "tasks-forms"].includes(
-            module,
-          ) && (
+          module === "channels" && (
             <View style={{ gap: 10 }}>
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TextInput
@@ -488,8 +486,8 @@ function WorkHubModuleContent() {
             <View
               key={row.id}
               style={{
-                borderWidth: 1,
-                borderColor: colors.border,
+                borderWidth: module === "tasks-forms" ? 2 : 1,
+                borderColor: module === "tasks-forms" ? colors.primary : colors.border,
                 borderRadius: 12,
                 padding: 16,
                 gap: 6,
