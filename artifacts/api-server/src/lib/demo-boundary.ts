@@ -10,6 +10,7 @@ export function sessionDatabaseRealm(session:{userId?:number;realm?:unknown}):'p
  return session.userId&&ids.has(session.userId)?'invalid':'production';
 }
 const reads=[
+ /^\/api\/tickets\/\d+\/(note-logs|gps-logs|crew-sessions|comments)$/,
  /^\/api\/field\/(me|history|sites|open-tickets(\/\d+)?)$/,
  /^\/api\/field\/sites\/\d+\/work-types$/,
  /^\/api\/safety\/events(\/\d+)?$/,
