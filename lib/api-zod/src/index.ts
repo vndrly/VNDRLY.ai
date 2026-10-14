@@ -42,3 +42,5 @@ export * from "./fleet-commercial";
 export * from "./live-meetings";
 
 export * from "./form-campaigns";
+
+export * from "./work-hub-library";

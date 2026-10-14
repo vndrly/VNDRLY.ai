@@ -1,0 +1,8 @@
+import {expect,it} from "vitest";
+import {validateLibraryValues,assignmentDeadline,publicTraining} from "./library-policy";
+import {gradeTraining} from "./training-policy";
+const question={id:"q",prompt:"Choose",options:[{id:"a",label:"A"},{id:"b",label:"B"},{id:"c",label:"C"}],correctOptionIds:["a","b"],multiple:true};
+it("scores exact multiple answer sets and enforces unrounded passing ratio",()=>{expect(gradeTraining({questions:[question],passingPercent:100},{q:["a","b"]}).passed).toBe(true);expect(gradeTraining({questions:[question],passingPercent:100},{q:["a","b","c"]}).passed).toBe(false);expect(()=>gradeTraining({questions:[question],passingPercent:100},{q:["wrong"]})).toThrow();});
+it("never sends answer keys in employee training content",()=>{expect(JSON.stringify(publicTraining({questions:[question]}))).not.toContain("correctOptionIds");});
+it("validates required date and choice fields without accepting unknown values",()=>{const fields=[{id:"date",label:"Date",type:"date",required:true},{id:"choice",label:"Choice",type:"choice",options:[{id:"a",label:"A"}],required:true}];expect(()=>validateLibraryValues(fields,{date:"2026-02-30",choice:"a"})).toThrow();expect(()=>validateLibraryValues(fields,{date:"2026-10-14",choice:"unknown"})).toThrow();expect(validateLibraryValues(fields,{date:"2026-10-14",choice:"a"})).toEqual({date:"2026-10-14",choice:"a"});});
+it("starts a new hire policy deadline at assignment but preserves poll close",()=>{const at=new Date("2026-11-15T12:00:00Z");expect(assignmentDeadline("policy",720,null,at).toISOString()).toBe("2026-12-15T12:00:00.000Z");expect(()=>assignmentDeadline("poll",24,"2026-11-14T12:00:00Z",at)).toThrow("closed");});

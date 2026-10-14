@@ -78,7 +78,8 @@
     "migrate:asset-custody-fingerprint": "tsx scripts/migrate-asset-custody-fingerprint.ts",
     "migrate:vendor-person-access": "tsx scripts/migrate-vendor-person-access.ts",
     "migrate:fleet-ops": "tsx scripts/migrate-fleet-ops.ts",
-    "migrate:form-campaigns": "node scripts/apply-form-campaigns-migration.mjs"
+    "migrate:form-campaigns": "node scripts/apply-form-campaigns-migration.mjs",
+    "migrate:work-hub-library": "node scripts/apply-work-hub-library-migration.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
