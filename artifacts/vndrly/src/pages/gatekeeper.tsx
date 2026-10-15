@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { changeOverRequest } from "@/lib/change-over-api";
 import { Link } from "wouter";
 import {
   Camera,
@@ -62,7 +63,6 @@ import {
 import {
   pickDefaultGateHostKey,
   groupAssignedGateSitesByPartner,
-  pickLocalAssignedGateSites,
   pickNearestAssignedGateSite,
   resolveAssignedGateSites,
   shouldApplyDefaultGateSite,
@@ -327,6 +327,14 @@ export default function GatekeeperPage() {
     enabled: !!confirmedCode,
     retry: false,
   });
+  const gateLocations = useQuery({
+    queryKey: ["gate-visit-locations", user?.vendorId, site.data?.site.id],
+    queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number }[] }>(`/stations?siteId=${site.data!.site.id}`),
+    enabled: !!site.data?.site.id,
+    retry: false,
+  });
+  const [gateLocationId, setGateLocationId] = useState("");
+  const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
   const preferredPlateStates = useQuery({
     queryKey: ["preferred-plate-states", site.data?.site.id, confirmedCode],
     queryFn: () =>
@@ -768,17 +776,16 @@ export default function GatekeeperPage() {
   const assignedSites = assigned.data?.sites ?? [];
   const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
   const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
-  const localAssignedSites = useMemo(() => pickLocalAssignedGateSites(assignedSites, origin), [assignedSites, origin]);
   useEffect(() => {
     if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
-    const resolvedSite = localAssignedSites.find((row) => row.id === resolvedPrefillSiteId);
+    const resolvedSite = assignedSites.find((row) => row.id === resolvedPrefillSiteId);
     if (resolvedSite) {
       appliedDefault.current = true;
       setSiteCode(resolvedSite.siteCode);
       setConfirmedCode(resolvedSite.siteCode);
     }
     setResolvedPrefillSiteId(null);
-  }, [assignedSites.length, localAssignedSites, resolvedPrefillSiteId]);
+  }, [assignedSites, resolvedPrefillSiteId]);
   const locationResolved = origin !== null || gps === "denied" || gps === "unavailable";
   const defaultSiteCode = locationResolved ? (nearestSite ?? assigned.data?.defaultSite)?.siteCode : undefined;
   const selectedAssignedSite = assignedSites.find((row) => row.siteCode === confirmedCode) ?? nearestSite ?? assigned.data?.defaultSite ?? null;
@@ -832,6 +839,7 @@ export default function GatekeeperPage() {
         });
       },
       (error) => {
+        setOrigin(null);
         setGps(error.code === error.PERMISSION_DENIED ? "denied" : "searching");
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
@@ -842,11 +850,11 @@ export default function GatekeeperPage() {
   const fence = evaluateGpsFence({
     gps,
     origin,
-    site: site.data
+    site: selectedGateLocation?.latitude != null && selectedGateLocation?.longitude != null
       ? {
-          latitude: site.data.site.latitude,
-          longitude: site.data.site.longitude,
-          siteRadiusMeters: site.data.site.siteRadiusMeters,
+          latitude: selectedGateLocation.latitude,
+          longitude: selectedGateLocation.longitude,
+          siteRadiusMeters: selectedGateLocation.geofenceRadiusM ?? 500,
         }
       : null,
   });
@@ -1040,8 +1048,8 @@ export default function GatekeeperPage() {
       setError(t("gatekeeper.requiredFields"));
       return;
     }
-    if (!fence.canSubmit || !origin) {
-      setError(t("gatekeeper.gpsRequiredToSubmit"));
+    if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGateLocation) {
+      setError(t("gatekeeper.selectGateLocation"));
       return;
     }
     setPlateStateError(null);
@@ -1064,8 +1072,9 @@ export default function GatekeeperPage() {
         siteLocationId: context.site.id,
         platePhotoUrl: platePhotoUrl ?? undefined,
         vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
-        latitude: origin.latitude,
-        longitude: origin.longitude,
+        latitude: origin?.latitude,
+        longitude: origin?.longitude,
+        gateStationId: selectedGateLocation?.id,
       });
       resetEntry();
       setVoiceResponse({ messageKey: "gatekeeper.checkedInTitle" });
@@ -1092,12 +1101,13 @@ export default function GatekeeperPage() {
     setBusy(true);
     setError(null);
     try {
-      const coords = await currentPosition(false, t);
+      const coords = origin;
       await visitsApi.gateCheckOut(
         id,
         coords?.latitude,
         coords?.longitude,
         checkOutNotes.trim() || undefined,
+        activeVisits.find(visit => visit.id === id)?.siteLocationId === site.data?.site.id ? selectedGateLocation?.id : undefined,
       );
       setCheckOutNotes("");
       resetEntry();
@@ -1677,9 +1687,9 @@ export default function GatekeeperPage() {
                 {t("gatekeeper.selectedLocation")}
               </p>
               {assignedSites.length > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid min-w-0 gap-3">
                 <div className={WORK_HUB_BRANDED_FIELD_CLASS} data-testid="gate-locked-partner" aria-readonly="true">
-                  {nearestSite?.partnerName ?? selectedAssignedSite?.partnerName ?? t("gatekeeper.selectCompany")}
+                  {selectedAssignedSite?.partnerName ?? t("gatekeeper.selectCompany")}
                 </div>
                 <Select
                   value={
@@ -1697,7 +1707,7 @@ export default function GatekeeperPage() {
                     <SelectValue placeholder={t("gatekeeper.selectSite")} />
                   </SelectTrigger>
                   <SelectContent className={GATE_SELECT_CONTENT_CLASS}>
-                    {localAssignedSites.map((row) => (
+                    {assignedSites.map((row) => (
                       <SelectItem className={GATE_SELECT_ITEM_CLASS} key={row.siteCode} value={row.siteCode}>
                         {siteDisplayName(row)}
                       </SelectItem>
@@ -1706,6 +1716,12 @@ export default function GatekeeperPage() {
                 </Select>
                 </div>
               ) : null}
+              {!!gateLocations.data?.stations.length && <label className="block space-y-1 text-sm font-medium">{t("gatekeeper.gateLocation")}
+                <select className={WORK_HUB_BRANDED_FIELD_CLASS} value={selectedGateLocation?.id ?? ""} onChange={event => setGateLocationId(event.target.value)} aria-label={t("gatekeeper.gateLocation")}>
+                  <option value="">{t("gatekeeper.selectGateLocation")}</option>
+                  {gateLocations.data.stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}
+                </select>
+              </label>}
               {site.data && (
                 <div className="space-y-1">
                   <p className="text-base font-bold leading-tight text-foreground">
@@ -1828,7 +1844,7 @@ export default function GatekeeperPage() {
               hoverTextClass="group-hover:text-gray-800"
               hoverTextShadowClass="group-hover:drop-shadow-none"
               onClick={() => void checkIn()}
-              disabled={busy || !site.data || !fence.canSubmit}
+              disabled={busy || !site.data}
               data-testid="button-gate-check-in"
             >
               {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}

@@ -291,8 +291,9 @@ function escapeXml(value: unknown) {
 }
 
 async function renderGateReport(kind: GateReportKind, format: GateReportFormat, rows: GateReportRow[], context: { siteName: string; stationName: string }) {
+  rows = rows.map(row => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, value && typeof value === "object" ? JSON.stringify(value) : value])) as GateReportRow);
   const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
-  const title = kind === "history" ? "VNDRLY Gate History" : "VNDRLY Shift Notes";
+  const title = kind === "history" ? "VNDRLY Gate Log" : "VNDRLY Shift Notes";
   if (format === "excel") {
     const csvCell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
     const body = [
@@ -395,11 +396,12 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
     `SELECT 'visit:'||v.id AS id,v.id AS "visitId",trim(v.first_name||' '||v.last_name) AS name,v.company,
       v.vehicle_plate AS "vehiclePlate",v.plate_state AS "plateState",v.check_in_time AS "checkInTime",
       v.check_out_time AS "checkOutTime",v.admission_status AS "admissionStatus",
-      v.reconciliation_state AS "reconciliationState",'visitor' AS kind
+      v.reconciliation_state AS "reconciliationState",'visitor' AS kind,
+      v.check_in_gps_evidence AS "checkInGpsEvidence",v.check_out_gps_evidence AS "checkOutGpsEvidence"
      FROM site_visits v WHERE v.site_location_id=$1 AND v.check_in_time <= $3
        AND (v.check_out_time IS NULL OR v.check_out_time >= $2)
      UNION ALL
-     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee'
+     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::jsonb,NULL::jsonb
      FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id JOIN vendor_people p ON p.id=c.employee_id
        JOIN vendors ven ON ven.id=t.vendor_id WHERE t.site_location_id=$1 AND c.check_in_at <= $3
        AND (c.check_out_at IS NULL OR c.check_out_at >= $2)
