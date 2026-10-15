@@ -438,8 +438,6 @@
       "missingInfoTitle": "Missing info",
       "missingInfoBody": "Pick a site and at least one work type.",
       "workTypesLoading": "Work types are still loading for this site. Wait a moment and try again.",
-      "startTracking": "Start Tracking",
-      "startNTracking": "Start {{count}} Tracking Numbers",
       "createdManyTitle": "{{count}} tracking numbers created{{partial}}",
       "failedSuffix": " ({{count}} failed)",
       "failedToCreate": "Failed to create tickets",
@@ -448,7 +446,30 @@
       "foremanSelf": "Me",
       "foremanSelfSuffix": "(you)",
       "vendorLabel": "Vendor",
-      "pickVendor": "Pick a vendor before starting a ticket."
+      "pickVendor": "Pick a vendor before starting a ticket.",
+      "wizard": {
+        "site": "Site",
+        "work": "Work",
+        "review": "Review",
+        "intro": "Choose a site, set up the work, then review your ticket before creating it.",
+        "chooseSite": "Where is the work?",
+        "searchSites": "Search site, company, address or site code",
+        "moreSites": "Show more sites",
+        "change": "Change",
+        "reviewTitle": "Ready to create?",
+        "reviewHelp": "Check the details below. One ticket will be created for each selected work type.",
+        "create": "Create Ticket",
+        "createMany": "Create {{count}} Tickets",
+        "previous": "Previous",
+        "selectSite": "Select site location"
+      },
+      "assignment": {
+        "title": "Assign to",
+        "assign": "Assign to employee",
+        "myself": "Myself",
+        "empty": "No eligible employees available.",
+        "help": "The employee receives this ticket in My Work. Assigning does not check anyone in or start their clock."
+      }
     },
     "errorLoadOpen": "Couldn't load your open tickets. Pull to refresh.",
     "errorLoadHistory": "Couldn't load your job history. Pull to refresh.",
@@ -572,7 +593,17 @@
     "siteFallbackPlaceholder": "—",
     "workTypeFallbackPlaceholder": "—",
     "partnerSuffix": " · {{partner}}",
-    "vendorSuffix": " · {{vendor}}"
+    "vendorSuffix": " · {{vendor}}",
+    "listFilters": {
+      "active": "Active",
+      "stale": "Stale",
+      "flagged": "Flagged",
+      "completed": "Completed",
+      "kickbacks": "Kickbacks",
+      "startNew": "Start New",
+      "flagsError": "Could not load flagged tickets. Pull down to retry.",
+      "title": "Tickets"
+    }
   },
   "ticketDetail": {
     "safetyReport": "Safety report",
@@ -1056,7 +1087,9 @@
       "ending_mileage_invalid": "Enter a valid ending mileage.",
       "ending_mileage_below_start": "Ending mileage must be greater than or equal to the starting mileage.",
       "not_approvable": "This ticket isn't ready to be approved.",
-      "invalid_field_employee_id": "That field employee can't be assigned to this ticket."
+      "invalid_field_employee_id": "That field employee can't be assigned to this ticket.",
+      "employee_invalid": "Select a valid employee.",
+      "employee_vendor_mismatch": "Select an active field employee from this company."
     },
     "site": {
       "not_found": "Site not found.",
@@ -2027,7 +2060,7 @@
     "home": "Home",
     "schedule": "Schedule",
     "flagged": "Flagged",
-    "crewMap": "Map",
+    "crewMap": "Crew Map",
     "crews": "Crews",
     "comms": "Comms",
     "scan": "Scan",
@@ -2048,7 +2081,7 @@
     "flaggedJobs": "Flagged Jobs"
   },
   "vendorHome": {
-    "portal": "Vendor Portal",
+    "portal": "Dashboard",
     "openTickets": "Team tickets",
     "subtitle": "Monitor open jobs across your field team. Tap a ticket for details, comments, and approvals."
   },

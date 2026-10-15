@@ -292,3 +292,24 @@ describe("POST /api/field/tickets — adjacent ticket foreman attribution", () =
     expect(inserted.intakeChannel).toBe("vendor_field_self_service");
   });
 });
+
+
+describe("foreman assignments at creation", () => {
+  it("rejects assignment by a regular field employee",async()=>{
+    const response=await request(app).post("/api/field/tickets").set("Cookie",fieldCookie).send({...baseBody,fieldEmployeeId:888});
+    expectStatus(response,403);
+    expect(insertValuesSpy).not.toHaveBeenCalled();
+  });
+  it("assigns to an active company employee without starting work even with adjacent and GPS",async()=>{
+    selectQueue.splice(1,0,{id:888});
+    const response=await request(app).post("/api/field/tickets").set("Cookie",cookieFor({userId:1234,role:"field_employee",vendorId:11,partnerId:null,vendorRole:"foreman"})).send({...baseBody,fieldEmployeeId:888,adjacent:true});
+    expectStatus(response,201);
+    expect(insertValuesSpy.mock.calls[0][0]).toMatchObject({fieldEmployeeId:888,status:"initiated",lifecycleState:"pending_arrival",checkInTime:null,foremanUserId:null});
+  });
+  it("rejects missing or out-of-company employees",async()=>{
+    selectQueue.splice(1,0,null);
+    const response=await request(app).post("/api/field/tickets").set("Cookie",cookieFor({userId:1234,role:"field_employee",vendorId:11,partnerId:null,vendorRole:"foreman"})).send({...baseBody,fieldEmployeeId:999});
+    expectStatus(response,400);
+    expect(insertValuesSpy).not.toHaveBeenCalled();
+  });
+});

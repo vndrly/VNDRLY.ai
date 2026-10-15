@@ -147,3 +147,7 @@ request_native_ticket_photo sends a request for one exact ticket. The worker ope
 ## October 13 iOS surface parity
 
 Use the ticket lifecycle tools for Start Travel, Arrived, Check In, Check Out and Close for Review. Arrival does not start paid work. Field Proof Packet ends at Submitted to Office; kicked-back work requires corrections and resubmission. Mileage is optional, subject to vendor reimbursement settings. Do not expose office approval/payment evidence as a field-worker checklist. Ticket map positions are recorded unless a fresh authorized live observation is returned.
+
+## Dashboard and new assignments
+
+Dashboard ticket filters include Active, Stale, Flagged, Completed and Kickbacks, ordered newest first. Crew Map remains company scoped. Creating or assigning a ticket for another employee leaves it pending arrival; assignment never asserts the creator or employee is physically on site and never starts a clock. Resolve the authorized employee in the same company and use the existing confirmation-bound ticket assignment tools. The employee receives the saved assignment in My Work.

@@ -17,6 +17,7 @@ type Props = {
   subtitle?: string;
   logoTestId: string;
   platformLogoTestId?: string;
+  notificationHref?: string;
   compact?: boolean;
   stacked?: boolean;
 };
@@ -26,6 +27,7 @@ export default function BrandTitleRow({
   subtitle,
   logoTestId,
   platformLogoTestId,
+  notificationHref = "/(tabs)/gate-notifications",
   compact = false,
   stacked = false,
 }: Props) {
@@ -84,7 +86,7 @@ export default function BrandTitleRow({
       </View>
       {platformLogoTestId ? (
         <React.Fragment>
-        {!sidebarNotifications ? <NotificationBell count={notificationCount} onPress={() => router.push("/(tabs)/gate-notifications")} /> : null}
+        {!sidebarNotifications ? <NotificationBell count={notificationCount} onPress={() => router.push(notificationHref as never)} /> : null}
         <Image
           accessibilityLabel="VNDRLY"
           resizeMode="contain"

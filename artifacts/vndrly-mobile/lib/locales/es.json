@@ -438,8 +438,6 @@
       "missingInfoTitle": "Falta información",
       "missingInfoBody": "Elige un sitio y al menos un tipo de trabajo.",
       "workTypesLoading": "Los tipos de trabajo de este sitio aún se están cargando. Espera un momento e inténtalo de nuevo.",
-      "startTracking": "Iniciar Seguimiento",
-      "startNTracking": "Iniciar {{count}} Seguimientos",
       "createdManyTitle": "{{count}} seguimientos creados{{partial}}",
       "failedSuffix": " ({{count}} fallidos)",
       "failedToCreate": "No se pudieron crear los tickets",
@@ -448,7 +446,30 @@
       "foremanSelf": "Yo",
       "foremanSelfSuffix": "(tú)",
       "vendorLabel": "Proveedor",
-      "pickVendor": "Seleccione un proveedor antes de iniciar un ticket."
+      "pickVendor": "Seleccione un proveedor antes de iniciar un ticket.",
+      "wizard": {
+        "site": "Sitio",
+        "work": "Trabajo",
+        "review": "Revisar",
+        "intro": "Elige un sitio, configura el trabajo y revisa el ticket antes de crearlo.",
+        "chooseSite": "¿Dónde se realizará el trabajo?",
+        "searchSites": "Buscar sitio, empresa, dirección o código",
+        "moreSites": "Mostrar más sitios",
+        "change": "Cambiar",
+        "reviewTitle": "¿Listo para crear?",
+        "reviewHelp": "Revisa los detalles. Se creará un ticket por cada tipo de trabajo seleccionado.",
+        "create": "Crear ticket",
+        "createMany": "Crear {{count}} tickets",
+        "previous": "Anterior",
+        "selectSite": "Seleccionar ubicación del sitio"
+      },
+      "assignment": {
+        "title": "Asignar a",
+        "assign": "Asignar a empleado",
+        "myself": "A mí",
+        "empty": "No hay empleados disponibles.",
+        "help": "El empleado recibe este ticket en Mi trabajo. Asignarlo no registra la entrada ni inicia el tiempo de nadie."
+      }
     },
     "errorLoadOpen": "No se pudieron cargar tus tickets abiertos. Desliza para refrescar.",
     "errorLoadHistory": "No se pudo cargar tu historial. Desliza para refrescar.",
@@ -572,7 +593,17 @@
     "siteFallbackPlaceholder": "—",
     "workTypeFallbackPlaceholder": "—",
     "partnerSuffix": " · {{partner}}",
-    "vendorSuffix": " · {{vendor}}"
+    "vendorSuffix": " · {{vendor}}",
+    "listFilters": {
+      "active": "Activos",
+      "stale": "Sin actividad",
+      "flagged": "Marcados",
+      "completed": "Completados",
+      "kickbacks": "Devueltos",
+      "startNew": "Crear nuevo",
+      "flagsError": "No se pudieron cargar los tickets marcados. Desliza hacia abajo para reintentar.",
+      "title": "Tickets"
+    }
   },
   "ticketDetail": {
     "safetyReport": "Reporte de seguridad",
@@ -1056,7 +1087,9 @@
       "ending_mileage_invalid": "Ingrese un kilometraje final válido.",
       "ending_mileage_below_start": "El kilometraje final debe ser mayor o igual al inicial.",
       "not_approvable": "Este boleto no está listo para aprobarse.",
-      "invalid_field_employee_id": "Ese empleado de campo no puede asignarse a este boleto."
+      "invalid_field_employee_id": "Ese empleado de campo no puede asignarse a este boleto.",
+      "employee_invalid": "Selecciona un empleado válido.",
+      "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa."
     },
     "site": {
       "not_found": "No se encontró el sitio.",
@@ -2027,7 +2060,7 @@
     "home": "Inicio",
     "schedule": "Agenda",
     "flagged": "Marcados",
-    "crewMap": "Mapa",
+    "crewMap": "Mapa de cuadrillas",
     "crews": "Cuadrillas",
     "comms": "Comunicación",
     "scan": "Escanear",
@@ -2048,7 +2081,7 @@
     "flaggedJobs": "Trabajos marcados"
   },
   "vendorHome": {
-    "portal": "Portal del proveedor",
+    "portal": "Panel",
     "openTickets": "Tickets del equipo",
     "subtitle": "Supervise trabajos abiertos de su equipo de campo. Toque un ticket para ver detalles, comentarios y aprobaciones."
   },

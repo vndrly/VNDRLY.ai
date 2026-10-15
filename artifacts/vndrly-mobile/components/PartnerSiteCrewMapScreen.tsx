@@ -16,7 +16,8 @@ import {
   View,
 } from "react-native";
 
-import InPageHeader from "@/components/InPageHeader";
+import PortalPageHeader from "@/components/PortalPageHeader";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 import LayeredPillButton, { LAYERED_PILL_BUTTON_TEXT } from "@/components/LayeredPillButton";
 import MapboxNativeMap, { type NativeMapCircle, type NativeMapLine, type NativeMapPoint } from "@/components/MapboxNativeMap";
 import { useAuth } from "@/hooks/use-auth";
@@ -302,11 +303,11 @@ export default function PartnerSiteCrewMapScreen() {
 
   return (
     <View style={styles.root}>
-      <InPageHeader
-        title={t("partnerMap.title")}
-        onBack={() => router.push("/(tabs)" as never)}
-        right={
-          showAddSite ? (
+      <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
+        <PortalPageHeader title={t("partnerMap.title")} testIdPrefix="partner-map" fallbackHref="/" backBehavior="history" />
+      </ScreenSafeArea>
+      <View style={{ paddingHorizontal: 20, alignItems: "flex-end", marginBottom: 8 }}>
+        {showAddSite ? (
             <LayeredPillButton
               testID="button-add-site"
               onPress={() => router.push("/add-site-location")}
@@ -317,9 +318,8 @@ export default function PartnerSiteCrewMapScreen() {
                 {t("siteLocations.addSite")}
               </Text>
             </LayeredPillButton>
-          ) : null
-        }
-      />
+          ) : null}
+      </View>
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.content}

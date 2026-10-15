@@ -24,6 +24,8 @@ vi.mock("@/hooks/useColors", () => ({
   }),
 }));
 
+vi.mock("@/components/PortalPageHeader", () => ({ default: () => null }));
+
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 
 const { routerReplaceMock, useLocalSearchParamsMock } = vi.hoisted(() => ({

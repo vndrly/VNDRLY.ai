@@ -1183,6 +1183,15 @@ router.post("/tickets", async (req, res): Promise<void> => {
     }
   }
 
+  if (parsed.data.fieldEmployeeId != null) {
+    const [target] = await db.select({id:vendorPeopleTable.id}).from(vendorPeopleTable).where(and(
+      eq(vendorPeopleTable.id,parsed.data.fieldEmployeeId),eq(vendorPeopleTable.vendorId,parsed.data.vendorId),
+      eq(vendorPeopleTable.isActive,true),isNull(vendorPeopleTable.deletedAt),
+      sql`${vendorPeopleTable.vendorRole} in ('field','foreman','both')`
+    ));
+    if (!target) {res.status(400).json({code:"ticket.employee_vendor_mismatch",message:"Employee must be active in this company"});return;}
+  }
+
   const initialState = parsed.data.initialState ?? "on_site";
   const lat = parsed.data.checkInLatitude ?? null;
   const lng = parsed.data.checkInLongitude ?? null;

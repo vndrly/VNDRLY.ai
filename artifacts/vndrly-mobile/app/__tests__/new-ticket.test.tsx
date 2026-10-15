@@ -26,6 +26,8 @@ vi.mock("@/hooks/useColors", () => ({
   }),
 }));
 
+vi.mock("@/components/PortalPageHeader", () => ({ default: () => null }));
+
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 
 const { routerReplaceMock } = vi.hoisted(() => ({
@@ -503,4 +505,60 @@ describe("NewTicketScreen — stale work types on site switch", () => {
       expect(firstByTestId("work-type-4")).toBeTruthy();
     });
   });
+});
+
+
+it("searches sites and preserves work selections when reviewing and going back without submitting", async () => {
+  apiFetchMock.mockImplementation((url: string) => {
+    if (url === "/api/field/sites") return Promise.resolve(SITES_BEFORE);
+    if (url.endsWith("/work-types")) return Promise.resolve(WORK_TYPES);
+    return Promise.reject(new Error(`unexpected url ${url}`));
+  });
+  render(<NewTicketScreen />);
+  await waitFor(() => expect(firstByTestId("new-job-site-11")).toBeTruthy());
+  expect(getComputedStyle(firstByTestId("new-job-site-options")).display).toBe("none");
+  tap(firstByTestId("new-job-site-dropdown"));
+  expect(getComputedStyle(firstByTestId("new-job-site-options")).display).not.toBe("none");
+  fireEvent.change(firstByTestId("new-job-site-search"), { target: { value: "ACME-OTHER" } });
+  expect(screen.queryByTestId("new-job-site-11")).toBeNull();
+  tap(firstByTestId("new-job-site-22"));
+  await waitFor(() => expect(firstByTestId("work-type-7")).toBeTruthy());
+  expect(getComputedStyle(firstByTestId("new-job-work-step")).display).not.toBe("none");
+  tap(firstByTestId("work-type-7"));
+  tap(firstByTestId("new-job-review"));
+  expect(getComputedStyle(firstByTestId("new-job-review-step")).display).not.toBe("none");
+  expect(getComputedStyle(firstByTestId("new-job-site-step")).display).toBe("none");
+  tap(firstByTestId("new-job-previous"));
+  expect(getComputedStyle(firstByTestId("new-job-work-step")).display).not.toBe("none");
+  tap(firstByTestId("new-job-review"));
+  expect(getComputedStyle(firstByTestId("new-job-review-step")).display).not.toBe("none");
+  expect(apiFetchMock.mock.calls.some(call => call[1]?.method === "POST")).toBe(false);
+});
+
+
+it("allows a foreman to assign an off-site ticket without requesting GPS", async () => {
+  Object.assign(fieldEmployeeUser, {vendorRole:"foreman"});
+  try {
+    apiFetchMock.mockImplementation((url: string, options?: {method?:string}) => {
+      if (url.startsWith("/api/field-employees")) return Promise.resolve([{id:88,firstName:"Alex",lastName:"Crew"}]);
+      if (url === "/api/field/sites") return Promise.resolve(SITES_BEFORE);
+      if (url.endsWith("/work-types")) return Promise.resolve(WORK_TYPES);
+      if (url === "/api/field/tickets" && options?.method === "POST") return Promise.resolve({id:900});
+      return Promise.resolve([]);
+    });
+    render(<NewTicketScreen />);
+    await waitFor(() => expect(firstByTestId("new-job-site-11")).toBeTruthy());
+    tap(firstByTestId("new-job-site-dropdown"));
+    tap(firstByTestId("new-job-site-11"));
+    await waitFor(() => expect(firstByTestId("work-type-7")).toBeTruthy());
+    tap(firstByTestId("work-type-7"));
+    await waitFor(() => expect(firstByTestId("new-job-assignee-88")).toBeTruthy());
+    tap(firstByTestId("new-job-assignee-88"));
+    tap(firstByTestId("new-job-review"));
+    tap(firstByTestId("button-create-tickets"));
+    await waitFor(() => expect(apiFetchMock.mock.calls.some(call => call[1]?.method === "POST")).toBe(true));
+    const post=apiFetchMock.mock.calls.find(call=>call[1]?.method === "POST");
+    expect(JSON.parse(post?.[1]?.body as string)).toMatchObject({fieldEmployeeId:88,initialState:"pending_arrival",adjacent:false,latitude:null,longitude:null});
+    expect(requestForegroundPermissionsAsyncMock).not.toHaveBeenCalled();
+  } finally { Object.assign(fieldEmployeeUser,{vendorRole:"field"}); }
 });

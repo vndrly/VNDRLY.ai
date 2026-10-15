@@ -4176,7 +4176,9 @@
       "ending_mileage_invalid": "Ingrese un kilometraje final válido.",
       "ending_mileage_below_start": "El kilometraje final debe ser mayor o igual al inicial.",
       "not_approvable": "Este boleto no está listo para aprobarse.",
-      "invalid_field_employee_id": "Ese empleado de campo no puede asignarse a este boleto."
+      "invalid_field_employee_id": "Ese empleado de campo no puede asignarse a este boleto.",
+      "employee_invalid": "Selecciona un empleado válido.",
+      "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa."
     },
     "invalid_ticket_id": "El ID del ticket no es válido.",
     "ticket_not_found": "No se encontró el ticket.",
