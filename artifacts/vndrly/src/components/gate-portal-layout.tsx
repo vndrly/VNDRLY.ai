@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { ArrowLeft, BriefcaseBusiness, History, Mic, Shield } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, History, MapPin, Mic, Shield } from "lucide-react";
 import { FieldOpsPortalShell, type FieldOpsTabDef } from "@/components/field-ops-portal-shell";
 
 export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
@@ -31,6 +31,13 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
     labelKey: "gateNav.gate",
     testId: "tab-gate-home",
     match: (p) => p === "/gate" || p === "/",
+  },
+  {
+    href: "/gate/map",
+    icon: MapPin,
+    labelKey: "gateNav.map",
+    testId: "tab-gate-map",
+    match: (p) => p === "/gate/map",
   },
   {
     href: "/gate/history",

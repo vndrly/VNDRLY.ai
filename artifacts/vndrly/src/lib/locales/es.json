@@ -5134,6 +5134,7 @@
     "purposeFilter": "Motivo de la visita"
   },
   "gateNav": {
+    "map": "Mapa de acceso",
     "voice": "Entrada por voz",
     "gate": "Portería",
     "history": "Historial",

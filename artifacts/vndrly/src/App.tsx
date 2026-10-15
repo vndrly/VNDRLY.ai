@@ -66,6 +66,7 @@ const VisitorEntryPage = lazy(() => import("@/pages/visitor-entry"));
 const GatekeeperPage = lazy(() => import("@/pages/gatekeeper"));
 const GateHistoryPage = lazy(() => import("@/pages/gate-history"));
 const GateChangeOverPage = lazy(() => import("@/pages/gate-change-over"));
+const GateMapPage = lazy(() => import("@/pages/gate-map"));
 const GateShiftNotesPage = lazy(() => import("@/pages/gate-change-over").then(m => ({ default: m.GateShiftNotesPage })));
 const VisitorsPage = lazy(() => import("@/pages/visitors"));
 const GateLogPage = lazy(() => import("@/pages/gate-log"));
@@ -271,6 +272,7 @@ function AuthenticatedRouter() {
         <Route path="/onboarding/field/:token" component={OnboardingField} />
         {user && <Route path="/gate/history"><GatePortalLayout returnToAdmin={!gateWorker}><GateHistoryPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
+        {user && <Route path="/gate/map"><GatePortalLayout returnToAdmin={!gateWorker}><GateMapPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/shift-notes"><GatePortalLayout returnToAdmin={!gateWorker}><GateShiftNotesPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate"><GatePortalLayout returnToAdmin={!gateWorker}><GatekeeperPage /></GatePortalLayout></Route>}
         {user && <Route path="/fleet/runs/:id"><Layout><FleetPage /></Layout></Route>}
@@ -295,6 +297,7 @@ function AuthenticatedRouter() {
             <Switch>
               <Route path="/gate/history" component={GateHistoryPage} />
               <Route path="/gate/change-over"><GateChangeOverPage /></Route>
+              <Route path="/gate/map"><GateMapPage /></Route>
               <Route path="/gate/shift-notes" component={GateShiftNotesPage} />
               <Route path="/gate" component={GatekeeperPage} />
               <Route path="/">
