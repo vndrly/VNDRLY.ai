@@ -23,9 +23,9 @@ export default function SafetyDashboardCard() {
 
   return (
     <Pressable
-      onPress={() => router.push({ pathname: "/notifications", params: { category: "safety" } })}
+      onPress={() => router.push("/safety-score")}
       style={[styles.card, { backgroundColor: colors.card, borderColor: brand.primary }]}
-      testID="safety-dashboard-open-notifications"
+      testID="safety-dashboard-open-score"
     >
       <View style={styles.headerRow}>
         <Feather name="shield" size={16} color="#dc2626" />

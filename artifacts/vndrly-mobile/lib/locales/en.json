@@ -2365,7 +2365,24 @@
     "trainingMarkComplete": "Mark complete",
     "trainingCompleteToast": "Training marked complete.",
     "trainingCompleteFailed": "Could not mark training complete.",
-    "trainingAllComplete": "All required training is complete."
+    "trainingAllComplete": "All required training is complete.",
+    "scoreDetails": {
+      "title": "Safety score",
+      "company": "Company safety score",
+      "unavailable": "Unable to load. Please try again shortly.",
+      "explanation": "The company score starts at 100. Open recordable incidents, high-potential events older than 7 days, and stale open events reduce it. Recent near-miss reports can add points, up to 100.",
+      "events": "Open events: {{count}} · High potential: {{hipo}}",
+      "improve": "Improve the score by following up on open incidents and corrective actions, addressing overdue high-potential events, and reporting near misses promptly.",
+      "reviewEvents": "Review safety events",
+      "myActions": "My required actions",
+      "separate": "Keep your training and certifications current. These requirements are shown separately and do not change the incident score.",
+      "trainingCount": "{{count}} required safety training item(s) outstanding",
+      "training": "Open required safety training",
+      "assignments": "View my assigned training and forms",
+      "certHint": "Review your certification status, expiration dates, and renewal requirements.",
+      "certifications": "My certifications",
+      "loading": "Loading…"
+    }
   },
   "meetingWorkspace": {
     "opening": "Opening meeting…",
