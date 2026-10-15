@@ -461,13 +461,13 @@ router.get("/work-hub/home", async (req, res) => {
       .where(
         and(
           ownerFilter(session),
-          or(
+          req.query.workOrder === "assigned" ? eq(workHubTasksTable.assigneeUserId, session.userId) : or(
             eq(workHubTasksTable.assigneeUserId, session.userId),
             eq(workHubTasksTable.createdById, session.userId),
           ),
         ),
       )
-      .orderBy(asc(workHubTasksTable.dueAt))
+      .orderBy(req.query.workOrder === "assigned" ? desc(workHubTasksTable.createdAt) : asc(workHubTasksTable.dueAt))
       .limit(50),
     db
       .select({
@@ -507,7 +507,7 @@ router.get("/work-hub/home", async (req, res) => {
           gte(workHubShiftsTable.endsAt, now),
         ),
       )
-      .orderBy(asc(workHubShiftsTable.startsAt))
+      .orderBy(req.query.workOrder === "assigned" ? desc(workHubShiftAssignmentsTable.createdAt) : asc(workHubShiftsTable.startsAt))
       .limit(50),
     db
       .select({

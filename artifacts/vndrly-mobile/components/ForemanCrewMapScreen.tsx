@@ -196,7 +196,7 @@ export default function ForemanCrewMapScreen() {
       >
       <Text style={[styles.sub, { color: colors.mutedForeground }]}>{t("foremanMap.subtitle")}</Text>
 
-      <View style={[styles.mapWrap, { borderColor: colors.border }]} testID="foreman-crew-map">
+      <View style={[styles.mapWrap, { borderColor: brand.primary }]} testID="foreman-crew-map">
         {loading ? (
           <View style={styles.mapLoading}>
             <ActivityIndicator color={colors.primary} />
@@ -253,16 +253,16 @@ export default function ForemanCrewMapScreen() {
       )}
 
       <Text style={[styles.section, { color: colors.foreground, marginTop: 16 }]}>
-        {t("foremanMap.recentTrips", "Recent trips")} ({recentTrips.length})
+        {t("foremanMap.recentActivity")} ({recentTrips.length})
       </Text>
       {recentTrips.length === 0 ? (
-        <Text style={{ color: colors.mutedForeground }}>{t("foremanMap.noRecentTrips", "No recent trips yet.")}</Text>
+        <Text style={{ color: colors.mutedForeground }}>{t("foremanMap.noRecentActivity")}</Text>
       ) : (
         recentTrips.slice(0, 100).map((trip) => (
           <Pressable
             key={`recent-${trip.ticketId}-${trip.lastActivityAt}`}
             onPress={() => router.push(`/crew-replay/${trip.employeeId}?date=${trip.replayDate}`)}
-            style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[styles.row, { borderColor: brand.primary, borderWidth: 2, backgroundColor: colors.card }]}
           >
             <View style={{ flex: 1 }}>
               <Text style={[styles.name, { color: colors.foreground }]}>{trip.employeeName}</Text>
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingBottom: 32 },
   livePill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   sub: { fontFamily: "Inter_400Regular", fontSize: 14, marginBottom: 12, ...SCREEN_SUBTITLE_TEXT },
-  mapWrap: { height: 320, borderRadius: 12, borderWidth: 1, overflow: "hidden", marginBottom: 16 },
+  mapWrap: { height: 320, borderRadius: 12, borderWidth: 2, overflow: "hidden", marginBottom: 16 },
   map: { flex: 1, backgroundColor: "#f3f4f6" },
   mapLoading: { flex: 1, alignItems: "center", justifyContent: "center" },
   section: { fontFamily: "Inter_600SemiBold", fontSize: 16, marginBottom: 8, ...SCREEN_TITLE_TEXT },

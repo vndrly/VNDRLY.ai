@@ -58,3 +58,9 @@ export async function completeSafetyTrainingModule(moduleId: number): Promise<vo
     body: JSON.stringify({ watchProgressPct: 100 }),
   });
 }
+
+export async function fetchCompanySafetyReadiness() {
+  const { CompanySafetyReadinessSchema } = await import("@workspace/api-zod");
+  const json = await apiFetch<ApiEnvelope<unknown>>("/api/safety/readiness");
+  return CompanySafetyReadinessSchema.parse(json.data);
+}

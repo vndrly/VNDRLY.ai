@@ -62,6 +62,7 @@ export function runClientTool(
     if (typeof link !== "string") return fail(link.error);
     args.path = link;
   }
+  if (name === "launch_scanner") { args.path = "/work-hub/my-work"; args.mobilePath = "/work-hub/my-work"; }
   if (name === "start_ticket_entry") {
     if (!Number.isSafeInteger(args.ticketId) || Number(args.ticketId) <= 0)
       return fail("Choose the exact ticket first.");

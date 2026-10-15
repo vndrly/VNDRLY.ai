@@ -58,6 +58,19 @@ export function attentionNotices(s: DailySources) {
       !subjects.has(n.link ?? ""),
   );
 }
+
+export function myWorkItems(s: DailySources) {
+  const items: { kind: "task" | "ticket" | "run" | "shift"; id: string; title: string; status: string; assignedAt: string | null }[] = [];
+  for (const task of pendingTasks(s.tasks ?? [])) items.push({ kind: "task", id: task.id, title: task.title, status: task.status, assignedAt: (task as DailyTask & {createdAt?:string;assignedAt?:string}).assignedAt ?? (task as DailyTask & {createdAt?:string}).createdAt ?? null });
+  for (const ticket of s.tickets ?? []) if (!["approved","funds_dispersed","cancelled","denied"].includes(ticket.status)) items.push({kind:"ticket",id:String(ticket.id),title:`Ticket #${ticket.id} · ${ticket.siteName ?? "Assigned site"}`,status:ticket.status,assignedAt:ticket.assignedAt ?? ticket.createdAt ?? null});
+  for (const run of s.runs ?? []) if (!["draft","completed","cancelled"].includes(run.status)) {
+    const latest = [...(run.events ?? [])].filter((event:any)=>["dispatch","reassign","dispatched","reassigned"].includes(event.type)).sort((a:any,b:any)=>Date.parse(b.recordedAt)-Date.parse(a.recordedAt))[0];
+    items.push({kind:"run",id:run.id,title:run.title,status:run.status,assignedAt:latest?.recordedAt ?? run.assignedAt ?? null});
+  }
+  for (const row of s.shifts ?? []) if (!["cancelled","declined"].includes(row.assignment?.status) && !["cancelled","completed"].includes(row.shift?.milestoneStatus)) items.push({kind:"shift",id:row.shift.id,title:row.shift.title ?? "Assigned shift",status:row.assignment?.status ?? "assigned",assignedAt:row.assignment?.createdAt ?? null});
+  const timestamp=(value:string|null)=>value && Number.isFinite(Date.parse(value)) ? Date.parse(value) : 0;
+  return items.sort((a,b)=>timestamp(b.assignedAt)-timestamp(a.assignedAt)||`${a.kind}:${a.id}`.localeCompare(`${b.kind}:${b.id}`));
+}
 export function dailySummary(s: DailySources) {
   const tasks = s.tasks ? pendingTasks(s.tasks) : [],
     safety = s.safety ? pendingSafety(s.safety) : [],
@@ -106,7 +119,7 @@ export async function loadDailySources(
     end = new Date(now);
   end.setDate(end.getDate() + 90);
   const results = await Promise.allSettled([
-    fetcher<any>("/api/work-hub/home"),
+    fetcher<any>("/api/work-hub/home?workOrder=assigned"),
     fetcher<any>("/api/notifications?limit=100"),
     fetcher<any>("/api/safety/events?limit=50"),
     fetcher<any>(

@@ -152,6 +152,7 @@ export default function LibraryEditor({
         (v) => patch({ description: v }),
         true,
       )}
+      {draft.kind !== "poll" && <TogglePillButton color="brand" disabled={disabled} solid={draft.safetyRelated === true} onPress={() => patch({ safetyRelated: !draft.safetyRelated })}>{t("safety.readiness.companyRequirement")}</TogglePillButton>}
       <Text style={label}>{t("workHubLibrary.deadlineHours")}</Text>
       {input("workHubLibrary.deadlineHours", String(draft.dueHours), (v) =>
         patch({ dueHours: Number(v) }),

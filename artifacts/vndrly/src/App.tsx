@@ -1,5 +1,5 @@
 import LibraryEntryNotice from "@/components/work-hub/library/entry-notice";
-import { Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
+import { Redirect, Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
 const WorkHubLibraryPage = lazy(() => import("@/pages/work-hub-library"));
 const PayrollPage = lazy(() => import("@/pages/payroll"));
@@ -54,6 +54,7 @@ const BillingSettingsPage = lazy(() => import("@/pages/billing-settings"));
 const BillsToPayPage = lazy(() => import("@/pages/bills-to-pay"));
 const StatementPage = lazy(() => import("@/pages/statement"));
 const FlaggedTicketsPage = lazy(() => import("@/pages/flagged-tickets"));
+const CompanySafetyScorePage = lazy(() => import("@/pages/safety-score"));
 const SafetyInboxPage = lazy(() => import("@/pages/safety-inbox"));
 const SafetyEventDetailPage = lazy(() => import("@/pages/safety-event-detail"));
 const SafetyReportPage = lazy(() => import("@/pages/safety-report"));
@@ -175,6 +176,7 @@ function AdminRoutes() {
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
         <Route path="/flagged" component={FlaggedTicketsPage} />
+        <Route path="/safety-score" component={CompanySafetyScorePage} />
         <Route path="/safety" component={SafetyInboxPage} />
         <Route path="/safety-report" component={SafetyReportPage} />
         <Route path="/safety-training" component={SafetyTrainingPage} />
@@ -316,8 +318,8 @@ function AuthenticatedRouter() {
               <Route path="/foreman/profile/edit" component={FieldEditProfile} />
               <Route path="/foreman/compliance" component={FieldCompliance} />
               <Route path="/foreman/crew" component={FieldCrew} />
-              <Route path="/foreman/new-ticket" component={FieldNewTicket} />
-              <Route path="/foreman/scan" component={FieldNewTicket} />
+              <Route path="/foreman/new-ticket">{() => <Redirect to="/work-hub/my-work" />}</Route>
+              <Route path="/foreman/scan">{() => <Redirect to="/work-hub/my-work" />}</Route>
               <Route path="/account/location" component={AccountLocation} />
               <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
               <Route path="/notifications" component={NotificationsInboxPage} />
@@ -337,13 +339,13 @@ function AuthenticatedRouter() {
               <Route path="/field/profile/edit" component={FieldEditProfile} />
               <Route path="/field/compliance" component={FieldCompliance} />
               <Route path="/field/crew" component={FieldCrew} />
-              <Route path="/field/new-ticket" component={FieldNewTicket} />
+              <Route path="/field/new-ticket">{() => <Redirect to="/work-hub/my-work" />}</Route>
               {/* `/field/scan` is the canonical mobile QR-scan entry the
                   bottom-nav tab points at. The flow currently reuses the
                   same FieldNewTicket component (which opens straight into
                   the QR scanner); the route alias keeps the URL stable so
                   external links / docs / tab match logic don't drift. */}
-              <Route path="/field/scan" component={FieldNewTicket} />
+              <Route path="/field/scan">{() => <Redirect to="/work-hub/my-work" />}</Route>
               <Route path="/account/location" component={AccountLocation} />
               <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
               <Route path="/notifications" component={NotificationsInboxPage} />

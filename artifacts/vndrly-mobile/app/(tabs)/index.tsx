@@ -883,9 +883,9 @@ export default function HomeScreen() {
 
       {isForemanEmployee ? (
         <View style={{ paddingHorizontal: 16, paddingVertical: 12, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-          {([ ["active", "Active Jobs"], ["stale", "Stale Jobs"], ["history", "Recent History"] ] as const).map(([key, label], index) => <React.Fragment key={key}>
+          {([ ["active", "Active Jobs"], ["stale", "Stale Jobs"], ["flagged", t("foremanHome.flaggedJobs")], ["history", "Recent History"] ] as const).map(([key, label], index) => <React.Fragment key={key}>
             {index > 0 ? <Text style={{color: colors.mutedForeground}}>|</Text> : null}
-            <TouchableOpacity accessibilityRole="button" accessibilityState={{selected: jobView===key}} onPress={() => {setJobView(key); if(key==="history") void loadRecentJobs();}} style={{paddingVertical:8}}>
+            <TouchableOpacity accessibilityRole="button" accessibilityState={{selected: jobView===key}} onPress={() => {if(key==="flagged") { router.push("/(tabs)/flagged"); return; } setJobView(key); if(key==="history") void loadRecentJobs();}} style={{paddingVertical:8}}>
               <Text style={{color:jobView===key ? brand.primary : colors.foreground, fontFamily:"Inter_600SemiBold"}}>{label}</Text>
             </TouchableOpacity>
           </React.Fragment>)}

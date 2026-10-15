@@ -139,7 +139,7 @@ export async function executeAskVClientIntent(intent: AskVClientIntent, path: st
       return fail("This screen is not available on this device.");
     }
     if (intent.name === "launch_scanner") {
-      router.push("/(tabs)/scan" as never); return opened("Opened the scanner. No scan has been completed yet.");
+      router.push("/work-hub/my-work" as never); return opened("Opened assigned work. QR job starts have been retired.");
     }
     if (intent.name === "launch_maps") {
       let destination: string;

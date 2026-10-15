@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { companySafetyReadiness } from "../lib/company-safety-readiness";
 import { randomBytes } from "crypto";
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import {
@@ -124,6 +125,13 @@ async function notifySafetyEvent(opts: {
     category: "safety",
   });
 }
+
+router.get("/safety/readiness", requireSession, async (req, res): Promise<void> => {
+  const session = readSession(req);
+  if (!session.userId) { sendApiError(res, 401, "auth.unauthorized", "Sign in required"); return; }
+  try { res.json({ success: true, data: await companySafetyReadiness({ ...session, userId: session.userId }) }); }
+  catch (error) { const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 403; sendApiError(res, status === 403 ? 403 : 500, "safety.readiness_unavailable", "Company safety readiness is unavailable"); }
+});
 
 router.get("/safety/metrics", requireSession, async (req, res): Promise<void> => {
   const session = readSession(req);

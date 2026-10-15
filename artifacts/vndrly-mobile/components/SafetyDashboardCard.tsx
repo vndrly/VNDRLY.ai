@@ -22,36 +22,35 @@ export default function SafetyDashboardCard() {
   if (isLoading || !data) return null;
 
   return (
-    <Pressable
-      onPress={() => router.push("/safety-score")}
+    <View
       style={[styles.card, { backgroundColor: colors.card, borderColor: brand.primary }]}
-      testID="safety-dashboard-open-score"
+      testID="safety-dashboard"
     >
       <View style={styles.headerRow}>
         <Feather name="shield" size={16} color="#dc2626" />
         <Text style={[styles.title, { color: colors.foreground }]}>{t("safety.dashboardTitle")}</Text>
       </View>
       <View style={styles.grid}>
-        <View style={styles.metric}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t("safety.score")} onPress={() => router.push("/safety-score")} style={styles.metric}>
           <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.score")}</Text>
           <Text style={[styles.metricValue, { color: colors.foreground }]}>{data.safetyScore}</Text>
-        </View>
+        </Pressable>
         <View style={styles.metric}>
           <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.daysClean")}</Text>
           <Text style={[styles.metricValue, { color: colors.foreground }]}>
             {data.daysWithoutRecordable ?? "—"}
           </Text>
         </View>
-        <View style={styles.metric}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t("safety.openEvents")} onPress={() => router.push({ pathname: "/safety-my-reports", params: { openOnly: "true" } })} style={styles.metric}>
           <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.openEvents")}</Text>
           <Text style={[styles.metricValueSm, { color: colors.foreground }]}>{data.openEventCount}</Text>
-        </View>
+        </Pressable>
         <View style={styles.metric}>
           <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.openHipo")}</Text>
           <Text style={[styles.metricValueSm, { color: colors.foreground }]}>{data.openHipoCount}</Text>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 

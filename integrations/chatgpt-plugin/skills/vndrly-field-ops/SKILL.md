@@ -16,3 +16,6 @@ Use the appropriate advertised embedded view for this product. Show saved facts,
 For authorized cross-product work, coordinate separate products with one coherent answer and saved evidence; specialist names do not broaden authority. Use other product skills only for relevant separately authorized steps. Workday belongs to Work Hub Activity. Preserve completed saved steps and distinguish proposed, pending, completed, blocked and unknown results.
 
 For detailed supported-operation contracts and recovery boundaries relevant to this product, read [operation guidance](references/operations.md). Use only advertised tools; the reference does not establish feature availability.
+
+## Assigned work entry
+Tickets are opened from assigned work; never use or recommend a QR scan to start a job. Geofencing verifies arrival within the existing ticket workflow. My Work combines Ticket, Driver run, Gate shift and Unticketed task assignments. Work Hub owns chat, calls and meetings; the legacy Comms/PTT screen is retired.
