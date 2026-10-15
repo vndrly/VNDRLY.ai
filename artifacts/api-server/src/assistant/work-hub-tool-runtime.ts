@@ -52,7 +52,7 @@ export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown
     return null;
   }
   for (const source of [input, record(input.payload), record(result.resource), record(result.asset), result]) {
-    for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "campaignId", "instanceId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
+    for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "itemId", "assignmentId", "campaignId", "instanceId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
       const value = source[key];
       if (typeof value === "string" && value.trim() || typeof value === "number" && Number.isFinite(value)) return value as string | number;
     }
@@ -479,6 +479,42 @@ export function resolveWorkHubToolRequest(
   let target: string | WorkHubToolRequest;
 
   switch (name) {
+    case "list_work_hub_library": return request("GET",`/work-hub/library${input.archived===true?"?archived=true":""}`);
+    case "get_library_options": return request("GET","/work-hub/library/options");
+    case "list_library_bundles": return request("GET","/work-hub/bundles");
+    case "get_library_checklist": return request("GET","/work-hub/library/to-complete");
+    case "get_library_assignments": return request("GET","/work-hub/library/assignments");
+    case "preview_library_assignment": return request("POST","/work-hub/library/assignment-preview",payload);
+    case "assign_library_item": return request("POST","/work-hub/library/assign",envelope(input));
+    case "get_work_hub_library":
+    case "get_library_bundle":
+    case "get_library_poll_results":
+    case "manage_library_item":
+    case "manage_library_bundle": {
+      const bundle=name.includes("bundle"),action=String(input.action??"");
+      if(name.startsWith("manage")&&action==="create") return request("POST",bundle?"/work-hub/bundles":"/work-hub/library",envelope(input));
+      const id=z.uuid().safeParse(input.itemId);if(!id.success)return {error:"Supply an exact library item UUID."};
+      const base=`/work-hub/${bundle?"bundles":"library"}/${id.data}`;
+      if(name==="get_library_poll_results")return request("GET",`${base}/results`);
+      if(name.startsWith("get"))return request("GET",base);
+      if(!Number.isInteger(input.expectedVersion)||Number(input.expectedVersion)<0)return {error:"Read the current library version first."};
+      if(action==="update")return request("PATCH",base,envelope(input));
+      if(action==="onboarding"&&bundle)return request("POST",`${base}/onboarding-rule`,envelope(input));
+      if(["revise","publish","archive"].includes(action))return request("POST",`/work-hub/library/${id.data}/${action}`,envelope(input));
+      return {error:"Unsupported library action."};
+    }
+    case "get_library_assignment":
+    case "get_library_assignment_progress":
+    case "respond_library_assignment":
+    case "manage_library_assignment": {
+      const id=z.uuid().safeParse(input.instanceId);if(!id.success)return {error:"Supply an exact assignment UUID."};
+      if(name==="get_library_assignment_progress")return request("GET",`/work-hub/library/assignments/${id.data}`);
+      const base=`/work-hub/library/instances/${id.data}`;
+      if(name==="get_library_assignment")return request("GET",base);
+      if(!Number.isInteger(input.expectedVersion)||Number(input.expectedVersion)<0)return {error:"Read the current assignment version first."};
+      const action=String(name==="respond_library_assignment"?input.mode:input.action),allowed=name==="respond_library_assignment"?["progress","attempt","complete"]:["cancel","exempt","attempt-reset"];
+      return allowed.includes(action)?request("POST",`${base}/${action}`,envelope(input)):{error:"Unsupported assignment action."};
+    }
     case "list_form_campaigns": return request("GET","/work-hub/form-campaigns");
     case "get_form_campaign_options": return request("GET","/work-hub/form-campaigns/options");
     case "create_form_campaign": return request("POST","/work-hub/form-campaigns",envelope(input));

@@ -2,6 +2,8 @@ export type MeetingPresence = { seenAt: number; joinedAt: number; speaking: bool
 export type MeetingDevicePresence = MeetingPresence & { userId: number; deviceId: string; connectionId: string };
 export type MeetingSignal = { sequence: number; fromUserId: number; fromDeviceId?: string; toUserId: number; toDeviceId?: string; kind: "offer" | "answer" | "ice"; payload: unknown; createdAt: number };
 export type MeetingRuntime = {
+  /** Explicit invitations, separate from attendance or admission. */
+  invitedUserIds?: number[];
   activity?: Record<string, { kind: "typing" | "file"; recipientUserId: number | null; expiresAt: number }>;
   startedAt?: string;
   endedAt?: string;

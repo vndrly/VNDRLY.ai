@@ -7,7 +7,7 @@ import en from "@/lib/locales/en.json";
 import WorkHubModuleScreen from "../work-hub/[module]";
 
 const env = vi.hoisted(() => ({ user: { id: 1, vendorId: 7, role: "vendor", activeMembershipId: 1 }, generation: 1, api: vi.fn() }));
-vi.mock("expo-router", () => ({ Stack: { Screen: () => null }, router: { push: vi.fn() }, useLocalSearchParams: () => ({ module: "files-notes" }) }));
+vi.mock("expo-router", () => ({ useFocusEffect:()=>{}, Stack: { Screen: () => null }, router: { push: vi.fn() }, useLocalSearchParams: () => ({ module: "files-notes" }) }));
 vi.mock("react-native", async (original) => ({ ...await original<any>(), ScrollView: ({ children, refreshControl }: any) => <div>{refreshControl}{children}</div>, RefreshControl: ({ onRefresh }: any) => <button onClick={onRefresh}>Refresh</button> }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue", card: "white", text: "black", border: "gray" }) }));

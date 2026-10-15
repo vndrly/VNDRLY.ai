@@ -1,3 +1,4 @@
+import {startOnboardingWorker,stopOnboardingWorker} from "./work-hub/onboarding-worker";
 import { startFormCampaignWorker, stopFormCampaignWorker } from "./work-hub/form-campaign-worker";
 import { startInternalVoicemailWorker, stopInternalVoicemailWorker } from "./work-hub/call-voicemail-worker";
 import {startGatePostMonitor,stopGatePostMonitor} from "./services/gate-post-coverage";
@@ -176,6 +177,7 @@ function onListening(): void {
   startNativeOperationsWorker();
   startInternalVoicemailWorker();
 startFormCampaignWorker();
+startOnboardingWorker();
   startGateCoverageMonitor();
   startGatePostMonitor();
   startInvoicePeriodWorker();
@@ -253,6 +255,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopNativeOperationsWorker();
   stopInternalVoicemailWorker();
 stopFormCampaignWorker();
+stopOnboardingWorker();
   stopGateCoverageMonitor();
   stopGatePostMonitor();
   stopInvoicePeriodWorker();

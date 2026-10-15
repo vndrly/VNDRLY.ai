@@ -163,7 +163,7 @@ export function LiveMeetingsPanel({
         )}
       </div>
       {!live.isError &&
-        live.data?.meetings.map((m) => (
+        live.data?.meetings.filter(m=>["live","active"].includes(m.status)).map((m) => (
           <div className={panel} key={m.occurrenceId}>
             <p className="text-[color:var(--brand-primary)] font-bold">
               LIVE · {m.connectedCount} connected

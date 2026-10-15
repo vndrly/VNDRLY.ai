@@ -45,3 +45,8 @@ describe("notificationIdFromPushData", () => {
     expect(notificationIdFromPushData({ notificationId: "99" })).toBe(99);
   });
 });
+
+it("opens exact training and checklist push destinations",()=>{
+ for(const kind of ["training","checklist"]){const path=`/work-hub/${kind}/10000000-0000-4000-8000-000000000001`;expect(routeForPushData({link:path})).toEqual({type:"route",path});}
+ expect(routeForPushData({link:"/work-hub/training/not-a-uuid"})).toEqual({type:"none"});
+});

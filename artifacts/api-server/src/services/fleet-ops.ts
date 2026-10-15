@@ -1,3 +1,4 @@
+import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
@@ -1034,6 +1035,7 @@ export function createFleetService(repository: FleetRepository) {
               source: "user_report",
             });
           } else if (body.action === "start") {
+            await assertRequiredWorkClear(client, run.driverUserId, { type: "vendor", id: actor.companyId });
             await selectFleetRunDestination(client,actor,state,run,body.destinationId);
             await eligible(state, client, run);
             run.status = "in_progress";

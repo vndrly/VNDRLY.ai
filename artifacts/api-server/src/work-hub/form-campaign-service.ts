@@ -202,6 +202,7 @@ export async function queueCampaignNotice(
     at: Date;
     push?: boolean;
     timezone?: string;
+    type?:string;
     metadata?: Record<string, unknown>;
   },
 ) {
@@ -234,7 +235,7 @@ export async function queueCampaignNotice(
       .insert(notices)
       .values({
         userId,
-        type: "work_hub_form_campaign",
+        type: input.type??"work_hub_form_campaign",
         category: "work_hub_tasks",
         title: input.title,
         body: input.body,
@@ -375,7 +376,7 @@ async function campaignSourceDefinition(
         eq(templates.id, config.sourceTemplateId!),
         eq(templates.ownerOrgType, owner.type),
         eq(templates.ownerOrgId, owner.id),
-        isNull(templates.campaignConfig),
+        isNull(templates.campaignConfig),isNull(templates.libraryMetadata),
       ),
     )
     .limit(1)
@@ -720,6 +721,8 @@ export async function listCampaigns(actor: CampaignActor) {
           ),
         )
     : [];
+  const responses = assigned.length ? await db.select({instanceId: submissions.instanceId}).from(submissions).where(inArray(submissions.instanceId, assigned.map(i=>i.id))) : [];
+  const responded = new Set(responses.map(r=>r.instanceId));
   return rows
     .filter(
       (r) =>
@@ -737,6 +740,7 @@ export async function listCampaigns(actor: CampaignActor) {
         state: publicCampaignState(state),
         canManage: member.role === "admin" || r.createdById === actor.userId,
         instanceId: assigned.find((i) => i.templateId === r.id)?.id ?? null,
+        completed: assigned.some(i=>i.templateId === r.id && responded.has(i.id)),
       };
     });
 }
@@ -952,7 +956,7 @@ export async function campaignOptions(actor: CampaignActor) {
         and(
           eq(templates.ownerOrgType, owner.type),
           eq(templates.ownerOrgId, owner.id),
-          isNull(templates.campaignConfig),
+          isNull(templates.campaignConfig),isNull(templates.libraryMetadata),
         ),
       )
       .limit(100),

@@ -1,0 +1,10 @@
+import React from "react";
+import {render,screen,cleanup} from "@testing-library/react";
+import {vi,it,expect,afterEach} from "vitest";
+vi.mock("./editor-controls",()=>({Frame:({children}:any)=><div>{children}</div>,Paragraph:({children}:any)=><span>{children}</span>,Pill:({children}:any)=><button>{children}</button>,usePalette:()=>({})}));
+vi.mock("wouter",()=>({useLocation:()=>["",vi.fn()]}));
+vi.mock("react-i18next",()=>({useTranslation:()=>({t:(k:string)=>k})}));
+vi.mock("./use-library",()=>({useLibrary:()=>({data:{items:[{instanceId:"1",title:"Unfinished training",kind:"training",assignment:{status:"in_progress"},href:"/work-hub/training/1"},{instanceId:"2",title:"Signed policy",kind:"policy",assignment:{status:"completed"},href:"/work-hub/checklist/2"},{instanceId:"3",title:"Cancelled form",kind:"form",assignment:{status:"cancelled"},href:"/work-hub/checklist/3"}]}})}));
+import AssignedCards from "./assigned-cards";
+afterEach(cleanup);
+it("defaults to incomplete and shows saved completions only in Complete",()=>{const {rerender}=render(<AssignedCards/>);expect(screen.getByText("Unfinished training")).toBeTruthy();expect(screen.queryByText("Signed policy")).toBeNull();expect(screen.queryByText("Cancelled form")).toBeNull();rerender(<AssignedCards completed/>);expect(screen.getByText("Signed policy")).toBeTruthy();expect(screen.queryByText("Unfinished training")).toBeNull();});

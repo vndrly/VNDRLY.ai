@@ -1,4 +1,10 @@
 export const USER_FACING_ACTIONS = [
+ {id:"library",route:"/work-hub/library",readTool:"list_work_hub_library"},
+ {id:"library-item",route:"/work-hub/library/:itemId",readTool:"get_work_hub_library"},
+ {id:"bundle",route:"/work-hub/bundle/:itemId",readTool:"get_library_bundle"},
+ {id:"training",route:"/work-hub/training/:instanceId",readTool:"get_library_assignment"},
+ {id:"checklist",route:"/work-hub/checklist/:instanceId",readTool:"get_library_assignment"},
+ {id:"library-assignment",route:"/work-hub/assignment/:instanceId",readTool:"get_library_assignment_progress"},
   {id:"form-campaigns",route:"/work-hub/tasks-forms",readTool:"list_form_campaigns"},
   {id:"form-campaign",route:"/work-hub/campaign/:campaignId",readTool:"get_form_campaign"},
   {id:"assigned-form",route:"/work-hub/form/:instanceId",readTool:"get_assigned_form"},

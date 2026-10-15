@@ -4,21 +4,31 @@ import {
 } from "@/lib/notification-link";
 import { nativeRequestRoute } from "./native-operations-policy";
 
-export type PushRoute =
-  | { type: "route"; path: string }
-  | { type: "none" };
+export type PushRoute = { type: "route"; path: string } | { type: "none" };
 
 /** Resolve navigation target from an APNs/Expo push `data` payload. */
 export function routeForPushData(data: unknown): PushRoute {
   if (!data || typeof data !== "object") return { type: "none" };
   const d = data as Record<string, unknown>;
-  if(typeof d.link === "string") {
-    const campaign=d.link.match(/^\/work-hub\/(form|campaign)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
-    if(campaign)return {type:"route",path:`/work-hub/${campaign[1]}/${campaign[2]}`};
-    const meeting=d.link.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
-    if(meeting)return {type:"route",path:`/work-hub/meeting/${meeting[1]}`};
+  if (typeof d.link === "string") {
+    const campaign = d.link.match(
+      /^\/work-hub\/(form|campaign|training|checklist|library|bundle)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i,
+    );
+    if (campaign)
+      return { type: "route", path: `/work-hub/${campaign[1]}/${campaign[2]}` };
+    const meeting = d.link.match(
+      /^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i,
+    );
+    if (meeting)
+      return { type: "route", path: `/work-hub/meeting/${meeting[1]}` };
   }
-  if (["native_operation", "native_operations_request", "native_photo_request"].includes(String(d.type))) {
+  if (
+    [
+      "native_operation",
+      "native_operations_request",
+      "native_photo_request",
+    ].includes(String(d.type))
+  ) {
     const path = nativeRequestRoute(d.nativeRequestId ?? d.requestId);
     return path ? { type: "route", path } : { type: "none" };
   }
@@ -33,7 +43,11 @@ export function routeForPushData(data: unknown): PushRoute {
       : typeof d.ticketId === "string"
         ? Number(d.ticketId)
         : null;
-  if (ticketFromId != null && Number.isFinite(ticketFromId) && ticketFromId > 0) {
+  if (
+    ticketFromId != null &&
+    Number.isFinite(ticketFromId) &&
+    ticketFromId > 0
+  ) {
     return { type: "route", path: `/ticket/${ticketFromId}` };
   }
 

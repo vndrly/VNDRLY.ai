@@ -95,11 +95,13 @@ function read(
   family: WorkHubToolFamily,
   description: string,
   inputSchema: JsonSchema = schema(),
+  companyAdminOnly = false,
 ): Entry {
   return {
     tool: { name, description, input_schema: inputSchema },
     family,
     mutating: false,
+    companyAdminOnly,
   };
 }
 
@@ -345,6 +347,22 @@ const entries: Entry[] = [
     targetUserId: { type: "number", description: "Required for host_mute, release_host_mute, remove, check_in, and check_out." },
   }, ["action", "occurrenceId"])),
   read("get_work_hub_meeting_catchup", "meetings", "Get the authorized meeting catch-up, transcript projection, decisions, and action items.", schema({ occurrenceId: identifier() }, ["occurrenceId"])),
+  read("list_work_hub_library","tasks","List current-company Forms, Policies, Polls and Training. Employee reads omit drafts and quiz keys.",schema({archived:{type:"boolean"}})),
+  read("get_work_hub_library","tasks","Read exact authorized library content and version history. Author answer keys are administrator-only.",schema({itemId:identifier()},["itemId"])),
+  read("get_library_options","tasks","Read current company people, groups, crews and approved attachment choices.",schema(),true),
+  read("list_library_bundles","tasks","List authorized versioned onboarding bundles."),
+  read("get_library_bundle","tasks","Read an exact authorized bundle with pinned content versions.",schema({itemId:identifier()},["itemId"])),
+  read("get_library_checklist","tasks","Read only the authenticated caller's assignments, deadlines and training progress. Reading never records completion."),
+  read("get_library_assignment","tasks","Read only your own exact assignment, lessons, quiz questions without answer keys, and saved receipts.",schema({instanceId:identifier()},["instanceId"])),
+  read("get_library_assignments","tasks","Administrator progress view; anonymous polls expose only aggregate counts.",schema(),true),
+  read("get_library_assignment_progress","tasks","Administrator reads an exact named assignment and retained attempts/responses. Anonymous poll detail is unavailable.",schema({instanceId:identifier()},["instanceId"]),true),
+  read("get_library_poll_results","tasks","Administrator aggregate poll results subject to configured visibility timing.",schema({itemId:identifier()},["itemId"]),true),
+  read("preview_library_assignment","tasks","Review the exact eligible audience, pinned versions, deadlines, reused assignments and omitted closed polls. payload: itemId, audience {mode:selected or all_active,userIds,groupIds}, renew, requiredBeforeWork, presentation. Save the returned previewFingerprint for confirmed assignment.",schema({payload:{type:"object"}},["payload"]),true),
+  write("manage_library_item","tasks","After exact-value confirmation create/update an unpublished content draft, revise to a new version, publish for reuse, or archive. action:create/update/revise/publish/archive; payload follows library content schema. Publishing does not assign. Never invent company policy or employee results.",writeSchema({action:{type:"string",enum:["create","update","revise","publish","archive"]},itemId:identifier(),payload:{type:"object"}},["action","payload"]),true),
+  write("manage_library_bundle","tasks","After confirmation create/update a draft bundle, revise/publish/archive it, or set onboarding. Bundle payload: title,bundle {description,entries:[{templateId,contentVersion,dueHours,presentation,requiredBeforeWork}]}. onboarding payload: enabled,roles,groupIds. New-hire enrollment begins at activation; never manufactures employee responses.",writeSchema({action:{type:"string",enum:["create","update","revise","publish","archive","onboarding"]},itemId:identifier(),payload:{type:"object"}},["action","payload"]),true),
+  write("assign_library_item","tasks","Assign a published item or bundle after confirming the exact current audience preview. payload must include itemId,audience,previewFingerprint and matching settings; expectedVersion is preview.version. Deduplicates existing obligations unless explicitly renewed; closed polls stay closed.",writeSchema({payload:{type:"object"}},["payload","expectedVersion"]),true),
+  write("respond_library_assignment","tasks","Save only the authenticated caller's explicitly supplied progress or response after confirmation. mode:progress/attempt/complete; payload: lessonIds,answers,acknowledged,values or choices. Do not choose quiz answers for employees, acknowledge for others, infer completion from reading, or bypass server work requirements.",writeSchema({instanceId:identifier(),mode:{type:"string",enum:["progress","attempt","complete"]},payload:{type:"object"}},["instanceId","mode","payload","expectedVersion"])),
+  write("manage_library_assignment","tasks","Administrator cancels, exempts or resets attempts for one named assignment after exact confirmation and an explicit reason. Does not create employee acknowledgement or a passing result. action:cancel/exempt/attempt-reset.",writeSchema({instanceId:identifier(),action:{type:"string",enum:["cancel","exempt","attempt-reset"]},payload:{type:"object"}},["instanceId","action","payload","expectedVersion"]),true),
   read("list_form_campaigns","tasks","List authorized company policy acknowledgement and poll campaigns; drafts are owner/admin only."),
   read("get_form_campaign","tasks","Read owner/admin progress, daily briefing snapshots and permitted results. Anonymous answers are aggregate only.",schema({campaignId:identifier()},["campaignId"])),
   read("get_assigned_form","tasks","Read only your exact assigned campaign instance, policy snapshot, deadline and own saved receipt.",schema({instanceId:identifier()},["instanceId"])),

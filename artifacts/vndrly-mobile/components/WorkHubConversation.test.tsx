@@ -11,6 +11,7 @@ vi.mock("@/hooks/useColors", () => ({ useColors: () => ({}) }));
 vi.mock("@react-native-async-storage/async-storage", () => ({ default: { getItem: async () => null, setItem: async () => undefined } }));
 vi.mock("@/lib/work-hub-queue-runtime", () => ({ isOfflineWorkHubFailure: () => false, queueNativeWorkHubRequest: vi.fn() }));
 vi.mock("react-native", () => ({
+  ScrollView: ({ children }: any) => <div>{children}</div>,
   View: ({ children }: any) => <div>{children}</div>, Text: ({ children }: any) => <span>{children}</span>,
   Pressable: ({ children, onPress, disabled }: any) => <button onClick={onPress} disabled={disabled}>{children}</button>,
   TextInput: ({ value, onChangeText, accessibilityLabel, editable }: any) => <input aria-label={accessibilityLabel} value={value} disabled={editable === false} onChange={e => onChangeText(e.target.value)} />,

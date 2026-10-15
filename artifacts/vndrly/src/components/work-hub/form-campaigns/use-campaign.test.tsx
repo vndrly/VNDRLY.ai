@@ -20,7 +20,8 @@ function setup() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return renderHook(() => useCampaign("/options", (x) => x), {
+  return renderHook(({ path }) => useCampaign(path, (x) => x), {
+    initialProps: { path: "/options" },
     wrapper: ({ children }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
@@ -60,4 +61,39 @@ describe("campaign recovery", () => {
     expect(bodies[0]).toBe(bodies[1]);
     expect(h.result.current.uncertain).toBe(false);
   });
+});
+
+it("does not apply an earlier view's completion after navigating to another assignment", async () => {
+  let resolve!: (value: unknown) => void;
+  mocks.request.mockImplementation((_path, options) =>
+    options
+      ? new Promise((r) => {
+          resolve = r;
+        })
+      : Promise.resolve({}),
+  );
+  const saved = vi.fn(),
+    h = setup();
+  await waitFor(() => expect(h.result.current.query.isSuccess).toBe(true));
+  act(() =>
+    h.result.current.send(
+      {
+        path: "/library/instances/a/complete",
+        payload: { acknowledged: true },
+      },
+      { onSuccess: saved },
+    ),
+  );
+  await waitFor(() => expect(resolve).toBeTypeOf("function"));
+  h.rerender({ path: "/library/instances/b" });
+  await act(async () => {
+    resolve({
+      operationId: "00000000-0000-4000-8000-000000000001",
+      resource: { instanceId: "a" },
+      appliedAt: "2026-10-14T00:00:00.000Z",
+      replayed: false,
+    });
+  });
+  await waitFor(() => expect(h.result.current.mutation.isPending).toBe(false));
+  expect(saved).not.toHaveBeenCalled();
 });

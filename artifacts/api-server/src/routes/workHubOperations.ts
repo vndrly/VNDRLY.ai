@@ -1,3 +1,4 @@
+import {submitAssignedLibrary} from "../work-hub/training-service";
 import { CampaignError, respondCampaign } from "../work-hub/form-campaign-service";
 import { setWorkHubShiftOpening, readWorkHubShiftOpening } from "../services/work-hub-shift-opening";
 import { requireRoomAdmission } from "../work-hub/live-meetings";
@@ -657,7 +658,7 @@ router.get("/work-hub/admin", async (req, res) => {
     db
       .select()
       .from(workHubFormTemplatesTable)
-      .where(and(ownerFilterFor(session, workHubFormTemplatesTable),isNull(workHubFormTemplatesTable.campaignConfig)))
+      .where(and(ownerFilterFor(session, workHubFormTemplatesTable),isNull(workHubFormTemplatesTable.campaignConfig),isNull(workHubFormTemplatesTable.libraryMetadata)))
       .orderBy(desc(workHubFormTemplatesTable.createdAt))
       .limit(100),
     db
@@ -755,7 +756,7 @@ router.get("/work-hub/required-actions", async (req, res) => {
         and(
           eq(workHubFormInstancesTable.assigneeUserId, session.userId),
           ownerFilterFor(session, workHubFormTemplatesTable),
-          isNull(workHubFormTemplatesTable.campaignConfig),
+          isNull(workHubFormTemplatesTable.campaignConfig),isNull(workHubFormTemplatesTable.libraryMetadata),isNull(workHubFormInstancesTable.assignmentMetadata),
         ),
       )
       .orderBy(desc(workHubFormInstancesTable.createdAt)),
@@ -934,7 +935,7 @@ async function assignTemplate(
               .limit(1)
           )[0];
     if (!template) throw new WorkHubAccessError("not_found");
-    if (kind === "form" && "campaignConfig" in template && template.campaignConfig) throw new CampaignError("Publish campaigns through the campaign workflow");
+    if (kind === "form" && (("campaignConfig" in template && template.campaignConfig)||("libraryMetadata" in template && template.libraryMetadata))) throw new CampaignError("Publish campaigns through the campaign workflow");
     if (payload.channelId)
       await resolveChannelAccess(session, payload.channelId, "task.assign");
     const result = await executeWorkHubCommand(
@@ -1114,6 +1115,7 @@ router.post("/work-hub/forms/:id/submit", async (req, res) => {
       )
       .limit(1);
     if (!record) throw new WorkHubAccessError("not_found");
+    if(record.instance.assignmentMetadata){const config=record.template.libraryMetadata as {kind?:string};const libraryPayload=config?.kind==="policy"?{acknowledged:payload.values.acknowledged}:config?.kind==="poll"?{choices:payload.values.choices}:{values:payload.values};return res.json(await submitAssignedLibrary({...session,userId:session.userId!,source:clientSource(req)},record.instance.id,{...envelope,payload:libraryPayload},"complete"));}
     if(record.template.campaignConfig){
       const config=record.template.campaignConfig;
       const campaignPayload=config.kind==="acknowledgement"?{acknowledged:payload.values.acknowledged}:config.kind==="poll"?{choices:payload.values.choices}:{values:payload.values};
@@ -2238,6 +2240,7 @@ router.post("/work-hub/meetings", async (req, res) => {
             meetingId: meeting.id,
             startsAt,
             endsAt,
+            runtime: {invitedUserIds: participants.filter(userId=>userId!==session.userId)},
           })
           .returning();
         await tx.insert(workHubMeetingParticipantsTable).values(

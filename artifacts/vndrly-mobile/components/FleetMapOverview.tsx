@@ -81,6 +81,7 @@ function FleetMapPanel({
   const [mapMode, setMapMode] = useState<"live" | "history">("live"),
     [followDriver, setFollowDriver] = useState<number | null>(null),
     [replayRun, setReplayRun] = useState<string | null>(null);
+  const [runPickerOpen, setRunPickerOpen] = useState(false);
   const [cameraReset,setCameraReset]=useState(0);
   const history = useQuery({
     queryKey: [
@@ -355,12 +356,13 @@ function FleetMapPanel({
       </View>
       {mapMode === "history" ? (
         <View style={{ gap: 10 }}>
-          {view.runs.map((run) => (
+          <TogglePillButton compactOnTablet accessibilityLabel="Choose recorded run" onPress={() => setRunPickerOpen(value => !value)}>{view.runs.find(run => run.id === replayRun)?.title ?? copy("Choose a recorded run")} ▾</TogglePillButton>
+          {runPickerOpen && view.runs.map((run) => (
             <TogglePillButton
               compactOnTablet
               key={run.id}
               solid={replayRun === run.id}
-              onPress={() => setReplayRun(run.id)}
+              onPress={() => { setReplayRun(run.id); setRunPickerOpen(false); }}
             >
               {run.title} · {run.labels?.driverName ?? copy("Driver")} ·{" "}
               {new Date(
@@ -480,6 +482,7 @@ function FleetMapPanel({
           )}
         </Text>
       )}
+      {mapMode === "live" && <>
       {company && !site && (
         <Text style={{ color: colors.mutedForeground }}>
           {company.name}
@@ -551,6 +554,7 @@ function FleetMapPanel({
           {copy("No drivers in this view.")}
         </Text>
       )}
+      </>}
     </View>
   );
 }

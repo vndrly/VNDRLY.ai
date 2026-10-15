@@ -1,3 +1,4 @@
+import OnboardingNotice from "@/components/work-hub/library/OnboardingNotice";
 import "@/lib/fleet-evidence-device-native";
 import {isFleetPushNotification,openFleetPushNotification} from "@/lib/fleet-push-notification";
 import "@/lib/fleet-background-location-native";
@@ -325,6 +326,7 @@ function AuthGate() {
   return (
     <>
       <Slot />
+      <OnboardingNotice enabled={hasAuth && role !== "guest"}/>
       <FieldModeCoordinator enabled={hasAuth && role === "field_employee"} />
     </>
   );

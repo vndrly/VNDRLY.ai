@@ -23,16 +23,23 @@ export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
     ].join(":"),
     current = useRef(identity);
   current.current = identity;
+  const view = `${identity}:${path}`,
+    currentView = useRef(view);
+  currentView.current = view;
   const attempt = useRef<{
     path: string;
     method: string;
     body: string;
     identity: string;
+    view: string;
   } | null>(null);
   useEffect(() => {
     attempt.current = null;
     completion.current = undefined;
-  }, [identity]);
+    return () => {
+      completion.current = undefined;
+    };
+  }, [identity, path]);
   const query = useQuery({
     queryKey: ["form-campaign", path, identity],
     queryFn: async () => parse(await workHubRequest(path)),
@@ -66,6 +73,7 @@ export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
             commandEnvelope(owner, q.payload, undefined, q.version),
           ),
           identity,
+          view,
         };
       const request = attempt.current;
       try {
@@ -77,12 +85,16 @@ export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
             body: request.body,
           }),
         );
-        if (request.identity !== current.current)
+        if (
+          request.identity !== current.current ||
+          request.view !== currentView.current
+        )
           throw Error("Account changed");
         if (result.operationId !== JSON.parse(request.body).operationId)
           throw Error("Saved operation could not be verified");
         attempt.current = null;
         await query.refetch();
+        if (request.view !== currentView.current) throw Error("Page changed");
         return result;
       } catch (e) {
         if (request.identity === current.current) {
@@ -108,6 +120,19 @@ export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
   };
   return {
     send,
+    sendAsync: (request: Parameters<typeof mutation.mutate>[0]) =>
+      mutation.mutateAsync(request),
+    retryAsync: () => {
+      const request = attempt.current;
+      if (!request) return Promise.reject(Error("No pending request"));
+      const body = JSON.parse(request.body);
+      return mutation.mutateAsync({
+        path: request.path,
+        payload: body.payload,
+        version: body.expectedVersion,
+        method: request.method,
+      });
+    },
     query,
     data: query.isError ? undefined : query.data,
     owner,

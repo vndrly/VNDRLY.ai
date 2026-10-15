@@ -1,3 +1,4 @@
+import AssignedCards from "@/components/work-hub/library/assigned-cards";
 import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
 import NativeOperations from "@/components/work-hub/native-operations";
@@ -1245,6 +1246,8 @@ function Governance({
 }
 
 function TasksModule() {
+  const [showCompleted,setShowCompleted]=useState(false);
+  const { t } = useTranslation();
   const { user } = useAuth();
   const canManage = isWorkHubScheduler(user);
   const owner = useOwner();
@@ -1361,15 +1364,18 @@ function TasksModule() {
   });
   return (
     <Shell module="tasks">
-      <FormCampaignsArea/>
+      {isWorkHubAdmin(user)&&<BrandPillButton tone="brand" href="/work-hub/library">{t("workHubLibrary.manage")}</BrandPillButton>}
+      <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>
+      <AssignedCards completed={showCompleted}/>
+      <FormCampaignsArea completed={showCompleted}/>
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader>
-            <CardTitle><WorkHubCardTitle icon={ClipboardList}>Assignments and review</WorkHubCardTitle></CardTitle>
+            <CardTitle><WorkHubCardTitle icon={ClipboardList}>{t("workHubLibrary.myAssignments")}</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            {tasks.data?.map((row) => (
-              <article key={row.id} className="rounded-lg border p-4">
+            {tasks.data?.filter(row=>showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status)).map((row) => (
+              <article key={row.id} className="rounded-lg border-2 border-primary bg-card p-4">
                 <div className="flex justify-between gap-3">
                   <div>
                     <span className="text-xs uppercase text-muted-foreground">
@@ -1407,7 +1413,7 @@ function TasksModule() {
                 </div>
               </article>
             ))}
-            {!tasks.data?.length && <Empty>No tasks yet.</Empty>}
+            {tasks.isError && <Empty>Could not load tasks. Refresh to try again.</Empty>}
           </CardContent>
         </Card>
         {canManage && (

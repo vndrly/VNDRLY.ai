@@ -1,0 +1,25 @@
+import React from "react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { vi,it,expect,afterEach } from "vitest";
+import en from "@/lib/locales/en.json";
+const id="10000000-0000-4000-8000-000000000001";
+const m=vi.hoisted(()=>({send:vi.fn(),api:vi.fn()}));
+vi.mock("@/lib/use-form-campaigns",()=>({useFormCampaigns:(path:string)=>({contextKey:"one",busy:false,uncertain:false,send:m.send,data:path.endsWith("options")?{people:[{userId:9,name:"Casey"}],groups:[{id:"crew:1",name:"Gate team"}]}:{items:[{itemId:"10000000-0000-4000-8000-000000000001",title:"Orientation",kind:"training",state:"published",version:2}]}})}));
+vi.mock("@/lib/api",()=>({apiFetch:(...args:unknown[])=>m.api(...args)}));
+vi.mock("@/lib/auth",()=>({captureAuthScope:()=>({}),isAuthScopeCurrent:()=>true}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({})}));
+vi.mock("react-i18next",()=>({useTranslation:()=>({t:(key:string)=>key.split('.').reduce((value:any,k)=>value?.[k],en)??key})}));
+vi.mock("../../TogglePillButton",()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
+vi.mock("react-native",()=>({View:({children}:any)=><div>{children}</div>,Text:({children}:any)=><span>{children}</span>,Platform:{OS:"web"},Switch:({accessibilityLabel,value,onValueChange,disabled}:any)=><input type="checkbox" aria-label={accessibilityLabel} checked={value} disabled={disabled} onChange={e=>onValueChange(e.target.checked)}/>,TextInput:({accessibilityLabel,value,onChangeText}:any)=><input aria-label={accessibilityLabel} value={value} onChange={e=>onChangeText(e.target.value)}/> }));
+import AssignmentReview from "./AssignmentReview";
+afterEach(()=>{cleanup();m.api.mockReset();m.send.mockReset();});
+it("reviews the canonical audience before assigning and binds its fingerprint and version",async()=>{
+ m.api.mockResolvedValue({itemId:id,title:"Orientation",version:2,people:[{userId:9,name:"Casey"}],items:[{title:"Orientation",estimatedDeadline:"2026-11-14T12:00:00Z"}],existingCount:0,excluded:[],omitted:[],previewFingerprint:"reviewed"});
+ m.send.mockResolvedValue({resource:{assignmentId:id}});
+ const saved=vi.fn(async()=>{});render(<AssignmentReview kind="training" onSaved={saved}/>);
+ fireEvent.click(screen.getByText("Orientation"));fireEvent.click(screen.getByText("Casey"));fireEvent.click(screen.getByText("Gate team"));
+ fireEvent.click(screen.getByText("Review assignment"));await screen.findByText("Confirm assignment");
+ expect(m.send).not.toHaveBeenCalled();fireEvent.click(screen.getByText("Confirm assignment"));await screen.findByText("Assignment saved.");
+ expect(m.send).toHaveBeenCalledWith("/api/work-hub/library/assign",expect.objectContaining({itemId:id,previewFingerprint:"reviewed",audience:{mode:"selected",userIds:[9],groupIds:["crew:1"]}}),2);
+ expect(saved).toHaveBeenCalled();
+});

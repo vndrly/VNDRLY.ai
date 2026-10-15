@@ -160,6 +160,13 @@ async function summary(
   return {
     occurrenceId: r.occurrence.id,
     title: r.meeting.title,
+    startsAt: r.occurrence.startsAt?.toISOString() ?? null,
+    invited:
+      (Array.isArray(runtime.invitedUserIds) &&
+        runtime.invitedUserIds.includes(actor.userId)) ||
+      (!r.meeting.admissionMode &&
+        !!r.participant &&
+        r.participant.role !== "host"),
     agenda: r.meeting.agenda,
     hostName: host?.name ?? "Meeting host",
     startedAt: runtime.startedAt ?? null,
@@ -186,11 +193,15 @@ export async function listLiveMeetings(actor: LiveActor) {
       and(
         eq(meetings.ownerOrgType, "vendor"),
         eq(meetings.ownerOrgId, actor.vendorId!),
-        inArray(occurrences.status, ["live", "active"]),
+        inArray(occurrences.status, ["scheduled", "live", "active"]),
+        sql`(${occurrences.status} in ('live','active') or coalesce(${occurrences.endsAt}, ${occurrences.startsAt}) >= now())`,
         sql`(${meetings.admissionMode} is not null or exists(select 1 from work_hub_meeting_participants p where p.occurrence_id=${occurrences.id} and p.user_id=${actor.userId} and p.removed_at is null)) and not exists(select 1 from work_hub_calls c where c.occurrence_id=${occurrences.id})`,
       ),
     )
-    .orderBy(desc(occurrences.startsAt))
+    .orderBy(
+      sql`case when ${occurrences.status} in ('live','active') then 0 else 1 end`,
+      occurrences.startsAt,
+    )
     .limit(100);
   const out: LiveMeetingSummary[] = [];
   for (const row of rows) {
@@ -361,7 +372,11 @@ export async function startLiveMeeting(
           startsAt: now,
           endsAt: new Date(now.getTime() + 3600000),
           status: "live",
-          runtime: { startedAt: now.toISOString(), admissionVersion: 0 },
+          runtime: {
+            startedAt: now.toISOString(),
+            admissionVersion: 0,
+            invitedUserIds: ids.filter((id) => id !== actor.userId),
+          },
         })
         .returning();
       await tx.insert(participants).values(

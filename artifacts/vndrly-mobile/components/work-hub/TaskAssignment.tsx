@@ -1,3 +1,4 @@
+import LibraryAssignmentReview from "./library/AssignmentReview";
 import React, { useEffect, useRef, useState } from "react";
 import { Modal, ScrollView, Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
@@ -8,13 +9,6 @@ import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { mobileOwner, mobileCommandEnvelope } from "@/lib/work-hub-mobile";
 import TogglePillButton from "../TogglePillButton";
 type Person = { id: number; displayName: string; sameCompany: boolean };
-type Form = {
-  id: string;
-  name: string;
-  ownerOrgType: string;
-  ownerOrgId: number;
-  campaignConfig?: unknown;
-};
 export default function TaskAssignment({
   onSaved,
 }: {
@@ -30,14 +24,12 @@ export default function TaskAssignment({
     owner?.id,
   ].join(":");
   const [open, setOpen] = useState(false),
-    [kind, setKind] = useState<"task" | "form">("task"),
+    [kind, setKind] = useState<"task" | "form" | "policy" | "training">("task"),
     [title, setTitle] = useState(""),
     [description, setDescription] = useState(""),
     [search, setSearch] = useState(""),
     [assignee, setAssignee] = useState<number | null>(null),
-    [template, setTemplate] = useState<string | null>(null),
     [people, setPeople] = useState<Person[]>([]),
-    [forms, setForms] = useState<Form[]>([]),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(false),
     [notice, setNotice] = useState("");
@@ -52,9 +44,7 @@ export default function TaskAssignment({
     pending.current = null;
     setOpen(false);
     setPeople([]);
-    setForms([]);
     setAssignee(null);
-    setTemplate(null);
     setTitle("");
     setDescription("");
     setNotice("");
@@ -65,18 +55,10 @@ export default function TaskAssignment({
     const scope = captureAuthScope();
     let active = true;
     setLoading(true);
-    Promise.all([
-      apiFetch<Person[]>("/api/work-hub/people", undefined, scope),
-      apiFetch<{ forms: Form[] }>("/api/work-hub/admin", undefined, scope),
-    ])
-      .then(([p, f]) => {
+    apiFetch<Person[]>("/api/work-hub/people", undefined, scope)
+      .then((p) => {
         if (!active || !isAuthScopeCurrent(scope)) return;
         setPeople(p.filter((x) => x.sameCompany));
-        setForms(
-          f.forms.filter(
-            (x) => x.ownerOrgType === owner.type && x.ownerOrgId === owner.id && !x.campaignConfig,
-          ),
-        );
       })
       .catch((e) => {
         if (active && isAuthScopeCurrent(scope))
@@ -104,24 +86,14 @@ export default function TaskAssignment({
         setNotice("Enter a task title.");
         return;
       }
-      if (kind === "form" && !template) {
-        setNotice("Choose a form template.");
-        return;
-      }
-      const payload =
-        kind === "task"
-          ? {
-              title: title.trim(),
-              description: description.trim() || null,
-              priority: "normal",
-              assigneeUserId: assignee,
-            }
-          : { assigneeUserId: assignee };
+      const payload = {
+        title: title.trim(),
+        description: description.trim() || null,
+        priority: "normal",
+        assigneeUserId: assignee,
+      };
       pending.current = {
-        path:
-          kind === "task"
-            ? "/api/work-hub/tasks"
-            : `/api/work-hub/admin/forms/${template}/assign`,
+        path: "/api/work-hub/tasks",
         body: JSON.stringify(
           mobileCommandEnvelope(
             owner,
@@ -245,8 +217,8 @@ export default function TaskAssignment({
               Close
             </TogglePillButton>
             <ScrollView contentContainerStyle={{ gap: 12 }}>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                {(["task", "form"] as const).map((k) => (
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {(["task", "form", "policy", "training"] as const).map((k) => (
                   <TogglePillButton
                     key={k}
                     color="brand"
@@ -254,103 +226,101 @@ export default function TaskAssignment({
                     disabled={busy || !!pending.current}
                     onPress={() => setKind(k)}
                   >
-                    {k === "task" ? "Task" : "Form"}
+                    {
+                      {
+                        task: "Task",
+                        form: "Form",
+                        policy: "Policy Acknowledgment",
+                        training: "Training",
+                      }[k]
+                    }
                   </TogglePillButton>
                 ))}
               </View>
-              {kind === "task" ? (
-                <>
-                  <TextInput
-                    accessibilityLabel="Task title"
-                    placeholder="Task title"
-                    value={title}
-                    editable={!busy && !pending.current}
-                    onChangeText={setTitle}
-                    style={field}
-                  />
-                  <TextInput
-                    accessibilityLabel="Task instructions"
-                    placeholder="Instructions (optional)"
-                    multiline
-                    value={description}
-                    editable={!busy && !pending.current}
-                    onChangeText={setDescription}
-                    style={field}
-                  />
-                </>
+              {kind !== "task" ? (
+                <LibraryAssignmentReview
+                  kind={kind}
+                  onSaved={async () => {
+                    setOpen(false);
+                    await onSaved();
+                  }}
+                />
               ) : (
-                <View style={{ gap: 8 }}>
-                  <Text style={{ color: colors.text }}>
-                    Choose an existing form
-                  </Text>
-                  {forms.map((f) => (
-                    <TogglePillButton
-                      key={f.id}
-                      color="brand"
-                      solid={template === f.id}
-                      disabled={busy || !!pending.current}
-                      onPress={() => setTemplate(f.id)}
-                    >
-                      {f.name}
-                    </TogglePillButton>
-                  ))}
-                  {!loading && !forms.length && (
+                <>
+                  <>
+                    <TextInput
+                      accessibilityLabel="Task title"
+                      placeholder="Task title"
+                      value={title}
+                      editable={!busy && !pending.current}
+                      onChangeText={setTitle}
+                      style={field}
+                    />
+                    <TextInput
+                      accessibilityLabel="Task instructions"
+                      placeholder="Instructions (optional)"
+                      multiline
+                      value={description}
+                      editable={!busy && !pending.current}
+                      onChangeText={setDescription}
+                      style={field}
+                    />
+                  </>
+                  <Text style={{ color: colors.text }}>Assign to</Text>
+                  <TextInput
+                    accessibilityLabel="Find assignee"
+                    placeholder="Search company members"
+                    value={search}
+                    onChangeText={setSearch}
+                    style={field}
+                  />
+                  {loading && (
                     <Text style={{ color: colors.text }}>
-                      No reusable forms are available for this company. Create a
-                      template in the web workspace first.
+                      Loading assignment choices…
                     </Text>
                   )}
-                </View>
-              )}
-              <Text style={{ color: colors.text }}>Assign to</Text>
-              <TextInput
-                accessibilityLabel="Find assignee"
-                placeholder="Search company members"
-                value={search}
-                onChangeText={setSearch}
-                style={field}
-              />
-              {loading && (
-                <Text style={{ color: colors.text }}>
-                  Loading assignment choices…
-                </Text>
-              )}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {people
-                  .filter((p) =>
-                    p.displayName.toLowerCase().includes(search.toLowerCase()),
-                  )
-                  .map((p) => (
-                    <TogglePillButton
-                      key={p.id}
-                      color="brand"
-                      solid={assignee === p.id}
-                      disabled={busy || !!pending.current}
-                      onPress={() => setAssignee(p.id)}
+                  <View
+                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
+                  >
+                    {people
+                      .filter((p) =>
+                        p.displayName
+                          .toLowerCase()
+                          .includes(search.toLowerCase()),
+                      )
+                      .map((p) => (
+                        <TogglePillButton
+                          key={p.id}
+                          color="brand"
+                          solid={assignee === p.id}
+                          disabled={busy || !!pending.current}
+                          onPress={() => setAssignee(p.id)}
+                        >
+                          {p.displayName}
+                        </TogglePillButton>
+                      ))}
+                  </View>
+                  {!!notice && (
+                    <Text
+                      accessibilityLiveRegion="polite"
+                      style={{ color: colors.text }}
                     >
-                      {p.displayName}
-                    </TogglePillButton>
-                  ))}
-              </View>
-              {!!notice && (
-                <Text
-                  accessibilityLiveRegion="polite"
-                  style={{ color: colors.text }}
-                >
-                  {notice}
-                </Text>
+                      {notice}
+                    </Text>
+                  )}
+                  <TogglePillButton
+                    color="brand"
+                    disabled={busy || loading}
+                    onPress={() => void submit()}
+                  >
+                    {busy
+                      ? "Saving…"
+                      : pending.current
+                        ? "Retry original assignment"
+                        : "Assign"}
+                  </TogglePillButton>
+                </>
               )}
-              <TogglePillButton
-                color="brand"
-                disabled={busy || loading}
-                onPress={() => void submit()}
-              >
-                {busy
-                  ? "Saving…"
-                  : pending.current
-                    ? "Retry original assignment"
-                    : "Assign"}
-              </TogglePillButton>
             </ScrollView>
           </View>
         </View>

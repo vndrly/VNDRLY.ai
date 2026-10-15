@@ -290,3 +290,13 @@ it("campaign embedded results suppress individual anonymous answers and bind exa
  expect(()=>workspaceOutput("form_campaign",request.sourceTool,{campaignId:"00000000-0000-4000-8000-000000000003"},data,now)).toThrow();
  expect(()=>workspaceRequest({view:"assigned_form",instanceId:"invalid"})).toThrow();
 });
+
+it("projects library and own training into exact links without answer keys or object locators",()=>{
+ const itemId="00000000-0000-4000-8000-000000000002";
+ expect(workspaceRequest({view:"library_item",itemId})).toMatchObject({sourceTool:"get_work_hub_library",sourceArguments:{itemId}});
+ expect(()=>workspaceRequest({view:"training",instanceId:"../foreign"})).toThrow();
+ const output=workspaceOutput("library_item","get_work_hub_library",{itemId},{itemId,title:"Orientation",metadata:{kind:"training",state:"published",contentVersion:2,content:{description:"Learn the workflow",training:{questions:[{correctOptionIds:["private-answer"]}]}},fileSnapshots:{x:{storageKey:"private-object"}}}},now);
+ expect(output.sections[0].rows[0].href).toBe(`https://vndrly.ai/work-hub/library/${itemId}`);
+ expect(JSON.stringify(output)).not.toMatch(/private-answer|private-object|correctOptionIds/);
+ expect(()=>workspaceOutput("library_item","get_work_hub_library",{itemId},{itemId:"00000000-0000-4000-8000-000000000003",title:"Wrong"},now)).toThrow();
+});

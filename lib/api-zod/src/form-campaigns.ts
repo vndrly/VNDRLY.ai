@@ -139,6 +139,7 @@ export const FormCampaignSummarySchema = z.object({
   state: FormCampaignStateSchema,
   canManage: z.boolean(),
   instanceId: z.uuid().nullable(),
+  completed: z.boolean().default(false),
 });
 export const FormCampaignCountsSchema = z.object({
   assigned: z.number().int().nonnegative(),

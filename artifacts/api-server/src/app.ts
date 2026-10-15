@@ -1,3 +1,4 @@
+import { RequiredWorkError } from "./work-hub/required-work-guard";
 import express, {
   type Express,
   type Request,
@@ -293,6 +294,7 @@ app.use(
 );
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof RequiredWorkError) { res.status(err.status).json({ code: err.code, message: err.message, assignments: err.assignments }); return; }
   console.error(err);
 
   res.status(500).json({

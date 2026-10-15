@@ -76,6 +76,8 @@ export async function resolveNotificationDestination(
   if (new Set(keys).size !== keys.length) return null;
   const path = url.pathname.replace(/^\/\(tabs\)/, "");
   const params = url.searchParams;
+  const libraryPath=path.match(/^\/work-hub\/(training|checklist|library|bundle)\/([0-9a-f-]{36})$/i);
+  if(libraryPath){if(keys.length||!uuid.test(libraryPath[2]))return null;try{if(["training","checklist"].includes(libraryPath[1])){const service=await import("../work-hub/training-service");await service.getAssignedLibrary({...session,userId:session.userId!},libraryPath[2]);}else{const service=await import("../work-hub/library-service");await service.getLibrary({...session,userId:session.userId!},libraryPath[2]);}return path;}catch{return null;}}
   const campaignPath=path.match(/^\/work-hub\/(form|campaign)\/([0-9a-f-]{36})$/i);
   if(campaignPath){if(keys.length||!uuid.test(campaignPath[2]))return null;try{const service=await import("../work-hub/form-campaign-service");if(campaignPath[1]==="form")await service.getCampaignInstance(session,campaignPath[2]);else await service.getCampaign(session,campaignPath[2]);return path;}catch{return null;}}
 

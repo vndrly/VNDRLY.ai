@@ -866,7 +866,7 @@ function OwnerProgress({
     </section>
   );
 }
-export default function FormCampaignsArea() {
+export default function FormCampaignsArea({completed}:{completed?:boolean}) {
   const { t } = useTranslation();
 
   const api = useCampaign("/form-campaigns", (v) =>
@@ -893,15 +893,15 @@ export default function FormCampaignsArea() {
   return (
     <section className="space-y-4 mb-4">
       <header className="flex items-center justify-between gap-2">
-        <h2 className="font-bold text-xl">{t("formCampaignLabels.c057")}</h2>
-        {admin && (
+        {completed === undefined && <h2 className="font-bold text-xl">{t("formCampaignLabels.c057")}</h2>}
+        {admin && completed === undefined && (
           <BrandPillButton tone="brand" onClick={() => setEditor({})}>
             {t("formCampaignLabels.c058")}
           </BrandPillButton>
         )}
       </header>
       <ErrorNotice api={api} />
-      {api.data?.campaigns.map((c) => (
+      {api.data?.campaigns.filter(c=>completed === undefined || (!!c.instanceId && c.completed === completed)).map((c) => (
         <article className={card} key={c.campaignId}>
           <h3>{c.title}</h3>
           <p>

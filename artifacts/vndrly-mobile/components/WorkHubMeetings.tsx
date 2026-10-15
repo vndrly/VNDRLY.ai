@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import type { LiveMeetingSummary } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
 import React, { useState } from "react";
 import {
@@ -22,6 +24,12 @@ type Meeting = {
   startsAt?: string;
   endsAt?: string;
   status?: string;
+  invited?: boolean;
+  admissionMode?: string | null;
+  canEnter?: boolean;
+  canRequest?: boolean;
+  requestedAt?: string | null;
+  ownAdmissionState?: string | null;
 };
 export default function WorkHubMeetings({
   meetings,
@@ -45,23 +53,39 @@ export default function WorkHubMeetings({
     [search, setSearch] = useState(""),
     [selected, setSelected] = useState<string | null>(null),
     [scheduling, setScheduling] = useState(false);
+  const [discovered, setDiscovered] = useState<LiveMeetingSummary[]>([]);
+  const [discoveryError, setDiscoveryError] = useState("");
+  const combined = new Map(meetings.map((m) => [m.id, m]));
+  for (const m of discovered)
+    combined.set(m.occurrenceId, {
+      ...combined.get(m.occurrenceId),
+      id: m.occurrenceId,
+      title: m.title,
+      agenda: m.agenda ?? undefined,
+      startsAt: m.startsAt ?? m.startedAt ?? undefined,
+      endsAt: m.plannedEndsAt ?? undefined,
+      status: m.status,
+      invited: m.invited,
+      admissionMode: m.admissionMode,
+      canEnter: m.canEnter,
+      canRequest: m.canRequest,
+      requestedAt: m.requestedAt,
+      ownAdmissionState: m.ownAdmissionState,
+    });
   const now = Date.now();
   const past = (m: Meeting) =>
     !["live", "active"].includes(m.status ?? "") &&
     (["ended", "completed", "cancelled"].includes(m.status ?? "") ||
       (!!m.endsAt && Date.parse(m.endsAt) <= now));
-  const ordered = [...meetings].sort(
+  const ordered = [...combined.values()].sort(
     (a, b) =>
+      Number(["live", "active"].includes(b.status ?? "")) -
+        Number(["live", "active"].includes(a.status ?? "")) ||
       (Date.parse(a.startsAt ?? "") || 0) - (Date.parse(b.startsAt ?? "") || 0),
-  );
-  const next = ordered.find(
-    (m) =>
-      !past(m) && !["cancelled", "live", "active"].includes(m.status ?? ""),
   );
   const visible = ordered.filter(
     (m) =>
       past(m) === history &&
-      !["live", "active"].includes(m.status ?? "") &&
       `${m.title ?? ""} ${m.agenda ?? ""}`
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -82,127 +106,167 @@ export default function WorkHubMeetings({
       : "Time not available";
   return (
     <View style={{ gap: 14 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <WorkHubLiveMeetings
+        onOpen={onOpen}
+        onMeetingsChange={setDiscovered}
+        onErrorChange={setDiscoveryError}
+        headerRightAction={
+          canSchedule ? (
+            <TogglePillButton color="brand" onPress={() => setScheduling(true)}>
+              Schedule meeting
+            </TogglePillButton>
+          ) : null
+        }
+      />
+      <View style={card}>
         <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>
-          Your meetings
+          Meetings
         </Text>
-        {canSchedule && (
-          <TogglePillButton color="brand" onPress={() => setScheduling(true)}>
-            Schedule meeting
-          </TogglePillButton>
+        {!!discoveryError && (
+          <Text style={{ color: colors.mutedForeground }}>
+            {discoveryError}
+          </Text>
         )}
-      </View>
-      <WorkHubLiveMeetings onOpen={onOpen} />
-      {!history && next && (
-        <View style={card}>
-          <Text style={{ color: colors.primary, fontWeight: "700" }}>
-            NEXT MEETING
-          </Text>
-          <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>
-            {next.title ?? "Meeting"}
-          </Text>
-          <Text style={{ color: colors.text }}>{date(next)}</Text>
+        <View style={{ flexDirection: "row", gap: 8 }}>
           <TogglePillButton
             color="brand"
-            accessibilityLabel={t("meetingWorkspace.openMeetingLabel", {
-              name: next.title ?? "Meeting",
-            })}
-            onPress={() => onOpen(next.id)}
+            solid={!history}
+            onPress={() => setHistory(false)}
           >
-            {t("meetingWorkspace.openMeeting")}
+            Upcoming
+          </TogglePillButton>
+          <TogglePillButton
+            color="brand"
+            solid={history}
+            onPress={() => setHistory(true)}
+          >
+            History
           </TogglePillButton>
         </View>
-      )}
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        <TogglePillButton
-          color="brand"
-          solid={!history}
-          onPress={() => setHistory(false)}
-        >
-          Upcoming
-        </TogglePillButton>
-        <TogglePillButton
-          color="brand"
-          solid={history}
-          onPress={() => setHistory(true)}
-        >
-          History
-        </TogglePillButton>
-      </View>
-      <TextInput
-        accessibilityLabel="Search meetings"
-        placeholder="Search meetings"
-        placeholderTextColor={colors.mutedForeground}
-        value={search}
-        onChangeText={setSearch}
-        style={{
-          borderWidth: 2,
-          borderColor: colors.primary,
-          borderRadius: 12,
-          padding: 12,
-          color: colors.text,
-        }}
-      />
-      <View style={{ flexDirection: wide ? "row" : "column", gap: 14 }}>
-        <View style={{ flex: 1, gap: 8 }}>
-          {visible.map((m) => (
-            <View key={m.id} style={card}>
-              <Text style={{ color: colors.text, fontWeight: "700" }}>
-                {m.title ?? "Meeting"}
-              </Text>
+        <TextInput
+          accessibilityLabel="Search meetings"
+          placeholder="Search meetings"
+          placeholderTextColor={colors.mutedForeground}
+          value={search}
+          onChangeText={setSearch}
+          style={{
+            borderWidth: 2,
+            borderColor: colors.primary,
+            borderRadius: 12,
+            padding: 12,
+            color: colors.text,
+          }}
+        />
+        <View style={{ flexDirection: wide ? "row" : "column", gap: 14 }}>
+          <View style={{ flex: 1, gap: 8 }}>
+            {visible.map((m) => (
+              <View key={m.id} style={card}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                >
+                  {m.invited && (
+                    <Ionicons
+                      name="mail-outline"
+                      size={16}
+                      color={colors.primary}
+                      accessibilityLabel="Invited"
+                    />
+                  )}
+                  {m.admissionMode === "host_approval" && (
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={16}
+                      color={colors.mutedForeground}
+                      accessibilityLabel="Private — host approval"
+                    />
+                  )}
+                  {["live", "active"].includes(m.status ?? "") && (
+                    <Ionicons
+                      name="ellipse"
+                      size={8}
+                      color={colors.primary}
+                      accessibilityLabel="Live"
+                    />
+                  )}
+                  <Text style={{ color: colors.text, fontWeight: "700" }}>
+                    {m.title ?? "Meeting"}
+                  </Text>
+                </View>
+                <Text style={{ color: colors.mutedForeground }}>
+                  {date(m)} · {m.status ?? "Scheduled"}
+                </Text>
+                <TogglePillButton
+                  color="brand"
+                  accessibilityLabel={
+                    ["live", "active"].includes(m.status ?? "")
+                      ? undefined
+                      : t("meetingWorkspace.openMeetingLabel", {
+                          name: m.title ?? "Meeting",
+                        })
+                  }
+                  onPress={() => onOpen(m.id)}
+                >
+                  {["live", "active"].includes(m.status ?? "")
+                    ? m.ownAdmissionState === "declined"
+                      ? "Request declined"
+                      : m.canEnter
+                        ? "Join"
+                        : m.requestedAt
+                          ? "Waiting for host"
+                          : "Ask to Join"
+                    : t("meetingWorkspace.openMeeting")}
+                </TogglePillButton>
+                <TogglePillButton
+                  color="brand"
+                  onPress={() => setSelected(m.id)}
+                >
+                  View details
+                </TogglePillButton>
+              </View>
+            ))}
+            {!visible.length && (
               <Text style={{ color: colors.mutedForeground }}>
-                {date(m)} · {m.status ?? "Scheduled"}
+                {search
+                  ? "No matching meetings."
+                  : history
+                    ? "No past meetings."
+                    : "No upcoming meetings."}
               </Text>
-              <TogglePillButton color="brand" onPress={() => setSelected(m.id)}>
-                View details
+            )}
+          </View>
+          {detail && (
+            <View
+              style={[
+                card,
+                wide ? { width: 320, alignSelf: "flex-start" } : {},
+              ]}
+            >
+              <Text
+                style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}
+              >
+                {detail.title ?? "Meeting"}
+              </Text>
+              <Text style={{ color: colors.text }}>{date(detail)}</Text>
+              {!!detail.agenda && (
+                <Text style={{ color: colors.text }}>{detail.agenda}</Text>
+              )}
+              {detail.attendanceConfirmationRequired && (
+                <Text style={{ color: colors.text }}>
+                  Attendance confirmation required
+                </Text>
+              )}
+              <TogglePillButton
+                color="brand"
+                accessibilityLabel={t("meetingWorkspace.openMeetingLabel", {
+                  name: detail.title ?? "Meeting",
+                })}
+                onPress={() => onOpen(detail.id)}
+              >
+                {t("meetingWorkspace.openMeeting")}
               </TogglePillButton>
             </View>
-          ))}
-          {!visible.length && (
-            <Text style={{ color: colors.mutedForeground }}>
-              {search
-                ? "No matching meetings."
-                : history
-                  ? "No past meetings."
-                  : "No upcoming meetings."}
-            </Text>
           )}
         </View>
-        {detail && (
-          <View
-            style={[card, wide ? { width: 320, alignSelf: "flex-start" } : {}]}
-          >
-            <Text
-              style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}
-            >
-              {detail.title ?? "Meeting"}
-            </Text>
-            <Text style={{ color: colors.text }}>{date(detail)}</Text>
-            {!!detail.agenda && (
-              <Text style={{ color: colors.text }}>{detail.agenda}</Text>
-            )}
-            {detail.attendanceConfirmationRequired && (
-              <Text style={{ color: colors.text }}>
-                Attendance confirmation required
-              </Text>
-            )}
-            <TogglePillButton
-              color="brand"
-              accessibilityLabel={t("meetingWorkspace.openMeetingLabel", {
-                name: detail.title ?? "Meeting",
-              })}
-              onPress={() => onOpen(detail.id)}
-            >
-              {t("meetingWorkspace.openMeeting")}
-            </TogglePillButton>
-          </View>
-        )}
       </View>
       <Modal
         visible={scheduling}

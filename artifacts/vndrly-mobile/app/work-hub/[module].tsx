@@ -1,3 +1,5 @@
+import { useFocusEffect } from "expo-router";
+import AssignedCards from "@/components/work-hub/library/AssignedCards";
 import FormCampaignList from "@/components/work-hub/FormCampaignList";
 import TaskAssignment from "@/components/work-hub/TaskAssignment";
 import * as Crypto from "expo-crypto";
@@ -108,6 +110,7 @@ function WorkHubModuleContent() {
   const [data, setData] = useState<any>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [draft, setDraft] = useState("");
   const [meetingFileBusy, setMeetingFileBusy] = useState(false);
   const [meetingFileNotice, setMeetingFileNotice] = useState("");
@@ -156,6 +159,7 @@ function WorkHubModuleContent() {
     },
     [module, user, t],
   );
+  useFocusEffect(useCallback(()=>{ if(module === "tasks-forms") void load(""); },[module,load]));
   useEffect(() => {
     if (!["attention","safety","my-work","calendar"].includes(module) && module !== "calls" && module !== "search" && module !== "safety-response" && module !== "implementation-exports") void load("");
   }, [module, load]);
@@ -185,7 +189,9 @@ function WorkHubModuleContent() {
         ...(data?.meetings ?? []).map((x: Row) => ({
           ...(x.occurrence ?? x.item?.occurrence),
           title: (x.meeting ?? x.item?.meeting)?.title,
-          kind: "Meeting",
+          admissionMode: (x.meeting ?? x.item?.meeting)?.admissionMode,
+        invited: !!(x.participant ?? x.item?.participant) && (x.participant ?? x.item?.participant)?.role !== "host",
+        kind: "Meeting",
         })),
       ];
     if (module === "meetings")
@@ -389,12 +395,14 @@ function WorkHubModuleContent() {
             {!!meetingFileError && <Text accessibilityRole="alert" style={{ color: colors.destructive, fontWeight: "700" }}>{meetingFileError}</Text>}
           </View>
         )}
-        {module === "meetings" && <WorkHubMeetings meetings={rows.map(row => ({ id: String(row.id), title: row.title, agenda: row.agenda, attendanceConfirmationRequired: row.attendanceConfirmationRequired, startsAt: row.startsAt, endsAt: row.endsAt, status: row.status }))} onOpen={(id) => router.push(`/work-hub/meeting/${id}` as never)} onSaved={() => load("")} />}
+        {module === "meetings" && <WorkHubMeetings meetings={rows.map(row => ({ id: String(row.id), title: row.title, agenda: row.agenda, attendanceConfirmationRequired: row.attendanceConfirmationRequired, startsAt: row.startsAt, endsAt: row.endsAt, status: row.status, invited: row.invited, admissionMode: row.admissionMode }))} onOpen={(id) => router.push(`/work-hub/meeting/${id}` as never)} onSaved={() => load("")} />}
         {module === "calendar" && <WorkHubAvailability />}
         {module === "calendar" && <ShiftScheduling onSaved={() => load("")} />}
               {module === "calendar" && <WorkHubShiftOpening shifts={data?.shifts ?? []} onSaved={() => load("")} />}
-        {owner && canManage && module === "tasks-forms" && <TaskAssignment onSaved={()=>load()} />}
-        {["tasks-forms","my-work"].includes(module) && <FormCampaignList/>}
+        {owner && canManage && module === "tasks-forms" && <><TaskAssignment onSaved={()=>load()} /><TogglePillButton color="brand" onPress={()=>router.push("/work-hub/library" as never)}>{t("workHubLibrary.manage")}</TogglePillButton></>}
+        {module === "tasks-forms" && <View style={{flexDirection:"row",gap:8}}>{[false,true].map(value=><Pressable key={String(value)} accessibilityRole="button" accessibilityState={{selected:showCompleted===value}} onPress={()=>setShowCompleted(value)}><Text style={{color:showCompleted===value?colors.primary:colors.text,fontWeight:showCompleted===value?"700":"400"}}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</Text></Pressable>)} </View>}
+        {module === "tasks-forms" && <AssignedCards completed={showCompleted}/>}
+        {["tasks-forms","my-work"].includes(module) && <FormCampaignList completed={module === "tasks-forms" ? showCompleted : undefined}/>}
         {owner &&
           canManage &&
           module === "channels" && (
@@ -482,7 +490,7 @@ function WorkHubModuleContent() {
           />
         )}
         {!selectedChannel && module !== "meetings" &&
-          rows.map((row) => (
+          rows.filter(row=>module !== "tasks-forms" || (showCompleted ? row.status === "completed" : !["completed","cancelled"].includes(row.status))).map((row) => (
             <View
               key={row.id}
               style={{

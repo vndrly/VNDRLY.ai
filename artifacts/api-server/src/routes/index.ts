@@ -1,3 +1,4 @@
+import workHubLibraryRouter from "./workHubLibrary";
 import workHubFormCampaignsRouter from "./workHubFormCampaigns";
 import fleetCommercialPolicyRouter from "./fleetCommercialPolicy";
 import nativeOperationsRouter from "./nativeOperations";
@@ -185,6 +186,7 @@ router.use(workHubGovernanceRouter);
 router.use(workHubOperationsRouter);
 router.use(workHubLiveMeetingsRouter);
 router.use(workHubFormCampaignsRouter);
+router.use(workHubLibraryRouter);
 router.use(workHubRequiredActionRouter);
 router.use(publicAskVRouter);
 router.use(implementationASponsorshipsRouter);
