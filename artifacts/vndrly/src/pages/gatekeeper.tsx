@@ -62,7 +62,6 @@ import {
 import {
   pickDefaultGateHostKey,
   groupAssignedGateSitesByPartner,
-  pickLocalAssignedGateSites,
   pickNearestAssignedGateSite,
   resolveAssignedGateSites,
   shouldApplyDefaultGateSite,
@@ -768,17 +767,16 @@ export default function GatekeeperPage() {
   const assignedSites = assigned.data?.sites ?? [];
   const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
   const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
-  const localAssignedSites = useMemo(() => pickLocalAssignedGateSites(assignedSites, origin), [assignedSites, origin]);
   useEffect(() => {
     if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
-    const resolvedSite = localAssignedSites.find((row) => row.id === resolvedPrefillSiteId);
+    const resolvedSite = assignedSites.find((row) => row.id === resolvedPrefillSiteId);
     if (resolvedSite) {
       appliedDefault.current = true;
       setSiteCode(resolvedSite.siteCode);
       setConfirmedCode(resolvedSite.siteCode);
     }
     setResolvedPrefillSiteId(null);
-  }, [assignedSites.length, localAssignedSites, resolvedPrefillSiteId]);
+  }, [assignedSites, resolvedPrefillSiteId]);
   const locationResolved = origin !== null || gps === "denied" || gps === "unavailable";
   const defaultSiteCode = locationResolved ? (nearestSite ?? assigned.data?.defaultSite)?.siteCode : undefined;
   const selectedAssignedSite = assignedSites.find((row) => row.siteCode === confirmedCode) ?? nearestSite ?? assigned.data?.defaultSite ?? null;
@@ -1677,9 +1675,9 @@ export default function GatekeeperPage() {
                 {t("gatekeeper.selectedLocation")}
               </p>
               {assignedSites.length > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid min-w-0 gap-3">
                 <div className={WORK_HUB_BRANDED_FIELD_CLASS} data-testid="gate-locked-partner" aria-readonly="true">
-                  {nearestSite?.partnerName ?? selectedAssignedSite?.partnerName ?? t("gatekeeper.selectCompany")}
+                  {selectedAssignedSite?.partnerName ?? t("gatekeeper.selectCompany")}
                 </div>
                 <Select
                   value={
@@ -1697,7 +1695,7 @@ export default function GatekeeperPage() {
                     <SelectValue placeholder={t("gatekeeper.selectSite")} />
                   </SelectTrigger>
                   <SelectContent className={GATE_SELECT_CONTENT_CLASS}>
-                    {localAssignedSites.map((row) => (
+                    {assignedSites.map((row) => (
                       <SelectItem className={GATE_SELECT_ITEM_CLASS} key={row.siteCode} value={row.siteCode}>
                         {siteDisplayName(row)}
                       </SelectItem>
