@@ -1,3 +1,4 @@
+import SafetyDashboardCard from "@/components/SafetyDashboardCard";
 import { useFocusEffect } from "expo-router";
 import AssignedCards from "@/components/work-hub/library/AssignedCards";
 import FormCampaignList from "@/components/work-hub/FormCampaignList";
@@ -321,7 +322,7 @@ function WorkHubModuleContent() {
       setMeetingFileBusy(false);
     }
   };
-  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="calendar"?<UnifiedWorkCalendar/>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
+  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="safety" && <SafetyDashboardCard/>}{module==="calendar"?<UnifiedWorkCalendar/>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
   if (["managed-crews", "workforce-coverage", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>

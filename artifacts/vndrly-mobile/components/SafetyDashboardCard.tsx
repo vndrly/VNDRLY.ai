@@ -57,7 +57,7 @@ export default function SafetyDashboardCard() {
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
