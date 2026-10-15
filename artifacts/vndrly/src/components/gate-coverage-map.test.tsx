@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mocks = vi.hoisted(() => ({ read: vi.fn(), points: [] as any[] }));
@@ -22,4 +22,25 @@ it("keeps stale staff off the map and exposes missing observations without an ac
   fireEvent.change(screen.getByLabelText(/Coverage time/), { target: { value: "2026-10-12T10:00" } });
   await waitFor(() => expect(mocks.read).toHaveBeenCalledWith(expect.stringMatching(/^\/coverage-map\?at=/)));
   expect(mocks.read.mock.calls.every(call => call.length === 1)).toBe(true);
+});
+it("filters recorded gate duties, opens marker details, refreshes and expands the map", async () => {
+  mocks.read.mockResolvedValue({ at: new Date().toISOString(), staff: [], gates: [
+    { id: "a", name: "North gate", siteName: "Site A", latitude: 31, longitude: -102 },
+    { id: "b", name: "South gate", siteName: "Site A", latitude: 32, longitude: -103 },
+  ], duties: [{ id: "d", stationId: "a", name: "Operator", startedAt: new Date().toISOString(), coverage: {} }] });
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCoverageMap /></QueryClientProvider>);
+  await screen.findByText("Live");
+  expect(mocks.points.map(point => point.id)).toEqual(["gate:a", "gate:b"]);
+  fireEvent.click(screen.getByRole("button", { name: "Staffed", exact: true }));
+  expect(mocks.points.map(point => point.id)).toEqual(["gate:a"]);
+  act(() => mocks.points[0].onClick());
+  expect(screen.getByText("Site A · North gate")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "No recorded duty", exact: true }));
+  expect(mocks.points.map(point => point.id)).toEqual(["gate:b"]);
+  fireEvent.click(screen.getByRole("button", { name: "Expand map" }));
+  expect(screen.getByRole("button", { name: "Collapse map" })).toBeTruthy();
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(screen.getByRole("button", { name: "Expand map" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Refresh", exact: true }));
+  await waitFor(() => expect(mocks.read.mock.calls.length).toBeGreaterThan(1));
 });
