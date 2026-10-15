@@ -1,4 +1,4 @@
-import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
+import { assertRequiredWorkClear, RequiredWorkError } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
 import { eq, and, desc, gte, lte, inArray, ne, or, sql, isNull, isNotNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -1519,6 +1519,7 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
 
   res.status(201).json(ticket);
   } catch (err) {
+    if(err instanceof RequiredWorkError) {res.status(409).json({code:err.code,error:err.message,assignments:err.assignments});return;}
     req.log.error({ err }, "POST /field/tickets failed");
     res.status(500).json({
       code: "field_ticket.create_failed",

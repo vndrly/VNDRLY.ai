@@ -1774,7 +1774,7 @@ router.post("/tickets/:id/check-in", async (req, res): Promise<void> => {
     if (!CHECK_IN_ALLOWED.has(existing.status)) {
       return { kind: "blocked" as const, status: existing.status };
     }
-    if (checkInSession?.userId && existing.vendorId) await assertRequiredWorkClear(tx, checkInSession.userId, { type: "vendor", id: existing.vendorId });
+    if (checkInSession?.role === "field_employee" && checkInSession.userId && existing.vendorId) await assertRequiredWorkClear(tx, checkInSession.userId, { type: "vendor", id: existing.vendorId });
     const [u] = await tx
       .update(ticketsTable)
       .set({

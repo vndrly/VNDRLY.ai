@@ -1,7 +1,7 @@
 import LibraryEntryNotice from "@/components/work-hub/library/entry-notice";
-const WorkHubLibraryPage = lazy(() => import("@/pages/work-hub-library"));
 import { Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
+const WorkHubLibraryPage = lazy(() => import("@/pages/work-hub-library"));
 const PayrollPage = lazy(() => import("@/pages/payroll"));
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { fleetClient } from "@/lib/fleet-client";

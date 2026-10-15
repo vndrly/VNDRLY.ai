@@ -171,7 +171,7 @@ export async function provisionFreshLocalTestDatabase(
       maintenance.port,
     );
     await admin.query(
-      `CREATE DATABASE "${target.testDbName}" TEMPLATE template0`,
+      `CREATE DATABASE "${target.testDbName}" TEMPLATE template0 ENCODING 'UTF8' LC_COLLATE 'C' LC_CTYPE 'C'`,
     );
   } finally {
     await admin.end();

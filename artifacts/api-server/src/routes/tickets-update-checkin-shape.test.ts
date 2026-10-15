@@ -127,7 +127,7 @@ function pickProvider(projection?: Record<string, any>): () => any[] {
     return () => siteGeofenceRows;
   }
   // Check-in CAS read inside the transaction: `{ arrivedAt, status }`.
-  if (keys.size === 2 && keys.has("arrivedAt") && keys.has("status")) {
+  if (keys.size === 3 && keys.has("vendorId") && keys.has("arrivedAt") && keys.has("status")) {
     return () => casRows;
   }
   // ticket_check_ins open-row dedupe and vendor_people hourly-rate

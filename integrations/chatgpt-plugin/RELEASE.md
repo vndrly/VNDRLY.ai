@@ -1,6 +1,6 @@
-# VNDRLY plugin 1.11.0
+# VNDRLY plugin 1.14.0
 
-Match the October 13 native and web operations release. Fleet guidance covers recorded location history, ticket plans, commercial settings and destination recommendations, plus confirmed plan and destination saves. Gate guidance covers authorized current and historical coverage. Work Hub guidance covers company Field/Fleet/Gate selection with separate `company:settings` consent, availability and exact native navigation. Field guidance retains role-projected proof packets and the field-to-office boundary.
+Match the October 14 Work Hub library, onboarding, training, meetings and call-transcript release. Work Hub guidance covers reviewed library distribution, versioned bundles, new-hire enrollment, explicit employee responses, scored quiz attempts and saved response readback. Fleet guidance covers recorded location history, ticket plans, commercial settings and destination recommendations, plus confirmed plan and destination saves. Gate guidance covers authorized current and historical coverage. Work Hub guidance covers company Field/Fleet/Gate selection with separate `company:settings` consent, availability and exact native navigation. Field guidance retains role-projected proof packets and the field-to-office boundary.
 
 Keep the existing plugin and app identifiers, all linked accounts, existing grants, five commercial service skills and VNDRLY.ai branding. This update does not grant company administration or location/finance access. Embedded views and MCP tool definitions are served by the matching API; deploy that API and refresh the existing connection before claiming online parity.
 
