@@ -284,17 +284,18 @@ export const visitsApi = {
     plateState?: string;
     platePhotoUrl?: string;
     vehiclePhotoUrl?: string;
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
+    gateStationId?: string;
   }) =>
     jf<VisitorRow>(`/api/visits/gate/check-in`, {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  gateCheckOut: (id: number, latitude?: number, longitude?: number, notes?: string) =>
+  gateCheckOut: (id: number, latitude?: number, longitude?: number, notes?: string, gateStationId?: string) =>
     jf<VisitorRow>(`/api/visits/gate/${id}/check-out`, {
       method: "POST",
-      body: JSON.stringify({ latitude, longitude, notes }),
+      body: JSON.stringify({ latitude, longitude, notes, gateStationId }),
     }),
   setEntryCategory: (id: number, entryCategory: VisitorRow["entryCategory"]) =>
     jf<{ id: number; entryCategory: VisitorRow["entryCategory"] }>(`/api/visits/${id}/entry-category`, { method: "PATCH", body: JSON.stringify({ entryCategory }) }),

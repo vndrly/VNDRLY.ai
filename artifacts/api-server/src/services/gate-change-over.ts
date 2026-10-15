@@ -351,7 +351,7 @@ export async function listChangeOverStations(
   )).rows;
   return (
     await pool.query(
-      `SELECT station.id, station.name, station.site_id, station.latitude, station.longitude, station.active
+      `SELECT station.id, station.name, station.site_id, station.latitude, station.longitude, station.geofence_radius_m AS "geofenceRadiusM", station.active
        FROM gate_stations station
        WHERE station.site_id=$1
          AND (station.active=true

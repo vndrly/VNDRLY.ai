@@ -2120,6 +2120,26 @@ describe("GET /api/visits/sites/:siteId/preferred-plate-states", () => {
 });
 
 describe("gatekeeper visit workflow", () => {
+  it("records a gate check-in without GPS rather than blocking the entry", async () => {
+    const { site, vendor } = seedScenario();
+    const response = await request(app).post("/api/visits/gate/check-in")
+      .set("Cookie", staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" }))
+      .send({ firstName: "Pat", lastName: "NoGPS", siteLocationId: site.id, vehiclePlate: "NO-GPS", plateState: "TX" });
+    expectStatus(response, 201);
+    expect(response.body.checkInGpsEvidence).toMatchObject({ status: "unavailable", latitude: null, longitude: null });
+    const departure = await request(app).post(`/api/visits/gate/${response.body.id}/check-out`)
+      .set("Cookie", staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" })).send({});
+    expectStatus(departure, 200);
+    expect(departure.body.checkOutGpsEvidence).toMatchObject({ status: "unavailable", latitude: null, longitude: null });
+  });
+  it("does not block a gate check-in far from the partner site", async () => {
+    const { site, vendor } = seedScenario();
+    const response = await request(app).post("/api/visits/gate/check-in")
+      .set("Cookie", staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" }))
+      .send({ firstName: "Pat", lastName: "Remote", siteLocationId: site.id, vehiclePlate: "FAR-GPS", plateState: "TX", latitude: 0, longitude: 0 });
+    expectStatus(response, 201);
+    expect(response.body.checkInGpsEvidence.status).toBe("gate_unconfigured");
+  });
   it("rejects a gatekeeper vehicle plate without a state", async () => {
     process.env.VNDRLY_REQUIRE_PLATE_STATE = "1";
     const { site, vendor } = seedScenario();

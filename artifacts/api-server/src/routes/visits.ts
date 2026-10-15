@@ -1,4 +1,6 @@
 import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
+import { gateVisitGpsEvidence } from "../lib/gate-visit-gps";
+import { listChangeOverStations } from "../services/gate-change-over";
 import { managedWorkerSessionIsCurrent } from "../lib/managed-worker-session";
 import { hasGateSupervisorAuthority } from "../lib/gate-supervisor-authority";
 import { managedWorkerSiteIds, managedWorkerSiteRole } from "../lib/managed-worker-access";
@@ -27,6 +29,7 @@ import {
   vendorPeopleTable,
   ticketCheckInsTable,
   ticketsTable,
+  gateStationsTable,
 } from "@workspace/db";
 import {
   notifyUsers,
@@ -1356,6 +1359,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     notes?: string;
     latitude?: number;
     longitude?: number;
+    gateStationId?: string;
   };
   let entryCategory;
   try { entryCategory = parseVisitEntryCategory(b.entryCategory); }
@@ -1421,31 +1425,14 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     .where(eq(partnersTable.id, site.partnerId));
   const hostName = leasePartner?.name || "the partner";
 
-  const radius = site.siteRadiusMeters ?? 805;
-  if (typeof b.latitude !== "number" || typeof b.longitude !== "number") {
-    res
-      .status(400)
-      .json({
-        message: "Location is required to check in",
-        code: VISIT_LOCATION_REQUIRED,
-      });
-    return;
+  let selectedGate = null;
+  if (b.gateStationId) {
+    if (!z.string().uuid().safeParse(b.gateStationId).success) { res.status(400).json({ message: "Invalid gate location", code: VISIT_INVALID_INPUT }); return; }
+    const allowed = await listChangeOverStations(session, site.id);
+    if (!allowed.some(gate => gate.id === b.gateStationId)) { res.status(403).json({ message: "Gate location is not available to this operator", code: VISIT_NO_ACCESS }); return; }
+    [selectedGate] = await db.select().from(gateStationsTable).where(and(eq(gateStationsTable.id, b.gateStationId), eq(gateStationsTable.siteId, site.id)));
   }
-  const meters = distanceMeters(
-    b.latitude,
-    b.longitude,
-    site.latitude,
-    site.longitude,
-  );
-  if (meters > radius && !isGeofenceBypassActive()) {
-    res.status(400).json({
-      message: formatTooFarFromSiteMessage(meters, radius),
-      code: OFF_GEOFENCE,
-      distanceMeters: Math.round(meters),
-      radiusMeters: radius,
-    });
-    return;
-  }
+  const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
 
   const expectedDuration =
     typeof b.expectedDurationMinutes === "number" &&
@@ -1518,8 +1505,9 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       hostType: "partner",
       hostPartnerId: site.partnerId,
       hostVendorId: null,
-      checkInLatitude: b.latitude,
-      checkInLongitude: b.longitude,
+      checkInLatitude: gpsEvidence.latitude,
+      checkInLongitude: gpsEvidence.longitude,
+      checkInGpsEvidence: gpsEvidence,
       safetyAcknowledgedAt: new Date(),
       expiresAt,
       recordedByUserId: session.userId ?? null,
@@ -1595,7 +1583,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     res.status(400).json({ message: "Invalid id", code: VISIT_INVALID_ID });
     return;
   }
-  const b = (req.body ?? {}) as { latitude?: number; longitude?: number; notes?: string };
+  const b = (req.body ?? {}) as { latitude?: number; longitude?: number; notes?: string; gateStationId?: string };
   const [visit] = await db
     .select()
     .from(siteVisitsTable)
@@ -1622,12 +1610,22 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     res.json({ ...visit, plateState: normalizePlateState(visit.plateState) });
     return;
   }
+  const gateId = b.gateStationId ?? (typeof visit.checkInGpsEvidence?.gateStationId === "string" ? visit.checkInGpsEvidence.gateStationId : undefined);
+  let selectedGate = null;
+  if (gateId) {
+    if (!z.string().uuid().safeParse(gateId).success) { res.status(400).json({ message: "Invalid gate location", code: VISIT_INVALID_INPUT }); return; }
+    const allowed = await listChangeOverStations(session, visit.siteLocationId);
+    if (!allowed.some(gate => gate.id === gateId)) { res.status(403).json({ message: "Gate location is not available to this operator", code: VISIT_NO_ACCESS }); return; }
+    [selectedGate] = await db.select().from(gateStationsTable).where(and(eq(gateStationsTable.id, gateId), eq(gateStationsTable.siteId, visit.siteLocationId)));
+  }
+  const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
   const [updated] = await db
     .update(siteVisitsTable)
     .set({
       checkOutTime: new Date(),
-      checkOutLatitude: typeof b.latitude === "number" ? b.latitude : null,
-      checkOutLongitude: typeof b.longitude === "number" ? b.longitude : null,
+      checkOutLatitude: gpsEvidence.latitude,
+      checkOutLongitude: gpsEvidence.longitude,
+      checkOutGpsEvidence: gpsEvidence,
       checkOutNotes: trimVisitNotes(b.notes) ?? visit.checkOutNotes,
     })
     .where(eq(siteVisitsTable.id, id))

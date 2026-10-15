@@ -62,9 +62,11 @@ export const siteVisitsTable = pgTable(
     checkInTime: timestamp("check_in_time", { withTimezone: true }).notNull().defaultNow(),
     checkInLatitude: doublePrecision("check_in_latitude"),
     checkInLongitude: doublePrecision("check_in_longitude"),
+    checkInGpsEvidence: jsonb("check_in_gps_evidence").$type<Record<string, unknown>>(),
     checkOutTime: timestamp("check_out_time", { withTimezone: true }),
     checkOutLatitude: doublePrecision("check_out_latitude"),
     checkOutLongitude: doublePrecision("check_out_longitude"),
+    checkOutGpsEvidence: jsonb("check_out_gps_evidence").$type<Record<string, unknown>>(),
     autoCheckedOut: boolean("auto_checked_out").notNull().default(false),
     recordedByUserId: integer("recorded_by_user_id"),
 

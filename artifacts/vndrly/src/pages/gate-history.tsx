@@ -15,6 +15,8 @@ type GateHistoryRow = {
   id: string; name?: string; company?: string | null; vehiclePlate?: string | null;
   plateState?: string | null; checkInTime?: string; checkOutTime?: string | null;
   reconciliationState?: string | null; kind?: string;
+  checkInGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;
+  checkOutGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;
 };
 
 const RANGE_OPTIONS: Array<[GateReportRange, string]> = [
@@ -76,6 +78,9 @@ export default function GateHistoryPage() {
           </div>
           {rows.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : rows.isError ? <p className="text-sm text-destructive">{t("gatekeeper.historyLoadFailed")}</p> : !rows.data?.length ? <p className="text-sm text-muted-foreground">{t("gatekeeper.historyEmpty")}</p> : rows.data.map((visit) => (
             <div key={visit.id} className={`${CARD_INNER_TILE_CLASS} transition-colors hover:bg-gray-50`} data-testid="gate-history-row">
+              {(["checkInGpsEvidence", "checkOutGpsEvidence"] as const).map(key => visit[key] && <p key={key} className="text-xs font-semibold" data-testid={`gps-${key}`}>
+                {key === "checkInGpsEvidence" ? t("gatekeeper.gpsEntry") : t("gatekeeper.gpsExit")}: {t(`gatekeeper.gpsEvidence.${visit[key]!.status}`, { defaultValue: t("gatekeeper.gpsEvidence.unavailable") })}{visit[key]!.gateName ? ` · ${visit[key]!.gateName}` : ""}{visit[key]!.distanceMeters != null ? ` · ${visit[key]!.distanceMeters} m` : ""}
+              </p>)}
               <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold text-foreground">{visit.name || "Gate record"}</p><p className="truncate text-xs text-muted-foreground">{[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}</p><p className="text-xs text-muted-foreground">{visit.checkInTime ? new Date(visit.checkInTime).toLocaleString() : ""}{visit.checkOutTime ? ` → ${new Date(visit.checkOutTime).toLocaleString()}` : ""}</p></div><span className="shrink-0 text-xs font-semibold text-muted-foreground">{visit.reconciliationState === "needs_review" ? "Needs review" : visit.checkOutTime ? t("gatekeeper.historyCheckedOut") : t("gatekeeper.historyOnSite")}</span></div>
             </div>
           ))}

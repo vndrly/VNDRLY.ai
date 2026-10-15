@@ -232,6 +232,20 @@ beforeEach(() => {
 });
 
 describe("GatekeeperPage plate state", () => {
+  it("submits a gate entry when GPS is unavailable", async () => {
+    Object.defineProperty(navigator, "geolocation", { configurable: true, value: undefined });
+    renderPage();
+    await screen.findByTestId("input-gate-plate");
+    fireEvent.change(screen.getByTestId("input-gate-first-name"), { target: { value: "Jordan" } });
+    fireEvent.change(screen.getByTestId("input-gate-last-name"), { target: { value: "Hale" } });
+    fireEvent.change(screen.getByTestId("input-gate-plate"), { target: { value: "4412" } });
+    const button = screen.getByTestId("button-gate-check-in") as HTMLButtonElement;
+    await waitFor(() => expect(button.disabled).toBe(false));
+    fireEvent.click(button);
+    await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(1));
+    expect(api.gateCheckIn.mock.calls[0][0].latitude).toBeUndefined();
+    expect(api.gateCheckIn.mock.calls[0][0].longitude).toBeUndefined();
+  });
   it("locks the GPS-determined company and localizes the current-location selector", async () => {
     locale.spanish = true;
     renderPage();
