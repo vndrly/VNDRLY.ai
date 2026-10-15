@@ -2365,7 +2365,24 @@
     "trainingMarkComplete": "Marcar completado",
     "trainingCompleteToast": "Capacitación marcada como completada.",
     "trainingCompleteFailed": "No se pudo marcar la capacitación como completada.",
-    "trainingAllComplete": "Toda la capacitación requerida está completa."
+    "trainingAllComplete": "Toda la capacitación requerida está completa.",
+    "scoreDetails": {
+      "title": "Puntuación de seguridad",
+      "company": "Puntuación de seguridad de la empresa",
+      "unavailable": "No se pudo cargar. Inténtalo de nuevo en breve.",
+      "explanation": "La puntuación comienza en 100. Los incidentes registrables abiertos, los eventos de alto potencial con más de 7 días y los eventos abiertos sin actualizar reducen la puntuación. Los reportes recientes de casi accidentes pueden sumar puntos, hasta 100.",
+      "events": "Eventos abiertos: {{count}} · Alto potencial: {{hipo}}",
+      "improve": "Mejora la puntuación dando seguimiento a incidentes y acciones correctivas, atendiendo eventos de alto potencial pendientes y reportando casi accidentes a tiempo.",
+      "reviewEvents": "Revisar eventos de seguridad",
+      "myActions": "Mis acciones requeridas",
+      "separate": "Mantén tu capacitación y certificaciones al día. Estos requisitos se muestran por separado y no cambian la puntuación de incidentes.",
+      "trainingCount": "{{count}} elemento(s) de capacitación de seguridad pendiente(s)",
+      "training": "Abrir capacitación de seguridad requerida",
+      "assignments": "Ver mi capacitación y formularios asignados",
+      "certHint": "Revisa el estado de tus certificaciones, sus fechas de vencimiento y requisitos de renovación.",
+      "certifications": "Mis certificaciones",
+      "loading": "Cargando…"
+    }
   },
   "meetingWorkspace": {
     "opening": "Abriendo la reunión…",
