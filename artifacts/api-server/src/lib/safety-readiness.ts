@@ -14,3 +14,11 @@ export function assessSafetyReadiness(incidentScore: number, evidence: Readiness
   const readinessPoints = categories.reduce((sum, c) => sum + c.points, 0);
   return { version: 1, incidentScore, incidentPoints, readinessPoints, readinessWeight: 60, incidentWeight: 40, score: Math.round(incidentPoints + readinessPoints), maximumScore: Math.round(incidentPoints + categories.reduce((sum, c) => sum + c.maximumPoints, 0)), provisional: categories.some(c => c.provisional), categories };
 }
+
+export function currentCredential(record: {vendorVerifiedAt: unknown; expirationDate: string | null; issuedDate?: string | null}, today: string) {
+ return Boolean(record.vendorVerifiedAt && record.expirationDate && record.expirationDate >= today && (!record.issuedDate || record.issuedDate <= today));
+}
+export function currentFleetInspection(run: {vehicleAssetId:string;trailerAssetId:string|null;driverUserId:number;inspections:{vehicleAssetId:string;trailerAssetId:string|null;driverUserId:number;outcome:string}[]}) {
+ const latest=run.inspections.at(-1);
+ return Boolean(latest?.outcome === "passed" && latest.vehicleAssetId === run.vehicleAssetId && latest.trailerAssetId === run.trailerAssetId && latest.driverUserId === run.driverUserId);
+}

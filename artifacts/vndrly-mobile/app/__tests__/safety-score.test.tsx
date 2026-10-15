@@ -5,6 +5,7 @@ const m = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn(), ca
 vi.mock("expo-router", () => ({ router: m, Stack: { Screen: () => null } }));
 vi.mock("react-native", () => ({ View: ({ children }: any) => <div>{children}</div>, Text: ({ children }: any) => <span>{children}</span>, ScrollView: ({ children }: any) => <div>{children}</div> }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:{id:1},activeMembershipId:1})}));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({}) }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "teal" }) }));
 vi.mock("@/components/InPageHeader", () => ({ default: () => null }));

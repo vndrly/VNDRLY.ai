@@ -3,6 +3,7 @@ import { router, Stack } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useBrand } from "@/hooks/use-brand";
@@ -11,10 +12,11 @@ import { fetchSafetyMetrics, fetchCompanySafetyReadiness } from "@/lib/safety-ap
 
 export default function SafetyScoreScreen() {
   const { t } = useTranslation();
+  const { user, activeMembershipId } = useAuth();
   const colors = useColors();
   const brand = useBrand();
   const metrics = useQuery({ queryKey: ["safety-metrics"], queryFn: fetchSafetyMetrics });
-  const readiness = useQuery({ queryKey: ["company-safety-readiness"], queryFn: fetchCompanySafetyReadiness });
+  const readiness = useQuery({ queryKey: ["company-safety-readiness", user?.id, activeMembershipId], queryFn: fetchCompanySafetyReadiness });
   const card = { backgroundColor: colors.card, borderColor: brand.primary, borderWidth: 2, borderRadius: 12, padding: 16, gap: 10 };
   const text = { color: colors.foreground };
   return <View style={{ flex: 1 }}>

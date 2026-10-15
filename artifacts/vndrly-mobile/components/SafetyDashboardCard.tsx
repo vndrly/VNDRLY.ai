@@ -7,12 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
-import { fetchSafetyMetrics } from "@/lib/safety-api";
+import { useAuth } from "@/hooks/use-auth";
+import { fetchCompanySafetyReadiness, fetchSafetyMetrics } from "@/lib/safety-api";
 
 export default function SafetyDashboardCard() {
   const { t } = useTranslation();
   const colors = useColors();
   const brand = useBrand();
+  const { user, activeMembershipId } = useAuth();
+  const readiness = useQuery({queryKey:["company-safety-readiness",user?.id,activeMembershipId],queryFn:fetchCompanySafetyReadiness,refetchInterval:60000});
   const { data, isLoading } = useQuery({
     queryKey: ["safety-metrics"],
     queryFn: fetchSafetyMetrics,
@@ -33,7 +36,7 @@ export default function SafetyDashboardCard() {
       <View style={styles.grid}>
         <Pressable accessibilityRole="button" accessibilityLabel={t("safety.score")} onPress={() => router.push("/safety-score")} style={styles.metric}>
           <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.score")}</Text>
-          <Text style={[styles.metricValue, { color: colors.foreground }]}>{data.safetyScore}</Text>
+          <Text style={[styles.metricValue, { color: colors.foreground }]}>{readiness.data ? `${readiness.data.score}${readiness.data.provisional ? "*" : ""}` : "—"}</Text>
         </Pressable>
         <View style={styles.metric}>
           <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.daysClean")}</Text>

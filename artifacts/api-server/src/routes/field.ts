@@ -1070,6 +1070,11 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
     }
   }
 
+  if (req.query.assignedToMe === "1" && ctx.mode !== "field") {
+    // My Work is personal even when this viewer can inspect the company's tickets.
+    conditions.push(sql`(${ticketsTable.foremanUserId}=${ctx.session.userId} or exists (select 1 from vendor_people vp where vp.id=${ticketsTable.fieldEmployeeId} and vp.user_id=${ctx.session.userId}) or exists (select 1 from ticket_crew tc join vendor_people vp on vp.id=tc.employee_id where tc.ticket_id=${ticketsTable.id} and tc.removed_at is null and vp.user_id=${ctx.session.userId}))`);
+  }
+
   const rows = await db
     .select({
       id: ticketsTable.id,

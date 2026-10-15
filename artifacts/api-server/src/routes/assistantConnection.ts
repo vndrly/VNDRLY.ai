@@ -555,6 +555,7 @@ router.post("/mcp", async (req, res) => {
       }
       if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
       output.availableViews = [];
+      if(allowedNames.has("lookup_safety_metrics"))output.availableViews.push("safety");
       for(const [view,tool] of [["library","list_work_hub_library"],["bundles","list_library_bundles"],["checklist","get_library_checklist"],["library_progress","get_library_assignments"]] as const)if(allowedNames.has(tool))output.availableViews.push(view);
       for(const [view,tool] of [["library_item","get_work_hub_library"],["bundle","get_library_bundle"],["training","get_library_assignment"],["library_assignment","get_library_assignment_progress"]] as const)if(request.view===view&&allowedNames.has(tool))output.availableViews.push(view);
 
@@ -935,3 +936,4 @@ function oauthError(res: Response, error: unknown) {
   return res.status(error instanceof AssistantOAuthError ? 400 : 503).json({ error: error instanceof AssistantOAuthError ? error.code : "temporarily_unavailable" });
 }
 export default router;
+

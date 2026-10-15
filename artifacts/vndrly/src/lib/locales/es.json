@@ -4816,7 +4816,6 @@
   "fieldNav": {
     "home": "Inicio",
     "schedule": "Agenda",
-    "scan": "Escanear",
     "profile": "Perfil",
     "aria": "Navegación del portal de campo"
   },
@@ -4826,7 +4825,6 @@
     "map": "Mapa",
     "crews": "Cuadrillas",
     "analytics": "Analítica",
-    "scan": "Escanear",
     "profile": "Perfil",
     "aria": "Navegación del portal de capataz"
   },

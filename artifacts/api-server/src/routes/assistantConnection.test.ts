@@ -1315,7 +1315,8 @@ it.each([{savedName:'prepare_workforce_coverage_action_assign',legacy:false},{sa
  expect((await invoke({action:'escalate'})).body.result.isError).toBe(true);
  grants[0].scopes=grants[0].scopes.filter(x=>x!=='workforce:read');mocks.run.mockClear();
  expect((await invoke()).body.result.isError).toBe(true);expect(mocks.run).not.toHaveBeenCalled();
-});it('prepares a signed fixed background operation through actual MCP without executing or granting approval',async()=>{
+});
+it('prepares a signed fixed background operation through actual MCP without executing or granting approval',async()=>{
  const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
  const previous=process.env.ASSISTANT_PLAN_EXECUTION_ENABLED;process.env.ASSISTANT_PLAN_EXECUTION_ENABLED='1';
  try{

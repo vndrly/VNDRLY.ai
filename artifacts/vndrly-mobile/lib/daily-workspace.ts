@@ -84,18 +84,7 @@ export function dailySummary(s: DailySources) {
         ? tasks.length + safety.length + notices.length
         : null,
     safetyCount: s.safety ? safety.length : null,
-    myWorkCount:
-      s.tasks && s.tickets
-        ? tasks.length +
-          s.tickets.filter(
-            (row) =>
-              !["approved", "funds_dispersed", "cancelled", "denied"].includes(
-                row.status,
-              ),
-          ).length +
-          (s.runs?.length ?? 0) +
-          (s.shifts?.length ?? 0)
-        : null,
+    myWorkCount: s.tasks && s.tickets ? myWorkItems(s).length : null,
     calendarCount:
       s.calendar && s.tickets
         ? calendar.length +
@@ -118,6 +107,11 @@ export async function loadDailySources(
   const now = new Date(),
     end = new Date(now);
   end.setDate(end.getDate() + 90);
+  const fleetRuns = async () => {
+    const first = await fetcher<any>("/api/fleet/overview"); const runs = [...(first.runs ?? [])]; const seen = new Set<string>(); let cursor = first.page?.nextCursor;
+    while (cursor) { if (seen.has(cursor)) throw Error("Fleet pagination did not advance"); seen.add(cursor); const next=await fetcher<any>(`/api/fleet/overview?cursor=${encodeURIComponent(cursor)}`); runs.push(...(next.runs??[])); cursor=next.page?.nextCursor; }
+    return {runs};
+  };
   const results = await Promise.allSettled([
     fetcher<any>("/api/work-hub/home?workOrder=assigned"),
     fetcher<any>("/api/notifications?limit=100"),
@@ -126,10 +120,10 @@ export async function loadDailySources(
       `/api/work-hub/calendar?start=${now.toISOString()}&end=${end.toISOString()}`,
     ),
     context?.field
-      ? fetcher<any>("/api/field/open-tickets")
+      ? fetcher<any>("/api/field/open-tickets?assignedToMe=1")
       : Promise.resolve({ tickets: [] }),
     context?.fleet
-      ? fetcher<any>("/api/fleet/overview")
+      ? fleetRuns()
       : Promise.resolve({ runs: [] }),
   ]);
   const value = (i: number) =>

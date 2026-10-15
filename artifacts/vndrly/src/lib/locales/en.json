@@ -4816,7 +4816,6 @@
   "fieldNav": {
     "home": "Home",
     "schedule": "Schedule",
-    "scan": "Scan",
     "profile": "Profile",
     "aria": "Field portal navigation"
   },
@@ -4826,7 +4825,6 @@
     "map": "Map",
     "crews": "Crews",
     "analytics": "Analytics",
-    "scan": "Scan",
     "profile": "Profile",
     "aria": "Foreman portal navigation"
   },

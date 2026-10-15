@@ -18,7 +18,7 @@ export function DailyWorkspace() {
     queryFn: async () => {
       const categories = user?.vendorId ? (await read("/api/company-operations")).categories as string[] : [];
       const jobs: [string, Promise<any>][] = [["tasks", read("/api/work-hub/home?workOrder=assigned")]];
-      if (categories.includes("field")) jobs.push(["tickets", read("/api/field/open-tickets")]);
+      if (categories.includes("field")) jobs.push(["tickets", read("/api/field/open-tickets?assignedToMe=1")]);
       if (categories.includes("fleet")) jobs.push(["runs", (async () => {
         const page = await read("/api/fleet/overview"), runs = [...(page.runs ?? [])], seen = new Set<string>();
         let cursor = page.page?.nextCursor;
@@ -33,7 +33,7 @@ export function DailyWorkspace() {
         const value = result.value;
         if (kind === "tasks") items.push(...(value.tasks ?? []).filter((row: any) => !["completed", "cancelled", "archived"].includes(row.status)).map((row: any) => ({ id: `task:${row.id}`, kind:"task" as const, assignedAt:row.assignedAt ?? row.createdAt, title: row.title, status: row.status, href: `/work-hub/tasks?task=${encodeURIComponent(row.id)}` })));
         if (kind === "tickets") items.push(...(Array.isArray(value) ? value : value.tickets ?? []).filter((row: any) => !["approved", "funds_dispersed", "cancelled", "denied"].includes(row.status)).map((row: any) => ({ id: `ticket:${row.id}`, kind:"ticket" as const, assignedAt:row.assignedAt ?? row.createdAt, title: row.ticketNumber ?? `Ticket #${row.id}`, status: row.status, href: `/tickets/${row.id}` })));
-        if (kind === "runs") items.push(...(value.runs ?? []).filter((row: any) => row.driverUserId === user?.userId && !["completed", "cancelled"].includes(row.status)).map((row: any) => ({ id: `run:${row.id}`, kind:"run" as const, assignedAt:[...(row.events??[])].reverse().find((event:any)=>["dispatch","reassign"].includes(event.type))?.recordedAt, title: row.title, status: row.status, href: `/fleet/runs/${encodeURIComponent(row.id)}` })));
+        if (kind === "runs") items.push(...(value.runs ?? []).filter((row: any) => row.driverUserId === user?.userId && !["draft", "completed", "cancelled"].includes(row.status)).map((row: any) => ({ id: `run:${row.id}`, kind:"run" as const, assignedAt:[...(row.events??[])].reverse().find((event:any)=>["dispatch","reassign"].includes(event.type))?.recordedAt, title: row.title, status: row.status, href: `/fleet/runs/${encodeURIComponent(row.id)}` })));
       });
       const home = results[0].status === "fulfilled" ? results[0].value : null;
       items.push(...(home?.shifts ?? []).filter((row:any)=>row.shift.ownerOrgId===(user?.vendorId??user?.partnerId) && !["cancelled","declined"].includes(row.assignment?.status) && !["cancelled","completed"].includes(row.shift?.milestoneStatus)).map((row:any)=>({id:`shift:${row.shift.id}`,kind:"shift" as const,title:row.shift.title??"Assigned shift",status:row.assignment?.status??"assigned",assignedAt:row.assignment?.createdAt,href:`/work-hub/shifts?shift=${encodeURIComponent(row.shift.id)}`})));

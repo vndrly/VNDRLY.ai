@@ -493,6 +493,22 @@ router.get("/implementation-a/trips", async (req, res) => {
   } catch (error) { return sendError(res, error); }
 });
 
+router.get("/implementation-a/trips", async (req, res) => {
+  try {
+    const context = actor(req);
+    const scope = fieldTripOverviewScope(context.session);
+    const rows = await db.select({ trip: fieldTripsTable, driverName: usersTable.displayName, vehicleName: assetsTable.name, siteName: siteLocationsTable.name })
+      .from(fieldTripsTable).innerJoin(siteLocationsTable, eq(fieldTripsTable.siteLocationId, siteLocationsTable.id))
+      .leftJoin(usersTable, eq(fieldTripsTable.driverUserId, usersTable.id))
+      .leftJoin(assetsTable, and(eq(fieldTripsTable.vehicleAssetId, assetsTable.id), eq(assetsTable.responsibleOrgType, fieldTripsTable.ownerOrgType), eq(assetsTable.responsibleOrgId, fieldTripsTable.ownerOrgId)))
+      .where(and(scope, activeFieldTripFilter())).orderBy(desc(fieldTripsTable.updatedAt)).limit(201);
+    return res.json({ generatedAt: new Date().toISOString(), truncated: rows.length > 200, trips: rows.slice(0, 200).map(({ trip, driverName, vehicleName, siteName }) => {
+      const exact = context.session.role === "admin" || context.session.membershipRole === "admin" || trip.driverUserId === context.session.userId || ["dispatcher", "foreman", "both", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? "");
+      return { id: trip.id, driverUserId: trip.driverUserId, driverName, vehicleAssetId: trip.vehicleAssetId, vehicleName, siteLocationId: trip.siteLocationId, siteName, trackingState: trip.trackingState, presenceState: trip.presenceState, ...(exact ? fieldTripOverviewPosition(trip) : { location: null, recordedAt: null, ageSeconds: null, freshness: "redacted" }) };
+    }) });
+  } catch (error) { return sendError(res, error); }
+});
+
 router.get("/implementation-a/trips/:tripId", async (req, res) => {
   try {
     const context = actor(req);
