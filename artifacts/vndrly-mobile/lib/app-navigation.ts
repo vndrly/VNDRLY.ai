@@ -103,7 +103,7 @@ export function buildAppNavigation({
 
   const result: AppNavigationItem[] = [
     item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"),
-    { ...item("index", "/(tabs)", labels.home, "home"), badge: badges.home },
+    item("index", "/(tabs)", labels.home, "home"),
     item("work-hub", "/work-hub", labels.workHub, "briefcase"),
     {
       ...item("schedule", "/work-hub/calendar", labels.schedule, "calendar"),
@@ -114,6 +114,10 @@ export function buildAppNavigation({
       badge: badges.flagged,
     },
   ];
+  if (user?.role === "vendor" || user?.role === "admin") {
+    const flaggedIndex = result.findIndex(entry => entry.key === "flagged");
+    if (flaggedIndex >= 0) result.splice(flaggedIndex, 1);
+  }
   if (fleetSupportEnabled) result.splice(2, 0, item("fleet-support", "/(tabs)/fleet-support", labels.fleetSupport ?? "Fleet support", "shield"));
   if (fleetSiteActivityEnabled) result.splice(2, 0, item("fleet-site-activity", "/(tabs)/fleet-site-activity", labels.fleetSiteActivity ?? "Fleet site activity", "activity"));
   if (fleetEnabled) result.splice(2, 0, item("fleet", "/(tabs)/fleet", labels.fleet ?? "Fleet Ops", "truck"));

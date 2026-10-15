@@ -1263,6 +1263,7 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
   if (!ctx) return;
   const {
     siteLocationId,
+    fieldEmployeeId: assignedEmployeeId,
     workTypeId,
     latitude,
     longitude,
@@ -1272,6 +1273,24 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
     foremanUserId: rawForemanUserId,
     startingMileage: rawStartingMileage,
   } = req.body ?? {};
+
+  const assigning = assignedEmployeeId != null;
+  let targetEmployeeId = ctx.employee.id;
+  if (assigning) {
+    if (!["foreman", "both"].includes(ctx.session.vendorRole ?? "")) {
+      res.status(403).json({code:"foreman.required",message:"Foreman access required"}); return;
+    }
+    if (!Number.isInteger(assignedEmployeeId) || assignedEmployeeId <= 0) {
+      res.status(400).json({code:"ticket.employee_invalid",message:"Invalid employee"}); return;
+    }
+    const [target] = await db.select({id:vendorPeopleTable.id}).from(vendorPeopleTable).where(and(
+      eq(vendorPeopleTable.id,assignedEmployeeId),eq(vendorPeopleTable.vendorId,ctx.employee.vendorId),
+      eq(vendorPeopleTable.isActive,true),isNull(vendorPeopleTable.deletedAt),
+      inArray(vendorPeopleTable.vendorRole,["field","foreman","both"])
+    ));
+    if (!target) {res.status(400).json({code:"ticket.employee_vendor_mismatch",message:"Employee must be active in this company"});return;}
+    targetEmployeeId=target.id;
+  }
 
   // T004: field self-create may include the starting odometer. The
   // mobile new-ticket form prompts for it whenever `initialState ===
@@ -1411,7 +1430,7 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
   // at the moment of submission.
   const isAdjacent = adjacent === true || adjacent === "1";
   const shouldCheckIn =
-    isAdjacent || (requestedState === "on_site" && insideGeofence);
+    !assigning && (isAdjacent || (requestedState === "on_site" && insideGeofence));
   const now = new Date();
   const initialStatus = shouldCheckIn ? "in_progress" : "initiated";
 
@@ -1455,7 +1474,7 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
       .values({
         siteLocationId,
         vendorId: ctx.employee.vendorId,
-        fieldEmployeeId: ctx.employee.id,
+        fieldEmployeeId: targetEmployeeId,
         workTypeId,
         status: initialStatus,
         intakeChannel: "vendor_field_self_service",
@@ -1470,7 +1489,7 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
         // freshly opened ticket is immediately attributed to the on-site
         // lead. Spec calls for this to be overridable — see
         // resolvedForemanUserId above for the validated override path.
-        foremanUserId: resolvedForemanUserId,
+        foremanUserId: assigning ? null : resolvedForemanUserId,
       })
       .returning();
     await recordTicketTransition({
@@ -1515,10 +1534,10 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
   }
 
   // In-app + push via notifyUsers (prefs, badge, bell sound).
-  void notifyFieldEmployee(ctx.employee.id, {
+  void notifyFieldEmployee(targetEmployeeId, {
     type: "ticket_assigned",
-    title: "New Tracking Started",
-    body: `Tracking #${String(ticket.id).padStart(4, "0")} is now in progress.`,
+    title: assigning ? "New Ticket Assigned" : "New Tracking Started",
+    body: assigning ? `Ticket #${ticket.id} has been assigned to you.` : `Tracking #${String(ticket.id).padStart(4, "0")} is now in progress.`,
     link: `/tickets/${ticket.id}`,
     pushData: { ticketId: ticket.id, type: "ticket_assigned" },
   });

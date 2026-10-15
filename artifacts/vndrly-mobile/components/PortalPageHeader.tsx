@@ -12,6 +12,7 @@ type Props = {
   testIdPrefix: string;
   fallbackHref?: string;
   backBehavior?: "history" | "destination";
+  notificationHref?: string;
 };
 
 /** Approved iOS portal header: company identity, then true Back + page title + Ask V. */
@@ -20,6 +21,7 @@ export default function PortalPageHeader({
   testIdPrefix,
   fallbackHref = "/profile",
   backBehavior = "destination",
+  notificationHref,
 }: Props) {
   const colors = useColors();
 
@@ -39,6 +41,7 @@ export default function PortalPageHeader({
     <View style={styles.standardHeader} testID={`${testIdPrefix}-standard-header`}>
       <BrandTitleRow
         subtitle="iOS Portal"
+        notificationHref={notificationHref}
         logoTestId={`${testIdPrefix}-company-logo`}
         platformLogoTestId={`${testIdPrefix}-vndrly-logo`}
       />

@@ -12,7 +12,8 @@ import {
   View,
 } from "react-native";
 
-import InPageHeader from "@/components/InPageHeader";
+import PortalPageHeader from "@/components/PortalPageHeader";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
@@ -63,10 +64,9 @@ export default function FlaggedTab() {
 
   return (
     <View style={{ flex: 1 }}>
-      <InPageHeader
-        title={t("flagged.title")}
-        onBack={() => router.push("/(tabs)" as never)}
-      />
+      <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
+        <PortalPageHeader title={t("flagged.title")} testIdPrefix="flagged-jobs" fallbackHref="/" backBehavior="history" notificationHref="/notifications" />
+      </ScreenSafeArea>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}

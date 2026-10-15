@@ -4176,7 +4176,9 @@
       "ending_mileage_invalid": "Enter a valid ending mileage.",
       "ending_mileage_below_start": "Ending mileage must be greater than or equal to the starting mileage.",
       "not_approvable": "This ticket isn't ready to be approved.",
-      "invalid_field_employee_id": "That field employee can't be assigned to this ticket."
+      "invalid_field_employee_id": "That field employee can't be assigned to this ticket.",
+      "employee_invalid": "Select a valid employee.",
+      "employee_vendor_mismatch": "Select an active field employee from this company."
     },
     "invalid_ticket_id": "That ticket id is invalid.",
     "ticket_not_found": "Ticket not found.",

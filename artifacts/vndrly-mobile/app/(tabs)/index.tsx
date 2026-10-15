@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -21,16 +20,12 @@ import { useScreenTopPadding } from "@/lib/screen-insets";
 
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 
-import AuthedImage from "@/components/AuthedImage";
-import NotificationBell from "@/components/NotificationBell";
-import { useSidebarNotifications } from "@/components/SidebarNotificationsContext";
+import PortalPageHeader from "@/components/PortalPageHeader";
 import ForemanQuickActions from "@/components/ForemanQuickActions";
 import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModal";
-import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
-import SafetyDashboardCard from "@/components/SafetyDashboardCard";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
@@ -40,8 +35,10 @@ import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
 import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
+import { filterOfficeTickets, type OfficeTicketFilter } from "@/lib/office-ticket-filters";
 import { type MobileOpenTicket, type PortalTicketRow, fetchPortalTicketsForHome, mapPortalTicket } from "@/lib/portal-tickets";
 import {
+  homeTabTitleKey,
   isFieldEmployeeUser,
   isForemanEmployeeUser,
   isOfficeMobileViewer,
@@ -49,7 +46,6 @@ import {
   isVendorOfficeUser,
   isAdminOfficeUser,
 } from "@/lib/mobile-viewer";
-import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { setHomeBadge } from "@/lib/tabBadges";
 import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 import {
@@ -81,6 +77,10 @@ export default function HomeScreen() {
     },
   } = useAuth();
   const topPadding = useScreenTopPadding();
+  const [officeTicketFilter, setOfficeTicketFilter] = useState<OfficeTicketFilter>("active");
+  const [flaggedTicketIds, setFlaggedTicketIds] = useState<number[]>([]);
+  const [flagsError, setFlagsError] = useState(false);
+  const [flagsLoading, setFlagsLoading] = useState(false);
   const [jobView, setJobView] = useState<"active" | "stale" | "history">("active");
   const [recentJobs, setRecentJobs] = useState<OpenTicket[]>([]);
   const [historyBusy, setHistoryBusy] = useState(false);
@@ -102,7 +102,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const unreadCount = useUnreadNotificationCount(true);
-  const sidebarNotifications = useSidebarNotifications();
   const [pendingScheduleCount, setPendingScheduleCount] = useState(0);
   const [schedulePickerOpen, setSchedulePickerOpen] = useState(false);
   // Task #630: brief confirmation toast that appears when a foreground
@@ -239,13 +238,6 @@ export default function HomeScreen() {
   const orgType: "partner" | "vendor" | null =
     activeMembership?.orgType ??
     (me?.role === "field_employee" || me?.role === "vendor" ? "vendor" : me?.role === "partner" ? "partner" : null);
-  const headerBrandLogoUri =
-    (brand.isOrgBranded ? (brand.logoSquareUrl ?? brand.logoUrl) : null) ??
-    activeMembership?.orgLogoUrl ??
-    null;
-  const headerBrandName =
-    brand.name ?? activeMembership?.orgName ?? t("home.brandWordmark");
-
   // The mobile home screen has historically been a field-employee
   // workspace: "New Ticket" and "History" assume a vendor_people row
   // backs the session. We now also let
@@ -261,6 +253,16 @@ export default function HomeScreen() {
   // Direct assignments are vendor-side (offered to a vendor org). Surface
   // for any user whose active org is a vendor (admin, member, or field).
   const isVendorViewer = orgType === "vendor";
+  useEffect(() => { setOfficeTicketFilter("active"); setFlaggedTicketIds([]); setFlagsError(false); }, [me?.id, activeMembershipId]);
+  useEffect(() => {
+    if (!isVendorOfficeViewer || officeTicketFilter !== "flagged") return;
+    let current = true; setFlagsLoading(true); setFlagsError(false);
+    void apiFetch<{ tickets?: {ticketId:number}[] }>("/api/tickets/flagged").then(result => {
+      if (current) setFlaggedTicketIds((result.tickets ?? []).map(row => row.ticketId));
+    }).catch(() => { if (current) setFlagsError(true); }).finally(() => { if (current) setFlagsLoading(false); });
+    return () => { current = false; };
+  }, [isVendorOfficeViewer, officeTicketFilter, lastLoadedAt, me?.id, activeMembershipId]);
+  const visibleOfficeTickets = useMemo(() => filterOfficeTickets(tickets, officeTicketFilter, flaggedTicketIds), [tickets, officeTicketFilter, flaggedTicketIds]);
   const latestTicketForQuickActions = useMemo(() => {
     return [...tickets].sort((a, b) => {
       const aTs = Date.parse(a.updatedAt ?? a.createdAt);
@@ -367,7 +369,7 @@ export default function HomeScreen() {
         try {
           if (isTicketsRateLimited()) return false;
           const data = isOfficeViewer
-            ? await fetchPortalTicketsForHome()
+            ? await fetchPortalTicketsForHome({ allPages: isVendorOfficeViewer })
             : await apiFetch<OpenTicket[]>(
                 isForemanEmployee
                   ? "/api/field/open-tickets?vendorWide=1"
@@ -408,6 +410,7 @@ export default function HomeScreen() {
       isFieldEmployee,
       isForemanEmployee,
       isOfficeViewer,
+      isVendorOfficeViewer,
       clearLoadRetry,
       scheduleLoadRetry,
     ],
@@ -488,7 +491,7 @@ export default function HomeScreen() {
         await load({ silent: true });
       }
     },
-    [load, isOfficeViewer],
+    [load, isOfficeViewer, isVendorOfficeViewer],
   );
 
   useFocusEffect(
@@ -713,164 +716,23 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.brandRow,
-          { paddingTop: topPadding },
-        ]}
-      >
-        <View style={styles.brandLeft}>
-          {headerBrandLogoUri ? (
-            <AuthedImage
-              uri={headerBrandLogoUri}
-              fallback={
-                <View
-                  style={[
-                    styles.brandLogo,
-                    {
-                      backgroundColor: brand.primary,
-                      borderRadius: 12,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
-                  ]}
-                  accessibilityLabel={headerBrandName}
-                >
-                  <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
-                    {(headerBrandName[0] ?? "V").toUpperCase()}
-                  </Text>
-                </View>
-              }
-              style={styles.brandLogo}
-              resizeMode="contain"
-              accessibilityLabel={headerBrandName}
-            />
-          ) : (
-            <Image
-              source={VNDRLY_LOGO_SQUARE}
-              style={styles.brandLogo}
-              resizeMode="contain"
-              accessibilityLabel={t("home.brandWordmark")}
-            />
-          )}
-          {(me?.displayName || orgName) ? (
-            <View style={styles.brandIdentity}>
-              <Text
-                style={[styles.brandVendor, { color: colors.mutedForeground }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {t("home.brandWordmark")}
-              </Text>
-              {me?.displayName ? (
-                <Text
-                  style={[styles.brandName, { color: colors.foreground }]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {me.displayName}
-                </Text>
-              ) : null}
-              {orgName ? (
-                // Task #187 — when the user belongs to more than one
-                // org, the row becomes a tappable switcher that opens
-                // a bottom sheet listing every membership. Single-
-                // membership users keep the previous static View so
-                // the pill doesn't advertise an interaction that
-                // wouldn't do anything. We pick TouchableOpacity (the
-                // same primitive the existing header buttons use) so
-                // the press feedback feels consistent with the rest
-                // of the row, and we extend the hit area with
-                // `hitSlop` because the pill itself is small.
-                canSwitchOrg ? (
-                  <TouchableOpacity
-                    onPress={() => setSwitcherOpen(true)}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("auth.switchOrgOpenA11y", {
-                      org: orgName,
-                    })}
-                    accessibilityHint={t("auth.switchOrgOpenHint")}
-                    style={styles.orgRow}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    testID="button-open-org-switcher"
-                  >
-                    <Text
-                      style={[styles.brandVendor, { color: colors.mutedForeground, flexShrink: 1 }]}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      testID="text-active-org-name"
-                    >
-                      {orgName}
-                    </Text>
-                    {orgType && !isFieldEmployee ? (
-                      <View
-                        style={[
-                          styles.orgPill,
-                          orgType === "partner" ? styles.orgPillPartner : styles.orgPillVendor,
-                        ]}
-                        testID={`badge-active-org-${orgType}`}
-                      >
-                        <Text style={styles.orgPillText}>
-                          {orgType === "partner" ? t("auth.partner") : t("auth.vendor")}
-                        </Text>
-                      </View>
-                    ) : null}
-                    {/* Affordance hint that the pill is interactive — the
-                        chevron mirrors the iOS/Android convention for a
-                        control that opens a sheet of options. */}
-                    <Feather
-                      name="chevron-down"
-                      size={14}
-                      color={colors.mutedForeground}
-                    />
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.orgRow}>
-                    <Text
-                      style={[styles.brandVendor, { color: colors.mutedForeground, flexShrink: 1 }]}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      testID="text-active-org-name"
-                    >
-                      {orgName}
-                    </Text>
-                    {orgType && !isFieldEmployee ? (
-                      <View
-                        style={[
-                          styles.orgPill,
-                          orgType === "partner" ? styles.orgPillPartner : styles.orgPillVendor,
-                        ]}
-                        testID={`badge-active-org-${orgType}`}
-                      >
-                        <Text style={styles.orgPillText}>
-                          {orgType === "partner" ? t("auth.partner") : t("auth.vendor")}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                )
-              ) : null}
-            </View>
-          ) : null}
-        </View>
-        {!isForemanEmployee && !sidebarNotifications ? (
-          <NotificationBell count={unreadCount} onPress={() => router.push("/notifications")} />
+      <View style={{ paddingTop: Math.max(0, topPadding - 20) }}>
+        <PortalPageHeader title={t(homeTabTitleKey(me))} testIdPrefix="field-portal" notificationHref="/notifications" fallbackHref="/work-hub" backBehavior="history" />
+        {orgName && (!isForemanEmployee || canSwitchOrg) ? (
+          <View style={{ paddingHorizontal: 20, marginBottom: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {canSwitchOrg ? (
+              <TouchableOpacity onPress={() => setSwitcherOpen(true)} accessibilityRole="button" accessibilityLabel={t("auth.switchOrgOpenA11y", { org: orgName })} accessibilityHint={t("auth.switchOrgOpenHint")} testID="button-open-org-switcher" style={styles.orgRow}>
+                <Text testID="text-active-org-name" style={{ color: colors.foreground }}>{orgName} ▾</Text>
+              </TouchableOpacity>
+            ) : <Text testID="text-active-org-name" style={{color:colors.mutedForeground}}>{orgName}</Text>}
+            {orgType && !isFieldEmployee ? <View style={[styles.orgPill,orgType === "partner" ? styles.orgPillPartner : styles.orgPillVendor]} testID={`badge-active-org-${orgType}`}><Text style={styles.orgPillText}>{t(orgType === "partner" ? "auth.partner" : "auth.vendor")}</Text></View> : null}
+          </View>
         ) : null}
-      </View>
-
-      <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-        <AskVVoiceIndicator inline />
       </View>
 
       <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
         <SafetyTrainingBanner />
       </View>
-
-      {(isPartnerViewer || isVendorOfficeViewer) && !isFieldEmployee ? (
-        <View style={{ paddingHorizontal: 16 }}>
-          <SafetyDashboardCard />
-        </View>
-      ) : null}
 
       {isForemanEmployee ? (
         <ForemanQuickActions
@@ -881,7 +743,31 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      {isForemanEmployee ? (
+      {isVendorOfficeViewer ? (
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.heading, { color: colors.foreground }]}>{t("tickets.listFilters.title")}</Text>
+            <FreshnessPill lastLoadedAt={lastLoadedAt} inFlight={loading || refreshing || headerRefreshing} errored={loadError != null} rateLimited={rateLimited} testID="tickets-freshness-pill" />
+          </View>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+            {([
+              ["active", t("tickets.listFilters.active")], ["stale", t("tickets.listFilters.stale")],
+              ["flagged", t("tickets.listFilters.flagged")], ["completed", t("tickets.listFilters.completed")],
+              ["kickbacks", t("tickets.listFilters.kickbacks")],
+            ] as const).map(([filter,label],index) => <React.Fragment key={filter}>
+              {index > 0 ? <Text style={{color:colors.mutedForeground}}>|</Text> : null}
+              <TouchableOpacity accessibilityRole="button" accessibilityState={{selected:officeTicketFilter===filter}} testID={`office-ticket-filter-${filter}`} onPress={()=>setOfficeTicketFilter(filter)} style={{paddingVertical:8}}>
+                <Text style={{color:officeTicketFilter===filter?brand.primary:colors.foreground,fontFamily:"Inter_600SemiBold"}}>{label}</Text>
+              </TouchableOpacity>
+            </React.Fragment>)}
+            <Text style={{color:colors.mutedForeground}}>|</Text>
+            <TouchableOpacity accessibilityRole="button" testID="button-new-ticket" onPress={()=>router.push("/new-ticket")} style={{paddingVertical:8}}>
+              <Text style={{color:brand.primary,fontFamily:"Inter_600SemiBold"}}>{t("tickets.listFilters.startNew")}</Text>
+            </TouchableOpacity>
+          </View>
+          {officeTicketFilter === "flagged" && flagsError ? <Text style={{color:colors.destructive}}>{t("tickets.listFilters.flagsError")}</Text> : null}
+        </View>
+      ) : isForemanEmployee ? (
         <View style={{ paddingHorizontal: 16, paddingVertical: 12, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
           {([ ["active", "Active Jobs"], ["stale", "Stale Jobs"], ["flagged", t("foremanHome.flaggedJobs")], ["history", "Recent History"] ] as const).map(([key, label], index) => <React.Fragment key={key}>
             {index > 0 ? <Text style={{color: colors.mutedForeground}}>|</Text> : null}
@@ -1180,11 +1066,11 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {loading ? (
+      {loading || (isVendorOfficeViewer && officeTicketFilter === "flagged" && flagsLoading) ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
-          data={isForemanEmployee ? jobView === "history" ? recentJobs : jobView === "stale" ? tickets.filter(row => Date.now()-Date.parse(row.createdAt)>30*86400000) : tickets : tickets}
+          data={isVendorOfficeViewer ? (flagsError && officeTicketFilter === "flagged" ? [] : visibleOfficeTickets) : isForemanEmployee ? jobView === "history" ? recentJobs : jobView === "stale" ? tickets.filter(row => Date.now()-Date.parse(row.createdAt)>30*86400000) : tickets : tickets}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16 }}
           refreshControl={

@@ -35,6 +35,7 @@ export type PortalTicketRow = {
 
 type PortalTicketsResponse = PortalTicketRow[] | {
   items?: PortalTicketRow[];
+  total?: number;
 };
 
 function splitEmployeeName(full: string | null | undefined): {
@@ -76,9 +77,18 @@ export function mapPortalTicket(row: PortalTicketRow): MobileOpenTicket {
 }
 
 /** Partner/vendor/admin Site tickets — same list as web Tracking (`GET /api/tickets`). */
-export async function fetchPortalTicketsForHome(): Promise<MobileOpenTicket[]> {
+export async function fetchPortalTicketsForHome(options: { allPages?: boolean } = {}): Promise<MobileOpenTicket[]> {
   const response = await apiFetch<PortalTicketsResponse>("/api/tickets");
-  const rows = Array.isArray(response) ? response : response?.items ?? [];
+  const rows = [...(Array.isArray(response) ? response : response?.items ?? [])];
+  const total = Array.isArray(response) ? rows.length : response.total ?? rows.length;
+  while (options.allPages && rows.length < total) {
+    const next = await apiFetch<PortalTicketsResponse>(`/api/tickets?limit=500&offset=${rows.length}`);
+    const page = Array.isArray(next) ? next : next.items ?? [];
+    const seen = new Set(rows.map(row => row.id));
+    const additional = page.filter(row => !seen.has(row.id));
+    if (!additional.length) throw new Error("Ticket pagination did not advance");
+    rows.push(...additional);
+  }
   return (rows ?? []).map(mapPortalTicket).sort((a, b) => {
     const aTs = Date.parse(a.updatedAt ?? a.createdAt);
     const bTs = Date.parse(b.updatedAt ?? b.createdAt);

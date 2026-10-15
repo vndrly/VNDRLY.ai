@@ -150,6 +150,16 @@ describe("buildAppNavigation", () => {
     });
   });
 
+  it("shows the company crew map to vendor office accounts only when Field is enabled", () => {
+    for (const vendorRole of [undefined, "admin", "office"]) {
+      const entries = buildAppNavigation({ user: user("vendor", vendorRole), labels, badges, companyOperationsCategories: ["field"] });
+      expect(entries.find(entry => entry.key === "crew-map")).toMatchObject({href:"/(tabs)/crew-map"});
+    }
+    for (const category of ["gate", "fleet"] as const) {
+      expect(buildAppNavigation({user:user("vendor", "admin"),labels,badges,companyOperationsCategories:[category]}).some(entry=>entry.key==="crew-map")).toBe(false);
+    }
+  });
+
   it("shows the shared map to partner and admin office viewers", () => {
     for (const role of ["partner", "admin"]) {
       const keys = buildAppNavigation({ user: user(role), labels, badges }).map(
@@ -206,7 +216,7 @@ describe("buildAppNavigation", () => {
       "flagged",
       "profile",
     ]);
-    expect(items.find((entry) => entry.key === "index")?.badge).toBe(4);
+    expect(items.find((entry) => entry.key === "index")?.badge).toBeUndefined();
     expect(items.find((entry) => entry.key === "schedule")?.badge).toBe(3);
     expect(items.find((entry) => entry.key === "flagged")?.badge).toBe(1);
   });

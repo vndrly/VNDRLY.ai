@@ -97,3 +97,10 @@ describe("fetchPortalTicketsForHome", () => {
     expect(row.fieldEmployeeLastName).toBe("Boggs");
   });
 });
+
+it("loads further ticket pages for office filters without losing older records", async () => {
+ const record=(id:number)=>({id,status:"initiated",siteLocationId:1,createdAt:"2026-10-01",updatedAt:"2026-10-01"});
+ apiFetch.mockReset();apiFetch.mockResolvedValueOnce({items:[record(2)],total:2}).mockResolvedValueOnce({items:[record(1)],total:2});
+ const rows=await fetchPortalTicketsForHome({allPages:true});
+ expect(apiFetch).toHaveBeenLastCalledWith("/api/tickets?limit=500&offset=1");expect(rows.map(r=>r.id).sort()).toEqual([1,2]);
+});

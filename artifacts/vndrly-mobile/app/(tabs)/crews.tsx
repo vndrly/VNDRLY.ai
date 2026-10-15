@@ -12,15 +12,17 @@ import {
   View,
 } from "react-native";
 
-import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
-import InPageHeader from "@/components/InPageHeader";
+import PortalPageHeader from "@/components/PortalPageHeader";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SetCrewModal, { type CrewPreset } from "@/components/SetCrewModal";
 import { useColors } from "@/hooks/useColors";
+import { useBrand } from "@/hooks/use-brand";
 import { apiFetch } from "@/lib/api";
 
 export default function CrewsScreen() {
   const colors = useColors();
+  const brand = useBrand();
   const { t } = useTranslation();
   const [crews, setCrews] = useState<CrewPreset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,9 @@ export default function CrewsScreen() {
   return (
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("tabs.crews")} right={<ActiveOrgIndicator />} />
+      <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
+        <PortalPageHeader title={t("tabs.crews")} testIdPrefix="crews" fallbackHref="/" backBehavior="history" />
+      </ScreenSafeArea>
 
       <View style={styles.topPad}>
         <LayeredPillButton
@@ -98,7 +102,7 @@ export default function CrewsScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => openEdit(item)}
-              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+              style={[styles.card, { backgroundColor: colors.card, borderColor: brand.primary }]}
               testID={`crew-preset-row-${item.id}`}
             >
               <View style={styles.cardRow}>
@@ -137,7 +141,7 @@ const styles = StyleSheet.create({
   help: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 10, lineHeight: 18 },
   list: { padding: 16, paddingTop: 8 },
   empty: { textAlign: "center", marginTop: 32, fontFamily: "Inter_400Regular" },
-  card: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 10 },
+  card: { borderWidth: 2, borderRadius: 12, padding: 14, marginBottom: 10 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   crewName: { fontFamily: "Inter_700Bold", fontSize: 15 },
   textShadow: {

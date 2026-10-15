@@ -14,7 +14,9 @@ import {
   View,
 } from "react-native";
 
-import InPageHeader from "@/components/InPageHeader";
+import PortalPageHeader from "@/components/PortalPageHeader";
+import Pill9Slice from "@/components/Pill9Slice";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 import MapboxNativeMap, { type NativeMapCircle, type NativeMapLine, type NativeMapPoint } from "@/components/MapboxNativeMap";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
@@ -169,17 +171,9 @@ export default function ForemanCrewMapScreen() {
 
   return (
     <View style={styles.root}>
-      <InPageHeader
-        title={t("foremanMap.title")}
-        onBack={() => router.push("/(tabs)" as never)}
-        right={
-          <View style={[styles.livePill, { backgroundColor: liveStatus === "live" ? "#dcfce7" : "#fef3c7" }]}>
-            <Text style={{ fontSize: 11, fontWeight: "600", color: liveStatus === "live" ? "#166534" : "#92400e" }}>
-              {liveStatus === "live" ? t("foremanMap.live", "Live") : t("foremanMap.connecting", "Connecting…")}
-            </Text>
-          </View>
-        }
-      />
+      <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
+        <PortalPageHeader title={t("foremanMap.title")} testIdPrefix="foreman-map" fallbackHref="/" backBehavior="history" />
+      </ScreenSafeArea>
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.content}
@@ -217,9 +211,17 @@ export default function ForemanCrewMapScreen() {
         <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text>
       ) : null}
 
-      <Text style={[styles.section, { color: colors.foreground }]}>
-        {t("foremanMap.onShiftNow", { count: locations.length })}
-      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }} testID="foreman-map-on-shift-heading">
+        <Text style={[styles.section, { color: colors.foreground, flexShrink: 1 }]}>
+          {t("foremanMap.onShiftNow", { count: locations.length })}
+        </Text>
+        <View style={styles.livePill} testID="foreman-map-live-status">
+          <Pill9Slice source={liveStatus === "live" ? require("@/assets/pill-stack/mid-green-v3.png") : require("@/assets/pill-stack/light-grey.png")} height={28} borderRadius={999} />
+          <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: liveStatus === "live" ? "#ffffff" : "#1a1d23" }}>
+            {liveStatus === "live" ? t("foremanMap.live", "Live") : t("foremanMap.connecting", "Connecting…")}
+          </Text>
+        </View>
+      </View>
       {locations.length === 0 && !loading ? (
         <Text style={{ color: colors.mutedForeground }}>{t("foremanMap.nobodyOnClock")}</Text>
       ) : (
@@ -284,7 +286,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   flex: { flex: 1 },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
-  livePill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  livePill: { height: 28, minWidth: 72, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
   sub: { fontFamily: "Inter_400Regular", fontSize: 14, marginBottom: 12, ...SCREEN_SUBTITLE_TEXT },
   mapWrap: { height: 320, borderRadius: 12, borderWidth: 2, overflow: "hidden", marginBottom: 16 },
   map: { flex: 1, backgroundColor: "#f3f4f6" },

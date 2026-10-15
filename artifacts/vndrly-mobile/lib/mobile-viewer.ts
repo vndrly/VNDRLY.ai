@@ -98,13 +98,14 @@ export function homeTabTitleKey(
   return "tabs.home";
 }
 
-/** Map tab: foreman crew GPS, or partner/admin site crew map. */
+/** Map tab: vendor office/foreman crew GPS, or partner/admin site crew map. */
 export function crewMapTabVisible(
   user: GatekeeperUserShape | null | undefined,
 ): boolean {
   if (isGatekeeperUser(user)) return false;
   return (
     isForemanEmployeeUser(user) ||
+    isVendorOfficeUser(user) ||
     isPartnerOfficeUser(user) ||
     isAdminOfficeUser(user)
   );

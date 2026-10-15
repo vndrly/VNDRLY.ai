@@ -110,8 +110,7 @@ export default function ForemanScheduleTicketsModal({
                       styles.card,
                       {
                         backgroundColor: colors.card,
-                        borderColor: `${brand.primary}55`,
-                        borderLeftColor: brand.primary,
+                        borderColor: brand.primary,
                       },
                     ]}
                     testID={`open-ticket-schedule-${item.id}`}
@@ -184,8 +183,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   empty: { textAlign: "center", marginTop: 40, fontFamily: "Inter_400Regular", padding: 16 },
   card: {
-    borderWidth: 1,
-    borderLeftWidth: 4,
+    borderWidth: 2,
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
