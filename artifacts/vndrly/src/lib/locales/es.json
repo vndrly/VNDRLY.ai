@@ -5363,7 +5363,7 @@
     "liveCheckedIn": "{{name}} acaba de entrar",
     "liveCheckedOut": "{{name}} acaba de salir",
     "history": "Registro de acceso",
-    "fullGateHistory": "Registro de acceso completo",
+    "fullGateHistory": "Registro de acceso",
     "historyTitle": "Registro de acceso",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",
     "historyEmpty": "No hay visitas en los últimos 30 días.",

@@ -5363,7 +5363,7 @@
     "liveCheckedIn": "{{name}} just checked in",
     "liveCheckedOut": "{{name}} just checked out",
     "history": "Gate Log",
-    "fullGateHistory": "Full Gate Log",
+    "fullGateHistory": "Gate Log",
     "historyTitle": "Gate Log",
     "historySearch": "Search by name, plate, company, or site",
     "historyEmpty": "No visits in the last 30 days.",
