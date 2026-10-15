@@ -76,6 +76,11 @@ export async function resolveNotificationDestination(
   if (new Set(keys).size !== keys.length) return null;
   const path = url.pathname.replace(/^\/\(tabs\)/, "");
   const params = url.searchParams;
+  const libraryPath=path.match(/^\/work-hub\/(training|checklist|library|bundle)\/([0-9a-f-]{36})$/i);
+  if(libraryPath){if(keys.length||!uuid.test(libraryPath[2]))return null;try{if(["training","checklist"].includes(libraryPath[1])){const service=await import("../work-hub/training-service");await service.getAssignedLibrary({...session,userId:session.userId!},libraryPath[2]);}else{const service=await import("../work-hub/library-service");await service.getLibrary({...session,userId:session.userId!},libraryPath[2]);}return path;}catch{return null;}}
+  const campaignPath=path.match(/^\/work-hub\/(form|campaign)\/([0-9a-f-]{36})$/i);
+  if(campaignPath){if(keys.length||!uuid.test(campaignPath[2]))return null;try{const service=await import("../work-hub/form-campaign-service");if(campaignPath[1]==="form")await service.getCampaignInstance(session,campaignPath[2]);else await service.getCampaign(session,campaignPath[2]);return path;}catch{return null;}}
+
   const permittedKeys = new Set([
     "section",
     "channel",
@@ -452,6 +457,7 @@ export async function resolveNotificationDestination(
         .where(eq(workHubMeetingsTable.id, occurrence.meetingId))
         .limit(1);
       if (!meeting || !ownerAllowed(meeting)) return null;
+      if(meeting.admissionMode){try{await getLiveMeeting({...session,userId:session.userId!},id);return link;}catch{return null;}}
       const [participant] = await db
         .select()
         .from(workHubMeetingParticipantsTable)
@@ -482,3 +488,4 @@ export async function resolveNotificationDestination(
     throw error;
   }
 }
+import { getLiveMeeting } from "../work-hub/live-meetings";

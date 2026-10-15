@@ -1,3 +1,5 @@
+import AssignedCards from "@/components/work-hub/library/assigned-cards";
+import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
@@ -47,6 +49,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import MeetingWorkspace from "@/components/meeting-workspace";
+import { LiveMeetingsPanel,LiveMeetingLobby } from "@/components/work-hub/live-meetings";
 import MeetingInvitationResponse from "@/components/meeting-invitation-response";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1243,6 +1246,8 @@ function Governance({
 }
 
 function TasksModule() {
+  const [showCompleted,setShowCompleted]=useState(false);
+  const { t } = useTranslation();
   const { user } = useAuth();
   const canManage = isWorkHubScheduler(user);
   const owner = useOwner();
@@ -1359,14 +1364,18 @@ function TasksModule() {
   });
   return (
     <Shell module="tasks">
+      {isWorkHubAdmin(user)&&<BrandPillButton tone="brand" href="/work-hub/library">{t("workHubLibrary.manage")}</BrandPillButton>}
+      <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>
+      <AssignedCards completed={showCompleted}/>
+      <FormCampaignsArea completed={showCompleted}/>
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader>
-            <CardTitle><WorkHubCardTitle icon={ClipboardList}>Assignments and review</WorkHubCardTitle></CardTitle>
+            <CardTitle><WorkHubCardTitle icon={ClipboardList}>{t("workHubLibrary.myAssignments")}</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            {tasks.data?.map((row) => (
-              <article key={row.id} className="rounded-lg border p-4">
+            {tasks.data?.filter(row=>showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status)).map((row) => (
+              <article key={row.id} className="rounded-lg border-2 border-primary bg-card p-4">
                 <div className="flex justify-between gap-3">
                   <div>
                     <span className="text-xs uppercase text-muted-foreground">
@@ -1404,7 +1413,7 @@ function TasksModule() {
                 </div>
               </article>
             ))}
-            {!tasks.data?.length && <Empty>No tasks yet.</Empty>}
+            {tasks.isError && <Empty>Could not load tasks. Refresh to try again.</Empty>}
           </CardContent>
         </Card>
         {canManage && (
@@ -1500,7 +1509,7 @@ function TasksModule() {
               )}
             </article>
           ))}
-          {required.data?.forms?.map(({ instance, template }: Row) => (
+          {required.data?.forms?.filter(({template}:Row)=>!template.campaignConfig).map(({ instance, template }: Row) => (
             <article key={instance.id} className="rounded-lg border p-4">
               <span className="text-xs uppercase text-muted-foreground">
                 Form
@@ -1640,7 +1649,7 @@ function TasksModule() {
                   ...x,
                   kind: "Checklist",
                 })),
-                ...(admin.data?.forms ?? []).map((x: Row) => ({
+                ...(admin.data?.forms ?? []).filter((x:Row)=>!x.campaignConfig).map((x: Row) => ({
                   ...x,
                   kind: "Form",
                 })),
@@ -1746,10 +1755,10 @@ function MeetingsContent() {
       qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] }),
   });
   return (
-    <Shell module="meetings"><MeetingScheduling />
+    <Shell module="meetings"><LiveMeetingsPanel owner={owner} canManage={canManage} onOpen={setSelected}/><MeetingScheduling />
       {canManage && <div className="mb-4 flex flex-wrap gap-2">
+        {owner?.type === "partner" && <BrandPillButton tone="brand" disabled={startNow.isPending || startNow.isError || create.isPending || create.isError} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>}
         <BrandPillButton tone="brand" onClick={() => document.getElementById("schedule-meeting")?.scrollIntoView({ behavior: "smooth" })}>Schedule meeting</BrandPillButton>
-        <BrandPillButton tone="green" disabled={!owner || !participantsReady || create.isPending || create.isError || startNow.isPending || startNow.isError} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>
       </div>}
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
@@ -1863,7 +1872,7 @@ function MeetingsContent() {
           </Card>
         )}
       </div>
-      {selected && <div className="mt-4"><MeetingInvitationResponse occurrenceId={selected} /><MeetingWorkspace key={selected} occurrenceId={selected} /></div>}
+      {selected && <div className="mt-4"><LiveMeetingLobby occurrenceId={selected} owner={owner}><MeetingInvitationResponse occurrenceId={selected} /><MeetingWorkspace key={selected} occurrenceId={selected} /></LiveMeetingLobby></div>}
     </Shell>
   );
 }

@@ -555,6 +555,14 @@ router.post("/mcp", async (req, res) => {
       }
       if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
       output.availableViews = [];
+      for(const [view,tool] of [["library","list_work_hub_library"],["bundles","list_library_bundles"],["checklist","get_library_checklist"],["library_progress","get_library_assignments"]] as const)if(allowedNames.has(tool))output.availableViews.push(view);
+      for(const [view,tool] of [["library_item","get_work_hub_library"],["bundle","get_library_bundle"],["training","get_library_assignment"],["library_assignment","get_library_assignment_progress"]] as const)if(request.view===view&&allowedNames.has(tool))output.availableViews.push(view);
+
+      if(allowedNames.has("list_form_campaigns"))output.availableViews.push("form_campaigns");
+      if(request.view==="form_campaign"&&allowedNames.has("get_form_campaign"))output.availableViews.push("form_campaign");
+      if(request.view==="assigned_form"&&allowedNames.has("get_assigned_form"))output.availableViews.push("assigned_form");
+      if(allowedNames.has("list_live_meetings"))output.availableViews.push("live_meetings");
+      if(request.view==="meeting_lobby"&&allowedNames.has("get_live_meeting"))output.availableViews.push("meeting_lobby");
       if (allowedNames.has("query_gate_coverage_map")) output.availableViews.push("gate_coverage");
       if (allowedNames.has("query_fleet_location_history")) output.availableViews.push("fleet_history");
       if (allowedNames.has("query_fleet_ticket_plan")) output.availableViews.push("fleet_plan");

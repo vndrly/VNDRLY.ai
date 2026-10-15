@@ -1,3 +1,4 @@
+import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
 import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
 import { decodeSession, getSessionFromRequest } from "../lib/session";
@@ -1434,6 +1435,7 @@ router.post("/tickets", async (req, res): Promise<void> => {
       : "ticket created";
 
   const ticket = await db.transaction(async (tx) => {
+    if (shouldCheckIn && creatorSession?.userId && parsed.data.vendorId) await assertRequiredWorkClear(tx, creatorSession.userId, { type: "vendor", id: parsed.data.vendorId });
     const [t] = await tx
       .insert(ticketsTable)
       .values({
@@ -1765,13 +1767,14 @@ router.post("/tickets/:id/check-in", async (req, res): Promise<void> => {
 
   const checkInResult = await db.transaction(async (tx) => {
     const [existing] = await tx
-      .select({ arrivedAt: ticketsTable.arrivedAt, status: ticketsTable.status })
+      .select({ arrivedAt: ticketsTable.arrivedAt, status: ticketsTable.status, vendorId: ticketsTable.vendorId })
       .from(ticketsTable)
       .where(eq(ticketsTable.id, params.data.id));
     if (!existing) return { kind: "not_found" as const };
     if (!CHECK_IN_ALLOWED.has(existing.status)) {
       return { kind: "blocked" as const, status: existing.status };
     }
+    if (checkInSession?.role === "field_employee" && checkInSession.userId && existing.vendorId) await assertRequiredWorkClear(tx, checkInSession.userId, { type: "vendor", id: existing.vendorId });
     const [u] = await tx
       .update(ticketsTable)
       .set({

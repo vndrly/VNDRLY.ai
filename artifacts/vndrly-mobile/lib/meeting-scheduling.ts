@@ -30,6 +30,9 @@ export function localMeetingTime(date: string, time: string) {
 const payloadSchema = z
   .object({
     title: z.string().trim().min(1).max(200),
+    agenda: z.string().trim().max(50000).optional(),
+    attendanceConfirmationRequired: z.boolean().default(false),
+    admissionMode: z.enum(["company_open","host_approval"]).optional(),
     startsAt: z.iso.datetime(),
     endsAt: z.iso.datetime(),
     timezone: z.string().min(3).max(80),
@@ -104,6 +107,9 @@ export function matchingMeeting(raw: unknown, attempt: MeetingAttempt) {
     s.ownerType !== attempt.body.owner.type ||
     s.ownerId !== attempt.body.owner.id ||
     s.title !== p.title ||
+    (s.agenda ?? "") !== (p.agenda ?? "") ||
+    (s.attendanceConfirmationRequired ?? false) !== p.attendanceConfirmationRequired ||
+    (p.admissionMode !== undefined && s.admissionMode !== p.admissionMode) ||
     s.timezone !== p.timezone ||
     Date.parse(s.startsAt) !== Date.parse(p.startsAt) ||
     Date.parse(s.endsAt ?? "") !== Date.parse(p.endsAt) ||

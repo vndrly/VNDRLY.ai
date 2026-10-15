@@ -1,3 +1,4 @@
+import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
@@ -183,6 +184,7 @@ async function insertDuty(
     )
   ).rows[0];
   if (active) return dutyRow(active);
+  if (session.vendorId || session.partnerId) await assertRequiredWorkClear(client, userId, session.partnerId ? { type: "partner", id: session.partnerId } : { type: "vendor", id: session.vendorId! });
   const legacyShift = (
     await client.query(
       "SELECT id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL FOR UPDATE",
@@ -254,6 +256,7 @@ export async function startWorkSession(
       input.workHubShiftId,
       input.stationId,
     );
+    await assertRequiredWorkClear(client, userId, { type: shift.owner_org_type, id: shift.owner_org_id });
     const stationId = input.stationId ?? shift.gate_station_id;
     const policy = shift.work_start_policy as "on_site" | "paid_travel";
     if (!policy || !["on_site", "paid_travel"].includes(policy))

@@ -1,5 +1,7 @@
+import LibraryEntryNotice from "@/components/work-hub/library/entry-notice";
 import { Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
+const WorkHubLibraryPage = lazy(() => import("@/pages/work-hub-library"));
 const PayrollPage = lazy(() => import("@/pages/payroll"));
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { fleetClient } from "@/lib/fleet-client";
@@ -137,6 +139,8 @@ function ForemanRootRedirect() {
   }, [navigate]);
   return null;
 }
+function FormCampaignLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/(form|campaign)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/tasks-forms?${match[1]}=${match[2]}`,{replace:true});},[navigate]);return null;}
+function MeetingLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/meetings?meeting=${match[1]}`,{replace:true});},[navigate]);return null;}
 
 function LoginRedirect() {
   const [, navigate] = useLocation();
@@ -230,6 +234,7 @@ function AuthenticatedRouter() {
 
   return (
     <>
+      <LibraryEntryNotice enabled={Boolean(user)}/>
       <Suspense fallback={<RouteFallback />}>
         <Switch>
         <Route path="/portal/:siteCode">{(params) => <Portal siteCode={params.siteCode} />}</Route>
@@ -245,6 +250,10 @@ function AuthenticatedRouter() {
         <Route path="/operations-display" component={OperationsDisplayDirectory} />
         <Route path="/organization-subscription" component={OrganizationSubscription} />
         <Route path="/work-hub/administration/displays" component={OperationsDisplayDirectory} />
+        <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>
+        <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>
+        <Route path="/work-hub/meeting/:occurrenceId" component={MeetingLinkRedirect}/>
+        <Route path="/work-hub/meetings/:occurrenceId" component={MeetingLinkRedirect}/>
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
@@ -265,6 +274,12 @@ function AuthenticatedRouter() {
         {user && <Route path="/fleet/runs/:id"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet/:section"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet"><Layout><FleetPage /></Layout></Route>}
+        <Route path="/work-hub/assignment/:instanceId">{params=><Layout><WorkHubLibraryPage kind="assignment" id={params.instanceId}/></Layout>}</Route>
+        <Route path="/work-hub/library/:itemId">{params=><Layout><WorkHubLibraryPage id={params.itemId}/></Layout>}</Route>
+        <Route path="/work-hub/bundle/:itemId">{params=><Layout><WorkHubLibraryPage kind="bundle" id={params.itemId}/></Layout>}</Route>
+        <Route path="/work-hub/training/:instanceId">{params=><Layout><WorkHubLibraryPage kind="training" id={params.instanceId}/></Layout>}</Route>
+        <Route path="/work-hub/checklist/:instanceId">{params=><Layout><WorkHubLibraryPage kind="checklist" id={params.instanceId}/></Layout>}</Route>
+        <Route path="/work-hub/library"><Layout><WorkHubLibraryPage/></Layout></Route>
         <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>
         <Route path="/work-hub"><Layout><WorkHubPage /></Layout></Route>
         {!user && <Route path="/" component={MarketingHome} />}

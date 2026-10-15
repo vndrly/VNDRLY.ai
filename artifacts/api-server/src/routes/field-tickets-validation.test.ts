@@ -66,7 +66,7 @@ vi.mock("@workspace/db", () => {
     }),
     delete: () => ({ where: () => Promise.resolve([]) }),
     transaction: async (fn: any) => fn(db),
-    execute: async () => ({ rows: [] }),
+    execute: async (query: any) => ({ rows: JSON.stringify(query).includes("SELECT m.id FROM user_org_memberships") ? [{id:1}] : [] }),
   };
   return {
     db,

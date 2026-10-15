@@ -78,7 +78,8 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     attachTestErrorMiddleware(app);
     const [submitter] = await db.insert(usersTable).values({ username: `submitter-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Synthetic vendor", role: "vendor" }).returning();
     const vendorCookie = buildTestCookie({ userId: submitter.id, role: "vendor", vendorId: vendor.id });
-    const fieldCookie = buildTestCookie({ userId: fieldUser.id, role: "field_employee", vendorId: vendor.id, vendorPeopleId: worker.id });
+    const [fieldMembership]=await db.insert(userOrgMembershipsTable).values({userId:fieldUser.id,orgType:"vendor",vendorId:vendor.id,role:"field_employee",vendorPeopleId:worker.id}).returning();
+    const fieldCookie = buildTestCookie({ userId: fieldUser.id, role: "field_employee", vendorId: vendor.id, vendorPeopleId: worker.id,activeMembershipId:fieldMembership.id });
     const state = async (status: string, lifecycleState: string) => {
       const [saved] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
       expect(saved).toMatchObject({ status, lifecycleState });

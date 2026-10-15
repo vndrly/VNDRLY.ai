@@ -27,6 +27,8 @@
     "migrate:askv-greeting": "node scripts/apply-askv-greeting-migration.mjs",
     "migrate:assistant-action-audit": "node scripts/apply-assistant-action-audit-migration.mjs",
     "migrate:work-hub-flags": "node scripts/apply-work-hub-flags-migration.mjs",
+    "migrate:internal-call-transcripts": "node scripts/apply-internal-call-transcripts-migration.mjs",
+    "migrate:live-meeting-admission": "node scripts/apply-live-meeting-admission-migration.mjs",
     "migrate:work-hub-calls": "node scripts/apply-work-hub-calls-migration.mjs",
     "migrate:work-hub-scheduling": "node scripts/apply-work-hub-scheduling-migration.mjs",
     "migrate:work-hub-file-library": "tsx scripts/migrate-work-hub-file-library.ts",
@@ -75,7 +77,9 @@
     "migrate:gate-contractor": "tsx scripts/migrate-gate-contractor.ts",
     "migrate:asset-custody-fingerprint": "tsx scripts/migrate-asset-custody-fingerprint.ts",
     "migrate:vendor-person-access": "tsx scripts/migrate-vendor-person-access.ts",
-    "migrate:fleet-ops": "tsx scripts/migrate-fleet-ops.ts"
+    "migrate:fleet-ops": "tsx scripts/migrate-fleet-ops.ts",
+    "migrate:form-campaigns": "node scripts/apply-form-campaigns-migration.mjs",
+    "migrate:work-hub-library": "node scripts/apply-work-hub-library-migration.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

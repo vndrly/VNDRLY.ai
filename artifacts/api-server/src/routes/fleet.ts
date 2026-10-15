@@ -1,3 +1,4 @@
+import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { withNativeLocationCollection } from "../services/native-operations";
 import { NativeOperationError } from "../services/native-operations-policy";
 import { Router } from "express";
@@ -308,6 +309,7 @@ function endpoint(
     try {
       return res.json(await operation(req));
     } catch (error) {
+    if (error instanceof RequiredWorkError) { res.status(error.status).json({ code: error.code, message: error.message, assignments: error.assignments }); return; }
       if (error instanceof FleetError)
         return res.status(error.status).json({ code: error.code });
       if (error instanceof z.ZodError)

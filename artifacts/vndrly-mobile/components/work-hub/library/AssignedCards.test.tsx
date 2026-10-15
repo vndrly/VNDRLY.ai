@@ -1,0 +1,12 @@
+import React from "react";
+import {render,screen,cleanup} from "@testing-library/react";
+import {vi,it,expect,afterEach} from "vitest";
+vi.mock("react-native",()=>({View:({children}:any)=><div>{children}</div>,Text:({children}:any)=><span>{children}</span>}));
+vi.mock("expo-router",()=>({router:{push:vi.fn()}}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({})}));
+vi.mock("react-i18next",()=>({useTranslation:()=>({t:(k:string)=>k})}));
+vi.mock("../../TogglePillButton",()=>({default:({children}:any)=><button>{children}</button>}));
+vi.mock("@/lib/use-form-campaigns",()=>({useFormCampaigns:()=>({data:{items:[{instanceId:"1",title:"Unfinished training",kind:"training",assignment:{status:"in_progress"},href:"/work-hub/training/1"},{instanceId:"2",title:"Signed policy",kind:"policy",assignment:{status:"completed"},href:"/work-hub/checklist/2"},{instanceId:"3",title:"Cancelled form",kind:"form",assignment:{status:"cancelled"},href:"/work-hub/checklist/3"}]}})}));
+import AssignedCards from "./AssignedCards";
+afterEach(cleanup);
+it("defaults to incomplete and shows saved completions only in Complete",()=>{const {rerender}=render(<AssignedCards/>);expect(screen.getByText("Unfinished training")).toBeTruthy();expect(screen.queryByText("Signed policy")).toBeNull();expect(screen.queryByText("Cancelled form")).toBeNull();rerender(<AssignedCards completed/>);expect(screen.getByText("Signed policy")).toBeTruthy();expect(screen.queryByText("Unfinished training")).toBeNull();});

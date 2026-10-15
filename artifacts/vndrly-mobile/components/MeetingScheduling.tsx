@@ -1,5 +1,6 @@
+import * as Crypto from "expo-crypto";
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Switch, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -11,6 +12,7 @@ import {
   subscribeToken,
 } from "@/lib/auth";
 import { mobileOwner } from "@/lib/work-hub-mobile";
+import MeetingDateTimeField from "./MeetingDateTimeField";
 import TogglePillButton from "@/components/TogglePillButton";
 import { z } from "zod/v4";
 import {
@@ -58,12 +60,18 @@ function Scheduling({ onSaved }: { onSaved?: () => Promise<unknown> }) {
   const scope = useRef(captureAuthScope());
   const mounted = useRef(true),
     busy = useRef(false);
+  const [attendanceConfirmationRequired, setAttendanceConfirmationRequired] =
+    useState(false);
+  const [admissionMode, setAdmissionMode] = useState<
+    "company_open" | "host_approval"
+  >("host_approval");
+  const [description, setDescription] = useState("");
+  const [duration, setDuration] = useState("60");
   const [title, setTitle] = useState(""),
     [start, setStart] = useState(""),
     [startTime, setStartTime] = useState(""),
-    [endTime, setEndTime] = useState(""),
-    [end, setEnd] = useState(""),
     [timezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [participantSearch, setParticipantSearch] = useState("");
   const [people, setPeople] = useState<z.infer<typeof peopleSchema>>([]),
     [selected, setSelected] = useState<number[]>([]),
     [attempt, setAttempt] = useState<MeetingAttempt | null>(null),
@@ -113,19 +121,27 @@ function Scheduling({ onSaved }: { onSaved?: () => Promise<unknown> }) {
     try {
       if (Intl.DateTimeFormat().resolvedOptions().timeZone !== timezone)
         throw new Error("device_timezone_changed");
+      const minutes = Number(duration);
+      if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440)
+        throw new Error("invalid_duration");
+      const startsAt = localMeetingTime(start, startTime);
+      const finish = new Date(Date.parse(startsAt) + minutes * 60000);
       const input = {
         title,
-        startsAt: localMeetingTime(start, startTime),
-        endsAt: localMeetingTime(end, endTime),
+        attendanceConfirmationRequired,
+        agenda: description,
+        startsAt,
+        endsAt: finish.toISOString(),
         timezone,
         participantUserIds: selected,
+        admissionMode,
         recordingAllowed: false as const,
       };
       const candidate = makeMeetingAttempt(
         user.id,
         owner,
         input,
-        crypto.randomUUID(),
+        Crypto.randomUUID(),
         [],
       );
       const rows = await apiFetch(
@@ -233,10 +249,24 @@ function Scheduling({ onSaved }: { onSaved?: () => Promise<unknown> }) {
     }
   }
   if (!allowed) return null;
+  let endPreview = "";
+  try {
+    const value = new Date(
+      Date.parse(localMeetingTime(start, startTime)) + Number(duration) * 60000,
+    );
+    if (Number.isFinite(value.getTime()))
+      endPreview = value.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+  } catch {}
   const inputStyle = {
     color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: 10,
     padding: 10,
   };
   return (
@@ -253,65 +283,146 @@ function Scheduling({ onSaved }: { onSaved?: () => Promise<unknown> }) {
             onChangeText={setTitle}
             style={inputStyle}
           />
+          <TextInput
+            accessibilityLabel={t("meetingScheduling.description", {
+              defaultValue: spanish ? "Descripción" : "Description",
+            })}
+            placeholder={t("meetingScheduling.description", {
+              defaultValue: spanish ? "Descripción" : "Description",
+            })}
+            multiline
+            value={description}
+            onChangeText={setDescription}
+            style={[inputStyle, { minHeight: 80 }]}
+          />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+            <MeetingDateTimeField
+              mode="date"
+              label={t("meetingScheduling.date", {
+                defaultValue: spanish ? "Fecha" : "Date",
+              })}
+              value={start}
+              onChange={setStart}
+            />
+            <MeetingDateTimeField
+              mode="time"
+              label={t("meetingScheduling.startTime")}
+              value={startTime}
+              onChange={setStartTime}
+            />
+          </View>
           <Text style={{ color: colors.text }}>
-            {t("meetingScheduling.startDateYearmonthday")}
+            {t("meetingScheduling.durationMinutes", {
+              defaultValue: spanish
+                ? "Duración (minutos)"
+                : "Duration (minutes)",
+            })}
           </Text>
           <TextInput
-            accessibilityLabel={t("meetingScheduling.startDate")}
-            placeholder="YYYY-MM-DD"
-            value={start}
-            onChangeText={setStart}
+            accessibilityLabel={t("meetingScheduling.durationMinutes", {
+              defaultValue: spanish
+                ? "Duración (minutos)"
+                : "Duration (minutes)",
+            })}
+            keyboardType="number-pad"
+            value={duration}
+            onChangeText={setDuration}
             style={inputStyle}
           />
-          <Text style={{ color: colors.text }}>
-            {t("meetingScheduling.endDateYearmonthday")}
+          {!!endPreview && (
+            <Text style={{ color: colors.text }}>
+              {t("meetingScheduling.endTime")}: {endPreview}
+            </Text>
+          )}
+          <Text style={{ color: colors.mutedForeground }}>
+            {t("meetingScheduling.sameDayHint", {
+              defaultValue: spanish
+                ? "Una hora por defecto. La fecha y hora de fin se calculan automáticamente."
+                : "Defaults to one hour. The end date and time are calculated automatically.",
+            })}
           </Text>
-          <TextInput
-            accessibilityLabel={t("meetingScheduling.endDate")}
-            placeholder="YYYY-MM-DD"
-            value={end}
-            onChangeText={setEnd}
-            style={inputStyle}
-          />
-          <Text style={{ color: colors.text }}>
-            {t("meetingScheduling.startTimeHourClock")}
-          </Text>
-          <TextInput
-            accessibilityLabel={t("meetingScheduling.startTime")}
-            placeholder="HH:mm"
-            value={startTime}
-            onChangeText={setStartTime}
-            style={inputStyle}
-          />
-          <Text style={{ color: colors.text }}>
-            {t("meetingScheduling.endTimeHourClock")}
-          </Text>
-          <TextInput
-            accessibilityLabel={t("meetingScheduling.endTime")}
-            placeholder="HH:mm"
-            value={endTime}
-            onChangeText={setEndTime}
-            style={inputStyle}
-          />
           <Text style={{ color: colors.text }}>
             {t("meetingScheduling.yourDeviceTimeZone")}: {timezone}
           </Text>
           <Text style={{ color: colors.text }}>
             {t("meetingScheduling.youAreTheHostSelectCompany")}
           </Text>
-          {people.map((p) => (
+          <TextInput
+            accessibilityLabel="Search meeting participants"
+            placeholder="Search people"
+            value={participantSearch}
+            onChangeText={setParticipantSearch}
+            style={inputStyle}
+          />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {people
+              .filter(
+                (p) =>
+                  selected.includes(p.id) ||
+                  p.displayName
+                    .toLowerCase()
+                    .includes(participantSearch.toLowerCase()),
+              )
+              .map((p) => (
+                <TogglePillButton
+                  key={p.id}
+                  color="brand"
+                  onPress={() =>
+                    setSelected((v) =>
+                      v.includes(p.id)
+                        ? v.filter((id) => id !== p.id)
+                        : [...v, p.id],
+                    )
+                  }
+                >{`${selected.includes(p.id) ? "✓ " : ""}${p.displayName}`}</TogglePillButton>
+              ))}
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
             <TogglePillButton
-              key={p.id}
               color="brand"
-              onPress={() =>
-                setSelected((v) =>
-                  v.includes(p.id)
-                    ? v.filter((id) => id !== p.id)
-                    : [...v, p.id],
-                )
-              }
-            >{`${selected.includes(p.id) ? "✓ " : ""}${p.displayName}`}</TogglePillButton>
-          ))}
+              solid={admissionMode === "host_approval"}
+              onPress={() => setAdmissionMode("host_approval")}
+            >
+              Host approval
+            </TogglePillButton>
+            <TogglePillButton
+              color="brand"
+              solid={admissionMode === "company_open"}
+              onPress={() => setAdmissionMode("company_open")}
+            >
+              Company members
+            </TogglePillButton>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <Text style={{ color: colors.text }}>
+              {t("meetingScheduling.requireAttendance", {
+                defaultValue: spanish
+                  ? "Requerir confirmación de asistencia"
+                  : "Require attendance confirmation",
+              })}
+            </Text>
+            <Switch
+              accessibilityLabel={t("meetingScheduling.requireAttendance", {
+                defaultValue: "Require attendance confirmation",
+              })}
+              value={attendanceConfirmationRequired}
+              onValueChange={setAttendanceConfirmationRequired}
+            />
+          </View>
           <TogglePillButton
             color="brand"
             disabled={sending || !ready}
@@ -325,6 +436,10 @@ function Scheduling({ onSaved }: { onSaved?: () => Promise<unknown> }) {
         <>
           <Text style={{ color: colors.text }}>
             {attempt.body.payload.title}
+            {attempt.body.payload.attendanceConfirmationRequired &&
+              `\n${t("meetingScheduling.requireAttendance", { defaultValue: "Require attendance confirmation" })}`}
+            {!!attempt.body.payload.agenda &&
+              `\n${attempt.body.payload.agenda}`}
             {"\n"}
             {new Date(attempt.body.payload.startsAt).toLocaleString(
               spanish ? "es" : "en",
@@ -381,7 +496,11 @@ function Scheduling({ onSaved }: { onSaved?: () => Promise<unknown> }) {
         {notice}
       </Text>
       <Text style={{ color: colors.text }}>
-        {t("meetingScheduling.schedulingDoesNotJoinAudioAuthorize")}
+        {t("meetingScheduling.companyPolicyHint", {
+          defaultValue: spanish
+            ? "La confirmación de asistencia es opcional al programar. Se aplica la política de comunicación de la empresa."
+            : "Attendance confirmation is optional when scheduling. Company communication policy applies.",
+        })}
       </Text>
     </View>
   );

@@ -95,7 +95,7 @@ vi.mock("@workspace/db", () => {
     }),
     delete: () => ({ where: () => Promise.resolve([]) }),
     transaction: async (fn: any) => fn(db),
-    execute: async () => ({ rows: executeRows }),
+    execute: async (query: any) => ({ rows: JSON.stringify(query).includes("SELECT m.id FROM user_org_memberships") ? [{id:1}] : JSON.stringify(query).includes("SELECT DISTINCT b.id") || JSON.stringify(query).includes("assignment_metadata IS NOT NULL") ? [] : executeRows }),
   };
   return {
     db,
@@ -132,8 +132,9 @@ vi.mock("@workspace/db", () => {
 
 vi.mock("drizzle-orm", () => {
   const passthrough = (..._args: any[]) => ({ kind: "true" });
-  const sqlTag: any = () => ({ kind: "true" });
-  sqlTag.raw = passthrough;
+  const sqlTag: any = (parts: any, ...values:any[]) => ({kind:"true",text:Array.isArray(parts)?parts.join(" "):String(parts),values});
+  sqlTag.raw = (text:string)=>({text});
+  sqlTag.join = (parts:any[])=>({parts});
   return {
     and: passthrough,
     eq: passthrough,

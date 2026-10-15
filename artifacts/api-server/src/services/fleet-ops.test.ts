@@ -51,11 +51,14 @@ function fixture() {
       },
     ],
   };
+  let required = false;
   let hold = false;
   let sitesVisible = true;
   let availability: { starts_at: string; ends_at: string; available: boolean; recurrence: null }[] = [];
   const client = {
     query: async (sql: string) => {
+      if (sql.includes("SELECT m.id FROM user_org_memberships")) return {rows:[{id:7}]};
+      if (sql.includes("FROM work_hub_form_instances")) return {rows:required?[{id:"10000000-0000-4000-8000-000000000003",title:"Orientation",template_version:1,assignment_metadata:{assignmentId:"10000000-0000-4000-8000-000000000001",sourceItemId:"10000000-0000-4000-8000-000000000002",contentVersion:1,membershipId:7,requiredBeforeWork:true,assignedAt:"2026-10-14T00:00:00Z",dueAt:"2026-11-14T00:00:00Z"}}]:[]};
       if (sql.includes("FROM work_hub_availability")) return { rows: availability };
       if (sql.includes("m.user_id=ANY")) return {rows:[{user_id:1},{user_id:2}]};
       if (sql.startsWith("INSERT INTO asset_holds")) hold = true;
@@ -95,6 +98,7 @@ function fixture() {
   return {
     service: createFleetService(repo),
     state: () => state,
+    requireTraining:()=>{required=true;},
     availability: (available: boolean) => { availability = [{ starts_at: "2026-10-08T12:00:00Z", ends_at: "2026-10-08T20:00:00Z", available, recurrence: null }]; },
     revokeSites: () => {
       sitesVisible = false;
@@ -604,3 +608,14 @@ describe("Fleet durable service authority contract", () => {
   });
 });
 it("projects commercial routing without financial fields unless the current scoped finance grant permits it",async()=>{const f=fixture();const created=await f.service.create(manager,createInput);const destination={id:crypto.randomUUID(),revision:1,name:"Synthetic yard",kind:"yard" as const,address:"123 Test Road",latitude:35,longitude:-97,materials:[],hours:"",instructions:"",active:true,ownerType:"vendor" as const,ownerId:7};const saved=f.state().runs[0];saved.commercial={ticketId:88,originSiteId:9,mode:"batch",rateCents:12500,currency:"USD",approvedDestinations:[destination],destinationId:destination.id,billedLineId:123};const own=await f.service.detail(driver,created.id);expect(own.commercial).toMatchObject({ticketId:88,originSiteId:9,mode:"batch",approvedDestinations:[destination],destinationId:destination.id});expect(own.commercial).not.toHaveProperty("rateCents");expect(own.commercial).not.toHaveProperty("billedLineId");expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty("billedLineId");expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty("rateCents");expect(f.state().runs[0].commercial?.rateCents).toBe(12500);expect((await f.service.detail(manager,created.id)).commercial).not.toHaveProperty("rateCents");f.state().grants.find(g=>g.userId===1)!.financeRead=true;expect((await f.service.detail(manager,created.id)).commercial).toMatchObject({rateCents:12500,billedLineId:123});f.state().grants.find(g=>g.userId===1)!.financeRead=false;expect((await f.service.detail({...manager,role:"vendor",membershipRole:"admin"},created.id)).commercial).not.toHaveProperty("rateCents");});
+
+it("prevents Fleet start at the lower service boundary when the driver's training is required",async()=>{
+ const f=fixture();let run=await f.service.create(manager,createInput);
+ run=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),action:"dispatch",expectedVersion:run.version});
+ run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"acknowledge",expectedVersion:run.version});
+ run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"record_meter",reading:100,unit:"miles",notes:"Synthetic odometer",expectedVersion:run.version});
+ run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"inspect",inspectionOutcome:"passed",notes:"Synthetic inspection",expectedVersion:run.version});
+ f.requireTraining();
+ await expect(f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"start",expectedVersion:run.version})).rejects.toMatchObject({code:"work_hub.required_completion",status:409});
+ expect(f.state().runs[0].status).not.toBe("in_progress");
+});

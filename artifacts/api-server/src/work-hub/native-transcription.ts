@@ -49,7 +49,7 @@ async function run(binary: string, args: string[], signal: AbortSignal | undefin
 }
 
 /** Validate the decoder's bounded PCM result; actual silence bypasses inference. */
-function hasSpeechSignal(wav: Buffer): boolean {
+function hasSpeechSignal(wav: Buffer, maxSeconds = 20): boolean {
   if (wav.length < 44 || wav.toString("ascii", 0, 4) !== "RIFF" || wav.toString("ascii", 8, 12) !== "WAVE") throw failure("invalid");
   let formatValid = false;
   for (let offset = 12; offset + 8 <= wav.length;) {
@@ -63,7 +63,7 @@ function hasSpeechSignal(wav: Buffer): boolean {
     }
     if (kind === "data") {
       // Small browser timer jitter is allowed; a 21-second capped decode is rejected.
-      if (!formatValid || size === 0 || size % 2 !== 0 || size > 20.5 * 32000) throw failure("invalid");
+      if (!formatValid || size === 0 || size % 2 !== 0 || size > (maxSeconds + 0.5) * 32000) throw failure("invalid");
       let magnitude = 0;
       for (let i = start; i < start + size; i += 2) magnitude += Math.abs(wav.readInt16LE(i));
       return magnitude / (size / 2) >= 50;
@@ -74,7 +74,7 @@ function hasSpeechSignal(wav: Buffer): boolean {
 }
 
 /** Temporary audio is confined to a private per-request directory and removed. */
-export async function transcribeNativeAudio(audio: Buffer, mimeType: string, signal?: AbortSignal): Promise<string> {
+export async function transcribeNativeAudio(audio: Buffer, mimeType: string, signal?: AbortSignal, maxSeconds: 20 | 120 = 20): Promise<string> {
   const settings = config(process.env);
   if (!settings) throw failure("unavailable");
   const extension = extensions[mimeType.split(";")[0].trim().toLowerCase()];
@@ -91,11 +91,11 @@ export async function transcribeNativeAudio(audio: Buffer, mimeType: string, sig
     const output = join(directory, "transcript");
     await writeFile(input, audio, { mode: 0o600, flag: "wx" });
     await run(settings.decoder, ["-nostdin", "-hide_banner", "-loglevel", "error", "-protocol_whitelist", "file,pipe",
-      "-format_whitelist", "matroska,webm,mov,wav,ogg", "-threads", "1", "-i", input, "-vn", "-t", "21",
-      "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", "-fs", "700000", "-y", decoded], signal, 10000, true);
-    if (!hasSpeechSignal(await readFile(decoded))) return "";
+      "-format_whitelist", "matroska,webm,mov,wav,ogg", "-threads", "1", "-i", input, "-vn", "-t", String(maxSeconds + 1),
+      "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", "-fs", String((maxSeconds + 1) * 32000 + 100000), "-y", decoded], signal, 10000, true);
+    if (!hasSpeechSignal(await readFile(decoded), maxSeconds)) return "";
     await run(settings.engine, ["-m", settings.model, "-f", decoded, "-t", "2", "-l", "auto",
-      "-np", "-nt", "-otxt", "-of", output], signal, 30000);
+      "-np", "-nt", "-otxt", "-of", output], signal, maxSeconds === 120 ? 180000 : 30000);
     checkAbort(signal);
     const text = (await readFile(`${output}.txt`, "utf8")).trim();
     if (text.length > 20000) throw failure("invalid");

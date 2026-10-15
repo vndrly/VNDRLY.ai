@@ -1,3 +1,4 @@
+import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { readGateCoverageMap } from "../services/gate-coverage-map";
 import { ownCoverageStatus, recordWorkCoverageLocation, resolvePostIncident, actOnGateSharingIncident } from "../services/gate-post-coverage";
 import { Router } from "express";
@@ -433,6 +434,7 @@ router.use(
     res: import("express").Response,
     next: import("express").NextFunction,
   ) => {
+    if (error instanceof RequiredWorkError) { res.status(error.status).json({ code: error.code, message: error.message, assignments: error.assignments }); return; }
     if (error instanceof ChangeOverError) {
       res
         .status(error.status)

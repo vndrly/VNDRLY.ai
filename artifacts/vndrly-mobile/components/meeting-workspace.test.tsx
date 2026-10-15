@@ -1,3 +1,6 @@
+vi.mock("expo-crypto",()=>({randomUUID:()=>globalThis.crypto.randomUUID()}));
+import { apiFetch } from "@/lib/api";
+import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 vi.mock("@/components/MeetingRsvp", () => ({ default: () => null }));
 import React from "react";
 import {
@@ -147,6 +150,7 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <div>{children}</div>,
 }));
 vi.mock("expo-router", () => ({
+  useFocusEffect: () => {},
   useRouter: () => ({ push: env.push }),
   Stack: Object.assign(({ children }: any) => <>{children}</>, {
     Screen: () => null,
@@ -1463,4 +1467,21 @@ it("keeps exact speak-request recovery visible after the host releases mute", ()
   render(<MeetingWorkspace occurrenceId="meeting-a" />);
   fireEvent.click(screen.getByLabelText("Request to speak"));
   expect(env.state.requestToSpeak).toHaveBeenCalledTimes(1);
+});
+
+it("completes a task with a valid exact-version command and refreshes its completed state",async()=>{
+ env.moduleName="tasks-forms";Object.assign(env.user,{vendorId:22});
+ const task={id:"10000000-0000-4000-8000-000000000007",title:"Synthetic real-work flow",version:3,status:"open"};
+ vi.mocked(apiFetch).mockImplementation(async(path:any,options:any)=>{
+  if(options?.method==="PATCH"){
+   expect(path).toBe(`/api/work-hub/tasks/${task.id}`);
+   expect(workHubCommandEnvelopeSchema.parse(JSON.parse(options.body))).toMatchObject({expectedVersion:3,payloadVersion:1,payload:{status:"completed"}});
+   task.status="completed";return {resource:task} as any;
+  }
+  return [task] as any;
+ });
+ render(<WorkHubModuleScreen/>);fireEvent.click(await screen.findByRole("button",{name:`Complete ${task.title}`}));
+ await waitFor(()=>expect(screen.queryByRole("button",{name:`Complete ${task.title}`})).toBeNull());
+ expect(task.status).toBe("completed");delete (env.user as any).vendorId;
+ vi.mocked(apiFetch).mockImplementation(async()=>env.moduleData);
 });

@@ -198,7 +198,7 @@ export function workHubToolFamilyForPath(path: string): WorkHubToolFamily {
   if (["calendar"].includes(module)) return "scheduling";
   if (["calls", "voicemail"].includes(module)) return "calls";
   if (["files", "notes", "files-notes", "inventory", "assets"].includes(module)) return "files";
-  if (["tasks", "forms", "tasks-forms"].includes(module)) return "tasks";
+  if (["tasks", "forms", "tasks-forms", "library", "bundle", "assignment", "training", "checklist"].includes(module)) return "tasks";
   if (["meetings"].includes(module)) return "meetings";
   if (["billing", "payroll", "finance"].includes(module)) return "finance";
   if (["administration", "admin", "import-export", "implementation-exports", "settings", "settings-connections", "connections"].includes(module)) return "administration";
@@ -230,6 +230,7 @@ export function toolsForRealtime(args: {
     for (const name of ["get_work_hub_settings", "set_work_hub_language", "get_work_hub_connections", "prepare_work_hub_profile", "confirm_work_hub_profile", "get_work_hub_gate_locations", "prepare_work_hub_gate_location", "confirm_work_hub_gate_location"]) allowed.add(name);
   }
   if (inWorkHub) {
+    if(workHubToolFamilyForPath(path)==="meetings") allowed.delete("launch_scanner");
     if (workHubToolFamilyForPath(path) === "files") {
       for (const tool of ASSET_CAPABILITY_TOOLS) allowed.add(tool.name);
       for (const name of ["list_work_hub_channels", "list_work_hub_notes", "manage_work_hub_note"]) allowed.add(name);
@@ -248,6 +249,13 @@ export function toolsForRealtime(args: {
     for (const family of families) {
       for (const name of WORK_HUB_TOOL_NAMES_BY_FAMILY[family]) {
         allowed.add(name);
+      }
+    }
+    if(workHubToolFamilyForPath(path)==="tasks") {
+      const libraryPage=/\/work-hub\/(?:library|bundle|assignment|training|checklist)(?:[/?#]|$)/i.test(path);
+      for(const name of WORK_HUB_TOOL_NAMES_BY_FAMILY.tasks) {
+        const libraryTool=name.includes("library");
+        if(libraryPage ? !libraryTool : libraryTool && !["get_library_checklist"].includes(name)) allowed.delete(name);
       }
     }
     // Conversation pages need messaging and away rules; crew administration

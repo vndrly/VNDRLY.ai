@@ -246,7 +246,7 @@ export class MeetingStreamingClient {
     );
   }
 
-  async close() {
+  async close(options?: { reason: "hangup" | "pause" }) {
     const handle = this.handle;
     this.handle = undefined;
     if (!handle) return;
@@ -260,7 +260,7 @@ export class MeetingStreamingClient {
     });
     const request = this.request(
       this.path(`/${handle.sessionId}/close`),
-      "{}",
+      JSON.stringify(options ?? {}),
       controller.signal,
     ).then(() => undefined).catch(() => undefined);
     await Promise.race([request, timeout]);

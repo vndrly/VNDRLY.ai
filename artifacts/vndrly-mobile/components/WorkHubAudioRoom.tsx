@@ -8,6 +8,7 @@ import { getCachedToken, getToken, subscribeToken, subscribeUser } from "@/lib/a
 import { isAskVAppActive, requestAskVMicrophonePermission, subscribeAskVAppState } from "@/lib/askv-audio-session";
 import { useColors } from "@/hooks/useColors";
 import { createNativeMeetingAudioSession, type NativeMeetingAudioSession } from "@/lib/native-meeting-audio";
+import { registerCallAudioShutdown } from "@/lib/call-audio-control";
 import { getDeviceId } from "@/lib/deviceId";
 import { workHubDeviceClass, workHubDeviceLabel } from "@/lib/work-hub-device-label";
 
@@ -41,7 +42,7 @@ function newConnectionId() {
 }
 
 /** Audio stays on the existing VNDRLY signaling service and native WebRTC. */
-export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, hostMuteGeneration = 0 }: { occurrenceId: string; hostMuted?: boolean; hostMuteGeneration?: number }) {
+export default function WorkHubAudioRoom({ occurrenceId, callId, hostMuted = false, hostMuteGeneration = 0 }: { occurrenceId: string; callId?: string; hostMuted?: boolean; hostMuteGeneration?: number }) {
   const { t } = useTranslation();
   const colors = useColors();
   const [joined, setJoined] = useState(false);
@@ -103,6 +104,8 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
     let releaseLease: (() => Promise<void>) | null = null;
     let interval: ReturnType<typeof setInterval> | null = null;
     let joinedServer = false, localMuted = true, presencePending = false, consentPending = false;
+    let unregisterCallAudio = () => {};
+    let speechFailed = false;
     let accepted = false, recordingPolicy: number | null = null, recordingActive = false;
     let identity: MeetingIdentity | null = null, lastDeviceHeartbeat = 0, lastAudioLeaseRenewal = 0;
     let serverAudioLease: ServerAudioLease | null = null;
@@ -141,9 +144,9 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
     const stopOwned = (message?: string): Promise<void> => {
       if (cleanup) return cleanup;
       session.valid = false;
+      unregisterCallAudio();
       const failures: unknown[] = [];
       local?.getTracks().forEach(track => { try { track.enabled = false; } catch (cause) { failures.push(cause); } });
-      void releaseServerAudio();
       controller.abort();
       if (interval !== null) clearInterval(interval);
       if (pollingTimer.current === interval) pollingTimer.current = null;
@@ -163,6 +166,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       try { disposeLocal(); } catch (cause) { failures.push(cause); }
       cleanup = (async () => {
         await Promise.all([capturePending, nativeCleanup]);
+        await releaseServerAudio();
         if (failures.length) throw failures[0];
       })();
       return cleanup;
@@ -171,6 +175,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       const ownedRelease = releaseLease; releaseLease = null;
       return ownedRelease?.();
     };
+    if (callId) unregisterCallAudio = registerCallAudioShutdown(callId, async () => { await stopOwned(); await release(); });
     session.stop = (message, notifyLeave = false) => {
       const shouldLeave = session.valid && joinedServer && notifyLeave && session.token === getCachedToken();
       const stopped = stopOwned(message);
@@ -180,7 +185,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       });
       if (shouldLeave) {
         const leaveController = new AbortController(); leaving.current = leaveController;
-        void apiFetch(`/api/work-hub/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity ?? {}), signal: leaveController.signal }).catch(() => undefined);
+        void stopped.then(() => apiFetch(`/api/work-hub/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity ?? {}), signal: leaveController.signal })).catch(() => undefined);
       }
     };
     const failure = (cause: any) => {
@@ -208,13 +213,17 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       return request("signal", { toUserId: id, toDeviceId: target.connectionId, kind, payload });
     };
     const reconcileNativeTranscription = () => {
-      if (!native || recordingPolicy === null || nativeTranscriptionPending || !live()) return;
-      const shouldTranscribe = !localMuted && accepted && recordingActive;
+      if (!native || nativeTranscriptionPending || !live()) return;
+      if (recordingPolicy === null) {
+        if (nativeTranscribing) { nativeTranscribing = false; void native.setTranscription(false, 0).catch(() => undefined); }
+        return;
+      }
+      const shouldTranscribe = !localMuted && accepted && recordingActive && !speechFailed;
       if (nativeTranscribing === shouldTranscribe) return;
       nativeTranscriptionPending = true;
       void native.setTranscription(shouldTranscribe, recordingPolicy).then(() => {
         check(); nativeTranscribing = shouldTranscribe;
-      }).catch(failure).finally(() => {
+      }).catch(cause => { if (callId) { speechFailed = true; setRecording(false); setError("Transcription paused. Voice call continues."); } else failure(cause); }).finally(() => {
         nativeTranscriptionPending = false;
         if (live()) reconcileNativeTranscription();
       });
@@ -295,7 +304,8 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       if (!live()) { await release(); return; }
       await requestAskVMicrophonePermission(check); check();
       native = createNativeMeetingAudioSession({
-        occurrenceId, generation: version,
+        occurrenceId, callId, generation: version,
+        onTranscriptionError: code => { speechFailed = true; if (live()) { setRecording(false); setError(`Transcription paused: ${code}. Voice call continues.`); } },
         audioAuthorization: () => serverAudioLease && identity ? { ...identity, token: serverAudioLease.token, generation: serverAudioLease.generation } : null,
         onSignal: event => { if (live()) void signal(event.toUserId, event.kind, event.payload).catch(failure); },
         onError: code => { if (live()) session.stop(t("meetingWorkspace.audio.nativeStopped", { code })); },
@@ -411,8 +421,11 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
             session.stop(t("meetingWorkspace.audio.sessionEnded"));
             return;
           }
-          recordingActive = state.recordingState === "active";
-          setRecording(recordingActive); setError(""); reconcileNativeTranscription();
+          if (callId) {
+            const callPolicy = await apiFetch<{enabled:boolean;policyVersion:number}>(`/api/work-hub/calls/${callId}/transcription-state`, {signal:controller.signal}); check();
+            recordingPolicy = callPolicy.enabled ? callPolicy.policyVersion : null; accepted = callPolicy.enabled; recordingActive = callPolicy.enabled; setPolicy(null);
+          } else recordingActive = state.recordingState === "active";
+          setRecording(recordingActive && !speechFailed); if (!speechFailed) setError(""); reconcileNativeTranscription();
           if (native) {
             for (const [id] of nativePeers) if (!state.presentUserIds.includes(id)) { nativePeers.delete(id); await native.removePeer(id); check(); }
             for (const [id, target] of peerConnectionByUser) {
@@ -486,7 +499,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
   const primaryLabel = busy ? t("meetingWorkspace.audio.joining")
     : joined ? hostMuted ? t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" }) : muted ? t("meetingWorkspace.audio.unmute") : t("meetingWorkspace.audio.mute")
     : t("meetingWorkspace.audio.join");
-  const consentControl = joined && policy !== null ? (
+  const consentControl = !callId && joined && policy !== null ? (
     <Pressable accessibilityRole="button" accessibilityLabel={consentLabel}
       accessibilityHint={t("meetingWorkspace.audio.consentHint")}
       style={{ minHeight: 44, justifyContent: "center" }} onPress={() => current.current?.consent()}>
@@ -494,7 +507,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
     </Pressable>
   ) : null;
   return <View style={{ gap: 10 }}>
-    <Text style={{ color: colors.text }}>{t("meetingWorkspace.audio.status", {
+    <Text style={{ color: colors.text }}>{callId ? (recording ? "Transcription on · company policy" : "Transcription off or paused") : t("meetingWorkspace.audio.status", {
       state: recording ? t("meetingWorkspace.audio.recordingActive") : t("meetingWorkspace.audio.recordingOff"),
     })}</Text>
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}

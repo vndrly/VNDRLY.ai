@@ -41,3 +41,9 @@ describe("reliable notification delivery", () => {
     expect(repository.acknowledge).toHaveBeenCalledWith({ id: 7, userId: 8, at: new Date("2026-09-13T12:00:00.000Z") });
   });
 });
+
+it("does not retry a notice whose recipient is no longer authorized", async()=>{
+ const repository={markDelivered:vi.fn(),markAttemptFailed:vi.fn(),acknowledge:vi.fn()};
+ const result=await deliverNotification({id:1,userId:2,link:null,attempts:0,acknowledgementRequired:false},{repository,sender:async()=>({delivered:false,retryable:false,detail:"recipient_unavailable"})});
+ expect(result.retrying).toBe(false);expect(repository.markAttemptFailed).toHaveBeenCalledWith(expect.objectContaining({final:true,nextAttemptAt:null}));expect(repository.markDelivered).not.toHaveBeenCalled();
+});

@@ -1,3 +1,4 @@
+import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
@@ -461,6 +462,7 @@ export async function startGateShift(
     }
     if (access.station.active === false)
       return fail(409, "station_inactive", "This gate is inactive");
+    if (session.userId && (session.vendorId || session.partnerId)) await assertRequiredWorkClear(c, session.userId, session.partnerId ? {type:"partner",id:session.partnerId} : {type:"vendor",id:session.vendorId!});
     return (
       await c.query(
         "INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2) RETURNING *",
@@ -724,6 +726,7 @@ export async function transferGateShift(
         return fail(409, "operation_conflict", "Operation already used");
       return previous;
     }
+    if (incoming.userId && (incoming.vendorId || incoming.partnerId)) await assertRequiredWorkClear(c, incoming.userId, incoming.partnerId ? {type:"partner",id:incoming.partnerId} : {type:"vendor",id:incoming.vendorId!});
     const shift = await activeShift(c, input.stationId);
     if (
       !shift ||

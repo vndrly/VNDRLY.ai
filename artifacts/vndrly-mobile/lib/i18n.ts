@@ -10,7 +10,9 @@ const STORAGE_KEY = "vndrly.lng";
 export const SUPPORTED_LANGUAGES = ["en", "es"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
-export function isSupportedLanguage(value: unknown): value is SupportedLanguage {
+export function isSupportedLanguage(
+  value: unknown,
+): value is SupportedLanguage {
   return (
     typeof value === "string" &&
     (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
@@ -66,8 +68,14 @@ if (!i18n.isInitialized) {
         en: { translation: en },
         es: { translation: es },
       },
-      react: { useSuspense: false },
+      react: { useSuspense: false, bindI18nStore: "added removed" },
     });
+} else {
+  // Expo Fast Refresh retains the initialized singleton while locale JSON changes.
+  // Refresh bundled resources without rerunning language detection or changing
+  // the user's selected language. Otherwise new screens display their key names.
+  i18n.addResourceBundle("en", "translation", en, true, true);
+  i18n.addResourceBundle("es", "translation", es, true, true);
 }
 
 export async function setLanguage(lng: SupportedLanguage) {

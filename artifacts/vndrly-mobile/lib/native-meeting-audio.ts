@@ -48,6 +48,8 @@ export type NativeMeetingAudioSession = {
 
 export function createNativeMeetingAudioSession(options: {
   occurrenceId: string;
+  callId?: string;
+  onTranscriptionError?: (code: string) => void;
   generation: number;
   audioAuthorization?: () => Record<string, unknown> | null;
   streamingClient?: StreamingClient;
@@ -65,7 +67,7 @@ export function createNativeMeetingAudioSession(options: {
     );
   }
 
-  const stream = options.streamingClient ?? createMobileMeetingStreamingClient(options.occurrenceId, options.audioAuthorization ?? (() => null));
+  const stream = options.streamingClient ?? createMobileMeetingStreamingClient(options.occurrenceId, options.audioAuthorization ?? (() => null), options.callId);
   const sessionController = new AbortController();
   let streamController: AbortController | null = null;
   const subscriptions: Array<{ remove(): void }> = [];
@@ -84,21 +86,47 @@ export function createNativeMeetingAudioSession(options: {
     if (stopping) return stopping;
     alive = false;
     native!.invalidateSession({ generation: options.generation });
-    sessionController.abort();
-    streamController?.abort();
-    streamController = null;
     subscriptions.splice(0).forEach(subscription => subscription.remove());
     transcription = false;
-    pendingFrames.splice(0);
-    stopping = Promise.resolve(stream.close());
+    const acceptedFrames = pendingFrames.splice(0);
+    const closingController = streamController;
+    if (!options.callId) { sessionController.abort(); closingController?.abort(); }
+    stopping = (async () => {
+      let deadline: ReturnType<typeof setTimeout> | undefined;
+      const bounded = new Promise<void>(resolve => { deadline = setTimeout(() => { closingController?.abort(); resolve(); }, 1500); });
+      try {
+        if (options.callId && closingController && !closingController.signal.aborted) {
+          const flush = (async () => {
+            await uploadTask;
+            for (const frame of acceptedFrames) {
+              if (closingController.signal.aborted) break;
+              await stream.sendBase64AndPersist(frame.sequence, frame.pcmBase64, stream.persistTurn.bind(stream), closingController.signal);
+            }
+          })().catch(() => undefined);
+          await Promise.race([flush, bounded]);
+        }
+        await stream.close(options.callId ? { reason: "hangup" } : undefined);
+      } finally {
+        if (deadline) clearTimeout(deadline);
+        sessionController.abort(); closingController?.abort(); streamController = null;
+      }
+    })();
     return stopping;
   };
-
   const fail = (code: string) => {
     if (!alive) return;
     void stop().finally(() => options.onError?.(code));
   };
 
+  const transcriptionFail = (code: string) => {
+    if (!options.callId) { fail(code); return; }
+    transcription = false;
+    pendingFrames.splice(0);
+    streamController?.abort(); streamController = null;
+    void native!.setTranscription({ generation: options.generation, enabled: false, policyRevision: activePolicyRevision }).catch(() => undefined);
+    void stream.close();
+    options.onTranscriptionError?.(code);
+  };
   const drainFrames = (uploadController: AbortController) => {
     if (uploadTask) return;
     uploadTask = (async () => {
@@ -116,7 +144,7 @@ export function createNativeMeetingAudioSession(options: {
       }
     })().catch(error => {
       if (alive && streamController === uploadController && !uploadController.signal.aborted) {
-        fail(error?.code ?? "TRANSCRIPTION_UNAVAILABLE");
+        transcriptionFail(error?.code ?? "TRANSCRIPTION_UNAVAILABLE");
       }
     }).finally(() => {
       uploadTask = null;
@@ -129,25 +157,28 @@ export function createNativeMeetingAudioSession(options: {
       if (!alive || event.generation !== options.generation) return;
       options.onSignal?.(event);
     }),
+    native.addListener("onMeetingTranscriptionError", (event: { generation: number; code: string }) => {
+      if (alive && event.generation === options.generation) transcriptionFail(event.code || "TRANSCRIPTION_UNAVAILABLE");
+    }),
     native.addListener("onMeetingError", (event: { generation: number; code: string }) => {
       if (alive && event.generation === options.generation) fail(event.code || "AUDIO_UNAVAILABLE");
     }),
     native.addListener("onMeetingPCMFrame", (frame: NativeMeetingPCMFrame) => {
       if (!alive || !transcription || frame.generation !== options.generation || frame.sourceId !== sourceId) return;
       if (frame.policyRevision !== activePolicyRevision) {
-        fail("AUDIO_POLICY_CHANGED"); return;
+        transcriptionFail("AUDIO_POLICY_CHANGED"); return;
       }
       if (frame.sampleRate !== 16000 || frame.channels !== 1 || frame.sampleCount !== 8000 || typeof frame.pcmBase64 !== "string" || !frame.pcmBase64) {
-        fail("AUDIO_FORMAT_UNSUPPORTED"); return;
+        transcriptionFail("AUDIO_FORMAT_UNSUPPORTED"); return;
       }
       if (frame.sequence !== expectedSequence || frame.firstSample !== expectedFirstSample) {
-        fail("AUDIO_SEQUENCE_GAP"); return;
+        transcriptionFail("AUDIO_SEQUENCE_GAP"); return;
       }
       expectedSequence += 1;
       expectedFirstSample += 8000;
       const uploadController = streamController;
       if (!uploadController) { fail("TRANSCRIPTION_UNAVAILABLE"); return; }
-      if (pendingFrames.length >= 2) { fail("AUDIO_BACKPRESSURE"); return; }
+      if (pendingFrames.length >= 2) { transcriptionFail("AUDIO_BACKPRESSURE"); return; }
       pendingFrames.push(frame);
       drainFrames(uploadController);
     }),
@@ -200,8 +231,8 @@ export function createNativeMeetingAudioSession(options: {
         if (streamController === openingController) streamController = null;
         openingController?.abort();
         if (expectedCancellation) return;
-        sessionController.abort();
-        if (alive) fail("TRANSCRIPTION_UNAVAILABLE");
+        if (!options.callId) sessionController.abort();
+        if (alive) transcriptionFail("TRANSCRIPTION_UNAVAILABLE");
         throw error;
       }
     },

@@ -1,0 +1,4 @@
+﻿question_id,question,choice_a,choice_b,choice_c,choice_d,correct_answers,multiple_answers,explanation
+q1,Which Work Hub area shows your outstanding assignments?,To Complete,Call History,Fleet Map,Profile,A,FALSE,To Complete lists your outstanding assignments.
+q2,Which actions record an actual training result? Select both.,Opening the training page,Submitting the required completion acknowledgement,Passing the required quiz,Reading a push notification,B;C,TRUE,An acknowledgement records completion; a passing quiz records the quiz result.
+q3,What should you do after a quiz submission has an uncertain network result?,Submit repeatedly with new requests,Assume it passed,Retry the original request,Create another account,C,FALSE,Retrying the original request avoids creating a duplicate attempt.

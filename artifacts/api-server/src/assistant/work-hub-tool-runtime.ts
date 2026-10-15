@@ -52,7 +52,7 @@ export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown
     return null;
   }
   for (const source of [input, record(input.payload), record(result.resource), record(result.asset), result]) {
-    for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
+    for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "itemId", "assignmentId", "campaignId", "instanceId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
       const value = source[key];
       if (typeof value === "string" && value.trim() || typeof value === "number" && Number.isFinite(value)) return value as string | number;
     }
@@ -479,6 +479,74 @@ export function resolveWorkHubToolRequest(
   let target: string | WorkHubToolRequest;
 
   switch (name) {
+    case "list_work_hub_library": return request("GET",`/work-hub/library${input.archived===true?"?archived=true":""}`);
+    case "get_library_options": return request("GET","/work-hub/library/options");
+    case "list_library_bundles": return request("GET","/work-hub/bundles");
+    case "get_library_checklist": return request("GET","/work-hub/library/to-complete");
+    case "get_library_assignments": return request("GET","/work-hub/library/assignments");
+    case "preview_library_assignment": return request("POST","/work-hub/library/assignment-preview",payload);
+    case "assign_library_item": return request("POST","/work-hub/library/assign",envelope(input));
+    case "get_work_hub_library":
+    case "get_library_bundle":
+    case "get_library_poll_results":
+    case "manage_library_item":
+    case "manage_library_bundle": {
+      const bundle=name.includes("bundle"),action=String(input.action??"");
+      if(name.startsWith("manage")&&action==="create") return request("POST",bundle?"/work-hub/bundles":"/work-hub/library",envelope(input));
+      const id=z.uuid().safeParse(input.itemId);if(!id.success)return {error:"Supply an exact library item UUID."};
+      const base=`/work-hub/${bundle?"bundles":"library"}/${id.data}`;
+      if(name==="get_library_poll_results")return request("GET",`${base}/results`);
+      if(name.startsWith("get"))return request("GET",base);
+      if(!Number.isInteger(input.expectedVersion)||Number(input.expectedVersion)<0)return {error:"Read the current library version first."};
+      if(action==="update")return request("PATCH",base,envelope(input));
+      if(action==="onboarding"&&bundle)return request("POST",`${base}/onboarding-rule`,envelope(input));
+      if(["revise","publish","archive"].includes(action))return request("POST",`/work-hub/library/${id.data}/${action}`,envelope(input));
+      return {error:"Unsupported library action."};
+    }
+    case "get_library_assignment":
+    case "get_library_assignment_progress":
+    case "respond_library_assignment":
+    case "manage_library_assignment": {
+      const id=z.uuid().safeParse(input.instanceId);if(!id.success)return {error:"Supply an exact assignment UUID."};
+      if(name==="get_library_assignment_progress")return request("GET",`/work-hub/library/assignments/${id.data}`);
+      const base=`/work-hub/library/instances/${id.data}`;
+      if(name==="get_library_assignment")return request("GET",base);
+      if(!Number.isInteger(input.expectedVersion)||Number(input.expectedVersion)<0)return {error:"Read the current assignment version first."};
+      const action=String(name==="respond_library_assignment"?input.mode:input.action),allowed=name==="respond_library_assignment"?["progress","attempt","complete"]:["cancel","exempt","attempt-reset"];
+      return allowed.includes(action)?request("POST",`${base}/${action}`,envelope(input)):{error:"Unsupported assignment action."};
+    }
+    case "list_form_campaigns": return request("GET","/work-hub/form-campaigns");
+    case "get_form_campaign_options": return request("GET","/work-hub/form-campaigns/options");
+    case "create_form_campaign": return request("POST","/work-hub/form-campaigns",envelope(input));
+    case "get_form_campaign":
+    case "update_form_campaign":
+    case "publish_form_campaign":
+    case "pause_form_campaign": {
+      const id=z.uuid().safeParse(input.campaignId);if(!id.success)return {error:"Supply an exact campaign UUID."};const base=`/work-hub/form-campaigns/${id.data}`;
+      if(name==="get_form_campaign")return request("GET",base);
+      if(name==="update_form_campaign")return request("PATCH",base,envelope(input));
+      return request("POST",`${base}/${name==="publish_form_campaign"?"publish":"pause"}`,envelope(input,{}));
+    }
+    case "get_assigned_form":
+    case "submit_form_campaign_response": {
+      const id=z.uuid().safeParse(input.instanceId);if(!id.success)return {error:"Supply your exact assigned form instance UUID."};const base=`/work-hub/form-campaigns/instances/${id.data}`;
+      return name==="get_assigned_form"?request("GET",base):request("POST",`${base}/respond`,envelope(input));
+    }
+    case "list_live_meetings": return request("GET","/work-hub/live-meetings");
+    case "get_live_meeting":
+    case "request_meeting_admission":
+    case "decide_meeting_admission":
+    case "invite_live_meeting_members":
+    case "change_meeting_admission": {
+      const parsed=z.uuid().safeParse(input.occurrenceId);if(!parsed.success)return {error:"Supply an exact meeting occurrence UUID."};
+      const base=`/work-hub/live-meetings/${parsed.data}`;
+      if(name==="get_live_meeting")return request("GET",base);
+      if(name==="request_meeting_admission")return request("POST",`${base}/request-admission`,envelope(input,{}));
+      if(name==="decide_meeting_admission") {const target=z.number().int().positive().safeParse(input.targetUserId);if(!target.success || !["admit","decline"].includes(String(payload.decision)))return {error:"Supply an exact requester ID and admit/decline decision."};return request("POST",`${base}/admission/${target.data}`,envelope(input));}
+      if(name==="invite_live_meeting_members")return request("POST",`${base}/invitations`,envelope(input));
+      return request("PATCH",`${base}/admission-mode`,envelope(input));
+    }
+    case "start_live_meeting": return request("POST","/work-hub/live-meetings",envelope(input));
     case "get_work_hub_settings": return request("GET", "/auth/me");
     case "get_work_hub_connections": return request("GET", "/work-hub/connectors/microsoft-365");
     case "set_work_hub_language":

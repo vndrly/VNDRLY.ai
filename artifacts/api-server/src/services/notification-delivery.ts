@@ -22,7 +22,7 @@ export interface NotificationDeliveryRepository {
   markEscalated?(input: { id: number; escalationId: string; at: Date }): Promise<unknown>;
 }
 
-export type NotificationSender = (notice: DeliveryNotice) => Promise<{ delivered: boolean; detail?: string }>;
+export type NotificationSender = (notice: DeliveryNotice) => Promise<{ delivered: boolean; detail?: string; retryable?: boolean }>;
 export type NotificationDeliveryDependencies = {
   repository: NotificationDeliveryRepository;
   sender: NotificationSender;
@@ -58,7 +58,7 @@ export async function deliverNotification(notice: DeliveryNotice, dependencies: 
       await dependencies.repository.markDelivered({ id: notice.id, at: now, attempt });
       return { delivered: true as const, retrying: false as const, attempt };
     }
-    const final = attempt >= maximumAttempts;
+    const final = result.retryable === false || attempt >= maximumAttempts;
     await dependencies.repository.markAttemptFailed({ id: notice.id, at: now, attempt, nextAttemptAt: final ? null : new Date(now.getTime() + retryDelayMs(attempt - 1)), final, detail: result.detail ?? "delivery_not_confirmed", link: notice.link });
     return { delivered: false as const, retrying: !final, attempt };
   } catch (error) {
@@ -122,6 +122,13 @@ export async function runReliableNotificationDelivery(): Promise<number> {
   const results = await retryDueNotifications({
     repository: databaseNotificationDeliveryRepository,
     sender: async (notice) => {
+      if(notice.type==="work_hub_library_summary"&&notice.link){const {librarySummaryPushAllowed}=await import("../work-hub/onboarding-worker");if(!await librarySummaryPushAllowed(notice.userId,notice.link))return {delivered:false,retryable:false,detail:"recipient_unavailable"};}
+      if(notice.type==="work_hub_library_assignment"&&notice.link){const {libraryPushAllowed}=await import("../work-hub/onboarding-worker");if(!await libraryPushAllowed(notice.userId,notice.link))return {delivered:false,retryable:false,detail:"recipient_unavailable"};}
+      if(notice.type==="work_hub_form_campaign" && notice.link){const {formCampaignPushAllowed}=await import("../work-hub/form-campaign-worker");if(!await formCampaignPushAllowed(notice.userId,notice.link))return {delivered:false,retryable:false,detail:"recipient_unavailable"};}
+      if (notice.type === "work_hub_meeting_invite" && notice.link?.startsWith("/work-hub/meetings/")) {
+        const { liveMeetingPushAllowed } = await import("../work-hub/live-meeting-notifications");
+        if (!(await liveMeetingPushAllowed(notice.userId, notice.link.slice("/work-hub/meetings/".length)))) return {delivered:false,retryable:false,detail:"recipient_unavailable"};
+      }
       const receipt = await sendPushToUser(notice.userId, {
         title: notice.title ?? "VNDRLY update",
         body: notice.body ?? "You have a new update.",

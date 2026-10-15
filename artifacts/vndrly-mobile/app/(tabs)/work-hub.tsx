@@ -46,12 +46,11 @@ function CommunicationsCard({ title, width, companyName, meetings }: { title: st
   return <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 16, borderWidth: 2, paddingHorizontal: 16, paddingTop: 16, ...(width === "100%" ? { width } : { flex: 1, minWidth: 0 }) }}>
     <View style={{ alignItems: "center", flexDirection: "row", gap: 10, paddingBottom: 14 }}>
       <View style={{ alignItems: "center", backgroundColor: `${colors.primary}22`, borderRadius: 12, height: 40, justifyContent: "center", width: 40 }}><Feather name="message-circle" size={21} color={colors.primary} /></View>
-      <View><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{title}</Text><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Messages, calls, and invitations</Text></View>
+      <View><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{title}</Text><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Chats, calls, and meetings</Text></View>
     </View>
     <TodayItem label="Chats" icon="message-square" value="Open" onPress={() => openModule("chat")} />
     <TodayItem label="Calls" icon="phone" value="Recent" onPress={() => openModule("calls")} />
-    <TodayItem label="Invitations" icon="mail" value={meetings === undefined ? "Unavailable" : `${meetings} upcoming`} onPress={() => openModule("meetings")} />
-    <TodayItem label={`${companyName} Conversations`} icon="users" value="Recent" onPress={() => openModule("chat")} />
+    <TodayItem label="Meetings" icon="calendar" value={meetings === undefined ? "Unavailable" : `${meetings} upcoming`} onPress={() => openModule("meetings")} />
   </View>;
 }
 

@@ -1,3 +1,4 @@
+vi.mock("@/components/WorkHubCallPolicy", () => ({ default: () => null }));
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -9,6 +10,10 @@ import {
   waitFor,
 } from "@testing-library/react";
 import WorkHubCalls from "./WorkHubCalls";
+vi.mock("react-native", async (importOriginal) => ({
+  ...await importOriginal<typeof import("react-native")>(),
+  Modal: ({ visible, children }: any) => visible ? <div>{children}</div> : null,
+}));
 const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   createSound: vi.fn(),
@@ -20,7 +25,7 @@ vi.mock("@/lib/api", () => ({
   apiFetch: mocks.api,
   getApiBase: () => "https://vndrly.example",
 }));
-vi.mock("@/lib/auth", () => ({ getToken: async () => "private-test-token" }));
+vi.mock("@/lib/auth", () => ({ getToken: async () => "private-test-token", captureAuthScope: () => ({generation:1}), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {} }));
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({
     primary: "blue",
@@ -55,6 +60,7 @@ vi.mock("expo-av", () => ({
     Sound: { createAsync: mocks.createSound },
   },
 }));
+afterEach(cleanup);
 const defaults = (path: string) => {
   if (path === "/api/work-hub/calls/settings")
     return { available: true, speedDial: [] };
@@ -236,4 +242,31 @@ describe("mobile internal Calls", () => {
     );
     expect(await screen.findByText("Private voicemail sent.")).toBeTruthy();
   });
+});
+
+it("keeps the contact directory in New call instead of filling the main screen", async () => {
+  mocks.api.mockImplementation(async (path: string) => defaults(path));
+  render(<WorkHubCalls />);
+  expect(screen.queryByLabelText("Find a contact")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "New call" }));
+  expect(await screen.findByLabelText("Find a contact")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Close contacts" }));
+  await waitFor(() => expect(screen.queryByLabelText("Find a contact")).toBeNull());
+});
+
+
+it("links saved transcripts in Recent and reads voicemail text without a Transcribe button", async () => {
+  mocks.api.mockImplementation(async (path: string) => {
+    if(path === "/api/work-hub/calls") return [{id:"saved",occurrenceId:"room",incoming:true,callerUserId:3,recipientUserId:4,callerName:"Riley",recipientName:"Morgan",status:"ended",createdAt:new Date().toISOString(),transcriptAvailable:true}];
+    if(path === "/api/work-hub/voicemail") return [{id:"mail",senderName:"Riley",createdAt:new Date().toISOString(),readAt:null,transcript:"Please meet at the north gate.",transcriptionState:"ready",durationMs:5000}];
+    if(path.endsWith("/saved/transcript")) return {segments:[{id:"segment",speakerName:"Riley",startsAtMs:0,text:"Bring the inspection sheet."}]};
+    return defaults(path);
+  });
+  render(<WorkHubCalls />);
+  fireEvent.click(await screen.findByRole("button",{name:"View transcript"}));
+  expect(await screen.findByText("Bring the inspection sheet.")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button",{name:"Close transcript"}));
+  fireEvent.click(screen.getByRole("button",{name:/^voicemail$/i}));
+  expect(await screen.findByText("Please meet at the north gate.")).toBeTruthy();
+  expect(screen.queryByRole("button",{name:"Transcribe"})).toBeNull();
 });

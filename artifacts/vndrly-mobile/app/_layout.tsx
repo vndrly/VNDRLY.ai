@@ -1,3 +1,4 @@
+import OnboardingNotice from "@/components/work-hub/library/OnboardingNotice";
 import "@/lib/fleet-evidence-device-native";
 import {isFleetPushNotification,openFleetPushNotification} from "@/lib/fleet-push-notification";
 import "@/lib/fleet-background-location-native";
@@ -19,6 +20,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { Slot, router, usePathname, useSegments } from "expo-router";
+import { rememberMeetingDestination,pendingMeetingDestination,clearMeetingDestination } from "@/lib/meeting-link-return";
 import * as Notifications from "expo-notifications";
 import { handleNotificationAction, NOTIFICATION_ACTIONS } from "@/lib/notification-actions";
 import * as SplashScreen from "expo-splash-screen";
@@ -188,12 +190,16 @@ function AuthGate() {
     const inOnboarding = seg0 === "onboarding";
     const inGuestStack = seg0 === "visitor-checkin";
     if (!hasAuth) {
+      rememberMeetingDestination(pathname);
       if (!inLogin && !inGuestLogin && !inActivation && !inOnboarding) router.replace("/login");
       return;
     }
     (async () => {
       const routeUser = await getUser().catch(() => null);
       if (cancelled) return;
+      const meetingDestination=pendingMeetingDestination();
+      if(meetingDestination && pathname===meetingDestination)clearMeetingDestination();
+      if(meetingDestination && inLogin && role!=="guest"){router.replace(meetingDestination as never);return;}
       const isGatekeeper = isGatekeeperUser(routeUser);
       const routeSegments = segments as readonly string[];
       const inGatekeeperStack = isGatekeeperRouteAllowed(routeUser, routeSegments);
@@ -320,6 +326,7 @@ function AuthGate() {
   return (
     <>
       <Slot />
+      <OnboardingNotice enabled={hasAuth && role !== "guest"}/>
       <FieldModeCoordinator enabled={hasAuth && role === "field_employee"} />
     </>
   );

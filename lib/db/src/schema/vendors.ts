@@ -6,6 +6,7 @@ import { usersTable } from "./users";
 
 export const vendorsTable = pgTable("vendors", {
   id: serial("id").primaryKey(),
+  callTranscriptionPolicy: jsonb("call_transcription_policy").$type<{ enabled: boolean; version: number; verifiedByUserId: number; effectiveAt: string }>(),
   operationsCategories: text("operations_categories").array(),
   nativeOperationsPolicy: jsonb("native_operations_policy").$type<Record<string, unknown>>().notNull().default({}),
   fleetCommercialSettings: jsonb("fleet_commercial_settings"),

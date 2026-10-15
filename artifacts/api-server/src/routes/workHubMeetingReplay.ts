@@ -1,4 +1,5 @@
 import express, { Router, type NextFunction, type Request, type Response } from "express";
+import { requireRoomAdmission } from "../work-hub/live-meetings";
 import { createHash, randomBytes } from "node:crypto";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -111,6 +112,7 @@ async function context(req: Request, tx: Tx, options: { allowAdminOutsideRoster?
   const participant = roster.find((row) => row.userId === session.userId && !row.removedAt);
   const authorizedAdmin = options.allowAdminOutsideRoster && session.role === "admin";
   if (!meeting || (!participant && !authorizedAdmin) || !sessionCanSeeOwner(session, meeting.ownerOrgType, meeting.ownerOrgId)) throw new ReplayRouteError(403, "You no longer have access to this meeting");
+  if(meeting.admissionMode)await requireRoomAdmission(tx,{...session,userId:session.userId},occurrenceId);
   return { session: { ...session, userId: session.userId }, occurrenceId, occurrence, meeting, participant, roster, source: source(req) };
 }
 

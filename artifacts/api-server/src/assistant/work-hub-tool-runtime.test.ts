@@ -767,3 +767,28 @@ it("routes only exact reviewed existing shift claim-window updates", () => {
   expect(resolveExecutableWorkHubToolRequest("manage_work_hub_shift", input, true)).toMatchObject({ method: "PATCH", path: `/work-hub/shifts/${input.shiftId}`, body: { operationId: command.operationId, expectedVersion: 2, payload: { action: "update", open: true } } });
   for (const change of [{action:"cancel"}, {action:"reschedule"}, {expectedVersion:null}, {payload:{open:"true"}}, {payload:{open:true,title:"unreviewed"}}]) expect(resolveExecutableWorkHubToolRequest("manage_work_hub_shift", {...input,...change}, true)).toHaveProperty("error");
 });
+it("routes live meeting reads and admission commands through the shared server boundary",()=>{
+ const id="b04608be-31d4-40b0-a5d1-ab39bbde9195";
+ expect(resolveWorkHubToolRequest("list_live_meetings",{})).toMatchObject({method:"GET",path:"/work-hub/live-meetings"});
+ expect(resolveWorkHubToolRequest("get_live_meeting",{occurrenceId:id})).toMatchObject({method:"GET",path:`/work-hub/live-meetings/${id}`});
+ expect(resolveWorkHubToolRequest("decide_meeting_admission",{occurrenceId:id,targetUserId:12,payload:{decision:"admit"}})).toMatchObject({method:"POST",path:`/work-hub/live-meetings/${id}/admission/12`});
+});
+
+it("maps campaign reads and confirmed writes to exact shared routes",()=>{
+ const campaignId="00000000-0000-4000-8000-000000000002",instanceId="00000000-0000-4000-8000-000000000003";
+ expect(resolveWorkHubToolRequest("list_form_campaigns",{})).toMatchObject({method:"GET",path:"/work-hub/form-campaigns"});
+ expect(resolveWorkHubToolRequest("get_assigned_form",{instanceId})).toMatchObject({method:"GET",path:`/work-hub/form-campaigns/instances/${instanceId}`});
+ expect(resolveExecutableWorkHubToolRequest("publish_form_campaign",{...command,campaignId,expectedVersion:0},false,{userId:7,role:"vendor",vendorId:42,membershipRole:"admin"})).toHaveProperty("requiresConfirmation",true);
+ expect(resolveWorkHubToolRequest("publish_form_campaign",{...command,campaignId,expectedVersion:0})).toMatchObject({method:"POST",path:`/work-hub/form-campaigns/${campaignId}/publish`,body:{payload:{}}});
+ expect(resolveWorkHubToolRequest("get_form_campaign",{campaignId:"../foreign"})).toHaveProperty("error");
+});
+
+it("routes library, bundle and own training operations with exact IDs and confirmation",()=>{
+ const itemId="00000000-0000-4000-8000-000000000002",instanceId="00000000-0000-4000-8000-000000000003";
+ expect(resolveWorkHubToolRequest("list_work_hub_library",{})).toMatchObject({method:"GET",path:"/work-hub/library"});
+ expect(resolveWorkHubToolRequest("get_library_assignment",{instanceId})).toMatchObject({method:"GET",path:`/work-hub/library/instances/${instanceId}`});
+ expect(resolveWorkHubToolRequest("manage_library_item",{...command,itemId,action:"publish",expectedVersion:0})).toMatchObject({method:"POST",path:`/work-hub/library/${itemId}/publish`});
+ expect(resolveExecutableWorkHubToolRequest("respond_library_assignment",{...command,instanceId,mode:"attempt",payload:{answers:{q:["a"]}},expectedVersion:0},false,{userId:7,role:"field_employee",vendorId:42,membershipRole:"field_employee"})).toHaveProperty("requiresConfirmation",true);
+ expect(resolveWorkHubToolRequest("get_library_assignment",{instanceId:"../foreign"})).toHaveProperty("error");
+ expect(resolveWorkHubToolRequest("manage_library_bundle",{...command,itemId,action:"onboarding",payload:{enabled:true},expectedVersion:0})).toMatchObject({path:`/work-hub/bundles/${itemId}/onboarding-rule`});
+});

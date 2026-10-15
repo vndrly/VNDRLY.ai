@@ -1,3 +1,4 @@
+import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
 import { eq, and, isNull, desc, inArray, sql } from "drizzle-orm";
 import crypto from "crypto";
@@ -227,7 +228,9 @@ router.post("/tickets/:id/crew/:employeeId/check-in", async (req, res): Promise<
   }
 
   const checkInAt = new Date();
-  const [row] = await db.insert(ticketCheckInsTable).values({
+  const row = await db.transaction(async tx=>{
+    if (employee.userId) await assertRequiredWorkClear(tx, employee.userId, {type:"vendor",id:auth.vendorId});
+    const [row] = await tx.insert(ticketCheckInsTable).values({
     ticketId,
     employeeId,
     checkInAt,
@@ -236,6 +239,8 @@ router.post("/tickets/:id/crew/:employeeId/check-in", async (req, res): Promise<
     hourlyRateAtTime: effectiveRate,
     source: "manual",
   }).returning();
+    return row;
+  });
 
   // Backwards compatibility: keep legacy ticket-row check-in fields in sync
   // when this is the ticket's primary field employee.

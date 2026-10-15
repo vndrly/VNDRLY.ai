@@ -1,0 +1,6 @@
+import { expect,it,vi } from "vitest";
+import {authorizeCallTranscript} from "./call-transcript-access";
+function reader(version:number,activeMembershipId:number|null){let i=0;const values=[[{call:{callerUserId:7,recipientUserId:8,status:"active"},meeting:{ownerOrgId:12},occurrence:{},policy:{enabled:true,version:1,verifiedByUserId:7,effectiveAt:"2020-01-01"}}],[{userId:7,role:"admin"},{userId:8,role:"member"}],[{id:7,sessionVersion:version,activeMembershipId},{id:8}]];return{select:()=>{const rows=values[i++];const q:any={from:()=>q,innerJoin:()=>q,where:()=>q,limit:async()=>rows,then:(resolve:any)=>Promise.resolve(rows).then(resolve)};return q;}} as any;}
+const actor={userId:7,vendorId:12,sv:2,activeMembershipId:15} as any;
+it("rejects publication after sign-out or company context changes",async()=>{await expect(authorizeCallTranscript(actor,"call","voicemail",reader(3,15))).rejects.toThrow();await expect(authorizeCallTranscript(actor,"call","voicemail",reader(2,16))).rejects.toThrow();});
+it("retains current signed actor access and explicit internal voicemail worker access",async()=>{await expect(authorizeCallTranscript(actor,"call","capture",reader(2,15))).resolves.toBeTruthy();await expect(authorizeCallTranscript({userId:7,vendorId:12} as any,"call","voicemail",reader(2,16),true)).resolves.toBeTruthy();});

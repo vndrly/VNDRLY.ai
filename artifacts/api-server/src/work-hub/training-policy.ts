@@ -1,0 +1,74 @@
+export function gradeTraining(
+  config: {
+    questions: {
+      id: string;
+      options: { id: string }[];
+      correctOptionIds: string[];
+      multiple: boolean;
+    }[];
+    passingPercent: number;
+  },
+  answers: Record<string, string[]>,
+) {
+  if (
+    Object.keys(answers).some(
+      (id) => !config.questions.some((q) => q.id === id),
+    )
+  )
+    throw Error("Unknown quiz question");
+  let correct = 0;
+  for (const q of config.questions) {
+    const selected = answers[q.id];
+    if (
+      !Array.isArray(selected) ||
+      !selected.length ||
+      new Set(selected).size !== selected.length ||
+      (!q.multiple && selected.length !== 1) ||
+      selected.some((id) => !q.options.some((o) => o.id === id))
+    )
+      throw Error("Choose the permitted answers for every question");
+    if (
+      selected.length === q.correctOptionIds.length &&
+      selected.every((id) => q.correctOptionIds.includes(id))
+    )
+      correct++;
+  }
+  if (!config.questions.length) throw Error("Quiz questions required");
+  return {
+    correct,
+    total: config.questions.length,
+    scorePercent: Math.round((correct / config.questions.length) * 10000) / 100,
+    passed: correct * 100 >= config.passingPercent * config.questions.length,
+  };
+}
+
+export function trainingCompletionReady(
+  config: { completionMode: string; lessons: { id: string }[] },
+  lessonIds: string[],
+  acknowledged: boolean,
+  passed: boolean,
+) {
+  const checked =
+    config.completionMode === "quiz" ||
+    (acknowledged && config.lessons.every((l) => lessonIds.includes(l.id)));
+  return checked && (config.completionMode === "checkoff" || passed);
+}
+export function validateTrainingProgress(
+  config: {
+    questions: { id: string; options: { id: string }[]; multiple: boolean }[];
+  },
+  answers: Record<string, string[]>,
+) {
+  for (const [id, selected] of Object.entries(answers)) {
+    const question = config.questions.find((q) => q.id === id);
+    if (
+      !question ||
+      !Array.isArray(selected) ||
+      new Set(selected).size !== selected.length ||
+      (!question.multiple && selected.length > 1) ||
+      selected.some((option) => !question.options.some((o) => o.id === option))
+    ) {
+      throw Error("Choose the permitted answers for this question");
+    }
+  }
+}

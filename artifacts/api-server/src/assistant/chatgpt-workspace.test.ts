@@ -271,3 +271,32 @@ it("shows continuous custody age without guessing unknown checkout dates", () =>
   expect(result.sections[0].rows[0].detail).toContain("91 days");
   expect(result.sections[0].rows[1].detail).toContain("Checkout date unknown");
 });
+it("renders authorized live meeting links and keeps admission actions host-only",()=>{
+ const id="b04608be-31d4-40b0-a5d1-ab39bbde9195";
+ expect(workspaceRequest({view:"meeting_lobby",occurrenceId:id})).toMatchObject({sourceTool:"get_live_meeting",sourceArguments:{occurrenceId:id}});
+ const meeting={occurrenceId:id,title:"Crew briefing",agenda:null,hostName:"Host",startedAt:null,plannedEndsAt:null,connectedCount:0,admissionMode:"host_approval",ownAdmissionState:"pending",requestedAt:null,canManage:false,canEnter:false,canRequest:true,status:"live",version:0};
+ const out=workspaceOutput("meeting_lobby","get_live_meeting",{occurrenceId:id},{meeting,requests:[],members:[]});
+ expect(out.sections[0].rows[0].href).toBe(`https://vndrly.ai/work-hub/meeting/${id}`);
+ expect(out.sections[1].rows).toEqual([]);
+});
+
+it("campaign embedded results suppress individual anonymous answers and bind exact identifiers",()=>{
+ const id="00000000-0000-4000-8000-000000000002";
+ const request=workspaceRequest({view:"form_campaign",campaignId:id});
+ const data={campaignId:id,config:{kind:"poll",title:"Lunch",anonymous:true,choices:[{id:"a",label:"Park"},{id:"b",label:"Hall"}]},state:{status:"closed"},canManage:true,counts:{assigned:1,eligible:1,responded:1,pending:0,overdue:0,excluded:0},resultsVisible:true,totals:[{id:"a",label:"Park",votes:1}],receipts:[{instanceId:id,userId:7,name:"Private employee",email:"private@example.invalid",excluded:false,submittedAt:now.toISOString(),late:false,values:{choices:["a"]}}]};
+ const output=workspaceOutput("form_campaign",request.sourceTool,request.sourceArguments,data,now);
+ expect(JSON.stringify(output)).not.toMatch(/Private employee|private@example.invalid/);
+ expect(output.sections.find(x=>x.title==="Results")?.rows[0].title).toBe("Park");
+ expect(()=>workspaceOutput("form_campaign",request.sourceTool,{campaignId:"00000000-0000-4000-8000-000000000003"},data,now)).toThrow();
+ expect(()=>workspaceRequest({view:"assigned_form",instanceId:"invalid"})).toThrow();
+});
+
+it("projects library and own training into exact links without answer keys or object locators",()=>{
+ const itemId="00000000-0000-4000-8000-000000000002";
+ expect(workspaceRequest({view:"library_item",itemId})).toMatchObject({sourceTool:"get_work_hub_library",sourceArguments:{itemId}});
+ expect(()=>workspaceRequest({view:"training",instanceId:"../foreign"})).toThrow();
+ const output=workspaceOutput("library_item","get_work_hub_library",{itemId},{itemId,title:"Orientation",metadata:{kind:"training",state:"published",contentVersion:2,content:{description:"Learn the workflow",training:{questions:[{correctOptionIds:["private-answer"]}]}},fileSnapshots:{x:{storageKey:"private-object"}}}},now);
+ expect(output.sections[0].rows[0].href).toBe(`https://vndrly.ai/work-hub/library/${itemId}`);
+ expect(JSON.stringify(output)).not.toMatch(/private-answer|private-object|correctOptionIds/);
+ expect(()=>workspaceOutput("library_item","get_work_hub_library",{itemId},{itemId:"00000000-0000-4000-8000-000000000003",title:"Wrong"},now)).toThrow();
+});
