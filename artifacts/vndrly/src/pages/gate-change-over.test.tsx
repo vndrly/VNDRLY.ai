@@ -78,6 +78,10 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("keeps the coverage map off the Dashboard", () => {
+  mount(false);
+  expect(screen.queryByRole("region", { name: "Gate coverage map" })).toBeNull();
+});
 it("requests separate history discovery for inactive gates without reusing operational selectors", async () => {
   mount(true);
   await waitFor(() => expect(api).toHaveBeenCalledWith("/sites?mode=history"));
