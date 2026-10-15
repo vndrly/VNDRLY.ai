@@ -1,0 +1,9 @@
+import{readFileSync,writeFileSync}from'node:fs';
+const path='artifacts/api-server/src/services/fleet-commercial.ts';let s=readFileSync(path,'utf8');
+s=s.replace('return actor.membershipRole==="admin"||state.grants.some(g=>g.userId===actor.userId&&g.roles.some(role=>["dispatcher","fleet_manager"].includes(role)))','return state.enabled&&(actor.membershipRole==="admin"||state.grants.some(g=>g.userId===actor.userId&&g.roles.some(role=>["dispatcher","fleet_manager"].includes(role))&&g.siteIds.some(id=>actor.currentSiteIds?.includes(id))&&g.fleetIds.some(id=>state.fleets.some(f=>f.id===id&&f.siteIds.some(site=>g.siteIds.includes(site)&&actor.currentSiteIds?.includes(site))))))');
+s=s.replace('run.linkedTicketId=ticketId;run.commercial=', 'if(run.commercial){validateCommercialStops(run);return;}\n run.linkedTicketId=ticketId;run.commercial=');
+s=s.replace('if(!run.commercial||run.commercial.billedLineId)return;', 'if(!run.commercial||run.commercial.billedLineId)return;if(run.commercial.rateCents===undefined)throw new FleetError("fleet.billing_rate_missing",409);');
+s=s.replace('ticketPlan:(a:FleetActor,ticketId:number)=>transaction(a,async(state,c)=>{const ticket=', 'ticketPlan:(a:FleetActor,ticketId:number)=>transaction(a,async(state,c)=>{if(!managing(state,a)||a.membershipRole!=="admin"&&!state.grants.some(g=>g.userId===a.userId&&g.financeRead&&g.roles.includes("fleet_manager")))throw new FleetError("fleet.finance_required",403);const ticket=');
+s=s.replace('return{...value,destinations:', 'return{version:value.version,defaultMode:value.defaultMode,destinations:');
+writeFileSync(path,s);
+const loc='artifacts/api-server/src/services/fleet-location.ts';s=readFileSync(loc,'utf8').replace("AND target_id=$2 AND EXISTS", "AND target_id=$2 AND tool_output->>'assignment'=$3 AND EXISTS").replace('[actor.companyId,runId]);','[actor.companyId,runId,assignment(run)]);');writeFileSync(loc,s);

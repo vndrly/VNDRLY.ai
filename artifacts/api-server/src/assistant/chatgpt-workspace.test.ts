@@ -1,3 +1,4 @@
+import { assessSafetyReadiness } from "../lib/safety-readiness";
 import { describe, expect, it } from "vitest";
 import { runInNewContext } from "node:vm";
 import { workspaceOutput, workspaceRequest, WORKSPACE_HTML } from "./chatgpt-workspace";
@@ -300,3 +301,5 @@ it("projects library and own training into exact links without answer keys or ob
  expect(JSON.stringify(output)).not.toMatch(/private-answer|private-object|correctOptionIds/);
  expect(()=>workspaceOutput("library_item","get_work_hub_library",{itemId},{itemId:"00000000-0000-4000-8000-000000000003",title:"Wrong"},now)).toThrow();
 });
+
+it("shows the company safety weighting and unknown coverage in the scoped workspace",()=>{const request=workspaceRequest({view:"safety"});expect(request.sourceTool).toBe("lookup_safety_metrics");const readiness={...assessSafetyReadiness(100,[]),activePeople:2,canManage:true,asOf:now.toISOString()}; const output=workspaceOutput("safety",request.sourceTool,{}, {readiness},now);expect(output.metrics[0].value).toBe(40);expect(output.attention[0].title).toBe("Incomplete coverage");expect(output.sections[0].rows).toHaveLength(6);});

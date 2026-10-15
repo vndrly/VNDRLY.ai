@@ -1,10 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { View, Text, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import {
   useDailySummary,
   pendingTasks,
+  myWorkItems,
   pendingSafety,
   attentionNotices,
 } from "@/lib/daily-workspace";
@@ -15,6 +17,7 @@ export default function DailyWorkPanel({
 }: {
   mode: "attention" | "safety" | "my-work";
 }) {
+  const { t } = useTranslation();
   const c = useColors(),
     q = useDailySummary(),
     s = q.sources;
@@ -104,7 +107,7 @@ export default function DailyWorkPanel({
         </>
       )}
       {s &&
-        mode !== "safety" &&
+        mode === "attention" &&
         pendingTasks(s.tasks ?? []).map((item) =>
           row("task-" + item.id, item.title, item.status, () =>
             router.push({
@@ -127,52 +130,18 @@ export default function DailyWorkPanel({
             },
           ),
         )}
-      {s &&
-        mode === "my-work" &&
-        (s.tickets ?? [])
-          .filter(
-            (item) =>
-              !["approved", "funds_dispersed", "cancelled", "denied"].includes(
-                item.status,
-              ),
-          )
-          .map((item) =>
-            row(
-              "ticket-" + item.id,
-              "Ticket #" + item.id + " · " + (item.siteName ?? "Assigned site"),
-              item.status,
-              () => router.push(`/ticket/${item.id}` as never),
-            ),
-          )}
-      {s &&
-        mode === "my-work" &&
-        (s.runs ?? []).map((item) =>
-          row("run-" + item.id, item.title, item.status, () =>
-            router.push(`/fleet-run/${item.id}` as never),
-          ),
-        )}
-      {s &&
-        mode === "my-work" &&
-        (s.shifts ?? []).map((item) =>
-          row(
-            "shift-" + item.shift.id,
-            item.shift.title ?? "Assigned shift",
-            new Date(item.shift.startsAt).toLocaleString(),
-            () =>
-              router.push({
-                pathname: "/work-hub/record" as never,
-                params: { kind: "shift", id: item.shift.id },
-              }),
-          ),
-        )}
+      {s && mode === "my-work" && myWorkItems(s).map(item => row(`${item.kind}-${item.id}`, `${t(`myWork.kind_${item.kind}`)} · ${item.title}`, item.status, () => {
+        if (item.kind === "ticket") router.push(`/ticket/${item.id}` as never);
+        else if (item.kind === "run") router.push(`/fleet-run/${item.id}` as never);
+        else router.push({pathname:"/work-hub/record" as never,params:{kind:item.kind,id:item.id}});
+      }))}
       {s && mode === "my-work" && (
-        <><TogglePillButton
+        <TogglePillButton
           compactOnTablet
           onPress={() => router.push("/work-hub/calendar")}
         >
           View shifts and scheduled work
         </TogglePillButton>
-        <TogglePillButton compactOnTablet onPress={()=>router.push("/work-hub/payroll-documents")}>My payroll documents</TogglePillButton></>
       )}
       {s && (s.notificationLimited || s.safetyLimited) && (
         <Text style={{ color: c.mutedForeground }}>

@@ -30,6 +30,7 @@ import {
 import type { SessionPayload } from "../lib/session";
 import { z } from "zod";
 import { ChangeOverError, getChangeOverState, getShiftNotes, listChangeOverSites, listChangeOverStations } from "../services/gate-change-over";
+import { companySafetyReadiness } from "../lib/company-safety-readiness";
 import { computeSafetyMetrics, loadSiteOperationalStatus } from "../lib/safety-metrics";
 import {
   blockFieldEmployee,
@@ -122,7 +123,8 @@ async function lookupSafetyMetrics(args: Record<string, unknown>, session: Sessi
     vendorId: session.role === "vendor" ? session.vendorId ?? undefined : undefined,
     siteLocationId: Number.isFinite(siteId) ? siteId : undefined,
   });
-  return JSON.stringify(metrics);
+  const readiness = session.userId && (session.vendorId || session.partnerId) ? await companySafetyReadiness({...session,userId:session.userId}) : null;
+  return JSON.stringify({...metrics, readiness});
 }
 
 async function lookupSiteOperationalStatus(args: Record<string, unknown>, session: SessionPayload) {

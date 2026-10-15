@@ -33,7 +33,6 @@ const CORE_TOOLS = new Set([
   "prefill_draft",
   "launch_camera",
   "launch_maps",
-  "launch_scanner",
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([

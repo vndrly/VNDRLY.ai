@@ -109,6 +109,7 @@ export const LibraryDraftSchema = z
       briefing: { enabled: false, hour: 8, minute: 0, push: false },
       escalationHours: null,
     }),
+    safetyRelated: z.boolean().optional(),
     dueHours: z.number().int().min(1).max(8760).default(720),
     timezone: z.string().default("America/Chicago"),
   })

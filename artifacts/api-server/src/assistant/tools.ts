@@ -1186,11 +1186,6 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
-    name: "launch_scanner",
-    description: "Client capability: open the QR/scanner flow.",
-    input_schema: { type: "object", properties: {}, additionalProperties: false },
-  },
-  {
     name: "start_ticket_entry",
     description:
       "Client capability: start photo, parts, labor, or mileage entry with known context. Ask for missing facts; do not invent them.",

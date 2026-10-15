@@ -1876,7 +1876,9 @@
     "title": "Mapa de cuadrilla",
     "subtitle": "GPS en vivo de su cuadrilla en trabajos activos.",
     "onShiftNow": "En turno ahora ({{count}})",
-    "nobodyOnClock": "Ningún miembro de la cuadrilla comparte ubicación en este momento."
+    "nobodyOnClock": "Ningún miembro de la cuadrilla comparte ubicación en este momento.",
+    "recentActivity": "Actividad de campo reciente",
+    "noRecentActivity": "Todavía no hay actividad de campo reciente."
   },
   "partnerMap": {
     "title": "Mapa de sitio y cuadrilla",
@@ -2040,25 +2042,10 @@
     "quickActions": "Acciones rápidas",
     "startJob": "Iniciar trabajo",
     "activeJobs": "Trabajos activos",
-    "crewCommsTitle": "Comunicación de cuadrilla",
-    "crewCommsSubtitle": "Mantenga pulsado para hablar con la cuadrilla en un ticket activo. Los clips se guardan en Supabase y la cuadrilla recibe alertas push y correo.",
-    "commsForemanOnly": "La comunicación de cuadrilla está disponible para capataces en tickets activos.",
-    "commsNoTickets": "No hay tickets activos — inicie o acepte un trabajo para abrir un canal.",
-    "openTicketDetail": "Abrir detalle del ticket",
-    "pttHold": "Mantener para hablar",
-    "pttRecording": "Grabando…",
-    "pttHoldHint": "Mantenga el botón del micrófono mientras habla. Suelte para enviar al canal de la cuadrilla.",
-    "pttHoldA11y": "Mantener para grabar un mensaje de voz para la cuadrilla",
-    "pttRecent": "Mensajes de voz recientes",
-    "pttEmpty": "Aún no hay mensajes de voz — sea el primero en el canal.",
     "pttVoice": "Mensaje de voz",
-    "pttUnknownSender": "Miembro de cuadrilla",
-    "pttMicDeniedTitle": "Se necesita acceso al micrófono",
     "pttMicDeniedBody": "Permita el acceso al micrófono para usar pulsar-para-hablar.",
-    "pttNotReadyTitle": "Micrófono no listo",
-    "pttNotReadyBody": "Traiga VNDRLY al primer plano, espere un momento y vuelva a mantener el botón del micrófono.",
-    "pttSendFailed": "No se pudo enviar el mensaje de voz.",
-    "pttPlayFailed": "No se pudo reproducir este clip."
+    "pttPlayFailed": "No se pudo reproducir este clip.",
+    "flaggedJobs": "Trabajos marcados"
   },
   "vendorHome": {
     "portal": "Portal del proveedor",
@@ -2103,14 +2090,7 @@
     "reactivateSiteConfirmTitle": "¿Reactivar este sitio?",
     "reactivateSiteConfirmDescription": "Las cuadrillas podrán iniciar nuevo trabajo aquí."
   },
-  "scanScreen": {
-    "cameraDenied": "Se necesita acceso a la cámara para escanear códigos QR.",
-    "loadingPermission": "Comprobando acceso a la cámara…",
-    "grantPermission": "Conceder permiso",
-    "invalidQrTitle": "Código QR inválido",
-    "invalidQrBody": "Código QR no reconocido:\n{{data}}",
-    "ok": "OK"
-  },
+  "scanScreen": {},
   "stack": {
     "newTicket": "Iniciar Nuevo Trabajo",
     "tracking": "Seguimiento",
@@ -2370,18 +2350,37 @@
       "title": "Puntuación de seguridad",
       "company": "Puntuación de seguridad de la empresa",
       "unavailable": "No se pudo cargar. Inténtalo de nuevo en breve.",
-      "explanation": "La puntuación comienza en 100. Los incidentes registrables abiertos, los eventos de alto potencial con más de 7 días y los eventos abiertos sin actualizar reducen la puntuación. Los reportes recientes de casi accidentes pueden sumar puntos, hasta 100.",
+      "explanation": "El desempeño de incidentes contribuye hasta 40 puntos al total. La preparación preventiva aporta hasta 60 puntos.",
       "events": "Eventos abiertos: {{count}} · Alto potencial: {{hipo}}",
       "improve": "Mejora la puntuación dando seguimiento a incidentes y acciones correctivas, atendiendo eventos de alto potencial pendientes y reportando casi accidentes a tiempo.",
       "reviewEvents": "Revisar eventos de seguridad",
       "myActions": "Mis acciones requeridas",
-      "separate": "Mantén tu capacitación y certificaciones al día. Estos requisitos se muestran por separado y no cambian la puntuación de incidentes.",
-      "trainingCount": "{{count}} elemento(s) de capacitación de seguridad pendiente(s)",
-      "training": "Abrir capacitación de seguridad requerida",
-      "assignments": "Ver mi capacitación y formularios asignados",
-      "certHint": "Revisa el estado de tus certificaciones, sus fechas de vencimiento y requisitos de renovación.",
-      "certifications": "Mis certificaciones",
-      "loading": "Cargando…"
+      "loading": "Cargando…",
+      "openIncidents": "Incidentes de seguridad abiertos"
+    },
+    "readiness": {
+      "title": "Mejorar la seguridad de la empresa",
+      "weights": "60% preparación preventiva · 40% desempeño de incidentes",
+      "companyRequirement": "Requisito de seguridad para toda la empresa",
+      "contributions": "Preparación: {{readiness}} / 60 puntos · Incidentes: {{incident}} / 40 puntos",
+      "provisional": "Puntuación provisional: {{minimum}}. La evidencia faltante podría elevarla hasta {{maximum}}. Establece la cobertura antes de confiar en el resultado.",
+      "training": "Capacitación de seguridad requerida",
+      "acknowledgements": "Formularios y acuses de políticas de seguridad",
+      "credentials": "Registros de credenciales verificados",
+      "drivers": "Calificaciones de conductores de Flota",
+      "inspections": "Inspecciones de recorridos activos de Flota",
+      "correctiveActions": "Acciones correctivas verificadas",
+      "counts": "{{completed}} / {{required}} completos o vigentes · {{outstanding}} pendientes · {{unknown}} desconocidos",
+      "noEvidence": "Cobertura no establecida. No se otorgan puntos de cumplimiento.",
+      "points": "{{points}} / 10 puntos de preparación",
+      "action_training": "Administrar y asignar capacitación",
+      "action_acknowledgements": "Administrar formularios y políticas",
+      "action_credentials": "Revisar credenciales de la empresa",
+      "action_drivers": "Revisar calificaciones de Flota",
+      "action_inspections": "Revisar inspecciones de Flota",
+      "action_correctiveActions": "Revisar acciones correctivas",
+      "coverageNote": "Los recuentos abarcan toda la empresa. Marca elementos publicados de la Biblioteca como requisitos de seguridad para incluirlos. La vigencia de credenciales no establece todas las calificaciones laborales. Las inspecciones de Flota cubren recorridos activos; otros requisitos de sitios, equipos y simulacros necesitan cobertura registrada. La cobertura desconocida no indica cumplimiento.",
+      "unavailable": "La preparación de seguridad de la empresa no está disponible. Inténtalo de nuevo."
     }
   },
   "meetingWorkspace": {
@@ -3653,5 +3652,11 @@
     "viewResponse": "Ver respuesta completada",
     "open": "Abrir asignación",
     "myAssignments": "Mis asignaciones"
+  },
+  "myWork": {
+    "kind_task": "Tarea sin ticket",
+    "kind_ticket": "Ticket",
+    "kind_run": "Recorrido de conductor",
+    "kind_shift": "Turno de acceso"
   }
 }

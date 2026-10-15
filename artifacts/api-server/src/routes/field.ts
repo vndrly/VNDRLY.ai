@@ -1070,6 +1070,11 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
     }
   }
 
+  if (req.query.assignedToMe === "1" && ctx.mode !== "field") {
+    // My Work is personal even when this viewer can inspect the company's tickets.
+    conditions.push(sql`(${ticketsTable.foremanUserId}=${ctx.session.userId} or exists (select 1 from vendor_people vp where vp.id=${ticketsTable.fieldEmployeeId} and vp.user_id=${ctx.session.userId}) or exists (select 1 from ticket_crew tc join vendor_people vp on vp.id=tc.employee_id where tc.ticket_id=${ticketsTable.id} and tc.removed_at is null and vp.user_id=${ctx.session.userId}))`);
+  }
+
   const rows = await db
     .select({
       id: ticketsTable.id,
@@ -1085,6 +1090,7 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
       foremanUserId: ticketsTable.foremanUserId,
       fieldEmployeeFirstName: vendorPeopleTable.firstName,
       fieldEmployeeLastName: vendorPeopleTable.lastName,
+      assignedAt: sql<string | null>`coalesce((select max(n.created_at) from notifications n where n.user_id=${ctx.session.userId} and n.type='ticket_assigned' and n.link=('/tickets/' || ${ticketsTable.id}::text)), (select max(tc.added_at) from ticket_crew tc join vendor_people vp on vp.id=tc.employee_id where tc.ticket_id=${ticketsTable.id} and vp.user_id=${ctx.session.userId} and tc.removed_at is null), ${ticketsTable.createdAt})`,
       createdAt: ticketsTable.createdAt,
       scheduledStartAt: ticketsTable.scheduledStartAt,
       // Task #605: mobile open-tickets pill mirrors the web 7-day

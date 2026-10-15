@@ -135,15 +135,11 @@ describe("buildAppNavigation", () => {
       "askv",
       "index",
       "work-hub",
-      "schedule",
-      "flagged",
       "crew-map",
       "crews",
-      "comms",
-      "scan",
       "profile",
     ]);
-    expect(items.find((entry) => entry.key === "comms")?.badge).toBe(2);
+    expect(items.some((entry) => entry.key === "comms")).toBe(false);
   });
 
   it("gives authorized office admins an explicit Gate Mode entry", () => {
@@ -208,7 +204,6 @@ describe("buildAppNavigation", () => {
       "work-hub",
       "schedule",
       "flagged",
-      "scan",
       "profile",
     ]);
     expect(items.find((entry) => entry.key === "index")?.badge).toBe(4);

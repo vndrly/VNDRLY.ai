@@ -4816,7 +4816,6 @@
   "fieldNav": {
     "home": "Home",
     "schedule": "Schedule",
-    "scan": "Scan",
     "profile": "Profile",
     "aria": "Field portal navigation"
   },
@@ -4826,7 +4825,6 @@
     "map": "Map",
     "crews": "Crews",
     "analytics": "Analytics",
-    "scan": "Scan",
     "profile": "Profile",
     "aria": "Foreman portal navigation"
   },
@@ -5056,6 +5054,30 @@
       "injury": "Injury",
       "property_damage": "Property damage",
       "observation": "Observation"
+    },
+    "readiness": {
+      "title": "Improve company safety",
+      "weights": "60% preventive readiness · 40% incident performance",
+      "companyRequirement": "Company-wide safety requirement",
+      "contributions": "Readiness: {{readiness}} / 60 points · Incidents: {{incident}} / 40 points",
+      "provisional": "Provisional score: {{minimum}}. Missing evidence could bring it up to {{maximum}}. Establish coverage before relying on this result.",
+      "training": "Required safety training",
+      "acknowledgements": "Safety forms and policy acknowledgements",
+      "credentials": "Verified credential records",
+      "drivers": "Fleet driver qualifications",
+      "inspections": "Active Fleet run inspections",
+      "correctiveActions": "Verified corrective actions",
+      "counts": "{{completed}} / {{required}} complete or current · {{outstanding}} outstanding · {{unknown}} unknown",
+      "noEvidence": "Coverage not established. No compliance points claimed.",
+      "points": "{{points}} / 10 readiness points",
+      "action_training": "Manage and assign safety training",
+      "action_acknowledgements": "Manage safety forms and policies",
+      "action_credentials": "Review company credentials",
+      "action_drivers": "Review Fleet qualifications",
+      "action_inspections": "Review Fleet inspections",
+      "action_correctiveActions": "Review safety corrective actions",
+      "coverageNote": "Counts are company-wide. Mark published Library items as company-wide safety requirements to include them. Credential currency does not establish every job qualification. Fleet inspections cover active runs; other site, equipment and emergency-drill requirements need recorded coverage. Unknown coverage is not a finding of compliance.",
+      "unavailable": "Company safety readiness is unavailable. Please try again."
     }
   },
   "mapCompliance": {
@@ -5922,5 +5944,11 @@
     "viewResponse": "View completed response",
     "open": "Open assignment",
     "myAssignments": "My Assignments"
+  },
+  "myWork": {
+    "kind_task": "Unticketed task",
+    "kind_ticket": "Ticket",
+    "kind_run": "Driver run",
+    "kind_shift": "Gate shift"
   }
 }

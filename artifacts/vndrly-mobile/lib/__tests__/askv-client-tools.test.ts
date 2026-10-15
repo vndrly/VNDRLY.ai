@@ -47,7 +47,7 @@ describe("AskV native client capabilities", () => {
     await executeAskVClientIntent({ name: "start_ticket_entry", arguments: { ticketId: 42, kind: "labor", path: "/tickets/42" } }, "/askv");
     expect(ui.push).toHaveBeenCalledWith(expect.objectContaining({ pathname: "/ticket/[id]", params: expect.objectContaining({ id: "42", askvEntry: "labor" }) }));
     await executeAskVClientIntent({ name: "launch_scanner", arguments: {} }, "/askv");
-    expect(ui.push).toHaveBeenCalledWith("/(tabs)/scan");
+    expect(ui.push).toHaveBeenCalledWith("/work-hub/my-work");
   });
   it("hydrates a safety draft without submitting it or carrying arbitrary fields", async () => {
     const result = await executeAskVClientIntent({ name: "prefill_draft", arguments: { form: "safety-report", values: JSON.stringify({ title: "Loose cable", eventType: "unsafe_condition", siteLocationId: 3, description: "At the gate", submitted: true }) } }, "/askv");

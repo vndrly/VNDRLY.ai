@@ -61,7 +61,7 @@ export function applyAskVClientIntent(intent: AskVClientIntent): { ok: boolean; 
     const ok = navigate(args.path);
     return { ok, message: ok ? 'Requested screen opened. The form still requires review and completion.' : 'That screen is unavailable.' };
   }
-  if (intent.name === 'launch_scanner') return { ok: navigate('/field/scan'), message: 'Scanner flow opened. Complete the scan on screen.' };
+  if (intent.name === 'launch_scanner') return { ok: navigate('/work-hub/my-work'), message: 'Assigned work opened. QR job starts have been retired.' };
   if (intent.name === 'focus_control') {
     const controlId = String(args.controlId ?? '');
     const control = document.getElementById(controlId) ?? document.querySelector(`[data-testid="${CSS.escape(controlId)}"]`);

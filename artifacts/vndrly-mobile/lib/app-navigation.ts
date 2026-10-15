@@ -129,13 +129,9 @@ export function buildAppNavigation({
     result.push(item("crew-map", "/(tabs)/crew-map", labels.map, "map-pin"));
   }
   if (isForemanEmployeeUser(user)) {
+    for (const key of ["schedule", "flagged"]) { const index = result.findIndex(item => item.key === key); if (index >= 0) result.splice(index, 1); }
     result.push(item("crews", "/(tabs)/crews", labels.crews, "users"));
-    result.push({
-      ...item("comms", "/(tabs)/comms", labels.comms, "radio"),
-      badge: badges.comms,
-    });
   }
-  result.push(item("scan", "/(tabs)/scan", labels.scan, "maximize"));
   result.push(item("profile", "/(tabs)/profile", labels.profile, "user"));
   return result;
 }

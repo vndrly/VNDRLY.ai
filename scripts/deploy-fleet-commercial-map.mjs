@@ -1,0 +1,23 @@
+import{createRequire}from'node:module';import{readFile,writeFile}from'node:fs/promises';import{loadVpsSshConfig}from'./ssh-vps-config.mjs';
+const{Client}=createRequire(import.meta.url)('ssh2'),c=new Client();await new Promise((ok,no)=>c.on('ready',ok).on('error',no).connect(loadVpsSshConfig()));
+const root='/var/www/vndrly/',baseline='C:/Users/JohnElerick/DEV/VNDRLY.ai/.local/fleet-live-baseline/';
+const sf=await new Promise((ok,no)=>c.sftp((e,s)=>e?no(e):ok(s)));
+const read=p=>new Promise((ok,no)=>{let out='';const s=sf.createReadStream(root+p);s.on('data',b=>out+=b);s.on('end',()=>ok(out));s.on('error',no);});
+const put=(p,value)=>new Promise((ok,no)=>{const s=sf.createWriteStream(root+p);s.on('close',ok);s.on('error',no);s.end(value);});
+const run=cmd=>new Promise((ok,no)=>c.exec(cmd,(e,s)=>{if(e)return no(e);s.on('data',b=>process.stdout.write(b));s.stderr.on('data',b=>process.stderr.write(b));s.on('close',code=>code?no(Error('Scoped Fleet deploy failed '+code)):ok());}));
+const existing=['artifacts/api-server/src/services/fleet-ops.ts','artifacts/api-server/src/services/fleet-planning.ts','artifacts/api-server/src/services/fleet-eta.ts','artifacts/api-server/src/services/fleet-location.ts','artifacts/api-server/src/routes/fleet.ts','lib/api-zod/src/fleet.ts','lib/api-zod/src/index.ts'];
+const added=['artifacts/api-server/src/services/fleet-commercial.ts','artifacts/api-server/src/routes/fleetCommercialPolicy.ts','lib/api-zod/src/fleet-commercial.ts'];
+const folder='.local/fleet-commercial-'+Date.now(),patches=[];
+try{
+ for(const path of existing){const current=await read(path),before=await readFile(baseline+path.replaceAll('/','__'),'utf8');if(current!==before)throw Error('Remote changed since inspection: '+path);patches.push([path,await readFile(path)]);}
+ let path='artifacts/api-server/src/routes/index.ts',text=await read(path);if(!text.includes('fleetCommercialPolicyRouter'))text='import fleetCommercialPolicyRouter from "./fleetCommercialPolicy";\n'+text.replace('router.use(fleetRouter);','router.use(fleetRouter);\nrouter.use(fleetCommercialPolicyRouter);');if(!text.includes('router.use(fleetCommercialPolicyRouter)'))throw Error('Missing mount');patches.push([path,text]);
+ for(const [p,anchor,field]of [['lib/db/src/schema/vendors.ts','fleetOpsState:','fleetCommercialSettings: jsonb("fleet_commercial_settings"),'],['lib/db/src/schema/partners.ts','id: serial','fleetCommercialSettings: jsonb("fleet_commercial_settings"),'],['lib/db/src/schema/tickets.ts','id: serial','fleetPlan: jsonb("fleet_plan"),'],['lib/db/src/schema/siteLocations.ts','id: serial','fleetTicketPolicy: jsonb("fleet_ticket_policy"),']]){text=await read(p);if(!text.includes(field)){const i=text.indexOf(anchor);if(i<0)throw Error('Schema anchor missing '+p);text=text.slice(0,i)+field+'\n  '+text.slice(i);}patches.push([p,text]);}
+ // Additive only, with a separate transaction for the isolated demo database.
+ const migration=`import fs from 'node:fs';import{createRequire}from'node:module';const pg=createRequire('/var/www/vndrly/lib/db/package.json')('pg');const env=fs.readFileSync('/var/www/vndrly/.env.production','utf8');const vars={};for(const line of env.split(/\\r?\\n/)){const i=line.indexOf('=');if(i>0)vars[line.slice(0,i).trim()]=line.slice(i+1).trim().replace(/^['"]|['"]$/g,'');}for(const demo of [false,true]){const u=new URL(vars.DATABASE_URL);if(demo)u.pathname='/vndrly_prairie_demo';const pool=new pg.Pool({connectionString:u.toString(),ssl:{rejectUnauthorized:false}}),c=await pool.connect();try{await c.query('BEGIN');for(const table of ['vendors','partners'])await c.query('ALTER TABLE '+table+' ADD COLUMN IF NOT EXISTS fleet_commercial_settings jsonb');await c.query('ALTER TABLE tickets ADD COLUMN IF NOT EXISTS fleet_plan jsonb');await c.query('ALTER TABLE site_locations ADD COLUMN IF NOT EXISTS fleet_ticket_policy jsonb');await c.query('COMMIT');console.log(demo?'Demo columns ready':'Production columns ready');}catch(e){await c.query('ROLLBACK');throw e;}finally{c.release();await pool.end();}}`;
+ await run(`cd ${root} && mkdir -p ${folder} && tar -czf ${folder}/before.tgz ${patches.map(([p])=>p).join(' ')} artifacts/api-server/dist`);
+ await put(folder+'/migration.mjs',migration);
+ await run(`cd ${root} && node ${folder}/migration.mjs`);
+ for(const [p,v]of patches)await put(p,v);for(const p of added)await put(p,await readFile(p));
+ await run(`cd ${root} && pnpm exec tsc -b lib/api-zod && pnpm --filter @workspace/api-server run build && sudo systemctl restart vndrly-api`);
+ await writeFile('C:/Users/JohnElerick/DEV/VNDRLY.ai/.local/fleet-commercial-deployment.json',JSON.stringify({backup:folder+'/before.tgz',deployedAt:new Date().toISOString(),api:true},null,2));
+}finally{c.end();}

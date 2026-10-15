@@ -1876,7 +1876,9 @@
     "title": "Crew map",
     "subtitle": "Live GPS for your crew on active jobs.",
     "onShiftNow": "On shift now ({{count}})",
-    "nobodyOnClock": "No crew are actively sharing location right now."
+    "nobodyOnClock": "No crew are actively sharing location right now.",
+    "recentActivity": "Recent field activity",
+    "noRecentActivity": "No recent field activity yet."
   },
   "partnerMap": {
     "title": "Site crew map",
@@ -2040,25 +2042,10 @@
     "quickActions": "Quick actions",
     "startJob": "Start job",
     "activeJobs": "Active jobs",
-    "crewCommsTitle": "Crew comms",
-    "crewCommsSubtitle": "Hold to talk with crew on an active ticket. Voice clips are stored in Supabase and crew get push + email alerts.",
-    "commsForemanOnly": "Crew comms is available to foremen on active tickets.",
-    "commsNoTickets": "No active tickets — start or accept a job to open a crew channel.",
-    "openTicketDetail": "Open ticket detail",
-    "pttHold": "Hold to talk",
-    "pttRecording": "Recording…",
-    "pttHoldHint": "Hold the mic button while speaking. Release to send to the crew channel.",
-    "pttHoldA11y": "Hold to record a voice message for the crew",
-    "pttRecent": "Recent voice messages",
-    "pttEmpty": "No voice messages yet — be the first on the channel.",
     "pttVoice": "Voice message",
-    "pttUnknownSender": "Crew member",
-    "pttMicDeniedTitle": "Microphone access needed",
     "pttMicDeniedBody": "Allow microphone access to use push-to-talk.",
-    "pttNotReadyTitle": "Microphone not ready",
-    "pttNotReadyBody": "Bring VNDRLY to the foreground, wait a moment, then hold the mic button again.",
-    "pttSendFailed": "Could not send voice message.",
-    "pttPlayFailed": "Could not play this clip."
+    "pttPlayFailed": "Could not play this clip.",
+    "flaggedJobs": "Flagged Jobs"
   },
   "vendorHome": {
     "portal": "Vendor Portal",
@@ -2103,14 +2090,7 @@
     "reactivateSiteConfirmTitle": "Reactivate this site?",
     "reactivateSiteConfirmDescription": "Field crews will be able to start new work here again."
   },
-  "scanScreen": {
-    "cameraDenied": "Camera access is required to scan QR codes.",
-    "loadingPermission": "Checking camera access…",
-    "grantPermission": "Grant Permission",
-    "invalidQrTitle": "Invalid QR",
-    "invalidQrBody": "Unrecognized QR code:\n{{data}}",
-    "ok": "OK"
-  },
+  "scanScreen": {},
   "stack": {
     "newTicket": "Start New Job",
     "tracking": "Tracking",
@@ -2370,18 +2350,37 @@
       "title": "Safety score",
       "company": "Company safety score",
       "unavailable": "Unable to load. Please try again shortly.",
-      "explanation": "The company score starts at 100. Open recordable incidents, high-potential events older than 7 days, and stale open events reduce it. Recent near-miss reports can add points, up to 100.",
+      "explanation": "Incident performance contributes up to 40 points to the total. Preventive readiness contributes up to 60 points.",
       "events": "Open events: {{count}} · High potential: {{hipo}}",
       "improve": "Improve the score by following up on open incidents and corrective actions, addressing overdue high-potential events, and reporting near misses promptly.",
       "reviewEvents": "Review safety events",
       "myActions": "My required actions",
-      "separate": "Keep your training and certifications current. These requirements are shown separately and do not change the incident score.",
-      "trainingCount": "{{count}} required safety training item(s) outstanding",
-      "training": "Open required safety training",
-      "assignments": "View my assigned training and forms",
-      "certHint": "Review your certification status, expiration dates, and renewal requirements.",
-      "certifications": "My certifications",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "openIncidents": "Open safety incidents"
+    },
+    "readiness": {
+      "title": "Improve company safety",
+      "weights": "60% preventive readiness · 40% incident performance",
+      "companyRequirement": "Company-wide safety requirement",
+      "contributions": "Readiness: {{readiness}} / 60 points · Incidents: {{incident}} / 40 points",
+      "provisional": "Provisional score: {{minimum}}. Missing evidence could bring it up to {{maximum}}. Establish coverage before relying on this result.",
+      "training": "Required safety training",
+      "acknowledgements": "Safety forms and policy acknowledgements",
+      "credentials": "Verified credential records",
+      "drivers": "Fleet driver qualifications",
+      "inspections": "Active Fleet run inspections",
+      "correctiveActions": "Verified corrective actions",
+      "counts": "{{completed}} / {{required}} complete or current · {{outstanding}} outstanding · {{unknown}} unknown",
+      "noEvidence": "Coverage not established. No compliance points claimed.",
+      "points": "{{points}} / 10 readiness points",
+      "action_training": "Manage and assign safety training",
+      "action_acknowledgements": "Manage safety forms and policies",
+      "action_credentials": "Review company credentials",
+      "action_drivers": "Review Fleet qualifications",
+      "action_inspections": "Review Fleet inspections",
+      "action_correctiveActions": "Review safety corrective actions",
+      "coverageNote": "Counts are company-wide. Mark published Library items as company-wide safety requirements to include them. Credential currency does not establish every job qualification. Fleet inspections cover active runs; other site, equipment and emergency-drill requirements need recorded coverage. Unknown coverage is not a finding of compliance.",
+      "unavailable": "Company safety readiness is unavailable. Please try again."
     }
   },
   "meetingWorkspace": {
@@ -3653,5 +3652,11 @@
     "viewResponse": "View completed response",
     "open": "Open assignment",
     "myAssignments": "My Assignments"
+  },
+  "myWork": {
+    "kind_task": "Unticketed task",
+    "kind_ticket": "Ticket",
+    "kind_run": "Driver run",
+    "kind_shift": "Gate shift"
   }
 }

@@ -1,3 +1,6 @@
+import { CompanySafetyReadinessSchema } from "@workspace/api-zod";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ShieldAlert } from "lucide-react";
@@ -15,6 +18,9 @@ type Metrics = {
 
 export function SafetyDashboardCard() {
   const { t } = useTranslation();
+  const [,navigate] = useLocation();
+  const {user}=useAuth();
+  const readiness=useQuery({queryKey:["company-safety-readiness",user?.userId,user?.vendorId,user?.partnerId],queryFn:async()=>{const response=await fetch(`${API_BASE}/api/safety/readiness`,{credentials:"include"});if(!response.ok)throw Error("readiness unavailable");return CompanySafetyReadinessSchema.parse((await response.json()).data);},refetchInterval:60000});
   const notificationsModal = useNotificationsModal();
   const { data, isLoading } = useQuery({
     queryKey: ["safety-metrics"],
@@ -38,31 +44,29 @@ export function SafetyDashboardCard() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <button
-          type="button"
+        <div
           className={CARD_INNER_TILE_CLICKABLE_CLASS + " block w-full text-left text-sm"}
-          onClick={() => notificationsModal?.openNotificationsWithCategory("safety")}
           data-testid="safety-dashboard-open-notifications"
         >
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <button type="button" className="text-left" onClick={()=>navigate("/safety-score")}>
               <div className="text-xs text-muted-foreground">{t("safety.score")}</div>
-              <div className="text-2xl font-bold">{data.safetyScore}</div>
-            </div>
+              <div className="text-2xl font-bold">{readiness.data ? `${readiness.data.score}${readiness.data.provisional ? "*" : ""}` : "—"}</div>
+            </button>
             <div>
               <div className="text-xs text-muted-foreground">{t("safety.daysClean")}</div>
               <div className="text-2xl font-bold">{data.daysWithoutRecordable ?? "—"}</div>
             </div>
-            <div>
+            <button type="button" className="text-left" onClick={()=>notificationsModal?.openNotificationsWithCategory("safety")}>
               <div className="text-xs text-muted-foreground">{t("safety.openEvents")}</div>
               <div className="text-lg font-semibold">{data.openEventCount}</div>
-            </div>
+            </button>
             <div>
               <div className="text-xs text-muted-foreground">{t("safety.openHipo")}</div>
               <div className="text-lg font-semibold">{data.openHipoCount}</div>
             </div>
           </div>
-        </button>
+        </div>
       </CardContent>
     </Card>
   );

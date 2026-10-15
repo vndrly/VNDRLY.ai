@@ -57,7 +57,7 @@ describe("AskV client intents", () => {
     expect(open).toHaveBeenCalledWith(expect.stringContaining("35.5%2C-97.5"), "_blank", "noopener,noreferrer");
 
     expect(applyAskVClientIntent({ name: "launch_scanner", arguments: {} })).toMatchObject({ ok: true });
-    expect(window.location.pathname).toBe("/field/scan");
+    expect(window.location.pathname).toBe("/work-hub/my-work");
     expect(applyAskVClientIntent({ name: "start_ticket_entry", arguments: { path: "/tickets/42?askvEntry=labor" } })).toMatchObject({ ok: true });
     expect(window.location.pathname).toBe("/tickets/42");
 
