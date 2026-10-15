@@ -11,6 +11,7 @@ type Props = {
   title: string;
   testIdPrefix: string;
   fallbackHref?: string;
+  backBehavior?: "history" | "destination";
 };
 
 /** Approved iOS portal header: company identity, then true Back + page title + Ask V. */
@@ -18,10 +19,16 @@ export default function PortalPageHeader({
   title,
   testIdPrefix,
   fallbackHref = "/profile",
+  backBehavior = "destination",
 }: Props) {
   const colors = useColors();
 
   const goBack = () => {
+    if (backBehavior === "history") {
+      if (router.canGoBack()) router.back();
+      else router.replace(fallbackHref as never);
+      return;
+    }
     // Profile is a tab route, so the generic history entry can point at Dashboard.
     // Dismiss to the originating Profile route when it exists; Expo falls back to
     // replacing with Profile only for a direct-opened page with no Profile entry.

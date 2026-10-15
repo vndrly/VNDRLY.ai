@@ -1,0 +1,13 @@
+import React from "react";
+import {render,screen,fireEvent,cleanup} from "@testing-library/react";
+import {it,expect,vi,afterEach} from "vitest";
+const m=vi.hoisted(()=>({canGoBack:vi.fn(()=>true),back:vi.fn(),replace:vi.fn(),dismissTo:vi.fn()}));
+vi.mock("expo-router",()=>({router:m}));
+vi.mock("react-native",()=>({StyleSheet:{create:(x:any)=>x},View:({children}:any)=><div>{children}</div>,Text:({children}:any)=><span>{children}</span>}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({})}));
+vi.mock("@/components/AskVVoiceIndicator",()=>({default:()=>null}));vi.mock("@/components/BrandTitleRow",()=>({default:()=>null}));
+vi.mock("@/components/SphereBackButton",()=>({default:({onPress}:any)=><button onClick={onPress}>Back</button>}));
+import PortalPageHeader from "./PortalPageHeader";
+afterEach(()=>{cleanup();vi.clearAllMocks();});
+it("returns to the previous screen for notification history",()=>{render(<PortalPageHeader title="Notifications" testIdPrefix="notifications" fallbackHref="/(tabs)/change-over" backBehavior="history"/>);fireEvent.click(screen.getByText("Back"));expect(m.back).toHaveBeenCalledOnce();expect(m.dismissTo).not.toHaveBeenCalled();expect(m.replace).not.toHaveBeenCalled();});
+it("uses the fallback only when directly opened without history",()=>{m.canGoBack.mockReturnValueOnce(false);render(<PortalPageHeader title="Notifications" testIdPrefix="notifications" fallbackHref="/(tabs)/change-over" backBehavior="history"/>);fireEvent.click(screen.getByText("Back"));expect(m.replace).toHaveBeenCalledWith("/(tabs)/change-over");expect(m.back).not.toHaveBeenCalled();});
