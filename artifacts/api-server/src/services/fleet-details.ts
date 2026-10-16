@@ -5,6 +5,7 @@ import {
   FleetDetailSnapshotSchema,
   FleetRigPackageSchema,
   FleetResourceReceiptSchema,
+  FleetCanonicalIdSchema,
   type FleetDetail,
   type FleetDetailSnapshot,
   type FleetRigPackage,
@@ -34,21 +35,21 @@ type Access = (
 ) => { fleetIds: readonly string[]; roles: readonly string[] } | null;
 const savePackage = z
   .object({
-    operationId: z.uuid(),
+    operationId: FleetCanonicalIdSchema,
     expectedVersion: z.number().int().nonnegative(),
     package: FleetRigPackageSchema,
   })
   .strict();
 const saveDetail = z
   .object({
-    operationId: z.uuid(),
+    operationId: FleetCanonicalIdSchema,
     expectedVersion: z.number().int().nonnegative(),
     detail: FleetDetailSchema,
   })
   .strict();
 const queryPage = z
   .object({
-    after: z.uuid().optional(),
+    after: FleetCanonicalIdSchema.optional(),
     limit: z.coerce.number().int().min(1).max(50).default(50),
   })
   .strict();
@@ -221,7 +222,7 @@ export function createFleetDetailsOperations(
     fleetResourceReceipt: (actor: FleetActor, operationId: string) =>
       transaction(actor, async (state, client) => {
         const grant = scope(state, actor);
-        z.uuid().parse(operationId);
+        operationId=FleetCanonicalIdSchema.parse(operationId);
         if (
           !grant.roles.some((role) =>
             ["fleet_manager", "dispatcher"].includes(role),
@@ -263,7 +264,7 @@ export function createFleetDetailsOperations(
             })
             .strict()
             .parse(raw);
-        z.uuid().parse(id);
+        id=FleetCanonicalIdSchema.parse(id);
         const targetType =
           type === "detail" ? "fleet-detail" : "fleet-rig-package";
         const current = await readFleetResourceRecord(
@@ -383,7 +384,7 @@ export function createFleetDetailsOperations(
     fleetRigPackage: (actor: FleetActor, id: string) =>
       transaction(actor, async (state, client) => {
         const grant = scope(state, actor);
-        z.uuid().parse(id);
+        id=FleetCanonicalIdSchema.parse(id);
         if (
           !grant.roles.some((role) =>
             ["fleet_manager", "dispatcher"].includes(role),
@@ -405,7 +406,7 @@ export function createFleetDetailsOperations(
       }),
     fleetDetailSnapshot: (actor: FleetActor, id: string) =>
       transaction(actor, async (state, client) => {
-        z.uuid().parse(id);
+        id=FleetCanonicalIdSchema.parse(id);
         const registry = await readFleetResourceRegistry(
           client,
           actor.companyId,

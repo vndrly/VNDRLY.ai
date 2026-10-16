@@ -8,6 +8,7 @@ import {
 } from "./fleet-repository";
 import type { FleetActor } from "./fleet-ops";
 import type { PoolClient } from "pg";
+import {FleetRunSchema} from "@workspace/api-zod";
 
 async function fixture() {
   assertFreshLocalTestDatabaseEnvironment(process.env);
@@ -330,6 +331,31 @@ describe("canonical Detail persistence", () => {
     expect(
       rejected && rejected.status === "rejected" ? rejected.reason.code : null,
     ).toBe("fleet.reservation_conflict");
+  });
+  it("uses canonical UUID casing for resource reads and operation receipts",async()=>{
+    const f=await fixture(),input=f.packageInput(0);
+    const rig=await f.service.saveFleetRigPackage(f.actor,input);
+    expect(await f.service.fleetRigPackage(f.actor,rig.id.toUpperCase())).toMatchObject({id:rig.id});
+    expect(await f.service.fleetResourceReceipt(f.actor,input.operationId.toUpperCase())).toMatchObject({operationId:input.operationId});
+    const detail=await f.service.saveFleetDetail(f.actor,f.detailInput(0,rig.id));
+    expect((await f.service.fleetDetailSnapshot(f.actor,detail.id.toUpperCase())).detail.id).toBe(detail.id);
+  });
+  it.each(["same_company","other_company"])("refuses a Detail reservation against an active legacy run in %s",async(where)=>{
+    const f=await fixture(),rig=await f.service.saveFleetRigPackage(f.actor,f.packageInput(0));
+    const detail=await f.service.saveFleetDetail(f.actor,f.detailInput(0,rig.id));
+    const snapshot=await f.service.fleetDetailSnapshot(f.actor,detail.id);
+    let companyId=f.actor.companyId;
+    if(where==="other_company")companyId=(await f.pool.query("INSERT INTO vendors(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",[`Other ${randomUUID()}`,`${randomUUID()}@example.invalid`])).rows[0].id;
+    const legacy=FleetRunSchema.parse({id:randomUUID(),companyId,fleetId:randomUUID(),title:"Private active legacy work",
+      driverUserId:detail.driverUserId,vehicleAssetId:where==="same_company"?detail.vehicleAssetId:randomUUID(),trailerAssetId:null,
+      siteIds:[9],status:"in_progress",phase:null,version:1,stops:[{id:randomUUID(),siteId:9,kind:"pickup",sequence:0}],
+      loads:[],records:[],inspections:[],currentStopId:null,visitedStopIds:[],events:[],linkedTicketId:null,allowedActions:[]});
+    if(where==="other_company")await f.pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[companyId,JSON.stringify({...emptyFleetState(),enabled:true,runs:[legacy]})]);
+    await expect(f.transaction({...f.actor,schedulingDriverUserIds:[detail.driverUserId]},(state,client)=>{
+      if(where==="same_company")state.runs.push(legacy);
+      return f.module.reserveFleetDetail({state,client},f.actor,{runId:randomUUID(),detailSnapshot:snapshot,
+        startAt:"2026-10-16T12:00:00Z",plannedEndAt:null,timeZone:"America/Chicago"});
+    })).rejects.toMatchObject({code:"fleet.reservation_conflict"});
   });
   it("refuses a supplied snapshot that changes components without changing the saved revision", async () => {
     const f = await fixture(),

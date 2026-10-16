@@ -22,7 +22,9 @@ export function fleetReservationConflicts(
   existing: ReadonlyArray<FleetReservation>,
 ): FleetReservation[] {
   const start = Date.parse(candidate.startAt),
-    end = Date.parse(candidate.plannedEndAt);
+    end = candidate.plannedEndAt
+      ? Date.parse(candidate.plannedEndAt)
+      : Infinity;
   return existing.filter(
     (row) =>
       row.runId !== candidate.runId &&
@@ -30,7 +32,9 @@ export function fleetReservationConflicts(
       (row.driverUserId === candidate.driverUserId ||
         row.assetIds.some((id) => candidate.assetIds.includes(id))) &&
       start <
-        (row.state === "active" ? Infinity : Date.parse(row.plannedEndAt)) &&
+        (row.state === "active" || row.plannedEndAt === null
+          ? Infinity
+          : Date.parse(row.plannedEndAt)) &&
       Date.parse(row.startAt) < end,
   );
 }
@@ -51,7 +55,7 @@ export async function reserveFleetDetail(
     runId: string;
     detailSnapshot: FleetDetailSnapshot;
     startAt: string;
-    plannedEndAt: string;
+    plannedEndAt: string | null;
     timeZone: string;
   },
 ): Promise<FleetReservation> {
@@ -66,7 +70,10 @@ export async function reserveFleetDetail(
       JSON.stringify(snapshot.detail) ||
     detail.archivedAt ||
     (detail.effectiveUntil &&
-      Date.parse(input.plannedEndAt) > Date.parse(detail.effectiveUntil)) ||
+      (Date.parse(input.startAt) >= Date.parse(detail.effectiveUntil) ||
+        (input.plannedEndAt &&
+          Date.parse(input.plannedEndAt) >
+            Date.parse(detail.effectiveUntil)))) ||
     Date.parse(input.startAt) < Date.parse(detail.effectiveFrom)
   )
     throw new FleetError("fleet.detail_revision_conflict");
@@ -96,7 +103,10 @@ export async function reserveFleetDetail(
       JSON.stringify(FleetRigPackageSchema.parse(current)) !==
         JSON.stringify(snapshot.rigPackage) ||
       (current.effectiveUntil &&
-        Date.parse(input.plannedEndAt) > Date.parse(current.effectiveUntil)) ||
+        (Date.parse(input.startAt) >= Date.parse(current.effectiveUntil) ||
+          (input.plannedEndAt &&
+            Date.parse(input.plannedEndAt) >
+              Date.parse(current.effectiveUntil)))) ||
       Date.parse(input.startAt) < Date.parse(current.effectiveFrom)
     )
       throw new FleetError("fleet.detail_revision_conflict");
@@ -159,7 +169,51 @@ export async function reserveFleetDetail(
   );
   if (fleetReservationConflicts(candidate, reservations).length)
     throw new FleetError("fleet.reservation_conflict");
-  const prior = reservations.find((row) => row.runId === input.runId);
+  // V1 work predates reservation receipts. Check both its current aggregate and
+  // immutable latest run records, including a driver's work in another company.
+  // Only resource identities/status are used; another company's work is never disclosed.
+  const legacy = await tx.client.query(
+    `SELECT run FROM (
+    SELECT value AS run FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'runs','[]'::jsonb))
+    UNION ALL
+    SELECT tool_output AS run FROM (SELECT DISTINCT ON(target_id) target_id,tool_output,id FROM assistant_action_audit
+      WHERE target_type='fleet-run' ORDER BY target_id,id DESC) latest
+    ) records WHERE run->>'driverUserId'=$1::text OR run->>'vehicleAssetId'=ANY($2::text[]) OR run->>'trailerAssetId'=ANY($2::text[])`,
+    [detail.driverUserId, assetIds],
+  );
+  const latest = new Map<
+    string,
+    {
+      id: string;
+      driverUserId: number;
+      vehicleAssetId: string;
+      trailerAssetId: string | null;
+      status: string;
+      version: number;
+    }
+  >();
+  for (const row of [
+    ...legacy.rows.map((item) => item.run),
+    ...tx.state.runs,
+  ]) {
+    if (!row || typeof row.id !== "string")
+      throw new FleetError("fleet.reservation_conflict");
+    const prior = latest.get(row.id);
+    if (!prior || prior.version <= row.version) latest.set(row.id, row);
+  }
+  if (
+    [...latest.values()].some(
+      (row) =>
+        row.id !== candidate.runId &&
+        ["dispatched", "acknowledged", "in_progress"].includes(row.status) &&
+        (row.driverUserId === candidate.driverUserId ||
+          [row.vehicleAssetId, row.trailerAssetId].some(
+            (id) => id && candidate.assetIds.includes(id),
+          )),
+    )
+  )
+    throw new FleetError("fleet.reservation_conflict");
+  const prior = reservations.find((row) => row.runId === candidate.runId);
   if (prior) {
     if (
       prior.detailId !== candidate.detailId ||

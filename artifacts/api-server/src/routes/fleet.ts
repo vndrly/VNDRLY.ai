@@ -4,6 +4,7 @@ import { NativeOperationError } from "../services/native-operations-policy";
 import { Router } from "express";
 import { pool } from "@workspace/db";
 import { z } from "zod/v4";
+import {FleetCanonicalIdSchema} from "@workspace/api-zod";
 import { getSessionFromRequest } from "../lib/session";
 import {
   databaseFleetRepository,
@@ -26,7 +27,7 @@ router.get("/fleet/details/:id/history", endpoint(req => service.fleetResourceHi
 router.get("/fleet/details/:id", endpoint(req => service.fleetDetailSnapshot(actor(req), z.uuid().parse(req.params.id))));
 router.post("/fleet/details", endpoint(req => service.saveFleetDetail(actor(req), req.body)));
 router.patch("/fleet/details/:id", endpoint(req => {
-  if (req.body?.detail?.id !== z.uuid().parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
+  if (FleetCanonicalIdSchema.parse(req.body?.detail?.id) !== FleetCanonicalIdSchema.parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
   return service.saveFleetDetail(actor(req), req.body);
 }));
 router.get("/fleet/rig-packages", endpoint(req => service.readFleetRigPackages(actor(req), req.query)));
@@ -35,7 +36,7 @@ router.get("/fleet/rig-packages/:id/history", endpoint(req => service.fleetResou
 router.get("/fleet/rig-packages/:id", endpoint(req => service.fleetRigPackage(actor(req), z.uuid().parse(req.params.id))));
 router.post("/fleet/rig-packages", endpoint(req => service.saveFleetRigPackage(actor(req), req.body)));
 router.patch("/fleet/rig-packages/:id", endpoint(req => {
-  if (req.body?.package?.id !== z.uuid().parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
+  if (FleetCanonicalIdSchema.parse(req.body?.package?.id) !== FleetCanonicalIdSchema.parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
   return service.saveFleetRigPackage(actor(req), req.body);
 }));
 router.get("/fleet/inventory", endpoint(req => service.fleetInventory(actor(req), req.query)));

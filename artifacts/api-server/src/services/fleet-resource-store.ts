@@ -91,7 +91,7 @@ export async function readFleetResourceAssets(
 ): Promise<FleetResourceAsset[]> {
   const unique = [...new Set(ids)].sort();
   const result = await client.query<FleetResourceAsset>(
-    "SELECT a.*,EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=a.id AND l.attachment_type='fleet_inventory' AND l.attachment_id=$2::text) AS enrolled FROM assets a WHERE a.id=ANY($1::uuid[]) ORDER BY a.id FOR UPDATE OF a",
+    "SELECT a.*,EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=a.id AND l.attachment_type='fleet_inventory' AND l.attachment_id=$2::text) AS enrolled FROM assets a WHERE a.id=ANY($1::uuid[]) ORDER BY a.id " + (allowHistorical?"FOR SHARE OF a":"FOR UPDATE OF a"),
     [unique, actor.companyId],
   );
   if (

@@ -37,6 +37,19 @@ it("detects a shared dolly even when the truck and driver differ", async () => {
       .map((row) => row.id),
   ).toEqual([first.id]);
 });
+it("keeps an unscheduled reservation busy until its explicit operational release", async () => {
+  const candidate = {
+    ...first,
+    runId: "77777777-7777-4777-8777-777777777777",
+    startAt: "2026-10-20T12:00:00Z",
+    plannedEndAt: null,
+  };
+  expect(
+    (await api()).fleetReservationConflicts(candidate, [
+      { ...first, plannedEndAt: null },
+    ]),
+  ).toHaveLength(1);
+});
 it("permits adjacent half-open reservations but keeps an active overrun busy", async () => {
   const candidate = {
     ...first,
