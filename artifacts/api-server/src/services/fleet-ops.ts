@@ -1,21 +1,50 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
-import { attachFleetBilling, createFleetBillingOperations, recordFleetBillingCharge } from "./fleet-billing";
+import {
+  attachFleetBilling,
+  createFleetBillingOperations,
+  recordFleetBillingCharge,
+} from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
 import { createFleetDetailsOperations } from "./fleet-details";
-import {assignFleetRunDetail,assertFleetRunDetailResources} from "./fleet-run-details";
-import {fleetRunInspectionMatches} from "@workspace/api-zod";
-import {activateFleetReservation,releaseFleetReservation} from "./fleet-reservations";
-import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
+import {
+  assignFleetRunDetail,
+  assertFleetDetailResources,
+} from "./fleet-run-details";
+import { fleetRunInspectionMatches } from "@workspace/api-zod";
+import {
+  activateFleetReservation,
+  releaseFleetReservation,
+} from "./fleet-reservations";
+import {
+  createFleetCommercialOperations,
+  bindFleetRunTicket,
+  selectFleetRunDestination,
+  recordFleetRunCharge,
+  validateCommercialStops,
+} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
-import { fleetRunNotificationRecipients, emitFleetRunNotification } from "./fleet-notifications";
-import { createFleetReplacementOperations, assertFleetReplacementCustody } from "./fleet-replacement";
+import {
+  fleetRunNotificationRecipients,
+  emitFleetRunNotification,
+} from "./fleet-notifications";
+import {
+  createFleetReplacementOperations,
+  assertFleetReplacementCustody,
+} from "./fleet-replacement";
 import { fleetReplacementReady } from "@workspace/api-zod";
 import { createFleetEvidenceOperations } from "./fleet-evidence";
 import { createFleetPlanningOperations } from "./fleet-planning";
-import { readFleetAvailability, requireFleetAvailability, type FleetAvailability } from "./fleet-availability";
+import {
+  readFleetAvailability,
+  requireFleetAvailability,
+  type FleetAvailability,
+} from "./fleet-availability";
 import { createFleetAvailabilityManagement } from "./fleet-availability-management";
-import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "@workspace/api-zod";
+import {
+  checkFleetInspectionRequirements,
+  checkFleetManifestRequirements,
+} from "@workspace/api-zod";
 import type { FleetItemizedAuthority } from "./fleet-itemized-repository";
 import {
   createFleetMaintenanceOperations,
@@ -37,10 +66,15 @@ import {
   type FleetRun,
   type FleetOverview,
   type FleetResources,
+  type FleetDetailSnapshot,
 } from "@workspace/api-zod";
 import { z } from "zod/v4";
 import type { PoolClient } from "pg";
-import { readFleetAuthoritySites, assessFleetActionPolicy,requireFleetRunCommercialAuthority } from "./fleet-commercial-authority";
+import {
+  readFleetAuthoritySites,
+  assessFleetActionPolicy,
+  requireFleetRunCommercialAuthority,
+} from "./fleet-commercial-authority";
 import { mayPerformFleetAction, type FleetGrant } from "./fleet-permissions";
 import {
   FleetError,
@@ -129,15 +163,21 @@ function allowed(
     if (!run.billing) result.push("link_ticket");
   }
   if (!permitted(state, actor, run, "perform_run")) return result;
-  if(run.status==="in_progress" && run.resourceAssignment?.reservation.state==="released")
-    return run.events.at(-1)?.type==="review" && run.events.at(-1)?.details?.decision==="return"?["submit_closeout"]:[];
+  if (
+    run.status === "in_progress" &&
+    run.resourceAssignment?.reservation.state === "released"
+  )
+    return run.events.at(-1)?.type === "review" &&
+      run.events.at(-1)?.details?.decision === "return"
+      ? ["submit_closeout"]
+      : [];
   if (run.status === "dispatched") result.push("acknowledge");
   if (run.status === "acknowledged") {
     result.push("inspect", "record_meter");
     const inspection = run.inspections.at(-1);
     if (
       inspection?.outcome === "passed" &&
-      fleetRunInspectionMatches(run,inspection) &&
+      fleetRunInspectionMatches(run, inspection) &&
       run.records.some(
         (r) =>
           r.kind === "meter" &&
@@ -148,7 +188,13 @@ function allowed(
       result.push("start");
   }
   if (run.status === "in_progress") {
-    if (run.phase === "paused") return [...result, "record_meter", ...(run.activeReplacement ? ["inspect" as const] : []), ...(fleetReplacementReady(run) ? ["resume" as const] : [])];
+    if (run.phase === "paused")
+      return [
+        ...result,
+        "record_meter",
+        ...(run.activeReplacement ? ["inspect" as const] : []),
+        ...(fleetReplacementReady(run) ? ["resume" as const] : []),
+      ];
     result.push("pause", "record_fuel", "record_meter");
     if (!run.currentStopId && run.visitedStopIds.length < run.stops.length)
       result.push("arrive_stop");
@@ -164,7 +210,12 @@ function allowed(
       run.loads.length &&
       run.loads.every((l) => l.deliveredAt || l.transferOut) &&
       run.records.filter(
-        (r, index) => r.kind === "meter" && r.vehicleAssetId === run.vehicleAssetId && (!run.activeReplacement || index >= run.activeReplacement.recordCount) && ["miles", "kilometers"].includes(r.unit),
+        (r, index) =>
+          r.kind === "meter" &&
+          r.vehicleAssetId === run.vehicleAssetId &&
+          (!run.activeReplacement ||
+            index >= run.activeReplacement.recordCount) &&
+          ["miles", "kilometers"].includes(r.unit),
       ).length >= 2
     )
       result.push("submit_closeout");
@@ -201,23 +252,36 @@ function project(
   }
   return {
     ...run,
-    ...(commercial ? {commercial} : {}),
-    ...(billing ? {billing} : {}),
+    ...(commercial ? { commercial } : {}),
+    ...(billing ? { billing } : {}),
     labels: actor.labels?.get(labelKey(run)) ?? {
       driverName: null,
       vehicleName: null,
       trailerName: null,
       sites: [],
     },
-    canEditDraft: run.status === "draft" && permitted(state, actor, run, "dispatch") && (!actor.currentRunsById || actor.currentRunsById.get(run.id)?.version === run.version),
+    canEditDraft:
+      run.status === "draft" &&
+      permitted(state, actor, run, "dispatch") &&
+      (!actor.currentRunsById ||
+        actor.currentRunsById.get(run.id)?.version === run.version),
     allowedActions: allowed(state, actor, run),
-    availability: actor.availability?.get(`${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`),
+    availability: actor.availability?.get(
+      `${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`,
+    ),
   };
 }
-async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
+async function eligible(
+  state: FleetState,
+  client: PoolClient,
+  run: FleetRun,
+  resourceSnapshot?: FleetDetailSnapshot,
+) {
+  const snapshot = resourceSnapshot ?? run.resourceAssignment?.snapshot;
   const fleet = state.fleets.find((f) => f.id === run.fleetId);
   if (
-    !run.resourceAssignment && ![run.vehicleAssetId, run.trailerAssetId]
+    !snapshot &&
+    ![run.vehicleAssetId, run.trailerAssetId]
       .filter(Boolean)
       .every((id) => fleet?.equipmentAssetIds.includes(id!))
   )
@@ -234,8 +298,12 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
     [run.driverUserId, run.companyId],
   );
   if (!person.rows.length) throw new FleetError("fleet.driver_unavailable");
-  if(run.resourceAssignment?.reservation.state==="released" && run.status==="in_progress"){
-    await requireFleetRunCommercialAuthority(client,run);
+  if (
+    !resourceSnapshot &&
+    run.resourceAssignment?.reservation.state === "released" &&
+    run.status === "in_progress"
+  ) {
+    await requireFleetRunCommercialAuthority(client, run);
     return; // Office corrections add recorded facts; they do not reuse released equipment.
   }
   const stopWork = await client.query(
@@ -243,10 +311,12 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
     [run.siteIds],
   );
   if (stopWork.rows.length) throw new FleetError("fleet.site_stop_work");
-  if(run.resourceAssignment)await assertFleetRunDetailResources({state,client},run);
-  for (const assetId of (run.resourceAssignment?[]:[run.vehicleAssetId, run.trailerAssetId]).filter(
-    Boolean,
-  )) {
+  if (snapshot)
+    await assertFleetDetailResources({ state, client }, snapshot, run);
+  for (const assetId of (snapshot
+    ? []
+    : [run.vehicleAssetId, run.trailerAssetId]
+  ).filter(Boolean)) {
     const asset = await client.query(
       "SELECT id,status,category,current_holder_user_id FROM assets WHERE id=$1 AND responsible_org_type='vendor' AND responsible_org_id=$2 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false FOR UPDATE",
       [assetId, run.companyId],
@@ -275,12 +345,16 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
   }
   if (run.trailerAssetId === run.vehicleAssetId)
     throw new FleetError("fleet.distinct_equipment_required");
-  const sites = await readFleetAuthoritySites(client,run.companyId,{siteIds:run.siteIds,activeOnly:true});
+  const sites = await readFleetAuthoritySites(client, run.companyId, {
+    siteIds: run.siteIds,
+    activeOnly: true,
+  });
   if (!run.siteIds.every((id) => sites.some((row) => row.id === id)))
     throw new FleetError("fleet.site_forbidden", 403);
-  await requireFleetRunCommercialAuthority(client,run);
+  await requireFleetRunCommercialAuthority(client, run);
   if (
-    !run.resourceAssignment && state.runs.some(
+    !snapshot &&
+    state.runs.some(
       (other) =>
         other.id !== run.id &&
         ["dispatched", "acknowledged", "in_progress"].includes(other.status) &&
@@ -308,9 +382,10 @@ async function setupEquipment(client: PoolClient, companyId: number) {
   }));
 }
 async function setupSites(client: PoolClient, companyId: number) {
-  const result = await readFleetAuthoritySites(client,companyId,{activeOnly:true});
-  if (result.length > 200)
-    throw new FleetError("fleet.site_limit_reached");
+  const result = await readFleetAuthoritySites(client, companyId, {
+    activeOnly: true,
+  });
+  if (result.length > 200) throw new FleetError("fleet.site_limit_reached");
   return result.map((row) => ({
     siteId: row.id as number,
     name: row.name as string,
@@ -327,11 +402,11 @@ export function createFleetService(repository: FleetRepository) {
       async (state, client) => {
         const siteIds =
           state.grants.find((g) => g.userId === actor.userId)?.siteIds ?? [];
-        const sites = await readFleetAuthoritySites(client,actor.companyId,{siteIds});
+        const sites = await readFleetAuthoritySites(client, actor.companyId, {
+          siteIds,
+        });
         actor.currentSiteIds = sites.map((s) => s.id);
-        actor.activeSiteIds = sites
-          .filter((s) => s.is_active)
-          .map((s) => s.id);
+        actor.activeSiteIds = sites.filter((s) => s.is_active).map((s) => s.id);
         const visible = [...state.runs, ...(actor.pageRuns ?? [])].filter((r) =>
           permitted(state, actor, r, "view"),
         );
@@ -400,11 +475,12 @@ export function createFleetService(repository: FleetRepository) {
     ...createFleetReplacementOperations(transaction, permitted, eligible),
     ...createFleetEvidenceOperations(transaction, permitted),
     reviewPacket: (actor: FleetActor, runId: string) => {
-      const bound = {...actor,runId};
-      return transaction(bound, async (state,client) => {
-      const run = state.runs.find(item => item.id === runId);
-      if (!run || !permitted(state,bound,run,"view")) throw new FleetError("fleet.not_found",404);
-      return readFleetReviewPacket(client,run);
+      const bound = { ...actor, runId };
+      return transaction(bound, async (state, client) => {
+        const run = state.runs.find((item) => item.id === runId);
+        if (!run || !permitted(state, bound, run, "view"))
+          throw new FleetError("fleet.not_found", 404);
+        return readFleetReviewPacket(client, run);
       });
     },
     ...createFleetPlanningOperations(transaction, permitted, eligible, project),
@@ -494,7 +570,17 @@ export function createFleetService(repository: FleetRepository) {
         const run = state.runs.find((r) => r.id === runId);
         if (!run) throw new FleetError("fleet.not_found", 404);
         project(state, actor, run);
-        actor.availability = new Map([[`${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`, await readFleetAvailability(client, actor.companyId, run.driverUserId, run.schedule)]]);
+        actor.availability = new Map([
+          [
+            `${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`,
+            await readFleetAvailability(
+              client,
+              actor.companyId,
+              run.driverUserId,
+              run.schedule,
+            ),
+          ],
+        ]);
         return project(state, actor, run);
       }),
     resources: (actor: FleetActor): Promise<FleetResources> =>
@@ -764,8 +850,10 @@ export function createFleetService(repository: FleetRepository) {
       transaction(
         Object.assign(actor, {
           operationId: CreateFleetRunSchema.parse(input).operationId,
-          schedulingRunId:undefined,
-          schedulingDriverUserIds:[CreateFleetRunSchema.parse(input).driverUserId],
+          schedulingRunId: undefined,
+          schedulingDriverUserIds: [
+            CreateFleetRunSchema.parse(input).driverUserId,
+          ],
         }),
         async (state, client) => {
           const body = CreateFleetRunSchema.parse(input);
@@ -806,12 +894,19 @@ export function createFleetService(repository: FleetRepository) {
             body.stops.some((s, i) => s.sequence !== i)
           )
             throw new FleetError("fleet.invalid_stops", 400);
-          const { operationId: _operationId, billing: _billing, detailSelection, ...runFields } = body;
+          const {
+            operationId: _operationId,
+            billing: _billing,
+            detailSelection,
+            ...runFields
+          } = body;
           const run: FleetRun = {
             ...runFields,
             id: randomUUID(),
             companyId: actor.companyId,
-            operationalProfile: fleet.operationalProfile ? structuredClone(fleet.operationalProfile) : undefined,
+            operationalProfile: fleet.operationalProfile
+              ? structuredClone(fleet.operationalProfile)
+              : undefined,
             siteIds,
             status: "draft",
             phase: null,
@@ -826,18 +921,35 @@ export function createFleetService(repository: FleetRepository) {
             linkedTicketId: null,
             allowedActions: [],
           };
-          await attachFleetBilling(client,actor,state,run,body.billing);
-          if(detailSelection)await assignFleetRunDetail({state,client},actor,run,detailSelection);
+          await attachFleetBilling(client, actor, state, run, body.billing);
+          if (detailSelection)
+            await assignFleetRunDetail(
+              { state, client },
+              actor,
+              run,
+              detailSelection,
+            );
           await eligible(state, client, run);
-          const fleetCompliance=await assessFleetActionPolicy(client,actor,{run,action:"create",
-            requiredCertifications:fleet.requiredCertifications,policyAt:new Date().toISOString()});
+          const fleetCompliance = await assessFleetActionPolicy(client, actor, {
+            run,
+            action: "create",
+            requiredCertifications: fleet.requiredCertifications,
+            policyAt: new Date().toISOString(),
+          });
           run.events.push({
             id: randomUUID(),
             operationId: body.operationId,
             type: "created",
             actorUserId: actor.userId,
             recordedAt: new Date().toISOString(),
-            details:{fleetCompliance,...(run.resourceAssignment?{resourceAssignment:structuredClone(run.resourceAssignment)}:{})},
+            details: {
+              fleetCompliance,
+              ...(run.resourceAssignment
+                ? {
+                    resourceAssignment: structuredClone(run.resourceAssignment),
+                  }
+                : {}),
+            },
           });
           state.runs.push(run);
           state.operations.push({
@@ -857,13 +969,19 @@ export function createFleetService(repository: FleetRepository) {
         Object.assign(actor, {
           operationId: FleetActionInputSchema.parse(input).operationId,
           runId,
-          schedulingRunId:runId,schedulingDriverUserIds:requested.driverUserId?[requested.driverUserId]:[],
+          schedulingRunId: runId,
+          schedulingDriverUserIds: requested.driverUserId
+            ? [requested.driverUserId]
+            : [],
         }),
         async (state, client) => {
           const body = FleetActionInputSchema.parse(input);
-          if(body.inspectedAssetIds && body.action!=="inspect")throw new FleetError("fleet.inspection_fields_required",400);
-          if(body.detailSelection && body.action!=="reassign")throw new FleetError("fleet.unexpected_assignment",400);
-          if(body.destinationId&&body.action!=="start")throw new FleetError("fleet.unexpected_destination",400);
+          if (body.inspectedAssetIds && body.action !== "inspect")
+            throw new FleetError("fleet.inspection_fields_required", 400);
+          if (body.detailSelection && body.action !== "reassign")
+            throw new FleetError("fleet.unexpected_assignment", 400);
+          if (body.destinationId && body.action !== "start")
+            throw new FleetError("fleet.unexpected_destination", 400);
           if (body.capturedAt) {
             const age = Date.now() - Date.parse(body.capturedAt);
             if (age < -300_000 || age > 30 * 86_400_000)
@@ -895,7 +1013,8 @@ export function createFleetService(repository: FleetRepository) {
             throw new FleetError("fleet.action_forbidden", 403);
           if (run.version !== body.expectedVersion)
             throw new FleetError("fleet.version_conflict");
-          if(!["cancel","pause"].includes(body.action))await requireFleetRunCommercialAuthority(client,run);
+          if (!["cancel", "pause"].includes(body.action))
+            await requireFleetRunCommercialAuthority(client, run);
           if (run.events.length >= 200 || state.operations.length >= 2000)
             throw new FleetError("fleet.store_capacity_reached");
           if (
@@ -989,9 +1108,11 @@ export function createFleetService(repository: FleetRepository) {
             run.pausedFromPhase = run.phase;
             run.phase = "paused";
           } else if (body.action === "resume") {
-              if (!fleetReplacementReady(run)) throw new FleetError("fleet.inspection_fields_required", 400);
+            if (!fleetReplacementReady(run))
+              throw new FleetError("fleet.inspection_fields_required", 400);
             await eligible(state, client, run);
-              if (run.activeReplacement) await assertFleetReplacementCustody(client, run);
+            if (run.activeReplacement)
+              await assertFleetReplacementCustody(client, run);
             run.phase = run.pausedFromPhase;
             run.pausedFromPhase = null;
           } else if (body.action === "link_ticket") {
@@ -1010,7 +1131,23 @@ export function createFleetService(repository: FleetRepository) {
             );
             if (!ticket.rows.length)
               throw new FleetError("fleet.ticket_not_found", 404);
-            if(run.commercial|| (await client.query("SELECT fleet_plan FROM tickets WHERE id=$1",[body.ticketId])).rows[0]?.fleet_plan){await bindFleetRunTicket(client,actor,state,run,body.ticketId);}else run.linkedTicketId = body.ticketId;
+            if (
+              run.commercial ||
+              (
+                await client.query(
+                  "SELECT fleet_plan FROM tickets WHERE id=$1",
+                  [body.ticketId],
+                )
+              ).rows[0]?.fleet_plan
+            ) {
+              await bindFleetRunTicket(
+                client,
+                actor,
+                state,
+                run,
+                body.ticketId,
+              );
+            } else run.linkedTicketId = body.ticketId;
           } else if (body.action === "cancel") {
             if (!body.reason)
               throw new FleetError("fleet.reason_required", 400);
@@ -1019,9 +1156,24 @@ export function createFleetService(repository: FleetRepository) {
           else if (body.action === "inspect") {
             if (!body.inspectionOutcome || !body.notes)
               throw new FleetError("fleet.inspection_fields_required", 400);
-            if(run.resourceAssignment && !fleetRunInspectionMatches(run,{driverUserId:run.driverUserId,vehicleAssetId:run.vehicleAssetId,trailerAssetId:run.trailerAssetId,inspectedAssetIds:body.inspectedAssetIds}))
-              throw new FleetError("fleet.inspection_components_required",400);
-            if (!checkFleetInspectionRequirements(run.operationalProfile, body.inspectionResponses, body.inspectionOutcome)) throw new FleetError("fleet.inspection_fields_required", 400);
+            if (
+              run.resourceAssignment &&
+              !fleetRunInspectionMatches(run, {
+                driverUserId: run.driverUserId,
+                vehicleAssetId: run.vehicleAssetId,
+                trailerAssetId: run.trailerAssetId,
+                inspectedAssetIds: body.inspectedAssetIds,
+              })
+            )
+              throw new FleetError("fleet.inspection_components_required", 400);
+            if (
+              !checkFleetInspectionRequirements(
+                run.operationalProfile,
+                body.inspectionResponses,
+                body.inspectionOutcome,
+              )
+            )
+              throw new FleetError("fleet.inspection_fields_required", 400);
             if (run.inspections.length >= 100)
               throw new FleetError("fleet.store_capacity_reached");
             if (body.inspectionOutcome === "defect_reported")
@@ -1033,7 +1185,9 @@ export function createFleetService(repository: FleetRepository) {
                 body.notes,
               );
             run.inspections.push({
-              ...(body.inspectedAssetIds?{inspectedAssetIds:body.inspectedAssetIds}:{}),
+              ...(body.inspectedAssetIds
+                ? { inspectedAssetIds: body.inspectedAssetIds }
+                : {}),
               responses: body.inspectionResponses,
               driverUserId: run.driverUserId,
               vehicleAssetId: run.vehicleAssetId,
@@ -1045,11 +1199,25 @@ export function createFleetService(repository: FleetRepository) {
               source: "user_report",
             });
           } else if (body.action === "start") {
-            await assertRequiredWorkClear(client, run.driverUserId, { type: "vendor", id: actor.companyId });
-            await selectFleetRunDestination(client,actor,state,run,body.destinationId);
+            await assertRequiredWorkClear(client, run.driverUserId, {
+              type: "vendor",
+              id: actor.companyId,
+            });
+            await selectFleetRunDestination(
+              client,
+              actor,
+              state,
+              run,
+              body.destinationId,
+            );
             await eligible(state, client, run);
-            const activeReservation=await activateFleetReservation({state,client},actor,run);
-            if(activeReservation && run.resourceAssignment)run.resourceAssignment.reservation=activeReservation;
+            const activeReservation = await activateFleetReservation(
+              { state, client },
+              actor,
+              run,
+            );
+            if (activeReservation && run.resourceAssignment)
+              run.resourceAssignment.reservation = activeReservation;
             run.status = "in_progress";
             run.phase = "traveling_to_pickup";
           } else if (body.action === "arrive_stop") {
@@ -1089,7 +1257,13 @@ export function createFleetService(repository: FleetRepository) {
               !body.manifestReference
             )
               throw new FleetError("fleet.load_fields_required", 400);
-            if (!checkFleetManifestRequirements(run.operationalProfile, body.manifestValues)) throw new FleetError("fleet.load_fields_required", 400);
+            if (
+              !checkFleetManifestRequirements(
+                run.operationalProfile,
+                body.manifestValues,
+              )
+            )
+              throw new FleetError("fleet.load_fields_required", 400);
             if (run.loads.some((l) => l.id === body.loadId))
               throw new FleetError("fleet.load_exists");
             if (run.loads.length >= 100)
@@ -1112,14 +1286,22 @@ export function createFleetService(repository: FleetRepository) {
             run.phase = "loading";
           } else if (body.action === "record_delivery") {
             const load = run.loads.find((l) => l.id === body.loadId);
-            if (!load || load.deliveredAt || load.transferOut || (load.plannedDeliveryStopId && load.plannedDeliveryStopId !== run.currentStopId) || !body.deliveryReference)
+            if (
+              !load ||
+              load.deliveredAt ||
+              load.transferOut ||
+              (load.plannedDeliveryStopId &&
+                load.plannedDeliveryStopId !== run.currentStopId) ||
+              !body.deliveryReference
+            )
               throw new FleetError("fleet.delivery_fields_required", 400);
             load.deliveryStopId = run.currentStopId!;
             load.deliveryReference = body.deliveryReference;
             load.deliveredAt = new Date().toISOString();
             run.phase = "unloading";
           } else if (body.action === "submit_closeout") {
-            if ((await readFleetReviewPacket(client,run)).missingRequiredCount) throw new FleetError("fleet.evidence_required",400);
+            if ((await readFleetReviewPacket(client, run)).missingRequiredCount)
+              throw new FleetError("fleet.evidence_required", 400);
             run.status = "submitted_for_review";
             run.phase = null;
           } else if (body.action === "review") {
@@ -1128,43 +1310,95 @@ export function createFleetService(repository: FleetRepository) {
             run.status =
               body.decision === "accept" ? "completed" : "in_progress";
             run.phase = null;
-            if(body.decision==="accept"){
-              await recordFleetBillingCharge(client,actor,run,body.billingQuantity);
-              await recordFleetRunCharge(client,actor,run);
+            if (body.decision === "accept") {
+              await recordFleetBillingCharge(
+                client,
+                actor,
+                run,
+                body.billingQuantity,
+              );
+              await recordFleetRunCharge(client, actor, run);
             }
           } else {
             if (body.action === "reassign") {
-              if(run.resourceAssignment && !body.detailSelection &&
-                ((body.driverUserId!==undefined && body.driverUserId!==run.driverUserId) ||
-                (body.vehicleAssetId!==undefined && body.vehicleAssetId!==run.vehicleAssetId) ||
-                (body.trailerAssetId!==undefined && body.trailerAssetId!==run.trailerAssetId)))
-                throw new FleetError("fleet.detail_selection_required",400);
-              if(body.detailSelection && run.resourceAssignment){
-                if(body.detailSelection.returnPolicy!==run.resourceAssignment.returnPolicy)throw new FleetError("fleet.return_policy_locked",409);
-                await releaseFleetReservation({state,client},actor,{runId:run.id,kind:"reassignment",
-                  reason:body.reason??"Office changed the Detail before start",occurredAt:new Date().toISOString()});
+              if (
+                run.resourceAssignment &&
+                !body.detailSelection &&
+                ((body.driverUserId !== undefined &&
+                  body.driverUserId !== run.driverUserId) ||
+                  (body.vehicleAssetId !== undefined &&
+                    body.vehicleAssetId !== run.vehicleAssetId) ||
+                  (body.trailerAssetId !== undefined &&
+                    body.trailerAssetId !== run.trailerAssetId))
+              )
+                throw new FleetError("fleet.detail_selection_required", 400);
+              if (body.detailSelection && run.resourceAssignment) {
+                if (
+                  body.detailSelection.returnPolicy !==
+                  run.resourceAssignment.returnPolicy
+                )
+                  throw new FleetError("fleet.return_policy_locked", 409);
+                await releaseFleetReservation({ state, client }, actor, {
+                  runId: run.id,
+                  kind: "reassignment",
+                  reason:
+                    body.reason ?? "Office changed the Detail before start",
+                  occurredAt: new Date().toISOString(),
+                });
               }
               run.driverUserId = body.driverUserId ?? run.driverUserId;
               run.vehicleAssetId = body.vehicleAssetId ?? run.vehicleAssetId;
               if (body.trailerAssetId !== undefined)
                 run.trailerAssetId = body.trailerAssetId;
               run.status = "draft";
-              if(body.detailSelection)await assignFleetRunDetail({state,client},actor,run,body.detailSelection);
+              if (body.detailSelection)
+                await assignFleetRunDetail(
+                  { state, client },
+                  actor,
+                  run,
+                  body.detailSelection,
+                );
             }
             await eligible(state, client, run);
             if (["dispatch", "reassign"].includes(body.action))
-              requireFleetAvailability(await readFleetAvailability(client, actor.companyId, run.driverUserId, run.schedule));
+              requireFleetAvailability(
+                await readFleetAvailability(
+                  client,
+                  actor.companyId,
+                  run.driverUserId,
+                  run.schedule,
+                ),
+              );
             if (body.action === "dispatch") run.status = "dispatched";
           }
           validateCommercialStops(run);
-          if(run.resourceAssignment && ["submit_closeout","cancel"].includes(body.action)){
-            const released=await releaseFleetReservation({state,client},actor,{runId:run.id,
-              reason:body.reason??(body.action==="submit_closeout"?"Driver closed the operational run":"Run cancelled"),occurredAt:new Date().toISOString()});
-            if(released)run.resourceAssignment.reservation=released;
+          if (
+            run.resourceAssignment &&
+            ["submit_closeout", "cancel"].includes(body.action)
+          ) {
+            const released = await releaseFleetReservation(
+              { state, client },
+              actor,
+              {
+                runId: run.id,
+                reason:
+                  body.reason ??
+                  (body.action === "submit_closeout"
+                    ? "Driver closed the operational run"
+                    : "Run cancelled"),
+                occurredAt: new Date().toISOString(),
+              },
+            );
+            if (released) run.resourceAssignment.reservation = released;
           }
-          const fleetCompliance=await assessFleetActionPolicy(client,actor,{run,action:body.action,
-            requiredCertifications:state.fleets.find(f=>f.id===run.fleetId)?.requiredCertifications??[],
-            policyAt:new Date().toISOString()});
+          const fleetCompliance = await assessFleetActionPolicy(client, actor, {
+            run,
+            action: body.action,
+            requiredCertifications:
+              state.fleets.find((f) => f.id === run.fleetId)
+                ?.requiredCertifications ?? [],
+            policyAt: new Date().toISOString(),
+          });
           run.version++;
           run.events.push({
             id: randomUUID(),
@@ -1190,7 +1424,14 @@ export function createFleetService(repository: FleetRepository) {
             runId: run.id,
             result: structuredClone(run),
           });
-          notice = await fleetRunNotificationRecipients(state,client,run,body.action,body.operationId,actor.userId);
+          notice = await fleetRunNotificationRecipients(
+            state,
+            client,
+            run,
+            body.action,
+            body.operationId,
+            actor.userId,
+          );
           return project(state, actor, run);
         },
       );

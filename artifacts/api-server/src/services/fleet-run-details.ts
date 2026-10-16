@@ -1,9 +1,9 @@
 import {
   FleetDetailSelectionSchema,
   FleetResourceAssignmentSchema,
-  fleetRunAssetIds,
   type FleetRun,
   type FleetDetailSelection,
+  type FleetDetailSnapshot,
 } from "@workspace/api-zod";
 import { createFleetDetailsOperations } from "./fleet-details";
 import {
@@ -17,7 +17,7 @@ import { readFleetResourceAssets } from "./fleet-resource-store";
 
 /** Reuse the Details scope/snapshot service inside the caller's transaction.
  * This adapter never opens or commits a nested transaction. */
-export async function assignFleetRunDetail(
+export async function resolveFleetRunDetailSnapshot(
   tx: FleetResourcesTransaction,
   actor: FleetActor,
   run: FleetRun,
@@ -50,6 +50,22 @@ export async function assignFleetRunDetail(
     run.stops.at(-1)?.kind !== "return"
   )
     throw new FleetError("fleet.return_stop_required", 400);
+  if (snapshot.detail.archivedAt)
+    throw new FleetError("fleet.detail_revision_conflict");
+  return { selection, snapshot };
+}
+export async function assignFleetRunDetail(
+  tx: FleetResourcesTransaction,
+  actor: FleetActor,
+  run: FleetRun,
+  raw: FleetDetailSelection,
+) {
+  const { selection, snapshot } = await resolveFleetRunDetailSnapshot(
+    tx,
+    actor,
+    run,
+    raw,
+  );
   const reservation = await reserveFleetDetail(tx, actor, {
     runId: run.id,
     detailSnapshot: snapshot,
@@ -95,16 +111,33 @@ export async function assertFleetRunDetailResources(
   run: FleetRun,
 ) {
   if (!run.resourceAssignment) return;
-  const ids = fleetRunAssetIds(run);
+  return assertFleetDetailResources(tx, run.resourceAssignment.snapshot, run);
+}
+export async function assertFleetDetailResources(
+  tx: FleetResourcesTransaction,
+  snapshot: FleetDetailSnapshot,
+  run: Pick<
+    FleetRun,
+    "companyId" | "driverUserId" | "vehicleAssetId" | "fleetId"
+  >,
+) {
+  const ids = [
+    snapshot.detail.vehicleAssetId,
+    ...(snapshot.rigPackage?.components.map((item) => item.assetId) ?? []),
+  ];
+  if (
+    snapshot.detail.companyId !== run.companyId ||
+    snapshot.detail.driverUserId !== run.driverUserId ||
+    snapshot.detail.vehicleAssetId !== run.vehicleAssetId
+  )
+    throw new FleetError("fleet.detail_assignment_mismatch");
   const assets = await readFleetResourceAssets(
     tx.client,
     { companyId: run.companyId, userId: run.driverUserId },
     tx.state,
     ids,
   );
-  if (
-    !run.resourceAssignment.snapshot.detail.accessGroupIds.includes(run.fleetId)
-  )
+  if (!snapshot.detail.accessGroupIds.includes(run.fleetId))
     throw new FleetError("fleet.equipment_grant_required", 403);
   for (const asset of assets) {
     if (!["available", "checked_out"].includes(asset.status))
@@ -114,7 +147,7 @@ export async function assertFleetRunDetailResources(
       asset.current_holder_user_id !== run.driverUserId
     )
       throw new FleetError("fleet.equipment_custody_conflict");
-    const role = run.resourceAssignment.snapshot.rigPackage?.components.find(
+    const role = snapshot.rigPackage?.components.find(
       (item) => item.assetId === asset.id,
     )?.role;
     if (

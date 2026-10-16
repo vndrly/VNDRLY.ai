@@ -45,8 +45,10 @@ export const FLEET_REPLACEMENT_TOOLS: AskVToolDefinition[] = [
     "Prepare Manager/Dispatcher equipment replacement for an exact paused active run. The replacement truck and selected trailer must already be in the assigned driver's canonical Inventory custody; Fleet never changes holders. Driver must separately accept and report a fresh equipment inspection and distance meter before resume. Ask for exact equipment IDs, current version and actual reason.",
     {
       runId: id,
-      ...z.toJSONSchema(FleetReplacementInputSchema.omit({ operationId: true }))
-        .properties,
+      ...z.toJSONSchema(
+        FleetReplacementInputSchema.omit({ operationId: true }),
+        { io: "input" },
+      ).properties,
     },
     ["runId", "expectedVersion", "vehicleAssetId", "trailerAssetId", "reason"],
   ),

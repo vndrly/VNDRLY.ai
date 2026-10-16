@@ -1,8 +1,32 @@
 import { z } from "zod/v4";
 import type { FleetRun } from "./fleet";
+import {
+  FleetDetailSelectionSchema,
+  FleetResourceAssignmentSchema,
+  fleetRunInspectionMatches,
+} from "./fleet-run-assignment";
+import { FleetDetailSnapshotSchema } from "./fleet-details";
+export const FleetReplacementResourceProposalSchema = z
+  .object({
+    selection: FleetDetailSelectionSchema,
+    snapshot: FleetDetailSnapshotSchema,
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (
+      value.selection.detailId !== value.snapshot.detail.id ||
+      value.selection.detailVersion !== value.snapshot.detail.version
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["snapshot"],
+        message: "Replacement must preserve the chosen exact Detail revision",
+      });
+  });
 
 export const FleetReplacementInputSchema = z
   .object({
+    detailSelection: FleetDetailSelectionSchema.optional(),
     operationId: z.uuid(),
     expectedVersion: z.number().int().positive(),
     vehicleAssetId: z.uuid(),
@@ -21,6 +45,7 @@ export const FleetReplacementActionSchema = z
   .strict();
 export const FleetReplacementMarkerSchema = z
   .object({
+    priorResourceAssignment: FleetResourceAssignmentSchema.optional(),
     replacementId: z.uuid(),
     acceptedAt: z.iso.datetime(),
     priorVehicleAssetId: z.uuid(),
@@ -31,6 +56,7 @@ export const FleetReplacementMarkerSchema = z
   .strict();
 export const FleetReplacementSchema = z
   .object({
+    resourceProposal: FleetReplacementResourceProposalSchema.optional(),
     id: z.uuid(),
     companyId: z.number().int().positive(),
     runId: z.uuid(),
@@ -75,9 +101,7 @@ export function fleetReplacementReady(run: FleetRun): boolean {
     run.inspections.length > marker.inspectionCount &&
     !!inspection &&
     inspection.outcome === "passed" &&
-    inspection.driverUserId === run.driverUserId &&
-    inspection.vehicleAssetId === run.vehicleAssetId &&
-    inspection.trailerAssetId === run.trailerAssetId &&
+    fleetRunInspectionMatches(run, inspection) &&
     inspection.recordedAt >= marker.acceptedAt &&
     run.records
       .slice(marker.recordCount)

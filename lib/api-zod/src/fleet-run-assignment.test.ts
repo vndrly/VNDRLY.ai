@@ -123,3 +123,68 @@ it("requires a real chosen return stop before creating return-required Detail wo
     }).detailSelection.returnPolicy,
   ).toBe("return_required");
 });
+it("requires replacement inspection coverage for the dolly as well as the mirrored truck/trailer", () => {
+  const run = schema("FleetRunSchema").parse({
+    id: id(7),
+    companyId: 7,
+    fleetId: id(9),
+    driverUserId: 42,
+    vehicleAssetId: id(2),
+    trailerAssetId: id(4),
+    title: "Replacement run",
+    siteIds: [9],
+    status: "in_progress",
+    phase: "paused",
+    version: 3,
+    resourceAssignment: {
+      version: 2,
+      snapshot,
+      reservation: { ...reservation, state: "active" },
+      returnPolicy: "delivery_only",
+    },
+    stops: [{ id: id(10), siteId: 9, kind: "pickup", sequence: 0 }],
+    loads: [],
+    currentStopId: null,
+    visitedStopIds: [],
+    events: [],
+    linkedTicketId: null,
+    allowedActions: [],
+    activeReplacement: {
+      replacementId: id(13),
+      acceptedAt: "2026-10-16T12:00:00Z",
+      priorVehicleAssetId: id(20),
+      priorTrailerAssetId: null,
+      inspectionCount: 0,
+      recordCount: 0,
+    },
+    inspections: [
+      {
+        driverUserId: 42,
+        vehicleAssetId: id(2),
+        trailerAssetId: id(4),
+        inspectedAssetIds: [id(2), id(4)],
+        outcome: "passed",
+        notes: "Reported",
+        recordedByUserId: 42,
+        recordedAt: "2026-10-16T12:00:01Z",
+        source: "user_report",
+      },
+    ],
+    records: [
+      {
+        id: id(14),
+        vehicleAssetId: id(2),
+        kind: "meter",
+        quantity: null,
+        reading: 100,
+        unit: "miles",
+        notes: "Reported",
+        recordedByUserId: 42,
+        recordedAt: "2026-10-16T12:00:01Z",
+        capturedAt: null,
+        source: "user_report",
+      },
+    ],
+  });
+  expect(contracts.fleetReplacementReady(run)).toBe(false);
+});

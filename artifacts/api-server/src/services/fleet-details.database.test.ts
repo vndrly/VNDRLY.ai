@@ -368,6 +368,97 @@ describe("canonical Detail persistence", () => {
     );
     await act("start");
     expect(run.resourceAssignment?.reservation.state).toBe("active");
+    await act("pause", { reason: "Driver reported a truck issue" });
+    const replacementInput = f.detailInput(1, packages[1].id);
+    replacementInput.detail.driverUserId = actors[1].userId;
+    replacementInput.detail.name = "Separate replacement Detail";
+    const replacementDetail = await f.service.saveFleetDetail(
+      f.actor,
+      replacementInput,
+    );
+    const proposal = {
+      operationId: randomUUID(),
+      expectedVersion: run.version,
+      vehicleAssetId: f.assets[1].id,
+      trailerAssetId: f.assets[3].id,
+      reason: "Recorded replacement resources",
+      detailSelection: {
+        ...input(0).detailSelection,
+        detailId: replacementDetail.id,
+        detailVersion: 1,
+      },
+    };
+    await f.pool.query(
+      "UPDATE assets SET status='checked_out',current_holder_user_id=$2 WHERE id=ANY($1::uuid[])",
+      [[f.assets[1].id, f.assets[3].id], actors[1].userId],
+    );
+    await expect(
+      service.proposeReplacement(actors[0], run.id, proposal),
+    ).rejects.toMatchObject({ code: "fleet.equipment_custody_conflict" });
+    await f.pool.query(
+      "UPDATE assets SET status='checked_out',current_holder_user_id=$2 WHERE id=$1",
+      [f.assets[4].id, actors[1].userId],
+    );
+    const replacementHold = (
+      await f.pool.query(
+        "INSERT INTO asset_holds(asset_id,reason,placed_by_user_id) VALUES($1,'Actual component hold',$2) RETURNING id",
+        [f.assets[4].id, actors[0].userId],
+      )
+    ).rows[0];
+    await expect(
+      service.proposeReplacement(actors[0], run.id, proposal),
+    ).rejects.toMatchObject({ code: "fleet.equipment_on_hold" });
+    await f.pool.query(
+      "UPDATE asset_holds SET released_at=NOW(),released_by_user_id=$2 WHERE id=$1",
+      [replacementHold.id, actors[0].userId],
+    );
+    const replacement = await service.proposeReplacement(
+      actors[0],
+      run.id,
+      proposal,
+    );
+    const acceptance = {
+      operationId: randomUUID(),
+      expectedVersion: replacement.version,
+      runExpectedVersion: run.version,
+      action: "accept",
+      notes: "Driver accepted the recorded physical replacement",
+    };
+    await expect(
+      service.replacementAction(actors[0], run.id, replacement.id, acceptance),
+    ).rejects.toMatchObject({ code: "fleet.action_forbidden" });
+    await service.replacementAction(
+      actors[1],
+      run.id,
+      replacement.id,
+      acceptance,
+    );
+    run = await service.detail(actors[1], run.id);
+    expect(run.resourceAssignment?.snapshot.detail.id).toBe(
+      replacementDetail.id,
+    );
+    expect(run.resourceAssignment?.reservation.state).toBe("active");
+    expect(
+      (
+        run.events[0].details?.resourceAssignment as {
+          snapshot: { detail: { id: string } };
+        }
+      ).snapshot.detail.id,
+    ).toBe(details[0].id);
+    await expect(act("resume")).rejects.toMatchObject({
+      code: "fleet.action_forbidden",
+    });
+    await act("inspect", {
+      inspectionOutcome: "passed",
+      notes: "Driver inspected replacement components",
+      inspectedAssetIds: [f.assets[1].id, f.assets[3].id, f.assets[4].id],
+    });
+    await act("record_meter", {
+      reading: 500,
+      unit: "miles",
+      notes: "Actual replacement vehicle meter",
+    });
+    await act("resume");
     const loadId = randomUUID();
     await act("arrive_stop", { stopId: run.stops[0].id });
     await act("record_load", {
@@ -385,7 +476,7 @@ describe("canonical Detail persistence", () => {
     });
     await act("depart_stop", { stopId: run.stops[1].id });
     await act("record_meter", {
-      reading: 110,
+      reading: 510,
       unit: "miles",
       notes: "Actual intermediate meter",
     });
@@ -398,6 +489,14 @@ describe("canonical Detail persistence", () => {
     await act("submit_closeout");
     expect(run.status).toBe("submitted_for_review");
     expect(run.resourceAssignment?.reservation.state).toBe("released");
+    await expect(service.create(actors[0], input(1))).rejects.toMatchObject({
+      code: "fleet.equipment_custody_conflict",
+    });
+    // The test records an explicit, separate Inventory return. Closing a Fleet run never does this implicitly.
+    await f.pool.query(
+      "UPDATE assets SET status='available',current_holder_user_id=NULL WHERE id=ANY($1::uuid[])",
+      [[f.assets[1].id, f.assets[3].id, f.assets[4].id]],
+    );
     let next = await service.create(actors[0], input(1));
     expect(next.resourceAssignment?.reservation.state).toBe("reserved");
     await act("review", {
