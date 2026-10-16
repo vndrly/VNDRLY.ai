@@ -18,7 +18,7 @@ const reads=[
  /^\/api\/public-config$/,
  /^\/api\/native-operations\/(status|policy)$/,
  /^\/api\/company-operations$/,
- /^\/api\/fleet\/(overview|map-context|commercial|resources|setup|site-activity|reports|locations|views|maintenance)$/,
+ /^\/api\/fleet\/(overview|map-context|commercial|billing-options|resources|setup|site-activity|reports|locations|views|maintenance)$/,
  /^\/api\/fleet\/runs\/[^/]+(\/(location-history|review-packet|eta|gate-observations|evidence))?$/,
  /^\/api\/fleet\/site-activity\/\d+$/,
  /^\/api\/fleet\/tickets\/\d+\/plan$/,

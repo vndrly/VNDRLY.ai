@@ -6,6 +6,10 @@ test('only the exact registry selects demo login',()=>{
  assert.equal(demoLoginIdentity(' '+DEMO_IDENTITIES[0].username.toUpperCase()+' ')?.userId,DEMO_IDENTITIES[0].userId);
  assert.equal(demoLoginIdentity('another@example.invalid'),undefined);
 });
+test('demo can inspect scoped Fleet billing choices while run and ticket writes stay blocked',()=>{
+ assert.equal(demoRouteAllowed('GET','/api/fleet/billing-options'),true);
+ for(const [method,path] of [['POST','/api/fleet/billing-options'],['POST','/api/fleet/runs'],['POST','/api/fleet/tickets/12/finalize']])assert.equal(demoRouteAllowed(method,path),false,path);
+});
 test('new demo map and fleet reads remain separate from mutations and provider access',()=>{
  for(const path of ['/api/public-config','/api/native-operations/status','/api/tickets/12/site-visit-summary','/api/company-operations','/api/fleet/overview','/api/fleet/map-context','/api/fleet/runs/example/location-history','/api/fleet/tickets/12/plan','/api/gate-change-over/coverage-map']){
   assert.equal(demoRouteAllowed('GET',path),true,path);
