@@ -52,7 +52,7 @@ it("filters current company memberships, exact Fleet/site roles and own assignme
   };
   const query = vi
     .fn()
-    .mockResolvedValueOnce({ rows: [{ id: 9 }] })
+    .mockResolvedValueOnce({ rows: [{ id: 9, relationship_id:1,relationship_status:"approved" }] })
     .mockResolvedValueOnce({
       rows: [{ user_id: 1 }, { user_id: 2 }, { user_id: 99 }],
     });

@@ -29,7 +29,8 @@
 // "you have new work to do because you've never engaged". The
 // auto_unapproved bucket also drives the partner-facing email digest.
 
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, asc } from "drizzle-orm";
+import { captureFleetApprovalProvenance } from "../services/fleet-commercial-authority";
 import { qualifiedVendorStaffCondition } from "./vendor-qualified-staff.js";
 import {
   db,
@@ -39,6 +40,9 @@ import {
   vendorCatalogVersionsTable,
   vendorPeopleTable,
   vendorsTable,
+  siteLocationsTable,
+  siteWorkAssignmentsTable,
+  partnerVendorWorkTypeApprovalsTable,
   type PartnerVendorRelationshipStatus,
   type PartnerVendorApprovalEventReason,
 } from "@workspace/db";
@@ -204,101 +208,122 @@ export async function recomputeApproval(
   vendorId: number,
   options: RecomputeOptions = {},
 ): Promise<RecomputeResult | null> {
-  const [rel] = await db
-    .select()
-    .from(partnerVendorRelationshipsTable)
-    .where(
-      and(
-        eq(partnerVendorRelationshipsTable.partnerId, partnerId),
-        eq(partnerVendorRelationshipsTable.vendorId, vendorId),
-      ),
-    )
-    .limit(1);
-  if (!rel) return null;
+  return db.transaction(async (tx) => {
+    const [rel] = await tx
+      .select()
+      .from(partnerVendorRelationshipsTable)
+      .where(
+        and(
+          eq(partnerVendorRelationshipsTable.partnerId, partnerId),
+          eq(partnerVendorRelationshipsTable.vendorId, vendorId),
+        ),
+      )
+      .limit(1)
+      .for("update");
+    if (!rel) return null;
 
-  const [vendor] = await db
-    .select()
-    .from(vendorsTable)
-    .where(eq(vendorsTable.id, vendorId))
-    .limit(1);
-  if (!vendor) return null;
+    const [vendor] = await tx
+      .select()
+      .from(vendorsTable)
+      .where(eq(vendorsTable.id, vendorId))
+      .limit(1);
+    if (!vendor) return null;
 
-  const hasEulaRows = rel.approvedCatalogVersionId
-    ? await db
-        .select({ id: partnerEulaAcceptancesTable.id })
-        .from(partnerEulaAcceptancesTable)
-        .where(
-          and(
-            eq(partnerEulaAcceptancesTable.partnerId, partnerId),
-            eq(partnerEulaAcceptancesTable.vendorId, vendorId),
-            eq(
-              partnerEulaAcceptancesTable.vendorCatalogVersionId,
-              vendor.currentCatalogVersionId ?? -1,
+    const hasEulaRows = rel.approvedCatalogVersionId
+      ? await tx
+          .select({ id: partnerEulaAcceptancesTable.id })
+          .from(partnerEulaAcceptancesTable)
+          .where(
+            and(
+              eq(partnerEulaAcceptancesTable.partnerId, partnerId),
+              eq(partnerEulaAcceptancesTable.vendorId, vendorId),
+              eq(
+                partnerEulaAcceptancesTable.vendorCatalogVersionId,
+                vendor.currentCatalogVersionId ?? -1,
+              ),
             ),
-          ),
-        )
-        .limit(1)
-    : [];
+          )
+          .limit(1)
+      : [];
 
-  // Active field, foreman and Gate staff count under their current grants.
-  // Legacy roles are used only when no current operational grant exists.
-  // We deliberately don't gate on
-  // certifications here — those reminders live in the cert-reminder
-  // worker. Future iterations can plumb cert rows into this query.
-  const [anyEmployee] = await db
-    .select({ id: vendorPeopleTable.id })
-    .from(vendorPeopleTable)
-    .where(
-      qualifiedVendorStaffCondition(vendorId),
-    )
-    .limit(1);
+    // Active field, foreman and Gate staff count under their current grants.
+    // Legacy roles are used only when no current operational grant exists.
+    // We deliberately don't gate on
+    // certifications here — those reminders live in the cert-reminder
+    // worker. Future iterations can plumb cert rows into this query.
+    const [anyEmployee] = await tx
+      .select({ id: vendorPeopleTable.id })
+      .from(vendorPeopleTable)
+      .where(qualifiedVendorStaffCondition(vendorId))
+      .limit(1);
 
-  const derived = deriveStatus({
-    currentStatus: rel.status as PartnerVendorRelationshipStatus,
-    approvedCatalogVersionId: rel.approvedCatalogVersionId ?? null,
-    vendorCurrentCatalogVersionId: vendor.currentCatalogVersionId ?? null,
-    hasCurrentEulaAcceptance: hasEulaRows.length > 0,
-    compliance: {
-      coiExpirationDate: vendor.insuranceExpirationDate,
-      coiDocumentUrl: vendor.coiDocumentUrl,
-      wcExpirationDate: vendor.wcExpirationDate,
-      wcDocumentUrl: vendor.wcDocumentUrl,
-      glExpirationDate: vendor.glExpirationDate,
-      glDocumentUrl: vendor.glDocumentUrl,
-      autoLiabilityExpirationDate: vendor.autoLiabilityExpirationDate,
-      autoLiabilityDocumentUrl: vendor.autoLiabilityDocumentUrl,
-      w9DocumentUrl: vendor.w9DocumentUrl,
-    },
-    hasQualifiedEmployee: !!anyEmployee,
-    now: new Date(),
-  });
+    const derived = deriveStatus({
+      currentStatus: rel.status as PartnerVendorRelationshipStatus,
+      approvedCatalogVersionId: rel.approvedCatalogVersionId ?? null,
+      vendorCurrentCatalogVersionId: vendor.currentCatalogVersionId ?? null,
+      hasCurrentEulaAcceptance: hasEulaRows.length > 0,
+      compliance: {
+        coiExpirationDate: vendor.insuranceExpirationDate,
+        coiDocumentUrl: vendor.coiDocumentUrl,
+        wcExpirationDate: vendor.wcExpirationDate,
+        wcDocumentUrl: vendor.wcDocumentUrl,
+        glExpirationDate: vendor.glExpirationDate,
+        glDocumentUrl: vendor.glDocumentUrl,
+        autoLiabilityExpirationDate: vendor.autoLiabilityExpirationDate,
+        autoLiabilityDocumentUrl: vendor.autoLiabilityDocumentUrl,
+        w9DocumentUrl: vendor.w9DocumentUrl,
+      },
+      hasQualifiedEmployee: !!anyEmployee,
+      now: new Date(),
+    });
 
-  const fromStatus = rel.status as PartnerVendorRelationshipStatus;
-  const result: RecomputeResult = {
-    partnerId,
-    vendorId,
-    fromStatus,
-    toStatus: derived.status,
-    changed: derived.status !== fromStatus,
-    reason: derived.reason,
-  };
+    const fromStatus = rel.status as PartnerVendorRelationshipStatus;
+    const result: RecomputeResult = {
+      partnerId,
+      vendorId,
+      fromStatus,
+      toStatus: derived.status,
+      changed: derived.status !== fromStatus,
+      reason: derived.reason,
+    };
 
-  if (!result.changed && !options.triggerReason) {
-    // Idempotent no-op.
-    return result;
-  }
+    if (!result.changed && !options.triggerReason) {
+      // Idempotent no-op.
+      return result;
+    }
 
-  // We always record the audit event when the trigger reason is
-  // explicit (e.g. "vendor_catalog_published") even if the derived
-  // status didn't change — operators care that the recompute ran.
-  const finalReason: PartnerVendorApprovalEventReason =
-    options.triggerReason ?? derived.reason ?? "system_recompute";
-  const finalDetail = {
-    ...(derived.reasonDetail ?? {}),
-    ...(options.triggerDetail ?? {}),
-  };
+    // We always record the audit event when the trigger reason is
+    // explicit (e.g. "vendor_catalog_published") even if the derived
+    // status didn't change — operators care that the recompute ran.
+    const finalReason: PartnerVendorApprovalEventReason =
+      options.triggerReason ?? derived.reason ?? "system_recompute";
+    const finalDetail = {
+      ...(derived.reasonDetail ?? {}),
+      ...(options.triggerDetail ?? {}),
+      // Keep independent derivation after caller detail: a generic mutation reason
+      // must not conceal why approval lapsed or forge compliance-only provenance.
+      fleetDerivation: {
+        version: 1,
+        derivedReason: derived.reason,
+        complianceOnly:
+          ![
+            "vendor_catalog_published",
+            "vendor_pricing_changed",
+            "manual_revoke",
+            "manual_unapprove",
+            "manual_pending_review",
+          ].includes(finalReason) &&
+          (derived.reason === null ||
+            [
+              "coi_expired",
+              "wc_expired",
+              "gl_expired",
+              "auto_liability_expired",
+              "qualified_employee_lapse",
+            ].includes(derived.reason)),
+      },
+    };
 
-  await db.transaction(async (tx) => {
     if (result.changed) {
       await tx
         .update(partnerVendorRelationshipsTable)
@@ -320,32 +345,92 @@ export async function recomputeApproval(
         })
         .where(eq(partnerVendorRelationshipsTable.id, rel.id));
     }
-    await tx.insert(partnerVendorApprovalEventsTable).values({
-      partnerId,
-      vendorId,
-      fromStatus,
-      toStatus: derived.status,
-      reason: finalReason,
-      reasonDetail: Object.keys(finalDetail).length > 0 ? finalDetail : null,
-      vendorCatalogVersionId: vendor.currentCatalogVersionId ?? null,
-      actorUserId: options.actorUserId ?? null,
-      actorRole: options.actorRole ?? null,
-    });
-  });
-
-  if (result.changed) {
-    logger.info(
-      {
+    const [event] = await tx
+      .insert(partnerVendorApprovalEventsTable)
+      .values({
         partnerId,
         vendorId,
         fromStatus,
         toStatus: derived.status,
         reason: finalReason,
-      },
-      "Approval recomputed",
-    );
-  }
-  return result;
+        reasonDetail: Object.keys(finalDetail).length > 0 ? finalDetail : null,
+        vendorCatalogVersionId: vendor.currentCatalogVersionId ?? null,
+        actorUserId: options.actorUserId ?? null,
+        actorRole: options.actorRole ?? null,
+      })
+      .returning();
+    if (fromStatus === "approved" && derived.status === "auto_unapproved") {
+      const history = await tx
+        .select()
+        .from(partnerVendorApprovalEventsTable)
+        .where(
+          and(
+            eq(partnerVendorApprovalEventsTable.partnerId, partnerId),
+            eq(partnerVendorApprovalEventsTable.vendorId, vendorId),
+          ),
+        )
+        .orderBy(asc(partnerVendorApprovalEventsTable.id));
+      const scopes = await tx
+        .select({
+          siteId: siteWorkAssignmentsTable.siteLocationId,
+          workTypeId: siteWorkAssignmentsTable.workTypeId,
+          assignmentId: siteWorkAssignmentsTable.id,
+          serviceApprovalId: partnerVendorWorkTypeApprovalsTable.id,
+        })
+        .from(siteWorkAssignmentsTable)
+        .innerJoin(
+          siteLocationsTable,
+          eq(siteLocationsTable.id, siteWorkAssignmentsTable.siteLocationId),
+        )
+        .innerJoin(
+          partnerVendorWorkTypeApprovalsTable,
+          and(
+            eq(partnerVendorWorkTypeApprovalsTable.partnerId, partnerId),
+            eq(partnerVendorWorkTypeApprovalsTable.vendorId, vendorId),
+            eq(
+              partnerVendorWorkTypeApprovalsTable.workTypeId,
+              siteWorkAssignmentsTable.workTypeId,
+            ),
+          ),
+        )
+        .where(
+          and(
+            eq(siteWorkAssignmentsTable.vendorId, vendorId),
+            eq(siteLocationsTable.partnerId, partnerId),
+          ),
+        );
+      const serialize = (e: typeof event) => ({
+        ...e,
+        createdAt: e.createdAt.toISOString(),
+      });
+      const provenance = captureFleetApprovalProvenance({
+        relationshipId: rel.id,
+        companyId: vendorId,
+        partnerId,
+        events: history.filter((e) => e.id !== event.id).map(serialize),
+        lapse: serialize(event),
+        scopes,
+      });
+      await tx
+        .update(partnerVendorRelationshipsTable)
+        .set({ fleetCommercialAuthority: provenance })
+        .where(eq(partnerVendorRelationshipsTable.id, rel.id));
+    }
+
+    if (result.changed) {
+      logger.info(
+        {
+          partnerId,
+          vendorId,
+          fromStatus,
+          toStatus: derived.status,
+          reason: finalReason,
+        },
+        "Approval recomputed",
+      );
+    }
+    return result;
+  });
 }
 
 /**
@@ -402,10 +487,30 @@ export async function publishVendorCatalogVersion(args: {
     currency: string;
   }>;
   complianceSnapshot: {
-    coi: { carrier: string | null; policyNumber: string | null; expirationDate: string | null; documentUrl: string | null } | null;
-    wc: { carrier: string | null; policyNumber: string | null; expirationDate: string | null; documentUrl: string | null } | null;
-    gl: { carrier: string | null; policyNumber: string | null; expirationDate: string | null; documentUrl: string | null } | null;
-    autoLiability: { carrier: string | null; policyNumber: string | null; expirationDate: string | null; documentUrl: string | null } | null;
+    coi: {
+      carrier: string | null;
+      policyNumber: string | null;
+      expirationDate: string | null;
+      documentUrl: string | null;
+    } | null;
+    wc: {
+      carrier: string | null;
+      policyNumber: string | null;
+      expirationDate: string | null;
+      documentUrl: string | null;
+    } | null;
+    gl: {
+      carrier: string | null;
+      policyNumber: string | null;
+      expirationDate: string | null;
+      documentUrl: string | null;
+    } | null;
+    autoLiability: {
+      carrier: string | null;
+      policyNumber: string | null;
+      expirationDate: string | null;
+      documentUrl: string | null;
+    } | null;
     w9DocumentUrl: string | null;
   };
 }): Promise<{ versionId: number; version: number }> {

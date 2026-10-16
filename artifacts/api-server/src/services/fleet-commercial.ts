@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-zod";
 import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
-import { ACTIVE_APPROVAL_STATUSES } from "@workspace/db";
+import { readFleetAuthoritySites } from "./fleet-commercial-authority";
 import { FleetError, type FleetState } from "./fleet-repository";
 const terminal = new Set([
   "submitted",
@@ -51,12 +51,7 @@ function managing(state: FleetState, actor: FleetActor) {
 }
 async function sites(c: PoolClient, a: FleetActor, state: FleetState) {
   const ids = a.membershipRole === "admin" ? null : (a.currentSiteIds ?? []);
-  return (
-    await c.query(
-      "SELECT s.id,s.name,s.partner_id,s.latitude,s.longitude,s.fleet_ticket_policy FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND r.status=ANY($2::text[]) AND s.is_active=true AND COALESCE(s.hidden,false)=false AND ($3::int[] IS NULL OR s.id=ANY($3)) ORDER BY s.name",
-      [a.companyId, [...ACTIVE_APPROVAL_STATUSES], ids],
-    )
-  ).rows;
+  return readFleetAuthoritySites(c,a.companyId,{...(ids?{siteIds:ids}:{}),activeOnly:true});
 }
 async function settings(c: PoolClient, a: FleetActor) {
   const row = (
@@ -78,7 +73,7 @@ export async function readFleetTicketPlan(
 ) {
   const ticket = (
     await c.query(
-      "SELECT t.id,t.site_location_id,t.vendor_id,s.partner_id,t.status,t.lifecycle_state,t.fleet_plan FROM tickets t JOIN site_locations s ON s.id=t.site_location_id WHERE t.id=$1 AND t.vendor_id=$2" +
+      "SELECT t.id,t.site_location_id,t.vendor_id,t.work_type_id,s.partner_id,t.status,t.lifecycle_state,t.fleet_plan FROM tickets t JOIN site_locations s ON s.id=t.site_location_id WHERE t.id=$1 AND t.vendor_id=$2" +
         (lock ? " FOR UPDATE OF t" : ""),
       [ticketId, a.companyId],
     )

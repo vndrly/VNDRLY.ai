@@ -54,12 +54,14 @@ function fixture() {
   let required = false;
   let hold = false;
   let sitesVisible = true;
-  const billingTickets: {id:number;site_location_id:number;vendor_id:number;partner_id:number;status:string;fleet_plan:unknown}[]=[];
+  let certificationRows: Array<{name:string;vendor_verified_at:string|null;expiration_date:string|null}>=[];
+  const billingTickets: {id:number;work_type_id:number;site_location_id:number;vendor_id:number;partner_id:number;status:string;fleet_plan:unknown}[]=[];
   let availability: { starts_at: string; ends_at: string; available: boolean; recurrence: null }[] = [];
   const client = {
     query: async (sql: string,params:unknown[]=[]) => {
+      if(sql.includes("FROM employee_certifications"))return{rows:certificationRows};
       if(sql.includes("FROM vendor_work_types"))return{rows:[{id:3,name:"Synthetic haul",unit_price:"1.00",unit:"per_job",afe_number:"A1"}]};
-      if(sql.startsWith("INSERT INTO tickets")){const ticket={id:billingTickets.length+10,site_location_id:9,vendor_id:7,partner_id:8,status:"initiated",fleet_plan:JSON.parse(params[5] as string)};billingTickets.push(ticket);return{rows:[ticket]};}
+      if(sql.startsWith("INSERT INTO tickets")){const ticket={id:billingTickets.length+10,work_type_id:3,site_location_id:9,vendor_id:7,partner_id:8,status:"initiated",fleet_plan:JSON.parse(params[5] as string)};billingTickets.push(ticket);return{rows:[ticket]};}
       if(sql.includes("FROM tickets"))return{rows:billingTickets.filter(t=>t.id===params[0])};
       if(sql.startsWith("INSERT INTO ticket_line_items"))return{rows:[{id:100}]};
       if (sql.includes("SELECT m.id FROM user_org_memberships")) return {rows:[{id:7}]};
@@ -85,7 +87,7 @@ function fixture() {
                 : []
               : sql.includes("site_locations")
                 ? sitesVisible
-                  ? [{ id: 9, partner_id:8, afe:"A1", status:"active", is_active: true }]
+                  ? [{ id: 9, relationship_id:1, relationship_status:"approved", partner_id:8, afe:"A1", status:"active", is_active: true }]
                   : []
                 : [],
       };
@@ -103,6 +105,7 @@ function fixture() {
   return {
     service: createFleetService(repo),
     state: () => state,
+    certificates:(rows:typeof certificationRows)=>{certificationRows=rows;},
     requireTraining:()=>{required=true;},
     availability: (available: boolean) => { availability = [{ starts_at: "2026-10-08T12:00:00Z", ends_at: "2026-10-08T20:00:00Z", available, recurrence: null }]; },
     revokeSites: () => {
@@ -133,6 +136,34 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
+  it("retains an expired dispatch assessment when a certificate is later renewed", async()=>{
+    const f=fixture();
+    f.state().fleets[0].requiredCertifications=["Synthetic DOT credential"];
+    f.certificates([{name:"Synthetic DOT credential",vendor_verified_at:"2000-01-01T00:00:00Z",expiration_date:"2000-01-01"}]);
+    const created=await f.service.create(manager,createInput);
+    expect(created.events[0].details?.fleetCompliance).toMatchObject({warnings:expect.arrayContaining([expect.objectContaining({reason:"expired"})])});
+    f.certificates([{name:"Synthetic DOT credential",vendor_verified_at:new Date().toISOString(),expiration_date:"2099-01-01"}]);
+    const dispatched=await f.service.action(manager,created.id,{operationId:crypto.randomUUID(),expectedVersion:created.version,action:"dispatch"});
+    expect(dispatched.events[0].details?.fleetCompliance).toEqual(created.events[0].details?.fleetCompliance);
+    expect(dispatched.events.at(-1)?.details?.fleetCompliance).toMatchObject({warnings:expect.not.arrayContaining([expect.objectContaining({category:"driver_certification"})])});
+  });
+  it("records missing document warnings at creation, dispatch and start while actual Inventory holds remain authoritative", async () => {
+    const f=fixture();
+    f.state().fleets[0].requiredCertifications=["Synthetic DOT credential"];
+    let run=await f.service.create(manager,createInput);
+    expect(run.events[0].details?.fleetCompliance).toMatchObject({mode:"warn_only",status:"red",warnings:expect.arrayContaining([{reason:"missing",category:"driver_certification",requirement:"Synthetic DOT credential"}])});
+    run=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"dispatch"});
+    expect(run.events.at(-1)?.details?.fleetCompliance).toMatchObject({status:"red"});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"acknowledge"});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"inspect",inspectionOutcome:"passed",notes:"Physically inspected"});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"record_meter",reading:100,unit:"miles",notes:"Actual reading"});
+    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"start"});
+    expect(run.status).toBe("in_progress");
+    expect(run.events.at(-1)?.details?.fleetCompliance).toMatchObject({status:"red"});
+    f.hold();
+    await expect(f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"arrive_stop",stopId:run.stops[0].id})).rejects.toMatchObject({code:"fleet.equipment_on_hold"});
+    expect(f.state().runs[0].events[0].details?.fleetCompliance).toMatchObject({status:"red"});
+  });
   it("notifies only newly committed dispatch events and never repeats alerts on exact replay", async () => {
     const f=fixture();
     const run=await f.service.create(manager,createInput);

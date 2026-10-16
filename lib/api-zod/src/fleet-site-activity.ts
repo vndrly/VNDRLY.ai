@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import type {FleetComplianceCheckpoint} from "./fleet-action-policy";
 export const FleetSiteActivityFilterSchema = z
   .object({
     startsAt: z.iso.datetime().optional(),
@@ -20,6 +21,7 @@ export type FleetSiteActivity = {
     runId: string;
     vendorName: string;
     status: string;
+    complianceCheckpoints?:FleetComplianceCheckpoint[];
     stops: {
       stopId: string;
       kind: string;

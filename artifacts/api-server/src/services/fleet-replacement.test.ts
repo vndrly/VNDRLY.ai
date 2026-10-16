@@ -199,7 +199,7 @@ describe("Fleet paused equipment replacement", () => {
     const client = {
       query: async (sql: string) => ({
         rows: sql.includes("FROM site_locations")
-          ? [{ id: 9, is_active: true }]
+          ? [{ id: 9, relationship_id:1, relationship_status:"approved", is_active: true }]
           : sql.includes("vendor_people")
             ? [{ id: 2 }]
             : sql.includes("status='checked_out'")

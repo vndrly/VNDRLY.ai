@@ -54,6 +54,7 @@ function fixture() {
     id: 10,
     site_location_id: 9,
     vendor_id: 7,
+    work_type_id:3,
     partner_id: 8,
     status: "initiated",
     fleet_plan: FleetTicketPlanSchema.parse({
@@ -107,6 +108,8 @@ function fixture() {
           {
             id: 9,
             partner_id: 8,
+            relationship_id: 1,
+            relationship_status: "approved",
             afe: "A1",
             status: "active",
             is_active: true,

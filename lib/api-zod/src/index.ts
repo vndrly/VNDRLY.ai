@@ -52,3 +52,4 @@ export * from "./fleet-route";
 export * from "./fleet-compliance";
 export * from "./fleet-compliance-evaluator";
 export * from "./fleet-pricing";
+export * from "./fleet-action-policy";

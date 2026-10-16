@@ -15,6 +15,7 @@ import { FleetError, type FleetState } from "./fleet-repository";
 import { commercialFingerprint, readFleetTicketPlan } from "./fleet-commercial";
 import { SUBMIT_ALLOWED_STATUSES } from "../lib/ticket-lifecycle-coherence";
 import { mayPerformFleetAction } from "./fleet-permissions";
+import {resolveFleetCommercialAuthority,requireFleetCommercialAuthority,assessFleetActionPolicy,readFleetAuthoritySites,authorityFromFleetRelationship} from "./fleet-commercial-authority";
 
 const openStatuses = [
   "initiated",
@@ -130,12 +131,14 @@ async function catalog(
   partnerId: number,
   siteId: number,
 ) {
+  const site=(await readFleetAuthoritySites(c,a.companyId,{siteIds:[siteId],activeOnly:true})).find(row=>row.id===siteId);
+  if(!site)return [];
   return (
     await c.query(
-      "SELECT w.id,w.name,v.unit_price,v.unit,v.currency,COALESCE(NULLIF(btrim(sw.afe),''),btrim(s.afe),'') AS afe_number FROM vendor_work_types v JOIN work_types w ON w.id=v.work_type_id JOIN site_work_assignments sw ON sw.vendor_id=v.vendor_id AND sw.work_type_id=w.id AND sw.site_location_id=$3 JOIN site_locations s ON s.id=sw.site_location_id WHERE v.vendor_id=$1 AND (w.partner_id IS NULL OR w.partner_id=$2) AND v.unit IN ('per_job','lump_sum','per_hour','per_day') AND v.currency='USD' AND v.unit_price IS NOT NULL AND v.unit_price>=0 AND v.unit_price<=1000000 ORDER BY w.name",
+      "SELECT w.id,w.name,v.unit_price,v.unit,v.currency,COALESCE(NULLIF(btrim(sw.afe),''),btrim(s.afe),'') AS afe_number FROM vendor_work_types v JOIN work_types w ON w.id=v.work_type_id JOIN site_work_assignments sw ON sw.vendor_id=v.vendor_id AND sw.work_type_id=w.id AND sw.site_location_id=$3 JOIN site_locations s ON s.id=sw.site_location_id JOIN partner_vendor_work_type_approvals pw ON pw.partner_id=s.partner_id AND pw.vendor_id=v.vendor_id AND pw.work_type_id=w.id WHERE v.vendor_id=$1 AND (w.partner_id IS NULL OR w.partner_id=$2) AND v.unit IN ('per_job','lump_sum','per_hour','per_day') AND v.currency='USD' AND v.unit_price IS NOT NULL AND v.unit_price>=0 AND v.unit_price<=1000000 ORDER BY w.name",
       [a.companyId, partnerId, siteId],
     )
-  ).rows.map((r) => ({
+  ).rows.filter(r=>authorityFromFleetRelationship(site,a.companyId,siteId,r.id).allowed).map((r) => ({
     id: r.id,
     name: r.name,
     unit: FleetBillingUnitSchema.parse(r.unit),
@@ -180,6 +183,10 @@ export async function attachFleetBilling(
   let ticketId: number;
   let billingUnit: z.infer<typeof FleetBillingUnitSchema> = "per_job";
   if (input.mode === "new_ticket") {
+    requireFleetCommercialAuthority(await resolveFleetCommercialAuthority(c,a,{
+      partnerId:site.partner_id,billingSiteId:siteId,workTypeId:input.workTypeId,
+      workDate:input.workDate,purpose:"capture",policyAt:new Date().toISOString(),
+    }));
     const service = (await catalog(c, a, site.partner_id, siteId)).find(
       (w) => w.id === input.workTypeId,
     );
@@ -228,6 +235,10 @@ export async function attachFleetBilling(
   } else {
     ticketId = input.ticketId;
     const ticket = await readFleetTicketPlan(c, a, state, ticketId, true);
+    requireFleetCommercialAuthority(await resolveFleetCommercialAuthority(c,a,{
+      partnerId:ticket.partner_id,billingSiteId:siteId,workTypeId:ticket.work_type_id,
+      workDate:input.workDate,purpose:"capture",policyAt:new Date().toISOString(),
+    }));
     const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
     assertBillingTicketOrigin(ticket, plan);
     billingUnit = plan.billingUnit ?? "per_job";
@@ -476,6 +487,10 @@ export function createFleetBillingOperations(
           throw new FleetError("fleet.version_conflict");
         if (!plan.billingWorkflow || plan.operations.length >= 100)
           throw new FleetError("fleet.ticket_plan_locked");
+        const authority=requireFleetCommercialAuthority(await resolveFleetCommercialAuthority(c,a,{
+          partnerId:ticket.partner_id,billingSiteId:ticket.site_location_id,workTypeId:ticket.work_type_id,
+          workDate:plan.workDate!,purpose:"office_submit",policyAt:new Date().toISOString(),
+        }));
         // Lock crew rows before checking; ticket row lock also serializes new run attachment.
         const open = (
           await c.query(
@@ -508,6 +523,16 @@ export function createFleetBillingOperations(
           actorUserId: a.userId,
           fingerprint,
         });
+        const checkpoints=[];
+        for(const run of runs.filter(run=>run.status==="completed"))
+          checkpoints.push({runId:run.id,compliance:await assessFleetActionPolicy(c,a,{run,action:"office_submit",
+            requiredCertifications:state.fleets.find(f=>f.id===run.fleetId)?.requiredCertifications??[],
+            policyAt:new Date().toISOString()})});
+        await c.query(`INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,tool_input,tool_output,target_type,target_id,result_status)
+          VALUES($1,$2,'fleet','typed','canonical','fleet_ticket_compliance','compliance-checkpoint',$3::jsonb,$4::jsonb,'fleet-ticket-compliance',$5,'completed')`,[
+          a.userId,a.companyId,JSON.stringify({operationId:body.operationId,ticketId}),
+          JSON.stringify({ticketId,authority,checkpoints}),String(ticketId),
+        ]);
         await c.query(
           "UPDATE tickets SET status='submitted',lifecycle_state='off_site',closed_at=COALESCE(closed_at,now()),closed_by_id=COALESCE(closed_by_id,$3),updated_at=now(),fleet_plan=$2::jsonb WHERE id=$1",
           [ticketId, JSON.stringify(plan), a.userId],

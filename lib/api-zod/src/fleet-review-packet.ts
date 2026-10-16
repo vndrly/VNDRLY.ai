@@ -1,8 +1,10 @@
 import { z } from "zod/v4";
+import {FleetComplianceCheckpointSchema} from "./fleet-action-policy";
 export const FleetReviewPacketSchema = z.object({
   runId: z.uuid(),
   runVersion: z.number().int().positive(),
   status: z.string(),
+  complianceCheckpoints:z.array(FleetComplianceCheckpointSchema).optional(),
   requirements: z.array(
     z.object({
       id: z.string(),

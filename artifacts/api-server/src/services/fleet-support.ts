@@ -1,4 +1,4 @@
-import { ACTIVE_APPROVAL_STATUSES } from "@workspace/db";
+import { readFleetAuthoritySites } from "./fleet-commercial-authority";
 import type { Pool, PoolClient } from "pg";
 import type {
   FleetSupportChoices,
@@ -61,12 +61,9 @@ export function createFleetSupportService(
         Date.parse(g.expiresAt) > clock().getTime(),
     );
     if (!state.enabled || !access) return null;
-    const sites = await client.query(
-      "SELECT s.id FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND r.status=ANY($2::text[]) AND s.id=ANY($3::int[]) AND COALESCE(s.hidden,false)=false FOR SHARE OF s,r",
-      [companyId, [...ACTIVE_APPROVAL_STATUSES], access.siteIds],
-    );
+    const sites = await readFleetAuthoritySites(client,companyId,{siteIds:access.siteIds});
     const siteIds = access.siteIds.filter((id) =>
-        sites.rows.some((s) => s.id === id),
+        sites.some((s) => s.id === id),
       ),
       fleetIds = access.fleetIds.filter((id) =>
         state.fleets.some(

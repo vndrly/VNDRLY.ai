@@ -3,6 +3,7 @@ import {
   FleetReviewPacketSchema,
   checkFleetInspectionRequirements,
   checkFleetManifestRequirements,
+  projectFleetComplianceCheckpoints,
   type FleetEvidence,
   type FleetRun,
 } from "@workspace/api-zod";
@@ -87,6 +88,7 @@ export function buildFleetReviewPacket(
     runId: run.id,
     runVersion: run.version,
     status: run.status,
+    complianceCheckpoints:projectFleetComplianceCheckpoints(run.events),
     requirements,
     missingRequiredCount,
     readyForOperationalReview:

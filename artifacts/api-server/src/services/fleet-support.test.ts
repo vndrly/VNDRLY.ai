@@ -96,7 +96,7 @@ function fixture() {
               : [],
         };
       if (sql.startsWith("SELECT s.id"))
-        return { rows: sites ? [{ id: 9 }] : [] };
+        return { rows: sites ? [{ id: 9,relationship_id:1,relationship_status:"approved" }] : [] };
       if (sql.includes("COALESCE(MAX")) return { rows: [{ id: 10 }] };
       if (sql.includes("DISTINCT ON"))
         return { rows: [{ id: 10, tool_output: run }] };

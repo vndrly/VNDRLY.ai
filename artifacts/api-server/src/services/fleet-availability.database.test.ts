@@ -83,6 +83,7 @@ describe.skipIf(!isolated)(
           vendorId: vendor.id,
           status: "approved",
         });
+      await s.db.insert(s.partnerVendorWorkTypeApprovalsTable).values({partnerId:partner.id,vendorId:vendor.id,workTypeId:workType.id});
       const [manager, driver] = await s.db
         .insert(s.usersTable)
         .values([

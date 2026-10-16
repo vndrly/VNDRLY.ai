@@ -16,7 +16,7 @@ function fixture(){
  const query=vi.fn(async(sql:string,params:unknown[]=[])=>{
   if(sql.includes("FROM ticket_check_ins"))return{rows:[]};
   if(sql.includes("FROM tickets"))return{rows:params[1]===ticket.vendor_id?[ticket]:[]};
-  if(sql.includes("FROM site_locations"))return{rows:visible?[{id:9,name:"Synthetic site",partner_id:8,fleet_ticket_policy:null}]:[]};
+  if(sql.includes("FROM site_locations"))return{rows:visible?[{id:9,name:"Synthetic site",relationship_id:1,relationship_status:"approved",partner_id:8,fleet_ticket_policy:null}]:[]};
   if(sql.includes("FROM assistant_action_audit"))return{rows:stored?[{id:1}]:[]};
   if(sql.includes("FROM vendors")||sql.includes("FROM partners"))return{rows:[{fleet_commercial_settings:directory}]};
   if(sql.startsWith("UPDATE vendors")){directory=JSON.parse(params[1] as string);return{rows:[]};}

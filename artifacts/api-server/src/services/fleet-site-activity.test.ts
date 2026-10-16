@@ -114,6 +114,7 @@ function fixture() {
                 {
                   id: 7,
                   name: "Authorized vendor",
+                  relationship_id:1,relationship_status:"approved",partner_id:10,
                   fleet_ops_state: { runs: [run] },
                 },
               ]
@@ -148,6 +149,15 @@ function fixture() {
   };
 }
 describe("Partner owned-site Fleet projection", () => {
+  it("discloses historical red checkpoints without private credential names or evidence", () => {
+    const run=record();
+    run.events[0].details={fleetCompliance:{mode:"warn_only",status:"red",evaluatedAt:time,
+      warnings:[{category:"driver_certification",reason:"expired",requirement:"Private credential label"}]},privateDocument:"Never disclosed"};
+    const result=projectFleetSiteRun(run,9,"Carrier");
+    expect(result.complianceCheckpoints).toEqual([{action:"created",recordedAt:time,mode:"warn_only",status:"red",reasons:[{category:"driver_certification",reason:"expired"}]}]);
+    expect(JSON.stringify(result)).not.toContain("Private credential");
+    expect(JSON.stringify(result)).not.toContain("Never disclosed");
+  });
   it("excludes driver/other-route/manifest/coordinates and only shows selected-site event facts", () => {
     const value = projectFleetSiteRun(record(), 9, "Authorized vendor");
     expect(value.stops).toHaveLength(1);

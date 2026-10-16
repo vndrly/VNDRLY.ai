@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod/v4";
-import { pool, ACTIVE_APPROVAL_STATUSES } from "@workspace/db";
+import { pool } from "@workspace/db";
+import { readFleetAuthoritySites } from "../services/fleet-commercial-authority";
 import { getSessionFromRequest } from "../lib/session";
 const router = Router();
 router.all("/fleet/site-ticket-policy/:siteId", async (req, res, next) => {
@@ -56,13 +57,8 @@ router.all("/fleet/site-ticket-policy/:siteId", async (req, res, next) => {
           canRead = true;
           canManage = member.role === "admin";
         } else if (orgType === "vendor") {
-          canRead =
-            (
-              await c.query(
-                "SELECT 1 FROM partner_vendor_relationships WHERE vendor_id=$1 AND partner_id=$2 AND status=ANY($3::text[]) FOR SHARE",
-                [orgId, site.partner_id, [...ACTIVE_APPROVAL_STATUSES]],
-              )
-            ).rows.length > 0;
+          canRead = Number.isInteger(orgId) &&
+            (await readFleetAuthoritySites(c,orgId!,{siteIds:[siteId]})).some(row=>row.id===siteId);
         }
       }
     }
