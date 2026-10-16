@@ -245,3 +245,15 @@ Vendors connect QuickBooks Online and OpenAccountant from the Reports page. Open
 - **Wouter:** React routing library.
 - **bcryptjs:** Password hashing library.
 - **Anthropic Claude:** AI model.
+
+## Cursor Cloud specific instructions
+
+Cloud Agents use a loopback PostgreSQL 16 cluster, not the shared Supabase database. Do not point `DATABASE_URL` at Supabase from this environment.
+
+- Node `24.22.0` and pnpm `9.15.9` are on `PATH` (`node -v`, `pnpm -v`).
+- Postgres listens on `127.0.0.1:55439` with trust auth for the local `postgres` user. Data directory: `/opt/vndrly-postgres`. The dev database is `vndrly_dev`.
+- Boot writes `/home/ubuntu/.vndrly/cloud.env` and repo-root `.env.local` (gitignored). The API is `http://127.0.0.1:8080` and the Vite app is `http://127.0.0.1:5173`.
+- `POST /api/auth/seed` is idempotent and creates the canonical demo accounts. Sign in with the admin user from `docs/canonical-credentials.md`.
+- Before `pnpm test`, `pnpm run test:api`, or `pnpm run test:e2e`, source `/home/ubuntu/.vndrly/test.env` so runs use `VNDRLY_TEST_DB_MODE=fresh-local`. That mode creates a new loopback database per run and does not reset `vndrly_dev`.
+- `AI_INTEGRATIONS_ANTHROPIC_API_KEY` is a non-working placeholder so the API can boot. Ask V calls need a real key.
+- iOS Simulator and Expo device builds are not available on this Linux VM. Mobile jsdom tests can still run with `pnpm --filter @workspace/vndrly-mobile run test`.
