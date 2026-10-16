@@ -11,11 +11,13 @@ describe("additive Fleet resource migration", () => {
     const id = inserted.rows[0].id;
     const before = await pool.query("SELECT to_jsonb(v) AS vendor FROM vendors v WHERE id=$1", [id]);
     const assetsBefore = await pool.query("SELECT count(*)::text AS count FROM assets");
-    const migration = fileURLToPath(new URL("../../../../lib/db/src/scripts/apply-fleet-resources.ts", import.meta.url));
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const result = spawnSync(process.execPath, ["--import", "tsx", migration], { env: { ...process.env, VNDRLY_LOAD_ENV_LOCAL: "0" }, encoding: "utf8", timeout: 30000, windowsHide: true });
-      expect(result.error).toBeUndefined();
-      expect(result.status, result.stderr).toBe(0);
+    for (const script of ["apply-fleet-resources.ts", "apply-fleet-compliance.ts"]) {
+      const migration = fileURLToPath(new URL(`../../../../lib/db/src/scripts/${script}`, import.meta.url));
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const result = spawnSync(process.execPath, ["--import", "tsx", migration], { env: { ...process.env, VNDRLY_LOAD_ENV_LOCAL: "0" }, encoding: "utf8", timeout: 30000, windowsHide: true });
+        expect(result.error).toBeUndefined();
+        expect(result.status, result.stderr).toBe(0);
+      }
     }
     const after = await pool.query("SELECT to_jsonb(v) AS vendor FROM vendors v WHERE id=$1", [id]);
     expect(after.rows).toEqual(before.rows);
