@@ -19,6 +19,8 @@ import type {
   FleetGateLink,
 } from "@workspace/api-zod";
 import {
+  FleetInventorySchema, FleetInventoryDetailSchema, FleetInventoryReceiptSchema,
+  FleetAssetCreateSchema, FleetAssetEnrollmentSchema, FleetAssetEditSchema,
   FleetReviewPacketSchema,
   FleetReplacementInputSchema,
   FleetReplacementActionSchema,
@@ -104,6 +106,14 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
+  inventory: (after?: string, fleetId?: string) => {
+    const params = new URLSearchParams({ ...(after ? { after } : {}), ...(fleetId ? { fleetId } : {}) });
+    return request<unknown>(`/inventory${params.size ? `?${params}` : ""}`).then(value => FleetInventorySchema.parse(value));
+  },
+  inventoryAsset: (id: string) => request<unknown>(`/inventory/${encodeURIComponent(id)}`).then(value => FleetInventoryDetailSchema.parse(value)),
+  createAsset: (input: z.infer<typeof FleetAssetCreateSchema>) => request<unknown>("/inventory", FleetAssetCreateSchema.parse(input)).then(value => FleetInventoryReceiptSchema.parse(value)),
+  enrollAsset: (id: string, input: z.infer<typeof FleetAssetEnrollmentSchema>) => request<unknown>(`/inventory/${encodeURIComponent(id)}/enroll`, FleetAssetEnrollmentSchema.parse(input)).then(value => FleetInventoryReceiptSchema.parse(value)),
+  editAsset: (id: string, input: z.infer<typeof FleetAssetEditSchema>) => request<unknown>(`/inventory/${encodeURIComponent(id)}`, FleetAssetEditSchema.parse(input), "PATCH").then(value => FleetInventoryReceiptSchema.parse(value)),
   reviewPacket: (id: string) =>
     request<unknown>(`/runs/${encodeURIComponent(id)}/review-packet`).then(
       (value) => FleetReviewPacketSchema.parse(value),

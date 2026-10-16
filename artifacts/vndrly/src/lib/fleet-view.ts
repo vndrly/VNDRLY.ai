@@ -34,18 +34,28 @@ export function fleetVisibleRuns(
       (!mine || run.driverUserId === userId) &&
       (!fleetId || run.fleetId === fleetId) &&
       (!siteId || run.siteIds.includes(Number(siteId))) &&
-      run.title.toLowerCase().includes(search.toLowerCase()),
+      [run.title, run.labels?.driverName, run.labels?.vehicleName, ...(run.labels?.sites.map(site => site.name) ?? [])]
+        .join(" ").toLowerCase().includes(search.toLowerCase()),
   );
 }
 export function fleetPositions(overview: FleetOverview, runIds: Set<string>) {
-  return overview.observations.filter(
+  const positions = overview.observations.filter(
     (point) =>
       runIds.has(point.runId) &&
-      point.source === "driver_phone" &&
-      point.freshness !== "unavailable" &&
-      Number.isFinite(point.latitude) &&
-      Number.isFinite(point.longitude) &&
-      Math.abs(point.latitude) <= 90 &&
-      Math.abs(point.longitude) <= 180,
+      point.source === "driver_phone",
+  );
+  // Overview pages can contain overlapping samples. Never draw a sample trail
+  // as though it were several vehicles; replay owns historical observations.
+  const latest = new Map<string, (typeof positions)[number]>();
+  for (const point of positions) {
+    const key = point.vehicleAssetId ?? point.runId;
+    const previous = latest.get(key);
+    if (!previous || Date.parse(point.recordedAt) >= Date.parse(previous.recordedAt))
+      latest.set(key, point);
+  }
+  return [...latest.values()].filter(point =>
+    point.freshness !== "unavailable" &&
+    Number.isFinite(point.latitude) && Number.isFinite(point.longitude) &&
+    Math.abs(point.latitude) <= 90 && Math.abs(point.longitude) <= 180,
   );
 }

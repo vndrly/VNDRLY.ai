@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
   resources: vi.fn(),
   action: vi.fn(),
   create: vi.fn(),
+  navigate: vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: api,
@@ -22,9 +23,9 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ i18n: { language: "en" }, t: (key: string) => key }),
 }));
 vi.mock("wouter", () => ({
-  useLocation: () => [api.location],
-  Link: ({ children }: { children: React.ReactNode }) => (
-    <span>{children}</span>
+  useLocation: () => [api.location, api.navigate],
+  Link: ({ children, href, ...props }: React.ComponentProps<"a">) => (
+    <a href={href} {...props}>{children}</a>
   ),
 }));
 vi.mock("@/components/mapbox-map", () => ({
@@ -60,6 +61,7 @@ const run = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
+  window.history.replaceState({}, "", "/");
   api.location = "/fleet/my-day";
   api.overviewPage.mockResolvedValue({
     companyId: 1,
@@ -87,6 +89,73 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("provides dispatch resources and run controls on Fleet Dispatch", async () => {
+    const initial = await api.overviewPage();
+    api.location = "/fleet";
+    api.overviewPage.mockResolvedValue({
+      ...initial,
+      capabilities: { canDrive: false, canDispatch: true, canManage: true },
+      runs: [run, { ...run, id: "working", title: "Working delivery", status: "in_progress" }],
+    });
+    api.resources.mockResolvedValue({
+      drivers: [{ userId: 7, name: "Driver seven", fleetIds: ["fleet1"] }],
+      equipment: [{ id: "asset1", name: "Truck seven", category: "truck", status: "active", dispatchable: true }],
+    });
+    mount();
+    await screen.findByRole("heading", { name: "Dispatch resources" });
+    expect(screen.getByRole("heading", { name: "Fleet Dispatch", level: 1 })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: /^Dispatch$/ })).toBeNull();
+    expect(screen.getByRole("link", { name: /Awaiting dispatch/ }).getAttribute("href")).toBe("/fleet");
+    expect(screen.getByText(/Driver seven/)).toBeTruthy();
+    expect(screen.getByText(/Truck seven/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Create run" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Working 1" }));
+    expect(screen.getByText("Working delivery")).toBeTruthy();
+    expect(screen.queryByText("Own pickup")).toBeNull();
+  });
+  it("replaces the retired Dispatch route with Fleet Dispatch", async () => {
+    api.location = "/fleet/dispatch";
+    mount();
+    await waitFor(() => expect(api.navigate).toHaveBeenCalledWith("/fleet", { replace: true }));
+    expect(api.overviewPage).not.toHaveBeenCalled();
+  });
+  it.each(["/fleet", "/fleet/runs"])("filters the run board and opens run actions on %s", async (path) => {
+    const initial = await api.overviewPage();
+    api.overviewPage.mockResolvedValue({ ...initial, runs: [run, { ...run, id: "working", title: "Working delivery", status: "in_progress" }] });
+    api.location = path;
+    mount();
+    await screen.findByText("Own pickup");
+    fireEvent.click(screen.getByRole("button", { name: "Working 1" }));
+    expect(screen.queryByText("Own pickup")).toBeNull();
+    expect(screen.getByText("Working delivery")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Working 1" }));
+    expect(screen.getByText("Own pickup")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Own pickup/ }));
+    expect(await screen.findByText("Acknowledge assignment")).toBeTruthy();
+  });
+  it("opens Runs without the map or replay clutter", async () => {
+    api.location = "/fleet/runs";
+    mount();
+    await screen.findByText("Own pickup");
+    expect(screen.queryByRole("heading", { name: "History & Replay" })).toBeNull();
+    expect(screen.queryByText(/No authorized recorded positions/)).toBeNull();
+    expect(screen.getByRole("heading", { level: 1, name: "Runs" })).toBeTruthy();
+    const backButton = screen.getByRole("button", { name: /^Back$/ });
+    expect(backButton.querySelector('[data-testid="sphere-back-circle"]')).toBeTruthy();
+    fireEvent.click(backButton);
+    expect(api.navigate).toHaveBeenCalledWith("/fleet", { replace: true });
+  });
+  it("updates operational review filtering when navigating without remounting", async () => {
+    const initial = await api.overviewPage();
+    api.overviewPage.mockResolvedValue({ ...initial, runs: [run, { ...run, id: "review", title: "Review delivery", status: "submitted_for_review" }] });
+    api.location = "/fleet/runs";
+    const view = mount();
+    await screen.findByText("Own pickup");
+    api.location = "/fleet/review";
+    view.rerender(<QueryClientProvider client={new QueryClient()}><FleetPage /></QueryClientProvider>);
+    await screen.findByText("Review delivery");
+    expect(screen.queryByText("Own pickup")).toBeNull();
+  });
   it("shows only own completed or cancelled loaded runs in recorded history", async () => {
     api.location = "/fleet/history";
     const initial = await api.overviewPage();
@@ -139,6 +208,24 @@ describe("Fleet driver workspace", () => {
     await screen.findAllByText("Historical pickup");
     expect(api.run).toHaveBeenCalledWith("historical");
     expect(screen.getByText("Acknowledge assignment")).toBeTruthy();
+    const backButton = screen.getByRole("button", { name: /^Back$/ });
+    expect(backButton.querySelector('[data-testid="sphere-back-circle"]')).toBeTruthy();
+    fireEvent.click(backButton);
+    expect(api.navigate).toHaveBeenCalledWith("/fleet/runs", { replace: true });
+  });
+  it("uses real browser back for a run opened from another VNDRLY page", async () => {
+    api.location = "/fleet/runs/historical";
+    api.run.mockResolvedValue({ ...run, id: "historical", title: "Historical pickup" });
+    window.history.replaceState({ __vndrlyNavigationIndex: 1 }, "", "/fleet/runs/historical");
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    try {
+      mount();
+      fireEvent.click(await screen.findByRole("button", { name: /^Back$/ }));
+      expect(back).toHaveBeenCalledOnce();
+      expect(api.navigate).not.toHaveBeenCalled();
+    } finally {
+      back.mockRestore();
+    }
   });
   it("loads the server cursor without losing already loaded authorized runs", async () => {
     const initial = await api.overviewPage();
@@ -195,7 +282,7 @@ describe("Fleet driver workspace", () => {
       .mockResolvedValueOnce({});
     mount();
     fireEvent.click(await screen.findByText("Create run"));
-    fireEvent.change(screen.getByLabelText("Fleet"), {
+    fireEvent.change(screen.getByLabelText("Detail"), {
       target: { value: fleetId },
     });
     await screen.findByText("Driver seven");
@@ -220,7 +307,7 @@ describe("Fleet driver workspace", () => {
     await waitFor(() => expect(api.create).toHaveBeenCalledTimes(2));
     expect(api.create.mock.calls[0][0]).toEqual(api.create.mock.calls[1][0]);
   });
-  it("shows only assigned runs with an honest unavailable map and no dispatch creation", async () => {
+  it("shows only assigned runs without adding a map or dispatch creation to the operations page", async () => {
     mount();
     await screen.findByText("Own pickup");
     expect(screen.queryByText("Other driver")).toBeNull();

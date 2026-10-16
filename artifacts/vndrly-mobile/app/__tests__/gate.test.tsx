@@ -351,6 +351,19 @@ function isDisabled(el: HTMLElement): boolean {
 }
 
 describe("GatekeeperScreen", () => {
+  it("submits at the selected site when device GPS is denied", async () => {
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 88 });
+    requestForegroundPermissionsAsyncMock.mockResolvedValue({ status: "denied" });
+    renderScreen();
+    await findFirstByTestId("gate-first-name");
+    fireEvent.change(firstByTestId("gate-first-name"), { target: { value: "Pat" } });
+    fireEvent.change(firstByTestId("gate-last-name"), { target: { value: "NoGPS" } });
+    fireEvent.change(firstByTestId("gate-vehicle-plate"), { target: { value: "NG1" } });
+    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
+    tap(firstByTestId("check-in-btn"));
+    await waitFor(() => expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({ coordinates: null, firstName: "Pat", ctx: expect.objectContaining({ site: expect.objectContaining({ id: 42 }) }) })));
+  });
   it("renders the state-qualified plate in the active visit rows", async () => {
     fetchGatekeeperVisitsMock.mockResolvedValue([
       {

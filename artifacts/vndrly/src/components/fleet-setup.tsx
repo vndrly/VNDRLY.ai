@@ -1,3 +1,4 @@
+import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { FleetProfileFields } from "@/components/fleet-profile-fields";
 import { FleetSupportGrants } from "@/components/fleet-support-grants";
 import { useTranslation } from "react-i18next";
@@ -116,11 +117,10 @@ function FleetSetupForm({
       <h2 className="text-xl font-semibold">{c.setup}</h2>
       <p className="text-sm">{c.setupExplanation}</p>
       <label>
-        <input
-          type="checkbox"
+        <BrandedCheckbox
           checked={draft.enabled}
           disabled={busy}
-          onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })}
+          onCheckedChange={(checked) => setDraft({ ...draft, enabled: (checked === true) })}
         />{" "}
         {c.enableFleet}
       </label>
@@ -129,6 +129,10 @@ function FleetSetupForm({
         {draft.fleets.map((fleet) => (
           <fieldset className="rounded border p-3" key={fleet.id}>
             <legend>{fleet.name}</legend>
+            <label className="block text-sm">
+              {c.detailName}
+              <input className="block w-full rounded border bg-background p-2" disabled={busy} value={fleet.name} onChange={event => setDraft({ ...draft, fleets: draft.fleets.map(item => item.id === fleet.id ? { ...item, name: event.target.value } : item) })} />
+            </label>
             <FleetProfileFields
               disabled={busy}
               value={fleet.operationalProfile}
@@ -147,18 +151,17 @@ function FleetSetupForm({
               <h4 className="text-sm font-semibold">{c.assignedEquipment}</h4>
               {initial.equipment.map((asset) => (
                 <label className="mr-4 inline-block" key={asset.assetId}>
-                  <input
-                    type="checkbox"
+                  <BrandedCheckbox
                     disabled={busy}
                     checked={fleet.equipmentAssetIds.includes(asset.assetId)}
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       setDraft({
                         ...draft,
                         fleets: draft.fleets.map((f) =>
                           f.id === fleet.id
                             ? {
                                 ...f,
-                                equipmentAssetIds: e.target.checked
+                                equipmentAssetIds: (checked === true)
                                   ? [...f.equipmentAssetIds, asset.assetId]
                                   : f.equipmentAssetIds.filter(
                                       (id) => id !== asset.assetId,
@@ -203,12 +206,11 @@ function FleetSetupForm({
             </label>
             {sites.map((site) => (
               <label className="mr-4 inline-block" key={site.id}>
-                <input
-                  type="checkbox"
+                <BrandedCheckbox
                   disabled={busy}
                   checked={fleet.siteIds.includes(site.id)}
-                  onChange={(e) =>
-                    updateFleetSite(fleet.id, site.id, e.target.checked)
+                  onCheckedChange={(checked) =>
+                    updateFleetSite(fleet.id, site.id, (checked === true))
                   }
                 />{" "}
                 {site.name}
@@ -257,13 +259,12 @@ function FleetSetupForm({
               {(["fleet_manager", "dispatcher", "driver"] as const).map(
                 (role) => (
                   <label className="mr-4" key={role}>
-                    <input
-                      type="checkbox"
+                    <BrandedCheckbox
                       disabled={busy}
                       checked={grant.roles.includes(role)}
-                      onChange={(e) =>
+                      onCheckedChange={(checked) =>
                         updateGrant(grant.userId, {
-                          roles: e.target.checked
+                          roles: (checked === true)
                             ? [...grant.roles, role]
                             : grant.roles.filter((r) => r !== role),
                         })
@@ -277,16 +278,15 @@ function FleetSetupForm({
             <div>
               {draft.fleets.map((fleet) => (
                 <label className="mr-4" key={fleet.id}>
-                  <input
-                    type="checkbox"
+                  <BrandedCheckbox
                     disabled={busy}
                     checked={grant.fleetIds.includes(fleet.id)}
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       updateGrant(grant.userId, {
-                        fleetIds: e.target.checked
+                        fleetIds: (checked === true)
                           ? [...grant.fleetIds, fleet.id]
                           : grant.fleetIds.filter((id) => id !== fleet.id),
-                        siteIds: e.target.checked
+                        siteIds: (checked === true)
                           ? grant.siteIds
                           : grant.siteIds.filter((id) =>
                               draft.fleets.some(
@@ -314,13 +314,12 @@ function FleetSetupForm({
                 )
                 .map((site) => (
                   <label className="mr-4" key={site.id}>
-                    <input
-                      type="checkbox"
+                    <BrandedCheckbox
                       disabled={busy}
                       checked={grant.siteIds.includes(site.id)}
-                      onChange={(e) =>
+                      onCheckedChange={(checked) =>
                         updateGrant(grant.userId, {
-                          siteIds: e.target.checked
+                          siteIds: (checked === true)
                             ? [...grant.siteIds, site.id]
                             : grant.siteIds.filter((id) => id !== site.id),
                         })
@@ -333,13 +332,12 @@ function FleetSetupForm({
             <div className="space-y-2">
               {(["safetyRelease", "financeRead"] as const).map((authority) => (
                 <label className="block" key={authority}>
-                  <input
-                    type="checkbox"
+                  <BrandedCheckbox
                     disabled={busy}
                     checked={grant[authority]}
-                    onChange={(event) =>
+                    onCheckedChange={(checked) =>
                       updateGrant(grant.userId, {
-                        [authority]: event.target.checked,
+                        [authority]: (checked === true),
                       })
                     }
                   />{" "}

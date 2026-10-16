@@ -34,10 +34,10 @@ import { enqueueNativeOperation } from "@/lib/native-operation-journal-runtime";
 import { isOfflineWorkHubFailure } from "@/lib/work-hub-queue-runtime";
 import { nativeUuid } from "@/lib/native-uuid";
 import { translateApiError } from "@/lib/apiErrors";
+import { changeOverRequest } from "@/lib/change-over-api";
 import {
   pickDefaultGateHostKey,
   groupAssignedGateSitesByPartner,
-  pickLocalAssignedGateSites,
   pickNearestAssignedGateSite,
   pickPreferredGateDefaultSite,
   resolveAssignedGateSites,
@@ -190,6 +190,8 @@ export default function GatekeeperScreen() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
   const [partnerMenuOpen, setPartnerMenuOpen] = useState(false);
   const [siteMenuOpen, setSiteMenuOpen] = useState(false);
+  const [gateMenuOpen, setGateMenuOpen] = useState(false);
+  const [gateLocationId, setGateLocationId] = useState("");
 
   const activeVisits = useQuery({
     queryKey: ["gatekeeper-visits"],
@@ -242,17 +244,16 @@ export default function GatekeeperScreen() {
   const assignedSites = assigned.data?.sites ?? [];
   const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
   const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
-  const localAssignedSites = useMemo(() => pickLocalAssignedGateSites(assignedSites, origin), [assignedSites, origin]);
   useEffect(() => {
     if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
-    const resolvedSite = localAssignedSites.find((site) => site.id === resolvedPrefillSiteId);
+    const resolvedSite = assignedSites.find((site) => site.id === resolvedPrefillSiteId);
     if (resolvedSite) {
       appliedDefault.current = true;
       setSiteCode(resolvedSite.siteCode);
       setConfirmedCode(resolvedSite.siteCode);
     }
     setResolvedPrefillSiteId(null);
-  }, [assignedSites.length, localAssignedSites, resolvedPrefillSiteId]);
+  }, [assignedSites, resolvedPrefillSiteId]);
   const locationResolved = origin !== null || gps === "denied" || gps === "unavailable";
   const preferredSite = nearestSite ?? pickPreferredGateDefaultSite(assignedSites, assigned.data?.defaultSite ?? null);
   const defaultSiteCode = locationResolved ? preferredSite?.siteCode : undefined;
@@ -268,6 +269,13 @@ export default function GatekeeperScreen() {
     retry: false,
   });
   const selectedSiteId = ctxQuery.data?.site.id ?? null;
+  const gateLocations = useQuery({
+    queryKey: ["gate-visit-locations", user?.id, user?.vendorId, selectedSiteId],
+    queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude: number | null; longitude: number | null; geofenceRadiusM: number }[] }>(`/stations?siteId=${selectedSiteId}`),
+    enabled: Boolean(selectedSiteId), retry: false,
+  });
+  const selectedGate = gateLocations.data?.stations.find(g => g.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
+  useEffect(() => { setGateLocationId(""); setGateMenuOpen(false); }, [selectedSiteId]);
   useEffect(() => {
     if (!selectedSiteId) return;
     return gateEventPoller.start(selectedSiteId, () => {
@@ -542,6 +550,7 @@ export default function GatekeeperScreen() {
         const perm = await Location.requestForegroundPermissionsAsync();
         if (cancelled) return;
         if (perm.status !== "granted") {
+          setOrigin(null);
           setGps("denied");
           return;
         }
@@ -557,7 +566,7 @@ export default function GatekeeperScreen() {
           },
         );
       } catch {
-        if (!cancelled) setGps("unavailable");
+        if (!cancelled) { setOrigin(null); setGps("unavailable"); }
       }
     })();
     return () => {
@@ -569,11 +578,11 @@ export default function GatekeeperScreen() {
   const fence = evaluateGpsFence({
     gps,
     origin,
-    site: ctxQuery.data
+    site: selectedGate?.latitude != null && selectedGate.longitude != null
       ? {
-          latitude: ctxQuery.data.site.latitude,
-          longitude: ctxQuery.data.site.longitude,
-          siteRadiusMeters: ctxQuery.data.site.siteRadiusMeters,
+          latitude: selectedGate.latitude,
+          longitude: selectedGate.longitude,
+          siteRadiusMeters: selectedGate.geofenceRadiusM ?? 500,
         }
       : null,
   });
@@ -760,6 +769,9 @@ export default function GatekeeperScreen() {
       Alert.alert(t("visitor.error"), t("visitor.siteLookupFailed"));
       return;
     }
+    if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGate) {
+      Alert.alert(t("visitor.error"), t("gatekeeper.selectGateLocation")); return;
+    }
     setPlateStateError(null);
     gateSaveInFlightRef.current = true;
     setBusy(true);
@@ -776,6 +788,8 @@ export default function GatekeeperScreen() {
         durationStr: duration,
         platePhotoUrl: platePhotoUrl ?? undefined,
         vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
+        coordinates: origin,
+        gateStationId: selectedGate?.id,
       });
       if (!result.ok) {
         const message =
@@ -826,7 +840,8 @@ export default function GatekeeperScreen() {
     gateSaveInFlightRef.current = true;
     setBusy(true);
     try {
-      await gatekeeperCheckOut(visitId, checkOutNotes.trim() || undefined);
+      const visit = (activeVisits.data ?? []).find(row => row.id === visitId);
+      await gatekeeperCheckOut(visitId, checkOutNotes.trim() || undefined, { coordinates: origin, gateStationId: visit?.siteLocationId === selectedSiteId ? selectedGate?.id : undefined });
       setCheckOutNotes("");
       resetForm();
       await qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
@@ -1122,14 +1137,14 @@ export default function GatekeeperScreen() {
               {fenceSentence}
             </Text>
             <View testID="gate-locked-partner" style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{nearestSite?.partnerName ?? selectedAssignedSite?.partnerName ?? "Current lease"}</Text>
+              <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.partnerName ?? "Current lease"}</Text>
             </View>
             <View testID={selectedAssignedSite ? `gate-site-option-${selectedAssignedSite.siteCode}` : undefined}>
               <TouchableOpacity testID="gate-site-selector" onPress={() => setSiteMenuOpen((open) => !open)} style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
                 <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.name ?? "Select site"}</Text>
               </TouchableOpacity>
             </View>
-            {siteMenuOpen && localAssignedSites.map((site) => {
+            {siteMenuOpen && assignedSites.map((site) => {
               const selected = confirmedCode === site.siteCode;
               return (
                 <TouchableOpacity
@@ -1161,6 +1176,13 @@ export default function GatekeeperScreen() {
                 </TouchableOpacity>
               );
             })}
+            {!!gateLocations.data?.stations.length && <View style={{ gap: 6 }}>
+              <Text style={[styles.label, { color: colors.foreground }]}>{t("gatekeeper.gateLocation")}</Text>
+              <TouchableOpacity testID="gate-location-selector" accessibilityRole="button" onPress={() => setGateMenuOpen(open => !open)} style={[styles.siteOption, { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.card }]}>
+                <Text style={{ color: colors.foreground }}>{selectedGate?.name ?? t("gatekeeper.selectGateLocation")}</Text>
+              </TouchableOpacity>
+              {gateMenuOpen && gateLocations.data.stations.map(gate => <TouchableOpacity key={gate.id} testID={`gate-location-${gate.id}`} onPress={() => { setGateLocationId(gate.id); setGateMenuOpen(false); }} style={[styles.siteOption, { borderColor: selectedGate?.id === gate.id ? colors.primary : colors.border, backgroundColor: colors.card }]}><Text style={{ color: colors.foreground }}>{gate.name}</Text></TouchableOpacity>)}
+            </View>}
             {ctxQuery.isLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.primary} />
@@ -1195,7 +1217,7 @@ export default function GatekeeperScreen() {
                     `gatekeeper.duration${chip.id === "30m" ? "30m" : chip.id === "2h" ? "2h" : chip.id === "allDay" ? "AllDay" : "Overnight"}`,
                   ),
                 }))}
-                extraSubmitDisabled={!fence.canSubmit}
+                extraSubmitDisabled={false}
                 showSubmit={false}
                 busy={busy}
                 onSubmit={onCheckIn}
@@ -1222,7 +1244,7 @@ export default function GatekeeperScreen() {
                 testID="check-in-btn"
                 onPress={onCheckIn}
                 loading={busy}
-                disabled={busy || !fence.canSubmit || !ctxQuery.data}
+                disabled={busy || !ctxQuery.data}
                 height={30}
                 style={styles.submitButton}
               >

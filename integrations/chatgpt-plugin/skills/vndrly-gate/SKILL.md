@@ -16,3 +16,6 @@ Use the appropriate advertised embedded view for this product. Show saved facts,
 For authorized cross-product work, coordinate separate products with one coherent answer and saved evidence; specialist names do not broaden authority. Use other product skills only for relevant separately authorized steps. Workday belongs to Work Hub Activity. Preserve completed saved steps and distinguish proposed, pending, completed, blocked and unknown results.
 
 For detailed supported-operation contracts and recovery boundaries relevant to this product, read [operation guidance](references/operations.md). Use only advertised tools; the reference does not establish feature availability.
+
+
+For authenticated Gate operators, visitor entry and checkout accept manual selection of the authorized site and optional exact gateStationId. GPS is optional evidence: unavailable, denied or outside-fence GPS does not block that operator workflow. Never substitute site coordinates or invent device evidence. The existing authenticated confirmation, vendor/site/Gate authorization, audit and idempotency boundaries still apply. Visitor self-check-in and paid-travel or ticket-location rules remain separate. Read the exact saved visit and action result before reporting completion.

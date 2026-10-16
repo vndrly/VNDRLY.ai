@@ -32,3 +32,5 @@ describe('Inventory explicit hold release',()=>{
  env.api.mockResolvedValue({assetId:'other',holdId:'hold-1',operationId:'wrong',version:5,status:'applied',physicalRepairVerified:false});render(<FilesInventory {...props}/>);open();fireEvent.click(screen.getByRole('button',{name:'Confirm hold release'}));await screen.findAllByText(/The result is unknown/);expect(props.onRefresh).not.toHaveBeenCalled();env.generation++;env.listeners.forEach(fn=>fn());await waitFor(()=>expect(screen.queryByRole('button',{name:'Confirm hold release'})).toBeNull());
  });
 });
+
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));

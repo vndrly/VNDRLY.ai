@@ -8,8 +8,12 @@ import {
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { MapboxMap } from "@/components/mapbox-map";
+import { FleetOperationsMap } from "@/components/fleet-operations-map";
+import { FleetInventoryPage } from "@/components/fleet-inventory";
+import ImagePill from "@/components/image-pill";
+import "./fleet.css";
 import { PngPillButton } from "@/components/png-pill-rollover";
+import PageBackButton from "@/components/page-back-button";
 import { fleetClient, fleetErrorMessage } from "@/lib/fleet-client";
 import {
   FleetActionFields,
@@ -45,8 +49,15 @@ import type { z } from "zod/v4";
 
 export default function FleetPage() {
   const { user } = useAuth();
-  const [location] = useLocation();
-  if (!user) return null;
+  const [location, navigate] = useLocation();
+  useEffect(() => {
+    if (user && location === "/fleet/dispatch") navigate("/fleet", { replace: true });
+  }, [user, location, navigate]);
+  if (!user || location === "/fleet/dispatch") return null;
+  if (location === "/fleet/equipment" || location.startsWith("/fleet/equipment/")) {
+    const identity = `${user.userId}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`;
+    return <FleetInventoryPage key={identity} identity={identity} assetId={location.split("/")[3]} />;
+  }
   if (location === "/fleet/support")
     return (
       <FleetSupportPanel
@@ -84,6 +95,7 @@ function FleetWorkspace({
   const c = fleetCopy(i18n.language);
   const [location] = useLocation();
   const queryClient = useQueryClient();
+  const section = location.split("/")[2] || "desk";
   const routeRunId = location.startsWith("/fleet/runs/")
     ? location.split("/")[3]
     : "";
@@ -137,14 +149,18 @@ function FleetWorkspace({
   const [selected, setSelected] = useState(
     location.startsWith("/fleet/runs/") ? location.split("/")[3] : "",
   );
+  const detailRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selected) detailRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  }, [selected]);
   useEffect(() => {
     if (routeRunId) setSelected(routeRunId);
   }, [routeRunId]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
-  const [status, setStatus] = useState(
-    location.endsWith("/review") ? "submitted_for_review" : "",
-  );
+  const [status, setStatus] = useState("");
+  const [lane, setLane] = useState("");
+  useEffect(() => { setStatus(""); setLane(""); setSelected(routeRunId); setPending(null); setCreate(false); }, [location]);
   const [pending, setPending] = useState<{
     id: string;
     input: FleetActionInput;
@@ -203,21 +219,21 @@ function FleetWorkspace({
     );
   if (location.endsWith("/setup") && data.capabilities.canSetup)
     return (
-      <div className="space-y-4 p-6">
+      <div className="fleet-workspace space-y-4 p-6">
         <Link href="/fleet">{c.desk}</Link>
         <FleetSetupPanel identity={identity} />
       </div>
     );
   if (location.endsWith("/settings"))
     return (
-      <div className="space-y-4 p-6">
+      <div className="fleet-workspace space-y-4 p-6">
         <Link href="/fleet">{c.desk}</Link>
         <FleetPreferences overview={data} identity={identity} />
       </div>
     );
   if (location.endsWith("/maintenance"))
     return (
-      <div className="space-y-4 p-6">
+      <div className="fleet-workspace space-y-4 p-6">
         <Link href="/fleet">{c.workspace}</Link>
         <FleetMaintenancePanel
           overview={data}
@@ -229,7 +245,7 @@ function FleetWorkspace({
     );
   if (location.endsWith("/reports"))
     return (
-      <div className="space-y-4 p-6">
+      <div className="fleet-workspace space-y-4 p-6">
         <Link href="/fleet">{c.workspace}</Link>
         <FleetReportsPanel overview={data} identity={identity} />
       </div>
@@ -237,7 +253,7 @@ function FleetWorkspace({
   const mine =
     location.includes("my-day") ||
     (!data.capabilities.canManage && !data.capabilities.canDispatch);
-  const runs = fleetVisibleRuns(
+  const filteredRuns = fleetVisibleRuns(
     data,
     userId,
     mine,
@@ -248,13 +264,21 @@ function FleetWorkspace({
     (item) =>
       (!location.endsWith("/history") ||
         ["completed", "cancelled"].includes(item.status)) &&
+      (!location.endsWith("/review") || item.status === "submitted_for_review") &&
       (!status || item.status === status),
   );
+  const runLane = (status: string) => status === "submitted_for_review" ? "review" : status === "in_progress" ? "working" : ["completed", "cancelled"].includes(status) ? "finished" : "ready";
+  const runs = filteredRuns.filter(item => !lane || runLane(item.status) === lane);
   const run = runs.find((item) => item.id === selected);
   const observations = fleetPositions(
     data,
     new Set(runs.map((item) => item.id)),
   );
+  const isDesk = section === "desk";
+  const isMap = section === "map" || mine && section === "my-day";
+  const showRunList = !routeRunId && ["desk", "runs", "review", "history", "my-day"].includes(section);
+  const showDetails = Boolean(run) || isMap;
+  const heading = ({ desk: c.desk, map: c.map, runs: c.runs, loads: c.loads, review: c.review, costs: c.costs, history: c.history, equipment: c.equipment, drivers: c.drivers, readiness: c.readinessTitle, "my-day": c.myDay } as Record<string, string>)[section] ?? c.workspace;
   const candidates = resources.data;
   async function reload() {
     await queryClient.invalidateQueries({ queryKey: ["fleet", identity] });
@@ -370,43 +394,28 @@ function FleetWorkspace({
   }
   const selectClass = "rounded border bg-background px-3 py-2 text-sm";
   return (
-    <main className="space-y-5 p-4 md:p-6">
+    <main className="fleet-workspace space-y-5 p-4 md:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">{c.workspace}</h1>
-          <p className="text-xs text-muted-foreground">
-            Company {data.companyId}
-          </p>
-          <p className="text-sm text-muted-foreground">{c.subtitle}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          {(routeRunId || section === "runs") && <PageBackButton fallbackHref={routeRunId ? "/fleet/runs" : "/fleet"} ariaLabel={c.back} />}
+          <div>
+            <h1 className="text-2xl font-semibold">{heading}</h1>
+            <p className="text-sm text-muted-foreground">{c.subtitle}</p>
+          </div>
         </div>
         <PngPillButton onClick={() => void reload()}>{c.refresh}</PngPillButton>
       </header>
-      <nav className="flex flex-wrap gap-4 text-sm" aria-label={c.workspace}>
-        {(data.capabilities.canManage || data.capabilities.canDispatch) && (
-          <>
-            <Link href="/fleet">{c.desk}</Link>
-            <Link href="/fleet/dispatch">{c.dispatch}</Link>
-          </>
-        )}
-        {data.capabilities.canDrive && (
-          <Link href="/fleet/my-day">{c.myDay}</Link>
-        )}
-        {data.capabilities.canSetup && (
-          <Link href="/fleet/setup">{c.setup}</Link>
-        )}
-        <Link href="/fleet/equipment">{c.equipment}</Link>
-        <Link href="/fleet/drivers">{c.drivers}</Link>
-        <Link href="/fleet/readiness">{c.readinessTitle}</Link>
-        <Link href="/fleet/costs">{c.costs}</Link>
-        {(data.capabilities.canReportDefect ??
-          (data.capabilities.canManage || data.capabilities.canDrive)) && (
-          <Link href="/fleet/maintenance">{c.maintenance}</Link>
-        )}
-        <Link href="/work-hub">{c.workHub}</Link>
-        <Link href="/fleet/reports">{c.reports}</Link>
-        <Link href="/fleet/history">{c.history}</Link>
+      <nav className="fleet-nav flex flex-wrap text-sm" aria-label={c.workspace}>
+        {(data.capabilities.canManage || data.capabilities.canDispatch) && <Link href="/fleet" aria-current={section === "desk" ? "page" : undefined}>{c.desk}</Link>}
+        {data.capabilities.canDrive && <Link href="/fleet/my-day">{c.myDay}</Link>}
+        {data.capabilities.canSetup && <Link href="/fleet/setup">{c.setup}</Link>}
+        <Link href="/fleet/map">{c.map}</Link><Link href="/fleet/runs">{c.runs}</Link><Link href="/fleet/loads">{c.loads}</Link>
+        {(data.capabilities.canManage || data.capabilities.canDispatch) && <Link href="/fleet/review">{c.review}</Link>}
+        <Link href="/fleet/equipment">{c.equipment}</Link><Link href="/fleet/drivers">{c.drivers}</Link><Link href="/fleet/readiness">{c.readinessTitle}</Link><Link href="/fleet/costs">{c.costs}</Link>
+        {(data.capabilities.canReportDefect ?? (data.capabilities.canManage || data.capabilities.canDrive)) && <Link href="/fleet/maintenance">{c.maintenance}</Link>}
+        <Link href="/work-hub">{c.workHub}</Link><Link href="/fleet/reports">{c.reports}</Link><Link href="/fleet/history">{c.history}</Link>
       </nav>
-      <div className="flex flex-wrap gap-3">
+      <div className="fleet-filters flex flex-wrap gap-3" role="search" aria-label={c.filters}>
         <select
           aria-label={c.fleet}
           className={selectClass}
@@ -485,13 +494,10 @@ function FleetWorkspace({
             setPending(null);
           }}
         />
-        {data.capabilities.canDispatch && (
-          <PngPillButton onClick={() => setCreate(!create)}>
-            {c.create}
-          </PngPillButton>
-        )}
+        {data.capabilities.canDispatch && <PngPillButton onClick={() => setCreate(!create)}>{c.create}</PngPillButton>}
       </div>
       {notice && <p role="status">{notice}</p>}
+      {!routeRunId && ["desk", "runs"].includes(section) && <div className="fleet-lanes" role="group" aria-label={c.runBoard}>{(["ready", "working", "review", "finished"] as const).map(value => <button key={value} className="fleet-summary-card" aria-label={`${c[value]} ${filteredRuns.filter(item => runLane(item.status) === value).length}`} aria-pressed={lane === value} onClick={() => { setLane(lane === value ? "" : value); setSelected(""); setPending(null); }}><span>{c[value]}</span><strong>{filteredRuns.filter(item => runLane(item.status) === value).length}</strong></button>)}</div>}
       {["equipment", "drivers", "readiness", "costs"].includes(
         location.split("/")[2],
       ) && (
@@ -532,7 +538,7 @@ function FleetWorkspace({
           {!runs.some((item) => item.loads.length) && <p>{c.noLoads}</p>}
         </section>
       )}
-      {location.endsWith("/dispatch") && candidates && (
+      {isDesk && candidates && (
         <section className="space-y-3 rounded-xl border p-4">
           <h2 className="text-lg font-semibold">Dispatch resources</h2>
           <p className="text-sm">
@@ -569,46 +575,14 @@ function FleetWorkspace({
           </div>
         </section>
       )}
-      {!mine && (
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border p-4">
-            <p className="text-sm text-muted-foreground">{c.active}</p>
-            <strong className="text-2xl">
-              {
-                runs.filter((item) =>
-                  ["dispatched", "acknowledged", "in_progress"].includes(
-                    item.status,
-                  ),
-                ).length
-              }
-            </strong>
-          </div>
-          <div className="rounded-xl border p-4">
-            <p className="text-sm text-muted-foreground">
-              Pending operational review
-            </p>
-            <strong className="text-2xl">
-              {
-                runs.filter((item) => item.status === "submitted_for_review")
-                  .length
-              }
-            </strong>
-          </div>
-          <div className="rounded-xl border p-4">
-            <p className="text-sm text-muted-foreground">
-              Stale / paused recorded positions
-            </p>
-            <strong className="text-2xl">
-              {
-                observations.filter(
-                  (point) =>
-                    point.freshness === "stale" || point.freshness === "paused",
-                ).length
-              }
-            </strong>
-          </div>
-        </div>
-      )}
+      {isDesk && <>
+        <div className="fleet-summary">{[
+          { href: "/fleet", title: c.awaitingDispatch, count: runs.filter(item => item.status === "draft").length, hint: c.dispatchHint },
+          { href: "/fleet/runs", title: c.active, count: runs.filter(item => ["dispatched", "acknowledged", "in_progress"].includes(item.status)).length, hint: c.activeHint },
+          { href: "/fleet/review", title: c.review, count: runs.filter(item => item.status === "submitted_for_review").length, hint: c.reviewHint },
+        ].map(card => <Link className="fleet-summary-card" key={card.href} href={card.href}><h2>{card.title}</h2><strong>{card.count}</strong><span>{card.hint}</span></Link>)}</div>
+        <section aria-label={c.fleetTools}><div className="fleet-card-heading"><h2>{c.fleetTools}</h2><p>{c.loadedRuns}: {data.runs.length}</p></div><div className="fleet-desk-links"><Link href="/fleet/map"><strong>{c.map}</strong><span>{c.mapSummary}</span></Link><Link href="/fleet/drivers"><strong>{c.drivers}</strong><span>{c.driverHint}</span></Link><Link href="/fleet/maintenance"><strong>{c.maintenance}</strong><span>{c.maintenanceHint}</span></Link></div></section>
+      </>}
       {create && (
         <section className="space-y-3 rounded-xl border p-4">
           <fieldset disabled={busy} className="space-y-3">
@@ -791,44 +765,9 @@ function FleetWorkspace({
           </fieldset>
         </section>
       )}
-      <FleetRouteReplay identity={identity} runs={runs} />
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-        <section className="overflow-hidden rounded-xl border">
-          <h2 className="p-3 font-semibold">{c.map}</h2>
-          {observations.length ? (
-            <MapboxMap
-              height={480}
-              fitToData
-              points={observations.map((point) => ({
-                id: point.runId,
-                latitude: point.latitude,
-                longitude: point.longitude,
-                title: `${point.source} · ${point.freshness} · ${point.recordedAt}`,
-                onClick: () => {
-                  setSelected(point.runId);
-                  setPending(null);
-                },
-              }))}
-            />
-          ) : (
-            <div className="flex h-80 items-center justify-center bg-muted p-6 text-center text-muted-foreground">
-              {c.noLocations}
-            </div>
-          )}
-          <p className="p-3 text-xs text-muted-foreground">{c.mapHint}</p>
-          <ul className="px-3 text-xs text-muted-foreground">
-            {observations.map((point, index) => (
-              <li key={`${point.runId}:${index}`}>
-                {runs.find((r) => r.id === point.runId)?.title} · {point.source}{" "}
-                · {point.freshness} · {point.recordedAt} ·{" "}
-                <Link href={`/fleet/runs/${point.runId}`}>{c.openRun}</Link>
-              </li>
-            ))}
-          </ul>
-          <p className="px-3 pb-3 text-xs">
-            {c.updated}: {data.generatedAt}
-          </p>
-        </section>
+      {section === "history" && <FleetRouteReplay identity={identity} runs={runs} />}
+      {isMap && <FleetOperationsMap runs={runs} positions={observations} selected={selected} onSelect={id => { setSelected(id); setPending(null); }} />}
+      {showDetails && <div className="fleet-run-detail" id="fleet-run-detail" ref={detailRef}>
         <section className="space-y-3 rounded-xl border p-4">
           <h2 className="font-semibold">{mine ? c.myRun : c.selected}</h2>
           {!run ? (
@@ -881,7 +820,7 @@ function FleetWorkspace({
               )}
               <Link href={`/fleet/runs/${run.id}`}>{c.openRun}</Link>
               <p className="text-xs">{c.routeUnavailable}</p>
-              <h3>{c.stops}</h3>
+              <div className="fleet-detail-group"><h3>{c.stops}</h3>
               <p>
                 {c.trailer}:{" "}
                 {run.labels?.trailerName ??
@@ -910,6 +849,7 @@ function FleetWorkspace({
                     </li>
                   ))}
               </ol>
+              </div><details className="fleet-detail-group"><summary>{c.runRecords}</summary>
               <h3>Reported meter and fuel records</h3>
               <ul>
                 {run.records.map((record) => (
@@ -973,7 +913,8 @@ function FleetWorkspace({
                   {c.ticket} #{run.linkedTicketId}
                 </Link>
               )}
-              <h3>{c.availableActions}</h3>
+              </details><h3>{c.availableActions}</h3>
+              <div className="fleet-detail-tools">
               <FleetEtaPanel
                 key={`${run.id}:${run.version}`}
                 run={run}
@@ -1020,7 +961,7 @@ function FleetWorkspace({
                 identity={identity}
                 onSaved={reload}
               />
-              <div className="flex flex-wrap gap-2">
+              </div><div className="flex flex-wrap gap-2">
                 {run.allowedActions.map((action) => (
                   <PngPillButton
                     key={action}
@@ -1230,7 +1171,7 @@ function FleetWorkspace({
                   </PngPillButton>
                 </div>
               )}
-              <h3>{c.events}</h3>
+              <details className="fleet-detail-group"><summary>{c.events}</summary>
               <ul className="text-xs">
                 {run.events.map((event) => (
                   <li key={event.id}>
@@ -1248,12 +1189,12 @@ function FleetWorkspace({
                     )}
                   </li>
                 ))}
-              </ul>
+              </ul></details>
             </>
           )}
         </section>
-      </div>
-      <section className="rounded-xl border p-4">
+      </div>}
+      {showRunList && <section className="rounded-xl border p-4">
         <h2 className="font-semibold">
           {mine ? c.assigned : c.runs} ({runs.length})
         </h2>
@@ -1269,25 +1210,23 @@ function FleetWorkspace({
           </PngPillButton>
         )}
         {!runs.length && <p>{mine ? c.noAssigned : c.noRuns}</p>}
-        <div className="divide-y">
+        <div className="fleet-run-list">
           {runs.map((item) => (
             <button
               key={item.id}
-              className="flex w-full items-center justify-between gap-3 py-3 text-left"
+              className="fleet-run-row"
               onClick={() => {
                 setSelected(item.id);
                 setPending(null);
               }}
               aria-pressed={selected === item.id}
             >
-              <span>{item.title}</span>
-              <span className="text-sm text-muted-foreground">
-                {item.status} · v{item.version}
-              </span>
+              <span><strong>{item.title}</strong><small>{item.labels?.driverName ?? `${c.driver} ${item.driverUserId}`} · {item.labels?.vehicleName ?? c.unlinked}</small></span>
+              <ImagePill color={item.status === "in_progress" || item.status === "completed" ? "green" : item.status === "cancelled" ? "red" : item.status === "dispatched" || item.status === "acknowledged" ? "blue" : "amber"}>{item.status.replaceAll("_", " ")}</ImagePill>
             </button>
           ))}
         </div>
-      </section>
+      </section>}
       {data.unavailableIntegrations.length > 0 && (
         <p className="text-sm text-muted-foreground">{c.unavailableTracking}</p>
       )}

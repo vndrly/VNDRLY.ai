@@ -30,7 +30,7 @@ Show sourced records and update times in embedded views. Distinguish phone locat
 
 Expose only installed, advertised and authorized functions. Maintenance, reports, saved views, Gate reconciliation or device capture must not be claimed operational merely because they appear in the design. Use their tools when actually available and verify saved or observed results.
 
-For the embedded work desk, use v_show_workspace with fleet, fleet_map, fleet_dispatch or fleet_run when those views are advertised. Run detail needs the exact authorized runId. Fleet Desk and Map counts cover the returned page; use the exact nextCursor with a supported paged read rather than claim those counts cover the whole fleet. The Run Card shows saved stops, reported inspections, loads/deliveries, meters/fuel and permitted next actions. Refresh or re-read after an action before stating the result.
+For the embedded work desk, use v_show_workspace with fleet, fleet_map, fleet_dispatch or fleet_run when those views are advertised. Run detail needs the exact authorized runId. Fleet Dispatch and Map counts cover the returned page; use the exact nextCursor with a supported paged read rather than claim those counts cover the whole fleet. The Run Card shows saved stops, reported inspections, loads/deliveries, meters/fuel and permitted next actions. Refresh or re-read after an action before stating the result.
 
 When maintenance is advertised, use fleet_maintenance for authorized reported defects and service records. Reported repairs do not release a hold; exact current safety-release authority and the canonical release action are required. Manager maintenance consent does not allow acting as an assigned driver, and driver defect consent does not grant company-wide maintenance administration.
 
@@ -79,3 +79,12 @@ Use the appropriate advertised embedded view for this product. Show saved facts,
 For authorized cross-product work, coordinate separate products with one coherent answer and saved evidence; specialist names do not broaden authority. Use other product skills only for relevant separately authorized steps. Workday belongs to Work Hub Activity. Preserve completed saved steps and distinguish proposed, pending, completed, blocked and unknown results.
 
 For detailed supported-operation contracts and recovery boundaries relevant to this product, read [operation guidance](references/operations.md). Use only advertised tools; the reference does not establish feature availability.
+
+
+## Fleet Dispatch, Fleet Inventory and Details
+
+Use Fleet Dispatch for operational work and Fleet Inventory for the canonical company equipment pool. Details are temporary work groups; internal fleetId values and the actual Fleet Ops roles are unchanged. Creating or enrolling equipment into Fleet Inventory never assigns it to a Detail, changes Inventory custody, releases a hold or creates a run or ticket.
+
+When query_fleet_inventory and query_fleet_inventory_detail are advertised, read the authorized pool and exact asset, identifiers, current recorded holder, holds and saved history. Use the returned UUID after cursor and preserve the same optional Detail filter; page counts and bounded history are not complete-company totals. Resolve an existing canonical Inventory asset before enrollment. Never manufacture identifiers, ownership or duplicate assets.
+
+Use create_fleet_inventory_asset, enroll_fleet_inventory_asset or edit_fleet_inventory_asset only for an explicit user instruction, exact reviewed fields and current asset version where required. ChatGPT requires separate fleet:inventory consent; existing Fleet dispatch, run, review or admin grants do not imply it. Current Fleet Manager plus Inventory authority remains server-enforced. Use the supported consent-upgrade flow for the intended account; never silently request or grant wider scopes. The existing authenticated action panel supplies approval and the server operation identity. Preparation is not completion. After saving, verify the exact operation receipt and independent canonical asset readback. An uncertain result retains the original v_action_status reference; recovery reads the original receipt and never creates another asset or retries with a new operation. Demo accounts remain read-only.

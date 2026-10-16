@@ -72,6 +72,21 @@ describe("fetchGatekeeperHistory", () => {
 });
 
 describe("submitGatekeeperVisit", () => {
+  it("records an operator check-in without waiting for denied or unavailable GPS", async () => {
+    const { submitGatekeeperVisit } = await import("./gatekeeper");
+    requestForegroundPermissionsAsyncMock.mockResolvedValue({ status: "denied" });
+    expect(await submitGatekeeperVisit({ ctx: baseCtx, firstName: "Pat", lastName: "NoGPS", company: "Synthetic", vehiclePlate: "NG1", plateState: null, purpose: "Delivery", durationStr: "45", coordinates: null, gateStationId: "movable-gate" })).toEqual({ ok: true, visitId: 88 });
+    const body = JSON.parse(apiFetchMock.mock.calls[0][1].body);
+    expect(body).toMatchObject({ siteLocationId: 42, gateStationId: "movable-gate" });
+    expect(body.latitude).toBeUndefined();
+    expect(requestForegroundPermissionsAsyncMock).not.toHaveBeenCalled();
+    expect(getCurrentPositionAsyncMock).not.toHaveBeenCalled();
+  });
+  it("passes an actual device observation even when far from the selected gate", async () => {
+    const { submitGatekeeperVisit } = await import("./gatekeeper");
+    await submitGatekeeperVisit({ ctx: baseCtx, firstName: "Pat", lastName: "Remote", company: "Synthetic", vehiclePlate: "GPS1", plateState: null, purpose: "Delivery", durationStr: "45", coordinates: { latitude: 0, longitude: 0 }, gateStationId: "movable-gate" });
+    expect(JSON.parse(apiFetchMock.mock.calls[0][1].body)).toMatchObject({ latitude: 0, longitude: 0, gateStationId: "movable-gate" });
+  });
   it("requires a license plate before requesting location", async () => {
     const { submitGatekeeperVisit } = await import("./gatekeeper");
     const result = await submitGatekeeperVisit({
@@ -140,4 +155,12 @@ describe("submitGatekeeperVisit", () => {
     expect(body.vehiclePlate).toBe("4412");
     expect(body.plateState).toBe("OK");
   });
+});
+
+it("records check-out without waiting for GPS and preserves selected gate evidence", async () => {
+  const { gatekeeperCheckOut } = await import("./gatekeeper");
+  await gatekeeperCheckOut(88, "Recorded exit", { coordinates: null, gateStationId: "movable-gate" });
+  expect(apiFetchMock.mock.calls[0][0]).toBe("/api/visits/gate/88/check-out");
+  expect(JSON.parse(apiFetchMock.mock.calls[0][1].body)).toEqual({ notes: "Recorded exit", gateStationId: "movable-gate" });
+  expect(requestForegroundPermissionsAsyncMock).not.toHaveBeenCalled();
 });

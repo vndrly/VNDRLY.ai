@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { resolveExecutableWorkHubToolRequest } from "./work-hub-tool-runtime";
+import { fleetInventoryOperationId } from "./fleet-inventory-tools";
 import {
   runBoundTypedAskVTool,
   synchronizeTypedAskVContext,
@@ -23,6 +25,23 @@ const base = {
   execute: mock.execute,
 };
 describe("AskV typed mutation confirmation", () => {
+  it("confirms Fleet Inventory through the normal in-app runtime without a model-supplied operation ID", async () => {
+    const input = { name: "Unit 17", category: "truck", legalOwner: "Synthetic Company", identifier: { kind: "vin", value: "UNIT17" } };
+    const execute = vi.fn(async (raw: unknown) => {
+      const authorized = raw as Record<string, unknown>;
+      expect(authorized).not.toHaveProperty("operationId");
+      expect(authorized.idempotencyKey).toEqual(expect.any(String));
+      expect(authorized.confirmed).toBe(true);
+      const request = resolveExecutableWorkHubToolRequest("create_fleet_inventory_asset", authorized, true, base.session)!;
+      expect(request).toMatchObject({ method: "POST", path: "/fleet/inventory", body: { ...input, operationId: fleetInventoryOperationId(authorized) } });
+      return JSON.stringify({ ok: true, request });
+    });
+    const action = { ...base, name: "create_fleet_inventory_asset", input, conversationId: 1110, contextKey: "/fleet/inventory", phrase: "Create Unit 17", execute };
+    expect(JSON.parse(await runBoundTypedAskVTool(action)).requiresConfirmation).toBe(true);
+    expect(execute).not.toHaveBeenCalled();
+    expect(JSON.parse(await runBoundTypedAskVTool({ ...action, turnId: 2, phrase: "yes" })).ok).toBe(true);
+    expect(execute).toHaveBeenCalledOnce();
+  });
   it("executes an exact Gate command in the same typed turn", async () => {
     mock.execute.mockClear();
     const completed = JSON.parse(

@@ -36,7 +36,7 @@ describe("Fleet personal preference", () => {
         <FleetPreferences overview={overview} identity="company1-member7" />
       </QueryClientProvider>,
     );
-    expect(screen.queryByRole("option", { name: "Fleet Desk" })).toBeNull();
+    expect(screen.queryByRole("option", { name: "Fleet Dispatch" })).toBeNull();
     fireEvent.change(screen.getByLabelText("Default home"), {
       target: { value: "fleet_my_day" },
     });

@@ -19,7 +19,7 @@ describe("mobile Fleet setup", () => {
     fireEvent.click(screen.getByText("Synthetic Reviewer"));
     fireEvent.click(screen.getByText("dispatcher"));
     fireEvent.click(screen.getByText("Add grant to draft"));
-    fireEvent.click(screen.getByText("Save Fleet setup"));
+    fireEvent.click(screen.getByText("Save Fleet Details"));
     await waitFor(() => expect(saved).toHaveBeenCalled());
     const body = JSON.parse(mocks.api.mock.calls[1][1].body);
     expect(body.expectedVersion).toBe(5);
@@ -30,6 +30,21 @@ describe("mobile Fleet setup", () => {
     mocks.api.mockRejectedValue(new Error("Company administrator required"));
     render(<FleetSetup onSaved={vi.fn()} />);
     expect(await screen.findByText("Company administrator required")).toBeTruthy();
-    expect(screen.queryByText("Save Fleet setup")).toBeNull();
+    expect(screen.queryByText("Save Fleet Details")).toBeNull();
+  });
+  it("edits a Detail name and assigns canonical equipment using branded checks while preserving support grants", async () => {
+    const assetId = "20000000-0000-4000-8000-000000000001";
+    const supportGrants = [{ userId: 1, fleetIds: [fleetId], siteIds: [392], expiresAt: "2026-12-01T00:00:00Z", reason: "Synthetic support", financeRead: false }];
+    mocks.api.mockResolvedValueOnce({ ...configuration, equipment: [{ assetId, name: "Canonical rig", category: "truck" }], supportGrants }).mockResolvedValue({ version: 6 });
+    render(<FleetSetup onSaved={vi.fn()} />);
+    fireEvent.click(await screen.findByText("North Fleet · sites 392"));
+    fireEvent.change(screen.getByLabelText("Detail name"), { target: { value: "North Detail" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Canonical rig" }));
+    expect(screen.getByRole("checkbox", { name: "Canonical rig" }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(screen.getByText("Save Fleet Details"));
+    await waitFor(() => expect(mocks.api.mock.calls).toHaveLength(2));
+    const body = JSON.parse(mocks.api.mock.calls[1][1].body);
+    expect(body.fleets[0]).toMatchObject({ name: "North Detail", equipmentAssetIds: [assetId] });
+    expect(body.supportGrants).toEqual(supportGrants);
   });
 });

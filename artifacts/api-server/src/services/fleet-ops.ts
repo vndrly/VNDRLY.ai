@@ -1,4 +1,5 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
+import { createFleetInventoryOperations } from "./fleet-inventory";
 import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
@@ -295,7 +296,7 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
 }
 async function setupEquipment(client: PoolClient, companyId: number) {
   const assets = await client.query(
-    "SELECT id,name,category FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer') ORDER BY name LIMIT 501",
+    "SELECT id,name,category FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer') AND (EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=assets.id AND l.attachment_type='fleet_inventory') OR EXISTS(SELECT 1 FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'fleets','[]'::jsonb)) d WHERE v.id=$1 AND COALESCE(d->'equipmentAssetIds','[]'::jsonb) ? assets.id::text)) ORDER BY name LIMIT 501",
     [companyId],
   );
   if (assets.rows.length > 500)
@@ -390,6 +391,7 @@ export function createFleetService(repository: FleetRepository) {
   const locations = createFleetLocationOperations(transaction, permitted);
   return {
     ...createFleetCommercialOperations(transaction),
+    ...createFleetInventoryOperations(transaction, grantFor, permitted),
     recordLocation: locations.record,
     locationObservations: locations.observations,
     locationHistory: locations.history,

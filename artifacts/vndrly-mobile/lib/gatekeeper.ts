@@ -1,5 +1,3 @@
-import * as Location from "expo-location";
-
 import { apiFetch } from "./api";
 import type { AssignedGateSitesResponse } from "./gate-default-site";
 import type { ActiveVisit, SiteContext } from "./guest";
@@ -20,6 +18,8 @@ export type GatekeeperVisitInput = {
   durationStr: string;
   platePhotoUrl?: string;
   vehiclePhotoUrl?: string;
+  coordinates?: { latitude: number; longitude: number } | null;
+  gateStationId?: string;
 };
 
 export type GatekeeperSubmitResult =
@@ -106,24 +106,13 @@ export async function deleteGateEvidence(
 export async function gatekeeperCheckOut(
   visitId: number,
   notes?: string,
+  evidence?: { coordinates?: { latitude: number; longitude: number } | null; gateStationId?: string },
 ): Promise<void> {
-  let latitude: number | undefined;
-  let longitude: number | undefined;
-  try {
-    const perm = await Location.requestForegroundPermissionsAsync();
-    if (perm.status === "granted") {
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      latitude = pos.coords.latitude;
-      longitude = pos.coords.longitude;
-    }
-  } catch {
-    // GPS is best-effort for check-out; the server still records time-out.
-  }
+  // Use the device observation already available on the operator's screen.
+  // Waiting for a new fix must never prevent recording a gate crossing.
   await apiFetch(`/api/visits/gate/${visitId}/check-out`, {
     method: "POST",
-    body: JSON.stringify({ latitude, longitude, notes }),
+    body: JSON.stringify({ latitude: evidence?.coordinates?.latitude, longitude: evidence?.coordinates?.longitude, gateStationId: evidence?.gateStationId, notes }),
   });
 }
 
@@ -138,12 +127,6 @@ export async function submitGatekeeperVisit(
     return { ok: false, reason: "missing-name" };
   }
   if (!input.vehiclePlate.trim()) return { ok: false, reason: "missing-plate" };
-  const perm = await Location.requestForegroundPermissionsAsync();
-  if (perm.status !== "granted")
-    return { ok: false, reason: "location-denied" };
-  const pos = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.High,
-  });
 
   const res = await apiFetch<{ id: number }>("/api/visits/gate/check-in", {
     method: "POST",
@@ -161,8 +144,9 @@ export async function submitGatekeeperVisit(
       ...(input.vehiclePhotoUrl
         ? { vehiclePhotoUrl: input.vehiclePhotoUrl }
         : {}),
-      latitude: pos.coords.latitude,
-      longitude: pos.coords.longitude,
+      latitude: input.coordinates?.latitude,
+      longitude: input.coordinates?.longitude,
+      gateStationId: input.gateStationId,
     }),
   });
   return { ok: true, visitId: res.id };

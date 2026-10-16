@@ -103,3 +103,5 @@ describe("Files & Inventory accessible localized presentation", () => {
     expect(document.getElementById(input.getAttribute("aria-describedby")!)?.textContent).toBe("Choose a group and enter a title.");
   });
 });
+
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));

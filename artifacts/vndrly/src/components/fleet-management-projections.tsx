@@ -171,6 +171,15 @@ export function FleetManagementProjections({
           <h2>{c.costs}</h2>
           <p>{c.costsUnavailable}</p>
           <Link href="/fleet/reports">{c.reports}</Link>
+          <div className="grid gap-3 md:grid-cols-2">
+            {runs.flatMap(run => run.records.map(record => <article key={`${run.id}:${record.id}`} className="space-y-2 p-4">
+              <Link href={`/fleet/runs/${run.id}`} className="font-semibold">{run.title}</Link>
+              <p>{record.kind === "fuel" ? c.fuelRecord : c.meterRecord}: {record.quantity ?? record.reading} {record.unit}</p>
+              <p className="text-sm">{record.notes}</p>
+              <p className="text-xs text-muted-foreground">{new Date(record.recordedAt).toLocaleString(i18n.language)}</p>
+            </article>))}
+          </div>
+          {!runs.some(run => run.records.length) && <p>{c.noFuelRecords}</p>}
         </>
       )}
     </section>

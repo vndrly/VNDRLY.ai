@@ -1,3 +1,6 @@
+import { ACTION_LOCATION_CLIENT, requiresActionLocation, isOperatorGateAction } from "../assistant/chatgpt-action-location";
+import { recoverFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
+import { fleetInventoryAction } from "../assistant/fleet-inventory-tools";
 import { db, vendorsTable, partnersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { dashboardBrand } from "../assistant/chatgpt-dashboard-brand";
@@ -580,6 +583,7 @@ router.post("/mcp", async (req, res) => {
         if (request.sourceTool !== "query_fleet_briefing") await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "query_fleet_capabilities", targetType: "work_hub", toolInput: {}, toolOutput: fleet, resultStatus: fleet.error ? "failure" : "success" });
         if (!fleet.error && (fleet.roles?.length || fleet.capabilities?.canSetup)) {
           output.availableViews.push("fleet", "fleet_map");
+          if (allowedNames.has("query_fleet_inventory")) output.availableViews.push("fleet_inventory");
           if (allowedNames.has("query_fleet_run_eta")) output.availableViews.push("fleet_eta");
           if (allowedNames.has("query_fleet_evidence")) output.availableViews.push("fleet_evidence");
           if (allowedNames.has("query_fleet_review_packet")) output.availableViews.push("fleet_review");
@@ -703,7 +707,7 @@ router.post("/mcp", async (req, res) => {
   }
 });
 router.all("/mcp", (_req, res) => res.status(405).set("Allow", "POST").end());
-const needsLocation = (toolName: string, input: Record<string, unknown> = {}) => ["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "set_ticket_lifecycle", "close_ticket_for_review"].includes(toolName) || (toolName === "confirm_field_trips_action" && input.action === "location");
+const needsLocation = requiresActionLocation;
 async function authorizedExactPlanTask(session: SessionPayload, scopes: string[], taskId: unknown) {
   requireChatGptReadableTool(session, scopes, 'list_work_hub_tasks');
   const owner = session.vendorId ? `vendor:${session.vendorId}` : session.partnerId ? `partner:${session.partnerId}` : null;
@@ -770,6 +774,10 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
   }
   if (result === null && action.toolName === "manage_work_hub_availability") {
     const receipt = await recoverWorkHubAvailabilityAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && fleetInventoryAction(action.toolName)) {
+    const receipt = await recoverFleetInventoryAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);
   }
   if (result === null && action.toolName === "record_fleet_driver_availability") {
@@ -883,7 +891,7 @@ async function executePreparedAction(reserved: Awaited<ReturnType<typeof authori
     throw error;
   }
 }
-router.get("/actions-client.js", (_req, res) => res.type("application/javascript").send(`document.querySelector('form[data-location="required"]')?.addEventListener('submit', function(event) { if (this.dataset.located === 'yes') return; event.preventDefault(); const form = this; const status = document.getElementById('location-status'); status.textContent = 'Getting your current location…'; navigator.geolocation.getCurrentPosition(function(position) { form.elements.latitude.value = position.coords.latitude; form.elements.longitude.value = position.coords.longitude; form.elements.accuracyMeters.value = position.coords.accuracy; form.dataset.located = 'yes'; form.requestSubmit(); }, function() { status.textContent = 'Location permission is required for this VNDRLY action. Enable location and try again.'; }, {enableHighAccuracy:true,timeout:15000,maximumAge:0}); });`));
+router.get("/actions-client.js", (_req, res) => res.type("application/javascript").send(ACTION_LOCATION_CLIENT));
 router.get("/actions/:actionToken", async (req, res) => {
   try {
     const { token, action } = await authorizedAction(req);
@@ -892,7 +900,7 @@ router.get("/actions/:actionToken", async (req, res) => {
     if (action.state === "outcome_unknown") return page(res, "<p>This action may already have completed. Check the current VNDRLY record before taking another action. V will not submit it again automatically.</p>");
     const nonce = randomBytes(32).toString("base64url");
     res.cookie("vndrly_assistant_action", envelope({ tokenHash: assistantTokenHash(token), nonce, expires: Date.now() + 300_000 }), { httpOnly: true, secure: true, sameSite: "lax", path: "/api/assistant-connection/actions", maxAge: 300_000 });
-    return page(res, `<h2>Approve VNDRLY action</h2><p>${escape(action.toolName.replaceAll("_", " "))}</p><pre>${escape(JSON.stringify(action.arguments, null, 2))}</pre>${action.toolName === "start_paid_travel" ? "<p>This starts paid time with your current location. Continuous trip tracking must be enabled in the VNDRLY mobile app; this browser does not start it.</p>" : ""}<form method="post" data-location="${needsLocation(action.toolName, action.arguments) ? "required" : "optional"}"><input type="hidden" name="nonce" value="${escape(nonce)}"><input type="hidden" name="latitude"><input type="hidden" name="longitude"><input type="hidden" name="accuracyMeters"><button type="submit">Approve and submit</button></form><p id="location-status"></p><script src="/api/assistant-connection/actions-client.js" defer></script>`);
+    return page(res, `<h2>Approve VNDRLY action</h2><p>${escape(action.toolName.replaceAll("_", " "))}</p><pre>${escape(JSON.stringify(action.arguments, null, 2))}</pre>${action.toolName === "start_paid_travel" ? "<p>This starts paid time with your current location. Continuous trip tracking must be enabled in the VNDRLY mobile app; this browser does not start it.</p>" : ""}<form method="post" data-location="${needsLocation(action.toolName, action.arguments) ? "required" : isOperatorGateAction(action.toolName) ? "optional_gate" : "optional"}"><input type="hidden" name="nonce" value="${escape(nonce)}"><input type="hidden" name="latitude"><input type="hidden" name="longitude"><input type="hidden" name="accuracyMeters"><button type="submit">Approve and submit</button></form><p id="location-status"></p><script src="/api/assistant-connection/actions-client.js" defer></script>`);
   } catch (error) { return oauthError(res, error); }
 });
 router.post("/actions/:actionToken", async (req, res) => {
@@ -919,6 +927,10 @@ router.post("/actions/:actionToken", async (req, res) => {
         delete input.latitude; delete input.longitude; delete input.accuracyMeters;
         Object.assign(input, { startLatitude: latitude, startLongitude: longitude, locationSharingActive: false });
       }
+    }
+    if (isOperatorGateAction(reserved.action.toolName) && req.body.latitude !== undefined && req.body.latitude !== "" && req.body.longitude !== undefined && req.body.longitude !== "") {
+      const latitude = Number(req.body.latitude), longitude = Number(req.body.longitude), accuracyMeters = Number(req.body.accuracyMeters);
+      if (Number.isFinite(latitude) && Math.abs(latitude) <= 90 && Number.isFinite(longitude) && Math.abs(longitude) <= 180 && Number.isFinite(accuracyMeters) && accuracyMeters >= 0) Object.assign(input, {latitude, longitude, accuracyMeters});
     }
     const savedResult = await executePreparedAction(reserved, input);
     if (savedResult === null) return page(res, "<p>This action was already submitted. Refresh its approval page for the result.</p>");

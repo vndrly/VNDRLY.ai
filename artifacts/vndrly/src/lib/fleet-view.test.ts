@@ -102,4 +102,19 @@ describe("Fleet view isolation", () => {
       overview.observations[0],
     ]);
   });
+  it("keeps the latest position per authorized run instead of drawing every recorded sample", () => {
+    const earlier = { ...overview.observations[0], recordedAt: "2026-10-15T10:00:00Z" };
+    const latest = { ...earlier, latitude: 36, recordedAt: "2026-10-15T11:00:00Z", freshness: "stale" as const };
+    expect(fleetPositions({ ...overview, observations: [latest, earlier] }, new Set(["own"]))).toEqual([latest]);
+  });
+  it("does not revive an older recent sample after the latest location becomes unavailable", () => {
+    const old = { ...overview.observations[0], recordedAt: "2026-10-15T10:00:00Z" };
+    const latest = { ...old, recordedAt: "2026-10-15T11:00:00Z", freshness: "unavailable" as const };
+    expect(fleetPositions({ ...overview, observations: [old, latest] }, new Set(["own"]))).toEqual([]);
+  });
+  it("shows a vehicle once even when it has positions from several loaded runs", () => {
+    const previous = { ...overview.observations[0], vehicleAssetId: "truck", recordedAt: "2026-10-14T10:00:00Z" };
+    const current = { ...previous, runId: "other", recordedAt: "2026-10-15T10:00:00Z" };
+    expect(fleetPositions({ ...overview, observations: [previous, current] }, new Set(["own", "other"]))).toEqual([current]);
+  });
 });

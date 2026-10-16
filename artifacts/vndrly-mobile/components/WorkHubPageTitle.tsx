@@ -7,7 +7,7 @@ import BrandTitleRow from "@/components/BrandTitleRow";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 
-export default function WorkHubPageTitle({ title }: { title: string }) {
+export default function WorkHubPageTitle({ title, onBack }: { title: string; onBack?: () => void }) {
   const colors = useColors();
   return (
     <View style={{ gap: 12 }}>
@@ -15,7 +15,7 @@ export default function WorkHubPageTitle({ title }: { title: string }) {
       <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
         <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
           <SphereBackButton
-            onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/change-over" as never)}
+            onPress={onBack ?? (() => router.canGoBack() ? router.back() : router.replace("/(tabs)/change-over" as never))}
             size={40}
             testID="work-hub-page-back"
           />

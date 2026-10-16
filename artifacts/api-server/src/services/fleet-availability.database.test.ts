@@ -141,6 +141,7 @@ describe.skipIf(!isolated)(
           responsibleOrgId: vendor.id,
         })
         .returning();
+      await s.pool.query("INSERT INTO asset_attachment_links(asset_id,attachment_type,attachment_id,linked_by_user_id) VALUES($1,'fleet_inventory',$2,$3)", [vehicle.id, String(vendor.id), manager.id]);
       const actor = () => ({
         userId: manager.id,
         companyId: vendor.id,

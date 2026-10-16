@@ -19,6 +19,9 @@ export function fleetConsentUpgradeTools(session: SessionPayload, scopes: readon
   if (overview.capabilities.canDispatch) eligible.add("fleet:dispatch");
   if (overview.capabilities.canDrive) eligible.add("fleet:run");
   if (overview.capabilities.canManage) eligible.add("fleet:review");
+  // The canonical inventory service also accepts current enabled-company vendor administrators
+  // before any Detail or individual Fleet grant exists. This only offers explicit consent.
+  if (overview.capabilities.canManage || (overview.enabled && session.role === "vendor" && session.membershipRole === "admin" && overview.capabilities.canSetup)) eligible.add("fleet:inventory");
   if (overview.capabilities.canMaintain === true) eligible.add("fleet:maintenance");
   if (overview.capabilities.canSetup) eligible.add("fleet:admin");
   const available = new Set([...chatGptReadableTools(session, scopes), ...chatGptActionTools(session, scopes)].map(tool => tool.name));

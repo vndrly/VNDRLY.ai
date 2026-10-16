@@ -238,7 +238,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const inWorkHub = isWorkHubPath(location);
   const inFleet = location === "/fleet" || location.startsWith("/fleet/");
   const fleetNavItems = [
-    ...(fleetAccess.data?.capabilities.canDispatch ? [{ key: "fleet-desk", href: "/fleet", label: fleetText.desk, icon: Gauge }, { key: "fleet-dispatch", href: "/fleet/dispatch", label: fleetText.dispatch, icon: ClipboardList }] : []),
+    ...(fleetAccess.data?.capabilities.canDispatch ? [{ key: "fleet-desk", href: "/fleet", label: fleetText.desk, icon: Gauge }] : []),
     { key: "fleet-map", href: "/fleet/map", label: fleetText.map, icon: MapIcon },
     { key: "fleet-runs", href: "/fleet/runs", label: fleetText.runs, icon: FileText },
     ...(fleetAccess.data?.capabilities.canDrive ? [{ key: "fleet-my-day", href: "/fleet/my-day", label: fleetText.myDay, icon: Users }] : []),
@@ -413,7 +413,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         >
           {inWorkHub && <Link href={getWorkHubReturnPath(sessionStorage.getItem("vndrly.workHub.returnPath"))} onClick={() => setSidebarOpen(false)}><SidebarButton isActive={false} activeOnHover testId="nav-back-to-vndrly" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}><ArrowLeft className="h-4 w-4"/>Back to VNDRLY</SidebarButton></Link>}
           {inWorkHub ? <WorkHubNavigation onNavigate={() => setSidebarOpen(false)} /> : navItems.map((item) => {
-            const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+            const isActive = location === item.href || (item.href !== "/" && item.href !== "/fleet" && location.startsWith(item.href));
             const Icon = item.icon;
             return (
               <React.Fragment key={item.href}>

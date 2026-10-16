@@ -5,6 +5,16 @@ import { fleetConsentChallenge, fleetConsentUpgradeTools, partnerFleetConsentUpg
 const session = {userId: 10, vendorId: 20, role: "field_employee", membershipRole: "field_employee", vendorPeopleId: 30} as SessionPayload;
 const overview = {companyId: 20, enabled: true, roles: ["driver"], capabilities: {canDrive: true, canManage: false, canDispatch: false, canSetup: false}, fleets: [], runs: [], observations: [], unavailableIntegrations: [], generatedAt: new Date().toISOString()} as FleetOverview;
 describe("Fleet consent discovery", () => {
+  it("offers explicit inventory consent to enabled-company administrators before a Detail grant exists", () => {
+    const admin = { ...session, role: "vendor", membershipRole: "admin" } as SessionPayload;
+    const setup = { ...overview, roles: [], capabilities: { ...overview.capabilities, canDrive: false, canSetup: true, canManage: false } };
+    const scopes = ["fleet:admin"];
+    const hints = fleetConsentUpgradeTools(admin, scopes, setup);
+    expect(hints.filter(item => item.scope === "fleet:inventory").map(item => item.tool.name)).toEqual(["create_fleet_inventory_asset", "enroll_fleet_inventory_asset", "edit_fleet_inventory_asset"]);
+    expect(scopes).toEqual(["fleet:admin"]);
+    expect(fleetConsentUpgradeTools(admin, scopes, { ...setup, enabled: false }).some(item => item.scope === "fleet:inventory")).toBe(false);
+    expect(fleetConsentUpgradeTools(admin, ["fleet:inventory"], setup).some(item => item.scope === "fleet:inventory")).toBe(false);
+  });
   it("offers only read-only support consent for trusted nonempty support company choices",()=>{
     const admin={...session,role:"admin",vendorId:undefined} as SessionPayload;
     expect(supportFleetConsentUpgradeTools(admin,[],{companies:[{companyId:20}]}).map(item=>item.tool.name)).toEqual(["query_fleet_support"]);
