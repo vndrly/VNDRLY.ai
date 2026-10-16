@@ -8,6 +8,7 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -34,6 +35,9 @@ export const invoiceLinesTable = pgTable(
     unit: text("unit"),
     unitPrice: numeric("unit_price", { precision: 14, scale: 4 }).notNull(),
     amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    preciseQuantity: numeric("precise_quantity", { precision: 24, scale: 9 }),
+    preciseUnitPrice: numeric("precise_unit_price", { precision: 24, scale: 9 }),
+    fleetBillingMetadata: jsonb("fleet_billing_metadata"),
     taxable: boolean("taxable").notNull().default(true),
     taxState: text("tax_state"),
     taxRate: numeric("tax_rate", { precision: 6, scale: 4 }),

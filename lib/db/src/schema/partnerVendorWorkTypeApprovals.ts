@@ -6,6 +6,7 @@ import {
   numeric,
   timestamp,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -28,6 +29,8 @@ export const partnerVendorWorkTypeApprovalsTable = pgTable(
       .notNull()
       .references(() => workTypesTable.id, { onDelete: "cascade" }),
     approvedUnitPrice: numeric("approved_unit_price", { precision: 12, scale: 2 }),
+    preciseUnitPrice: numeric("precise_unit_price", { precision: 24, scale: 9 }),
+    fleetRateCard: jsonb("fleet_rate_card"),
     approvedUnit: text("approved_unit"),
     approvedCurrency: text("approved_currency").notNull().default("USD"),
     approvedAt: timestamp("approved_at", { withTimezone: true })
