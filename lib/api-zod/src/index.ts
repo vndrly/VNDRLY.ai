@@ -47,3 +47,5 @@ export * from "./form-campaigns";
 export * from "./work-hub-library";
 
 export * from "./safety-readiness";
+export * from "./fleet-details";
+export * from "./fleet-route";

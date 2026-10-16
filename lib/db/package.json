@@ -21,6 +21,7 @@
     "migrate:implementation-a": "tsx src/scripts/apply-implementation-a.ts",
     "migrate:gate-post-coverage": "tsx src/scripts/apply-gate-post-coverage.ts",
     "migrate:fleet-commercial": "tsx src/scripts/apply-fleet-commercial.ts",
+    "migrate:fleet-resources": "tsx src/scripts/apply-fleet-resources.ts",
     "migrate:ios-parity-demo": "tsx src/scripts/apply-ios-parity-demo.ts"
   },
   "dependencies": {

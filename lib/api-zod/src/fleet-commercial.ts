@@ -24,6 +24,16 @@ export const FleetDestinationSchema = z
     active: z.boolean().default(true),
     ownerType: z.enum(["vendor", "partner"]),
     ownerId: z.number().int().positive(),
+    roles: z.array(z.enum(["partner_site", "pickup", "terminal", "disposal", "base", "maintenance", "other"])).min(1).optional(),
+    timeZone: z.string().min(1).max(100).optional(),
+    geofenceRadiusMeters: z.number().positive().max(100000).nullable().optional(),
+    entryPoint: z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180) }).strict().nullable().optional(),
+    contacts: z.array(z.object({ name: z.string().trim().min(1).max(160), phone: z.string().max(60).nullable(), email: z.email().nullable() }).strict()).max(20).optional(),
+    permittedCompanyIds: z.array(z.number().int().positive()).max(200).optional(),
+    appointmentNotes: z.string().max(2000).optional(),
+    requiredPermitReferences: z.array(z.string().trim().min(1).max(200)).max(50).optional(),
+    activeFrom: z.iso.datetime({ offset: true }).nullable().optional(),
+    activeUntil: z.iso.datetime({ offset: true }).nullable().optional(),
   })
   .strict();
 export type FleetDestination = z.infer<typeof FleetDestinationSchema>;

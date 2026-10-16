@@ -11,6 +11,7 @@ export const vendorsTable = pgTable("vendors", {
   nativeOperationsPolicy: jsonb("native_operations_policy").$type<Record<string, unknown>>().notNull().default({}),
   fleetCommercialSettings: jsonb("fleet_commercial_settings"),
   fleetOpsState: jsonb("fleet_ops_state"),
+  fleetResources: jsonb("fleet_resources"),
   name: text("name").notNull(),
   contactName: text("contact_name").notNull(),
   contactEmail: text("contact_email").notNull(),
