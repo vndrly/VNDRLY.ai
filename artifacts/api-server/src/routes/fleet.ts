@@ -20,6 +20,24 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/details", endpoint(req => service.readFleetDetails(actor(req), req.query)));
+router.get("/fleet/details/operations/:operationId", endpoint(req => service.fleetResourceReceipt(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/details/:id/history", endpoint(req => service.fleetResourceHistory(actor(req), "detail", z.uuid().parse(req.params.id), req.query)));
+router.get("/fleet/details/:id", endpoint(req => service.fleetDetailSnapshot(actor(req), z.uuid().parse(req.params.id))));
+router.post("/fleet/details", endpoint(req => service.saveFleetDetail(actor(req), req.body)));
+router.patch("/fleet/details/:id", endpoint(req => {
+  if (req.body?.detail?.id !== z.uuid().parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
+  return service.saveFleetDetail(actor(req), req.body);
+}));
+router.get("/fleet/rig-packages", endpoint(req => service.readFleetRigPackages(actor(req), req.query)));
+router.get("/fleet/rig-packages/operations/:operationId", endpoint(req => service.fleetResourceReceipt(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/rig-packages/:id/history", endpoint(req => service.fleetResourceHistory(actor(req), "rig_package", z.uuid().parse(req.params.id), req.query)));
+router.get("/fleet/rig-packages/:id", endpoint(req => service.fleetRigPackage(actor(req), z.uuid().parse(req.params.id))));
+router.post("/fleet/rig-packages", endpoint(req => service.saveFleetRigPackage(actor(req), req.body)));
+router.patch("/fleet/rig-packages/:id", endpoint(req => {
+  if (req.body?.package?.id !== z.uuid().parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
+  return service.saveFleetRigPackage(actor(req), req.body);
+}));
 router.get("/fleet/inventory", endpoint(req => service.fleetInventory(actor(req), req.query)));
 router.get("/fleet/inventory/operations/:operationId", endpoint(req => service.fleetInventoryReceipt(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/inventory/:assetId", endpoint(req => service.fleetInventoryDetail(actor(req), z.uuid().parse(req.params.assetId))));

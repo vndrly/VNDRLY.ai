@@ -1,6 +1,7 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { attachFleetBilling, createFleetBillingOperations, recordFleetBillingCharge } from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
+import { createFleetDetailsOperations } from "./fleet-details";
 import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
@@ -401,6 +402,7 @@ export function createFleetService(repository: FleetRepository) {
     ...createFleetCommercialOperations(transaction),
     ...createFleetBillingOperations(transaction),
     ...createFleetInventoryOperations(transaction, grantFor, permitted),
+    ...createFleetDetailsOperations(transaction, grantFor),
     recordLocation: locations.record,
     locationObservations: locations.observations,
     locationHistory: locations.history,

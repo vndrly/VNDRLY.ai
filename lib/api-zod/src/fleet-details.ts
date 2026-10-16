@@ -68,3 +68,9 @@ export const FleetResourcesRegistrySchema = z.object({
 }).strict();
 export type FleetResourcesRegistry = z.infer<typeof FleetResourcesRegistrySchema>;
 export const emptyFleetResourcesRegistry = (): FleetResourcesRegistry => ({ version: 1, rigPackages: [], details: [], reservations: [] });
+export const FleetDetailPageSchema = z.object({ details: z.array(FleetDetailSchema), nextCursor: z.uuid().nullable(), canManage: z.boolean() }).strict();
+export type FleetDetailPage = z.infer<typeof FleetDetailPageSchema>;
+export const FleetRigPackagePageSchema = z.object({ rigPackages: z.array(FleetRigPackageSchema), nextCursor: z.uuid().nullable() }).strict();
+export const FleetResourceReceiptSchema = z.object({ operationId: z.uuid(), fingerprint: z.string(), result: z.union([FleetDetailSchema, FleetRigPackageSchema]) }).strict();
+export type FleetResourceReceipt = z.infer<typeof FleetResourceReceiptSchema>;
+export const FleetResourceHistoryPageSchema = z.object({ records: z.array(z.object({ id: z.number().int().positive(), record: z.union([FleetDetailSchema, FleetRigPackageSchema]) }).strict()), nextCursor: z.number().int().positive().nullable() }).strict();
