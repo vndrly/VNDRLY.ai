@@ -4,6 +4,7 @@ import {
   checkFleetInspectionRequirements,
   checkFleetManifestRequirements,
   projectFleetComplianceCheckpoints,
+  fleetRunInspectionMatches,
   type FleetEvidence,
   type FleetRun,
 } from "@workspace/api-zod";
@@ -54,9 +55,7 @@ export function buildFleetReviewPacket(
   const inspection = run.inspections.at(-1);
   const inspectionComplete =
     !!inspection &&
-    inspection.driverUserId === run.driverUserId &&
-    inspection.vehicleAssetId === run.vehicleAssetId &&
-    inspection.trailerAssetId === run.trailerAssetId &&
+    fleetRunInspectionMatches(run,inspection) &&
     inspection.outcome === "passed" &&
     checkFleetInspectionRequirements(
       run.operationalProfile,

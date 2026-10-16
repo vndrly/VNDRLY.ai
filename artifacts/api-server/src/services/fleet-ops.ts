@@ -2,6 +2,9 @@ import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { attachFleetBilling, createFleetBillingOperations, recordFleetBillingCharge } from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
 import { createFleetDetailsOperations } from "./fleet-details";
+import {assignFleetRunDetail,assertFleetRunDetailResources} from "./fleet-run-details";
+import {fleetRunInspectionMatches} from "@workspace/api-zod";
+import {activateFleetReservation,releaseFleetReservation} from "./fleet-reservations";
 import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
@@ -126,15 +129,15 @@ function allowed(
     if (!run.billing) result.push("link_ticket");
   }
   if (!permitted(state, actor, run, "perform_run")) return result;
+  if(run.status==="in_progress" && run.resourceAssignment?.reservation.state==="released")
+    return run.events.at(-1)?.type==="review" && run.events.at(-1)?.details?.decision==="return"?["submit_closeout"]:[];
   if (run.status === "dispatched") result.push("acknowledge");
   if (run.status === "acknowledged") {
     result.push("inspect", "record_meter");
     const inspection = run.inspections.at(-1);
     if (
       inspection?.outcome === "passed" &&
-      inspection.driverUserId === run.driverUserId &&
-      inspection.vehicleAssetId === run.vehicleAssetId &&
-      inspection.trailerAssetId === run.trailerAssetId &&
+      fleetRunInspectionMatches(run,inspection) &&
       run.records.some(
         (r) =>
           r.kind === "meter" &&
@@ -214,7 +217,7 @@ function project(
 async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
   const fleet = state.fleets.find((f) => f.id === run.fleetId);
   if (
-    ![run.vehicleAssetId, run.trailerAssetId]
+    !run.resourceAssignment && ![run.vehicleAssetId, run.trailerAssetId]
       .filter(Boolean)
       .every((id) => fleet?.equipmentAssetIds.includes(id!))
   )
@@ -231,12 +234,17 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
     [run.driverUserId, run.companyId],
   );
   if (!person.rows.length) throw new FleetError("fleet.driver_unavailable");
+  if(run.resourceAssignment?.reservation.state==="released" && run.status==="in_progress"){
+    await requireFleetRunCommercialAuthority(client,run);
+    return; // Office corrections add recorded facts; they do not reuse released equipment.
+  }
   const stopWork = await client.query(
     "SELECT id FROM safety_events WHERE site_location_id=ANY($1::int[]) AND is_stop_work=true AND closed_at IS NULL",
     [run.siteIds],
   );
   if (stopWork.rows.length) throw new FleetError("fleet.site_stop_work");
-  for (const assetId of [run.vehicleAssetId, run.trailerAssetId].filter(
+  if(run.resourceAssignment)await assertFleetRunDetailResources({state,client},run);
+  for (const assetId of (run.resourceAssignment?[]:[run.vehicleAssetId, run.trailerAssetId]).filter(
     Boolean,
   )) {
     const asset = await client.query(
@@ -272,7 +280,7 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
     throw new FleetError("fleet.site_forbidden", 403);
   await requireFleetRunCommercialAuthority(client,run);
   if (
-    state.runs.some(
+    !run.resourceAssignment && state.runs.some(
       (other) =>
         other.id !== run.id &&
         ["dispatched", "acknowledged", "in_progress"].includes(other.status) &&
@@ -756,6 +764,8 @@ export function createFleetService(repository: FleetRepository) {
       transaction(
         Object.assign(actor, {
           operationId: CreateFleetRunSchema.parse(input).operationId,
+          schedulingRunId:undefined,
+          schedulingDriverUserIds:[CreateFleetRunSchema.parse(input).driverUserId],
         }),
         async (state, client) => {
           const body = CreateFleetRunSchema.parse(input);
@@ -796,7 +806,7 @@ export function createFleetService(repository: FleetRepository) {
             body.stops.some((s, i) => s.sequence !== i)
           )
             throw new FleetError("fleet.invalid_stops", 400);
-          const { operationId: _operationId, billing: _billing, ...runFields } = body;
+          const { operationId: _operationId, billing: _billing, detailSelection, ...runFields } = body;
           const run: FleetRun = {
             ...runFields,
             id: randomUUID(),
@@ -817,6 +827,7 @@ export function createFleetService(repository: FleetRepository) {
             allowedActions: [],
           };
           await attachFleetBilling(client,actor,state,run,body.billing);
+          if(detailSelection)await assignFleetRunDetail({state,client},actor,run,detailSelection);
           await eligible(state, client, run);
           const fleetCompliance=await assessFleetActionPolicy(client,actor,{run,action:"create",
             requiredCertifications:fleet.requiredCertifications,policyAt:new Date().toISOString()});
@@ -826,7 +837,7 @@ export function createFleetService(repository: FleetRepository) {
             type: "created",
             actorUserId: actor.userId,
             recordedAt: new Date().toISOString(),
-            details:{fleetCompliance},
+            details:{fleetCompliance,...(run.resourceAssignment?{resourceAssignment:structuredClone(run.resourceAssignment)}:{})},
           });
           state.runs.push(run);
           state.operations.push({
@@ -846,10 +857,12 @@ export function createFleetService(repository: FleetRepository) {
         Object.assign(actor, {
           operationId: FleetActionInputSchema.parse(input).operationId,
           runId,
-          ...(["dispatch", "reassign"].includes(requested.action) ? { schedulingRunId: runId, schedulingDriverUserIds: requested.driverUserId ? [requested.driverUserId] : [] } : {}),
+          schedulingRunId:runId,schedulingDriverUserIds:requested.driverUserId?[requested.driverUserId]:[],
         }),
         async (state, client) => {
           const body = FleetActionInputSchema.parse(input);
+          if(body.inspectedAssetIds && body.action!=="inspect")throw new FleetError("fleet.inspection_fields_required",400);
+          if(body.detailSelection && body.action!=="reassign")throw new FleetError("fleet.unexpected_assignment",400);
           if(body.destinationId&&body.action!=="start")throw new FleetError("fleet.unexpected_destination",400);
           if (body.capturedAt) {
             const age = Date.now() - Date.parse(body.capturedAt);
@@ -1006,6 +1019,8 @@ export function createFleetService(repository: FleetRepository) {
           else if (body.action === "inspect") {
             if (!body.inspectionOutcome || !body.notes)
               throw new FleetError("fleet.inspection_fields_required", 400);
+            if(run.resourceAssignment && !fleetRunInspectionMatches(run,{driverUserId:run.driverUserId,vehicleAssetId:run.vehicleAssetId,trailerAssetId:run.trailerAssetId,inspectedAssetIds:body.inspectedAssetIds}))
+              throw new FleetError("fleet.inspection_components_required",400);
             if (!checkFleetInspectionRequirements(run.operationalProfile, body.inspectionResponses, body.inspectionOutcome)) throw new FleetError("fleet.inspection_fields_required", 400);
             if (run.inspections.length >= 100)
               throw new FleetError("fleet.store_capacity_reached");
@@ -1018,6 +1033,7 @@ export function createFleetService(repository: FleetRepository) {
                 body.notes,
               );
             run.inspections.push({
+              ...(body.inspectedAssetIds?{inspectedAssetIds:body.inspectedAssetIds}:{}),
               responses: body.inspectionResponses,
               driverUserId: run.driverUserId,
               vehicleAssetId: run.vehicleAssetId,
@@ -1032,6 +1048,8 @@ export function createFleetService(repository: FleetRepository) {
             await assertRequiredWorkClear(client, run.driverUserId, { type: "vendor", id: actor.companyId });
             await selectFleetRunDestination(client,actor,state,run,body.destinationId);
             await eligible(state, client, run);
+            const activeReservation=await activateFleetReservation({state,client},actor,run);
+            if(activeReservation && run.resourceAssignment)run.resourceAssignment.reservation=activeReservation;
             run.status = "in_progress";
             run.phase = "traveling_to_pickup";
           } else if (body.action === "arrive_stop") {
@@ -1116,11 +1134,22 @@ export function createFleetService(repository: FleetRepository) {
             }
           } else {
             if (body.action === "reassign") {
+              if(run.resourceAssignment && !body.detailSelection &&
+                ((body.driverUserId!==undefined && body.driverUserId!==run.driverUserId) ||
+                (body.vehicleAssetId!==undefined && body.vehicleAssetId!==run.vehicleAssetId) ||
+                (body.trailerAssetId!==undefined && body.trailerAssetId!==run.trailerAssetId)))
+                throw new FleetError("fleet.detail_selection_required",400);
+              if(body.detailSelection && run.resourceAssignment){
+                if(body.detailSelection.returnPolicy!==run.resourceAssignment.returnPolicy)throw new FleetError("fleet.return_policy_locked",409);
+                await releaseFleetReservation({state,client},actor,{runId:run.id,kind:"reassignment",
+                  reason:body.reason??"Office changed the Detail before start",occurredAt:new Date().toISOString()});
+              }
               run.driverUserId = body.driverUserId ?? run.driverUserId;
               run.vehicleAssetId = body.vehicleAssetId ?? run.vehicleAssetId;
               if (body.trailerAssetId !== undefined)
                 run.trailerAssetId = body.trailerAssetId;
               run.status = "draft";
+              if(body.detailSelection)await assignFleetRunDetail({state,client},actor,run,body.detailSelection);
             }
             await eligible(state, client, run);
             if (["dispatch", "reassign"].includes(body.action))
@@ -1128,6 +1157,11 @@ export function createFleetService(repository: FleetRepository) {
             if (body.action === "dispatch") run.status = "dispatched";
           }
           validateCommercialStops(run);
+          if(run.resourceAssignment && ["submit_closeout","cancel"].includes(body.action)){
+            const released=await releaseFleetReservation({state,client},actor,{runId:run.id,
+              reason:body.reason??(body.action==="submit_closeout"?"Driver closed the operational run":"Run cancelled"),occurredAt:new Date().toISOString()});
+            if(released)run.resourceAssignment.reservation=released;
+          }
           const fleetCompliance=await assessFleetActionPolicy(client,actor,{run,action:body.action,
             requiredCertifications:state.fleets.find(f=>f.id===run.fleetId)?.requiredCertifications??[],
             policyAt:new Date().toISOString()});

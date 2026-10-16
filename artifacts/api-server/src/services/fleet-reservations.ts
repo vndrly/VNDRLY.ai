@@ -6,6 +6,7 @@ import {
   FleetReservationSchema,
   type FleetDetailSnapshot,
   type FleetReservation,
+  type FleetRun,
 } from "@workspace/api-zod";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError } from "./fleet-repository";
@@ -57,13 +58,25 @@ export async function reserveFleetDetail(
     startAt: string;
     plannedEndAt: string | null;
     timeZone: string;
+    retainRunSnapshot?: boolean;
   },
 ): Promise<FleetReservation> {
   const snapshot = FleetDetailSnapshotSchema.parse(input.detailSnapshot);
   if (actor.readOnly || snapshot.detail.companyId !== actor.companyId)
     throw new FleetError("fleet.dispatch_required", 403);
   const registry = await readFleetResourceRegistry(tx.client, actor.companyId);
-  const detail = registry.details.find((row) => row.id === snapshot.detail.id);
+  const savedRun = tx.state.runs.find((row) => row.id === input.runId);
+  const retain =
+    input.retainRunSnapshot === true &&
+    savedRun &&
+    ["draft", "dispatched", "acknowledged"].includes(savedRun.status) &&
+    JSON.stringify(savedRun.resourceAssignment?.snapshot) ===
+      JSON.stringify(snapshot);
+  if (input.retainRunSnapshot && !retain)
+    throw new FleetError("fleet.detail_revision_conflict");
+  const detail = retain
+    ? snapshot.detail
+    : registry.details.find((row) => row.id === snapshot.detail.id);
   if (
     !detail ||
     JSON.stringify(FleetDetailSchema.parse(detail)) !==
@@ -94,9 +107,9 @@ export async function reserveFleetDetail(
   )
     throw new FleetError("fleet.dispatch_required", 403);
   if (snapshot.rigPackage) {
-    const current = registry.rigPackages.find(
-      (row) => row.id === snapshot.rigPackage!.id,
-    );
+    const current = retain
+      ? snapshot.rigPackage
+      : registry.rigPackages.find((row) => row.id === snapshot.rigPackage!.id);
     if (
       !current ||
       current.archivedAt ||
@@ -190,6 +203,7 @@ export async function reserveFleetDetail(
       trailerAssetId: string | null;
       status: string;
       version: number;
+      resourceAssignment?: { version: number };
     }
   >();
   for (const row of [
@@ -205,6 +219,7 @@ export async function reserveFleetDetail(
     [...latest.values()].some(
       (row) =>
         row.id !== candidate.runId &&
+        row.resourceAssignment?.version !== 2 &&
         ["dispatched", "acknowledged", "in_progress"].includes(row.status) &&
         (row.driverUserId === candidate.driverUserId ||
           [row.vehicleAssetId, row.trailerAssetId].some(
@@ -238,12 +253,18 @@ export async function reserveFleetDetail(
 export async function releaseFleetReservation(
   tx: FleetResourcesTransaction,
   actor: FleetActor,
-  input: { runId: string; reason: string; occurredAt: string },
+  input: {
+    runId: string;
+    reason: string;
+    occurredAt: string;
+    kind?: "reassignment" | "reschedule" | "replacement";
+  },
 ): Promise<FleetReservation | null> {
   if (actor.readOnly) throw new FleetError("fleet.action_forbidden", 403);
   const run = tx.state.runs.find((row) => row.id === input.runId);
   if (
     !run ||
+    run.companyId !== actor.companyId ||
     (run.driverUserId !== actor.userId &&
       !tx.state.grants.some(
         (row) =>
@@ -255,8 +276,42 @@ export async function releaseFleetReservation(
       ))
   )
     throw new FleetError("fleet.action_forbidden", 403);
-  if (!["submitted_for_review", "completed", "cancelled"].includes(run.status))
+  const beforeStart =
+    input.kind && ["reassignment", "reschedule"].includes(input.kind);
+  if (
+    beforeStart &&
+    (!["draft", "dispatched", "acknowledged"].includes(run.status) ||
+      !tx.state.grants.some(
+        (grant) =>
+          grant.userId === actor.userId &&
+          grant.fleetIds.includes(run.fleetId) &&
+          grant.roles.some((role) =>
+            ["fleet_manager", "dispatcher"].includes(role),
+          ),
+      ))
+  )
+    throw new FleetError("fleet.action_forbidden", 403);
+  const replacing =
+    input.kind === "replacement" &&
+    run.status === "in_progress" &&
+    run.phase === "paused" &&
+    actor.userId === run.driverUserId;
+  if (
+    !beforeStart &&
+    !replacing &&
+    !["submitted_for_review", "completed", "cancelled"].includes(run.status)
+  )
     throw new FleetError("fleet.run_not_closed");
+  if (
+    !beforeStart &&
+    !replacing &&
+    run.status !== "cancelled" &&
+    run.resourceAssignment?.returnPolicy === "return_required" &&
+    (run.stops.at(-1)?.kind !== "return" ||
+      !run.visitedStopIds.includes(run.stops.at(-1)!.id) ||
+      run.currentStopId !== null)
+  )
+    throw new FleetError("fleet.return_required");
   const registry = await readFleetResourceRegistry(tx.client, actor.companyId);
   const reservation = registry.reservations.find(
     (row) => row.runId === input.runId,
@@ -264,7 +319,7 @@ export async function releaseFleetReservation(
   if (!reservation) return null;
   const released = FleetReservationSchema.parse({
     ...reservation,
-    state: run.status === "cancelled" ? "cancelled" : "released",
+    state: beforeStart || run.status === "cancelled" ? "cancelled" : "released",
     version: reservation.version + 1,
     actualReleasedAt: input.occurredAt,
     releaseReason: input.reason,
@@ -281,4 +336,61 @@ export async function releaseFleetReservation(
   );
   await writeFleetResourceRegistry(tx.client, actor, registry);
   return released;
+}
+
+export async function activateFleetReservation(
+  tx: FleetResourcesTransaction,
+  actor: FleetActor,
+  run: FleetRun,
+): Promise<FleetReservation | null> {
+  const assignment = run.resourceAssignment;
+  if (!assignment) return null;
+  if (
+    actor.readOnly ||
+    actor.companyId !== run.companyId ||
+    actor.userId !== run.driverUserId
+  )
+    throw new FleetError("fleet.action_forbidden", 403);
+  const registry = await readFleetResourceRegistry(tx.client, actor.companyId);
+  const current = registry.reservations.find(
+    (row) => row.id === assignment.reservation.id && row.runId === run.id,
+  );
+  if (!current || current.version !== assignment.reservation.version)
+    throw new FleetError("fleet.reservation_revision_conflict");
+  if (current.state === "active") return current;
+  const now = new Date().toISOString();
+  const candidate = FleetReservationSchema.parse({
+    ...current,
+    state: "active",
+    version: current.version + 1,
+    startAt:
+      Date.parse(now) < Date.parse(current.startAt) ? now : current.startAt,
+    plannedEndAt:
+      current.plannedEndAt && Date.parse(current.plannedEndAt) > Date.parse(now)
+        ? current.plannedEndAt
+        : null,
+  });
+  const found = await tx.client.query(
+    "SELECT tool_output FROM (SELECT DISTINCT ON(target_id) target_id,id,tool_output FROM assistant_action_audit WHERE target_type='fleet-reservation' ORDER BY target_id,id DESC) latest WHERE tool_output->>'state' IN ('reserved','active') AND (tool_output->>'driverUserId'=$1::text OR tool_output->'assetIds' ?| $2::text[])",
+    [current.driverUserId, current.assetIds],
+  );
+  if (
+    fleetReservationConflicts(
+      candidate,
+      found.rows.map((row) => FleetReservationSchema.parse(row.tool_output)),
+    ).length
+  )
+    throw new FleetError("fleet.reservation_conflict");
+  registry.reservations = registry.reservations.map((row) =>
+    row.id === candidate.id ? candidate : row,
+  );
+  await appendFleetResourceRecord(
+    tx.client,
+    actor,
+    "fleet-reservation",
+    candidate.id,
+    candidate,
+  );
+  await writeFleetResourceRegistry(tx.client, actor, registry);
+  return candidate;
 }

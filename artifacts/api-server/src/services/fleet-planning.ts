@@ -4,6 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
+import {rescheduleFleetRunDetail} from "./fleet-run-details";
 type Transaction = <T>(
   actor: FleetActor,
   operation: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -27,7 +28,7 @@ export function createFleetPlanningOperations(
   return {
     editDraft: (actor: FleetActor, runId: string, input: unknown) => {
       const body = FleetDraftEditSchema.parse(input),
-        bound = { ...actor, runId, operationId: body.operationId };
+        bound = { ...actor, runId, operationId: body.operationId,schedulingRunId:runId,schedulingDriverUserIds:[] };
       return transaction(bound, async (state, client) => {
         const run = state.runs.find((row) => row.id === runId);
         if (!run || !permitted(state, bound, run, "dispatch"))
@@ -81,6 +82,7 @@ export function createFleetPlanningOperations(
         if(run.billing && (next.stops[0]?.kind!=="pickup" || next.stops[0].siteId!==run.stops[0].siteId))
           throw new FleetError("fleet.billing_ticket_mismatch",409);
         await eligible(state, client, next);
+        if(next.resourceAssignment && body.schedule!==undefined)await rescheduleFleetRunDetail({state,client},bound,next);
         Object.assign(run, next);
         run.version++;
         run.events.push({

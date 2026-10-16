@@ -8,7 +8,9 @@ import {
 } from "./fleet-repository";
 import type { FleetActor } from "./fleet-ops";
 import type { PoolClient } from "pg";
-import {FleetRunSchema} from "@workspace/api-zod";
+import { FleetRunSchema } from "@workspace/api-zod";
+import { createFleetService } from "./fleet-ops";
+import { databaseFleetRepository } from "./fleet-repository";
 
 async function fixture() {
   assertFreshLocalTestDatabaseEnvironment(process.env);
@@ -194,6 +196,285 @@ async function fixture() {
 }
 
 describe("canonical Detail persistence", () => {
+  it("binds canonical runs to all components, preserves revisions, and releases only after the chosen return without waiting for office", async () => {
+    const f = await fixture(),
+      tag = randomUUID();
+    const partner = (
+      await f.pool.query(
+        "INSERT INTO partners(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",
+        [`Detail customer ${tag}`, `${tag}@example.invalid`],
+      )
+    ).rows[0];
+    const site = (
+      await f.pool.query(
+        "INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code,afe) VALUES($1,'Synthetic pad','Synthetic',35,-97,$2,'A1') RETURNING id",
+        [partner.id, tag],
+      )
+    ).rows[0];
+    const work = (
+      await f.pool.query(
+        "INSERT INTO work_types(name,category) VALUES($1,'haul') RETURNING id",
+        [`Detail haul ${tag}`],
+      )
+    ).rows[0];
+    await f.pool.query(
+      "INSERT INTO vendor_work_types(vendor_id,work_type_id,unit,unit_price) VALUES($1,$2,'per_job','1.00')",
+      [f.vendor.id, work.id],
+    );
+    await f.pool.query(
+      "INSERT INTO site_work_assignments(vendor_id,site_location_id,work_type_id,afe) VALUES($1,$2,$3,'A1')",
+      [f.vendor.id, site.id, work.id],
+    );
+    await f.pool.query(
+      "INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')",
+      [partner.id, f.vendor.id],
+    );
+    await f.pool.query(
+      "INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id) VALUES($1,$2,$3)",
+      [partner.id, f.vendor.id, work.id],
+    );
+    const state = FleetStateSchema.parse(
+      (
+        await f.pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1", [
+          f.vendor.id,
+        ])
+      ).rows[0].fleet_ops_state,
+    );
+    state.fleets[0].siteIds = [site.id];
+    for (const grant of state.grants) grant.siteIds = [site.id];
+    await f.pool.query(
+      "UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",
+      [f.vendor.id, JSON.stringify(state)],
+    );
+    const actors: FleetActor[] = [];
+    for (const user of f.staff) {
+      const membership = (
+        await f.pool.query(
+          "SELECT id,role FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2",
+          [user.id, f.vendor.id],
+        )
+      ).rows[0];
+      actors.push({
+        ...f.actor,
+        userId: user.id,
+        activeMembershipId: membership.id,
+        membershipRole: membership.role,
+        sv: user.sessionVersion,
+      });
+    }
+    const packages = await Promise.all(
+      [0, 1].map((index) =>
+        f.service.saveFleetRigPackage(f.actor, f.packageInput(index)),
+      ),
+    );
+    const details = await Promise.all(
+      packages.map((rig, index) =>
+        f.service.saveFleetDetail(f.actor, f.detailInput(index, rig.id)),
+      ),
+    );
+    const service = createFleetService(databaseFleetRepository);
+    const input = (index: number) => ({
+      operationId: randomUUID(),
+      fleetId: f.groupId,
+      title: "Synthetic round trip",
+      driverUserId: details[index].driverUserId,
+      vehicleAssetId: details[index].vehicleAssetId,
+      trailerAssetId: f.assets[2 + index].id,
+      detailSelection: {
+        version: 2,
+        detailId: details[index].id,
+        detailVersion: 1,
+        timeZone: "America/Chicago",
+        returnPolicy: "return_required",
+      },
+      billing: {
+        mode: "new_ticket",
+        workTypeId: work.id,
+        afeNumber: "A1",
+        workDate: "2026-10-16",
+      },
+      stops: ["pickup", "delivery", "return"].map((kind, sequence) => ({
+        id: randomUUID(),
+        kind,
+        sequence,
+        siteId: site.id,
+      })),
+    });
+    let run = await service.create(actors[0], input(0));
+    expect(run.resourceAssignment?.reservation.assetIds).toEqual([
+      f.assets[0].id,
+      f.assets[2].id,
+      f.assets[4].id,
+    ]);
+    await expect(service.create(actors[0], input(1))).rejects.toMatchObject({
+      code: "fleet.reservation_conflict",
+    });
+    expect(
+      (
+        await f.pool.query(
+          "SELECT count(*)::int AS count FROM tickets WHERE vendor_id=$1",
+          [f.vendor.id],
+        )
+      ).rows[0].count,
+    ).toBe(1);
+    await f.service.saveFleetDetail(f.actor, {
+      operationId: randomUUID(),
+      expectedVersion: 1,
+      detail: { ...details[0], version: 2, name: "Changed future default" },
+    });
+    const act = async (action: string, extra: Record<string, unknown> = {}) => {
+      run = await service.action(
+        ["dispatch", "review"].includes(action) ? actors[0] : actors[1],
+        run.id,
+        {
+          operationId: randomUUID(),
+          expectedVersion: run.version,
+          action,
+          ...extra,
+        },
+      );
+    };
+    await act("dispatch");
+    await act("acknowledge");
+    expect(run.resourceAssignment?.snapshot.detail.version).toBe(1);
+    await expect(
+      act("inspect", {
+        inspectionOutcome: "passed",
+        notes: "Incomplete component coverage",
+      }),
+    ).rejects.toMatchObject({ code: "fleet.inspection_components_required" });
+    await act("inspect", {
+      inspectionOutcome: "passed",
+      notes: "Actually inspected every component",
+      inspectedAssetIds: [f.assets[0].id, f.assets[2].id, f.assets[4].id],
+    });
+    await act("record_meter", {
+      reading: 100,
+      unit: "miles",
+      notes: "Actual meter",
+    });
+    const hold = (
+      await f.pool.query(
+        "INSERT INTO asset_holds(asset_id,reason,placed_by_user_id) VALUES($1,'Synthetic actual dolly hold',$2) RETURNING id",
+        [f.assets[4].id, actors[0].userId],
+      )
+    ).rows[0];
+    await expect(act("start")).rejects.toMatchObject({
+      code: "fleet.equipment_on_hold",
+    });
+    await f.pool.query(
+      "UPDATE asset_holds SET released_at=NOW(),released_by_user_id=$2 WHERE id=$1",
+      [hold.id, actors[0].userId],
+    );
+    await act("start");
+    expect(run.resourceAssignment?.reservation.state).toBe("active");
+    const loadId = randomUUID();
+    await act("arrive_stop", { stopId: run.stops[0].id });
+    await act("record_load", {
+      loadId,
+      commodity: "Water",
+      quantity: 1,
+      unit: "bbl",
+      manifestReference: "Synthetic pickup",
+    });
+    await act("depart_stop", { stopId: run.stops[0].id });
+    await act("arrive_stop", { stopId: run.stops[1].id });
+    await act("record_delivery", {
+      loadId,
+      deliveryReference: "Synthetic delivered",
+    });
+    await act("depart_stop", { stopId: run.stops[1].id });
+    await act("record_meter", {
+      reading: 110,
+      unit: "miles",
+      notes: "Actual intermediate meter",
+    });
+    await expect(act("submit_closeout")).rejects.toMatchObject({
+      code: "fleet.action_forbidden",
+    });
+    expect(run.resourceAssignment?.reservation.state).toBe("active");
+    await act("arrive_stop", { stopId: run.stops[2].id });
+    await act("depart_stop", { stopId: run.stops[2].id });
+    await act("submit_closeout");
+    expect(run.status).toBe("submitted_for_review");
+    expect(run.resourceAssignment?.reservation.state).toBe("released");
+    let next = await service.create(actors[0], input(1));
+    expect(next.resourceAssignment?.reservation.state).toBe("reserved");
+    await act("review", {
+      decision: "return",
+      reason: "Please clarify the receipt notes",
+    });
+    expect(run.allowedActions).toEqual([]); // Office cannot perform the driver's correction.
+    run = await service.detail(actors[1], run.id);
+    expect(run.allowedActions).toEqual(["submit_closeout"]);
+    await act("submit_closeout", {
+      notes: "Driver clarified recorded receipt; no new physical trip",
+    });
+    expect(run.resourceAssignment?.reservation.state).toBe("released");
+    const original = structuredClone(next.resourceAssignment);
+    const reassignment = {
+      operationId: randomUUID(),
+      expectedVersion: next.version,
+      action: "reassign",
+      driverUserId: details[0].driverUserId,
+      vehicleAssetId: details[0].vehicleAssetId,
+      trailerAssetId: f.assets[2].id,
+      detailSelection: { ...input(0).detailSelection, detailVersion: 2 },
+    };
+    await expect(
+      service.action(actors[0], next.id, {
+        ...reassignment,
+        detailSelection: {
+          ...reassignment.detailSelection,
+          detailId: randomUUID(),
+        },
+      }),
+    ).rejects.toMatchObject({ code: "fleet.detail_not_found" });
+    expect(
+      (await service.detail(actors[0], next.id)).resourceAssignment,
+    ).toEqual(original);
+    next = await service.action(actors[0], next.id, reassignment);
+    expect(next.resourceAssignment?.snapshot.detail).toMatchObject({
+      id: details[0].id,
+      version: 2,
+    });
+    expect(next.resourceAssignment?.reservation.id).not.toBe(
+      original?.reservation.id,
+    );
+    const start = new Date(Date.now() + 86400000),
+      end = new Date(start.getTime() + 3600000);
+    next = await service.editDraft(actors[0], next.id, {
+      operationId: randomUUID(),
+      expectedVersion: next.version,
+      schedule: {
+        plannedStartAt: start.toISOString(),
+        plannedEndAt: end.toISOString(),
+        timezone: "America/Chicago",
+      },
+    });
+    expect(next.resourceAssignment?.reservation).toMatchObject({
+      startAt: start.toISOString(),
+      plannedEndAt: end.toISOString(),
+    });
+    next = await service.action(actors[0], next.id, {
+      operationId: randomUUID(),
+      expectedVersion: next.version,
+      action: "cancel",
+      reason: "Office cancelled planned work",
+    });
+    expect(next.resourceAssignment?.reservation.state).toBe("cancelled");
+    expect(
+      (
+        await f.pool.query(
+          "SELECT current_holder_user_id,status FROM assets WHERE id=ANY($1::uuid[])",
+          [f.assets.map((row) => row.id)],
+        )
+      ).rows.every(
+        (row) =>
+          row.current_holder_user_id === null && row.status === "available",
+      ),
+    ).toBe(true);
+  });
   it("does not let a scoped manager read, replay or overwrite another group's package", async () => {
     const f = await fixture(),
       input = f.packageInput(0);
@@ -332,31 +613,98 @@ describe("canonical Detail persistence", () => {
       rejected && rejected.status === "rejected" ? rejected.reason.code : null,
     ).toBe("fleet.reservation_conflict");
   });
-  it("uses canonical UUID casing for resource reads and operation receipts",async()=>{
-    const f=await fixture(),input=f.packageInput(0);
-    const rig=await f.service.saveFleetRigPackage(f.actor,input);
-    expect(await f.service.fleetRigPackage(f.actor,rig.id.toUpperCase())).toMatchObject({id:rig.id});
-    expect(await f.service.fleetResourceReceipt(f.actor,input.operationId.toUpperCase())).toMatchObject({operationId:input.operationId});
-    const detail=await f.service.saveFleetDetail(f.actor,f.detailInput(0,rig.id));
-    expect((await f.service.fleetDetailSnapshot(f.actor,detail.id.toUpperCase())).detail.id).toBe(detail.id);
+  it("uses canonical UUID casing for resource reads and operation receipts", async () => {
+    const f = await fixture(),
+      input = f.packageInput(0);
+    const rig = await f.service.saveFleetRigPackage(f.actor, input);
+    expect(
+      await f.service.fleetRigPackage(f.actor, rig.id.toUpperCase()),
+    ).toMatchObject({ id: rig.id });
+    expect(
+      await f.service.fleetResourceReceipt(
+        f.actor,
+        input.operationId.toUpperCase(),
+      ),
+    ).toMatchObject({ operationId: input.operationId });
+    const detail = await f.service.saveFleetDetail(
+      f.actor,
+      f.detailInput(0, rig.id),
+    );
+    expect(
+      (await f.service.fleetDetailSnapshot(f.actor, detail.id.toUpperCase()))
+        .detail.id,
+    ).toBe(detail.id);
   });
-  it.each(["same_company","other_company"])("refuses a Detail reservation against an active legacy run in %s",async(where)=>{
-    const f=await fixture(),rig=await f.service.saveFleetRigPackage(f.actor,f.packageInput(0));
-    const detail=await f.service.saveFleetDetail(f.actor,f.detailInput(0,rig.id));
-    const snapshot=await f.service.fleetDetailSnapshot(f.actor,detail.id);
-    let companyId=f.actor.companyId;
-    if(where==="other_company")companyId=(await f.pool.query("INSERT INTO vendors(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",[`Other ${randomUUID()}`,`${randomUUID()}@example.invalid`])).rows[0].id;
-    const legacy=FleetRunSchema.parse({id:randomUUID(),companyId,fleetId:randomUUID(),title:"Private active legacy work",
-      driverUserId:detail.driverUserId,vehicleAssetId:where==="same_company"?detail.vehicleAssetId:randomUUID(),trailerAssetId:null,
-      siteIds:[9],status:"in_progress",phase:null,version:1,stops:[{id:randomUUID(),siteId:9,kind:"pickup",sequence:0}],
-      loads:[],records:[],inspections:[],currentStopId:null,visitedStopIds:[],events:[],linkedTicketId:null,allowedActions:[]});
-    if(where==="other_company")await f.pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[companyId,JSON.stringify({...emptyFleetState(),enabled:true,runs:[legacy]})]);
-    await expect(f.transaction({...f.actor,schedulingDriverUserIds:[detail.driverUserId]},(state,client)=>{
-      if(where==="same_company")state.runs.push(legacy);
-      return f.module.reserveFleetDetail({state,client},f.actor,{runId:randomUUID(),detailSnapshot:snapshot,
-        startAt:"2026-10-16T12:00:00Z",plannedEndAt:null,timeZone:"America/Chicago"});
-    })).rejects.toMatchObject({code:"fleet.reservation_conflict"});
-  });
+  it.each(["same_company", "other_company"])(
+    "refuses a Detail reservation against an active legacy run in %s",
+    async (where) => {
+      const f = await fixture(),
+        rig = await f.service.saveFleetRigPackage(f.actor, f.packageInput(0));
+      const detail = await f.service.saveFleetDetail(
+        f.actor,
+        f.detailInput(0, rig.id),
+      );
+      const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id);
+      let companyId = f.actor.companyId;
+      if (where === "other_company")
+        companyId = (
+          await f.pool.query(
+            "INSERT INTO vendors(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",
+            [`Other ${randomUUID()}`, `${randomUUID()}@example.invalid`],
+          )
+        ).rows[0].id;
+      const legacy = FleetRunSchema.parse({
+        id: randomUUID(),
+        companyId,
+        fleetId: randomUUID(),
+        title: "Private active legacy work",
+        driverUserId: detail.driverUserId,
+        vehicleAssetId:
+          where === "same_company" ? detail.vehicleAssetId : randomUUID(),
+        trailerAssetId: null,
+        siteIds: [9],
+        status: "in_progress",
+        phase: null,
+        version: 1,
+        stops: [{ id: randomUUID(), siteId: 9, kind: "pickup", sequence: 0 }],
+        loads: [],
+        records: [],
+        inspections: [],
+        currentStopId: null,
+        visitedStopIds: [],
+        events: [],
+        linkedTicketId: null,
+        allowedActions: [],
+      });
+      if (where === "other_company")
+        await f.pool.query(
+          "UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",
+          [
+            companyId,
+            JSON.stringify({
+              ...emptyFleetState(),
+              enabled: true,
+              runs: [legacy],
+            }),
+          ],
+        );
+      await expect(
+        f.transaction(
+          { ...f.actor, schedulingDriverUserIds: [detail.driverUserId] },
+          (state, client) => {
+            if (where === "same_company") state.runs.push(legacy);
+            return f.module.reserveFleetDetail({ state, client }, f.actor, {
+              runId: randomUUID(),
+              detailSnapshot: snapshot,
+              startAt: "2026-10-16T12:00:00Z",
+              plannedEndAt: null,
+              timeZone: "America/Chicago",
+            });
+          },
+        ),
+      ).rejects.toMatchObject({ code: "fleet.reservation_conflict" });
+    },
+  );
   it("refuses a supplied snapshot that changes components without changing the saved revision", async () => {
     const f = await fixture(),
       rig = await f.service.saveFleetRigPackage(f.actor, f.packageInput(0));

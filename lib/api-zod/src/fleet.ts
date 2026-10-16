@@ -3,6 +3,8 @@ import { FleetCargoMarkerSchema } from "./fleet-cargo";
 import { FleetReplacementMarkerSchema } from "./fleet-replacement";
 import { FleetScheduleSchema, FleetOperationalProfileSchema, FleetInspectionResponsesSchema, FleetManifestValuesSchema } from "./fleet-planning";
 import { z } from "zod/v4";
+import {FleetDetailSelectionSchema,FleetResourceAssignmentSchema} from "./fleet-run-assignment";
+import {FleetCanonicalIdSchema} from "./fleet-details";
 import { FleetAvailabilitySchema } from "./fleet-availability";
 export const FleetRoleSchema = z.enum([
   "fleet_manager",
@@ -62,6 +64,7 @@ export const FleetStopSchema = z
   .strict();
 export const FleetInspectionSchema = z
   .object({
+    inspectedAssetIds:z.array(FleetCanonicalIdSchema).min(1).max(101).optional(),
     responses: FleetInspectionResponsesSchema.optional(),
     driverUserId: z.number().int().positive(),
     vehicleAssetId: z.uuid(),
@@ -109,6 +112,7 @@ export const FleetRunRecordSchema = z
   })
   .strict();
 export const FleetRunSchema = z.object({
+  resourceAssignment:FleetResourceAssignmentSchema.optional(),
   billing: FleetRunBillingSnapshotSchema.optional(),
   commercial: FleetRunCommercialSchema.optional(),
   activeReplacement: FleetReplacementMarkerSchema.optional(),
@@ -168,9 +172,19 @@ export const FleetRunSchema = z.object({
   linkedTicketId: z.number().int().positive().nullable(),
   allowedActions: z.array(FleetRunActionSchema),
   availability: FleetAvailabilitySchema.optional(),
+}).superRefine((run,ctx)=>{
+  const assignment=run.resourceAssignment;
+  if(!assignment)return;
+  const {detail}=assignment.snapshot;
+  const trailer=assignment.snapshot.rigPackage?.components.find(item=>item.role==="trailer")?.assetId??null;
+  if(run.id!==assignment.reservation.runId || run.companyId!==detail.companyId ||
+    run.driverUserId!==detail.driverUserId || run.vehicleAssetId!==detail.vehicleAssetId || run.trailerAssetId!==trailer)
+    ctx.addIssue({code:"custom",path:["resourceAssignment"],message:"Run identity and legacy resource fields must match its immutable Detail assignment"});
 });
 export const FleetActionInputSchema = z
   .object({
+    detailSelection:FleetDetailSelectionSchema.optional(),
+    inspectedAssetIds:z.array(FleetCanonicalIdSchema).min(1).max(101).optional(),
     billingQuantity:z.number().positive().finite().max(1000000).multipleOf(0.01).optional(),
     destinationId: z.uuid().optional(),
     capturedAt: z.iso.datetime().optional(),
@@ -200,6 +214,7 @@ export const FleetActionInputSchema = z
   .strict();
 export const CreateFleetRunSchema = z
   .object({
+    detailSelection:FleetDetailSelectionSchema.optional(),
     billing: FleetRunBillingInputSchema,
     schedule: FleetScheduleSchema.nullable().optional(),
     operationId: z.uuid(),
@@ -210,7 +225,12 @@ export const CreateFleetRunSchema = z
     trailerAssetId: z.uuid().nullable().default(null),
     stops: z.array(FleetStopSchema).min(1).max(50),
   })
-  .strict();
+  .strict().superRefine((value,ctx)=>{
+    if(value.detailSelection?.returnPolicy==="return_required" && value.stops.at(-1)?.kind!=="return")
+      ctx.addIssue({code:"custom",path:["stops"],message:"Return-required work needs its chosen final return stop"});
+    if(value.detailSelection && value.schedule && value.detailSelection.timeZone!==value.schedule.timezone)
+      ctx.addIssue({code:"custom",path:["detailSelection","timeZone"],message:"Detail reservation and schedule must use the same chosen time zone"});
+  });
 export type FleetRun = z.infer<typeof FleetRunSchema>;
 export type FleetActionInput = z.infer<typeof FleetActionInputSchema>;
 export type FleetOverview = {
