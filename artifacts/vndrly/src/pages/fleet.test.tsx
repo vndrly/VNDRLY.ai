@@ -10,10 +10,13 @@ const api = vi.hoisted(() => ({
   resources: vi.fn(),
   action: vi.fn(),
   create: vi.fn(),
+  billingOptions: vi.fn(),
+  billingTicket: vi.fn(),
   navigate: vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: api,
+  FleetRequestError: class extends Error { constructor(public code: string, public status: number) { super(code); } },
   fleetErrorMessage: (_error: unknown, fallback: string) => fallback,
 }));
 vi.mock("@/hooks/use-auth", () => ({
@@ -40,6 +43,7 @@ vi.mock("@/components/png-pill-rollover", () => ({
   ),
 }));
 import FleetPage from "./fleet";
+import { FleetRequestError } from "@/lib/fleet-client";
 const run = {
   id: "run1",
   companyId: 1,
@@ -63,6 +67,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   window.history.replaceState({}, "", "/");
   api.location = "/fleet/my-day";
+  api.billingOptions.mockResolvedValue({ workTypes: [{ id: 3, name: "Hauling service", rateCents: 10000 }], tickets: [], afeRequired: false, siteAfe: "" });
   api.overviewPage.mockResolvedValue({
     companyId: 1,
     enabled: true,
@@ -246,7 +251,7 @@ describe("Fleet driver workspace", () => {
     expect(api.overviewPage).toHaveBeenCalledWith("next-authorized-page");
     expect(screen.getByText("Own pickup")).toBeTruthy();
   });
-  it("keeps generated run and stop identities on exact create retry", async () => {
+  it.each(["response", "readback"])("keeps generated run and stop identities after a lost %s", async (failure) => {
     const fleetId = "22222222-2222-4222-8222-222222222222";
     const assetId = "33333333-3333-4333-8333-333333333333";
     api.overviewPage.mockResolvedValueOnce({
@@ -277,9 +282,9 @@ describe("Fleet driver workspace", () => {
         },
       ],
     });
-    api.create
-      .mockRejectedValueOnce(new Error("connection lost"))
-      .mockResolvedValueOnce({});
+    if (failure === "response") api.create.mockRejectedValueOnce(new Error("connection lost"));
+    else api.create.mockImplementationOnce(async () => { api.run.mockRejectedValueOnce(new FleetRequestError("fleet.not_found", 404)); return { id: "new-run" }; });
+    api.create.mockImplementationOnce(async input => { api.run.mockResolvedValue({ ...run, id: "new-run", linkedTicketId: 123, events: [{ operationId: input.operationId }] }); return { id: "new-run" }; });
     mount();
     fireEvent.click(await screen.findByText("Create run"));
     fireEvent.change(screen.getByLabelText("Detail"), {
@@ -301,11 +306,17 @@ describe("Fleet driver workspace", () => {
     fireEvent.change(screen.getByLabelText("Delivery site"), {
       target: { value: "20" },
     });
+    await screen.findByRole("option", { name: /Hauling service/ });
+    fireEvent.change(screen.getByLabelText("Billing service"), { target: { value: "3" } });
+    await waitFor(() => expect((screen.getByText("Save exact change") as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByText("Save exact change"));
     await screen.findByText(/record changed or this action is blocked/);
-    fireEvent.click(screen.getByText("Save exact change"));
+    expect((screen.getByLabelText("Run title").closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
+    fireEvent.click(screen.getByText("Retry exact run save"));
     await waitFor(() => expect(api.create).toHaveBeenCalledTimes(2));
     expect(api.create.mock.calls[0][0]).toEqual(api.create.mock.calls[1][0]);
+    expect(api.create.mock.calls[0][0].billing).toMatchObject({ mode: "new_ticket", workTypeId: 3 });
+    await screen.findByText(/Linked ticket #123/);
   });
   it("shows only assigned runs without adding a map or dispatch creation to the operations page", async () => {
     mount();
@@ -367,7 +378,7 @@ it("blocks closeout review until current required saved files are present", asyn
     requirements: [],
   });
   mount();
-  const button = await screen.findByRole("button", { name: "submit closeout" });
+  const button = await screen.findByRole("button", { name: "Close Run" });
   fireEvent.click(button);
   await screen.findAllByText(
     "Recorded requirements are incomplete. Save missing files and complete the inspection, manifests and closeout records before review.",

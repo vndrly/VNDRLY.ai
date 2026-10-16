@@ -1,0 +1,41 @@
+import React from 'react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
+const mocks = vi.hoisted(() => ({ api: vi.fn() }));
+vi.mock('@/lib/api', () => ({ apiFetch: mocks.api }));
+vi.mock('@/lib/auth', () => ({ captureAuthScope: () => ({}), isAuthScopeCurrent: () => true }));
+vi.mock('@/hooks/useColors', () => ({ useColors: () => ({text:'black',border:'gray',destructive:'red'}) }));
+vi.mock('expo-crypto', () => ({randomUUID: () => '10000000-0000-4000-8000-000000000001'}));
+vi.mock('@/components/TogglePillButton', () => ({default: ({children,onPress,disabled}:any) => <button onClick={onPress} disabled={disabled}>{children}</button>}));
+import FleetTicketFinalization from './FleetTicketFinalization';
+afterEach(() => {cleanup();mocks.api.mockReset();});
+const plan={ticketId:77,siteId:4,status:'in_progress',afeNumber:'AFE-SYN',workDate:'2026-10-16',plan:{version:3},runs:[{id:'r1',title:'Reviewed haul',status:'completed',version:8}],canFinalize:true,finalizationOperationId:null};
+it('requires office confirmation, preserves uncertain operation and independently verifies finalization',async()=>{
+ let saved=false, attempts=0;
+ mocks.api.mockImplementation(async(path:string,options:any)=>{if(options?.method==='POST'){attempts++;if(attempts===1)throw Error('Network interrupted');saved=true;return {status:'submitted'};}return {...plan,status:saved?'submitted':plan.status,finalizationOperationId:saved?'10000000-0000-4000-8000-000000000001':null,plan:{version:saved?4:3}};});
+ render(<FleetTicketFinalization ticketId={77}/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Review and finalize ticket'}));
+ expect(mocks.api.mock.calls.filter(c=>c[1]?.method==='POST')).toHaveLength(0);
+ fireEvent.click(screen.getByRole('button',{name:'Confirm finalization and submit ticket'}));
+ await screen.findByText(/Network interrupted/);
+ fireEvent.click(screen.getByRole('button',{name:'Confirm finalization and submit ticket'}));
+ await screen.findByText('Ticket submission verified.');
+ const writes=mocks.api.mock.calls.filter(c=>c[1]?.method==='POST');expect(writes[0][1].body).toBe(writes[1][1].body);
+ expect(JSON.parse(writes[0][1].body)).toEqual({operationId:'10000000-0000-4000-8000-000000000001',expectedVersion:3});
+});
+it('keeps shared billing ticket open when a run is unreviewed',async()=>{
+ mocks.api.mockResolvedValue({...plan,canFinalize:false,runs:[{id:'r1',title:'Awaiting office review',status:'submitted_for_review',version:7}]});
+ render(<FleetTicketFinalization ticketId={77}/>);await screen.findByText(/Awaiting office review/);
+ expect(screen.queryByRole('button',{name:'Review and finalize ticket'})).toBeNull();
+ expect(mocks.api.mock.calls.some(c=>c[1]?.method==='POST')).toBe(false);
+});
+it('refreshes a definite stale revision only after readback confirms the original operation did not apply',async()=>{
+ let revision=3;
+ mocks.api.mockImplementation(async(path:string,options:any)=>{if(options?.method==='POST'){revision=4;throw Object.assign(Error('Version conflict'),{status:409});}return {...plan,plan:{version:revision}};});
+ render(<FleetTicketFinalization ticketId={77}/>);fireEvent.click(await screen.findByRole('button',{name:'Review and finalize ticket'}));fireEvent.click(screen.getByRole('button',{name:'Confirm finalization and submit ticket'}));
+ await screen.findByText('Ticket changed. Review the refreshed ticket before finalizing.');
+ expect(screen.queryByRole('button',{name:'Confirm finalization and submit ticket'})).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Review and finalize ticket'}));fireEvent.click(screen.getByRole('button',{name:'Confirm finalization and submit ticket'}));
+ await waitFor(()=>expect(mocks.api.mock.calls.filter(c=>c[1]?.method==='POST')).toHaveLength(2));
+ expect(JSON.parse(mocks.api.mock.calls.filter(c=>c[1]?.method==='POST')[1][1].body).expectedVersion).toBe(4);
+});

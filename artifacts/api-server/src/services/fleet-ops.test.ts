@@ -54,9 +54,14 @@ function fixture() {
   let required = false;
   let hold = false;
   let sitesVisible = true;
+  const billingTickets: {id:number;site_location_id:number;vendor_id:number;partner_id:number;status:string;fleet_plan:unknown}[]=[];
   let availability: { starts_at: string; ends_at: string; available: boolean; recurrence: null }[] = [];
   const client = {
-    query: async (sql: string) => {
+    query: async (sql: string,params:unknown[]=[]) => {
+      if(sql.includes("FROM vendor_work_types"))return{rows:[{id:3,name:"Synthetic haul",unit_price:"1.00",unit:"per_job",afe_number:"A1"}]};
+      if(sql.startsWith("INSERT INTO tickets")){const ticket={id:billingTickets.length+10,site_location_id:9,vendor_id:7,partner_id:8,status:"initiated",fleet_plan:JSON.parse(params[5] as string)};billingTickets.push(ticket);return{rows:[ticket]};}
+      if(sql.includes("FROM tickets"))return{rows:billingTickets.filter(t=>t.id===params[0])};
+      if(sql.startsWith("INSERT INTO ticket_line_items"))return{rows:[{id:100}]};
       if (sql.includes("SELECT m.id FROM user_org_memberships")) return {rows:[{id:7}]};
       if (sql.includes("FROM work_hub_form_instances")) return {rows:required?[{id:"10000000-0000-4000-8000-000000000003",title:"Orientation",template_version:1,assignment_metadata:{assignmentId:"10000000-0000-4000-8000-000000000001",sourceItemId:"10000000-0000-4000-8000-000000000002",contentVersion:1,membershipId:7,requiredBeforeWork:true,assignedAt:"2026-10-14T00:00:00Z",dueAt:"2026-11-14T00:00:00Z"}}]:[]};
       if (sql.includes("FROM work_hub_availability")) return { rows: availability };
@@ -80,7 +85,7 @@ function fixture() {
                 : []
               : sql.includes("site_locations")
                 ? sitesVisible
-                  ? [{ id: 9, is_active: true }]
+                  ? [{ id: 9, partner_id:8, afe:"A1", status:"active", is_active: true }]
                   : []
                 : [],
       };
@@ -112,6 +117,7 @@ function fixture() {
   };
 }
 const createInput = {
+  billing:{mode:"new_ticket",workTypeId:3,afeNumber:"A1",workDate:"2026-10-16"},
   operationId: "33333333-3333-4333-8333-333333333333",
   fleetId,
   title: "Synthetic run",
@@ -533,7 +539,7 @@ describe("Fleet durable service authority contract", () => {
       reason: "Reviewed user-reported records",
     });
     expect(completed.status).toBe("completed");
-    expect(completed.linkedTicketId).toBeNull();
+    expect(completed.linkedTicketId).toBe(10);
     expect(completed.loads[0].source).toBe("user_report");
     expect(completed.events.at(-1)?.details?.reason).toBe(
       "Reviewed user-reported records",

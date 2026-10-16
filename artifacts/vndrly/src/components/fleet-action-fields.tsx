@@ -330,6 +330,7 @@ export function FleetActionFields({
             </select>
           </label>
           {text("reason", "Review reason")}
+          {input.decision === "accept" && ["per_hour", "per_day"].includes(run.billing?.unit ?? "") && <label className="block">{run.billing?.unit === "per_hour" ? (i18n.language.startsWith("es") ? "Horas facturables" : "Billable hours") : (i18n.language.startsWith("es") ? "Días facturables" : "Billable days")}<input aria-label={run.billing?.unit === "per_hour" ? (i18n.language.startsWith("es") ? "Horas facturables" : "Billable hours") : (i18n.language.startsWith("es") ? "Días facturables" : "Billable days")} disabled={disabled} type="number" min="0.01" step="0.01" max="1000000" value={input.billingQuantity ?? ""} onChange={event => update({ billingQuantity: event.target.value ? Number(event.target.value) : undefined })} /><span className="block text-sm">{i18n.language.startsWith("es") ? "Cantidad revisada por oficina; no se calcula del GPS ni del tiempo del recorrido." : "Office-reviewed quantity; not calculated from GPS or run timing."}</span></label>}
         </>
       )}
     </div>
@@ -413,7 +414,7 @@ export function fleetActionComplete(
           ))
       );
     case "review":
-      return Boolean(input.decision && present(input.reason));
+      return Boolean(input.decision && present(input.reason) && (input.decision !== "accept" || !["per_hour", "per_day"].includes(run?.billing?.unit ?? "") || (input.billingQuantity && Number.isFinite(input.billingQuantity) && input.billingQuantity > 0 && input.billingQuantity <= 1000000)));
     case "cancel":
       return present(input.reason);
     case "reassign":

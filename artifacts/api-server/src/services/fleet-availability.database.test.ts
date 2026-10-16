@@ -67,6 +67,7 @@ describe.skipIf(!isolated)(
         .insert(s.workTypesTable)
         .values({ name: `Synthetic Gate ${tag}`, category: "gate" })
         .returning();
+      await s.db.insert(s.vendorWorkTypesTable).values({vendorId:vendor.id,workTypeId:workType.id,unit:"per_job",unitPrice:"1.00",currency:"USD"});
       await s.db
         .insert(s.siteWorkAssignmentsTable)
         .values({
@@ -221,6 +222,7 @@ describe.skipIf(!isolated)(
           available: true,
         });
         const run = await service.create(actor(), {
+          billing:{mode:"new_ticket",workTypeId:workType.id,afeNumber:"",workDate:"2026-10-16"},
           operationId: randomUUID(),
           fleetId,
           title: "Synthetic scheduled run",
@@ -511,6 +513,7 @@ describe.skipIf(!isolated)(
         ],
       );
       const reassignedRun = await service.create(actor(), {
+        billing:{mode:"new_ticket",workTypeId:workType.id,afeNumber:"",workDate:"2026-10-16"},
         operationId: randomUUID(),
         fleetId,
         title: "Synthetic reassignment",
@@ -576,6 +579,7 @@ describe.skipIf(!isolated)(
         reason: "Synthetic reassignment scenario finished; release the test run",
       })).toMatchObject({ status: "cancelled" });
       const changedWindowRun = await service.create(actor(), {
+        billing:{mode:"new_ticket",workTypeId:workType.id,afeNumber:"",workDate:"2026-10-16"},
         operationId: randomUUID(),
         fleetId,
         title: "Synthetic changed window",

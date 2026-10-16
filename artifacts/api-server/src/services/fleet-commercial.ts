@@ -1,4 +1,5 @@
 import { estimateMapboxDrivingRoute } from "../lib/mapbox-routing";
+import { canOfficeFinalize, canFinalizeFleetRuns, fleetBillingChargesValid, readFleetTicketRuns, assertFleetTicketFinalizable } from "./fleet-billing";
 import { randomUUID, createHash } from "node:crypto";
 import { z } from "zod/v4";
 import {
@@ -77,8 +78,8 @@ export async function readFleetTicketPlan(
 ) {
   const ticket = (
     await c.query(
-      "SELECT t.id,t.site_location_id,t.vendor_id,t.partner_id,t.status,t.lifecycle_state,t.fleet_plan FROM tickets t WHERE t.id=$1 AND t.vendor_id=$2" +
-        (lock ? " FOR UPDATE" : ""),
+      "SELECT t.id,t.site_location_id,t.vendor_id,s.partner_id,t.status,t.lifecycle_state,t.fleet_plan FROM tickets t JOIN site_locations s ON s.id=t.site_location_id WHERE t.id=$1 AND t.vendor_id=$2" +
+        (lock ? " FOR UPDATE OF t" : ""),
       [ticketId, a.companyId],
     )
   ).rows[0];
@@ -115,6 +116,7 @@ export async function bindFleetRunTicket(
     throw new FleetError("fleet.ticket_plan_required", 400);
   const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
   assertOrigin(ticket, plan);
+  if(plan.billingWorkflow)throw new FleetError("fleet.billing_choice_required",409);
   if (
     plan.closedAt ||
     (plan.closesAt && Date.parse(plan.closesAt) <= Date.now())
@@ -225,7 +227,7 @@ export async function recordFleetRunCharge(
     throw new FleetError("fleet.billing_rate_missing", 409);
   const ticket = (
     await c.query(
-      "SELECT id,site_location_id,vendor_id,partner_id,status,fleet_plan FROM tickets WHERE id=$1 AND vendor_id=$2 FOR UPDATE",
+      "SELECT t.id,t.site_location_id,t.vendor_id,s.partner_id,t.status,t.fleet_plan FROM tickets t JOIN site_locations s ON s.id=t.site_location_id WHERE t.id=$1 AND t.vendor_id=$2 FOR UPDATE OF t",
       [run.commercial.ticketId, a.companyId],
     )
   ).rows[0];
@@ -303,6 +305,7 @@ export function createFleetCommercialOperations(
           throw new FleetError("fleet.ticket_plan_required", 400);
         const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
         assertOrigin(ticket, plan);
+        if(plan.billingWorkflow)throw new FleetError("fleet.office_finalize_required",409);
         if (plan.closedAt) return plan;
         if (plan.version !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict", 409);
@@ -547,12 +550,20 @@ export function createFleetCommercialOperations(
         const plan = ticket.fleet_plan
           ? FleetTicketPlanSchema.parse(ticket.fleet_plan)
           : null;
+        const runs = await readFleetTicketRuns(c, a, state, ticketId);
+        if(plan?.billingWorkflow && !canFinalizeFleetRuns(state,a,runs))
+          throw new FleetError("fleet.finance_required",403);
         const charges = (
           await c.query(
             "SELECT count(*)::int AS runs,COALESCE(sum(quantity*unit_price),0)::text AS total FROM ticket_line_items WHERE ticket_id=$1 AND type='other' AND description LIKE 'Fleet run %'",
             [ticketId],
           )
         ).rows[0];
+        const openCrew = (await c.query("SELECT id FROM ticket_check_ins WHERE ticket_id=$1 AND check_out_at IS NULL", [ticketId])).rows.length;
+        let canFinalize = canOfficeFinalize(state,a) && canFinalizeFleetRuns(state,a,runs) && !!plan?.billingWorkflow && (!plan.finalizationOperationId || ticket.status==="kicked_back") && !!runs.length;
+        try { assertFleetTicketFinalizable(ticket.status,runs,openCrew); } catch { canFinalize=false; }
+        if(runs.some(r=>r.siteIds.some(id=>!a.currentSiteIds?.includes(id)) || (r.status==="completed"&&!r.billing?.billedLineId)))canFinalize=false;
+        if(canFinalize && plan && !await fleetBillingChargesValid(c,ticketId,plan,runs))canFinalize=false;
         return {
           ticketId,
           siteId: ticket.site_location_id,
@@ -560,6 +571,12 @@ export function createFleetCommercialOperations(
           plan,
           charges,
           canManage: managing(state, a),
+          status: ticket.status,
+          afeNumber: plan?.afeNumber ?? null,
+          workDate: plan?.workDate ?? null,
+          runs: runs.map(run=>({id:run.id,title:run.title,status:run.status,version:run.version})),
+          canFinalize,
+          finalizationOperationId: plan?.finalizationOperationId ?? null,
         };
       }),
     saveTicketPlan: (a: FleetActor, ticketId: number, input: unknown) =>

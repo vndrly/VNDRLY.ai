@@ -3,6 +3,7 @@ import { FLEET_CARGO_TOOLS } from "./fleet-cargo-tools";
 import { FLEET_REPLACEMENT_TOOLS } from "./fleet-replacement-tools";
 import { z } from "zod/v4";
 import {
+  CreateFleetRunSchema,
   FleetDraftEditSchema,
   FleetScheduleSchema,
   FleetOperationalProfileSchema,
@@ -64,6 +65,7 @@ const common = {
   capturedAt: { type: "string", format: "date-time" },
   source: { type: "string", const: "user_report" },
   reading: { type: "number", minimum: 0 },
+  billingQuantity: {type:"number",exclusiveMinimum:0,description:"Office-entered actual billable hours or days when accepting a per_hour or per_day run. Never infer from GPS or elapsed run time."},
   ticketId: { type: "integer", minimum: 1 },
   reason: { type: "string", minLength: 1, maxLength: 500 },
   runId: id,
@@ -71,6 +73,9 @@ const common = {
 };
 export const FLEET_TOOLS: AskVToolDefinition[] = [
   ...FLEET_INVENTORY_TOOLS,
+  read("query_fleet_billing_options", "Read real vendor catalog work types/rates and eligible open tickets for the exact authorized origin site, AFE and work date. Every new run requires new_ticket or existing_ticket billing. Never invent a rate or silently reuse another company/site/AFE/day ticket.", {siteId:{type:"integer",minimum:1},afeNumber:{type:"string",maxLength:200},workDate:{type:"string",format:"date"}}, ["siteId","afeNumber","workDate"]),
+  action("finalize_fleet_ticket", "Prepare explicit office finalization and submission of an exact Fleet billing ticket. First read query_fleet_ticket_plan and review every noncancelled run. Requires canFinalize, current plan version, separate fleet:billing consent and authenticated confirmation. Acceptance of one run never finalizes the shared ticket. Server binds operation ID; preserve it after uncertain outcomes and verify status, version and finalizationOperationId independently. Does not approve or pay the ticket.", {ticketId:{type:"integer",minimum:1},expectedVersion:{type:"integer",minimum:1}}, ["ticketId","expectedVersion"]),
+
   action("save_fleet_ticket_plan", "Save an explicitly reviewed ticket Batch/Singles plan after confirmation. First read the exact ticket plan and destination directory. Origin cannot change. Use approved destination IDs, explicit per-run rate, closure choice and current version; retain operationId across retries. Server enforces dispatch authority and partner policy.", {ticketId:{type:"integer",minimum:1},operationId:id,expectedVersion:{type:"integer",minimum:0},mode:{type:"string",enum:["batch","singles"]},rateCents:{type:"integer",minimum:0,maximum:100000000},closure:{type:"string",enum:["shift","day","manual"]},closesAt:{type:["string","null"],format:"date-time"},destinationIds:{type:"array",minItems:1,maxItems:30,items:id}}, ["ticketId","operationId","expectedVersion","rateCents","closure","closesAt","destinationIds"]),
   action("save_fleet_destination", "Save or edit a reusable disposal/delivery destination after explicit review and confirmation. Read current directory version; never invent address, coordinates, accepted materials or availability. This does not approve that destination for any ticket. Exact canonical readback required.", {operationId:id,expectedVersion:{type:"integer",minimum:1},destination:{type:"object"}}, ["operationId","expectedVersion","destination"]),
   read("query_fleet_ticket_plan", "Read the exact authorized ticket origin, Batch/Singles mode, closure policy, approved destinations and accepted run charges. Finance fields depend on current grants; recommendations do not authorize destinations.", {ticketId:{type:"integer",minimum:1}}, ["ticketId"]),
@@ -354,7 +359,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
   },
   action(
     "manage_fleet_run",
-    "Prepare exact Fleet run creation, dispatch, reassignment or cancellation. Requires explicit Fleet Manager or Dispatcher grants. Scheduled dispatch/reassignment requires covering recorded availability without confirmed conflicts; unplanned runs retain existing policy and have no verified availability window. Separate dispatch, driver acknowledgement and physical departure; never claim prepared means saved. For create supply fleetId,title,driverUserId,vehicleAssetId and ordered stops with UUID id/siteId/kind pickup|delivery|return/zero-based sequence. link_ticket links only an existing authorized ticketId without changing the ticket. Equipment references existing inventory explicitly assigned to this fleet; no location collector starts.",
+    "Prepare exact Fleet run creation, dispatch, reassignment or cancellation. Requires explicit Fleet Manager or Dispatcher grants. Scheduled dispatch/reassignment requires covering recorded availability without confirmed conflicts; unplanned runs retain existing policy and have no verified availability window. Separate dispatch, driver acknowledgement and physical departure; never claim prepared means saved. For create first read query_fleet_billing_options and supply required billing {mode:new_ticket,workTypeId,afeNumber,workDate} or {mode:existing_ticket,ticketId,afeNumber,workDate}, fleetId,title,driverUserId,vehicleAssetId and the complete ordered stops with UUID id/siteId/kind pickup|delivery|return/zero-based sequence. link_ticket links only an existing authorized ticketId without changing the ticket. Equipment references existing inventory explicitly assigned to this fleet; no location collector starts.",
     {
       ...common,
       action: {
@@ -362,6 +367,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
         enum: ["create", "dispatch", "reassign", "cancel", "link_ticket"],
       },
       fleetId: id,
+      billing: z.toJSONSchema(CreateFleetRunSchema.shape.billing),
       schedule: z.toJSONSchema(FleetScheduleSchema.nullable()),
       title: { type: "string", minLength: 1, maxLength: 200 },
       driverUserId: { type: "integer", minimum: 1 },
@@ -433,7 +439,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
   ),
   action(
     "review_fleet_closeout",
-    "Prepare acceptance or return of exact submitted Fleet closeout, with reason and current version. Explicit Fleet Manager only; Dispatchers and Drivers cannot review. This reviews user-reported Fleet records, not validated media, regulated inspection or ticket/payment approval.",
+    "Accepting per_hour or per_day billing requires explicit office-entered positive billingQuantity in actual hours or days; never infer from GPS or elapsed duration. Prepare acceptance or return of exact submitted Fleet closeout, with reason and current version. Explicit Fleet Manager only; Dispatchers and Drivers cannot review. This reviews user-reported Fleet records, not validated media, regulated inspection or ticket/payment approval.",
     {
       ...common,
       decision: { type: "string", enum: ["accept", "return"] },

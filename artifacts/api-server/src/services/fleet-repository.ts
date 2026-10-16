@@ -53,6 +53,8 @@ export const emptyFleetState = (): FleetState => ({
   preferences: [],
 });
 export type FleetSessionAuthority = {
+  /** Trusted session boundary used to suppress unavailable write controls. */
+  readOnly?: boolean;
   sv?: number;
   activeMembershipId?: number | null;
   membershipRole?: string | null;

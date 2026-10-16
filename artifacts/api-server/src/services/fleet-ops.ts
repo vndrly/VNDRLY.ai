@@ -1,4 +1,5 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
+import { attachFleetBilling, createFleetBillingOperations, recordFleetBillingCharge } from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
 import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
@@ -120,7 +121,8 @@ function allowed(
     permitted(state, actor, run, "dispatch")
   ) {
     if (run.status === "draft") result.push("dispatch");
-    result.push("reassign", "cancel", "link_ticket");
+    result.push("reassign", "cancel");
+    if (!run.billing) result.push("link_ticket");
   }
   if (!permitted(state, actor, run, "perform_run")) return result;
   if (run.status === "dispatched") result.push("acknowledge");
@@ -184,6 +186,11 @@ function project(
   // Project commercial routing independently of the current finance grant.
   // Never mutate the durable run when hiding amounts from an operational reader.
   let commercial = run.commercial;
+  let billing = run.billing;
+  if (billing && !permitted(state, actor, run, "view_finance")) {
+    const { billedLineId: _line, ...context } = billing;
+    billing = context;
+  }
   if (commercial && !permitted(state, actor, run, "view_finance")) {
     const { rateCents: _rate, billedLineId: _line, ...routing } = commercial;
     commercial = routing;
@@ -191,6 +198,7 @@ function project(
   return {
     ...run,
     ...(commercial ? {commercial} : {}),
+    ...(billing ? {billing} : {}),
     labels: actor.labels?.get(labelKey(run)) ?? {
       driverName: null,
       vehicleName: null,
@@ -391,6 +399,7 @@ export function createFleetService(repository: FleetRepository) {
   const locations = createFleetLocationOperations(transaction, permitted);
   return {
     ...createFleetCommercialOperations(transaction),
+    ...createFleetBillingOperations(transaction),
     ...createFleetInventoryOperations(transaction, grantFor, permitted),
     recordLocation: locations.record,
     locationObservations: locations.observations,
@@ -808,7 +817,7 @@ export function createFleetService(repository: FleetRepository) {
             body.stops.some((s, i) => s.sequence !== i)
           )
             throw new FleetError("fleet.invalid_stops", 400);
-          const { operationId: _operationId, ticketId: _ticketId, ...runFields } = body;
+          const { operationId: _operationId, billing: _billing, ...runFields } = body;
           const run: FleetRun = {
             ...runFields,
             id: randomUUID(),
@@ -828,7 +837,7 @@ export function createFleetService(repository: FleetRepository) {
             linkedTicketId: null,
             allowedActions: [],
           };
-          if(body.ticketId)await bindFleetRunTicket(client,actor,state,run,body.ticketId);
+          await attachFleetBilling(client,actor,state,run,body.billing);
           await eligible(state, client, run);
           run.events.push({
             id: randomUUID(),
@@ -1118,7 +1127,10 @@ export function createFleetService(repository: FleetRepository) {
             run.status =
               body.decision === "accept" ? "completed" : "in_progress";
             run.phase = null;
-            if(body.decision==="accept")await recordFleetRunCharge(client,actor,run);
+            if(body.decision==="accept"){
+              await recordFleetBillingCharge(client,actor,run,body.billingQuantity);
+              await recordFleetRunCharge(client,actor,run);
+            }
           } else {
             if (body.action === "reassign") {
               run.driverUserId = body.driverUserId ?? run.driverUserId;

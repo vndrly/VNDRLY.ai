@@ -24,8 +24,13 @@ export function actionRecordSummary(toolName: string, input: unknown): string {
   const value = input as Record<string, unknown>;
   const resource = value.resource && typeof value.resource === "object" && !Array.isArray(value.resource) ? value.resource as Record<string, unknown> : value;
   const payload = resource.payload && typeof resource.payload === "object" && !Array.isArray(resource.payload) ? resource.payload as Record<string, unknown> : resource;
-  const labels: Record<string, string> = { id: toolName === "manage_ticket_record" ? "Ticket" : "Record", ticketId: "Ticket", taskId: "Task", itemId: "Calendar item", assetId: "Asset", stationId: "Gate station", tripId: "Trip", action: "Action", title: "Title", name: "Name", status: "Status", siteName: "Site", vendorName: "Company", fieldEmployeeName: "Worker", description: "Description", body: "Message", reason: "Reason", error: "Issue", message: "Message" };
+  const labels: Record<string, string> = { id: toolName === "manage_ticket_record" ? "Ticket" : "Record", ticketId: "Ticket", taskId: "Task", itemId: "Calendar item", assetId: "Asset", stationId: "Gate station", tripId: "Trip", action: "Action", title: "Title", name: "Name", status: "Status", siteName: "Site", vendorName: "Company", fieldEmployeeName: "Worker", description: "Description", body: "Message", reason: "Reason", afeNumber: "AFE", workDate: "Work date", expectedVersion: "Reviewed revision", billingQuantity: "Actual billable quantity", error: "Issue", message: "Message" };
   const lines: string[] = [];
+  if (toolName === "manage_fleet_run" && value.action === "create") {
+    const billing = value.billing as Record<string,unknown> | undefined;
+    if (billing) lines.push(`Billing: ${billing.mode === "new_ticket" ? "New ticket" : "Add to ticket #" + billing.ticketId} · AFE ${billing.afeNumber ?? ""} · ${billing.workDate ?? ""}${billing.mode === "new_ticket" ? " · Catalog work type #" + billing.workTypeId : ""}`);
+  }
+  if (toolName === "finalize_fleet_ticket") lines.push("Finalize and submit the reviewed shared ticket. New runs will no longer be accepted. This does not approve or pay the ticket.");
   for (const key of Object.keys(labels)) {
     const item = payload[key] ?? resource[key];
     if (typeof item !== "string" && typeof item !== "number") continue;

@@ -4113,6 +4113,7 @@
       "rate_limited": "Espera antes de enviar otro recordatorio en esta dirección."
     },
     "ticket": {
+      "not_mutable": "Este ticket cambió o ya no se puede editar. Actualice antes de editar los cargos.",
       "not_found": "No se encontró el ticket.",
       "no_access": "No tienes acceso a este ticket.",
       "not_submittable": "Este ticket aún no está listo para enviar.",
@@ -4751,6 +4752,21 @@
       "publish_failed": "No pudimos publicar su catálogo. Inténtelo de nuevo."
     },
     "fleet": {
+      "office_finalize_required": "Revise y envíe este ticket desde la facturación de Flota después de revisar sus recorridos.",
+      "derived_charge_locked": "Los cargos de recorridos de Flota revisados no se pueden eliminar aquí.",
+      "billing_choice_required": "Elija un ticket de facturación nuevo o un ticket abierto elegible al crear el recorrido.",
+      "billing_ticket_mismatch": "El ticket de facturación debe coincidir con el origen, AFE y fecha de trabajo del recorrido.",
+      "billing_origin_required": "Inicie el recorrido con una recolección en su sitio de facturación.",
+      "billing_work_type_unavailable": "Seleccione un servicio con precio asignado a esta empresa y sitio.",
+      "billing_afe_mismatch": "El AFE debe coincidir con la asignación del servicio seleccionado.",
+      "billing_quantity_required": "Ingrese las horas o los días facturables revisados antes de aceptar el recorrido.",
+      "billing_quantity_invalid": "Ingrese una cantidad de facturación positiva con un máximo de dos decimales.",
+      "billing_charge_missing": "Falta el cargo de un recorrido revisado. Revise los cargos del ticket.",
+      "billing_charge_mismatch": "Un cargo del recorrido cambió o falta. Revise su cantidad y tarifa antes de enviarlo.",
+      "ticket_not_submittable": "Este ticket de facturación no se puede enviar en su estado actual.",
+      "open_crew_sessions": "Registre la salida de todos los miembros de la cuadrilla antes de enviar el ticket.",
+      "runs_not_reviewed": "Cierre y revise todos los recorridos activos antes de enviar el ticket.",
+      "no_reviewed_runs": "Revise al menos un recorrido completado antes de enviar el ticket.",
       "evidence_required": "Faltan evidencias requeridas de la flota. Revise el paquete del recorrido y adjunte los registros reales.",
       "invalid_request": "La solicitud de flota no es válida. Revisa los campos e inténtalo de nuevo.",
       "internal_error": "No se pudo completar la solicitud de flota. Inténtalo de nuevo."

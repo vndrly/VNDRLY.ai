@@ -14,6 +14,9 @@ import {
   siteLocationsTable,
   partnerVendorRelationshipsTable,
   assetsTable,
+  workTypesTable,
+  vendorWorkTypesTable,
+  siteWorkAssignmentsTable,
 } from "@workspace/db";
 import { buildTestCookie } from "../test-utils/session";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
@@ -60,6 +63,9 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           partnerId: partner.id,
           status: "approved",
         });
+      const [workType]=await db.insert(workTypesTable).values({name:`Synthetic hauling ${tag}`,category:"hauling"}).returning();
+      await db.insert(vendorWorkTypesTable).values({vendorId:vendor.id,workTypeId:workType.id,unit:"per_job",unitPrice:"12.34",currency:"USD"});
+      await db.insert(siteWorkAssignmentsTable).values({vendorId:vendor.id,workTypeId:workType.id,siteLocationId:site.id});
       const users = await db
         .insert(usersTable)
         .values(
@@ -182,6 +188,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
             operationId: randomUUID(),
             fleetId,
             title: "Synthetic cargo " + index,
+            billing:{mode:"new_ticket",workTypeId:workType.id,afeNumber:"",workDate:"2026-10-16"},
             driverUserId: users[index + 1].id,
             vehicleAssetId: equipment[index].id,
             stops,

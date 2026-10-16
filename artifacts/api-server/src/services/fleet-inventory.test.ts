@@ -48,6 +48,19 @@ describe("Fleet Inventory uses canonical assets", () => {
     await expect(f.service.createFleetAsset(actor, { ...body, name: "Changed" })).rejects.toMatchObject({ code: "fleet.operation_conflict" });
     expect(f.assets.size).toBe(1);
   });
+  it("keeps authorized pool and detail reads while hiding management for a read-only session", async () => {
+    const f = fixture(), receipt = await f.service.createFleetAsset(actor, create());
+    f.state().fleets[0].equipmentAssetIds = [receipt.assetId];
+    const readOnlyActor = { ...actor, readOnly: true };
+    expect((await f.service.fleetInventory(actor)).canManage).toBe(true);
+    expect((await f.service.fleetInventory(readOnlyActor)).canManage).toBe(false);
+    const listCalls = f.query.mock.calls.filter(([sql]) => sql.includes("ORDER BY a.id LIMIT 51"));
+    expect(listCalls.at(-1)?.[1]?.[4]).toBe(true);
+    const detail = await f.service.fleetInventoryDetail(readOnlyActor, receipt.assetId);
+    expect(detail.asset.id).toBe(receipt.assetId);
+    expect(detail.canManage).toBe(false);
+    expect((await f.service.fleetInventoryDetail(actor, receipt.assetId)).canManage).toBe(true);
+  });
   it("reads the exact saved receipt only for the original actor with current Inventory authority", async () => {
     const f = fixture(), body = create();
     const receipt = await f.service.createFleetAsset(actor, body);

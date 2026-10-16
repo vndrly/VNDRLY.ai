@@ -19,6 +19,7 @@ export function fleetConsentUpgradeTools(session: SessionPayload, scopes: readon
   if (overview.capabilities.canDispatch) eligible.add("fleet:dispatch");
   if (overview.capabilities.canDrive) eligible.add("fleet:run");
   if (overview.capabilities.canManage) eligible.add("fleet:review");
+  if (overview.capabilities.canManage || overview.capabilities.canSetup) eligible.add("fleet:billing");
   // The canonical inventory service also accepts current enabled-company vendor administrators
   // before any Detail or individual Fleet grant exists. This only offers explicit consent.
   if (overview.capabilities.canManage || (overview.enabled && session.role === "vendor" && session.membershipRole === "admin" && overview.capabilities.canSetup)) eligible.add("fleet:inventory");
