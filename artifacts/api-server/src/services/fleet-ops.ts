@@ -6,6 +6,7 @@ import {
 } from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
 import { createFleetDetailsOperations } from "./fleet-details";
+import { createFleetComplianceOperations } from "./fleet-compliance";
 import {
   assignFleetRunDetail,
   assertFleetDetailResources,
@@ -475,6 +476,15 @@ export function createFleetService(repository: FleetRepository) {
     ...createFleetBillingOperations(transaction),
     ...createFleetInventoryOperations(transaction, grantFor, permitted),
     ...createFleetDetailsOperations(transaction, grantFor),
+    // Qualification onboarding belongs to current company Fleet roles. It
+    // cannot depend on already having a commercially authorized partner site.
+    // Operational run dispatch continues to use the narrower grantFor above.
+    ...createFleetComplianceOperations(transaction, (state, actor) => {
+      const grant=state.grants.find(row=>row.userId===actor.userId);
+      if(!state.enabled||!grant?.roles.length)return null;
+      const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id));
+      return fleetIds.length?{roles:grant.roles,fleetIds}:null;
+    }),
     recordLocation: locations.record,
     locationObservations: locations.observations,
     locationHistory: locations.history,

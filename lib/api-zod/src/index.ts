@@ -54,3 +54,6 @@ export * from "./fleet-compliance-evaluator";
 export * from "./fleet-pricing";
 export * from "./fleet-action-policy";
 export * from "./fleet-run-assignment";
+export * from "./fleet-insurance";
+export * from "./fleet-compliance-register";
+export * from "./fleet-compliance-rulebook";

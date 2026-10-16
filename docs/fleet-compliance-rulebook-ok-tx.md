@@ -1,0 +1,63 @@
+# Fleet compliance rulebook: Federal, Oklahoma and Texas
+
+Research checked **2026-10-16**. Product policy starts **warn-only**. These are sourced implementation references, not a declaration that a carrier is legally compliant. A designated company reviewer must determine applicability, record evidence and adopt a requirement revision. Research does not impersonate that reviewer. Missing facts, unavailable external lookups, ambiguous cargo classifications and unreviewed documents remain **unverified/red**.
+
+## Identity and applicability
+
+Keep carrier of record, legal insured entity, authority/registration identifiers, leased equipment, subcontract relationships, actual truck and every towed component distinct. An Inventory asset ID remains canonical. A Detail groups resources for dispatch; it does not create a new legal carrier or transfer custody. Billing partner/site/AFE are separate from the physical origin, destination and return base.
+
+Before selecting requirements, record sourced facts: interstate/intrastate commerce, private/for-hire operation, commodity and reviewed hazardous-material classification, GVWR/GCWR and applicable actual/registered weights, seating, trailer configuration and state(s). “Crude” in a description is insufficient to classify a hazardous-material insurance tier. A short trip inside one state is not proof of intrastate commerce. Unknown facts cannot produce green.
+
+## Insurance reference mappings
+
+The reference-only classifier is `lib/api-zod/src/fleet-compliance-rulebook.ts`. It never activates a requirement or policy, supplies a zero minimum, or treats a reference value as proof of coverage. Fixtures record the research date and source section.
+
+| Scope already established by reviewer | Reference minimum liability | Source and conditions |
+| --- | --- | --- |
+| Federal for-hire nonhazardous property, GVWR below 10,001 lb / at least 10,001 lb | $300,000 / $750,000 | [FMCSA filing chart](https://www.fmcsa.dot.gov/registration/insurance-filing-requirements), 49 CFR 387; separate hazardous, passenger, household-goods and authority categories apply |
+| Federal specifically classified hazardous categories | $1 million / $5 million | Same chart and [49 CFR 387.9](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-387/subpart-A/section-387.9); use the actual commodity, quantity, packaging and carrier applicability |
+| Oklahoma intrastate for-hire ordinary property, carrier using only vehicles below 10,000 lb / vehicles at least 10,000 lb | $300,000 / $750,000 | OAC 165:30-3-11; one light truck cannot establish that the entire carrier uses only light vehicles |
+| Oklahoma specified restricted property / deleterious substances | $350,000 / $750,000 | OAC 165:30-3-11; restricted commodities have an explicit list; concrete is not silently classified as an asphalt mixture |
+| Oklahoma regulated intrastate private, ordinary property / deleterious substances | $350,000 / $750,000 | OAC 165:30-15-6; licensing applicability and any larger Commission-ordered amount require review |
+| Texas ordinary private/for-hire property above 26,000 lb applicable weight basis | $500,000 | [TxDMV](https://www.txdmv.gov/motor-carriers/txdmv-number), insurance table and 43 TAC 218.16; additional registration triggers exist |
+| Texas oil/fuel table category / specified high-hazard table category | $1 million / $5 million | Same TxDMV table; these are already-reviewed classifications, not guesses based on a product name |
+
+Oklahoma reference: [Chapter 30 effective August 1, 2026](https://oklahoma.gov/content/dam/ok/en/occ/documents/ajls/jls-courts/rules/2026/chapter%2030%20MCC%20and%20Transportation%20Network%20Companies%20_eff%2008-01-2026.pdf), sections above. The Commission identifies this PDF as a convenience copy; the official Oklahoma Administrative Code controls. [Private carrier licensing](https://oklahoma.gov/occ/divisions/transportation/trucking/intrastate-licenses-for-private-motor-carriers.html) and [for-hire licensing](https://oklahoma.gov/occ/divisions/transportation/trucking/intrastate-licenses-for-hire-motor-carriers.html) are separate applicability references. Do not apply the ordinary-property minimum to every operation.
+
+Record auto liability, cargo, pollution, general liability, physical damage, workers compensation and excess separately. A certificate receipt, policy review, scope review and regulatory filing verification are different facts. Match entity, carrier, equipment, territory, commodity, effective dates and the complete planned run/return window. Unknown end time stays unverified. Do not add unrelated primary limits. Excess layers count only with a reviewed relationship and matching attachment point. Contractual coverage may exceed a statutory minimum. A COI cannot enlarge policy coverage: [Texas Department of Insurance COI guidance](https://www.tdi.texas.gov/certificates/faq.html).
+
+Only an insurer/qualified filing source can establish the actual filing record; a local checkbox is not an agency filing. Current TxDMV guidance calls for active TxMCCS insurance records and insurer-filed forms. No FMCSA/TxDMV/OCC/insurance provider integration is represented as connected merely because VNDRLY stores a reference.
+
+## Driver requirements and privacy
+
+| Register | Reviewer records | Primary reference |
+| --- | --- | --- |
+| License | State, class, current status, endorsements, restrictions, expiry, source/MVR; full identifier remains private | [49 CFR Part 383](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-383) |
+| Qualification | Application/history, appropriate inquiries, road-test/equivalent, annual driving-record review, required qualification evidence and exceptions | [49 CFR 391.51](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-391/subpart-F/section-391.51) and [391.23](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-391/subpart-C/section-391.23) |
+| Medical | Authoritative qualification/status evidence, qualified examiner/registry reference and permitted operational restriction summary; no clinical file in dispatcher/partner views | [FMCSA medical resources](https://www.fmcsa.dot.gov/regulations/medical/medical-regulations-and-guidance-resource-links) and current state process |
+| Testing / Clearinghouse | Required consent, appropriate query, testing-program participation, source and prohibited/eligible/unverified status | [49 CFR 382.701](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-382/subpart-G/section-382.701) and applicable Part 382 requirements |
+| Duty / hours | Qualified ELD or reviewed log source, as-of time, applicability and exception basis | [49 CFR Part 395](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-395) |
+
+Do not resurrect superseded annual driver violation-list requirements from old checklists. Retention depends on the record category and controlling section; it is not one universal period. Qualification, medical, testing and operational records have distinct retention classes, explicit retained-until dates and legal holds. This release performs **no automatic deletion** or legal-hold removal.
+
+Service Oklahoma says paper medical examiner certificates are no longer accepted as of **February 17, 2026**; use its current electronic process and the actual state status, with appropriate exception review: [Service Oklahoma CDL guidance](https://oklahoma.gov/service/all-pages/cdl-first-time-applicants.html). Licensing exceptions do not necessarily exempt the operation itself. Recheck Texas DPS and the issuing state for each driver. No blanket “oilfield exemption”: [FMCSA oilfield hours guidance](https://www.fmcsa.dot.gov/regulations/hours-service/what-kinds-oilfield-equipment-may-drivers-operate-while-taking-advantage).
+
+Schedule availability is not hours-of-service clearance. A phone GPS track is not an ELD. No ordinary review decision can waive a revoked license, prohibited testing result, or unqualified medical record. Corrected facts require a new evidence revision and qualified source review.
+
+## Vehicles, rigs and trip credentials
+
+Track registration/plate/VIN identity, periodic inspection, maintenance and repair records, unrepaired defects, tank specifications and applicable tests, weight/dimension/axle/coupling/capacity facts, permit conditions and trip-specific credentials. Every combination component matters; a truck-only inspection is not proof of a trailer inspection. Periodic inspection generally uses a calendar 12-month interval where Part 396 applies; do not convert it to a universally fixed 365 days or assume every tank has the same test schedule. [49 CFR 396.17](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-396/subpart-B/section-396.17), [396.3](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-396/subpart-A/section-396.3), [49 CFR 180.407](https://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-180/subpart-E/section-180.407).
+
+Review USDOT/operating authority, state authority, UCR, IRP/IFTA or applicable trip permits, oversize/overweight and hazardous/cargo-specific credentials according to actual operation. Oklahoma deleterious-substance permits, Texas waste/commodity permits and federal hazmat requirements require the correct material and transport facts. Unresolved applicability is visible rather than silently treated as exempt. A known mechanical incompatibility or explicit stop-work/maintenance hold remains a genuine operational restriction, separate from warn-only document expiry.
+
+## Product controls and snapshots
+
+Company administrators explicitly designate current company members as reviewers. Administrator status alone does not reveal private files. Private structured records and documents use the existing private ObjectStore namespace; ordinary vendor/Inventory/audit records retain only opaque pointers and allowlisted operational facts. Generic file URLs and generic ACL changes cannot open them. Private review downloads recheck current membership and reviewer appointment; removing either also removes access to historical revisions and retries.
+
+Drivers can submit their own evidence as document-received. Dispatch sees green/red, reasons, expiry and masked license identifiers; partners receive only the actual ticket-bound safe checkpoint summaries. Store the precise rule/evidence revisions and capture/evaluation times. Renewal or rule changes never rewrite an earlier run checkpoint.
+
+Initial expired, revoked, missing, unverified or mismatched documentary evidence produces warnings and partner disclosure while work continues. Authentication, actual authority, tenant isolation, custody/reservation conflicts, billing integrity and explicit safety holds still apply. An unavailable lookup is not a newly invented hard hold. Product reminder windows are 60/30/14/7 days, deduplicated by evidence identity/revision/window, not statutory grace periods. Notifications retain existing user channel preferences.
+
+Future enforcement needs an explicit authorized partner scope, notice, future effective date, checkpoints, impact preview and treatment of already dispatched/offline work. Nothing in a migration, upload, research template or missing configuration activates it. Offline work retains its capture-time evidence/policy references and reconciles without rewriting physical work as an online action. Temporary official notices need a source, reviewer, explicit expiry and affected scope; never create a permanent guessed waiver.
+
+The final acceptance gate must exercise actual office/dispatcher/reviewer/driver/partner views, direct private-file denials, network loss/restart/replay, source-qualified tracking, exact ticket billing and all release lanes. Tests or a deployed schema alone are not completion evidence.

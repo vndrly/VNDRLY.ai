@@ -2,6 +2,7 @@ import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { withNativeLocationCollection } from "../services/native-operations";
 import { NativeOperationError } from "../services/native-operations-policy";
 import { Router } from "express";
+import { createFleetComplianceRouter } from "./fleet-compliance";
 import { pool } from "@workspace/db";
 import { z } from "zod/v4";
 import {FleetCanonicalIdSchema} from "@workspace/api-zod";
@@ -21,6 +22,7 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.use(createFleetComplianceRouter(service, actor));
 router.get("/fleet/details", endpoint(req => service.readFleetDetails(actor(req), req.query)));
 router.get("/fleet/details/operations/:operationId", endpoint(req => service.fleetResourceReceipt(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/details/:id/history", endpoint(req => service.fleetResourceHistory(actor(req), "detail", z.uuid().parse(req.params.id), req.query)));

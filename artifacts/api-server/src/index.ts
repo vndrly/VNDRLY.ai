@@ -68,6 +68,7 @@ import {
   stopSignupAssistantDigest,
 } from "./lib/signup-assistant-digest";
 import { startNotificationEmailDigest } from "./lib/notification-email-digest";
+import {startFleetComplianceReminderWorker,stopFleetComplianceReminderWorker} from "./services/fleet-compliance-reminders";
 import {
   startCertificationReminderWorker,
   stopCertificationReminderWorker,
@@ -194,6 +195,7 @@ startOnboardingWorker();
   startSignupAssistantDigest();
   startNotificationEmailDigest();
   startCertificationReminderWorker();
+  startFleetComplianceReminderWorker();
   // Task #248 — every-6h sweep that emails + in-app notifies the
   // creator of any OA connection whose credentials have been revoked
   // or whose OAuth refresh appears stale.
@@ -267,6 +269,7 @@ stopOnboardingWorker();
   stopBulkActionExpiryWarningWorker();
   stopSignupAssistantDigest();
   stopCertificationReminderWorker();
+  stopFleetComplianceReminderWorker();
   stopOaConnectionReminderWorker();
   stopWorkHubExportWorker();
   const retentionPlannerStop = stopWorkHubRetentionPlannerWorker();
