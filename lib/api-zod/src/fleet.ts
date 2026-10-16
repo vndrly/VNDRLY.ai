@@ -1,10 +1,28 @@
-import {FleetDestinationSchema,FleetRunCommercialSchema,FleetRunBillingInputSchema,FleetRunBillingSnapshotSchema} from "./fleet-commercial";
+import {
+  FleetDestinationSchema,
+  FleetRunCommercialSchema,
+  FleetRunBillingInputSchema,
+  FleetRunBillingSnapshotSchema,
+} from "./fleet-commercial";
 import { FleetCargoMarkerSchema } from "./fleet-cargo";
 import { FleetReplacementMarkerSchema } from "./fleet-replacement";
-import { FleetScheduleSchema, FleetOperationalProfileSchema, FleetInspectionResponsesSchema, FleetManifestValuesSchema } from "./fleet-planning";
+import {
+  FleetScheduleSchema,
+  FleetOperationalProfileSchema,
+  FleetInspectionResponsesSchema,
+  FleetManifestValuesSchema,
+} from "./fleet-planning";
 import { z } from "zod/v4";
-import {FleetDetailSelectionSchema,FleetResourceAssignmentSchema} from "./fleet-run-assignment";
-import {FleetCanonicalIdSchema} from "./fleet-details";
+import {
+  FleetDetailSelectionSchema,
+  FleetResourceAssignmentSchema,
+} from "./fleet-run-assignment";
+import { FleetCanonicalIdSchema } from "./fleet-details";
+import {
+  FleetRoutePlanSchema,
+  fleetPhysicalStopsMatch,
+  FleetRouteOperationalStopSchema,
+} from "./fleet-route";
 import { FleetAvailabilitySchema } from "./fleet-availability";
 export const FleetRoleSchema = z.enum([
   "fleet_manager",
@@ -53,18 +71,14 @@ export const FleetDefinitionSchema = z
     siteIds: z.array(z.number().int().positive()).max(200),
   })
   .strict();
-export const FleetStopSchema = z
-  .object({
-    destination: FleetDestinationSchema.optional(),
-    id: z.uuid(),
-    siteId: z.number().int().positive(),
-    kind: z.enum(["pickup", "delivery", "return"]),
-    sequence: z.number().int().nonnegative(),
-  })
-  .strict();
+export const FleetStopSchema = FleetRouteOperationalStopSchema;
 export const FleetInspectionSchema = z
   .object({
-    inspectedAssetIds:z.array(FleetCanonicalIdSchema).min(1).max(101).optional(),
+    inspectedAssetIds: z
+      .array(FleetCanonicalIdSchema)
+      .min(1)
+      .max(101)
+      .optional(),
     responses: FleetInspectionResponsesSchema.optional(),
     driverUserId: z.number().int().positive(),
     vehicleAssetId: z.uuid(),
@@ -111,81 +125,117 @@ export const FleetRunRecordSchema = z
     source: z.literal("user_report"),
   })
   .strict();
-export const FleetRunSchema = z.object({
-  resourceAssignment:FleetResourceAssignmentSchema.optional(),
-  billing: FleetRunBillingSnapshotSchema.optional(),
-  commercial: FleetRunCommercialSchema.optional(),
-  activeReplacement: FleetReplacementMarkerSchema.optional(),
-  canEditDraft: z.boolean().optional(),
-  schedule: FleetScheduleSchema.nullable().optional(),
-  operationalProfile: FleetOperationalProfileSchema.optional(),
-  labels: z
-    .object({
-      driverName: z.string().nullable(),
-      vehicleName: z.string().nullable(),
-      trailerName: z.string().nullable(),
-      sites: z.array(
-        z.object({ siteId: z.number().int().positive(), name: z.string() }),
-      ),
-    })
-    .optional(),
-  id: z.uuid(),
-  fleetId: z.uuid(),
-  companyId: z.number().int().positive(),
-  title: z.string().trim().min(1).max(200),
-  driverUserId: z.number().int().positive(),
-  vehicleAssetId: z.uuid(),
-  trailerAssetId: z.uuid().nullable(),
-  siteIds: z.array(z.number().int().positive()).max(200),
-  status: z.enum([
-    "draft",
-    "dispatched",
-    "acknowledged",
-    "in_progress",
-    "submitted_for_review",
-    "completed",
-    "cancelled",
-  ]),
-  phase: z.string().nullable(),
-  pausedFromPhase: z.string().nullable().default(null),
-  records: z.array(FleetRunRecordSchema).max(200).default([]),
-  version: z.number().int().positive(),
-  stops: z.array(FleetStopSchema).min(1).max(50),
-  loads: z.array(FleetLoadSchema).max(100),
-  inspections: z.array(FleetInspectionSchema).max(100),
-  currentStopId: z.uuid().nullable(),
-  visitedStopIds: z.array(z.uuid()).max(50),
-  events: z
-    .array(
-      z.object({
-        id: z.uuid(),
-        operationId: z.uuid(),
-        type: z.string(),
-        actorUserId: z.number().int().positive(),
-        recordedAt: z.iso.datetime(),
-        capturedAt: z.iso.datetime().optional(),
-        source: z.literal("user_report").optional(),
-        details: z.record(z.string(), z.unknown()).optional(),
-      }),
+export const FleetRunSchema = z
+  .object({
+    routePlan: FleetRoutePlanSchema.optional(),
+    resourceAssignment: FleetResourceAssignmentSchema.optional(),
+    billing: FleetRunBillingSnapshotSchema.optional(),
+    commercial: FleetRunCommercialSchema.optional(),
+    activeReplacement: FleetReplacementMarkerSchema.optional(),
+    canEditDraft: z.boolean().optional(),
+    schedule: FleetScheduleSchema.nullable().optional(),
+    operationalProfile: FleetOperationalProfileSchema.optional(),
+    labels: z
+      .object({
+        driverName: z.string().nullable(),
+        vehicleName: z.string().nullable(),
+        trailerName: z.string().nullable(),
+        sites: z.array(
+          z.object({ siteId: z.number().int().positive(), name: z.string() }),
+        ),
+      })
+      .optional(),
+    id: z.uuid(),
+    fleetId: z.uuid(),
+    companyId: z.number().int().positive(),
+    title: z.string().trim().min(1).max(200),
+    driverUserId: z.number().int().positive(),
+    vehicleAssetId: z.uuid(),
+    trailerAssetId: z.uuid().nullable(),
+    siteIds: z.array(z.number().int().positive()).max(200),
+    status: z.enum([
+      "draft",
+      "dispatched",
+      "acknowledged",
+      "in_progress",
+      "submitted_for_review",
+      "completed",
+      "cancelled",
+    ]),
+    phase: z.string().nullable(),
+    pausedFromPhase: z.string().nullable().default(null),
+    records: z.array(FleetRunRecordSchema).max(200).default([]),
+    version: z.number().int().positive(),
+    stops: z.array(FleetStopSchema).min(1).max(50),
+    loads: z.array(FleetLoadSchema).max(100),
+    inspections: z.array(FleetInspectionSchema).max(100),
+    currentStopId: z.uuid().nullable(),
+    visitedStopIds: z.array(z.uuid()).max(50),
+    events: z
+      .array(
+        z.object({
+          id: z.uuid(),
+          operationId: z.uuid(),
+          type: z.string(),
+          actorUserId: z.number().int().positive(),
+          recordedAt: z.iso.datetime(),
+          capturedAt: z.iso.datetime().optional(),
+          source: z.literal("user_report").optional(),
+          details: z.record(z.string(), z.unknown()).optional(),
+        }),
+      )
+      .max(200),
+    linkedTicketId: z.number().int().positive().nullable(),
+    allowedActions: z.array(FleetRunActionSchema),
+    availability: FleetAvailabilitySchema.optional(),
+  })
+  .superRefine((run, ctx) => {
+    if (
+      run.routePlan &&
+      !fleetPhysicalStopsMatch(run.routePlan, run.stops[0].siteId, run.stops)
     )
-    .max(200),
-  linkedTicketId: z.number().int().positive().nullable(),
-  allowedActions: z.array(FleetRunActionSchema),
-  availability: FleetAvailabilitySchema.optional(),
-}).superRefine((run,ctx)=>{
-  const assignment=run.resourceAssignment;
-  if(!assignment)return;
-  const {detail}=assignment.snapshot;
-  const trailer=assignment.snapshot.rigPackage?.components.find(item=>item.role==="trailer")?.assetId??null;
-  if(run.id!==assignment.reservation.runId || run.companyId!==detail.companyId ||
-    run.driverUserId!==detail.driverUserId || run.vehicleAssetId!==detail.vehicleAssetId || run.trailerAssetId!==trailer)
-    ctx.addIssue({code:"custom",path:["resourceAssignment"],message:"Run identity and legacy resource fields must match its immutable Detail assignment"});
-});
+      ctx.addIssue({
+        code: "custom",
+        path: ["routePlan"],
+        message:
+          "Operational stops must preserve the exact physical route and separate billing site",
+      });
+    const assignment = run.resourceAssignment;
+    if (!assignment) return;
+    const { detail } = assignment.snapshot;
+    const trailer =
+      assignment.snapshot.rigPackage?.components.find(
+        (item) => item.role === "trailer",
+      )?.assetId ?? null;
+    if (
+      run.id !== assignment.reservation.runId ||
+      run.companyId !== detail.companyId ||
+      run.driverUserId !== detail.driverUserId ||
+      run.vehicleAssetId !== detail.vehicleAssetId ||
+      run.trailerAssetId !== trailer
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["resourceAssignment"],
+        message:
+          "Run identity and legacy resource fields must match its immutable Detail assignment",
+      });
+  });
 export const FleetActionInputSchema = z
   .object({
-    detailSelection:FleetDetailSelectionSchema.optional(),
-    inspectedAssetIds:z.array(FleetCanonicalIdSchema).min(1).max(101).optional(),
-    billingQuantity:z.number().positive().finite().max(1000000).multipleOf(0.01).optional(),
+    detailSelection: FleetDetailSelectionSchema.optional(),
+    inspectedAssetIds: z
+      .array(FleetCanonicalIdSchema)
+      .min(1)
+      .max(101)
+      .optional(),
+    billingQuantity: z
+      .number()
+      .positive()
+      .finite()
+      .max(1000000)
+      .multipleOf(0.01)
+      .optional(),
     destinationId: z.uuid().optional(),
     capturedAt: z.iso.datetime().optional(),
     source: z.literal("user_report").optional(),
@@ -214,7 +264,8 @@ export const FleetActionInputSchema = z
   .strict();
 export const CreateFleetRunSchema = z
   .object({
-    detailSelection:FleetDetailSelectionSchema.optional(),
+    routePlan: FleetRoutePlanSchema.optional(),
+    detailSelection: FleetDetailSelectionSchema.optional(),
     billing: FleetRunBillingInputSchema,
     schedule: FleetScheduleSchema.nullable().optional(),
     operationId: z.uuid(),
@@ -225,11 +276,52 @@ export const CreateFleetRunSchema = z
     trailerAssetId: z.uuid().nullable().default(null),
     stops: z.array(FleetStopSchema).min(1).max(50),
   })
-  .strict().superRefine((value,ctx)=>{
-    if(value.detailSelection?.returnPolicy==="return_required" && value.stops.at(-1)?.kind!=="return")
-      ctx.addIssue({code:"custom",path:["stops"],message:"Return-required work needs its chosen final return stop"});
-    if(value.detailSelection && value.schedule && value.detailSelection.timeZone!==value.schedule.timezone)
-      ctx.addIssue({code:"custom",path:["detailSelection","timeZone"],message:"Detail reservation and schedule must use the same chosen time zone"});
+  .strict()
+  .superRefine((value, ctx) => {
+    if (
+      value.routePlan &&
+      !fleetPhysicalStopsMatch(
+        value.routePlan,
+        value.stops[0].siteId,
+        value.stops,
+      )
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["routePlan"],
+        message:
+          "Operational stops must preserve the exact physical route and separate billing site",
+      });
+    if (
+      value.routePlan &&
+      value.detailSelection &&
+      value.routePlan.returnPolicy !== value.detailSelection.returnPolicy
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["routePlan"],
+        message: "Route and Detail must use the same return policy",
+      });
+    if (
+      value.detailSelection?.returnPolicy === "return_required" &&
+      value.stops.at(-1)?.kind !== "return"
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["stops"],
+        message: "Return-required work needs its chosen final return stop",
+      });
+    if (
+      value.detailSelection &&
+      value.schedule &&
+      value.detailSelection.timeZone !== value.schedule.timezone
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["detailSelection", "timeZone"],
+        message:
+          "Detail reservation and schedule must use the same chosen time zone",
+      });
   });
 export type FleetRun = z.infer<typeof FleetRunSchema>;
 export type FleetActionInput = z.infer<typeof FleetActionInputSchema>;
@@ -435,22 +527,24 @@ export const FleetReportFilterSchema = z
     "Report end must follow start",
   );
 export type FleetReportFilter = z.infer<typeof FleetReportFilterSchema>;
-export const FleetRecordedTimingSchema = z.object({
-  source: z.literal("server_recorded_event_times"),
-  physicalPresenceVerified: z.literal(false),
-  contractualTimelinessVerified: z.literal(false),
-  eligibleRunCount: z.number().int().nonnegative(),
-  invalidSequenceCount: z.number().int().nonnegative(),
-  elapsedMinutes: z.number().finite().nonnegative(),
-  pausedMinutes: z.number().finite().nonnegative(),
-  activeMinutes: z.number().finite().nonnegative(),
-  plannedStartCount: z.number().int().nonnegative(),
-  lateStartCount: z.number().int().nonnegative(),
-  startOffsetTotalMinutes: z.number().finite(),
-  plannedFinishCount: z.number().int().nonnegative(),
-  lateFinishCount: z.number().int().nonnegative(),
-  finishOffsetTotalMinutes: z.number().finite(),
-}).strict();
+export const FleetRecordedTimingSchema = z
+  .object({
+    source: z.literal("server_recorded_event_times"),
+    physicalPresenceVerified: z.literal(false),
+    contractualTimelinessVerified: z.literal(false),
+    eligibleRunCount: z.number().int().nonnegative(),
+    invalidSequenceCount: z.number().int().nonnegative(),
+    elapsedMinutes: z.number().finite().nonnegative(),
+    pausedMinutes: z.number().finite().nonnegative(),
+    activeMinutes: z.number().finite().nonnegative(),
+    plannedStartCount: z.number().int().nonnegative(),
+    lateStartCount: z.number().int().nonnegative(),
+    startOffsetTotalMinutes: z.number().finite(),
+    plannedFinishCount: z.number().int().nonnegative(),
+    lateFinishCount: z.number().int().nonnegative(),
+    finishOffsetTotalMinutes: z.number().finite(),
+  })
+  .strict();
 export type FleetRecordedTiming = z.infer<typeof FleetRecordedTimingSchema>;
 export const FleetReportSchema = z
   .object({

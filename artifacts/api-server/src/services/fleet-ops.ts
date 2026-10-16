@@ -21,6 +21,7 @@ import {
   selectFleetRunDestination,
   recordFleetRunCharge,
   validateCommercialStops,
+  assertFleetPhysicalRoute,
 } from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
@@ -311,6 +312,17 @@ async function eligible(
     [run.siteIds],
   );
   if (stopWork.rows.length) throw new FleetError("fleet.site_stop_work");
+  if (run.routePlan)
+    await assertFleetPhysicalRoute(
+      client,
+      {
+        companyId: run.companyId,
+        userId: run.driverUserId,
+        currentSiteIds: run.siteIds,
+      },
+      state,
+      run,
+    );
   if (snapshot)
     await assertFleetDetailResources({ state, client }, snapshot, run);
   for (const assetId of (snapshot
@@ -370,7 +382,7 @@ async function eligible(
 }
 async function setupEquipment(client: PoolClient, companyId: number) {
   const assets = await client.query(
-    "SELECT id,name,category FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer') AND (EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=assets.id AND l.attachment_type='fleet_inventory') OR EXISTS(SELECT 1 FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'fleets','[]'::jsonb)) d WHERE v.id=$1 AND COALESCE(d->'equipmentAssetIds','[]'::jsonb) ? assets.id::text)) ORDER BY name LIMIT 501",
+    "SELECT id,name,category FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer','dolly','tank','pump','accessory') AND (EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=assets.id AND l.attachment_type='fleet_inventory') OR EXISTS(SELECT 1 FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'fleets','[]'::jsonb)) d WHERE v.id=$1 AND COALESCE(d->'equipmentAssetIds','[]'::jsonb) ? assets.id::text)) ORDER BY name LIMIT 501",
     [companyId],
   );
   if (assets.rows.length > 500)
@@ -602,7 +614,7 @@ export function createFleetService(repository: FleetRepository) {
           [actor.companyId, userIds],
         );
         const assets = await client.query(
-          "SELECT a.id,a.name,a.category,a.status,a.current_holder_user_id,EXISTS(SELECT 1 FROM asset_holds h WHERE h.asset_id=a.id AND h.released_at IS NULL) AS held FROM assets a WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer') ORDER BY name LIMIT 201",
+          "SELECT a.id,a.name,a.category,a.status,a.current_holder_user_id,EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=a.id AND l.attachment_type='fleet_inventory' AND l.attachment_id=$1::text) AS enrolled,EXISTS(SELECT 1 FROM asset_holds h WHERE h.asset_id=a.id AND h.released_at IS NULL) AS held FROM assets a WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer','dolly','tank','pump','accessory') ORDER BY name LIMIT 201",
           [actor.companyId],
         );
         if (assets.rows.length > 200)
@@ -633,12 +645,16 @@ export function createFleetService(repository: FleetRepository) {
               .fleetIds.filter((id) => grant.fleetIds.includes(id)),
           })),
           equipment: assets.rows
-            .filter((row) =>
-              state.fleets.some(
-                (f) =>
-                  grant.fleetIds.includes(f.id) &&
-                  f.equipmentAssetIds.includes(row.id),
-              ),
+            .filter(
+              (row) =>
+                (actor.role === "vendor" &&
+                  actor.membershipRole === "admin" &&
+                  row.enrolled) ||
+                state.fleets.some(
+                  (f) =>
+                    grant.fleetIds.includes(f.id) &&
+                    f.equipmentAssetIds.includes(row.id),
+                ),
             )
             .map((row) => ({
               id: row.id,
@@ -922,6 +938,7 @@ export function createFleetService(repository: FleetRepository) {
             allowedActions: [],
           };
           await attachFleetBilling(client, actor, state, run, body.billing);
+          await assertFleetPhysicalRoute(client, actor, state, run, true);
           if (detailSelection)
             await assignFleetRunDetail(
               { state, client },

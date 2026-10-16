@@ -40,7 +40,7 @@ import { FLEET_OFFLINE_MAX_ACTIONS, fleetQueueBase, fleetQueueAssignmentMatches,
 export default function FleetWorkspace({ initialRunId, initialAssetId, initialMode = "desk" }: {
     initialRunId?: string;
     initialAssetId?: string;
-    initialMode?: "desk" | "my-day" | "log" | "map" | "inventory";
+    initialMode?: "desk" | "my-day" | "log" | "map" | "inventory" | "locations";
 } = {}) {
     const colors = useColors();
     const { width } = useWindowDimensions();
@@ -63,8 +63,8 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         resources: FleetResources;
     } | null>(null);
     const [selected, setSelected] = useState<string | null>(initialRunId ?? null);
-    const [mode, setMode] = useState<"desk" | "my-day" | "dispatch" | "map" | "setup" | "maintenance" | "reports" | "directory" | "review" | "log" | "inventory">(initialMode);
-    const inventoryView = mode === "inventory";
+    const [mode, setMode] = useState<"desk" | "my-day" | "dispatch" | "map" | "setup" | "maintenance" | "reports" | "directory" | "review" | "log" | "inventory" | "locations">(initialMode);
+    const inventoryView = mode === "inventory" || mode === "locations";
     const [logSearch, setLogSearch] = useState("");
     const [fleetFilter, setFleetFilter] = useState<string | null>(null);
     const [error, setError] = useState("");
@@ -364,8 +364,9 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     }
     // Inventory has its own paginated, permission-scoped API. The dispatch
     // resources projection is bounded and must never gate this asset library.
+    if (mode === "locations") return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:16,gap:16}}><WorkHubPageTitle title={copy("Origins and Destinations")} onBack={initialMode !== "locations" ? () => setMode(initialMode) : undefined}/><FleetDestinationDirectory key={`locations:${identity}`}/></ScrollView></ScreenSafeArea>;
     if (mode === "inventory") return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <WorkHubPageTitle title={copy("Fleet Inventory")} onBack={initialMode !== "inventory" ? () => setMode(initialMode) : undefined} />
+      <WorkHubPageTitle title={copy("Inventory and Details")} onBack={initialMode !== "inventory" ? () => setMode(initialMode) : undefined} />
       <FleetInventory key={`${identity}:${initialAssetId ?? ""}`} identity={identity} initialAssetId={initialAssetId} onSaved={() => setRevision(n => n + 1)} />
     </ScrollView></ScreenSafeArea>;
     return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
@@ -375,7 +376,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}>{([
         [overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"My Run":"Fleet Dispatch",overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"my-day":"desk","truck"],
         ...(overview.capabilities.canDrive&&overview.capabilities.canDispatch?[["My Run","my-day","user"]]:[]),
-        ["Fleet Inventory","inventory","truck"], ...(overview.capabilities.canDispatch?[["Drivers","directory","users"]]:[]),["Reports","reports","bar-chart-2"],
+        ["Inventory and Details","inventory","truck"], ["Origins and Destinations","locations","map-pin"], ...(overview.capabilities.canDispatch?[["Drivers","directory","users"]]:[]),["Reports","reports","bar-chart-2"],
         ["Map","map","map"]
       ] as const).map(([label,value,icon])=><Pressable key={value} accessibilityRole="button" accessibilityState={{selected:mode===value}} onPress={()=>setMode(value as typeof mode)} style={{paddingHorizontal:16,paddingVertical:12,borderRadius:12,borderWidth:2,borderColor:colors.primary,backgroundColor:mode===value?colors.primary:colors.card,flexDirection:"row",gap:8,alignItems:"center"}}><Feather name={icon as any} size={18} color={mode===value?"#ffffff":colors.primary}/><Text style={{color:mode===value?"#ffffff":colors.foreground,fontWeight:"600"}}>{copy(label)}</Text></Pressable>)}</View>
       <Pressable accessibilityRole="button" accessibilityLabel={copy("Fleet settings")} onPress={()=>setSettingsOpen(!settingsOpen)} style={{padding:12}}><Feather name="settings" size={23} color={colors.primary}/></Pressable>
@@ -392,7 +393,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     {overview.capabilities.canDispatch&&mode==="desk"&&overview.fleets.length>0&&<TogglePillButton compactOnTablet solid onPress={()=>setMode("dispatch")}>{copy("New run")}</TogglePillButton>}
     </>}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
-    {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Fleet Inventory")}</TogglePillButton>}
+    {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Inventory and Details")}</TogglePillButton>}
     {cachedAt && <Text style={textStyle}>{copy("Offline assigned-work cache from ")}{cachedAt}{copy(". Permissions and readiness are unverified. Entries remain unsynced until the server accepts them; no location is collected.")}</Text>}
     {queued.length > 0 && <Text style={textStyle}>{copy("Queued entries")}: {queued.length}/{FLEET_OFFLINE_MAX_ACTIONS} · {copy("Device storage is bounded; longer reports may need synchronization before another capture.")}</Text>}
     {queued.map(item => <View key={item.input.operationId} style={{ gap: 8 }}><Text style={textStyle}>{copy(item.input.action === "submit_closeout" ? "Close Run" : item.input.action.replaceAll("_", " "))}{copy(": ")}{copy(item.state)}{copy(" \u00B7 captured ")}{item.capturedAt}{copy(" \u00B7 run ")}{item.runId}{copy(" \u00B7 ")}{item.message ? copy(item.message) : copy("Not accepted by the server")}</Text>{["commodity", "quantity", "unit", "manifestReference", "deliveryReference", "notes", "reason", "reading", "inspectionOutcome"].map(field => (item.input as Record<string, unknown>)[field] !== undefined && <Text key={field} style={textStyle}>{copy(field)}: {String((item.input as Record<string, unknown>)[field])}</Text>)}{item.input.inspectionResponses?.map(response=><Text key={response.id} style={textStyle}>{overview?.runs.find(run=>run.id===item.runId)?.operationalProfile?.inspectionItems.find(rule=>rule.id===response.id)?.label??response.id}: {copy(response.outcome)}{response.notes?` · ${response.notes}`:""}</Text>)}{Object.entries(item.input.manifestValues??{}).map(([id,value])=><Text key={id} style={textStyle}>{overview?.runs.find(run=>run.id===item.runId)?.operationalProfile?.manifestFields.find(rule=>rule.id===id)?.label??id}: {value}</Text>)}{item.state === "unsynced" ? <TogglePillButton disabled={busy || !!cachedAt} onPress={() => void synchronize(item)}>{copy("Verify and synchronize queued operation")}</TogglePillButton> : <TogglePillButton disabled={busy} onPress={() => { if (scope)

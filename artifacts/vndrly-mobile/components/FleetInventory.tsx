@@ -9,6 +9,7 @@ import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent, subscribeToken, subscribeUser } from "@/lib/auth";
 import { useFleetInventoryCopy } from "@/lib/fleet-inventory-copy";
+import FleetDetailsLibrary from "./FleetDetailsLibrary";
 
 /** Remount drafts and protected records when the auth generation changes, even in the same company. */
 function useAuthGeneration() {
@@ -66,7 +67,7 @@ function useMutation(onSaved: (detail: FleetInventoryDetail) => void, onDenied: 
 }
 function Field({ label, value, onChange, disabled, maxLength = 200 }: { label: string; value: string; onChange: (value: string) => void; disabled: boolean; maxLength?: number }) {
   const colors = useColors();
-  return <View style={{ gap: 4 }}><Text style={{ color: colors.mutedForeground }}>{label}</Text><TextInput accessibilityLabel={label} editable={!disabled} value={value} onChangeText={onChange} maxLength={maxLength} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 12 }} /></View>;
+  return <View style={{ gap: 4 }}><Text style={{ color: colors.mutedForeground }}>{label}</Text><TextInput accessibilityLabel={label} editable={!disabled} value={value} onChangeText={onChange} maxLength={maxLength} style={{ color: colors.text, borderWidth: 2, borderColor: colors.border, borderRadius: 8, padding: 12 }} /></View>;
 }
 const openFullInventory = () => router.push("/work-hub/inventory" as never);
 type Props = { identity: string; initialAssetId?: string; onSaved?: () => void };
@@ -77,7 +78,7 @@ export default function FleetInventory(props: Props) {
 function InventoryContent({ initialAssetId, onSaved }: Props) {
   const c = useFleetInventoryCopy(), colors = useColors(), access = useRequestScope();
   const [list, setList] = useState<Inventory | null>(null), [detail, setDetail] = useState<FleetInventoryDetail | null>(null), [assetId, setAssetId] = useState(initialAssetId ?? "");
-  const [search, setSearch] = useState(""), [fleet, setFleet] = useState(""), [adding, setAdding] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState(""), [freshRevision, setFreshRevision] = useState(0);
+  const [search, setSearch] = useState(""), [fleet, setFleet] = useState(""), [adding, setAdding] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState(""), [freshRevision, setFreshRevision] = useState(0),[showDetails,setShowDetails]=useState(false);
   const readGeneration = useRef(0), loadingRef = useRef(false);
   async function load(after?: string) {
     const generation = ++readGeneration.current;
@@ -108,13 +109,14 @@ function InventoryContent({ initialAssetId, onSaved }: Props) {
     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>{!!assetId && <SphereBackButton accessibilityLabel={c.back} onPress={() => { setAssetId(""); setDetail(null); }} />}<Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: "700", flex: 1 }}>{detail?.asset.name ?? c.title}</Text><TogglePillButton compactOnTablet disabled={loading} onPress={() => void load()}>{c.refresh}</TogglePillButton></View>
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
     {loading && <ActivityIndicator accessibilityLabel={c.loading} color={colors.primary} />}
-    {assetId ? detail && <AssetDetail key={assetId} data={detail} freshRevision={freshRevision} onSaved={saved} onDenied={denied} /> : <>
+    {!assetId&&<View style={{flexDirection:"row",gap:10}}><TogglePillButton onPress={()=>setShowDetails(false)}>Inventory</TogglePillButton><TogglePillButton onPress={()=>setShowDetails(true)}>Details</TogglePillButton></View>}
+    {!assetId&&showDetails?<FleetDetailsLibrary/>:assetId ? detail && <AssetDetail key={assetId} data={detail} freshRevision={freshRevision} onSaved={saved} onDenied={denied} /> : <>
       <Field label={c.search} value={search} onChange={setSearch} disabled={false} />
       {(list?.fleets.length ?? 0) > 0 && <View style={{ gap: 8 }}><TogglePillButton compactOnTablet solid={!fleet} onPress={() => setFleet("")}>{c.all}</TogglePillButton>{list?.fleets.map(f => <TogglePillButton compactOnTablet key={f.id} solid={fleet === f.id} onPress={() => setFleet(f.id)}>{f.name}</TogglePillButton>)}</View>}
       {list?.canManage && !adding && !error && <TogglePillButton compactOnTablet onPress={() => setAdding(true)}>{c.add}</TogglePillButton>}
       <TogglePillButton compactOnTablet onPress={openFullInventory}>{c.full}</TogglePillButton>
       {adding && list?.canManage && <AssetCreate onSaved={saved} onCancel={() => setAdding(false)} onDenied={denied} />}
-      {assets.map(a => <Pressable key={a.id} accessibilityRole="button" accessibilityLabel={a.name} onPress={() => { setAssetId(a.id); setAdding(false); }} style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: 16, gap: 8 }}><Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{a.name}</Text><Text style={{ color: colors.mutedForeground }}>{[a.manufacturer, a.model].filter(Boolean).join(" · ") || c[a.category as "truck" | "trailer" | "vehicle"] || a.category}</Text><Text style={{ color: colors.text }}>{a.aliases.map(alias => alias.value).join(" · ")}</Text><Text style={{ color: colors.mutedForeground }}>{a.held ? c.held : c[a.status as "available" | "checked_out"] ?? a.status}</Text></Pressable>)}
+      {assets.map(a => <Pressable key={a.id} accessibilityRole="button" accessibilityLabel={a.name} onPress={() => { setAssetId(a.id); setAdding(false); }} style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 2, borderRadius: 14, padding: 16, gap: 8 }}><Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{a.name}</Text><Text style={{ color: colors.mutedForeground }}>{[a.manufacturer, a.model].filter(Boolean).join(" · ") || c[a.category as "truck" | "trailer" | "vehicle"] || a.category}</Text><Text style={{ color: colors.text }}>{a.aliases.map(alias => alias.value).join(" · ")}</Text><Text style={{ color: colors.mutedForeground }}>{a.held ? c.held : c[a.status as "available" | "checked_out"] ?? a.status}</Text></Pressable>)}
       {!loading && !error && !assets.length && <Text style={{ color: colors.text }}>{c.empty}</Text>}
       {list?.nextCursor && <TogglePillButton disabled={loading} onPress={() => { if (!loadingRef.current) void load(list.nextCursor!); }}>{c.more}</TogglePillButton>}
     </>}
@@ -125,7 +127,7 @@ function AssetCreate({ onSaved, onCancel, onDenied }: { onSaved: (detail: FleetI
   const [name, setName] = useState(""), [owner, setOwner] = useState(""), [manufacturer, setManufacturer] = useState(""), [model, setModel] = useState(""), [category, setCategory] = useState("truck"), [kind, setKind] = useState("asset_tag"), [identifier, setIdentifier] = useState(""), [jurisdiction, setJurisdiction] = useState("");
   return <View style={{ backgroundColor: colors.card, padding: 16, borderRadius: 14, gap: 12 }}>
     <Text style={{ color: colors.text }}>{c.createHint}</Text><Text style={{ color: colors.mutedForeground }}>{c.category}</Text>
-    {(["truck", "trailer", "vehicle"] as const).map(value => <TogglePillButton key={value} disabled={mutation.locked} solid={category === value} accessibilityState={{ selected: category === value }} onPress={() => setCategory(value)}>{c[value]}</TogglePillButton>)}
+    {(["truck", "trailer", "vehicle", "dolly", "tank", "pump", "accessory"] as const).map(value => <TogglePillButton key={value} disabled={mutation.locked} solid={category === value} accessibilityState={{ selected: category === value }} onPress={() => setCategory(value)}>{c[value]}</TogglePillButton>)}
     {([[c.name, name, setName], [c.owner, owner, setOwner], [c.manufacturer, manufacturer, setManufacturer], [c.model, model, setModel]] as const).map(([label, value, change]) => <Field key={label} label={label} value={value} onChange={change} disabled={mutation.locked} />)}
     <Text style={{ color: colors.mutedForeground }}>{c.identifierType}</Text>{(["asset_tag", "vin", "plate", "serial"] as const).map(value => <TogglePillButton key={value} disabled={mutation.locked} solid={kind === value} accessibilityState={{ selected: kind === value }} onPress={() => setKind(value)}>{c[value]}</TogglePillButton>)}
     <Field label={c.identifier} value={identifier} onChange={setIdentifier} disabled={mutation.locked} />

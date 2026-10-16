@@ -8,7 +8,12 @@ import {
 } from "./fleet-repository";
 import type { FleetActor } from "./fleet-ops";
 import type { PoolClient } from "pg";
-import { FleetRunSchema } from "@workspace/api-zod";
+import {
+  FleetRunSchema,
+  FleetRoutePlanSchema,
+  fleetRouteOperationalStops,
+  type FleetDestination,
+} from "@workspace/api-zod";
 import { createFleetService } from "./fleet-ops";
 import { databaseFleetRepository } from "./fleet-repository";
 
@@ -273,6 +278,49 @@ describe("canonical Detail persistence", () => {
       ),
     );
     const service = createFleetService(databaseFleetRepository);
+    const places: FleetDestination[] = [];
+    for (const [index, kind] of (
+      ["pickup", "delivery", "yard"] as const
+    ).entries()) {
+      const saved = await service.saveDestination(actors[0], {
+        operationId: randomUUID(),
+        expectedVersion: index + 1,
+        destination: {
+          name: `Synthetic physical ${kind}`,
+          kind,
+          address: `Manual ${kind} road`,
+          latitude: null,
+          longitude: null,
+          active: true,
+          timeZone: "America/Chicago",
+        },
+      });
+      if (!("destination" in saved))
+        throw new Error("Canonical location receipt required");
+      places.push(saved.destination);
+    }
+    const physicalPlan = FleetRoutePlanSchema.parse({
+      origin: { type: "canonical", location: places[0] },
+      stops: [
+        {
+          id: randomUUID(),
+          sequence: 0,
+          kind: "delivery",
+          cycleId: null,
+          location: { type: "canonical", location: places[1] },
+        },
+        {
+          id: randomUUID(),
+          sequence: 1,
+          kind: "return",
+          cycleId: null,
+          location: { type: "canonical", location: places[2] },
+        },
+      ],
+      base: { type: "canonical", location: places[2] },
+      returnPolicy: "return_required",
+      plannedWindow: null,
+    });
     const input = (index: number) => ({
       operationId: randomUUID(),
       fleetId: f.groupId,
@@ -293,14 +341,30 @@ describe("canonical Detail persistence", () => {
         afeNumber: "A1",
         workDate: "2026-10-16",
       },
-      stops: ["pickup", "delivery", "return"].map((kind, sequence) => ({
-        id: randomUUID(),
-        kind,
-        sequence,
-        siteId: site.id,
-      })),
+      routePlan: physicalPlan,
+      stops: fleetRouteOperationalStops(physicalPlan, site.id, randomUUID()),
     });
     let run = await service.create(actors[0], input(0));
+    expect(run.routePlan?.origin).toMatchObject({
+      type: "canonical",
+      location: { id: places[0].id, latitude: null },
+    });
+    expect(run.stops.map((stop) => stop.siteId)).toEqual([
+      site.id,
+      site.id,
+      site.id,
+    ]);
+    const forged = structuredClone(physicalPlan);
+    if (forged.origin.type !== "canonical") throw new Error("fixture");
+    forged.origin.location.address = "Forged alternate pickup";
+    await expect(
+      service.editDraft(actors[0], run.id, {
+        operationId: randomUUID(),
+        expectedVersion: run.version,
+        routePlan: forged,
+        stops: fleetRouteOperationalStops(forged, site.id, run.stops[0].id),
+      }),
+    ).rejects.toMatchObject({ code: "fleet.destination_revision_conflict" });
     expect(run.resourceAssignment?.reservation.assetIds).toEqual([
       f.assets[0].id,
       f.assets[2].id,

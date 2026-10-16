@@ -244,6 +244,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     ...(fleetAccess.data?.capabilities.canDrive ? [{ key: "fleet-my-day", href: "/fleet/my-day", label: fleetText.myDay, icon: Users }] : []),
     { key: "fleet-loads", href: "/fleet/loads", label: fleetText.loads, icon: Receipt },
     { key: "fleet-inventory", href: "/fleet/equipment", label: fleetText.equipment, icon: BriefcaseBusiness },
+    { key: "fleet-destinations", href: "/fleet/destinations", label: fleetText.destinations, icon: MapIcon },
     ...((fleetAccess.data?.capabilities.canReportDefect ?? (fleetAccess.data?.capabilities.canManage || fleetAccess.data?.capabilities.canDrive)) ? [{ key: "fleet-maintenance", href: "/fleet/maintenance", label: fleetText.maintenance, icon: ClipboardList }] : []),
     ...(fleetAccess.data?.capabilities.canManage ? [{ key: "fleet-review", href: "/fleet/review", label: fleetText.review, icon: UserCheck }] : []),
     ...(fleetAccess.data?.capabilities.canSetup ? [{ key: "fleet-setup", href: "/fleet/setup", label: fleetText.setup, icon: Gauge }] : []),

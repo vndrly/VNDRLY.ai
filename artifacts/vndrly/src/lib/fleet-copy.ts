@@ -18,7 +18,8 @@ const en = {
   reviewHint: "Review saved closeout records and resolve exceptions.",
   driverHint: "Review drivers, fleet access and recorded availability.",
   maintenanceHint: "Review defects, service records and safety holds.",
-  mapSummary: "Latest recorded position per vehicle. Select a vehicle to inspect its work.",
+  mapSummary:
+    "Latest recorded position per vehicle. Select a vehicle to inspect its work.",
   recordedSnapshot: "Recorded snapshot",
   mapTools: "Fleet map controls",
   street: "Street",
@@ -28,9 +29,11 @@ const en = {
   collapseMap: "Collapse map",
   showOld: "Show stale / paused positions",
   noCurrentLocations: "No recent positions in this view",
-  oldLocationsHint: "Older positions are hidden. Show stale / paused positions to inspect their last recorded locations.",
+  oldLocationsHint:
+    "Older positions are hidden. Show stale / paused positions to inspect their last recorded locations.",
   positionRoster: "Vehicles on map",
-  positionLegend: "Numbers match the map markers. Blue: recent. Grey: stale or paused.",
+  positionLegend:
+    "Numbers match the map markers. Blue: recent. Grey: stale or paused.",
   recentPosition: "Recent",
   oldPosition: "Stale / paused",
 
@@ -396,7 +399,8 @@ const en = {
   myDay: "My Day",
   myRun: "My Run",
   map: "Recorded Map",
-  equipment: "Fleet Inventory",
+  equipment: "Inventory and Details",
+  destinations: "Origins and Destinations",
   workHub: "Work Hub",
   companyPortal: "Company portal",
   subtitle: "Authorized dispatch, assigned runs and recorded locations",
@@ -478,12 +482,14 @@ const es: Record<keyof typeof en, string> = {
   filters: "Filtrar trabajo de flota",
   fleetTools: "Herramientas de flota",
   awaitingDispatch: "Pendiente de despacho",
-  dispatchHint: "Prepare recorridos en borrador y asigne los recursos adecuados.",
+  dispatchHint:
+    "Prepare recorridos en borrador y asigne los recursos adecuados.",
   activeHint: "Recorridos despachados, confirmados y en curso.",
   reviewHint: "Revise los registros de cierre y resuelva excepciones.",
   driverHint: "Revise conductores, acceso y disponibilidad registrada.",
   maintenanceHint: "Revise defectos, servicios y bloqueos de seguridad.",
-  mapSummary: "Última posición registrada por vehículo. Seleccione un vehículo para revisar su trabajo.",
+  mapSummary:
+    "Última posición registrada por vehículo. Seleccione un vehículo para revisar su trabajo.",
   recordedSnapshot: "Registro guardado",
   mapTools: "Controles del mapa de flota",
   street: "Calles",
@@ -493,9 +499,11 @@ const es: Record<keyof typeof en, string> = {
   collapseMap: "Reducir mapa",
   showOld: "Mostrar posiciones antiguas o pausadas",
   noCurrentLocations: "No hay posiciones recientes en esta vista",
-  oldLocationsHint: "Las posiciones antiguas están ocultas. Active la opción para revisar las últimas ubicaciones registradas.",
+  oldLocationsHint:
+    "Las posiciones antiguas están ocultas. Active la opción para revisar las últimas ubicaciones registradas.",
   positionRoster: "Vehículos en el mapa",
-  positionLegend: "Los números coinciden con los marcadores. Azul: reciente. Gris: antigua o pausada.",
+  positionLegend:
+    "Los números coinciden con los marcadores. Azul: reciente. Gris: antigua o pausada.",
   recentPosition: "Reciente",
   oldPosition: "Antigua o pausada",
 
@@ -861,7 +869,8 @@ const es: Record<keyof typeof en, string> = {
   myDay: "Mi día",
   myRun: "Mi recorrido",
   map: "Mapa registrado",
-  equipment: "Inventario de flota",
+  equipment: "Inventario y destacamentos",
+  destinations: "Orígenes y destinos",
   workHub: "Centro de trabajo",
   companyPortal: "Portal de la empresa",
   subtitle:

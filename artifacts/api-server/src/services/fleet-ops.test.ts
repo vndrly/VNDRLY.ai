@@ -1,7 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 const notifications = vi.hoisted(() => vi.fn());
-vi.mock("../routes/notifications", () => ({notifyUsers:notifications}));
-beforeEach(() => {notifications.mockReset().mockResolvedValue(1);});
+vi.mock("../routes/notifications", () => ({ notifyUsers: notifications }));
+beforeEach(() => {
+  notifications.mockReset().mockResolvedValue(1);
+});
 import {
   previewFleetRunActions,
   FleetActionInputSchema,
@@ -54,20 +56,86 @@ function fixture() {
   let required = false;
   let hold = false;
   let sitesVisible = true;
-  let certificationRows: Array<{name:string;vendor_verified_at:string|null;expiration_date:string|null}>=[];
-  const billingTickets: {id:number;work_type_id:number;site_location_id:number;vendor_id:number;partner_id:number;status:string;fleet_plan:unknown}[]=[];
-  let availability: { starts_at: string; ends_at: string; available: boolean; recurrence: null }[] = [];
+  let certificationRows: Array<{
+    name: string;
+    vendor_verified_at: string | null;
+    expiration_date: string | null;
+  }> = [];
+  const billingTickets: {
+    id: number;
+    work_type_id: number;
+    site_location_id: number;
+    vendor_id: number;
+    partner_id: number;
+    status: string;
+    fleet_plan: unknown;
+  }[] = [];
+  let availability: {
+    starts_at: string;
+    ends_at: string;
+    available: boolean;
+    recurrence: null;
+  }[] = [];
   const client = {
-    query: async (sql: string,params:unknown[]=[]) => {
-      if(sql.includes("FROM employee_certifications"))return{rows:certificationRows};
-      if(sql.includes("FROM vendor_work_types"))return{rows:[{id:3,name:"Synthetic haul",unit_price:"1.00",unit:"per_job",afe_number:"A1"}]};
-      if(sql.startsWith("INSERT INTO tickets")){const ticket={id:billingTickets.length+10,work_type_id:3,site_location_id:9,vendor_id:7,partner_id:8,status:"initiated",fleet_plan:JSON.parse(params[5] as string)};billingTickets.push(ticket);return{rows:[ticket]};}
-      if(sql.includes("FROM tickets"))return{rows:billingTickets.filter(t=>t.id===params[0])};
-      if(sql.startsWith("INSERT INTO ticket_line_items"))return{rows:[{id:100}]};
-      if (sql.includes("SELECT m.id FROM user_org_memberships")) return {rows:[{id:7}]};
-      if (sql.includes("FROM work_hub_form_instances")) return {rows:required?[{id:"10000000-0000-4000-8000-000000000003",title:"Orientation",template_version:1,assignment_metadata:{assignmentId:"10000000-0000-4000-8000-000000000001",sourceItemId:"10000000-0000-4000-8000-000000000002",contentVersion:1,membershipId:7,requiredBeforeWork:true,assignedAt:"2026-10-14T00:00:00Z",dueAt:"2026-11-14T00:00:00Z"}}]:[]};
-      if (sql.includes("FROM work_hub_availability")) return { rows: availability };
-      if (sql.includes("m.user_id=ANY")) return {rows:[{user_id:1},{user_id:2}]};
+    query: async (sql: string, params: unknown[] = []) => {
+      if (sql.includes("FROM employee_certifications"))
+        return { rows: certificationRows };
+      if (sql.includes("FROM vendor_work_types"))
+        return {
+          rows: [
+            {
+              id: 3,
+              name: "Synthetic haul",
+              unit_price: "1.00",
+              unit: "per_job",
+              afe_number: "A1",
+            },
+          ],
+        };
+      if (sql.startsWith("INSERT INTO tickets")) {
+        const ticket = {
+          id: billingTickets.length + 10,
+          work_type_id: 3,
+          site_location_id: 9,
+          vendor_id: 7,
+          partner_id: 8,
+          status: "initiated",
+          fleet_plan: JSON.parse(params[5] as string),
+        };
+        billingTickets.push(ticket);
+        return { rows: [ticket] };
+      }
+      if (sql.includes("FROM tickets"))
+        return { rows: billingTickets.filter((t) => t.id === params[0]) };
+      if (sql.startsWith("INSERT INTO ticket_line_items"))
+        return { rows: [{ id: 100 }] };
+      if (sql.includes("SELECT m.id FROM user_org_memberships"))
+        return { rows: [{ id: 7 }] };
+      if (sql.includes("FROM work_hub_form_instances"))
+        return {
+          rows: required
+            ? [
+                {
+                  id: "10000000-0000-4000-8000-000000000003",
+                  title: "Orientation",
+                  template_version: 1,
+                  assignment_metadata: {
+                    assignmentId: "10000000-0000-4000-8000-000000000001",
+                    sourceItemId: "10000000-0000-4000-8000-000000000002",
+                    contentVersion: 1,
+                    membershipId: 7,
+                    requiredBeforeWork: true,
+                    assignedAt: "2026-10-14T00:00:00Z",
+                    dueAt: "2026-11-14T00:00:00Z",
+                  },
+                },
+              ]
+            : [],
+        };
+      if (sql.includes("FROM work_hub_availability"))
+        return { rows: availability };
+      if (sql.includes("m.user_id=ANY"))
+        return { rows: [{ user_id: 1 }, { user_id: 2 }] };
       if (sql.startsWith("INSERT INTO asset_holds")) hold = true;
       return {
         rows: sql.includes("vendor_people")
@@ -76,6 +144,7 @@ function fixture() {
             ? [
                 {
                   id: vehicle,
+                  enrolled: true,
                   status: "available",
                   category: "truck",
                   current_holder_user_id: null,
@@ -87,7 +156,17 @@ function fixture() {
                 : []
               : sql.includes("site_locations")
                 ? sitesVisible
-                  ? [{ id: 9, relationship_id:1, relationship_status:"approved", partner_id:8, afe:"A1", status:"active", is_active: true }]
+                  ? [
+                      {
+                        id: 9,
+                        relationship_id: 1,
+                        relationship_status: "approved",
+                        partner_id: 8,
+                        afe: "A1",
+                        status: "active",
+                        is_active: true,
+                      },
+                    ]
                   : []
                 : [],
       };
@@ -105,9 +184,22 @@ function fixture() {
   return {
     service: createFleetService(repo),
     state: () => state,
-    certificates:(rows:typeof certificationRows)=>{certificationRows=rows;},
-    requireTraining:()=>{required=true;},
-    availability: (available: boolean) => { availability = [{ starts_at: "2026-10-08T12:00:00Z", ends_at: "2026-10-08T20:00:00Z", available, recurrence: null }]; },
+    certificates: (rows: typeof certificationRows) => {
+      certificationRows = rows;
+    },
+    requireTraining: () => {
+      required = true;
+    },
+    availability: (available: boolean) => {
+      availability = [
+        {
+          starts_at: "2026-10-08T12:00:00Z",
+          ends_at: "2026-10-08T20:00:00Z",
+          available,
+          recurrence: null,
+        },
+      ];
+    },
     revokeSites: () => {
       sitesVisible = false;
     },
@@ -120,7 +212,12 @@ function fixture() {
   };
 }
 const createInput = {
-  billing:{mode:"new_ticket",workTypeId:3,afeNumber:"A1",workDate:"2026-10-16"},
+  billing: {
+    mode: "new_ticket",
+    workTypeId: 3,
+    afeNumber: "A1",
+    workDate: "2026-10-16",
+  },
   operationId: "33333333-3333-4333-8333-333333333333",
   fleetId,
   title: "Synthetic run",
@@ -136,95 +233,337 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
-  it("retains an expired dispatch assessment when a certificate is later renewed", async()=>{
-    const f=fixture();
-    f.state().fleets[0].requiredCertifications=["Synthetic DOT credential"];
-    f.certificates([{name:"Synthetic DOT credential",vendor_verified_at:"2000-01-01T00:00:00Z",expiration_date:"2000-01-01"}]);
-    const created=await f.service.create(manager,createInput);
-    expect(created.events[0].details?.fleetCompliance).toMatchObject({warnings:expect.arrayContaining([expect.objectContaining({reason:"expired"})])});
-    f.certificates([{name:"Synthetic DOT credential",vendor_verified_at:new Date().toISOString(),expiration_date:"2099-01-01"}]);
-    const dispatched=await f.service.action(manager,created.id,{operationId:crypto.randomUUID(),expectedVersion:created.version,action:"dispatch"});
-    expect(dispatched.events[0].details?.fleetCompliance).toEqual(created.events[0].details?.fleetCompliance);
-    expect(dispatched.events.at(-1)?.details?.fleetCompliance).toMatchObject({warnings:expect.not.arrayContaining([expect.objectContaining({category:"driver_certification"})])});
+  it("offers enrolled Inventory assets to a company administrator without changing access-group membership", async () => {
+    const f = fixture();
+    f.state().fleets[0].equipmentAssetIds = [];
+    expect(
+      (
+        await f.service.resources({
+          ...manager,
+          role: "vendor",
+          membershipRole: "admin",
+        })
+      ).equipment.map((item) => item.id),
+    ).toContain(vehicle);
+    expect(f.state().fleets[0].equipmentAssetIds).toEqual([]);
+    expect((await f.service.resources(manager)).equipment).toEqual([]);
+  });
+  it("retains an expired dispatch assessment when a certificate is later renewed", async () => {
+    const f = fixture();
+    f.state().fleets[0].requiredCertifications = ["Synthetic DOT credential"];
+    f.certificates([
+      {
+        name: "Synthetic DOT credential",
+        vendor_verified_at: "2000-01-01T00:00:00Z",
+        expiration_date: "2000-01-01",
+      },
+    ]);
+    const created = await f.service.create(manager, createInput);
+    expect(created.events[0].details?.fleetCompliance).toMatchObject({
+      warnings: expect.arrayContaining([
+        expect.objectContaining({ reason: "expired" }),
+      ]),
+    });
+    f.certificates([
+      {
+        name: "Synthetic DOT credential",
+        vendor_verified_at: new Date().toISOString(),
+        expiration_date: "2099-01-01",
+      },
+    ]);
+    const dispatched = await f.service.action(manager, created.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: created.version,
+      action: "dispatch",
+    });
+    expect(dispatched.events[0].details?.fleetCompliance).toEqual(
+      created.events[0].details?.fleetCompliance,
+    );
+    expect(dispatched.events.at(-1)?.details?.fleetCompliance).toMatchObject({
+      warnings: expect.not.arrayContaining([
+        expect.objectContaining({ category: "driver_certification" }),
+      ]),
+    });
   });
   it("records missing document warnings at creation, dispatch and start while actual Inventory holds remain authoritative", async () => {
-    const f=fixture();
-    f.state().fleets[0].requiredCertifications=["Synthetic DOT credential"];
-    let run=await f.service.create(manager,createInput);
-    expect(run.events[0].details?.fleetCompliance).toMatchObject({mode:"warn_only",status:"red",warnings:expect.arrayContaining([{reason:"missing",category:"driver_certification",requirement:"Synthetic DOT credential"}])});
-    run=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"dispatch"});
-    expect(run.events.at(-1)?.details?.fleetCompliance).toMatchObject({status:"red"});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"acknowledge"});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"inspect",inspectionOutcome:"passed",notes:"Physically inspected"});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"record_meter",reading:100,unit:"miles",notes:"Actual reading"});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"start"});
+    const f = fixture();
+    f.state().fleets[0].requiredCertifications = ["Synthetic DOT credential"];
+    let run = await f.service.create(manager, createInput);
+    expect(run.events[0].details?.fleetCompliance).toMatchObject({
+      mode: "warn_only",
+      status: "red",
+      warnings: expect.arrayContaining([
+        {
+          reason: "missing",
+          category: "driver_certification",
+          requirement: "Synthetic DOT credential",
+        },
+      ]),
+    });
+    run = await f.service.action(manager, run.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: run.version,
+      action: "dispatch",
+    });
+    expect(run.events.at(-1)?.details?.fleetCompliance).toMatchObject({
+      status: "red",
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: run.version,
+      action: "acknowledge",
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: run.version,
+      action: "inspect",
+      inspectionOutcome: "passed",
+      notes: "Physically inspected",
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: run.version,
+      action: "record_meter",
+      reading: 100,
+      unit: "miles",
+      notes: "Actual reading",
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: run.version,
+      action: "start",
+    });
     expect(run.status).toBe("in_progress");
-    expect(run.events.at(-1)?.details?.fleetCompliance).toMatchObject({status:"red"});
+    expect(run.events.at(-1)?.details?.fleetCompliance).toMatchObject({
+      status: "red",
+    });
     f.hold();
-    await expect(f.service.action(driver,run.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"arrive_stop",stopId:run.stops[0].id})).rejects.toMatchObject({code:"fleet.equipment_on_hold"});
-    expect(f.state().runs[0].events[0].details?.fleetCompliance).toMatchObject({status:"red"});
+    await expect(
+      f.service.action(driver, run.id, {
+        operationId: crypto.randomUUID(),
+        expectedVersion: run.version,
+        action: "arrive_stop",
+        stopId: run.stops[0].id,
+      }),
+    ).rejects.toMatchObject({ code: "fleet.equipment_on_hold" });
+    expect(f.state().runs[0].events[0].details?.fleetCompliance).toMatchObject({
+      status: "red",
+    });
   });
   it("notifies only newly committed dispatch events and never repeats alerts on exact replay", async () => {
-    const f=fixture();
-    const run=await f.service.create(manager,createInput);
-    const input={operationId:crypto.randomUUID(),expectedVersion:run.version,action:"dispatch"};
-    const dispatched=await f.service.action(manager,run.id,input);
+    const f = fixture();
+    const run = await f.service.create(manager, createInput);
+    const input = {
+      operationId: crypto.randomUUID(),
+      expectedVersion: run.version,
+      action: "dispatch",
+    };
+    const dispatched = await f.service.action(manager, run.id, input);
     expect(f.state().runs[0].status).toBe("dispatched");
     expect(notifications).toHaveBeenCalledTimes(1);
-    expect(notifications).toHaveBeenCalledWith([2],expect.objectContaining({type:"fleet_run_event",dedupeKey:`fleet:7:${input.operationId}`}));
-    expect(await f.service.action(manager,run.id,input)).toMatchObject({version:dispatched.version});
+    expect(notifications).toHaveBeenCalledWith(
+      [2],
+      expect.objectContaining({
+        type: "fleet_run_event",
+        dedupeKey: `fleet:7:${input.operationId}`,
+      }),
+    );
+    expect(await f.service.action(manager, run.id, input)).toMatchObject({
+      version: dispatched.version,
+    });
     expect(notifications).toHaveBeenCalledTimes(1);
     notifications.mockRejectedValue(new Error("Unavailable delivery"));
-    const cancelled=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),expectedVersion:dispatched.version,action:"cancel",reason:"Synthetic cancellation"});
+    const cancelled = await f.service.action(manager, run.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: dispatched.version,
+      action: "cancel",
+      reason: "Synthetic cancellation",
+    });
     expect(cancelled.status).toBe("cancelled");
     expect(f.state().runs[0].status).toBe("cancelled");
   });
   it("reads a scoped review packet and refuses closeout with missing snapshotted evidence", async () => {
-    const f=fixture();
-    f.state().fleets[0].operationalProfile={name:"Saved receipt required",inspectionItems:[],manifestFields:[],evidenceRequirements:[{id:"receipt",label:"Saved receipt",kind:"receipt",scope:"run",required:true}]};
-    const created=await f.service.create(manager,createInput);
-    const run=f.state().runs[0];
-    run.status="in_progress";run.phase=null;run.visitedStopIds=run.stops.map(stop=>stop.id);
-    run.loads=[{id:crypto.randomUUID(),pickupStopId:run.stops[0].id,deliveryStopId:run.stops[0].id,commodity:"Water",quantity:1,unit:"bbl",manifestReference:"Synthetic",deliveryReference:"Reported",recordedByUserId:2,recordedAt:new Date().toISOString(),deliveredAt:new Date().toISOString(),source:"user_report" as const}];
-    run.records=[100,101].map(reading=>({id:crypto.randomUUID(),vehicleAssetId:vehicle,kind:"meter",quantity:null,reading,unit:"miles",notes:"Reported",recordedByUserId:2,recordedAt:new Date().toISOString(),capturedAt:null,source:"user_report"}));
-    f.state().fleets[0].operationalProfile!.evidenceRequirements=[];
-    const packet=await f.service.reviewPacket(driver,created.id);
+    const f = fixture();
+    f.state().fleets[0].operationalProfile = {
+      name: "Saved receipt required",
+      inspectionItems: [],
+      manifestFields: [],
+      evidenceRequirements: [
+        {
+          id: "receipt",
+          label: "Saved receipt",
+          kind: "receipt",
+          scope: "run",
+          required: true,
+        },
+      ],
+    };
+    const created = await f.service.create(manager, createInput);
+    const run = f.state().runs[0];
+    run.status = "in_progress";
+    run.phase = null;
+    run.visitedStopIds = run.stops.map((stop) => stop.id);
+    run.loads = [
+      {
+        id: crypto.randomUUID(),
+        pickupStopId: run.stops[0].id,
+        deliveryStopId: run.stops[0].id,
+        commodity: "Water",
+        quantity: 1,
+        unit: "bbl",
+        manifestReference: "Synthetic",
+        deliveryReference: "Reported",
+        recordedByUserId: 2,
+        recordedAt: new Date().toISOString(),
+        deliveredAt: new Date().toISOString(),
+        source: "user_report" as const,
+      },
+    ];
+    run.records = [100, 101].map((reading) => ({
+      id: crypto.randomUUID(),
+      vehicleAssetId: vehicle,
+      kind: "meter",
+      quantity: null,
+      reading,
+      unit: "miles",
+      notes: "Reported",
+      recordedByUserId: 2,
+      recordedAt: new Date().toISOString(),
+      capturedAt: null,
+      source: "user_report",
+    }));
+    f.state().fleets[0].operationalProfile!.evidenceRequirements = [];
+    const packet = await f.service.reviewPacket(driver, created.id);
     expect(packet.missingRequiredCount).toBe(1);
     expect(packet.physicalProofVerified).toBe(false);
-    await expect(f.service.action(driver,created.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"submit_closeout"})).rejects.toMatchObject({code:"fleet.evidence_required"});
+    await expect(
+      f.service.action(driver, created.id, {
+        operationId: crypto.randomUUID(),
+        expectedVersion: run.version,
+        action: "submit_closeout",
+      }),
+    ).rejects.toMatchObject({ code: "fleet.evidence_required" });
     expect(f.state().runs[0].status).toBe("in_progress");
     f.revokeSites();
-    await expect(f.service.reviewPacket(driver,created.id)).rejects.toMatchObject({code:"fleet.not_found"});
+    await expect(
+      f.service.reviewPacket(driver, created.id),
+    ).rejects.toMatchObject({ code: "fleet.not_found" });
   });
   it("snapshots configured requirements and enforces checklist before accepting a passed inspection", async () => {
-    const f=fixture();
-    f.state().fleets[0].operationalProfile={name:"Bulk",inspectionItems:[{id:"brakes",label:"Brakes",required:true}],manifestFields:[{id:"seal",label:"Seal reference",required:true}]};
-    let run=await f.service.create(manager,{...createInput,schedule:{plannedStartAt:"2026-10-08T12:00:00Z",plannedEndAt:"2026-10-08T20:00:00Z",timezone:"America/Chicago"}});
-    expect(run.canEditDraft).toBe(true);expect(run.operationalProfile?.inspectionItems).toHaveLength(1);
-    f.state().fleets[0].operationalProfile=undefined;
+    const f = fixture();
+    f.state().fleets[0].operationalProfile = {
+      name: "Bulk",
+      inspectionItems: [{ id: "brakes", label: "Brakes", required: true }],
+      manifestFields: [{ id: "seal", label: "Seal reference", required: true }],
+    };
+    let run = await f.service.create(manager, {
+      ...createInput,
+      schedule: {
+        plannedStartAt: "2026-10-08T12:00:00Z",
+        plannedEndAt: "2026-10-08T20:00:00Z",
+        timezone: "America/Chicago",
+      },
+    });
+    expect(run.canEditDraft).toBe(true);
+    expect(run.operationalProfile?.inspectionItems).toHaveLength(1);
+    f.state().fleets[0].operationalProfile = undefined;
     f.availability(true);
-    run=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),action:"dispatch",expectedVersion:run.version});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"acknowledge",expectedVersion:run.version});
-    await expect(f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"inspect",inspectionOutcome:"passed",notes:"User report",expectedVersion:run.version})).rejects.toMatchObject({code:"fleet.inspection_fields_required"});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"inspect",inspectionOutcome:"passed",inspectionResponses:[{id:"brakes",outcome:"passed"}],notes:"Actually checked",expectedVersion:run.version});
-    expect(run.inspections[0].responses).toEqual([{id:"brakes",outcome:"passed"}]);expect(run.operationalProfile?.manifestFields[0].id).toBe("seal");
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"record_meter",reading:100,unit:"miles",notes:"Actual meter",expectedVersion:run.version});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"start",expectedVersion:run.version});
-    run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"arrive_stop",stopId:run.stops[0].id,expectedVersion:run.version});
-    const load={operationId:crypto.randomUUID(),action:"record_load",loadId:crypto.randomUUID(),commodity:"Bulk",quantity:20,unit:"tons",manifestReference:"Fictional fixture manifest",expectedVersion:run.version};
-    await expect(f.service.action(driver,run.id,load)).rejects.toMatchObject({code:"fleet.load_fields_required"});
-    run=await f.service.action(driver,run.id,{...load,manifestValues:{seal:"Actual user-reported seal"}});
-    expect(run.loads[0].manifestValues).toEqual({seal:"Actual user-reported seal"});expect(run.loads[0].source).toBe("user_report");
+    run = await f.service.action(manager, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "dispatch",
+      expectedVersion: run.version,
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "acknowledge",
+      expectedVersion: run.version,
+    });
+    await expect(
+      f.service.action(driver, run.id, {
+        operationId: crypto.randomUUID(),
+        action: "inspect",
+        inspectionOutcome: "passed",
+        notes: "User report",
+        expectedVersion: run.version,
+      }),
+    ).rejects.toMatchObject({ code: "fleet.inspection_fields_required" });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "inspect",
+      inspectionOutcome: "passed",
+      inspectionResponses: [{ id: "brakes", outcome: "passed" }],
+      notes: "Actually checked",
+      expectedVersion: run.version,
+    });
+    expect(run.inspections[0].responses).toEqual([
+      { id: "brakes", outcome: "passed" },
+    ]);
+    expect(run.operationalProfile?.manifestFields[0].id).toBe("seal");
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "record_meter",
+      reading: 100,
+      unit: "miles",
+      notes: "Actual meter",
+      expectedVersion: run.version,
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "start",
+      expectedVersion: run.version,
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "arrive_stop",
+      stopId: run.stops[0].id,
+      expectedVersion: run.version,
+    });
+    const load = {
+      operationId: crypto.randomUUID(),
+      action: "record_load",
+      loadId: crypto.randomUUID(),
+      commodity: "Bulk",
+      quantity: 20,
+      unit: "tons",
+      manifestReference: "Fictional fixture manifest",
+      expectedVersion: run.version,
+    };
+    await expect(f.service.action(driver, run.id, load)).rejects.toMatchObject({
+      code: "fleet.load_fields_required",
+    });
+    run = await f.service.action(driver, run.id, {
+      ...load,
+      manifestValues: { seal: "Actual user-reported seal" },
+    });
+    expect(run.loads[0].manifestValues).toEqual({
+      seal: "Actual user-reported seal",
+    });
+    expect(run.loads[0].source).toBe("user_report");
   });
   it("allows scheduled planning but denies dispatch without covering saved availability", async () => {
     const f = fixture();
-    const run = await f.service.create(manager, { ...createInput, schedule: { plannedStartAt: "2026-10-08T12:00:00Z", plannedEndAt: "2026-10-08T20:00:00Z", timezone: "America/Chicago" } });
-    const command = { operationId: crypto.randomUUID(), action: "dispatch", expectedVersion: run.version };
-    await expect(f.service.action(manager, run.id, command)).rejects.toMatchObject({ code: "fleet.driver_availability_unknown" });
+    const run = await f.service.create(manager, {
+      ...createInput,
+      schedule: {
+        plannedStartAt: "2026-10-08T12:00:00Z",
+        plannedEndAt: "2026-10-08T20:00:00Z",
+        timezone: "America/Chicago",
+      },
+    });
+    const command = {
+      operationId: crypto.randomUUID(),
+      action: "dispatch",
+      expectedVersion: run.version,
+    };
+    await expect(
+      f.service.action(manager, run.id, command),
+    ).rejects.toMatchObject({ code: "fleet.driver_availability_unknown" });
     expect(f.state().runs[0].status).toBe("draft");
     expect(f.state().runs[0].version).toBe(run.version);
     f.availability(false);
-    await expect(f.service.action(manager, run.id, command)).rejects.toMatchObject({ code: "fleet.driver_schedule_conflict" });
+    await expect(
+      f.service.action(manager, run.id, command),
+    ).rejects.toMatchObject({ code: "fleet.driver_schedule_conflict" });
     f.availability(true);
     const saved = await f.service.action(manager, run.id, command);
     f.availability(false);
@@ -644,15 +983,106 @@ describe("Fleet durable service authority contract", () => {
     expect(overview.capabilities.canDispatch).toBe(false);
   });
 });
-it("projects commercial routing without financial fields unless the current scoped finance grant permits it",async()=>{const f=fixture();const created=await f.service.create(manager,createInput);const destination={id:crypto.randomUUID(),revision:1,name:"Synthetic yard",kind:"yard" as const,address:"123 Test Road",latitude:35,longitude:-97,materials:[],hours:"",instructions:"",active:true,ownerType:"vendor" as const,ownerId:7};const saved=f.state().runs[0];saved.commercial={ticketId:88,originSiteId:9,mode:"batch",rateCents:12500,currency:"USD",approvedDestinations:[destination],destinationId:destination.id,billedLineId:123};const own=await f.service.detail(driver,created.id);expect(own.commercial).toMatchObject({ticketId:88,originSiteId:9,mode:"batch",approvedDestinations:[destination],destinationId:destination.id});expect(own.commercial).not.toHaveProperty("rateCents");expect(own.commercial).not.toHaveProperty("billedLineId");expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty("billedLineId");expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty("rateCents");expect(f.state().runs[0].commercial?.rateCents).toBe(12500);expect((await f.service.detail(manager,created.id)).commercial).not.toHaveProperty("rateCents");f.state().grants.find(g=>g.userId===1)!.financeRead=true;expect((await f.service.detail(manager,created.id)).commercial).toMatchObject({rateCents:12500,billedLineId:123});f.state().grants.find(g=>g.userId===1)!.financeRead=false;expect((await f.service.detail({...manager,role:"vendor",membershipRole:"admin"},created.id)).commercial).not.toHaveProperty("rateCents");});
+it("projects commercial routing without financial fields unless the current scoped finance grant permits it", async () => {
+  const f = fixture();
+  const created = await f.service.create(manager, createInput);
+  const destination = {
+    id: crypto.randomUUID(),
+    revision: 1,
+    name: "Synthetic yard",
+    kind: "yard" as const,
+    address: "123 Test Road",
+    latitude: 35,
+    longitude: -97,
+    materials: [],
+    hours: "",
+    instructions: "",
+    active: true,
+    ownerType: "vendor" as const,
+    ownerId: 7,
+  };
+  const saved = f.state().runs[0];
+  saved.commercial = {
+    ticketId: 88,
+    originSiteId: 9,
+    mode: "batch",
+    rateCents: 12500,
+    currency: "USD",
+    approvedDestinations: [destination],
+    destinationId: destination.id,
+    billedLineId: 123,
+  };
+  const own = await f.service.detail(driver, created.id);
+  expect(own.commercial).toMatchObject({
+    ticketId: 88,
+    originSiteId: 9,
+    mode: "batch",
+    approvedDestinations: [destination],
+    destinationId: destination.id,
+  });
+  expect(own.commercial).not.toHaveProperty("rateCents");
+  expect(own.commercial).not.toHaveProperty("billedLineId");
+  expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty(
+    "billedLineId",
+  );
+  expect(FleetRunSchema.parse(own).commercial).not.toHaveProperty("rateCents");
+  expect(f.state().runs[0].commercial?.rateCents).toBe(12500);
+  expect(
+    (await f.service.detail(manager, created.id)).commercial,
+  ).not.toHaveProperty("rateCents");
+  f.state().grants.find((g) => g.userId === 1)!.financeRead = true;
+  expect(
+    (await f.service.detail(manager, created.id)).commercial,
+  ).toMatchObject({ rateCents: 12500, billedLineId: 123 });
+  f.state().grants.find((g) => g.userId === 1)!.financeRead = false;
+  expect(
+    (
+      await f.service.detail(
+        { ...manager, role: "vendor", membershipRole: "admin" },
+        created.id,
+      )
+    ).commercial,
+  ).not.toHaveProperty("rateCents");
+});
 
-it("prevents Fleet start at the lower service boundary when the driver's training is required",async()=>{
- const f=fixture();let run=await f.service.create(manager,createInput);
- run=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),action:"dispatch",expectedVersion:run.version});
- run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"acknowledge",expectedVersion:run.version});
- run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"record_meter",reading:100,unit:"miles",notes:"Synthetic odometer",expectedVersion:run.version});
- run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"inspect",inspectionOutcome:"passed",notes:"Synthetic inspection",expectedVersion:run.version});
- f.requireTraining();
- await expect(f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"start",expectedVersion:run.version})).rejects.toMatchObject({code:"work_hub.required_completion",status:409});
- expect(f.state().runs[0].status).not.toBe("in_progress");
+it("prevents Fleet start at the lower service boundary when the driver's training is required", async () => {
+  const f = fixture();
+  let run = await f.service.create(manager, createInput);
+  run = await f.service.action(manager, run.id, {
+    operationId: crypto.randomUUID(),
+    action: "dispatch",
+    expectedVersion: run.version,
+  });
+  run = await f.service.action(driver, run.id, {
+    operationId: crypto.randomUUID(),
+    action: "acknowledge",
+    expectedVersion: run.version,
+  });
+  run = await f.service.action(driver, run.id, {
+    operationId: crypto.randomUUID(),
+    action: "record_meter",
+    reading: 100,
+    unit: "miles",
+    notes: "Synthetic odometer",
+    expectedVersion: run.version,
+  });
+  run = await f.service.action(driver, run.id, {
+    operationId: crypto.randomUUID(),
+    action: "inspect",
+    inspectionOutcome: "passed",
+    notes: "Synthetic inspection",
+    expectedVersion: run.version,
+  });
+  f.requireTraining();
+  await expect(
+    f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "start",
+      expectedVersion: run.version,
+    }),
+  ).rejects.toMatchObject({
+    code: "work_hub.required_completion",
+    status: 409,
+  });
+  expect(f.state().runs[0].status).not.toBe("in_progress");
 });

@@ -12,11 +12,21 @@ const api = vi.hoisted(() => ({
   create: vi.fn(),
   billingOptions: vi.fn(),
   billingTicket: vi.fn(),
+  details: vi.fn(),
+  rigPackages: vi.fn(),
+  commercial: vi.fn(),
   navigate: vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: api,
-  FleetRequestError: class extends Error { constructor(public code: string, public status: number) { super(code); } },
+  FleetRequestError: class extends Error {
+    constructor(
+      public code: string,
+      public status: number,
+    ) {
+      super(code);
+    }
+  },
   fleetErrorMessage: (_error: unknown, fallback: string) => fallback,
 }));
 vi.mock("@/hooks/use-auth", () => ({
@@ -28,7 +38,9 @@ vi.mock("react-i18next", () => ({
 vi.mock("wouter", () => ({
   useLocation: () => [api.location, api.navigate],
   Link: ({ children, href, ...props }: React.ComponentProps<"a">) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 vi.mock("@/components/mapbox-map", () => ({
@@ -67,7 +79,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   window.history.replaceState({}, "", "/");
   api.location = "/fleet/my-day";
-  api.billingOptions.mockResolvedValue({ workTypes: [{ id: 3, name: "Hauling service", rateCents: 10000 }], tickets: [], afeRequired: false, siteAfe: "" });
+  api.billingOptions.mockResolvedValue({
+    workTypes: [{ id: 3, name: "Hauling service", rateCents: 10000 }],
+    tickets: [],
+    afeRequired: false,
+    siteAfe: "",
+  });
   api.overviewPage.mockResolvedValue({
     companyId: 1,
     enabled: true,
@@ -94,23 +111,87 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("offers physical origin/destination dropdowns separately from ticket billing", async () => {
+    const initial = await api.overviewPage();
+    api.location = "/fleet";
+    api.overviewPage.mockResolvedValue({
+      ...initial,
+      capabilities: { canDispatch: true, canManage: true },
+    });
+    api.resources.mockResolvedValue({ drivers: [], equipment: [] });
+    api.details.mockResolvedValue({
+      details: [],
+      canManage: true,
+      nextCursor: null,
+    });
+    api.rigPackages.mockResolvedValue({ rigPackages: [], nextCursor: null });
+    api.commercial.mockResolvedValue({
+      destinations: [
+        {
+          id: "11111111-1111-4111-8111-111111111111",
+          revision: 1,
+          name: "Terminal",
+          address: "Crude road",
+          latitude: null,
+          longitude: null,
+          ownerType: "vendor",
+          ownerId: 1,
+          kind: "delivery",
+          materials: [],
+          hours: "",
+          instructions: "",
+          active: true,
+        },
+      ],
+    });
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: "Create run" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Use Origins and Destinations" }),
+    );
+    expect(await screen.findByLabelText("Origin")).toBeTruthy();
+    expect(screen.getByLabelText("Destination")).toBeTruthy();
+    expect(screen.queryByLabelText("Delivery site")).toBeNull();
+  });
   it("provides dispatch resources and run controls on Fleet Dispatch", async () => {
     const initial = await api.overviewPage();
     api.location = "/fleet";
     api.overviewPage.mockResolvedValue({
       ...initial,
       capabilities: { canDrive: false, canDispatch: true, canManage: true },
-      runs: [run, { ...run, id: "working", title: "Working delivery", status: "in_progress" }],
+      runs: [
+        run,
+        {
+          ...run,
+          id: "working",
+          title: "Working delivery",
+          status: "in_progress",
+        },
+      ],
     });
     api.resources.mockResolvedValue({
       drivers: [{ userId: 7, name: "Driver seven", fleetIds: ["fleet1"] }],
-      equipment: [{ id: "asset1", name: "Truck seven", category: "truck", status: "active", dispatchable: true }],
+      equipment: [
+        {
+          id: "asset1",
+          name: "Truck seven",
+          category: "truck",
+          status: "active",
+          dispatchable: true,
+        },
+      ],
     });
     mount();
     await screen.findByRole("heading", { name: "Dispatch resources" });
-    expect(screen.getByRole("heading", { name: "Fleet Dispatch", level: 1 })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Fleet Dispatch", level: 1 }),
+    ).toBeTruthy();
     expect(screen.queryByRole("link", { name: /^Dispatch$/ })).toBeNull();
-    expect(screen.getByRole("link", { name: /Awaiting dispatch/ }).getAttribute("href")).toBe("/fleet");
+    expect(
+      screen
+        .getByRole("link", { name: /Awaiting dispatch/ })
+        .getAttribute("href"),
+    ).toBe("/fleet");
     expect(screen.getByText(/Driver seven/)).toBeTruthy();
     expect(screen.getByText(/Truck seven/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Create run" })).toBeTruthy();
@@ -121,43 +202,80 @@ describe("Fleet driver workspace", () => {
   it("replaces the retired Dispatch route with Fleet Dispatch", async () => {
     api.location = "/fleet/dispatch";
     mount();
-    await waitFor(() => expect(api.navigate).toHaveBeenCalledWith("/fleet", { replace: true }));
+    await waitFor(() =>
+      expect(api.navigate).toHaveBeenCalledWith("/fleet", { replace: true }),
+    );
     expect(api.overviewPage).not.toHaveBeenCalled();
   });
-  it.each(["/fleet", "/fleet/runs"])("filters the run board and opens run actions on %s", async (path) => {
-    const initial = await api.overviewPage();
-    api.overviewPage.mockResolvedValue({ ...initial, runs: [run, { ...run, id: "working", title: "Working delivery", status: "in_progress" }] });
-    api.location = path;
-    mount();
-    await screen.findByText("Own pickup");
-    fireEvent.click(screen.getByRole("button", { name: "Working 1" }));
-    expect(screen.queryByText("Own pickup")).toBeNull();
-    expect(screen.getByText("Working delivery")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Working 1" }));
-    expect(screen.getByText("Own pickup")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Own pickup/ }));
-    expect(await screen.findByText("Acknowledge assignment")).toBeTruthy();
-  });
+  it.each(["/fleet", "/fleet/runs"])(
+    "filters the run board and opens run actions on %s",
+    async (path) => {
+      const initial = await api.overviewPage();
+      api.overviewPage.mockResolvedValue({
+        ...initial,
+        runs: [
+          run,
+          {
+            ...run,
+            id: "working",
+            title: "Working delivery",
+            status: "in_progress",
+          },
+        ],
+      });
+      api.location = path;
+      mount();
+      await screen.findByText("Own pickup");
+      fireEvent.click(screen.getByRole("button", { name: "Working 1" }));
+      expect(screen.queryByText("Own pickup")).toBeNull();
+      expect(screen.getByText("Working delivery")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Working 1" }));
+      expect(screen.getByText("Own pickup")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: /Own pickup/ }));
+      expect(await screen.findByText("Acknowledge assignment")).toBeTruthy();
+    },
+  );
   it("opens Runs without the map or replay clutter", async () => {
     api.location = "/fleet/runs";
     mount();
     await screen.findByText("Own pickup");
-    expect(screen.queryByRole("heading", { name: "History & Replay" })).toBeNull();
+    expect(
+      screen.queryByRole("heading", { name: "History & Replay" }),
+    ).toBeNull();
     expect(screen.queryByText(/No authorized recorded positions/)).toBeNull();
-    expect(screen.getByRole("heading", { level: 1, name: "Runs" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Runs" }),
+    ).toBeTruthy();
     const backButton = screen.getByRole("button", { name: /^Back$/ });
-    expect(backButton.querySelector('[data-testid="sphere-back-circle"]')).toBeTruthy();
+    expect(
+      backButton.querySelector('[data-testid="sphere-back-circle"]'),
+    ).toBeTruthy();
     fireEvent.click(backButton);
     expect(api.navigate).toHaveBeenCalledWith("/fleet", { replace: true });
   });
   it("updates operational review filtering when navigating without remounting", async () => {
     const initial = await api.overviewPage();
-    api.overviewPage.mockResolvedValue({ ...initial, runs: [run, { ...run, id: "review", title: "Review delivery", status: "submitted_for_review" }] });
+    api.overviewPage.mockResolvedValue({
+      ...initial,
+      runs: [
+        run,
+        {
+          ...run,
+          id: "review",
+          title: "Review delivery",
+          status: "submitted_for_review",
+        },
+      ],
+    });
     api.location = "/fleet/runs";
     const view = mount();
     await screen.findByText("Own pickup");
     api.location = "/fleet/review";
-    view.rerender(<QueryClientProvider client={new QueryClient()}><FleetPage /></QueryClientProvider>);
+    view.rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <FleetPage />
+      </QueryClientProvider>,
+    );
     await screen.findByText("Review delivery");
     expect(screen.queryByText("Own pickup")).toBeNull();
   });
@@ -214,15 +332,27 @@ describe("Fleet driver workspace", () => {
     expect(api.run).toHaveBeenCalledWith("historical");
     expect(screen.getByText("Acknowledge assignment")).toBeTruthy();
     const backButton = screen.getByRole("button", { name: /^Back$/ });
-    expect(backButton.querySelector('[data-testid="sphere-back-circle"]')).toBeTruthy();
+    expect(
+      backButton.querySelector('[data-testid="sphere-back-circle"]'),
+    ).toBeTruthy();
     fireEvent.click(backButton);
     expect(api.navigate).toHaveBeenCalledWith("/fleet/runs", { replace: true });
   });
   it("uses real browser back for a run opened from another VNDRLY page", async () => {
     api.location = "/fleet/runs/historical";
-    api.run.mockResolvedValue({ ...run, id: "historical", title: "Historical pickup" });
-    window.history.replaceState({ __vndrlyNavigationIndex: 1 }, "", "/fleet/runs/historical");
-    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    api.run.mockResolvedValue({
+      ...run,
+      id: "historical",
+      title: "Historical pickup",
+    });
+    window.history.replaceState(
+      { __vndrlyNavigationIndex: 1 },
+      "",
+      "/fleet/runs/historical",
+    );
+    const back = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => undefined);
     try {
       mount();
       fireEvent.click(await screen.findByRole("button", { name: /^Back$/ }));
@@ -251,73 +381,106 @@ describe("Fleet driver workspace", () => {
     expect(api.overviewPage).toHaveBeenCalledWith("next-authorized-page");
     expect(screen.getByText("Own pickup")).toBeTruthy();
   });
-  it.each(["response", "readback"])("keeps generated run and stop identities after a lost %s", async (failure) => {
-    const fleetId = "22222222-2222-4222-8222-222222222222";
-    const assetId = "33333333-3333-4333-8333-333333333333";
-    api.overviewPage.mockResolvedValueOnce({
-      companyId: 1,
-      enabled: true,
-      capabilities: { canDrive: true, canDispatch: true, canManage: true },
-      fleets: [
-        {
-          id: fleetId,
-          name: "North fleet",
-          siteIds: [10, 20],
-          equipmentAssetIds: [assetId],
-        },
-      ],
-      runs: [],
-      observations: [],
-      unavailableIntegrations: [],
-      generatedAt: "now",
-    });
-    api.resources.mockResolvedValueOnce({
-      drivers: [{ userId: 7, name: "Driver seven", fleetIds: [fleetId] }],
-      equipment: [
-        {
-          id: assetId,
-          name: "Truck seven",
-          category: "truck",
-          dispatchable: true,
-        },
-      ],
-    });
-    if (failure === "response") api.create.mockRejectedValueOnce(new Error("connection lost"));
-    else api.create.mockImplementationOnce(async () => { api.run.mockRejectedValueOnce(new FleetRequestError("fleet.not_found", 404)); return { id: "new-run" }; });
-    api.create.mockImplementationOnce(async input => { api.run.mockResolvedValue({ ...run, id: "new-run", linkedTicketId: 123, events: [{ operationId: input.operationId }] }); return { id: "new-run" }; });
-    mount();
-    fireEvent.click(await screen.findByText("Create run"));
-    fireEvent.change(screen.getByLabelText("Detail"), {
-      target: { value: fleetId },
-    });
-    await screen.findByText("Driver seven");
-    fireEvent.change(screen.getByLabelText("Run title"), {
-      target: { value: "Water delivery" },
-    });
-    fireEvent.change(screen.getByLabelText("Driver"), {
-      target: { value: "7" },
-    });
-    fireEvent.change(screen.getByLabelText("Vehicle"), {
-      target: { value: assetId },
-    });
-    fireEvent.change(screen.getByLabelText("Pickup site"), {
-      target: { value: "10" },
-    });
-    fireEvent.change(screen.getByLabelText("Delivery site"), {
-      target: { value: "20" },
-    });
-    await screen.findByRole("option", { name: /Hauling service/ });
-    fireEvent.change(screen.getByLabelText("Billing service"), { target: { value: "3" } });
-    await waitFor(() => expect((screen.getByText("Save exact change") as HTMLButtonElement).disabled).toBe(false));
-    fireEvent.click(screen.getByText("Save exact change"));
-    await screen.findByText(/record changed or this action is blocked/);
-    expect((screen.getByLabelText("Run title").closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
-    fireEvent.click(screen.getByText("Retry exact run save"));
-    await waitFor(() => expect(api.create).toHaveBeenCalledTimes(2));
-    expect(api.create.mock.calls[0][0]).toEqual(api.create.mock.calls[1][0]);
-    expect(api.create.mock.calls[0][0].billing).toMatchObject({ mode: "new_ticket", workTypeId: 3 });
-    await screen.findByText(/Linked ticket #123/);
-  });
+  it.each(["response", "readback"])(
+    "keeps generated run and stop identities after a lost %s",
+    async (failure) => {
+      const fleetId = "22222222-2222-4222-8222-222222222222";
+      const assetId = "33333333-3333-4333-8333-333333333333";
+      api.overviewPage.mockResolvedValueOnce({
+        companyId: 1,
+        enabled: true,
+        capabilities: { canDrive: true, canDispatch: true, canManage: true },
+        fleets: [
+          {
+            id: fleetId,
+            name: "North fleet",
+            siteIds: [10, 20],
+            equipmentAssetIds: [assetId],
+          },
+        ],
+        runs: [],
+        observations: [],
+        unavailableIntegrations: [],
+        generatedAt: "now",
+      });
+      api.resources.mockResolvedValueOnce({
+        drivers: [{ userId: 7, name: "Driver seven", fleetIds: [fleetId] }],
+        equipment: [
+          {
+            id: assetId,
+            name: "Truck seven",
+            category: "truck",
+            dispatchable: true,
+          },
+        ],
+      });
+      if (failure === "response")
+        api.create.mockRejectedValueOnce(new Error("connection lost"));
+      else
+        api.create.mockImplementationOnce(async () => {
+          api.run.mockRejectedValueOnce(
+            new FleetRequestError("fleet.not_found", 404),
+          );
+          return { id: "new-run" };
+        });
+      api.create.mockImplementationOnce(async (input) => {
+        api.run.mockResolvedValue({
+          ...run,
+          id: "new-run",
+          linkedTicketId: 123,
+          events: [{ operationId: input.operationId }],
+        });
+        return { id: "new-run" };
+      });
+      mount();
+      fireEvent.click(await screen.findByText("Create run"));
+      fireEvent.change(screen.getByLabelText("Detail"), {
+        target: { value: fleetId },
+      });
+      await screen.findByText("Driver seven");
+      fireEvent.change(screen.getByLabelText("Run title"), {
+        target: { value: "Water delivery" },
+      });
+      fireEvent.change(screen.getByLabelText("Driver"), {
+        target: { value: "7" },
+      });
+      fireEvent.change(screen.getByLabelText("Vehicle"), {
+        target: { value: assetId },
+      });
+      fireEvent.change(screen.getByLabelText("Pickup site"), {
+        target: { value: "10" },
+      });
+      fireEvent.change(screen.getByLabelText("Delivery site"), {
+        target: { value: "20" },
+      });
+      await screen.findByRole("option", { name: /Hauling service/ });
+      fireEvent.change(screen.getByLabelText("Billing service"), {
+        target: { value: "3" },
+      });
+      await waitFor(() =>
+        expect(
+          (screen.getByText("Save exact change") as HTMLButtonElement).disabled,
+        ).toBe(false),
+      );
+      fireEvent.click(screen.getByText("Save exact change"));
+      await screen.findByText(/record changed or this action is blocked/);
+      expect(
+        (
+          screen
+            .getByLabelText("Run title")
+            .closest("fieldset") as HTMLFieldSetElement
+        ).disabled,
+      ).toBe(true);
+      fireEvent.click(screen.getByText("Retry exact run save"));
+      await waitFor(() => expect(api.create).toHaveBeenCalledTimes(2));
+      expect(api.create.mock.calls[0][0]).toEqual(api.create.mock.calls[1][0]);
+      expect(api.create.mock.calls[0][0].billing).toMatchObject({
+        mode: "new_ticket",
+        workTypeId: 3,
+      });
+      await screen.findByText(/Linked ticket #123/);
+    },
+  );
   it("shows only assigned runs without adding a map or dispatch creation to the operations page", async () => {
     mount();
     await screen.findByText("Own pickup");

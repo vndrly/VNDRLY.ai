@@ -1,10 +1,18 @@
 import { estimateMapboxDrivingRoute } from "../lib/mapbox-routing";
-import { canOfficeFinalize, canFinalizeFleetRuns, fleetBillingChargesValid, readFleetTicketRuns, assertFleetTicketFinalizable } from "./fleet-billing";
+import {
+  canOfficeFinalize,
+  canFinalizeFleetRuns,
+  fleetBillingChargesValid,
+  readFleetTicketRuns,
+  assertFleetTicketFinalizable,
+} from "./fleet-billing";
 import { randomUUID, createHash } from "node:crypto";
 import { z } from "zod/v4";
 import {
   FleetCommercialSettingsSchema,
   FleetDestinationSchema,
+  FleetDestinationInputSchema,
+  fleetPhysicalStopsMatch,
   FleetTicketPlanSchema,
   type FleetRun,
   type FleetTicketPlan,
@@ -51,7 +59,10 @@ function managing(state: FleetState, actor: FleetActor) {
 }
 async function sites(c: PoolClient, a: FleetActor, state: FleetState) {
   const ids = a.membershipRole === "admin" ? null : (a.currentSiteIds ?? []);
-  return readFleetAuthoritySites(c,a.companyId,{...(ids?{siteIds:ids}:{}),activeOnly:true});
+  return readFleetAuthoritySites(c, a.companyId, {
+    ...(ids ? { siteIds: ids } : {}),
+    activeOnly: true,
+  });
 }
 async function settings(c: PoolClient, a: FleetActor) {
   const row = (
@@ -111,7 +122,8 @@ export async function bindFleetRunTicket(
     throw new FleetError("fleet.ticket_plan_required", 400);
   const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
   assertOrigin(ticket, plan);
-  if(plan.billingWorkflow)throw new FleetError("fleet.billing_choice_required",409);
+  if (plan.billingWorkflow)
+    throw new FleetError("fleet.billing_choice_required", 409);
   if (
     plan.closedAt ||
     (plan.closesAt && Date.parse(plan.closesAt) <= Date.now())
@@ -253,6 +265,14 @@ export async function recordFleetRunCharge(
   run.commercial.billedLineId = row.id;
 }
 export function validateCommercialStops(run: FleetRun) {
+  if (run.routePlan) {
+    if (
+      !fleetPhysicalStopsMatch(run.routePlan, run.siteIds[0], run.stops) ||
+      run.siteIds.some((id) => id !== run.siteIds[0])
+    )
+      throw new FleetError("fleet.physical_route_mismatch", 409);
+    return;
+  }
   if (!run.commercial) return;
   if (
     run.siteIds.some((id) => id !== run.commercial!.originSiteId) ||
@@ -275,11 +295,69 @@ export function validateCommercialStops(run: FleetRun) {
   )
     throw new FleetError("fleet.destination_not_approved", 409);
 }
-const destinationInput = FleetDestinationSchema.omit({
-  revision: true,
-  ownerType: true,
-  ownerId: true,
-}).extend({ id: z.uuid().optional() });
+export async function assertFleetPhysicalRoute(
+  c: PoolClient,
+  a: FleetActor,
+  state: FleetState,
+  run: FleetRun,
+  exactRevision = false,
+) {
+  if (!run.routePlan) return;
+  const locations = [
+    run.routePlan.origin,
+    ...run.routePlan.stops.map((stop) => stop.location),
+    ...(run.routePlan.base ? [run.routePlan.base] : []),
+  ];
+  const authorized = await sites(c, a, state);
+  const owners = new Map<string, FleetDestination[]>();
+  for (const reference of locations) {
+    if (reference.type !== "canonical")
+      throw new FleetError("fleet.route_location_unresolved", 409);
+    const saved = reference.location;
+    if (
+      saved.ownerType === "vendor"
+        ? saved.ownerId !== a.companyId
+        : !authorized.some((site) => site.partner_id === saved.ownerId)
+    )
+      throw new FleetError("fleet.destination_unavailable", 403);
+    const ownerKey = `${saved.ownerType}:${saved.ownerId}`;
+    if (!owners.has(ownerKey)) {
+      const table = saved.ownerType === "vendor" ? "vendors" : "partners";
+      const row = (
+        await c.query(
+          `SELECT fleet_commercial_settings FROM ${table} WHERE id=$1 FOR SHARE`,
+          [saved.ownerId],
+        )
+      ).rows[0];
+      owners.set(
+        ownerKey,
+        FleetCommercialSettingsSchema.parse(
+          row?.fleet_commercial_settings ?? {},
+        ).destinations,
+      );
+    }
+    const current = owners
+      .get(ownerKey)!
+      .find(
+        (location) =>
+          location.id === saved.id &&
+          location.ownerType === saved.ownerType &&
+          location.ownerId === saved.ownerId,
+      );
+    if (
+      !current?.active ||
+      (current.permittedCompanyIds?.length &&
+        !current.permittedCompanyIds.includes(a.companyId)) ||
+      (current.activeFrom && Date.parse(current.activeFrom) > Date.now()) ||
+      (current.activeUntil && Date.parse(current.activeUntil) <= Date.now())
+    )
+      throw new FleetError("fleet.destination_unavailable", 409);
+    if (exactRevision && JSON.stringify(current) !== JSON.stringify(saved))
+      throw new FleetError("fleet.destination_revision_conflict", 409);
+  }
+  validateCommercialStops(run);
+}
+const destinationInput = FleetDestinationInputSchema;
 export function createFleetCommercialOperations(
   transaction: <T>(
     actor: FleetActor,
@@ -300,7 +378,8 @@ export function createFleetCommercialOperations(
           throw new FleetError("fleet.ticket_plan_required", 400);
         const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
         assertOrigin(ticket, plan);
-        if(plan.billingWorkflow)throw new FleetError("fleet.office_finalize_required",409);
+        if (plan.billingWorkflow)
+          throw new FleetError("fleet.office_finalize_required", 409);
         if (plan.closedAt) return plan;
         if (plan.version !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict", 409);
@@ -387,12 +466,19 @@ export function createFleetCommercialOperations(
       const radians = Math.PI / 180;
       const distance = (d: FleetDestination) => {
         const lat = snapshot.site.latitude,
-          lng = snapshot.site.longitude,
-          x =
-            Math.sin(((d.latitude - lat) * radians) / 2) ** 2 +
-            Math.cos(lat * radians) *
-              Math.cos(d.latitude * radians) *
-              Math.sin(((d.longitude - lng) * radians) / 2) ** 2;
+          lng = snapshot.site.longitude;
+        if (
+          d.latitude === null ||
+          d.longitude === null ||
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng)
+        )
+          return null;
+        const x =
+          Math.sin(((d.latitude - lat) * radians) / 2) ** 2 +
+          Math.cos(lat * radians) *
+            Math.cos(d.latitude * radians) *
+            Math.sin(((d.longitude - lng) * radians) / 2) ** 2;
         return 3958.7613 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
       };
       const eligible = snapshot.destinations
@@ -406,16 +492,32 @@ export function createFleetCommercialOperations(
                   value.toLowerCase() === material.trim().toLowerCase(),
               )),
         )
-        .sort((a, b) => distance(a) - distance(b))
+        .sort((a, b) => (distance(a) ?? Infinity) - (distance(b) ?? Infinity))
         .slice(0, 5);
       const recommendations = await Promise.all(
         eligible.map(async (destination) => {
+          if (
+            destination.latitude === null ||
+            destination.longitude === null ||
+            distance(destination) === null
+          )
+            return {
+              destination,
+              distanceMiles: null,
+              durationMinutes: null,
+              basis: "unavailable",
+              availability: "capacity_unconfirmed",
+              materialEligibility: "unconfirmed",
+            };
           const route = await estimateMapboxDrivingRoute({
             origin: {
               latitude: snapshot.site.latitude,
               longitude: snapshot.site.longitude,
             },
-            destination,
+            destination: {
+              latitude: destination.latitude,
+              longitude: destination.longitude,
+            },
           });
           return {
             destination,
@@ -438,7 +540,8 @@ export function createFleetCommercialOperations(
       );
       return {
         recommendations: recommendations.sort(
-          (a, b) => a.distanceMiles - b.distanceMiles,
+          (a, b) =>
+            (a.distanceMiles ?? Infinity) - (b.distanceMiles ?? Infinity),
         ),
       };
     },
@@ -463,7 +566,21 @@ export function createFleetCommercialOperations(
             replay.actorUserId !== a.userId
           )
             throw new FleetError("fleet.operation_conflict");
-          return { version: value.version, destinations: value.destinations };
+          const saved = (
+            await c.query(
+              "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-destination-operation' AND target_id=$2 ORDER BY id LIMIT 1",
+              [a.companyId, body.operationId],
+            )
+          ).rows[0]?.tool_output;
+          return saved
+            ? z
+                .object({
+                  version: z.number().int().positive(),
+                  destination: FleetDestinationSchema,
+                })
+                .strict()
+                .parse(saved)
+            : { version: value.version, destinations: value.destinations };
         }
         if (value.version !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict");
@@ -504,7 +621,12 @@ export function createFleetCommercialOperations(
           "UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",
           [a.companyId, JSON.stringify(value)],
         );
-        return { version: value.version, destination: next };
+        const receipt = { version: value.version, destination: next };
+        await c.query(
+          "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','fleet_destination','save','fleet-destination-operation',$3,$4::jsonb,'completed')",
+          [a.userId, a.companyId, body.operationId, JSON.stringify(receipt)],
+        );
+        return receipt;
       }),
     saveCommercialDefault: (a: FleetActor, input: unknown) =>
       transaction(a, async (state, c) => {
@@ -546,19 +668,45 @@ export function createFleetCommercialOperations(
           ? FleetTicketPlanSchema.parse(ticket.fleet_plan)
           : null;
         const runs = await readFleetTicketRuns(c, a, state, ticketId);
-        if(plan?.billingWorkflow && !canFinalizeFleetRuns(state,a,runs))
-          throw new FleetError("fleet.finance_required",403);
+        if (plan?.billingWorkflow && !canFinalizeFleetRuns(state, a, runs))
+          throw new FleetError("fleet.finance_required", 403);
         const charges = (
           await c.query(
             "SELECT count(*)::int AS runs,COALESCE(sum(quantity*unit_price),0)::text AS total FROM ticket_line_items WHERE ticket_id=$1 AND type='other' AND description LIKE 'Fleet run %'",
             [ticketId],
           )
         ).rows[0];
-        const openCrew = (await c.query("SELECT id FROM ticket_check_ins WHERE ticket_id=$1 AND check_out_at IS NULL", [ticketId])).rows.length;
-        let canFinalize = canOfficeFinalize(state,a) && canFinalizeFleetRuns(state,a,runs) && !!plan?.billingWorkflow && (!plan.finalizationOperationId || ticket.status==="kicked_back") && !!runs.length;
-        try { assertFleetTicketFinalizable(ticket.status,runs,openCrew); } catch { canFinalize=false; }
-        if(runs.some(r=>r.siteIds.some(id=>!a.currentSiteIds?.includes(id)) || (r.status==="completed"&&!r.billing?.billedLineId)))canFinalize=false;
-        if(canFinalize && plan && !await fleetBillingChargesValid(c,ticketId,plan,runs))canFinalize=false;
+        const openCrew = (
+          await c.query(
+            "SELECT id FROM ticket_check_ins WHERE ticket_id=$1 AND check_out_at IS NULL",
+            [ticketId],
+          )
+        ).rows.length;
+        let canFinalize =
+          canOfficeFinalize(state, a) &&
+          canFinalizeFleetRuns(state, a, runs) &&
+          !!plan?.billingWorkflow &&
+          (!plan.finalizationOperationId || ticket.status === "kicked_back") &&
+          !!runs.length;
+        try {
+          assertFleetTicketFinalizable(ticket.status, runs, openCrew);
+        } catch {
+          canFinalize = false;
+        }
+        if (
+          runs.some(
+            (r) =>
+              r.siteIds.some((id) => !a.currentSiteIds?.includes(id)) ||
+              (r.status === "completed" && !r.billing?.billedLineId),
+          )
+        )
+          canFinalize = false;
+        if (
+          canFinalize &&
+          plan &&
+          !(await fleetBillingChargesValid(c, ticketId, plan, runs))
+        )
+          canFinalize = false;
         return {
           ticketId,
           siteId: ticket.site_location_id,
@@ -569,7 +717,12 @@ export function createFleetCommercialOperations(
           status: ticket.status,
           afeNumber: plan?.afeNumber ?? null,
           workDate: plan?.workDate ?? null,
-          runs: runs.map(run=>({id:run.id,title:run.title,status:run.status,version:run.version})),
+          runs: runs.map((run) => ({
+            id: run.id,
+            title: run.title,
+            status: run.status,
+            version: run.version,
+          })),
           canFinalize,
           finalizationOperationId: plan?.finalizationOperationId ?? null,
         };

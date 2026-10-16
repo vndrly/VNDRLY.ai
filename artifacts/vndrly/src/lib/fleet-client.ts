@@ -19,8 +19,20 @@ import type {
   FleetGateLink,
 } from "@workspace/api-zod";
 import {
-  FleetInventorySchema, FleetInventoryDetailSchema, FleetInventoryReceiptSchema,
-  FleetAssetCreateSchema, FleetAssetEnrollmentSchema, FleetAssetEditSchema,
+  FleetDestinationSaveSchema,
+  FleetDestinationReceiptSchema,
+  FleetDestinationDirectorySchema,
+  FleetDetailPageSchema,
+  FleetRigPackagePageSchema,
+  FleetResourceReceiptSchema,
+  FleetDetailSchema,
+  FleetRigPackageSchema,
+  FleetInventorySchema,
+  FleetInventoryDetailSchema,
+  FleetInventoryReceiptSchema,
+  FleetAssetCreateSchema,
+  FleetAssetEnrollmentSchema,
+  FleetAssetEditSchema,
   FleetReviewPacketSchema,
   FleetReplacementInputSchema,
   FleetReplacementActionSchema,
@@ -41,7 +53,10 @@ import {
   FleetGateLinkInputSchema,
 } from "@workspace/api-zod";
 import type { z } from "zod/v4";
-import type { FleetBillingOptions, FleetBillingTicket } from "@/components/fleet-billing";
+import type {
+  FleetBillingOptions,
+  FleetBillingTicket,
+} from "@/components/fleet-billing";
 export class FleetRequestError extends Error {
   constructor(
     public code: string,
@@ -107,17 +122,89 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
-  billingOptions: (siteId: number, afeNumber: string, workDate: string, fleetId?: string) => request<FleetBillingOptions>(`/billing-options?${new URLSearchParams({ siteId: String(siteId), afeNumber, workDate, ...(fleetId ? { fleetId } : {}) })}`),
-  billingTicket: (ticketId: number) => request<FleetBillingTicket>(`/tickets/${ticketId}/plan`),
-  finalizeBillingTicket: (ticketId: number, input: { operationId: string; expectedVersion: number }) => request<{ ticketId: number; status: string; operationId: string }>(`/tickets/${ticketId}/finalize`, input),
+  commercial: () =>
+    request<unknown>("/commercial").then((value) =>
+      FleetDestinationDirectorySchema.parse(value),
+    ),
+  saveDestination: (input: z.infer<typeof FleetDestinationSaveSchema>) =>
+    request<unknown>(
+      "/destinations",
+      FleetDestinationSaveSchema.parse(input),
+    ).then((value) => FleetDestinationReceiptSchema.parse(value)),
+  details: (after?: string) =>
+    request<unknown>(
+      `/details${after ? `?after=${encodeURIComponent(after)}` : ""}`,
+    ).then((value) => FleetDetailPageSchema.parse(value)),
+  rigPackages: (after?: string) =>
+    request<unknown>(
+      `/rig-packages${after ? `?after=${encodeURIComponent(after)}` : ""}`,
+    ).then((value) => FleetRigPackagePageSchema.parse(value)),
+  saveDetail: (input: {
+    operationId: string;
+    expectedVersion: number;
+    detail: import("@workspace/api-zod").FleetDetail;
+  }) =>
+    request<unknown>("/details", input).then((value) =>
+      FleetDetailSchema.parse(value),
+    ),
+  saveRigPackage: (input: {
+    operationId: string;
+    expectedVersion: number;
+    package: import("@workspace/api-zod").FleetRigPackage;
+  }) =>
+    request<unknown>("/rig-packages", input).then((value) =>
+      FleetRigPackageSchema.parse(value),
+    ),
+  billingOptions: (
+    siteId: number,
+    afeNumber: string,
+    workDate: string,
+    fleetId?: string,
+  ) =>
+    request<FleetBillingOptions>(
+      `/billing-options?${new URLSearchParams({ siteId: String(siteId), afeNumber, workDate, ...(fleetId ? { fleetId } : {}) })}`,
+    ),
+  billingTicket: (ticketId: number) =>
+    request<FleetBillingTicket>(`/tickets/${ticketId}/plan`),
+  finalizeBillingTicket: (
+    ticketId: number,
+    input: { operationId: string; expectedVersion: number },
+  ) =>
+    request<{ ticketId: number; status: string; operationId: string }>(
+      `/tickets/${ticketId}/finalize`,
+      input,
+    ),
   inventory: (after?: string, fleetId?: string) => {
-    const params = new URLSearchParams({ ...(after ? { after } : {}), ...(fleetId ? { fleetId } : {}) });
-    return request<unknown>(`/inventory${params.size ? `?${params}` : ""}`).then(value => FleetInventorySchema.parse(value));
+    const params = new URLSearchParams({
+      ...(after ? { after } : {}),
+      ...(fleetId ? { fleetId } : {}),
+    });
+    return request<unknown>(
+      `/inventory${params.size ? `?${params}` : ""}`,
+    ).then((value) => FleetInventorySchema.parse(value));
   },
-  inventoryAsset: (id: string) => request<unknown>(`/inventory/${encodeURIComponent(id)}`).then(value => FleetInventoryDetailSchema.parse(value)),
-  createAsset: (input: z.infer<typeof FleetAssetCreateSchema>) => request<unknown>("/inventory", FleetAssetCreateSchema.parse(input)).then(value => FleetInventoryReceiptSchema.parse(value)),
-  enrollAsset: (id: string, input: z.infer<typeof FleetAssetEnrollmentSchema>) => request<unknown>(`/inventory/${encodeURIComponent(id)}/enroll`, FleetAssetEnrollmentSchema.parse(input)).then(value => FleetInventoryReceiptSchema.parse(value)),
-  editAsset: (id: string, input: z.infer<typeof FleetAssetEditSchema>) => request<unknown>(`/inventory/${encodeURIComponent(id)}`, FleetAssetEditSchema.parse(input), "PATCH").then(value => FleetInventoryReceiptSchema.parse(value)),
+  inventoryAsset: (id: string) =>
+    request<unknown>(`/inventory/${encodeURIComponent(id)}`).then((value) =>
+      FleetInventoryDetailSchema.parse(value),
+    ),
+  createAsset: (input: z.infer<typeof FleetAssetCreateSchema>) =>
+    request<unknown>("/inventory", FleetAssetCreateSchema.parse(input)).then(
+      (value) => FleetInventoryReceiptSchema.parse(value),
+    ),
+  enrollAsset: (
+    id: string,
+    input: z.infer<typeof FleetAssetEnrollmentSchema>,
+  ) =>
+    request<unknown>(
+      `/inventory/${encodeURIComponent(id)}/enroll`,
+      FleetAssetEnrollmentSchema.parse(input),
+    ).then((value) => FleetInventoryReceiptSchema.parse(value)),
+  editAsset: (id: string, input: z.infer<typeof FleetAssetEditSchema>) =>
+    request<unknown>(
+      `/inventory/${encodeURIComponent(id)}`,
+      FleetAssetEditSchema.parse(input),
+      "PATCH",
+    ).then((value) => FleetInventoryReceiptSchema.parse(value)),
   reviewPacket: (id: string) =>
     request<unknown>(`/runs/${encodeURIComponent(id)}/review-packet`).then(
       (value) => FleetReviewPacketSchema.parse(value),

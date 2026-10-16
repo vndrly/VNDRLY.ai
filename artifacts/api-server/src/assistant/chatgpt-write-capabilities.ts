@@ -16,7 +16,7 @@ import { FleetReplacementInputSchema, FleetReplacementActionSchema, AssetLossRep
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
 import { z } from "zod/v4";
-import { FleetDestinationSchema, FleetCargoTransferInputSchema, FleetCargoTransferActionSchema, FleetDraftEditSchema, AssetCustodyCommandSchema, CreateFleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema } from "@workspace/api-zod";
+import { FleetDestinationInputSchema, FleetCargoTransferInputSchema, FleetCargoTransferActionSchema, FleetDraftEditSchema, AssetCustodyCommandSchema, CreateFleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema } from "@workspace/api-zod";
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
@@ -76,7 +76,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
   if (fleetInventoryAction(name)) { const { operationId, ...fields } = input; if (operationId !== undefined) z.uuid().parse(operationId); fleetInventoryArguments(name).parse(fields); }
   if(name === "set_company_operations") z.object({categories:z.array(z.enum(["field","fleet","gate"])).min(1).max(3).refine(values=>new Set(values).size===values.length),operationId:z.uuid().optional()}).strict().parse(input);
-  if(name === "save_fleet_destination") z.object({operationId:z.uuid().optional(),expectedVersion:z.number().int().positive(),destination:FleetDestinationSchema.omit({revision:true,ownerType:true,ownerId:true}).extend({id:z.uuid().optional()})}).strict().parse(input);
+  if(name === "save_fleet_destination") z.object({operationId:z.uuid().optional(),expectedVersion:z.number().int().positive(),destination:FleetDestinationInputSchema}).strict().parse(input);
   if(name === "finalize_fleet_ticket") z.object({ticketId:z.number().int().positive(),expectedVersion:z.number().int().positive(),operationId:z.uuid().optional()}).strict().parse(input);
   if(name === "save_fleet_ticket_plan") z.object({ticketId:z.number().int().positive(),operationId:z.uuid().optional(),expectedVersion:z.number().int().nonnegative(),mode:z.enum(["batch","singles"]).optional(),rateCents:z.number().int().min(0).max(100000000),closure:z.enum(["shift","day","manual"]),closesAt:z.iso.datetime().nullable(),destinationIds:z.array(z.uuid()).min(1).max(30)}).strict().parse(input);
   if (name === "moderate_work_hub_meeting" && input.action === "request_to_speak") z.object({ action: z.literal("request_to_speak"), occurrenceId: z.uuid(), payload: z.object({}).strict().optional(), operationId: z.uuid().optional() }).strict().parse(input);
