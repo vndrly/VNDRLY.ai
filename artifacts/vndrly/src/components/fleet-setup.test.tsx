@@ -56,6 +56,15 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet configuration", () => {
+  it("uses Detail terminology and the shared branded checkboxes", async () => {
+    const view = mount();
+    expect(await screen.findByRole("heading", { name: /^Details$/ })).toBeTruthy();
+    expect(screen.getByText("Details and authorized sites")).toBeTruthy();
+    expect(screen.getByLabelText("New Detail name")).toBeTruthy();
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes.every(box => box.tagName === "BUTTON" && box.className.includes("var(--brand-primary)"))).toBe(true);
+    expect(view.container.querySelector('input[type="checkbox"]:not([aria-hidden="true"])')).toBeNull();
+  });
   it("saves explicit checklist configuration only through the reviewed company setup", async () => {
     mount();
     fireEvent.change(await screen.findByLabelText("Profile name"), {

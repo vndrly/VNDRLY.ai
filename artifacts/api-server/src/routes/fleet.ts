@@ -20,6 +20,12 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/inventory", endpoint(req => service.fleetInventory(actor(req), req.query)));
+router.get("/fleet/inventory/operations/:operationId", endpoint(req => service.fleetInventoryReceipt(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/inventory/:assetId", endpoint(req => service.fleetInventoryDetail(actor(req), z.uuid().parse(req.params.assetId))));
+router.post("/fleet/inventory", endpoint(req => service.createFleetAsset(actor(req), req.body)));
+router.post("/fleet/inventory/:assetId/enroll", endpoint(req => service.enrollFleetAsset(actor(req), z.uuid().parse(req.params.assetId), req.body)));
+router.patch("/fleet/inventory/:assetId", endpoint(req => service.editFleetAsset(actor(req), z.uuid().parse(req.params.assetId), req.body)));
 router.get("/fleet/runs/:id/location-history",endpoint(req=>service.locationHistory(actor(req),z.uuid().parse(req.params.id))));
 router.get("/fleet/map-context",endpoint(req=>service.mapContext(actor(req))));
 router.get("/fleet/commercial",endpoint(req=>service.commercialSettings(actor(req),req.query.siteId?z.coerce.number().int().positive().parse(req.query.siteId):undefined)));

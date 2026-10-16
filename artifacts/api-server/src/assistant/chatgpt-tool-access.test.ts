@@ -115,7 +115,7 @@ describe("ChatGPT assistant tool access", () => {
   it("returns draft data without a client execution claim or form instruction", () => {
     const raw = { ok: true, draft: { firstName: "Sam" }, missing: ["latitude"], execution: "client", intent: { name: "prefill_gate_visit" } };
     const projected = chatGptReadToolOutput("prepare_visitor_check_in", raw);
-    expect(projected).toMatchObject({ draft: raw.draft, missing: [], deviceRequiredFields: ["latitude", "longitude"], execution: "draft_only", submitted: false, formPopulated: false });
+    expect(projected).toMatchObject({ draft: raw.draft, missing: [], deviceRequiredFields: [], optionalDeviceFields: ["latitude", "longitude"], execution: "draft_only", submitted: false, formPopulated: false });
     expect(projected).not.toHaveProperty("intent");
     expect(raw).toHaveProperty("intent");
     expect(chatGptReadToolOutput("query_gate_stations", raw)).toBe(raw);
@@ -178,7 +178,7 @@ it("separates approval-device GPS from missing visitor fields without minting an
     ok: true,
     visitorDraftComplete: true,
     missing: [],
-    deviceRequiredFields: ["latitude", "longitude"],
+    deviceRequiredFields: [], optionalDeviceFields: ["latitude", "longitude"],
     submitted: false,
     formPopulated: false,
     siteAccessVerified: false,
@@ -186,7 +186,7 @@ it("separates approval-device GPS from missing visitor fields without minting an
       toolName: "confirm_visitor_check_in",
       requiredScope: "gate:write",
       preparationRequired: true,
-      deviceLocationRequired: true,
+      deviceLocationRequired: false,
     },
   });
   expect(ready.draft).not.toHaveProperty("latitude");

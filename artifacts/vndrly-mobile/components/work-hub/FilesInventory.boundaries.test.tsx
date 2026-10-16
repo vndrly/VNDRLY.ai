@@ -25,7 +25,7 @@ vi.mock("@/lib/meeting-files", async (original) => ({ ...await original<any>(), 
 vi.mock("@/lib/photos", () => ({ captureAndUploadImage: vi.fn() }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ card: "white", text: "black", mutedForeground: "gray", border: "gray", primary: "blue" }) }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, accessibilityLabel, onPress, disabled }: any) => <button aria-label={accessibilityLabel} onClick={onPress} disabled={disabled}>{children}</button> }));
-vi.mock("expo-crypto", () => ({ CryptoDigestAlgorithm: { SHA256: "SHA-256" }, digest: async (_algorithm: string, bytes: ArrayBuffer) => new Uint8Array(bytes).length > 3 ? new Uint8Array(32).fill(170).buffer : new Uint8Array([new Uint8Array(bytes).reduce((a, b) => a + b, 0)]).buffer }));
+vi.mock("expo-crypto", () => ({ randomUUID: () => "10101010-1010-4010-8010-101010101010", CryptoDigestAlgorithm: { SHA256: "SHA-256" }, digest: async (_algorithm: string, bytes: ArrayBuffer) => new Uint8Array(bytes).length > 3 ? new Uint8Array(32).fill(170).buffer : new Uint8Array([new Uint8Array(bytes).reduce((a, b) => a + b, 0)]).buffer }));
 vi.mock("expo/fetch", () => ({ fetch: env.put }));
 vi.mock("expo-file-system", () => ({
   Paths: { cache: "file:///cache" }, Directory: class {},
@@ -63,6 +63,20 @@ beforeEach(async () => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.clearAllMocks(); env.api.mockReset(); env.raw.mockReset(); env.put.mockReset(); env.pick.mockReset(); });
 
 describe("native Files & Inventory boundaries", () => {
+  it("offers authorized Fleet enrollment on the full Inventory record and preserves its canonical asset ID", async () => {
+    const asset = { id: nativeId, name: "Canonical synthetic truck", category: "truck", status: "available", version: 4, manufacturer: "", model: "", legalOwner: "Synthetic owner", aliases: [], fleetIds: [], held: false, currentHolderUserId: null };
+    env.api.mockImplementation(async (path, init) => {
+      if (init?.method === "POST") return { operationId: nativeId, assetId: nativeId, version: 4, fleetVersion: 2, fingerprint: "synthetic" };
+      if (path.endsWith(nativeId)) return { canManage: true, asset, history: [], runs: [], maintenance: [], historyLimited: false };
+      return { canManage: true, version: 2, fleets: [], assets: [], nextCursor: null };
+    });
+    render(<FilesInventory {...props} files={[]} assets={[asset]} capabilities={{ ...caps, canManageAsset: true }} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Add to Fleet" }));
+    await waitFor(() => expect(props.onRefresh).toHaveBeenCalled());
+    const writes = env.api.mock.calls.filter(call => call[1]?.method === "POST");
+    expect(writes).toHaveLength(1); expect(writes[0][0]).toBe(`/api/fleet/inventory/${nativeId}/enroll`);
+    expect(JSON.parse(writes[0][1].body)).toEqual({ operationId: nativeId, expectedVersion: 4 });
+  });
   it("renders the canonical API custodian separately and confirms custody without browser UUIDs", async () => {
     vi.spyOn(globalThis.crypto, "randomUUID").mockImplementation(() => { throw new Error("Browser UUID unavailable"); });
     let event:any=null;
@@ -196,3 +210,5 @@ describe("native Files & Inventory boundaries", () => {
     expect(env.share).not.toHaveBeenCalled(); expect(env.files.size).toBe(0);
   });
 });
+
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));

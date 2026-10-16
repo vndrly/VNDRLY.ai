@@ -1,3 +1,4 @@
+import { FLEET_INVENTORY_TOOLS } from "./fleet-inventory-tools";
 import { FLEET_CARGO_TOOLS } from "./fleet-cargo-tools";
 import { FLEET_REPLACEMENT_TOOLS } from "./fleet-replacement-tools";
 import { z } from "zod/v4";
@@ -69,6 +70,7 @@ const common = {
   expectedVersion: { type: "integer", minimum: 1 },
 };
 export const FLEET_TOOLS: AskVToolDefinition[] = [
+  ...FLEET_INVENTORY_TOOLS,
   action("save_fleet_ticket_plan", "Save an explicitly reviewed ticket Batch/Singles plan after confirmation. First read the exact ticket plan and destination directory. Origin cannot change. Use approved destination IDs, explicit per-run rate, closure choice and current version; retain operationId across retries. Server enforces dispatch authority and partner policy.", {ticketId:{type:"integer",minimum:1},operationId:id,expectedVersion:{type:"integer",minimum:0},mode:{type:"string",enum:["batch","singles"]},rateCents:{type:"integer",minimum:0,maximum:100000000},closure:{type:"string",enum:["shift","day","manual"]},closesAt:{type:["string","null"],format:"date-time"},destinationIds:{type:"array",minItems:1,maxItems:30,items:id}}, ["ticketId","operationId","expectedVersion","rateCents","closure","closesAt","destinationIds"]),
   action("save_fleet_destination", "Save or edit a reusable disposal/delivery destination after explicit review and confirmation. Read current directory version; never invent address, coordinates, accepted materials or availability. This does not approve that destination for any ticket. Exact canonical readback required.", {operationId:id,expectedVersion:{type:"integer",minimum:1},destination:{type:"object"}}, ["operationId","expectedVersion","destination"]),
   read("query_fleet_ticket_plan", "Read the exact authorized ticket origin, Batch/Singles mode, closure policy, approved destinations and accepted run charges. Finance fields depend on current grants; recommendations do not authorize destinations.", {ticketId:{type:"integer",minimum:1}}, ["ticketId"]),

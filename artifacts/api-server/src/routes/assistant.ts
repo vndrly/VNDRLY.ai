@@ -1,3 +1,5 @@
+import { readFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
+import { fleetInventoryAction, fleetInventoryOperationId } from "../assistant/fleet-inventory-tools";
 import { runBoundTypedAskVTool, synchronizeTypedAskVContext, organizationKeyFromSession } from "../assistant/askv-pending-confirmation";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq, desc, ne, inArray, lte, sql } from "drizzle-orm";
@@ -854,6 +856,12 @@ export async function runTool(
           ? { requiresConfirmation: true }
           : {}),
       });
+    if (fleetInventoryAction(name)) {
+      const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
+      if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);
+      const { operationId, confirmed: _confirmed, idempotencyKey: _key, voiceSessionId: _voice, ...fields } = input as Record<string, unknown>;
+      return JSON.stringify(await readFleetInventoryAction(name, fields, fleetInventoryOperationId(input as Record<string, unknown>), session));
+    }
     return JSON.stringify(describeWorkHubToolResult(name, input,
       await callNaturalVoiceDomainApi(
         workHubRequest.path,

@@ -1,4 +1,5 @@
 import FleetProfileEditor from "@/components/FleetProfileEditor";
+import FleetCheckbox from "@/components/FleetCheckbox";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import React, { useEffect, useState } from "react";
 import { Text, TextInput, View } from "react-native";
@@ -32,12 +33,12 @@ export default function FleetSetup({ onSaved }: {
     }, []);
     function addFleet() {
         if (!setup || !name.trim() || sites.length === 0) {
-            setError("Name the fleet and choose authorized sites.");
+            setError("Name the Detail and choose authorized sites.");
             return;
         }
         const parsed = FleetDefinitionSchema.safeParse({ id: Crypto.randomUUID(), name: name.trim(), siteIds: sites, requiredCertifications: certifications.split(",").map(value => value.trim()).filter(Boolean) });
         if (!parsed.success) {
-            setError("Check the fleet name, sites and required certification names.");
+            setError("Check the Detail name, sites and required certification names.");
             return;
         }
         const fleet = parsed.data;
@@ -50,7 +51,7 @@ export default function FleetSetup({ onSaved }: {
     function setGrant() {
         const fleet = setup?.fleets.find(f => f.id === selectedFleet);
         if (!setup || !fleet || !memberId || roles.length === 0) {
-            setError("Choose an existing member, fleet and Fleet roles.");
+            setError("Choose an existing member, Detail and Fleet Ops roles.");
             return;
         }
         const prior = setup.grants.find(g => g.userId === memberId);
@@ -61,7 +62,7 @@ export default function FleetSetup({ onSaved }: {
     async function save() {
         if (!setup)
             return;
-        const input = FleetSetupInputSchema.safeParse({ expectedVersion: setup.expectedVersion, enabled: setup.enabled, fleets: setup.fleets, grants: setup.grants });
+        const input = FleetSetupInputSchema.safeParse({ expectedVersion: setup.expectedVersion, enabled: setup.enabled, fleets: setup.fleets, grants: setup.grants, ...(setup.supportGrants ? { supportGrants: setup.supportGrants } : {}) });
         if (!input.success) {
             setError("Review the fleet configuration before saving.");
             return;
@@ -81,24 +82,34 @@ export default function FleetSetup({ onSaved }: {
         }
     }
     return <View style={{ gap: 12 }}>
-    <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{copy("Company Fleet setup")}</Text>
+    <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{copy("Company Fleet Details")}</Text>
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {setup && <>
       <Text style={{ color: colors.text }}>{copy("Draft changes are unsaved. Fleet roles grant operational access only; safety release and finance remain separate.")}</Text>
-      <TogglePillButton compactOnTablet solid={setup.enabled} onPress={() => setSetup({ ...setup, enabled: !setup.enabled })}>{copy(setup.enabled ? "Fleet enabled" : "Fleet disabled")}</TogglePillButton>
-      {setup.fleets.map(fleet => <TogglePillButton compactOnTablet key={fleet.id} solid={selectedFleet === fleet.id} onPress={() => setSelectedFleet(fleet.id)}>{fleet.name}{copy(" \u00B7 sites ")}{fleet.siteIds.join(", ")}</TogglePillButton>)}
+      <FleetCheckbox label={copy("Enable Fleet Ops")} disabled={busy} checked={setup.enabled} onChange={enabled => setSetup({ ...setup, enabled })} />
+      {setup.fleets.map(fleet => <TogglePillButton compactOnTablet key={fleet.id} disabled={busy} solid={selectedFleet === fleet.id} onPress={() => setSelectedFleet(fleet.id)}>{`${fleet.name}${copy(" \u00B7 sites ")}${fleet.siteIds.join(", ")}`}</TogglePillButton>)}
+      {setup.fleets.filter(fleet => fleet.id === selectedFleet).map(fleet => <View key={`detail:${fleet.id}`} style={{ gap: 8, backgroundColor: colors.card, padding: 16, borderRadius: 14 }}>
+        <TextInput accessibilityLabel={copy("Detail name")} editable={!busy} value={fleet.name} onChangeText={value => setSetup({ ...setup, fleets: setup.fleets.map(item => item.id === fleet.id ? { ...item, name: value } : item) })} style={{ color: colors.text, padding: 12, borderColor: colors.border, borderWidth: 1 }} />
+        <Text style={{ color: colors.text }}>{copy("Detailed assets")}</Text>
+        {(setup.equipment ?? []).map(asset => <FleetCheckbox key={asset.assetId} label={asset.name} disabled={busy} checked={fleet.equipmentAssetIds?.includes(asset.assetId) ?? false} onChange={checked => setSetup({ ...setup, fleets: setup.fleets.map(item => item.id === fleet.id ? { ...item, equipmentAssetIds: checked ? [...(item.equipmentAssetIds ?? []), asset.assetId] : (item.equipmentAssetIds ?? []).filter(id => id !== asset.assetId) } : item) })} />)}
+        <Text style={{ color: colors.text }}>{copy("Authorized sites")}</Text>
+        {setup.sites.map(site => <FleetCheckbox key={site.siteId} label={site.name} disabled={busy} checked={fleet.siteIds.includes(site.siteId)} onChange={checked => {
+          const fleets = setup.fleets.map(item => item.id === fleet.id ? { ...item, siteIds: checked ? [...item.siteIds, site.siteId] : item.siteIds.filter(id => id !== site.siteId) } : item);
+          setSetup({ ...setup, fleets, grants: setup.grants.map(grant => ({ ...grant, siteIds: grant.siteIds.filter(id => fleets.some(detail => grant.fleetIds.includes(detail.id) && detail.siteIds.includes(id))) })) });
+        }} />)}
+      </View>)}
       {setup.fleets.filter(fleet=>fleet.id===selectedFleet).map(fleet=><FleetProfileEditor key={fleet.id} profile={fleet.operationalProfile} disabled={busy} onChange={profile=>setSetup(current=>current?{...current,fleets:current.fleets.map(item=>{if(item.id!==fleet.id)return item;const next={...item};if(profile)next.operationalProfile=profile;else delete next.operationalProfile;return next;})}:current)}/>)}
-      <TextInput accessibilityLabel={copy("New Fleet name")} placeholder={copy("New fleet name")} value={name} onChangeText={setName} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border }}/>
+      <TextInput accessibilityLabel={copy("New Detail name")} placeholder={copy("New Detail name")} editable={!busy} value={name} onChangeText={setName} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border }}/>
       <TextInput accessibilityLabel={copy("Required Fleet certifications")} placeholder={copy("Required certification names, separated by commas")} value={certifications} onChangeText={setCertifications} style={{ color: colors.text, padding: 12, borderWidth: 1, borderColor: colors.border }}/>
-      {setup.sites.map(site => <TogglePillButton compactOnTablet key={site.siteId} solid={sites.includes(site.siteId)} onPress={() => setSites(current => current.includes(site.siteId) ? current.filter(id => id !== site.siteId) : [...current, site.siteId])}>{site.name}</TogglePillButton>)}
-      <TogglePillButton compactOnTablet onPress={addFleet}>{copy("Add fleet to draft")}</TogglePillButton>
-      <Text style={{ color: colors.text }}>{copy("Grant selected fleet access to an existing company member")}</Text>
+      {setup.sites.map(site => <FleetCheckbox key={site.siteId} label={site.name} disabled={busy} checked={sites.includes(site.siteId)} onChange={checked => setSites(current => checked ? [...current, site.siteId] : current.filter(id => id !== site.siteId))} />)}
+      <TogglePillButton compactOnTablet disabled={busy} onPress={addFleet}>{copy("Add Detail to draft")}</TogglePillButton>
+      <Text style={{ color: colors.text }}>{copy("Grant selected Detail access to an existing company member")}</Text>
       {setup.members.map(member => <TogglePillButton compactOnTablet key={member.userId} solid={memberId === member.userId} onPress={() => { setMemberId(member.userId); setRoles([]); }}>{member.name}</TogglePillButton>)}
-      {(["fleet_manager", "dispatcher", "driver"] as const).map(role => <TogglePillButton compactOnTablet key={role} solid={roles.includes(role)} onPress={() => setRoles(current => current.includes(role) ? current.filter(item => item !== role) : [...current, role])}>{copy(role.replaceAll("_", " "))}</TogglePillButton>)}
-      <TogglePillButton compactOnTablet onPress={setGrant}>{copy("Add grant to draft")}</TogglePillButton>
-      <TogglePillButton compactOnTablet disabled={!memberId} color="red" onPress={() => setSetup({ ...setup, grants: setup.grants.filter(grant => grant.userId !== memberId) })}>{copy("Remove selected member's Fleet grant from draft")}</TogglePillButton>
-      {setup.grants.map(grant => <Text key={grant.userId} style={{ color: colors.text }}>{setup.members.find(m => m.userId === grant.userId)?.name ?? `Member ${grant.userId}`}{copy(": ")}{grant.roles.map(role => copy(role.replaceAll("_", " "))).join(", ")}{copy(" \u00B7 ")}{grant.fleetIds.length}{copy(" fleets \u00B7 ")}{grant.siteIds.length}{copy(" sites")}</Text>)}
-      <TogglePillButton compactOnTablet disabled={busy} onPress={() => void save()}>{copy("Save Fleet setup")}</TogglePillButton>
+      {(["fleet_manager", "dispatcher", "driver"] as const).map(role => <FleetCheckbox key={role} label={copy(role.replaceAll("_", " "))} disabled={busy} checked={roles.includes(role)} onChange={checked => setRoles(current => checked ? [...current, role] : current.filter(item => item !== role))} />)}
+      <TogglePillButton compactOnTablet disabled={busy} onPress={setGrant}>{copy("Add grant to draft")}</TogglePillButton>
+      <TogglePillButton compactOnTablet disabled={busy || !memberId} color="red" onPress={() => setSetup({ ...setup, grants: setup.grants.filter(grant => grant.userId !== memberId) })}>{copy("Remove selected member's Fleet grant from draft")}</TogglePillButton>
+      {setup.grants.map(grant => <Text key={grant.userId} style={{ color: colors.text }}>{setup.members.find(m => m.userId === grant.userId)?.name ?? `Member ${grant.userId}`}{copy(": ")}{grant.roles.map(role => copy(role.replaceAll("_", " "))).join(", ")}{copy(" \u00B7 ")}{grant.fleetIds.length}{copy(" Details \u00B7 ")}{grant.siteIds.length}{copy(" sites")}</Text>)}
+      <TogglePillButton compactOnTablet disabled={busy} onPress={() => void save()}>{copy("Save Fleet Details")}</TogglePillButton>
     </>}
   </View>;
 }

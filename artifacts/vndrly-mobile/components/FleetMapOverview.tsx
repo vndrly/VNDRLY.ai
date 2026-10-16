@@ -10,6 +10,7 @@ import type {
 import MapRouteReplay from "./MapRouteReplay";
 import MapboxNativeMap from "./MapboxNativeMap";
 import TogglePillButton from "./TogglePillButton";
+import FleetCheckbox from "./FleetCheckbox";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
@@ -64,7 +65,9 @@ function FleetMapPanel({
     [ticketMenu, setTicketMenu] = useState(false),
     [fit, setFit] = useState(false),
     [selected, setSelected] = useState<string | null>(null),
-    [street, setStreet] = useState(false);
+    [street, setStreet] = useState(true),
+    [includeOld, setIncludeOld] = useState(false),
+    [expanded, setExpanded] = useState(false);
   const context = useQuery({
     queryKey: [
       "fleet-map-context",
@@ -161,6 +164,12 @@ function FleetMapPanel({
           .filter((id): id is number => id !== null),
       ),
     ];
+  const positions = [...new Map(view.observations.slice().reverse().map(point => {
+    const run = view.runs.find(item => item.id === point.runId)!;
+    return [point.vehicleAssetId ?? run.vehicleAssetId, point] as const;
+  })).values()].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt));
+  const shownPositions = positions.filter(point => includeOld || point.freshness === "recent");
+  const oldCount = positions.filter(point => point.freshness !== "recent").length;
   const pins = [
     ...(valid(place)
       ? [
@@ -174,32 +183,12 @@ function FleetMapPanel({
           },
         ]
       : []),
-    ...[
-      ...new Map(
-        view.observations
-          .slice()
-          .reverse()
-          .map((o) => {
-            const run = view.runs.find((run) => run.id === o.runId)!;
-            return [
-              run.driverUserId,
-              {
-                id: "driver-" + run.driverUserId,
-                latitude: o.latitude,
-                longitude: o.longitude,
-                title: run.labels?.driverName ?? copy("Assigned driver"),
-                label: (run.labels?.driverName ?? "D")
-                  .split(/\s+/)
-                  .map((part) => part[0])
-                  .slice(0, 2)
-                  .join(""),
-                color:
-                  o.freshness === "recent" ? "#22a565" : colors.mutedForeground,
-              },
-            ];
-          }),
-      ).values(),
-    ],
+    ...shownPositions.map((point, index) => {
+      const run = view.runs.find(item => item.id === point.runId)!;
+      return { id: point.vehicleAssetId ?? run.vehicleAssetId, latitude: point.latitude, longitude: point.longitude,
+        title: `${run.labels?.vehicleName ?? copy("Assigned vehicle")} · ${run.labels?.driverName ?? copy("Assigned driver")} · ${new Date(point.recordedAt).toLocaleString()}`,
+        label: String(index + 1), color: point.freshness === "recent" ? "#1E5BD0" : "#6b7280" };
+    }),
   ];
   const field = {
     padding: 12,
@@ -212,7 +201,7 @@ function FleetMapPanel({
   const followed =
     followDriver === null
       ? undefined
-      : pins.find((pin) => pin.id === "driver-" + followDriver);
+      : shownPositions.find(point => view.runs.find(run => run.id === point.runId)?.driverUserId === followDriver);
   const active = (run: FleetRun) =>
     !["completed", "cancelled"].includes(run.status);
   const row = (
@@ -251,13 +240,12 @@ function FleetMapPanel({
             new Date(observation.recordedAt).toLocaleString()
           : copy("No reported location")}
       </Text>
-      {id.startsWith("driver-")&&<TogglePillButton compactOnTablet disabled={!observation} solid={followDriver===Number(id.slice(7))} onPress={()=>{setFollowDriver(Number(id.slice(7)));setMapMode("live");setSelected(id);}}>{copy("Follow")} · {name}</TogglePillButton>}
+      {id.startsWith("driver-")&&<TogglePillButton compactOnTablet disabled={!observation} solid={followDriver===Number(id.slice(7))} onPress={()=>{setFollowDriver(Number(id.slice(7)));setMapMode("live");setSelected(run?.vehicleAssetId ?? id);}}>{`${copy("Follow")} · ${name}`}</TogglePillButton>}
       {run && (
         <TogglePillButton compactOnTablet onPress={() => onOpen(run)}>
-          {copy("Open run")} ·{" "}
-          {run.linkedTicketId
+          {`${copy("Open run")} · ${run.linkedTicketId
             ? copy("Ticket") + " #" + run.linkedTicketId
-            : run.title}
+            : run.title}`}
         </TogglePillButton>
       )}
     </View>
@@ -403,10 +391,11 @@ function FleetMapPanel({
         </View>
       ) : (
         <View>
+          <View style={{ gap: 8, marginBottom: 10 }}><FleetCheckbox label={`${copy("Show stale / paused positions")} (${oldCount})`} checked={includeOld} onChange={setIncludeOld} /><TogglePillButton compactOnTablet onPress={() => setExpanded(value => !value)}>{copy(expanded ? "Collapse map" : "Expand map")}</TogglePillButton></View>
           <MapboxNativeMap
             controls
             viewKey={String(siteId) + ":" + ticketId + ":" + fit+":"+cameraReset}
-            height={Math.max(360, Math.min(640, height - 260))}
+            height={expanded ? Math.max(520, height - 100) : Math.max(360, Math.min(640, height - 260))}
             points={pins}
             center={
               followed
@@ -483,6 +472,12 @@ function FleetMapPanel({
         </Text>
       )}
       {mapMode === "live" && <>
+      <Text style={{ color: colors.mutedForeground }}>{copy("Numbers match the map markers. Blue: recent. Grey: stale or paused.")}</Text>
+      {!shownPositions.length && <Text style={{ color: colors.text }}>{copy("No recent positions in this view")}</Text>}
+      {shownPositions.map((point, index) => {
+        const run = view.runs.find(item => item.id === point.runId)!;
+        return <Pressable key={point.vehicleAssetId ?? run.vehicleAssetId} accessibilityRole="button" accessibilityLabel={`${index + 1} · ${run.labels?.vehicleName ?? copy("Assigned vehicle")}`} onPress={() => { setSelected(point.vehicleAssetId ?? run.vehicleAssetId); setExpanded(false); onOpen(run); }} style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{index + 1} · {run.labels?.vehicleName ?? copy("Assigned vehicle")}</Text><Text style={{ color: colors.mutedForeground }}>{run.labels?.driverName ?? copy("Assigned driver")} · {run.title}</Text><Text style={{ color: colors.mutedForeground }}>{copy(point.freshness === "recent" ? "Recent" : "Stale / paused")} · {new Date(point.recordedAt).toLocaleString()}</Text></Pressable>;
+      })}
       {company && !site && (
         <Text style={{ color: colors.mutedForeground }}>
           {company.name}

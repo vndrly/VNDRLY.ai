@@ -34,18 +34,6 @@ function missingCheckInFields(args: Record<string, unknown>): string[] {
     !/^[A-Z]{2}$/.test(args.plateState.trim().toUpperCase())
   )
     missing.push("plateState");
-  if (
-    typeof args.latitude !== "number" ||
-    !Number.isFinite(args.latitude) ||
-    Math.abs(args.latitude) > 90
-  )
-    missing.push("latitude");
-  if (
-    typeof args.longitude !== "number" ||
-    !Number.isFinite(args.longitude) ||
-    Math.abs(args.longitude) > 180
-  )
-    missing.push("longitude");
   return missing;
 }
 /** Reuse the real API boundary: assignment, role, geofence, audit, GPS and events. */
@@ -124,7 +112,7 @@ async function gatekeeper(session: SessionPayload): Promise<boolean> {
     (session.vendorRole === "gatekeeper" || session.vendorRole === "gate_supervisor"),
   );
 }
-const GATE_FORM_FIELDS = ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "latitude", "longitude"] as const;
+const GATE_FORM_FIELDS = ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "gateStationId", "latitude", "longitude"] as const;
 function gateFormValues(args: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(GATE_FORM_FIELDS.filter((key) => args[key] != null).map((key) => [key, args[key]]));
 }
@@ -439,6 +427,7 @@ export async function resolveGateCheckInCandidate(
     "notes",
     "expectedDurationMinutes",
     "siteLocationId",
+    "gateStationId",
     "latitude",
     "longitude",
   ] as const;

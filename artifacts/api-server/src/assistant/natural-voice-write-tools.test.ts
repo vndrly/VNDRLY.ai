@@ -47,6 +47,18 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
 });
 describe("AskV canonical Gate and field operations", () => {
+  it("submits an explicitly confirmed operator entry and checkout without GPS and preserves the selected Gate", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 44, firstName: "Bob", lastName: "Villa" }) });
+    const { latitude: _latitude, longitude: _longitude, ...manual } = fields;
+    const gateStationId = "11111111-1111-4111-8111-111111111111";
+    expect(JSON.parse(await confirmVisitorCheckIn({ ...manual, gateStationId }, gate))).toMatchObject({ ok: true, visitId: 44 });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ siteLocationId: 9, gateStationId });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).not.toHaveProperty("latitude");
+    expect(JSON.parse(await confirmVisitorCheckOut({ visitId: 44, gateStationId, confirmed: true, idempotencyKey: "manual-out" }, gate))).toMatchObject({ ok: true });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).not.toHaveProperty("latitude");
+    const prepared = JSON.parse(await prepareVisitorCheckIn({ ...manual, gateStationId }));
+    expect(prepared.intent.arguments.values.gateStationId).toBe(gateStationId);
+  });
   it("uses current operational roles for normalized Gate accounts and rejects revoked roles", async () => {
     const session = { ...gate, vendorRole: "field_employee", vendorPeopleId: 77 };
     accessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: ["gatekeeper"] });
@@ -117,7 +129,7 @@ describe("AskV canonical Gate and field operations", () => {
       "x-replay-view-session": "server-issued-token",
     });
   });
-  it("collects exact host and location instead of silently choosing them", async () => {
+  it("collects exact host and site without making optional operator GPS required", async () => {
     const incomplete = JSON.parse(
       await prepareVisitorCheckIn({
         firstName: "Bob",
@@ -129,8 +141,6 @@ describe("AskV canonical Gate and field operations", () => {
     expect(incomplete.missing).toEqual([
       "hostVendorId",
       "vehiclePlate",
-      "latitude",
-      "longitude",
     ]);
     expect(JSON.parse(await prepareVisitorCheckIn(fields)).ok).toBe(true);
   });
@@ -166,7 +176,7 @@ describe("AskV canonical Gate and field operations", () => {
     const result = JSON.parse(await prepareVisitorCheckIn({ ...fields, plateState: " Oklahoma ", latitude: undefined, longitude: undefined }));
     expect(result.draft.plateState).toBe("OK");
     expect(result.intent.arguments.values.plateState).toBe("OK");
-    expect(result.missing).toEqual(["latitude", "longitude"]);
+    expect(result.missing).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
     const unknown = JSON.parse(await prepareVisitorCheckIn({ ...fields, plateState: "unknown state" }));
     expect(unknown.missing).toEqual(["plateState"]);

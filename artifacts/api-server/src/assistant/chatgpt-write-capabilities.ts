@@ -1,3 +1,4 @@
+import { fleetInventoryAction, fleetInventoryArguments } from "./fleet-inventory-tools";
 import { WorkHubAvailabilityArgumentsSchema } from "./work-hub-availability-tools";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
 import { MeetingMessageArgumentsSchema } from "../work-hub/meeting-message";
@@ -19,6 +20,7 @@ import { FleetDestinationSchema, FleetCargoTransferInputSchema, FleetCargoTransf
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
+  "fleet:inventory": { label: "Prepare Fleet Inventory pool creation, enrollment and metadata edits with current Fleet Manager and Inventory authority; no custody or Detail assignment", tools: ["create_fleet_inventory_asset", "enroll_fleet_inventory_asset", "edit_fleet_inventory_asset"] },
   "company:settings": {label:"Prepare company administrator Field/Fleet/Gate category changes for explicit approval",tools:["set_company_operations"]},
   "fleet:maintenance": {label:"Prepare Fleet Manager maintenance and explicitly permitted hold release; no physical certification",tools:["manage_fleet_maintenance","report_fleet_defect"]},
   "fleet:admin":{label:"Prepare current company administrator Fleet settings and explicit role grants",tools:["manage_fleet_settings"]},
@@ -40,6 +42,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+ if (fleetInventoryAction(name)) { const { operationId: _op, confirmed: _confirmed, ...fields } = input; return fields; }
  if(name === "set_company_operations") return {categories: input.categories};
  if(name==="manage_work_hub_availability"){const {operationId:_op,confirmed:_confirmed,...fields}=input;return fields;}
   if (name === "moderate_work_hub_meeting" && input.action === "request_to_speak") { const { operationId: _op, confirmed: _confirmed, ...fields } = input; return fields; }
@@ -69,6 +72,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if (fleetInventoryAction(name)) { const { operationId, ...fields } = input; if (operationId !== undefined) z.uuid().parse(operationId); fleetInventoryArguments(name).parse(fields); }
   if(name === "set_company_operations") z.object({categories:z.array(z.enum(["field","fleet","gate"])).min(1).max(3).refine(values=>new Set(values).size===values.length),operationId:z.uuid().optional()}).strict().parse(input);
   if(name === "save_fleet_destination") z.object({operationId:z.uuid().optional(),expectedVersion:z.number().int().positive(),destination:FleetDestinationSchema.omit({revision:true,ownerType:true,ownerId:true}).extend({id:z.uuid().optional()})}).strict().parse(input);
   if(name === "save_fleet_ticket_plan") z.object({ticketId:z.number().int().positive(),operationId:z.uuid().optional(),expectedVersion:z.number().int().nonnegative(),mode:z.enum(["batch","singles"]).optional(),rateCents:z.number().int().min(0).max(100000000),closure:z.enum(["shift","day","manual"]),closesAt:z.iso.datetime().nullable(),destinationIds:z.array(z.uuid()).min(1).max(30)}).strict().parse(input);

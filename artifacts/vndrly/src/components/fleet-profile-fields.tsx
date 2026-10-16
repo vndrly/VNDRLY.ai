@@ -1,3 +1,4 @@
+import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { useTranslation } from "react-i18next";
 import type { FleetOperationalProfile } from "@workspace/api-zod";
 import { fleetCopy } from "@/lib/fleet-copy";
@@ -80,15 +81,14 @@ export function FleetProfileFields({
                   />
                 </label>
                 <label>
-                  <input
-                    type="checkbox"
+                  <BrandedCheckbox
                     checked={item.required}
-                    onChange={(event) =>
+                    onCheckedChange={(checked) =>
                       onChange({
                         ...value,
                         [key]: value[key].map((row, i) =>
                           i === index
-                            ? { ...row, required: event.target.checked }
+                            ? { ...row, required: (checked === true) }
                             : row,
                         ),
                       })
@@ -224,17 +224,16 @@ export function FleetProfileFields({
                 </select>
               </label>
               <label>
-                <input
+                <BrandedCheckbox
                   disabled={disabled}
-                  type="checkbox"
                   checked={item.required}
-                  onChange={(event) =>
+                  onCheckedChange={(checked) =>
                     onChange({
                       ...value,
                       evidenceRequirements: value.evidenceRequirements?.map(
                         (row, i) =>
                           i === index
-                            ? { ...row, required: event.target.checked }
+                            ? { ...row, required: (checked === true) }
                             : row,
                       ),
                     })

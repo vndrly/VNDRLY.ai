@@ -747,7 +747,12 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}>
           <View style={styles.headerRow}>
             <Text style={[styles.heading, { color: colors.foreground }]}>{t("tickets.listFilters.title")}</Text>
-            <FreshnessPill lastLoadedAt={lastLoadedAt} inFlight={loading || refreshing || headerRefreshing} errored={loadError != null} rateLimited={rateLimited} testID="tickets-freshness-pill" />
+            <View style={[styles.freshnessRow, { gap: 8 }]}>
+              <FreshnessPill lastLoadedAt={lastLoadedAt} inFlight={loading || refreshing || headerRefreshing} errored={loadError != null} rateLimited={rateLimited} testID="tickets-freshness-pill" />
+              <LayeredPillButton onPress={onHeaderRefresh} disabled={headerRefreshing || refreshing || rateLimited} loading={headerRefreshing} height={28} testID="button-refresh-tickets" accessibilityLabel={t("common.refresh")}>
+                <Feather name="refresh-cw" size={14} color="#ffffff" />
+              </LayeredPillButton>
+            </View>
           </View>
           <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
             {([

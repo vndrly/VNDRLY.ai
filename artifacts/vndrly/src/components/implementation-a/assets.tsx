@@ -8,6 +8,7 @@ import { InventoryHoldRelease, type InventoryHold } from "./asset-hold-release";
 import { useQuery } from "@tanstack/react-query";
 import { implementationARequest } from "./client";
 import { EmptyState, ImplementationSurface } from "./surface";
+import { FleetInventoryAddExisting } from "../fleet-inventory";
 type Asset = {
   version: number;
   holds?: InventoryHold[];
@@ -58,6 +59,7 @@ export function Assets() {
           {query.data.assets.map((asset) => (
             <li key={asset.id} className="rounded-lg border p-4">
               <strong>{asset.name}</strong>
+              {owner?.type === "vendor" && query.data.capabilities.canManageAsset && ["vehicle", "truck", "trailer"].includes(asset.category) && <FleetInventoryAddExisting key={identity + asset.id + "fleet"} identity={identity} asset={asset} onSaved={refreshed} />}
               <p className="text-sm text-muted-foreground">
                 {[asset.category, asset.status, asset.condition]
                   .filter(Boolean)

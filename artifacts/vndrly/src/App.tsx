@@ -276,6 +276,7 @@ function AuthenticatedRouter() {
         {user && <Route path="/gate/shift-notes"><GatePortalLayout returnToAdmin={!gateWorker}><GateShiftNotesPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate"><GatePortalLayout returnToAdmin={!gateWorker}><GatekeeperPage /></GatePortalLayout></Route>}
         {user && <Route path="/fleet/runs/:id"><Layout><FleetPage /></Layout></Route>}
+        {user && <Route path="/fleet/equipment/:id"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet/:section"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet"><Layout><FleetPage /></Layout></Route>}
         <Route path="/work-hub/assignment/:instanceId">{params=><Layout><WorkHubLibraryPage kind="assignment" id={params.instanceId}/></Layout>}</Route>

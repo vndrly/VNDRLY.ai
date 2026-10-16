@@ -1,3 +1,4 @@
+import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FleetSetup, FleetSupportGrant } from "@workspace/api-zod";
@@ -100,11 +101,10 @@ export function FleetSupportGrants({
         <legend>{c.fleet}</legend>
         {draft.fleets.map((fleet) => (
           <label className="mr-4" key={fleet.id}>
-            <input
-              type="checkbox"
+            <BrandedCheckbox
               checked={fleetIds.includes(fleet.id)}
-              onChange={(event) => {
-                const next = event.target.checked
+              onCheckedChange={(checked) => {
+                const next = (checked === true)
                   ? [...fleetIds, fleet.id]
                   : fleetIds.filter((id) => id !== fleet.id);
                 setFleets(next);
@@ -126,12 +126,11 @@ export function FleetSupportGrants({
         <legend>{c.site}</legend>
         {sites.map((site) => (
           <label className="mr-4" key={site.siteId}>
-            <input
-              type="checkbox"
+            <BrandedCheckbox
               checked={siteIds.includes(site.siteId)}
-              onChange={(event) =>
+              onCheckedChange={(checked) =>
                 setSites(
-                  event.target.checked
+                  (checked === true)
                     ? [...siteIds, site.siteId]
                     : siteIds.filter((id) => id !== site.siteId),
                 )
@@ -142,10 +141,9 @@ export function FleetSupportGrants({
         ))}
       </fieldset>
       <label>
-        <input
-          type="checkbox"
+        <BrandedCheckbox
           checked={financeRead}
-          onChange={(event) => setFinance(event.target.checked)}
+          onCheckedChange={(checked) => setFinance((checked === true))}
         />
         {c.supportFinance}
       </label>

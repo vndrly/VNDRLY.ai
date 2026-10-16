@@ -17,6 +17,18 @@ import FleetWorkspace from "./FleetWorkspace";
 const overview = { companyId: 609, enabled: true, roles: ["driver"], capabilities: { canDispatch: false, canManage: false, canDrive: true }, fleets: [], runs: [], observations: [], unavailableIntegrations: [], generatedAt: "2026-10-07T12:00:00Z" };
 afterEach(() => { cleanup(); mocks.api.mockReset(); mocks.membership = 1; mocks.actions = []; });
 describe("mobile Fleet authorization", () => {
+  it("loads paginated Fleet Inventory independently of the capped dispatcher resources endpoint", async () => {
+    const assetId = "30000000-0000-4000-8000-000000000001";
+    mocks.api.mockImplementation(async (path: string) => {
+      if (path === "/api/fleet/resources") throw Object.assign(new Error("Resource cap exceeded"), { status: 409 });
+      if (path === "/api/fleet/inventory") return { canManage: false, version: 1, fleets: [], nextCursor: null, assets: [{ id: assetId, name: "Canonical paginated truck", category: "truck", status: "available", version: 1, manufacturer: "", model: "", legalOwner: "Synthetic owner", aliases: [], held: false, currentHolderUserId: null, fleetIds: [] }] };
+      return { ...overview, capabilities: { canDispatch: true, canManage: true, canDrive: false } };
+    });
+    render(<FleetWorkspace initialMode="inventory" />);
+    expect(await screen.findByText("Canonical paginated truck")).toBeTruthy();
+    expect(mocks.api.mock.calls.some(call => call[0] === "/api/fleet/resources")).toBe(false);
+    expect(screen.queryByRole("button", { name: "Add Fleet Asset" })).toBeNull();
+  });
   it("saves own acknowledgement using server revision and renders the saved next step without claiming completion", async () => {
     const run = { id: "20000000-0000-4000-8000-000000000001", title: "Synthetic load", version: 4, driverUserId: 1, vehicleAssetId: "30000000-0000-4000-8000-000000000001", trailerAssetId: null, status: "dispatched", allowedActions: ["acknowledge"], currentStopId: null, loads: [], inspections: [], records: [], events: [], stops: [] };
     let accepted = false;
@@ -85,10 +97,10 @@ it("shows only authorized resource projections and submitted runs in the review 
   const resources={drivers:[{userId:1,name:"Synthetic authorized driver",fleetIds:[]}],equipment:[{id:"30000000-0000-4000-8000-000000000001",name:"Synthetic held truck",category:"truck",status:"held",dispatchable:false}]};
   const run=(id:string,title:string,status:string)=>({id,title,status,version:1,driverUserId:1,vehicleAssetId:resources.equipment[0].id,trailerAssetId:null,allowedActions:[],stops:[],loads:[],inspections:[],records:[],events:[],currentStopId:null});
   mocks.api.mockImplementation(async path=>path==="/api/fleet/resources"?resources:{...overview,capabilities:{canDispatch:true,canManage:true,canDrive:false},runs:[run("20000000-0000-4000-8000-000000000001","Review candidate","submitted_for_review"),run("20000000-0000-4000-8000-000000000002","Active work","in_progress")]});
-  render(<FleetWorkspace/>);fireEvent.click(await screen.findByRole("button",{name:"Vehicles"}));
+  render(<FleetWorkspace/>);fireEvent.click(await screen.findByRole("button",{name:"Drivers"}));
   expect(screen.getByText("Synthetic held truck")).toBeTruthy();
   expect(screen.getByText("Not ready for dispatch")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button",{name:"Today"}));
+  fireEvent.click(screen.getByRole("button",{name:"Fleet Dispatch"}));
   fireEvent.click(screen.getByRole("button",{name:"Review"}));
   expect(screen.getByRole("button",{name:"Review candidate"})).toBeTruthy();
   expect(screen.queryByRole("button",{name:"Active work"})).toBeNull();

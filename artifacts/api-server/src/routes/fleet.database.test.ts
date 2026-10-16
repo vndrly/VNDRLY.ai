@@ -119,6 +119,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         })
         .returning();
       const app = express().use(express.json()).use(cookieParser()).use(router);
+      await pool.query("INSERT INTO asset_attachment_links(asset_id,attachment_type,attachment_id,linked_by_user_id) VALUES($1,'fleet_inventory',$2,$3)", [vehicle.id, String(vendor.id), users[0].id]);
       const fleetId = randomUUID();
       const setup = await request(app)
         .post("/fleet/setup")

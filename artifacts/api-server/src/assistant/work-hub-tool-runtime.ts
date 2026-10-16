@@ -1,3 +1,4 @@
+import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
 import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
 import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
@@ -212,6 +213,9 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if(name==='query_work_hub_availability') return z.object({}).strict().safeParse(input).success ? request('GET','/work-hub/availability') : {error:'Personal availability accepts no other-user target.'};
   if(name==='manage_work_hub_availability') { const {confirmed:_confirmed,...business}=input;const parsed=WorkHubAvailabilityInputSchema.safeParse(business);return parsed.success?request('POST','/work-hub/availability',parsed.data):{error:'Supply the exact personal availability fingerprint and reviewed interval.'}; }
+  if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === name)) {
+    try { return fleetInventoryRequest(name, input); } catch { return { error: "Supply exact reviewed Fleet Inventory fields, current version and authorized asset ID." }; }
+  }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
     if (name === "query_fleet_driver_availability") {
       if (!z.object({ driverUserId: z.number().int().positive() }).strict().safeParse(input).success) return { error: "Select an exact authorized Fleet driver." };
@@ -1182,6 +1186,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
+  if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination"].includes(toolName ?? "")) return input;
   if (["query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical

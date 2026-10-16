@@ -629,10 +629,36 @@ describe("ChatGPT account connection boundary", () => {
   });
   it("does not mint a component submission proof for a location-dependent action", async () => {
     const credentials = await tokens("gate:write");
-    const prepared = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "confirm_visitor_check_in", arguments: { siteId: 3, firstName: "Fixture", lastName: "Driver" } } });
+    const prepared = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "start_paid_travel", arguments: { stationId: "11111111-1111-4111-8111-111111111111", workHubShiftId: "22222222-2222-4222-8222-222222222222" } } });
     expect(prepared.body.result._meta.componentApproval).toMatchObject({ requiresLocation: true });
     expect(prepared.body.result._meta.componentApproval).not.toHaveProperty("proof");
     expect(mocks.run).not.toHaveBeenCalled();
+  });
+  it.each(["confirm_visitor_check_in", "confirm_visitor_check_out"])("prepares %s without GPS while preserving authenticated approval and manual Gate selection", async name => {
+    const credentials = await tokens("gate:write");
+    const fields = name === "confirm_visitor_check_in" ? { siteLocationId: 3, firstName: "Fixture", lastName: "Driver", gateStationId: "11111111-1111-4111-8111-111111111111" } : { visitId: 44, gateStationId: "11111111-1111-4111-8111-111111111111" };
+    const prepared = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: { ...fields, latitude: 35, longitude: -97 } } });
+    expect(prepared.body.result._meta.componentApproval).toMatchObject({ requiresLocation: false, arguments: fields });
+    expect(prepared.body.result._meta.componentApproval.proof).toBeTruthy();
+    const action = grants[0].actions![0];
+    expect(action.arguments).not.toHaveProperty("latitude");
+    expect(action.arguments).not.toHaveProperty("longitude");
+    const pending = JSON.parse(prepared.body.result.content[0].text);
+    const approval = await request(app).get(new URL(pending.approvalUrl).pathname).set("Cookie", cookie());
+    expect(approval.text).toContain('data-location="optional_gate"');
+    expect(mocks.run).not.toHaveBeenCalled();
+    const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+    const approvalCookie = approval.headers["set-cookie"][0].split(";")[0];
+    mocks.run.mockImplementation(async (_name, input) => {
+      expect(input).not.toHaveProperty("latitude");
+      expect(input).not.toHaveProperty("longitude");
+      expect(input).toMatchObject(fields);
+      return JSON.stringify({ ok: true, visitId: 44 });
+    });
+    const submit = () => request(app).post(new URL(pending.approvalUrl).pathname).set("Origin", "https://vndrly.ai").set("Cookie", `${cookie()}; ${approvalCookie}`).type("form").send({ nonce });
+    expect((await submit()).status).toBe(200);
+    expect((await submit()).status).toBe(200);
+    expect(mocks.run).toHaveBeenCalledTimes(1);
   });
   it("never uses model-supplied ticket coordinates to auto-check in", async () => {
     const credentials = await tokens("tickets:write");

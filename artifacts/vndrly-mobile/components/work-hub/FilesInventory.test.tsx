@@ -149,3 +149,5 @@ describe("Files & Inventory", () => {
       expect(JSON.parse(network.api.mock.calls.find((call:any)=>call[1]?.method==="POST")![1].body).payload).toMatchObject({ scope: "personal" });
   });
 });
+
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
