@@ -4113,6 +4113,7 @@
       "rate_limited": "Please wait before sending another nudge in this direction."
     },
     "ticket": {
+      "not_mutable": "This ticket changed or can no longer be edited. Refresh before editing charges.",
       "not_found": "Ticket not found.",
       "no_access": "You don't have access to this ticket.",
       "not_submittable": "This ticket isn't ready to submit yet.",
@@ -4751,6 +4752,21 @@
       "publish_failed": "We couldn't publish your catalog. Please try again."
     },
     "fleet": {
+      "office_finalize_required": "Review and submit this ticket from Fleet billing after its runs are reviewed.",
+      "derived_charge_locked": "Reviewed Fleet run charges cannot be deleted here.",
+      "billing_choice_required": "Choose a new billing ticket or an eligible open ticket when creating the run.",
+      "billing_ticket_mismatch": "The billing ticket must match this run’s origin, AFE and work date.",
+      "billing_origin_required": "Start the run with a pickup at its billing site.",
+      "billing_work_type_unavailable": "Select a priced service assigned to this company and site.",
+      "billing_afe_mismatch": "The AFE must match the selected service assignment.",
+      "billing_quantity_required": "Enter the reviewed billable hours or days before accepting this run.",
+      "billing_quantity_invalid": "Enter a positive billing quantity with at most two decimal places.",
+      "billing_charge_missing": "A reviewed run is missing its billing charge. Review the ticket charges.",
+      "billing_charge_mismatch": "A run charge changed or is missing. Review its quantity and rate before submitting.",
+      "ticket_not_submittable": "This billing ticket cannot be submitted in its current status.",
+      "open_crew_sessions": "Check out all crew members before submitting the ticket.",
+      "runs_not_reviewed": "Close and review every active run before submitting the ticket.",
+      "no_reviewed_runs": "Review at least one completed run before submitting the ticket.",
       "evidence_required": "Required Fleet evidence is missing. Review the run packet and attach the actual records.",
       "invalid_request": "The Fleet request is invalid. Review the fields and try again.",
       "internal_error": "The Fleet request could not be completed. Please try again."

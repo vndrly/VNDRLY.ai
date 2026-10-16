@@ -29,6 +29,8 @@ router.patch("/fleet/inventory/:assetId", endpoint(req => service.editFleetAsset
 router.get("/fleet/runs/:id/location-history",endpoint(req=>service.locationHistory(actor(req),z.uuid().parse(req.params.id))));
 router.get("/fleet/map-context",endpoint(req=>service.mapContext(actor(req))));
 router.get("/fleet/commercial",endpoint(req=>service.commercialSettings(actor(req),req.query.siteId?z.coerce.number().int().positive().parse(req.query.siteId):undefined)));
+router.get("/fleet/billing-options",endpoint(req=>service.billingOptions(actor(req),req.query)));
+router.post("/fleet/tickets/:ticketId/finalize",endpoint(req=>service.finalizeTicket(actor(req),z.coerce.number().int().positive().parse(req.params.ticketId),req.body)));
 router.get("/fleet/destinations/recommend",endpoint(req=>service.recommendDestinations(actor(req),z.coerce.number().int().positive().parse(req.query.siteId),z.string().trim().max(80).optional().parse(req.query.material))));
 router.post("/fleet/destinations",endpoint(req=>service.saveDestination(actor(req),req.body)));
 router.post("/fleet/commercial/default",endpoint(req=>service.saveCommercialDefault(actor(req),req.body)));
@@ -283,6 +285,7 @@ function actor(req: Parameters<typeof getSessionFromRequest>[0]): FleetActor {
     membershipRole: s.membershipRole,
     role: s.role,
     vendorPeopleId: s.vendorPeopleId,
+    readOnly: s.realm === "demo" || s.publicDemo === true,
   };
 }
 router.get(

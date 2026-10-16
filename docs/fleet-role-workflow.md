@@ -33,6 +33,6 @@ Map cards show source, observation time and accuracy where available. ETA is una
 
 ## Implementation status
 
-The pure Fleet permission foundation and its focused tests exist in `artifacts/api-server/src/services/fleet-permissions.ts`. It is not yet connected to trusted persisted Fleet grants or run services. The Fleet database, management/driver screens, telemetry adapters and complete workflow are still to implement. The ChatGPT Fleet extension must continue to report that disconnected state until those services and live checks are complete.
+Fleet permissions are connected to persisted company grants, canonical Inventory assets and run services. Web, iOS, Ask V and the existing ChatGPT plugin provide the shared management and driver workflows, including Fleet Dispatch, Inventory, Details, recorded maps and history. Run transitions retain current authorization, readiness, version and retry checks. Fleet review remains separate from commercial ticket approval and payment.
 
-Build order: trusted grants and vehicle/driver/run records; canonical run transitions and assignment validation; web/iOS screens; maps and tracking; Ask V/ChatGPT tools and embedded views; synthetic role demonstrations; full release including TestFlight and ChatGPT package verification.
+The approved new-ticket/shared-ticket billing workflow is tracked separately; this status does not establish its completion. Physical iPhone tracking and push behavior, configured hardware/provider integrations, and each release's online deployment, plugin verification and TestFlight submission require their own evidence.

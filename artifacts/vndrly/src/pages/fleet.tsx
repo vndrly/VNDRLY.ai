@@ -10,11 +10,12 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { FleetOperationsMap } from "@/components/fleet-operations-map";
 import { FleetInventoryPage } from "@/components/fleet-inventory";
+import { FleetRunBillingFields, FleetBillingTicketPanel, type FleetBillingDraft } from "@/components/fleet-billing";
 import ImagePill from "@/components/image-pill";
 import "./fleet.css";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import PageBackButton from "@/components/page-back-button";
-import { fleetClient, fleetErrorMessage } from "@/lib/fleet-client";
+import { fleetClient, fleetErrorMessage, FleetRequestError } from "@/lib/fleet-client";
 import {
   FleetActionFields,
   fleetActionComplete,
@@ -167,6 +168,9 @@ function FleetWorkspace({
   } | null>(null);
   const [create, setCreate] = useState(false);
   const [title, setTitle] = useState("");
+  const [billing, setBilling] = useState<FleetBillingDraft>(() => ({ mode: "new_ticket", workTypeId: "", ticketId: "", afeNumber: "", workDate: new Date().toLocaleDateString("en-CA") }));
+  const [billingValid, setBillingValid] = useState(false);
+  const [createUnverified, setCreateUnverified] = useState(false);
   const [scheduleDraft, setScheduleDraft] = useState(() =>
     fleetScheduleDraft(null),
   );
@@ -308,18 +312,19 @@ function FleetWorkspace({
     }
   }
   async function saveRun() {
+    const retained = createUnverified && createRetry.current;
     if (
-      !data ||
+      busy || !data || (!retained && (
       !fleetId ||
       !driver ||
       !vehicle ||
       !pickup ||
       !delivery ||
       extraStops.some((stop) => !stop.siteId) ||
-      busy
+      !billingValid))
     )
       return;
-    const schedule = parseFleetSchedule(scheduleDraft);
+    const schedule = retained ? { valid: true, schedule: retained.input.schedule } : parseFleetSchedule(scheduleDraft);
     if (!schedule.valid) {
       setNotice(c.blocked);
       return;
@@ -336,14 +341,18 @@ function FleetWorkspace({
       delivery,
       returnSite,
       extraStops,
+      billing,
     });
-    if (createRetry.current?.fingerprint !== fingerprint)
+    if (!createUnverified && createRetry.current?.fingerprint !== fingerprint)
       createRetry.current = {
         fingerprint,
         input: {
           operationId: crypto.randomUUID(),
           fleetId,
           title,
+          billing: billing.mode === "new_ticket"
+            ? { mode: "new_ticket", workTypeId: Number(billing.workTypeId), afeNumber: billing.afeNumber.trim(), workDate: billing.workDate }
+            : { mode: "existing_ticket", ticketId: Number(billing.ticketId), afeNumber: billing.afeNumber.trim(), workDate: billing.workDate },
           schedule: schedule.schedule,
           driverUserId: Number(driver),
           vehicleAssetId: vehicle,
@@ -380,13 +389,23 @@ function FleetWorkspace({
           ],
         },
       };
+    const creation = createRetry.current;
+    if (!creation) { setBusy(false); return; }
+    let creationAccepted = false;
     try {
-      await fleetClient.create(createRetry.current.input);
+      const created = await fleetClient.create(CreateFleetRunSchema.parse(creation.input));
+      creationAccepted = true;
+      const saved = await fleetClient.run(created.id);
+      if (!saved.linkedTicketId || !saved.events.some(event => event.operationId === creation.input.operationId)) throw new Error("Run creation needs verification");
       createRetry.current = null;
+      setCreateUnverified(false);
       setCreate(false);
-      setNotice(c.saved);
+      setNotice(`${c.saved} ${c.ticket} #${saved.linkedTicketId}`);
       await reload();
     } catch (error) {
+      const rejected = !creationAccepted && error instanceof FleetRequestError && error.status >= 400 && error.status < 500 && ![408, 429].includes(error.status);
+      setCreateUnverified(!rejected);
+      if (rejected) createRetry.current = null;
       setNotice(describeFleetError(error, c.blocked));
     } finally {
       setBusy(false);
@@ -585,7 +604,7 @@ function FleetWorkspace({
       </>}
       {create && (
         <section className="space-y-3 rounded-xl border p-4">
-          <fieldset disabled={busy} className="space-y-3">
+          <fieldset disabled={busy || createUnverified} className="space-y-3">
             <h2>{c.create}</h2>
             <p className="text-sm">{c.readiness}</p>
             <input
@@ -685,6 +704,7 @@ function FleetWorkspace({
                   ))}
               </select>
             ))}
+            <FleetRunBillingFields fleetId={fleetId} siteId={Number(pickup)} identity={identity} value={billing} onChange={setBilling} onValidityChange={setBillingValid} disabled={busy} />
             {extraStops.map((stop, index) => (
               <label key={index} className="block">
                 Cycle {Math.floor(index / 2) + 2} {stop.kind}
@@ -749,7 +769,7 @@ function FleetWorkspace({
             </select>
             <PngPillButton
               disabled={
-                busy ||
+                busy || !billingValid ||
                 !title ||
                 !fleetId ||
                 !driver ||
@@ -763,6 +783,7 @@ function FleetWorkspace({
               {c.submit}
             </PngPillButton>
           </fieldset>
+          {createUnverified && <div role="status" className="space-y-2"><p>{i18n.language.startsWith("es") ? "No se confirmó el guardado del recorrido y ticket. Reintente la misma solicitud para evitar duplicados." : "Run and ticket save was not confirmed. Retry the exact request to avoid duplicates."}</p><PngPillButton disabled={busy} onClick={() => void saveRun()}>{i18n.language.startsWith("es") ? "Reintentar guardado" : "Retry exact run save"}</PngPillButton></div>}
         </section>
       )}
       {section === "history" && <FleetRouteReplay identity={identity} runs={runs} />}
@@ -775,6 +796,8 @@ function FleetWorkspace({
           ) : (
             <>
               <h3 className="text-lg">{run.title}</h3>
+              {run.linkedTicketId && (data.capabilities.canManage || data.capabilities.canDispatch) && <FleetBillingTicketPanel key={`${identity}:${run.linkedTicketId}`} identity={identity} ticketId={run.linkedTicketId} />}
+              {run.billing && <p>AFE: {run.billing.afeNumber || "—"} · {i18n.language.startsWith("es") ? "Fecha de trabajo" : "Work date"}: {run.billing.workDate}</p>}
               <p>
                 {run.status} · {c.version} {run.version}
               </p>
@@ -1005,7 +1028,7 @@ function FleetWorkspace({
                       });
                     }}
                   >
-                    {action === "acknowledge"
+                    {action === "submit_closeout" ? (i18n.language.startsWith("es") ? "Cerrar recorrido" : "Close Run") : action === "acknowledge"
                       ? c.acknowledge
                       : action === "dispatch"
                         ? c.dispatchRun

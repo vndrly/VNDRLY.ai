@@ -1,4 +1,4 @@
-import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest } from "./fleet-inventory-tools";
+import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
 import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
 import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
@@ -276,6 +276,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if(name==="manage_fleet_settings"){const body=FleetSetupInputSchema.safeParse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants,supportGrants:input.supportGrants});return body.success?request("POST","/fleet/setup",body.data):{error:"Supply the exact current Fleet settings and version."};}
     if(name === "save_fleet_destination") {const {confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...business}=input;const value=z.object({operationId:z.uuid(),expectedVersion:z.number().int().positive(),destination:FleetDestinationSchema.omit({revision:true,ownerType:true,ownerId:true}).extend({id:z.uuid().optional()})}).strict().safeParse(business);return value.success?request("POST","/fleet/destinations",value.data):{error:"Supply the current directory revision and reviewed destination fields."};}
     if(name === "save_fleet_ticket_plan") {const {ticketId,confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...fields}=input;const id=z.number().int().positive().safeParse(ticketId);const value=z.object({operationId:z.uuid(),expectedVersion:z.number().int().nonnegative(),mode:z.enum(["batch","singles"]).optional(),rateCents:z.number().int().min(0).max(100000000),closure:z.enum(["shift","day","manual"]),closesAt:z.string().datetime().nullable(),destinationIds:z.array(z.uuid()).min(1).max(30)}).strict().safeParse(fields);return id.success&&value.success?request("POST","/fleet/tickets/"+id.data+"/plan",value.data):{error:"Supply the exact ticket, current plan revision, explicit rate, closure and approved destinations."};}
+    if(name === "query_fleet_billing_options") {const value=z.object({siteId:z.number().int().positive(),afeNumber:z.string().max(200),workDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)}).strict().safeParse(input);if(!value.success)return {error:"Supply exact origin site, AFE and work date."};return request("GET","/fleet/billing-options?"+new URLSearchParams({siteId:String(value.data.siteId),afeNumber:value.data.afeNumber,workDate:value.data.workDate}));}
+    if(name === "finalize_fleet_ticket") {const {confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...fields}=input;const business={...fields,operationId:fleetInventoryOperationId(input)};const value=z.object({ticketId:z.number().int().positive(),operationId:z.uuid(),expectedVersion:z.number().int().positive()}).strict().safeParse(business);return value.success?request("POST",`/fleet/tickets/${value.data.ticketId}/finalize`,{operationId:value.data.operationId,expectedVersion:value.data.expectedVersion}):{error:"Supply exact ticket, current plan version and server-authorized operation ID."};}
     if(name === "query_fleet_ticket_plan") {const id=z.number().int().positive().safeParse(input.ticketId);return id.success?request("GET","/fleet/tickets/"+id.data+"/plan"):{error:"Select an exact ticket."};}
     if (name === "query_fleet_location_history") {
       const id=z.uuid().safeParse(input.runId);return id.success?request("GET","/fleet/runs/"+id.data+"/location-history"):{error:"Select an exact run UUID."};
@@ -304,13 +306,13 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (name === "query_fleet_review_packet") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/review-packet`) : runId;
     if (name === "query_fleet_run_eta") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/eta`) : runId;
     if (name === "query_fleet_run_detail") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}`) : runId;
-    const keys=["operationId","expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","schedule","inspectionResponses","manifestValues","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
+    const keys=["operationId","expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","schedule","billing","inspectionResponses","manifestValues","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","billingQuantity","decision","capturedAt","source","reading","ticketId"];
     const fields=Object.fromEntries(keys.filter(key=>input[key]!==undefined).map(key=>[key,input[key]]));
     const validActions: Record<string,string[]> = {manage_fleet_run:["create","dispatch","reassign","cancel","link_ticket"],transition_fleet_run:["inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout","pause","resume","record_fuel","record_meter"]};
     if(validActions[name]&&!validActions[name].includes(String(input.action)))return {error:"This Fleet action is unavailable through this tool."};
     if (name === "manage_fleet_run" && input.action === "create") {
       const { action: _action, expectedVersion: _version, ...create }=fields;
-      const parsed=CreateFleetRunSchema.safeParse(create);return parsed.success?request("POST","/fleet/runs",parsed.data):{error:"Supply the exact Fleet creation fields and server-authorized operation ID."};
+      const parsed=CreateFleetRunSchema.safeParse({...create,operationId:fleetInventoryOperationId(input)});return parsed.success?request("POST","/fleet/runs",parsed.data):{error:"Supply the exact Fleet creation fields and server-authorized operation ID."};
     }
     if (typeof runId !== "string") return runId;
     const parsed=FleetActionInputSchema.safeParse({...fields,action:name==="acknowledge_fleet_assignment"?"acknowledge":name==="review_fleet_closeout"?"review":input.action});
@@ -1187,7 +1189,7 @@ export function bindWorkHubToolScope(
 ): Input {
   const input = record(rawInput);
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
-  if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination"].includes(toolName ?? "")) return input;
+  if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination", "finalize_fleet_ticket", "query_fleet_billing_options"].includes(toolName ?? "")) return input;
   if (["query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any

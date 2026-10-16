@@ -78,6 +78,8 @@ export function createFleetPlanningOperations(
         )
           throw new FleetError("fleet.invalid_stops", 400);
         validateCommercialStops(next);
+        if(run.billing && (next.stops[0]?.kind!=="pickup" || next.stops[0].siteId!==run.stops[0].siteId))
+          throw new FleetError("fleet.billing_ticket_mismatch",409);
         await eligible(state, client, next);
         Object.assign(run, next);
         run.version++;

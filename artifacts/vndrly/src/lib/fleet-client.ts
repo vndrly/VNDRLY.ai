@@ -41,6 +41,7 @@ import {
   FleetGateLinkInputSchema,
 } from "@workspace/api-zod";
 import type { z } from "zod/v4";
+import type { FleetBillingOptions, FleetBillingTicket } from "@/components/fleet-billing";
 export class FleetRequestError extends Error {
   constructor(
     public code: string,
@@ -106,6 +107,9 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
+  billingOptions: (siteId: number, afeNumber: string, workDate: string, fleetId?: string) => request<FleetBillingOptions>(`/billing-options?${new URLSearchParams({ siteId: String(siteId), afeNumber, workDate, ...(fleetId ? { fleetId } : {}) })}`),
+  billingTicket: (ticketId: number) => request<FleetBillingTicket>(`/tickets/${ticketId}/plan`),
+  finalizeBillingTicket: (ticketId: number, input: { operationId: string; expectedVersion: number }) => request<{ ticketId: number; status: string; operationId: string }>(`/tickets/${ticketId}/finalize`, input),
   inventory: (after?: string, fleetId?: string) => {
     const params = new URLSearchParams({ ...(after ? { after } : {}), ...(fleetId ? { fleetId } : {}) });
     return request<unknown>(`/inventory${params.size ? `?${params}` : ""}`).then(value => FleetInventorySchema.parse(value));

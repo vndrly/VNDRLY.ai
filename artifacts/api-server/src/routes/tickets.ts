@@ -591,7 +591,7 @@ const ticketSelect = {
   siteLatitude: siteLocationsTable.latitude,
   siteLongitude: siteLocationsTable.longitude,
   siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-  afe: siteWorkAssignmentsTable.afe,
+  afe: sql<string | null>`CASE WHEN ${ticketsTable.fleetPlan}->>'billingWorkflow'='true' THEN ${ticketsTable.fleetPlan}->>'afeNumber' ELSE ${siteWorkAssignmentsTable.afe} END`,
   scheduledStartAt: ticketsTable.scheduledStartAt,
   scheduledDurationMinutes: ticketsTable.scheduledDurationMinutes,
   foremanUserId: ticketsTable.foremanUserId,
@@ -2276,11 +2276,15 @@ router.post("/tickets/:id/submit", async (req, res): Promise<void> => {
   if (!(await ensureAccepted(req, res, params.data.id))) return;
 
   const [submitExisting] = await db
-    .select({ status: ticketsTable.status })
+    .select({ status: ticketsTable.status, fleetPlan: ticketsTable.fleetPlan })
     .from(ticketsTable)
     .where(eq(ticketsTable.id, params.data.id));
   if (!submitExisting) {
     res.status(404).json({ code: "ticket.not_found", error: "ticket_not_found", message: "Ticket not found" });
+    return;
+  }
+  if ((submitExisting.fleetPlan as {billingWorkflow?:boolean}|null)?.billingWorkflow) {
+    res.status(409).json({code:"fleet.office_finalize_required",message:"Finalize the reviewed Fleet runs from the office ticket billing panel."});
     return;
   }
   if (!SUBMIT_ALLOWED_STATUSES.has(submitExisting.status)) {
@@ -5494,10 +5498,13 @@ router.post("/tickets/:id/line-items", async (req, res): Promise<void> => {
     sendValidationFailed(res, parsed.error);
     return;
   }
-  const [item] = await db
-    .insert(ticketLineItemsTable)
-    .values({ ticketId: params.data.id, ...parsed.data })
-    .returning();
+  const item = await db.transaction(async (tx) => {
+    const [ticket] = await tx.select({status:ticketsTable.status}).from(ticketsTable).where(eq(ticketsTable.id,params.data.id)).for("update");
+    if(!ticket || !MUTABLE_TICKET_STATUSES.has(ticket.status))return null;
+    const [created]=await tx.insert(ticketLineItemsTable).values({ticketId:params.data.id,...parsed.data}).returning();
+    return created;
+  });
+  if(!item){res.status(409).json({code:"ticket.not_mutable",message:"Ticket changed; refresh before editing charges."});return;}
   res.status(201).json(item);
 });
 
@@ -5509,14 +5516,22 @@ router.delete("/tickets/:id/line-items/:lineItemId", async (req, res): Promise<v
   }
   if (!(await ensureFieldOwnership(req, res, params.data.id))) return;
   if (!(await ensureTicketMutable(req, res, params.data.id))) return;
-  await db
-    .delete(ticketLineItemsTable)
-    .where(
-      and(
-        eq(ticketLineItemsTable.id, params.data.lineItemId),
-        eq(ticketLineItemsTable.ticketId, params.data.id),
-      ),
-    );
+  const removed = await db.transaction(async (tx) => {
+    // Ticket-before-line lock order matches Fleet finalization, so an earlier
+    // read cannot authorize a delayed deletion after the ticket was submitted.
+    const [ticket]=await tx.select({status:ticketsTable.status,fleetPlan:ticketsTable.fleetPlan}).from(ticketsTable).where(eq(ticketsTable.id,params.data.id)).for("update");
+    if(!ticket || !MUTABLE_TICKET_STATUSES.has(ticket.status))return false;
+    if((ticket.fleetPlan as {billingWorkflow?:boolean}|null)?.billingWorkflow){
+      const [line]=await tx.select({type:ticketLineItemsTable.type,description:ticketLineItemsTable.description}).from(ticketLineItemsTable).where(and(eq(ticketLineItemsTable.id,params.data.lineItemId),eq(ticketLineItemsTable.ticketId,params.data.id)));
+      // Accepted run snapshots bind this generated line ID permanently. Generic
+      // deletion would leave an unrepairable billing reference on a completed run.
+      if(line?.type==="other" && /^Fleet run [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(line.description))return "derived_charge";
+    }
+    await tx.delete(ticketLineItemsTable).where(and(eq(ticketLineItemsTable.id,params.data.lineItemId),eq(ticketLineItemsTable.ticketId,params.data.id)));
+    return true;
+  });
+  if(removed==="derived_charge"){res.status(409).json({code:"fleet.derived_charge_locked",message:"Reviewed Fleet run charges cannot be deleted here."});return;}
+  if(!removed){res.status(409).json({code:"ticket.not_mutable",message:"Ticket changed; refresh before editing charges."});return;}
   res.json({ success: true });
 });
 

@@ -33,6 +33,17 @@ const baseRun = FleetRunSchema.parse({
   allowedActions: ["inspect"],
 });
 describe("Fleet hauling forms", () => {
+  it("requires office-entered billable hours rather than inferring quantity from run timing", () => {
+    const run = { ...baseRun, billing: { afeNumber: "A1", workDate: "2026-10-16", unit: "per_hour" as const } };
+    const review: FleetActionInput = { operationId: "11111111-1111-4111-8111-111111111111", expectedVersion: 4, action: "review", decision: "accept", reason: "Office reviewed" };
+    expect(fleetActionComplete(review, run)).toBe(false);
+    expect(fleetActionComplete({ ...review, billingQuantity: 2.5 }, run)).toBe(true);
+    expect(fleetActionComplete({ ...review, billingQuantity: 0 }, run)).toBe(false);
+    const change = vi.fn();
+    render(<FleetActionFields run={run} input={review} onChange={change} disabled={false} />);
+    fireEvent.change(screen.getByLabelText("Billable hours"), { target: { value: "2.5" } });
+    expect(change).toHaveBeenCalledWith(expect.objectContaining({ billingQuantity: 2.5 }));
+  });
   it("renders actual saved checklist labels and omits not-applicable for required items", () => {
     const change = vi.fn();
     const run = {

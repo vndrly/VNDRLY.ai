@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+import { readFleetBillingAction, readFleetRunCreation } from "../assistant/fleet-billing-action-recovery";
 import { readFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
 import { fleetInventoryAction, fleetInventoryOperationId } from "../assistant/fleet-inventory-tools";
 import { runBoundTypedAskVTool, synchronizeTypedAskVContext, organizationKeyFromSession } from "../assistant/askv-pending-confirmation";
@@ -856,6 +858,16 @@ export async function runTool(
           ? { requiresConfirmation: true }
           : {}),
       });
+    if (name === "manage_fleet_run" && (input as Record<string,unknown>).action === "create") {
+      const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
+      if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);
+      return JSON.stringify(await readFleetRunCreation(input as Record<string,unknown>,fleetInventoryOperationId(input as Record<string,unknown>),z.uuid().parse((saved as Record<string,unknown>).id),session));
+    }
+    if (name === "finalize_fleet_ticket") {
+      const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
+      if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);
+      return JSON.stringify(await readFleetBillingAction({ticketId:(input as Record<string,unknown>).ticketId,expectedVersion:(input as Record<string,unknown>).expectedVersion}, fleetInventoryOperationId(input as Record<string,unknown>), session));
+    }
     if (fleetInventoryAction(name)) {
       const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
       if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);

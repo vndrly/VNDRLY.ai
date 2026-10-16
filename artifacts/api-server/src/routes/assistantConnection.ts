@@ -1,3 +1,4 @@
+import { recoverFleetBillingAction, recoverFleetRunCreation } from "../assistant/fleet-billing-action-recovery";
 import { ACTION_LOCATION_CLIENT, requiresActionLocation, isOperatorGateAction } from "../assistant/chatgpt-action-location";
 import { recoverFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
 import { fleetInventoryAction } from "../assistant/fleet-inventory-tools";
@@ -778,6 +779,14 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
   }
   if (result === null && fleetInventoryAction(action.toolName)) {
     const receipt = await recoverFleetInventoryAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && action.toolName === "manage_fleet_run" && action.arguments.action === "create") {
+    const receipt = await recoverFleetRunCreation(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && action.toolName === "finalize_fleet_ticket") {
+    const receipt = await recoverFleetBillingAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);
   }
   if (result === null && action.toolName === "record_fleet_driver_availability") {

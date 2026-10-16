@@ -1,5 +1,14 @@
 import { z } from "zod/v4";
 export const FleetBillingModeSchema = z.enum(["batch", "singles"]);
+export const FleetWorkDateSchema = z.iso.date();
+const billingContext = { afeNumber: z.string().trim().max(200), workDate: FleetWorkDateSchema };
+export const FleetBillingUnitSchema = z.enum(["per_job","lump_sum","per_hour","per_day"]);
+export const FleetRunBillingInputSchema = z.discriminatedUnion("mode", [
+  z.object({ mode: z.literal("new_ticket"), workTypeId: z.number().int().positive(), ...billingContext }).strict(),
+  z.object({ mode: z.literal("existing_ticket"), ticketId: z.number().int().positive(), ...billingContext }).strict(),
+]);
+export const FleetRunBillingSnapshotSchema = z.object({ ...billingContext, unit:FleetBillingUnitSchema.optional(),quantity:z.number().positive().finite().max(1000000).multipleOf(0.01).optional(),billedLineId: z.number().int().positive().nullable().optional() }).strict();
+export const FleetFinalizeTicketInputSchema = z.object({ operationId: z.uuid(), expectedVersion: z.number().int().positive() }).strict();
 export const FleetDestinationSchema = z
   .object({
     id: z.uuid(),
@@ -20,6 +29,11 @@ export const FleetDestinationSchema = z
 export type FleetDestination = z.infer<typeof FleetDestinationSchema>;
 export const FleetTicketPlanSchema = z
   .object({
+    billingWorkflow: z.literal(true).optional(),
+    billingUnit: FleetBillingUnitSchema.optional(),
+    afeNumber: z.string().trim().max(200).optional(),
+    workDate: FleetWorkDateSchema.optional(),
+    finalizationOperationId: z.uuid().optional(),
     version: z.number().int().positive(),
     siteId: z.number().int().positive(),
     vendorId: z.number().int().positive(),
@@ -29,7 +43,7 @@ export const FleetTicketPlanSchema = z
     currency: z.literal("USD"),
     closure: z.enum(["shift", "day", "manual"]),
     closesAt: z.iso.datetime().nullable(),
-    destinations: z.array(FleetDestinationSchema).min(1).max(30),
+    destinations: z.array(FleetDestinationSchema).max(30),
     closedAt: z.iso.datetime().nullable().default(null),
     createdByUserId: z.number().int().positive(),
     createdAt: z.iso.datetime(),
@@ -44,7 +58,11 @@ export const FleetTicketPlanSchema = z
       .max(100)
       .default([]),
   })
-  .strict();
+  .strict()
+  .superRefine((plan,ctx)=>{
+    if(plan.billingWorkflow && (plan.afeNumber===undefined || plan.workDate===undefined))ctx.addIssue({code:"custom",message:"Explicit billing AFE and work date required"});
+    if(!plan.billingWorkflow && !plan.destinations.length)ctx.addIssue({code:"custom",path:["destinations"],message:"Approved destination required for commercial routing"});
+  });
 export type FleetTicketPlan = z.infer<typeof FleetTicketPlanSchema>;
 export const FleetRunCommercialSchema = z
   .object({

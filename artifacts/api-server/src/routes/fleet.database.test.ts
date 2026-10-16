@@ -15,6 +15,9 @@ import {
   siteLocationsTable,
   partnerVendorRelationshipsTable,
   assetsTable,
+  workTypesTable,
+  vendorWorkTypesTable,
+  siteWorkAssignmentsTable,
   assetHoldsTable,
   siteVisitsTable,
   locationConsentsTable,
@@ -64,6 +67,9 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           status: "approved",
         })
         .returning();
+      const [workType]=await db.insert(workTypesTable).values({name:`Synthetic hauling ${tag}`,category:"hauling"}).returning();
+      await db.insert(vendorWorkTypesTable).values({vendorId:vendor.id,workTypeId:workType.id,unit:"per_job",unitPrice:"12.34",currency:"USD"});
+      await db.insert(siteWorkAssignmentsTable).values({vendorId:vendor.id,workTypeId:workType.id,siteLocationId:site.id});
       const users = await db
         .insert(usersTable)
         .values(
@@ -158,6 +164,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         .post("/fleet/runs")
         .set("Cookie", cookies[0])
         .send({
+          billing:{mode:"new_ticket",workTypeId:workType.id,afeNumber:"",workDate:"2026-10-16"},
           operationId: randomUUID(),
           fleetId,
           title: "Synthetic hauling day",
@@ -414,7 +421,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
       });
       expect(completed.status).toBe("completed");
       expect(completed.loads).toHaveLength(2);
-      expect(completed.linkedTicketId).toBeNull();
+      expect(completed.linkedTicketId).toBe(created.body.linkedTicketId);
       const retained = await request(app)
         .get(`/fleet/runs/${id}`)
         .set("Cookie", cookies[1]);
@@ -603,6 +610,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           operationId: randomUUID(),
           fleetId,
           title: "Blocked held truck",
+          billing:{mode:"new_ticket",workTypeId:workType.id,afeNumber:"",workDate:"2026-10-16"},
           driverUserId: users[1].id,
           vehicleAssetId: vehicle.id,
           stops,
