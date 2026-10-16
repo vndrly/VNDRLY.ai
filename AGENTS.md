@@ -245,3 +245,14 @@ Vendors connect QuickBooks Online and OpenAccountant from the Reports page. Open
 - **Wouter:** React routing library.
 - **bcryptjs:** Password hashing library.
 - **Anthropic Claude:** AI model.
+
+## Cursor Cloud specific instructions
+
+Cloud agents boot with a local PostgreSQL 16 cluster. Do not point `DATABASE_URL` at the shared Supabase project from this environment.
+
+- Node.js 24.22.0 is installed at `/usr/local/lib/nodejs/bin`. The first `node` on PATH may still be 22.14.0. Prepend `/usr/local/lib/nodejs/bin`, or set `NODE_OPTIONS=--experimental-strip-types`, before starting Vite. Otherwise Vite fails while importing workspace `.ts` files.
+- Local database: `postgresql://vndrly:vndrly_local_dev@127.0.0.1:5432/vndrly`. Gitignored `.env.local` is rewritten on boot. API port `8080`, web port `5173` (`/api` proxies to the API).
+- Boot runs `/usr/local/bin/vndrly-cloud-start`. It starts Postgres, applies the Drizzle schema only when `public.users` is missing, then starts the API and web dev servers when those ports are down.
+- Demo sign-in after seed: `admin` / `vndrly123` (see `docs/canonical-credentials.md`). `AI_INTEGRATIONS_ANTHROPIC_API_KEY` in `.env.local` is a placeholder so the API can boot.
+- API tests that need Postgres: `VNDRLY_TEST_DB_MODE=fresh-local` and `VNDRLY_TEST_DB_MAINTENANCE_URL=postgresql://vndrly:vndrly_local_dev@127.0.0.1:5432/postgres`.
+- `pnpm lint:i18n` is the fast check. `pnpm --filter @workspace/api-server run dev:local` and `pnpm --filter @workspace/vndrly run dev:local` are the dev servers.
