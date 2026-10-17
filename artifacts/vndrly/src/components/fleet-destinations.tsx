@@ -1,3 +1,4 @@
+import { useFleetResourceCopy } from "@/lib/fleet-resource-copy";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -24,6 +25,7 @@ type Draft = {
   timeZone: string;
 };
 export function FleetDestinationsPage({ identity }: { identity: string }) {
+  const copy = useFleetResourceCopy();
   const query = useQuery({
       queryKey: ["fleet-destinations", identity],
       queryFn: () => fleetClient.commercial(),
@@ -120,28 +122,33 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
     <main className="fleet-workspace space-y-5 p-4 md:p-6">
       <header className="flex items-center gap-3">
         <PageBackButton fallbackHref="/fleet" />
-        <h1 className="text-2xl font-semibold">Origins and Destinations</h1>
+        <h1 className="text-2xl font-semibold">
+          {copy("Origins and Destinations")}
+        </h1>
       </header>
       <section className="space-y-3">
         <p>
-          Reusable pickups, terminals, disposal points and bases. Physical
-          locations do not grant billing-site access.
+          {copy(
+            " Reusable pickups, terminals, disposal points and bases. Physical locations do not grant billing-site access. ",
+          )}
         </p>
         <label>
-          Search locations
+          {copy(" Search locations ")}
           <input value={search} onChange={(e) => setSearch(e.target.value)} />
         </label>
         {query.data?.canManage && (
-          <PngPillButton onClick={() => edit()}>Add location</PngPillButton>
+          <PngPillButton onClick={() => edit()}>
+            {copy("Add location")}
+          </PngPillButton>
         )}
       </section>
-      {query.isPending && <p>Loading locations…</p>}
+      {query.isPending && <p>{copy("Loading locations\u2026")}</p>}
       {query.isError && (
-        <p role="alert">Locations unavailable. Refresh to retry.</p>
+        <p role="alert">{copy("Locations unavailable. Refresh to retry.")}</p>
       )}
       {draft && (
         <section className="space-y-4">
-          <h2>{draft.id ? "Edit location" : "Add location"}</h2>
+          <h2>{draft.id ? copy("Edit location") : copy("Add location")}</h2>
           <fieldset
             disabled={busy || Boolean(attempt)}
             className="fleet-asset-fields"
@@ -158,9 +165,9 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
               ] as const
             ).map(([label, key]) => (
               <label key={key}>
-                {label}
+                {copy(label)}
                 <input
-                  aria-label={label}
+                  aria-label={copy(label)}
                   value={draft[key]}
                   onChange={(e) =>
                     setDraft({ ...draft, [key]: e.target.value })
@@ -169,17 +176,19 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
               </label>
             ))}
             <label>
-              Location type
+              {copy(" Location type ")}
               <select
                 value={draft.kind}
                 onChange={(e) =>
                   setDraft({ ...draft, kind: e.target.value as Draft["kind"] })
                 }
               >
-                <option value="pickup">Origin / pickup</option>
-                <option value="delivery">Destination / terminal</option>
-                <option value="disposal">Disposal</option>
-                <option value="yard">Base / yard</option>
+                <option value="pickup">{copy("Origin / pickup")}</option>
+                <option value="delivery">
+                  {copy("Destination / terminal")}
+                </option>
+                <option value="disposal">{copy("Disposal")}</option>
+                <option value="yard">{copy("Base / yard")}</option>
               </select>
             </label>
             <label className="flex items-center gap-2">
@@ -189,27 +198,29 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
                   setDraft({ ...draft, active: checked === true })
                 }
               />
-              Active location
+              {copy(" Active location ")}
             </label>
           </fieldset>
           {attempt ? (
             <>
               <p>
-                Review {attempt.destination.name} ·{" "}
-                {attempt.destination.address}.{" "}
+                {copy(" Review ")}
+                {attempt.destination.name} · {attempt.destination.address}.{" "}
                 {attempt.destination.latitude === null
                   ? "GPS unverified; routing estimates unavailable."
                   : "Coordinates supplied."}
               </p>
               <PngPillButton disabled={busy} onClick={() => void save()}>
-                Save location
+                {copy(" Save location ")}
               </PngPillButton>
               <PngPillButton disabled={busy} onClick={() => setAttempt(null)}>
-                Edit selection
+                {copy(" Edit selection ")}
               </PngPillButton>
             </>
           ) : (
-            <PngPillButton onClick={review}>Review location</PngPillButton>
+            <PngPillButton onClick={review}>
+              {copy("Review location")}
+            </PngPillButton>
           )}
           <PngPillButton
             disabled={busy}
@@ -218,13 +229,13 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
               setAttempt(null);
             }}
           >
-            Cancel
+            {copy(" Cancel ")}
           </PngPillButton>
         </section>
       )}
       {message && (
         <p role={message === "Location saved." ? "status" : "alert"}>
-          {message}
+          {copy(message)}
         </p>
       )}
       <div className="fleet-asset-grid">
@@ -233,18 +244,19 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
             <h2>{item.name}</h2>
             <p>{item.address}</p>
             <p>
-              {item.kind} · {item.active ? "Active" : "Inactive"} · revision{" "}
-              {item.revision}
+              {item.kind} · {item.active ? copy("Active") : copy("Inactive")}
+              {copy(" \u00B7 revision")} {item.revision}
             </p>
             <p>
               {item.latitude === null
-                ? "GPS unverified"
+                ? copy("GPS unverified")
                 : `${item.latitude}, ${item.longitude}`}
             </p>
             {item.instructions && <p>{item.instructions}</p>}
             {query.data?.canManage && item.ownerType === "vendor" && (
               <PngPillButton onClick={() => edit(item)}>
-                Edit {item.name}
+                {copy(" Edit ")}
+                {item.name}
               </PngPillButton>
             )}
           </article>

@@ -1,3 +1,4 @@
+import { useFleetResourceCopy } from "@/lib/fleet-resource-copy";
 import { useRef, useState } from "react";
 import {
   FleetDetailSchema,
@@ -8,13 +9,15 @@ import {
 } from "@workspace/api-zod";
 import { PngPillButton } from "./png-pill-rollover";
 import { BrandedCheckbox } from "./branded-checkbox";
-
 export type FleetDetailSave = {
   operationId: string;
   expectedVersion: number;
   detail: FleetDetail;
 };
-export type FleetResourceIndicator = { status: "green" | "red"; label: string };
+export type FleetResourceIndicator = {
+  status: "green" | "red";
+  label: string;
+};
 export type FleetDetailBuilderProps = {
   companyId: number;
   accessGroupIds: string[];
@@ -35,6 +38,7 @@ export function FleetDetailBuilder({
   initialDetail,
   onSave,
 }: FleetDetailBuilderProps) {
+  const copy = useFleetResourceCopy();
   const [name, setName] = useState(initialDetail?.name ?? ""),
     [truck, setTruck] = useState(initialDetail?.vehicleAssetId ?? ""),
     [rig, setRig] = useState(initialDetail?.rigPackageId ?? ""),
@@ -57,7 +61,10 @@ export function FleetDetailBuilder({
   const packages = rigPackages.filter((item) => !item.archivedAt);
   const selectedRig = packages.find((item) => item.id === rig);
   const members = [
-    { id: `vehicle:${truck}`, label: trucks.find((item) => item.id === truck)?.name },
+    {
+      id: `vehicle:${truck}`,
+      label: trucks.find((item) => item.id === truck)?.name,
+    },
     ...(selectedRig?.components.map((item) => ({
       id: `component:${item.assetId}`,
       label:
@@ -129,35 +136,38 @@ export function FleetDetailBuilder({
   return (
     <section
       className="fleet-detail-group space-y-4"
-      aria-label="Detail builder"
+      aria-label={copy("Detail builder")}
     >
-      <h2>{initialDetail ? "Edit Detail" : "Build a Detail"}</h2>
+      <h2>{initialDetail ? copy("Edit Detail") : copy("Build a Detail")}</h2>
       <p>
-        Choose a truck, its optional towed package, and a driver. A Detail can
-        be reused across runs.
+        {copy(
+          " Choose a truck, its optional towed package, and a driver. A Detail can be reused across runs. ",
+        )}
       </p>
       <fieldset disabled={busy || Boolean(attempt)} className="space-y-4">
         <label className="block">
-          Detail name
+          {copy(" Detail name ")}
           <input
-            aria-label="Detail name"
+            aria-label={copy("Detail name")}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
         <label className="block">
-          Search resources
+          {copy(" Search resources ")}
           <input value={search} onChange={(e) => setSearch(e.target.value)} />
         </label>
         <div className="fleet-asset-fields">
           <label>
-            Available Trucks
+            {copy(" Available Trucks ")}
             <select
-              aria-label="Available Trucks"
+              aria-label={copy("Available Trucks")}
               value={truck}
               onChange={(e) => setTruck(e.target.value)}
             >
-              <option value="">Choose truck or support vehicle</option>
+              <option value="">
+                {copy("Choose truck or support vehicle")}
+              </option>
               {trucks
                 .filter((item) => matches(item.id, item.name))
                 .map((item) => (
@@ -168,30 +178,31 @@ export function FleetDetailBuilder({
             </select>
           </label>
           <label>
-            Available Rig
+            {copy(" Available Rig ")}
             <select
-              aria-label="Available Rig"
+              aria-label={copy("Available Rig")}
               value={rig}
               onChange={(e) => setRig(e.target.value)}
             >
-              <option value="">No towed package</option>
+              <option value="">{copy("No towed package")}</option>
               {packages
                 .filter((item) => matches(item.id, item.name))
                 .map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.name} · {item.components.length} components
+                    {item.name} · {item.components.length}
+                    {copy(" components ")}
                   </option>
                 ))}
             </select>
           </label>
           <label>
-            Driver
+            {copy(" Driver ")}
             <select
-              aria-label="Driver"
+              aria-label={copy("Driver")}
               value={driver}
               onChange={(e) => setDriver(e.target.value)}
             >
-              <option value="">Choose driver</option>
+              <option value="">{copy("Choose driver")}</option>
               {resources.drivers
                 .filter((item) => matches(String(item.userId), item.name))
                 .map((item) => (
@@ -218,28 +229,29 @@ export function FleetDetailBuilder({
               ●{" "}
             </span>
             {item.label} ·{" "}
-            {assessments[item.id]?.label ?? "Compliance unverified"}
+            {assessments[item.id]?.label ?? copy("Compliance unverified")}
           </li>
         ))}
       </ul>
       <p>
-        Document compliance warnings remain visible and selectable. Run
-        availability, custody and operational holds are checked when assigning
-        work.
+        {copy(
+          " Document compliance warnings remain visible and selectable. Run availability, custody and operational holds are checked when assigning work. ",
+        )}
       </p>
       {message && (
         <p role={message.startsWith("Detail saved") ? "status" : "alert"}>
-          {message}
+          {copy(message)}
         </p>
       )}
       {attempt ? (
         <>
           <p>
-            Review: {attempt.detail.name}. No equipment is checked out or
-            returned.
+            {copy(" Review: ")}
+            {attempt.detail.name}
+            {copy(". No equipment is checked out or returned. ")}
           </p>
           <PngPillButton disabled={busy} onClick={() => void save()}>
-            Save Detail
+            {copy(" Save Detail ")}
           </PngPillButton>
           <PngPillButton
             disabled={busy}
@@ -248,11 +260,11 @@ export function FleetDetailBuilder({
               setMessage("");
             }}
           >
-            Edit selection
+            {copy(" Edit selection ")}
           </PngPillButton>
         </>
       ) : (
-        <PngPillButton onClick={review}>Review Detail</PngPillButton>
+        <PngPillButton onClick={review}>{copy("Review Detail")}</PngPillButton>
       )}
     </section>
   );
@@ -272,6 +284,7 @@ export function FleetRigPackageBuilder({
     package: FleetRigPackage;
   }) => Promise<unknown>;
 }) {
+  const copy = useFleetResourceCopy();
   const [name, setName] = useState(initialPackage?.name ?? ""),
     [components, setComponents] = useState<FleetRigPackage["components"]>(
       initialPackage?.components ?? [],
@@ -333,16 +346,21 @@ export function FleetRigPackageBuilder({
   }
   return (
     <section className="fleet-detail-group space-y-3">
-      <h2>{initialPackage ? "Edit rig package" : "Build a rig package"}</h2>
+      <h2>
+        {initialPackage
+          ? copy("Edit rig package")
+          : copy("Build a rig package")}
+      </h2>
       <p>
-        Select components in coupling order. Cargo is recorded on the run
-        separately.
+        {copy(
+          " Select components in coupling order. Cargo is recorded on the run separately. ",
+        )}
       </p>
       <fieldset disabled={busy || Boolean(attempt)} className="space-y-3">
         <label>
-          Rig package name
+          {copy(" Rig package name ")}
           <input
-            aria-label="Rig package name"
+            aria-label={copy("Rig package name")}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -380,7 +398,7 @@ export function FleetRigPackageBuilder({
                 </label>
                 {component && (
                   <label>
-                    Component role
+                    {copy(" Component role ")}
                     <select
                       value={component.role}
                       onChange={(e) =>
@@ -399,7 +417,7 @@ export function FleetRigPackageBuilder({
                     >
                       {roles.map((role) => (
                         <option key={role} value={role}>
-                          {role}
+                          {copy(role)}
                         </option>
                       ))}
                     </select>
@@ -419,20 +437,22 @@ export function FleetRigPackageBuilder({
       </p>
       {message && (
         <p role={message === "Rig package saved." ? "status" : "alert"}>
-          {message}
+          {copy(message)}
         </p>
       )}
       {attempt ? (
         <>
           <PngPillButton disabled={busy} onClick={() => void save()}>
-            Save rig package
+            {copy(" Save rig package ")}
           </PngPillButton>
           <PngPillButton disabled={busy} onClick={() => setAttempt(null)}>
-            Edit selection
+            {copy(" Edit selection ")}
           </PngPillButton>
         </>
       ) : (
-        <PngPillButton onClick={review}>Review rig package</PngPillButton>
+        <PngPillButton onClick={review}>
+          {copy("Review rig package")}
+        </PngPillButton>
       )}
     </section>
   );

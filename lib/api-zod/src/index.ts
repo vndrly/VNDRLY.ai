@@ -89,3 +89,5 @@ export * from "./fleet-reconciliation";
 export * from "./fleet-monitoring";
 
 export * from "./fleet-local-work";
+
+export * from "./fleet-resource-copy";

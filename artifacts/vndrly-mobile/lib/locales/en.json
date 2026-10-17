@@ -321,7 +321,12 @@
     "selectGateLocation": "Select gate location",
     "gpsEntry": "Entry GPS",
     "gpsExit": "Exit GPS",
-    "gpsEvidence": { "verified": "Verified at gate", "mismatch": "GPS discrepancy", "unavailable": "GPS unavailable", "gate_unconfigured": "Gate coordinates not configured" },
+    "gpsEvidence": {
+      "verified": "Verified at gate",
+      "mismatch": "GPS discrepancy",
+      "unavailable": "GPS unavailable",
+      "gate_unconfigured": "Gate coordinates not configured"
+    },
     "duration30m": "30m",
     "duration2h": "2h",
     "durationAllDay": "All day",
@@ -770,6 +775,10 @@
     "cameraUnavailablePickSite": "Camera is unavailable in this build. Choose a site by name instead."
   },
   "errors": {
+    "workday": {
+      "invalid_request": "The shift request is invalid.",
+      "internal_error": "The shift could not be saved. Retry the same action."
+    },
     "work_hub": {
       "invalid_operation": "Unable to verify this Work Hub operation. Refresh and try again."
     },
@@ -1590,6 +1599,7 @@
       "already_provisioned": "That partner contact has already been provisioned."
     },
     "fleet": {
+      "login_required": "Sign in to access Fleet operations.",
       "office_finalize_required": "Review and submit this ticket from Fleet billing after its runs are reviewed.",
       "derived_charge_locked": "Reviewed Fleet run charges cannot be deleted here.",
       "billing_choice_required": "Choose a new billing ticket or an eligible open ticket when creating the run.",
@@ -3712,5 +3722,8 @@
     "kind_ticket": "Ticket",
     "kind_run": "Driver run",
     "kind_shift": "Gate shift"
+  },
+  "fleet": {
+    "agreementEditor": "Transport agreement"
   }
 }

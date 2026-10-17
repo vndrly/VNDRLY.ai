@@ -31,7 +31,10 @@ export function projectFleetSiteRun(
     runId: run.id,
     vendorName,
     status: run.status,
-    complianceCheckpoints:projectFleetComplianceCheckpoints([...events]),
+    // Partner disclosure carries commercial compliance warnings without
+    // exposing the vendor's private fuel, meter or internal review activity.
+    complianceCheckpoints:projectFleetComplianceCheckpoints(events.filter(event=>
+      ["created","dispatch","acknowledge","inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout"].includes(event.type))),
     stops: stops.map((stop) => ({
       stopId: stop.id,
       kind: stop.kind,

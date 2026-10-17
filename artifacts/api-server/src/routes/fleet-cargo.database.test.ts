@@ -16,6 +16,7 @@ import {
   assetsTable,
   workTypesTable,
   vendorWorkTypesTable,
+  partnerVendorWorkTypeApprovalsTable,
   siteWorkAssignmentsTable,
 } from "@workspace/db";
 import { buildTestCookie } from "../test-utils/session";
@@ -65,6 +66,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         });
       const [workType]=await db.insert(workTypesTable).values({name:`Synthetic hauling ${tag}`,category:"hauling"}).returning();
       await db.insert(vendorWorkTypesTable).values({vendorId:vendor.id,workTypeId:workType.id,unit:"per_job",unitPrice:"12.34",currency:"USD"});
+      await db.insert(partnerVendorWorkTypeApprovalsTable).values({partnerId:partner.id,vendorId:vendor.id,workTypeId:workType.id});
       await db.insert(siteWorkAssignmentsTable).values({vendorId:vendor.id,workTypeId:workType.id,siteLocationId:site.id});
       const users = await db
         .insert(usersTable)
@@ -193,7 +195,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
             vehicleAssetId: equipment[index].id,
             stops,
           });
-        expect(created.status).toBe(200);
+        expect(created.status, JSON.stringify(created.body)).toBe(200);
         runs[index] = created.body;
         const dispatched = await request(app)
           .post(`/fleet/runs/${runs[index].id}/actions`)
@@ -247,7 +249,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           quantity: 20,
           reason: "Synthetic user-reported full cargo handoff",
         });
-      expect(proposed.status).toBe(200);
+      expect(proposed.status, JSON.stringify(proposed.body)).toBe(200);
       let transfer = proposed.body;
       const command = (action: string) => ({
         operationId: randomUUID(),

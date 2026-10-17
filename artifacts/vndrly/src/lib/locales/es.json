@@ -3957,6 +3957,10 @@
     "mismatch": "Las contraseñas no coinciden."
   },
   "errors": {
+    "workday": {
+      "invalid_request": "La solicitud de turno no es válida.",
+      "internal_error": "No se pudo guardar el turno. Vuelve a intentarlo con la misma acción."
+    },
     "work_hub": {
       "invalid_operation": "No se pudo verificar esta operación de Work Hub. Actualiza e inténtalo de nuevo."
     },
@@ -4752,6 +4756,7 @@
       "publish_failed": "No pudimos publicar su catálogo. Inténtelo de nuevo."
     },
     "fleet": {
+      "login_required": "Inicia sesión para acceder a las operaciones de flota.",
       "office_finalize_required": "Revise y envíe este ticket desde la facturación de Flota después de revisar sus recorridos.",
       "derived_charge_locked": "Los cargos de recorridos de Flota revisados no se pueden eliminar aquí.",
       "billing_choice_required": "Elija un ticket de facturación nuevo o un ticket abierto elegible al crear el recorrido.",

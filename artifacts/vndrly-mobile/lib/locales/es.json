@@ -321,7 +321,12 @@
     "selectGateLocation": "Seleccione el acceso",
     "gpsEntry": "GPS de entrada",
     "gpsExit": "GPS de salida",
-    "gpsEvidence": { "verified": "Verificado en el acceso", "mismatch": "Discrepancia GPS", "unavailable": "GPS no disponible", "gate_unconfigured": "Coordenadas del acceso no configuradas" },
+    "gpsEvidence": {
+      "verified": "Verificado en el acceso",
+      "mismatch": "Discrepancia GPS",
+      "unavailable": "GPS no disponible",
+      "gate_unconfigured": "Coordenadas del acceso no configuradas"
+    },
     "duration30m": "30m",
     "duration2h": "2h",
     "durationAllDay": "Todo el día",
@@ -770,6 +775,10 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "workday": {
+      "invalid_request": "La solicitud de turno no es válida.",
+      "internal_error": "No se pudo guardar el turno. Vuelve a intentarlo con la misma acción."
+    },
     "work_hub": {
       "invalid_operation": "No se pudo verificar esta operación de Work Hub. Actualiza e inténtalo de nuevo."
     },
@@ -1590,6 +1599,7 @@
       "already_provisioned": "Ese contacto del socio ya fue dado de alta."
     },
     "fleet": {
+      "login_required": "Inicia sesión para acceder a las operaciones de flota.",
       "office_finalize_required": "Revise y envíe este ticket desde la facturación de Flota después de revisar sus recorridos.",
       "derived_charge_locked": "Los cargos de recorridos de Flota revisados no se pueden eliminar aquí.",
       "billing_choice_required": "Elija un ticket de facturación nuevo o un ticket abierto elegible al crear el recorrido.",
@@ -3712,5 +3722,8 @@
     "kind_ticket": "Ticket",
     "kind_run": "Recorrido de conductor",
     "kind_shift": "Turno de acceso"
+  },
+  "fleet": {
+    "agreementEditor": "Acuerdo de transporte"
   }
 }

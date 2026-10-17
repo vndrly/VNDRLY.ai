@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FleetDetailBuilder, FleetRigPackageBuilder } from "./fleet-details";
+const language=vi.hoisted(()=>({value:"en"}));
+vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:language.value}})}));
+afterEach(()=>{language.value="en";});
 vi.mock("./png-pill-rollover", () => ({
   PngPillButton: ({ children, ...props }: React.ComponentProps<"button">) => (
     <button {...props}>{children}</button>
@@ -141,3 +144,5 @@ describe("Inventory and Details builder", () => {
     expect(save.mock.calls[0][0].detail.rigPackageId).toBeNull();
   });
 });
+
+it("localizes assembly choices while preserving canonical person and asset names",()=>{language.value="es";render(<FleetDetailBuilder companyId={7} accessGroupIds={[group]} resources={resources} rigPackages={[rig]} onSave={vi.fn()}/>);expect(screen.getByRole("heading",{name:"Crear un destacamento"})).toBeTruthy();expect(screen.getByLabelText("Camiones disponibles")).toBeTruthy();expect(screen.getByLabelText("Conductor")).toBeTruthy();expect(screen.getByText("Bob Villa")).toBeTruthy();expect(screen.getByRole("button",{name:"Revisar destacamento"})).toBeTruthy();});

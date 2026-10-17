@@ -3957,6 +3957,10 @@
     "mismatch": "Passwords do not match."
   },
   "errors": {
+    "workday": {
+      "invalid_request": "The shift request is invalid.",
+      "internal_error": "The shift could not be saved. Retry the same action."
+    },
     "work_hub": {
       "invalid_operation": "Unable to verify this Work Hub operation. Refresh and try again."
     },
@@ -4752,6 +4756,7 @@
       "publish_failed": "We couldn't publish your catalog. Please try again."
     },
     "fleet": {
+      "login_required": "Sign in to access Fleet operations.",
       "office_finalize_required": "Review and submit this ticket from Fleet billing after its runs are reviewed.",
       "derived_charge_locked": "Reviewed Fleet run charges cannot be deleted here.",
       "billing_choice_required": "Choose a new billing ticket or an eligible open ticket when creating the run.",

@@ -1,3 +1,4 @@
+import { useFleetResourceCopy } from "@/lib/fleet-resource-copy";
 import { useState } from "react";
 import {
   FleetRoutePlanSchema,
@@ -21,6 +22,7 @@ export function FleetRouteFields({
   destinations: FleetDestination[];
   onChange: (value: FleetRoutePlan | null) => void;
 }) {
+  const copy = useFleetResourceCopy();
   const locationId = (reference: FleetRoutePlan["origin"] | null) =>
     reference?.type === "canonical" ? reference.location.id : "";
   const [cycles, setCycles] = useState<Cycle[]>(() => {
@@ -116,17 +118,17 @@ export function FleetRouteFields({
   function select(label: string, id: string, choose: (value: string) => void) {
     return (
       <label>
-        {label}
+        {copy(label)}
         <select
-          aria-label={label}
+          aria-label={copy(label)}
           value={id}
           onChange={(e) => choose(e.target.value)}
         >
-          <option value="">Choose location</option>
+          <option value="">{copy("Choose location")}</option>
           {choices.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name} · {item.address}
-              {item.latitude === null ? " · GPS unverified" : ""}
+              {item.latitude === null ? copy(" · GPS unverified") : ""}
             </option>
           ))}
         </select>
@@ -134,15 +136,19 @@ export function FleetRouteFields({
     );
   }
   return (
-    <div className="space-y-4" aria-label="Physical route">
-      <h3>Physical route</h3>
+    <div className="space-y-4" aria-label={copy("Physical route")}>
+      <h3>{copy("Physical route")}</h3>
       <p>
-        Choose the actual places visited. Billing site, customer and AFE stay
-        separate.
+        {copy(
+          " Choose the actual places visited. Billing site, customer and AFE stay separate. ",
+        )}
       </p>
       {cycles.map((cycle, index) => (
         <div className="fleet-detail-group space-y-3" key={cycle.id}>
-          <strong>Cycle {index + 1}</strong>
+          <strong>
+            {copy("Cycle ")}
+            {index + 1}
+          </strong>
           <div className="fleet-asset-fields">
             {select(
               index ? `Origin ${index + 1}` : "Origin",
@@ -163,7 +169,8 @@ export function FleetRouteFields({
                 publish(next, policy, base);
               }}
             >
-              Remove cycle {index + 1}
+              {copy(" Remove cycle ")}
+              {index + 1}
             </PngPillButton>
           )}
         </div>
@@ -184,12 +191,12 @@ export function FleetRouteFields({
           publish(next, policy, base);
         }}
       >
-        Repeat pickup / delivery cycle
+        {copy(" Repeat pickup / delivery cycle ")}
       </PngPillButton>
       <label>
-        Return policy
+        {copy(" Return policy ")}
         <select
-          aria-label="Return policy"
+          aria-label={copy("Return policy")}
           value={policy}
           onChange={(e) => {
             const next = e.target.value as typeof policy;
@@ -198,10 +205,10 @@ export function FleetRouteFields({
           }}
         >
           <option value="delivery_only">
-            Delivery only · release after closeout
+            {copy(" Delivery only \u00B7 release after closeout ")}
           </option>
           <option value="return_required">
-            Return to base before closeout
+            {copy(" Return to base before closeout ")}
           </option>
         </select>
       </label>
@@ -211,8 +218,9 @@ export function FleetRouteFields({
           publish(cycles, policy, id);
         })}
       <p>
-        Map estimates need verified coordinates. GPS gaps do not prevent
-        choosing or recording the location.
+        {copy(
+          " Map estimates need verified coordinates. GPS gaps do not prevent choosing or recording the location. ",
+        )}
       </p>
     </div>
   );

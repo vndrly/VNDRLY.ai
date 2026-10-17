@@ -1,3 +1,4 @@
+import {fleetResourceCopy} from "@workspace/api-zod";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -320,6 +321,8 @@ const spanish: Record<string, string> = {
 export function fleetCopy(text: string, language: string): string {
   if (!language.toLowerCase().startsWith("es")) return text;
   const trimmed = text.trim();
+  const resource=fleetResourceCopy(text,language);
+  if(resource!==text)return resource;
   const translated = spanish[trimmed] ?? spanish[trimmed.replaceAll("_", " ")];
   if (!translated) return text;
   return text.replace(trimmed, translated);

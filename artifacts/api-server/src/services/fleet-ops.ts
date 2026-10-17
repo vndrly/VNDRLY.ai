@@ -574,7 +574,15 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
     ...createFleetAvailabilityManagement(transaction),
     ...createFleetMaintenanceOperations(transaction, companyGrantFor),
     ...createFleetWorkdayOperations(),
-    ...createFleetReportingOperations(transaction, grantFor),
+    ...createFleetReportingOperations(transaction, (state,actor)=>{
+      const office=grantFor(state,actor);if(office)return office;
+      const pool=companyGrantFor(state,actor);
+      if(!pool?.roles.includes("driver"))return null;
+      // These sites come from the actual current own assignments resolved by
+      // the transaction. They never become personal customer/site grants.
+      const siteIds=actor.currentSiteIds??[];
+      return {...pool,siteIds,fleetIds:pool.fleetIds.filter(id=>state.fleets.some(group=>group.id===id&&group.siteIds.some(site=>siteIds.includes(site)))),financeRead:false};
+    }),
     ...createFleetGateOperations(transaction, permitted),
     overview: (actor: FleetActor): Promise<FleetOverview> =>
       transaction(

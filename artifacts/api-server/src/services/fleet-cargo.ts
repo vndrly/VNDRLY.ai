@@ -186,8 +186,7 @@ export function createFleetCargoOperations(
     const grant = state.grants.find((row) => row.userId === run.driverUserId);
     if (
       !grant?.roles.includes("driver") ||
-      !grant.fleetIds.includes(run.fleetId) ||
-      !run.siteIds.every((id) => grant.siteIds.includes(id))
+      !grant.fleetIds.includes(run.fleetId)
     )
       throw new FleetError("fleet.driver_grant_required", 403);
     const person = await client.query(
