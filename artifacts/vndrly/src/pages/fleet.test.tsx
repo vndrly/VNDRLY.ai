@@ -21,7 +21,9 @@ const api = vi.hoisted(() => ({
   complianceRegister:vi.fn(),
   complianceConfiguration:vi.fn(),
   work: {session:null as any,status:{pending:0,needsReconciliation:0,pendingEvidence:0,locked:false},commands:[],error:"",refresh:vi.fn()},
+  cacheRead:vi.fn(),cacheSave:vi.fn(),
 }));
+vi.mock("@/lib/fleet-offline-bootstrap",()=>({readWebFleetWorkspace:api.cacheRead,saveWebFleetWorkspace:api.cacheSave,activateWebFleetOffline:vi.fn()}));
 vi.mock("@/hooks/use-fleet-work",()=>({useFleetWork:()=>api.work}));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: api,
@@ -84,6 +86,7 @@ const run = {
 beforeEach(() => {
   vi.clearAllMocks();
   api.work.session=null;
+  api.cacheRead.mockResolvedValue(null);api.cacheSave.mockResolvedValue(undefined);
   api.complianceConfiguration.mockResolvedValue({version:1,isReviewer:false,mayAppointReviewers:false,reviewerUserIds:[]});
   window.history.replaceState({}, "", "/");
   api.location = "/fleet/my-day";
@@ -119,6 +122,10 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("keeps a cached overview visibly unverified when another endpoint succeeds over an intermittent connection",async()=>{
+    const saved=await api.overviewPage();api.location="/fleet";api.overviewPage.mockRejectedValue(new TypeError("Network failed"));api.cacheRead.mockResolvedValue({overview:{...saved,capabilities:{canDispatch:true,canManage:true,canDrive:false}},resources:{drivers:[],equipment:[]},receivedAt:"2026-10-16T18:00:00Z"});api.resources.mockResolvedValue({drivers:[],equipment:[]});
+    mount();await waitFor(()=>expect(api.resources).toHaveBeenCalled());await waitFor(()=>expect(screen.getByText(/Offline original workspace from/)).toBeTruthy());
+  });
   it("retains a modern driver action through the durable journal without claiming server acceptance",async()=>{
     const initial=await api.overviewPage();
     api.overviewPage.mockResolvedValue({...initial,runs:[{...run,ticketReference:{id:500,version:1}}]});

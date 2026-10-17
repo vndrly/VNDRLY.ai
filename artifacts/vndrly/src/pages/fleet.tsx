@@ -1,3 +1,5 @@
+import {saveWebFleetWorkspace,readWebFleetWorkspace,activateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
+import {provisionFleetOfflineShell} from "@/lib/fleet-offline-shell";
 import {FleetRetainedEvidence} from "@/components/fleet-retained-evidence";
 import { FleetRouteReplay } from "@/components/fleet-route-replay";
 import { useEffect, useRef, useState } from "react";
@@ -128,6 +130,18 @@ function FleetWorkspace({
   userId: number;
   identity: string;
 }) {
+  const {user:workspaceUser}=useAuth();
+  const cachedSources=useRef(new Map<string,string>());
+  const currentIdentity=useRef(identity);currentIdentity.current=identity;
+  const [offlineAt,setOfflineAt]=useState<string|null>(null),[offlineProvision,setOfflineProvision]=useState("");
+  useEffect(()=>()=>{currentIdentity.current="";},[identity]);
+  async function cachedRead<T>(fresh:()=>Promise<T>,select:(value:NonNullable<Awaited<ReturnType<typeof readWebFleetWorkspace>>>)=>T,source:string):Promise<T>{
+    try{const value=await fresh();if(currentIdentity.current===identity){cachedSources.current.delete(source);setOfflineAt([...cachedSources.current.values()].sort()[0]??null);}return value;}catch(error){
+      const status=Number((error as {status?:number})?.status);
+      if(!workspaceUser||(Number.isFinite(status)&&status<500)||(!(error instanceof TypeError)&&navigator.onLine!==false&&!(status>=500)))throw error;
+      const retained=await readWebFleetWorkspace(workspaceUser,()=>currentIdentity.current===identity).catch(()=>null);if(!retained||currentIdentity.current!==identity)throw error;cachedSources.current.set(source,retained.receivedAt);setOfflineAt([...cachedSources.current.values()].sort()[0]??null);return select(retained);
+    }
+  }
   const { i18n, t } = useTranslation();
   const describeFleetError = (error: unknown, fallback: string) => {
     const code = (error as { code?: string })?.code;
@@ -146,14 +160,14 @@ function FleetWorkspace({
     : "";
   const routeRun = useQuery({
     queryKey: ["fleet", identity, "run", routeRunId],
-    queryFn: () => fleetClient.run(routeRunId),
+    queryFn: () => cachedRead(()=>fleetClient.run(routeRunId),saved=>{const run=saved.overview.runs.find(item=>item.id===routeRunId);if(!run)throw Error("This activity was not downloaded to this device");return run;},"run"),
     enabled: Boolean(routeRunId),
     retry: false,
   });
   const overview = useInfiniteQuery({
     queryKey: ["fleet", identity, "pages"],
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => fleetClient.overviewPage(pageParam),
+    queryFn: ({ pageParam }) => cachedRead(()=>fleetClient.overviewPage(pageParam),saved=>{if(pageParam)throw Error("Connect to load additional Fleet pages");return {...saved.overview,observations:saved.overview.observations.map(value=>({...value,freshness:"stale" as const}))};},"overview"),
     getNextPageParam: (page) => page.page?.nextCursor ?? undefined,
     retry: false,
   });
@@ -181,10 +195,12 @@ function FleetWorkspace({
   const work = useFleetWork(overviewData?.accountScope, overviewData?.runs ?? []);
   const resources = useQuery({
     queryKey: ["fleet-resources", identity],
-    queryFn: fleetClient.resources,
+    queryFn: ()=>cachedRead(fleetClient.resources,saved=>saved.resources,"resources"),
     enabled: Boolean(overviewData?.capabilities.canDispatch || overviewData?.capabilities.canManageResources),
     retry: false,
   });
+  useEffect(()=>{let alive=true;if(work.session&&overviewData?.accountScope&&workspaceUser&&!offlineAt&&(!overviewData.capabilities.canDispatch||resources.data))void saveWebFleetWorkspace(workspaceUser,{overview:overviewData,resources:resources.data??{drivers:[],equipment:[]}},()=>alive&&currentIdentity.current===identity).catch(error=>{if(alive)setOfflineProvision(error instanceof Error?error.message:"Offline workspace cache unavailable");});return()=>{alive=false;};},[work.session,overview.dataUpdatedAt,resources.dataUpdatedAt,routeRun.dataUpdatedAt,identity,offlineAt]);
+  async function provisionOffline(){if(!workspaceUser||!work.session||!overviewData||offlineAt)return;setOfflineProvision("Preparing protected Fleet offline reload");try{await saveWebFleetWorkspace(workspaceUser,{overview:overviewData,resources:resources.data??{drivers:[],equipment:[]}},()=>currentIdentity.current===identity);const result=await provisionFleetOfflineShell();if(currentIdentity.current!==identity)return;if(result.status!=="durable_ready"){setOfflineProvision(result.reason);return;}activateWebFleetOffline(workspaceUser);setOfflineProvision("Fleet offline reload provisioned for this original account. Server permissions are rechecked at synchronization.");}catch(error){if(currentIdentity.current===identity)setOfflineProvision(error instanceof Error?error.message:"Offline provision failed");}}
   const createRetry = useRef<{
     fingerprint: string;
     input: z.infer<typeof CreateFleetRunSchema>;
@@ -644,11 +660,14 @@ function FleetWorkspace({
         </div>
         <PngPillButton onClick={() => void reload()}>{c.refresh}</PngPillButton>
       </header>
+      {(offlineAt||workspaceUser?.offlineOnly)&&<section className="fleet-detail-group"><p>Offline original workspace{offlineAt?` from ${offlineAt}`:""}. Permissions, resources and positions are cached and unverified. Device facts remain pending until canonical acceptance.</p></section>}
       {work.session && <section className="fleet-panel space-y-2" aria-label="Retained Fleet work">
         <p>{work.status.pending} pending sync · {work.status.needsReconciliation} needing office reconciliation · {work.status.pendingEvidence} pending evidence</p>
         <p>Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.</p>
         {!!work.error && <p role="alert">{work.error}</p>}
         <PngPillButton disabled={busy} onClick={()=>void work.refresh()}>Verify and synchronize retained work</PngPillButton>
+        <PngPillButton disabled={busy||!!offlineAt} onClick={()=>void provisionOffline()}>Prepare this browser for offline Fleet work</PngPillButton>
+        {!!offlineProvision&&<p role="status">{offlineProvision}</p>}
       </section>}
       <nav
         className="fleet-nav flex flex-wrap text-sm"
@@ -1739,7 +1758,7 @@ function FleetWorkspace({
           </p>
           {overview.hasNextPage && (
             <PngPillButton
-              disabled={overview.isFetchingNextPage}
+              disabled={overview.isFetchingNextPage || !!offlineAt}
               onClick={() => void overview.fetchNextPage()}
             >
               {c.loadMore}

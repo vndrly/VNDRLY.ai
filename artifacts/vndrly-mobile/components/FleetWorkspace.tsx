@@ -1,4 +1,5 @@
 import FleetRetainedEvidence from "@/components/FleetRetainedEvidence";
+import {saveFleetWorkspaceCache,readFleetWorkspaceCache} from "@/lib/fleet-workspace-cache";
 import FleetMapOverview from "@/components/FleetMapOverview";
 import FleetRunBoard from "@/components/FleetRunBoard";
 import { Feather } from "@expo/vector-icons";
@@ -99,6 +100,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     const companyId = activeMembership ? (activeMembership.orgType === "vendor" ? activeMembership.orgId : null) : user?.vendorId;
     const verifiedAccount = data?.identity === identity ? data.overview.accountScope : undefined;
     const work = useFleetWork(verifiedAccount, data?.identity === identity ? data.overview.runs : []);
+    useEffect(()=>{let alive=true;const value=data?.identity===identity?data:null,account=value?.overview.accountScope;if(work.session&&value&&account)void saveFleetWorkspaceCache({userId:account.userId,companyId:account.companyId,membershipId:account.membershipId},{overview:value.overview,resources:value.resources},()=>alive&&identityRef.current===identity).catch(e=>{if(alive&&identityRef.current===identity)setError(e instanceof Error?e.message:"Fleet device cache unavailable");});return()=>{alive=false;};},[work.session,data,identity]);
     const scope: FleetOfflineScope | null = user?.id && companyId ? { userId: user.id, companyId, membershipId: activeMembershipId, ...(verifiedAccount?.userId === user.id && verifiedAccount.companyId === companyId && verifiedAccount.membershipId === activeMembershipId ? {sessionVersion:verifiedAccount.sessionVersion}: {}) } : null;
     async function readQueue() { if (scope) {
         const document = await nativeFleetOffline.read(scope);
@@ -156,7 +158,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
                     const account = overview.accountScope;
                     const freshScope = scope && account?.userId === scope.userId && account.companyId === scope.companyId && account.membershipId === scope.membershipId ? {...scope,sessionVersion:account.sessionVersion} : scope;
                     if (freshScope?.sessionVersion !== undefined) await nativeFleetOffline.bindAccount(freshScope);
-                    if (freshScope && overview.capabilities.canDrive)
+                    if (freshScope && overview.capabilities.canDrive && !overview.runs.some(run=>!!run.ticketReference))
                         void nativeFleetOffline.cache(freshScope, overview).catch(e => { if (alive)
                             setError(e instanceof Error ? e.message : "Fleet cache unavailable."); });
                     if (scope)
@@ -177,6 +179,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
                 if (scope && (e as {
                     code?: string;
                 }).code === "network.unreachable") {
+                    if(scope.membershipId){const retained=await readFleetWorkspaceCache({userId:scope.userId,companyId:scope.companyId,membershipId:scope.membershipId},()=>alive&&identityRef.current===identity).catch(()=>null);if(retained&&alive&&identityRef.current===identity){setData({identity,overview:retained.overview,resources:retained.resources});setCachedAt(retained.receivedAt);return;}}
                     const document = await nativeFleetOffline.read(scope).catch(() => null);
                     if (alive && document?.overview) {
                         setData({ identity, overview: document.overview, resources: { drivers: [], equipment: [] } });
