@@ -4,16 +4,16 @@ import * as FileSystem from "expo-file-system/legacy";
 import { File } from "expo-file-system";
 import { z } from "zod/v4";
 import { Platform } from "react-native";
-import { createDurableFleetWorkJournal, type FleetWorkScope, type FleetJournalStore } from "@workspace/api-zod";
+import { createDurableFleetWorkJournal, openFleetBrowserStorage, type FleetWorkScope, type FleetJournalStore } from "@workspace/api-zod";
 import type { SQLiteDatabase } from "expo-sqlite";
 const opened=new Map<string,Promise<SQLiteDatabase>>();
 const sha=(value:string)=>Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256,value);
 /** Each original account/device/provisioning scope has a separate encrypted DB.
  * A lost/corrupt key never regenerates over retained originals. */
-export async function openNativeFleetWorkJournal(scope:FleetWorkScope,isCurrent:()=>boolean){
- if(Platform.OS==="web")throw Error("Native Fleet work requires device storage; use the provisioned browser journal");
+export async function openNativeFleetWorkStorage(identity:string,isCurrent:()=>boolean){
+ if(Platform.OS==="web")return {storage:await openFleetBrowserStorage(identity,isCurrent),db:null};
  if(!isCurrent())throw Error("Original work account changed");
- const id=await sha(JSON.stringify(scope)),name=`fleet-work-${id}.db`,keyName=`fleet.work.key.${id}`;
+ const id=await sha(identity),name=`fleet-work-${id}.db`,keyName=`fleet.work.key.${id}`;
  let ready=opened.get(id);
  if(!ready){ready=(async()=>{
   const SQLite=await import("expo-sqlite");
@@ -32,6 +32,11 @@ export async function openNativeFleetWorkJournal(scope:FleetWorkScope,isCurrent:
   result=await work({get:async(kind,key)=>(await tx.getFirstAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind=? AND id=?",kind,key))?.value??null,set:async(kind,key,value)=>{await tx.runAsync("INSERT INTO fleet_work_rows(kind,id,value) VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET value=excluded.value",kind,key,value);},values:async kind=>(await tx.getAllAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind=? ORDER BY rowid",kind)).map(row=>row.value)});
   if(!isCurrent())throw Error("Original work account changed");
  });return result!;}};
+ return {storage,db};
+}
+export async function openNativeFleetWorkJournal(scope:FleetWorkScope,isCurrent:()=>boolean){
+ const {storage,db}=await openNativeFleetWorkStorage(`fleet:${JSON.stringify(scope)}`,isCurrent);
+ if(!db)throw Error("Use browser-owned evidence storage for this browser preview");
  const journal=createDurableFleetWorkJournal({scope,storage,digest:sha,isCurrent});
  return Object.assign(journal,{
   async stageEvidence(id:string,uri:string,contentType:string){

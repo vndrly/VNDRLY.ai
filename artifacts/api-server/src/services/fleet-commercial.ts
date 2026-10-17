@@ -14,6 +14,7 @@ import {
   FleetDestinationInputSchema,
   fleetPhysicalStopsMatch,
   FleetTicketPlanSchema,
+  FleetTicketBillingV2Schema,
   type FleetRun,
   type FleetTicketPlan,
   type FleetDestination,
@@ -23,6 +24,7 @@ import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
 import { readFleetAuthoritySites } from "./fleet-commercial-authority";
 import { FleetError, type FleetState } from "./fleet-repository";
+import {sumEffectiveFinancialLines} from "../lib/effective-financial-line";
 const terminal = new Set([
   "submitted",
   "approved",
@@ -677,6 +679,15 @@ export function createFleetCommercialOperations(
         )
           throw new FleetError("fleet.finance_required", 403);
         const ticket = await readFleetTicketPlan(c, a, state, ticketId);
+        if(ticket.fleet_plan?.billingVersion===2){
+          const plan=FleetTicketBillingV2Schema.parse(ticket.fleet_plan),runs=await readFleetTicketRuns(c,a,state,ticketId);
+          if(plan.vendorId!==a.companyId||plan.partnerId!==ticket.partner_id||plan.billingSiteId!==ticket.site_location_id||!canFinalizeFleetRuns(state,a,runs))throw new FleetError("fleet.finance_required",403);
+          const rows=(await c.query("SELECT quantity,unit_price AS \"unitPrice\",fleet_billing_metadata AS \"fleetBillingMetadata\" FROM ticket_line_items WHERE ticket_id=$1",[ticketId])).rows;
+          const open=(await c.query("SELECT id FROM ticket_check_ins WHERE ticket_id=$1 AND check_out_at IS NULL",[ticketId])).rows.length;
+          let canFinalize=canOfficeFinalize(state,a)&&!plan.finalizedAt&&runs.filter(r=>r.status==="completed").every(r=>r.billingV2?.review.status==="reviewed")&&rows.length>0;
+          try{assertFleetTicketFinalizable(ticket.status,runs,open);}catch{canFinalize=false;}
+          return {billingVersion:2,ticketId,siteId:ticket.site_location_id,partnerId:ticket.partner_id,status:ticket.status,afeNumber:plan.afeNumber,workDate:plan.workDate,plan:{version:plan.revision,closedAt:plan.finalizedAt,rateCents:undefined},charges:{runs:runs.filter(r=>r.status==="completed").length,total:sumEffectiveFinancialLines(rows).currencyAmount},chargeLines:rows.map(row=>row.fleetBillingMetadata),runs:runs.map(({id,title,status,version})=>({id,title,status,version})),canManage:managing(state,a),canFinalize,finalizationOperationId:plan.finalizationOperationId};
+        }
         const plan = ticket.fleet_plan
           ? FleetTicketPlanSchema.parse(ticket.fleet_plan)
           : null;

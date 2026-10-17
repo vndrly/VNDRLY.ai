@@ -220,3 +220,12 @@ it("serves the shared Work Hub mechanism with authenticated no-store reads and e
  const ended=await request(app).post("/work-hub/workday/events").set("Cookie",cookie).send(command(f.worker,body.shiftId,"end_shift","2026-10-15T22:30:00Z"));expect(ended.status).toBe(200);
  const day=await request(app).get(`/work-hub/workday/workers/${f.worker.userId}?start=2026-10-15T00:00:00Z&end=2026-10-16T00:00:00Z`).set("Cookie",buildTestCookie(f.office));expect(day.status).toBe(200);expect(day.body.items).toHaveLength(1);
 });
+
+it("explicit workday controls synchronize shift tracking without changing separate consent or On Call",async()=>{
+ const f=await fixture(),id=randomUUID();
+ await f.pool.query("UPDATE vendors SET native_operations_policy=$2::jsonb WHERE id=$1",[f.worker.vendorId,JSON.stringify({enabled:true,dutyModes:["manual"]})]);
+ await f.pool.query("INSERT INTO work_hub_device_preferences(user_id,owner_org_type,owner_org_id,native_operations) VALUES($1,'vendor',$2,$3::jsonb)",[f.worker.userId,f.worker.vendorId,JSON.stringify({consent:{locationSharing:true,automaticArrival:false},designatedDeviceId:null,bindingVersion:1,duty:{active:false,mode:null,startedAt:null,endsAt:null,ticketId:null,shiftId:null,overrideEndedAt:null},onCallActive:true})]);
+ await f.service.record(f.worker,command(f.worker,id));let value=(await f.pool.query("SELECT native_operations FROM work_hub_device_preferences WHERE user_id=$1 AND owner_org_id=$2",[f.worker.userId,f.worker.vendorId])).rows[0].native_operations;
+ expect(value.duty.active).toBe(true);expect(value.consent.locationSharing).toBe(true);expect(value.onCallActive).toBe(true);
+ await f.service.record(f.worker,command(f.worker,id,"end_shift","2026-10-15T22:30:00Z"));value=(await f.pool.query("SELECT native_operations FROM work_hub_device_preferences WHERE user_id=$1 AND owner_org_id=$2",[f.worker.userId,f.worker.vendorId])).rows[0].native_operations;expect(value.duty.active).toBe(false);expect(value.onCallActive).toBe(true);expect(value.consent.locationSharing).toBe(true);
+});

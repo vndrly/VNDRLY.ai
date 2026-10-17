@@ -4,6 +4,7 @@ import {
   FleetFinalizeTicketInputSchema,
   FleetRunBillingInputSchema,
   FleetTicketPlanSchema,
+  FleetTicketBillingV2Schema,
   FleetWorkDateSchema,
   FleetRunSchema,
   type FleetRun,
@@ -407,7 +408,7 @@ export function createFleetBillingOperations(
         });
         const rows = (
           await c.query(
-            "SELECT id,status,fleet_plan FROM tickets WHERE vendor_id=$1 AND site_location_id=$2 AND status=ANY($3::text[]) AND fleet_plan->>'billingWorkflow'='true' AND fleet_plan->>'afeNumber'=$4 AND fleet_plan->>'workDate'=$5 ORDER BY id DESC LIMIT 201",
+            "SELECT id,status,fleet_plan FROM tickets WHERE vendor_id=$1 AND site_location_id=$2 AND status=ANY($3::text[]) AND (fleet_plan->>'billingWorkflow'='true' OR fleet_plan->>'billingVersion'='2') AND fleet_plan->>'afeNumber'=$4 AND fleet_plan->>'workDate'=$5 ORDER BY id DESC LIMIT 201",
             [
               a.companyId,
               body.siteId,
@@ -428,6 +429,10 @@ export function createFleetBillingOperations(
           planVersion: number;
         }[] = [];
         for (const t of rows) {
+          if(t.fleet_plan?.billingVersion===2){const p=FleetTicketBillingV2Schema.parse(t.fleet_plan);
+            if(p.vendorId===a.companyId&&p.partnerId===site.partner_id&&p.billingSiteId===body.siteId&&p.batchingAllowed&&!p.finalizedAt&&!p.finalizationOperationId&&site.fleet_ticket_policy?.mode!=="singles"&&canAccessFleetRuns(state,a,await readFleetTicketRuns(c,a,state,t.id),"dispatch"))tickets.push({id:t.id,ticketNumber:t.id,siteId:p.billingSiteId,afeNumber:p.afeNumber,workDate:p.workDate,planVersion:p.revision});
+            continue;
+          }
           const p = FleetTicketPlanSchema.parse(t.fleet_plan);
           if (
             site.fleet_ticket_policy?.mode !== "singles" &&

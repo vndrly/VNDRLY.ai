@@ -27,8 +27,8 @@ it("preserves the prior generation after an interrupted reservation publication"
  const first=await captureFleetEvidence(account,run,{kind:"photo",notes:"中".repeat(2000)},"camera");mocks.fail=".meta";
  await expect(submitFleetEvidencePending()).rejects.toThrow("Interrupted");expect(await readFleetEvidencePending()).toEqual(first);mocks.fail="";await clearFleetEvidencePending();expect(mocks.records.size).toBe(0);expect(mocks.files.has(first!.asset.uri)).toBe(false);
 });
-it("clears every encrypted chunk and only the owned captured file on account mutation",async()=>{
- const value=await captureFleetEvidence(account,run,{kind:"photo",notes:"Synthetic image"},"camera");mocks.epoch++;mocks.token?.();await clearFleetEvidencePending();expect(mocks.records.size).toBe(0);expect(mocks.files.has(value!.asset.uri)).toBe(false);expect(mocks.files.has("file:///camera/image.jpg")).toBe(true);
+it("retains unsubmitted originals on account mutation without posting to a new account",async()=>{
+ const value=await captureFleetEvidence(account,run,{kind:"photo",notes:"Synthetic image"},"camera");mocks.epoch++;mocks.token?.();expect(await readFleetEvidencePending()).toEqual(value);expect(mocks.records.size).toBeGreaterThan(0);expect(mocks.files.has(value!.asset.uri)).toBe(true);expect(mocks.files.has("file:///camera/image.jpg")).toBe(true);
 });
 it("refuses off-origin or mismatched private upload destinations",()=>{
  expect(()=>fleetPrivateUploadUrl("https://external.invalid/api/storage/upload/70000000-0000-4000-8000-000000000001",upload.objectPath,"https://vndrly.ai")).toThrow("destination");

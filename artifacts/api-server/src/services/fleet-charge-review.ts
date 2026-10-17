@@ -85,8 +85,8 @@ export async function finalizeFleetTicketV2(context:FleetWorkExecutionContext,co
   for(const raw of input.inputs as FleetChargeCalculation[]){
    // Any later source review requires a fresh explicit charge review/adjustment.
    for(const ref of input.quantityReviews as Array<{evidenceId:string;revision:number}>){const latest=(await context.client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-quantity-review' AND target_id=$2 ORDER BY id DESC LIMIT 1",[context.actor.companyId,ref.evidenceId])).rows[0]?.tool_output;if(!latest||latest.revision!==ref.revision||latest.decision!=="accept_as_billable")throw new FleetError("fleet.quantity_review_version_conflict");}
-   if(raw.rateCard.minimum?.scope==="day")throw new FleetError("fleet.day_minimum_finalization_required");
-   let calculated:FleetCharge[];try{calculated=calculateFleetCharges({...raw,scope:{...raw.scope,stage:"ticket_finalize"},existingCharges:charges});}catch(error){if(error instanceof FleetPricingError)throw new FleetError(error.code);throw error;}
+   if(raw.rateCard.minimum?.scope==="day"&&!command.payload.finalizeDayMinimums)throw new FleetError("fleet.day_minimum_finalization_required");
+   let calculated:FleetCharge[];try{calculated=calculateFleetCharges({...raw,scope:{...raw.scope,stage:raw.rateCard.minimum?.scope==="day"?"day_finalize":"ticket_finalize"},existingCharges:charges});}catch(error){if(error instanceof FleetPricingError)throw new FleetError(error.code);throw error;}
    for(const candidate of calculated){const saved=charges.find(c=>c.id===candidate.id)??FleetChargeSchema.parse({...candidate,reviewedByUserId:context.actor.userId,reviewedAt:new Date().toISOString()});await saveCharge(context,saved);if(!charges.some(c=>c.id===saved.id))charges.push(saved);}
   }
   requireFleetCommercialAuthority(await resolveFleetCommercialAuthority(context.client,context.actor,{partnerId:plan.partnerId,billingSiteId:plan.billingSiteId,workTypeId:run.billingV2.serviceId,workDate:run.billingV2.context.workDate,purpose:"office_submit",policyAt:new Date().toISOString()}));
@@ -99,4 +99,18 @@ export async function finalizeFleetTicketV2(context:FleetWorkExecutionContext,co
  await context.client.query("UPDATE tickets SET status='submitted',lifecycle_state='off_site',closed_at=COALESCE(closed_at,now()),closed_by_id=COALESCE(closed_by_id,$3),fleet_plan=$2::jsonb,updated_at=now() WHERE id=$1",[ticketId,JSON.stringify(finalized),context.actor.userId]);
  await context.client.query("INSERT INTO ticket_status_history(ticket_id,from_status,to_status,actor_user_id,actor_role,reason) VALUES($1,$2,'submitted',$3,$4,'Fleet office explicitly submitted reviewed ticket')",[ticketId,row.status,context.actor.userId,context.actor.role??"vendor"]);
  return {ticketVersion:finalized.revision};
+}
+
+export async function adjustFleetReviewedCharge(context:FleetWorkExecutionContext,command:Extract<FleetWorkCommand,{kind:"charge.adjust"}>,run:FleetRun){
+ await office(context,run);const {plan}=await parent(context,run.linkedTicketId!);await rate(context,run);
+ if(command.payload.ticket.type==="canonical"&&plan.revision!==command.payload.ticket.version)throw new FleetError("fleet.version_conflict");
+ const existing=await readFleetReviewedCharges(context.client,context.actor.companyId,run.linkedTicketId!);
+ const original=existing.find(c=>c.id===command.payload.chargeId);
+ if(!original||original.runId!==run.id||original.revision!==command.payload.expectedRevision||!original.reviewedAt||!run.billingV2||run.billingV2.review.status!=="reviewed")throw new FleetError("fleet.charge_revision_conflict");
+ const delta=parseExactDecimal(command.payload.delta);if(delta.coefficient===0n)throw new FleetError("fleet.adjustment_amount_required");
+ const charge=FleetChargeSchema.parse({...original,id:command.operationId,revision:1,code:`adjustment:${original.id}`,kind:"adjustment",description:command.payload.reason,quantity:"1",unit:"flat",unitRate:formatExact({...delta,coefficient:delta.coefficient<0n?-delta.coefficient:delta.coefficient}),exactAmount:formatExact(delta),currencyAmount:formatExact(roundExact(delta,{scale:2,rounding:"half_away_from_zero"})),adjustsChargeId:original.id,eligibleChargeIds:[],calculation:undefined,reviewedByUserId:context.actor.userId,reviewedAt:new Date().toISOString()});
+ await saveCharge(context,charge);run.version++;run.billingV2={...run.billingV2,revision:run.billingV2.revision+1,review:{...run.billingV2.review,chargeRevision:run.billingV2.review.chargeRevision+1}};
+ appendFleetRunEvent(run,{id:randomUUID(),operationId:command.operationId,type:"charge_adjusted",actorUserId:context.actor.userId,recordedAt:charge.reviewedAt!,capturedAt:new Date(command.capturedAt).toISOString(),source:"user_report",details:{chargeId:charge.id,adjustsChargeId:original.id,reason:command.payload.reason}});
+ const revision=plan.revision+1;await context.client.query("UPDATE tickets SET fleet_plan=$2::jsonb,updated_at=now() WHERE id=$1",[run.linkedTicketId,JSON.stringify({...plan,revision,reviewedChargeIds:[...new Set([...plan.reviewedChargeIds,charge.id])]})]);
+ return {ticketVersion:revision};
 }

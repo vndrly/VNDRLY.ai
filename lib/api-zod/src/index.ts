@@ -76,3 +76,6 @@ export * from "./fleet-evidence-upload";
 export * from "./fleet-work-journal";
 
 export * from "./fleet-work-runtime";
+
+export * from "./workday-client";
+export * from "./fleet-work-browser-storage";

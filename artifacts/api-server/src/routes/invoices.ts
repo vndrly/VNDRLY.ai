@@ -477,7 +477,7 @@ router.get("/invoices/:id", async (req, res): Promise<void> => {
     ...invoice,
     vendor,
     partner,
-    lines,
+    lines:lines.map(line=>line.fleetBillingMetadata?{...line,quantity:resolveEffectiveFinancialLine(line).quantity,unitPrice:resolveEffectiveFinancialLine(line).unitPrice}:line),
     ticketLinks,
     payments,
     creditMemos: credits,

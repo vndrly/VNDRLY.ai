@@ -336,6 +336,16 @@ export function createWorkdayService(run: typeof transaction = transaction) { re
         { fingerprint, event, receipt },
       );
       await append(client, session, scope, "workday", command.shiftId, saved);
+      if(scope.owner.type==="vendor"&&["start_shift","end_shift"].includes(command.action)){
+        // This is the same worker's explicit day intent. Keep device designation,
+        // consent and separately agreed On Call unchanged; those remain actual
+        // collection gates. Never start a ticket or infer physical presence.
+        const policy=(await client.query("SELECT native_operations_policy FROM vendors WHERE id=$1",[scope.owner.id])).rows[0]?.native_operations_policy;
+        if(command.action==="end_shift"||policy?.enabled===true&&policy?.dutyModes?.includes("manual")){
+          const duty={active:command.action==="start_shift",mode:"manual",startedAt:saved.summary.startedAt,endsAt:null,ticketId:null,shiftId:null,overrideEndedAt:command.action==="end_shift"?event.receivedAt:null};
+          await client.query("UPDATE work_hub_device_preferences SET native_operations=jsonb_set(COALESCE(native_operations,'{}'::jsonb),'{duty}',$3::jsonb,true),updated_at=now() WHERE user_id=$1 AND owner_org_type='vendor' AND owner_org_id=$2",[scope.userId,scope.owner.id,JSON.stringify(duty)]);
+        }
+      }
       return receipt;
     }),
   current: (session: SessionPayload) =>

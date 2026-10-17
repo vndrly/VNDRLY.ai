@@ -1,3 +1,4 @@
+import WorkdayControls from "@/components/workday-controls";
 import { lazy, Suspense, type ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -339,6 +340,7 @@ export function FieldOpsPortalShell({
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
         >
+          <WorkdayControls />
           {children}
         </main>
 
