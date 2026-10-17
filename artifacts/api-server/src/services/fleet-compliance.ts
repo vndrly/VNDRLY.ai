@@ -731,7 +731,9 @@ export function createFleetComplianceOperations(
           false,
           true,
         );
-        return privateRecord(entry, actor);
+        const record=await privateRecord(entry, actor);
+        await appendFleetResourceRecord(client,actor,"fleet-compliance-private-access",entry.id,{revision:entry.revision,access:"record",occurredAt:now()});
+        return record;
       }),
     readFleetComplianceRegister: (actor: FleetActor, input: unknown) => {
       const query = FleetComplianceRegisterQuerySchema.parse(input);
@@ -926,6 +928,7 @@ export function createFleetComplianceOperations(
         const proof=await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-compliance-document' AND target_id=$2 AND tool_output->>'objectPath'=$3 ORDER BY id DESC LIMIT 1",[actor.companyId,id,path]);
         const descriptor=proof.rows[0]?.tool_output;
         if(!descriptor||descriptor.size!==object.body.length||object.size!==object.body.length||descriptor.contentType!==object.contentType||descriptor.fingerprint!==digest({contentType:object.contentType,bodyBase64:object.body.toString("base64")}))throw new FleetError("fleet.private_document_unavailable",503);
+        await appendFleetResourceRecord(client,actor,"fleet-compliance-private-access",entry.id,{revision:entry.revision,access:"document",occurredAt:now()});
         return object;
       }),
   };

@@ -59,3 +59,4 @@ export * from "./fleet-run-assignment";
 export * from "./fleet-insurance";
 export * from "./fleet-compliance-register";
 export * from "./fleet-compliance-rulebook";
+export * from "./fleet-resource-readiness";

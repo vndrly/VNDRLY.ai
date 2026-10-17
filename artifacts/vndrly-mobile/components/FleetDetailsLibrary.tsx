@@ -5,6 +5,9 @@ import {
   FleetRigPackagePageSchema,
   FleetDetailSchema,
   FleetRigPackageSchema,
+  FleetComplianceAssessmentsSchema,
+  fleetResourceComplianceSubjects,
+  fleetResourceReadinessIndex,
   type FleetDetail,
   type FleetOverview,
   type FleetResources,
@@ -16,6 +19,7 @@ import { useColors } from "@/hooks/useColors";
 import { FleetDetailBuilder, FleetRigPackageBuilder } from "./FleetDetails";
 import FleetChoiceField from "./FleetChoiceField";
 import TogglePillButton from "./TogglePillButton";
+import { useFleetCopy } from "@/lib/fleet-copy";
 type Data = {
   overview: FleetOverview;
   resources: FleetResources;
@@ -23,6 +27,7 @@ type Data = {
   rigs: ReturnType<typeof FleetRigPackagePageSchema.parse>;
 };
 export default function FleetDetailsLibrary() {
+  const copy = useFleetCopy();
   const colors = useColors(),
     scope = useRef(captureAuthScope()),
     alive = useRef(true),
@@ -34,6 +39,62 @@ export default function FleetDetailsLibrary() {
     [rigView, setRigView] = useState(false),
     [editRig, setEditRig] = useState<FleetRigPackage | undefined>(),
     [error, setError] = useState("");
+  const [assessments, setAssessments] = useState<
+    Record<string, { status: "green" | "red"; label: string }>
+  >({});
+  useEffect(() => {
+    const resources = data?.resources;
+    let cancelled = false,
+      sequence = 0;
+    async function refresh() {
+      const attempt = ++sequence;
+      setAssessments({});
+      if (!resources) return;
+      try {
+        const subjects = fleetResourceComplianceSubjects(resources),
+          summaries = [];
+        for (let offset = 0; offset < subjects.length; offset += 100) {
+          const page = FleetComplianceAssessmentsSchema.parse(
+            await apiFetch<unknown>(
+              "/api/fleet/compliance/assessments",
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  subjects: subjects.slice(offset, offset + 100),
+                }),
+              },
+              scope.current,
+            ),
+          );
+          summaries.push(...page.summaries);
+        }
+        if (!cancelled && attempt === sequence && current())
+          setAssessments(
+            Object.fromEntries(
+              Object.entries(
+                fleetResourceReadinessIndex(subjects, summaries),
+              ).map(([id, value]) => [
+                id,
+                {
+                  status: value.status,
+                  label: value.reasons.length
+                    ? value.reasons.map((reason) => copy(reason)).join(", ")
+                    : copy("Current reviewed evidence"),
+                },
+              ]),
+            ),
+          );
+      } catch {
+        if (!cancelled && attempt === sequence && current()) setAssessments({});
+      }
+    }
+    void refresh();
+    const timer = setInterval(() => void refresh(), 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [data?.resources, copy]);
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   const request = <T,>(path: string, body?: unknown) =>
     apiFetch<T>(
@@ -205,6 +266,7 @@ export default function FleetDetailsLibrary() {
                 }
                 resources={data.resources}
                 rigPackages={data.rigs.rigPackages}
+                assessments={assessments}
                 initialDetail={edit}
                 onSave={async (input) => {
                   if (!current()) throw new Error("Account context changed.");

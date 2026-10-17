@@ -12,6 +12,7 @@ import { useColors } from "@/hooks/useColors";
 import TogglePillButton from "./TogglePillButton";
 import FleetChoiceField from "./FleetChoiceField";
 import FleetCheckbox from "./FleetCheckbox";
+import {useFleetCopy} from "@/lib/fleet-copy";
 type Save = {
   operationId: string;
   expectedVersion: number;
@@ -23,6 +24,7 @@ export function FleetDetailBuilder({
   resources,
   rigPackages,
   initialDetail,
+  assessments = {},
   onSave,
 }: {
   companyId: number;
@@ -30,8 +32,10 @@ export function FleetDetailBuilder({
   resources: FleetResources;
   rigPackages: FleetRigPackage[];
   initialDetail?: FleetDetail;
+  assessments?: Record<string, { status: "green" | "red"; label: string }>;
   onSave: (input: Save) => Promise<unknown>;
 }) {
+  const copy=useFleetCopy();
   const colors = useColors(),
     lock = useRef(false);
   const [name, setName] = useState(initialDetail?.name ?? ""),
@@ -165,9 +169,48 @@ export function FleetDetailBuilder({
         disabled={busy || Boolean(attempt)}
       />
       <Text style={text}>
-        Compliance unverified. Document warnings remain selectable; current
-        holds, custody and availability are checked at assignment.
+        Evidence status is separate from availability and run-specific coverage.
+        Document warnings remain selectable; current holds, custody and
+        availability are checked at assignment.
       </Text>
+      {[
+        {
+          id: `vehicle:${truck}`,
+          label: trucks.find((item) => item.id === truck)?.name,
+        },
+        ...(chosen?.components.map((component) => ({
+          id: `component:${component.assetId}`,
+          label:
+            resources.equipment.find((asset) => asset.id === component.assetId)
+              ?.name ?? component.role,
+        })) ?? []),
+        {
+          id: `driver:${driver}`,
+          label: resources.drivers.find(
+            (item) => String(item.userId) === driver,
+          )?.name,
+        },
+      ]
+        .filter((item) => item.label)
+        .map((item) => (
+          <View key={item.id} style={{ flexDirection: "row", gap: 6 }}>
+            <Text
+              accessibilityElementsHidden
+              style={{
+                color:
+                  assessments[item.id]?.status === "green"
+                    ? "#15803D"
+                    : "#DC2626",
+              }}
+            >
+              ●
+            </Text>
+            <Text style={text}>
+              {item.label} ·{" "}
+            {assessments[item.id]?.label ?? copy("Compliance unverified")}
+            </Text>
+          </View>
+        ))}
       {message && (
         <Text accessibilityRole="alert" style={text}>
           {message}

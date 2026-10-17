@@ -1,5 +1,7 @@
 /** Fleet-specific copy kept together while the workspace evolves. */
 const en = {
+  evidenceCurrent:"Current reviewed evidence",
+  evidenceMissing:"missing",evidenceExpired:"expired",evidenceRevoked:"revoked",evidenceFailed:"failed",evidenceUnverified:"unverified",evidenceExcluded:"excluded",
   back: "Back",
 
   fuelRecord: "Fuel reported",
@@ -472,6 +474,8 @@ const en = {
     "Readiness and eligibility are checked by the server when dispatch is saved.",
 } as const;
 const es: Record<keyof typeof en, string> = {
+  evidenceCurrent:"Evidencia revisada vigente",
+  evidenceMissing:"faltante",evidenceExpired:"vencida",evidenceRevoked:"revocada",evidenceFailed:"incumplida",evidenceUnverified:"sin verificar",evidenceExcluded:"excluida",
   back: "Atrás",
 
   fuelRecord: "Combustible reportado",

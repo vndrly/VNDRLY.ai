@@ -57,9 +57,9 @@ export function FleetDetailBuilder({
   const packages = rigPackages.filter((item) => !item.archivedAt);
   const selectedRig = packages.find((item) => item.id === rig);
   const members = [
-    { id: truck, label: trucks.find((item) => item.id === truck)?.name },
+    { id: `vehicle:${truck}`, label: trucks.find((item) => item.id === truck)?.name },
     ...(selectedRig?.components.map((item) => ({
-      id: item.assetId,
+      id: `component:${item.assetId}`,
       label:
         resources.equipment.find((asset) => asset.id === item.assetId)?.name ??
         item.role,

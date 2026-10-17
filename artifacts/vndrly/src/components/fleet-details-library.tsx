@@ -5,11 +5,19 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { FleetDetail, FleetRigPackage } from "@workspace/api-zod";
+import {
+  fleetResourceComplianceSubjects,
+  fleetResourceReadinessIndex,
+} from "@workspace/api-zod";
 import { fleetClient } from "@/lib/fleet-client";
 import { FleetDetailBuilder, FleetRigPackageBuilder } from "./fleet-details";
 import { PngPillButton } from "./png-pill-rollover";
+import { useTranslation } from "react-i18next";
+import { fleetCopy } from "@/lib/fleet-copy";
 
 export function FleetDetailsLibrary({ identity }: { identity: string }) {
+  const { i18n } = useTranslation(),
+    copy = fleetCopy(i18n.language);
   const cache = useQueryClient(),
     [group, setGroup] = useState(""),
     [selected, setSelected] = useState<FleetDetail | undefined>(),
@@ -39,6 +47,29 @@ export function FleetDetailsLibrary({ identity }: { identity: string }) {
     queryFn: ({ pageParam }) => fleetClient.rigPackages(pageParam),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: false,
+  });
+  const subjects = context.data
+    ? fleetResourceComplianceSubjects(context.data.resources)
+    : [];
+  const compliance = useQuery({
+    queryKey: ["fleet-detail-compliance", identity, subjects],
+    enabled: subjects.length > 0,
+    queryFn: async () => {
+      const pages = [];
+      for (let offset = 0; offset < subjects.length; offset += 100)
+        pages.push(
+          await fleetClient.assessCompliance(
+            subjects.slice(offset, offset + 100),
+          ),
+        );
+      return fleetResourceReadinessIndex(
+        subjects,
+        pages.flatMap((page) => page.summaries),
+      );
+    },
+    retry: false,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
   async function reload() {
     await Promise.all([
@@ -109,6 +140,33 @@ export function FleetDetailsLibrary({ identity }: { identity: string }) {
                 }
                 resources={resources}
                 rigPackages={packages}
+                assessments={Object.fromEntries(
+                  Object.entries(
+                    compliance.isError || compliance.isFetching
+                      ? {}
+                      : (compliance.data ?? {}),
+                  ).map(([id, value]) => [
+                    id,
+                    {
+                      status: value.status,
+                      label: value.reasons.length
+                        ? value.reasons
+                            .map(
+                              (reason) =>
+                                ({
+                                  missing: copy.evidenceMissing,
+                                  expired: copy.evidenceExpired,
+                                  revoked: copy.evidenceRevoked,
+                                  failed: copy.evidenceFailed,
+                                  unverified: copy.evidenceUnverified,
+                                  excluded: copy.evidenceExcluded,
+                                })[reason],
+                            )
+                            .join(", ")
+                        : copy.evidenceCurrent,
+                    },
+                  ]),
+                )}
                 initialDetail={selected}
                 onSave={async (input) => {
                   await fleetClient.saveDetail(input);

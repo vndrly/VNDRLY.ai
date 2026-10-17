@@ -74,7 +74,7 @@ describe("Inventory and Details builder", () => {
         resources={resources}
         rigPackages={[rig]}
         assessments={{
-          [truck]: { status: "red", label: "Registration expired" },
+          [`vehicle:${truck}`]: { status: "red", label: "Registration expired" },
         }}
         onSave={save}
       />,

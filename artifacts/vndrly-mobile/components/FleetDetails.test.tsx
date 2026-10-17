@@ -73,6 +73,7 @@ it("reviews a reusable native truck and driver Detail without fabricating custod
         ],
       }}
       rigPackages={[]}
+      assessments={{[`vehicle:${truck}`]:{status:"green",label:"Current reviewed evidence"},"driver:2":{status:"red",label:"expired"}}}
       onSave={save}
     />,
   );
@@ -83,6 +84,8 @@ it("reviews a reusable native truck and driver Detail without fabricating custod
   fireEvent.click(await screen.findByRole("button", { name: "Truck 12" }));
   fireEvent.click(screen.getByRole("button", { name: "Driver" }));
   fireEvent.click(await screen.findByRole("button", { name: "Bob Villa" }));
+  expect(await screen.findByText("Bob Villa · expired")).toBeTruthy();
+  expect(screen.getByText("Truck 12 · Current reviewed evidence")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Review Detail" }));
   expect(save).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Save Detail" }));

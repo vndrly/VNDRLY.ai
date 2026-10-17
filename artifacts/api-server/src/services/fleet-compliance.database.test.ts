@@ -674,6 +674,9 @@ describe("Private Fleet compliance register", () => {
       record.evidence.id,
     );
     expect(privateRecord.evidence.verifiedByUserId).toBe(f.reviewer.userId);
+    const accessLog=await f.pool.query("SELECT user_id,target_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-compliance-private-access' ORDER BY id",[f.admin.companyId]);
+    expect(accessLog.rows).toHaveLength(2);
+    expect(accessLog.rows.map(row=>({userId:row.user_id,id:row.target_id,...row.tool_output}))).toEqual([1,2].map(revision=>({userId:f.reviewer.userId,id:record.evidence.id,revision,access:"record",occurredAt:"2026-10-16T18:00:00.000Z"})));
     const audit = await f.pool.query(
       "SELECT tool_input,tool_output FROM assistant_action_audit WHERE vendor_id=$1",
       [f.admin.companyId],
