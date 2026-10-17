@@ -38,3 +38,9 @@ it("preserves v2 run billing only on its actual parent and refuses mixing financ
   expect(run.safeParse({...value,linkedTicketId:101}).success).toBe(false);
   expect(run.safeParse({...value,billing:{afeNumber:"SYNTHETIC",workDate:"2026-10-16"}}).success).toBe(false);
 });
+it("requires an explicit billing protocol marker because legacy plan version is an edit counter",()=>{
+  const value={version:2,revision:1,vendorId:7,partnerId:8,billingSiteId:9,afeNumber:"SYNTHETIC",workDate:"2026-10-16",currency:"USD",batchingAllowed:true,serviceIds:[3],reviewedChargeIds:[],finalizedAt:null,finalizationOperationId:null};
+  const ticket=schema("FleetTicketBillingV2Schema");
+  expect(ticket.safeParse(value).success).toBe(false);
+  expect(ticket.safeParse({...value,billingVersion:2}).success).toBe(true);
+});

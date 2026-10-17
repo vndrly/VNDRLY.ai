@@ -15,6 +15,7 @@ import { FleetError, type FleetState } from "./fleet-repository";
 import { commercialFingerprint, readFleetTicketPlan } from "./fleet-commercial";
 import { SUBMIT_ALLOWED_STATUSES } from "../lib/ticket-lifecycle-coherence";
 import { mayPerformFleetAction } from "./fleet-permissions";
+import {readLegacyFleetBillingPlan} from "./fleet-billing-context";
 import {resolveFleetCommercialAuthority,requireFleetCommercialAuthority,assessFleetActionPolicy,readFleetAuthoritySites,authorityFromFleetRelationship} from "./fleet-commercial-authority";
 
 const openStatuses = [
@@ -285,7 +286,7 @@ export async function recordFleetBillingCharge(
   ).rows[0];
   if (!ticket || !openStatuses.includes(ticket.status))
     throw new FleetError("fleet.ticket_closed", 409);
-  const plan = FleetTicketPlanSchema.parse(ticket.fleet_plan);
+  const plan = await readLegacyFleetBillingPlan(c,a.companyId,ticket.id,ticket.fleet_plan);
   assertBillingTicketOrigin(ticket, plan);
   assertFleetBillingMatch(plan, run.stops[0].siteId, run.billing);
   if (

@@ -50,7 +50,7 @@ export const FleetChargeSchema = z.object({
   if ((value.reviewedAt === null) !== (value.reviewedByUserId === null)) ctx.addIssue({ code: "custom", path: ["reviewedAt"], message: "Review requires both actor and time" });
 });
 export type FleetCharge = z.infer<typeof FleetChargeSchema>;
-export const FleetTicketBillingV2Schema = z.object({ version: z.literal(2), revision: positiveId, vendorId: positiveId, partnerId: positiveId, billingSiteId: positiveId, afeNumber: z.string().max(200), workDate: z.iso.date(), currency: z.literal("USD"), batchingAllowed: z.boolean(), serviceIds: z.array(positiveId).min(1), reviewedChargeIds: z.array(z.uuid()), finalizedAt: timestamp.nullable(), finalizationOperationId: z.uuid().nullable() }).strict();
+export const FleetTicketBillingV2Schema = z.object({ billingVersion:z.literal(2),legacyPlanReference:z.string().regex(/^fleet-legacy-plan:[a-f0-9]{64}$/).optional(),version: z.literal(2), revision: positiveId, vendorId: positiveId, partnerId: positiveId, billingSiteId: positiveId, afeNumber: z.string().max(200), workDate: z.iso.date(), currency: z.literal("USD"), batchingAllowed: z.boolean(), serviceIds: z.array(positiveId).min(1), reviewedChargeIds: z.array(z.uuid()), finalizedAt: timestamp.nullable(), finalizationOperationId: z.uuid().nullable() }).strict();
 export type FleetTicketBillingV2 = z.infer<typeof FleetTicketBillingV2Schema>;
 /** Canonical finance-only state, never an activity-create request field. The
  * ticket groups work; every execution retains its own actual rate authority. */
@@ -58,6 +58,8 @@ export const FleetRunBillingV2Schema=z.object({
   version:z.literal(2),revision:positiveId,ticketId:positiveId,ticketRevisionAtBinding:positiveId,
   context:FleetTicketBillingV2Schema.pick({vendorId:true,partnerId:true,billingSiteId:true,afeNumber:true,workDate:true,currency:true}),
   serviceId:positiveId,pricing:FleetPricingIntentSchema,
+  requestedAgreementReference:z.string().trim().min(1).max(500).nullable().optional(),
+  reportedPricing:FleetPricingIntentSchema.optional(),
   review:z.discriminatedUnion("status",[
     z.object({status:z.literal("pending"),reason:z.string().trim().min(1).max(2000).nullable()}).strict(),
     z.object({status:z.literal("reviewed"),operationId:z.uuid(),reviewedByUserId:positiveId,reviewedAt:timestamp,chargeRevision:positiveId}).strict(),
