@@ -36,6 +36,8 @@ export const FleetQuantityEvidenceSchema = z.object({ id: z.uuid(), cycleId: z.u
 });
 export type FleetQuantityEvidence = z.infer<typeof FleetQuantityEvidenceSchema>;
 export const FleetChargeSchema = z.object({
+  billingContext:z.object({vendorId:positiveId,partnerId:positiveId,billingSiteId:positiveId,afeNumber:z.string().max(200),workDate:z.iso.date(),minimumGroupKey:z.string().min(1).max(500)}).strict().optional(),
+  calculation:z.object({kind:z.literal("detention_minutes"),billableMinutes:nonnegativeDecimal,ratePerHour:nonnegativeDecimal,quantityDisplayScale:z.literal(9),amountDisplayScale:z.literal(36)}).strict().optional(),
   id: z.uuid(), revision: positiveId, code: z.string().trim().min(1).max(100), ticketId: positiveId, runId: z.uuid().nullable(), cycleId: z.uuid().nullable(), serviceId: positiveId,
   kind: z.enum(["primary", "minimum_top_up", "adjustment", ...FleetAdditionalChargeKindSchema.options]),
   description: z.string().trim().min(1).max(2000), quantity: FleetExactDecimalSchema, unit: FleetQuantityUnitSchema, unitRate: nonnegativeDecimal,
