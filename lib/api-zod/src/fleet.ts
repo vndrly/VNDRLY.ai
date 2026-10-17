@@ -5,6 +5,7 @@ import {
   FleetRunBillingSnapshotSchema,
 } from "./fleet-commercial";
 import { FleetCargoMarkerSchema } from "./fleet-cargo";
+import {FleetRunBillingV2Schema} from "./fleet-pricing";
 import { FleetReplacementMarkerSchema } from "./fleet-replacement";
 import {
   FleetScheduleSchema,
@@ -133,6 +134,7 @@ export const FleetRunSchema = z
     routePlan: FleetRoutePlanSchema.optional(),
     resourceAssignment: FleetResourceAssignmentSchema.optional(),
     billing: FleetRunBillingSnapshotSchema.optional(),
+    billingV2:FleetRunBillingV2Schema.optional(),
     commercial: FleetRunCommercialSchema.optional(),
     activeReplacement: FleetReplacementMarkerSchema.optional(),
     canEditDraft: z.boolean().optional(),
@@ -193,6 +195,11 @@ export const FleetRunSchema = z
     availability: FleetAvailabilitySchema.optional(),
   })
   .superRefine((run, ctx) => {
+    if(run.billingV2){
+      const financial=run.billingV2;
+      if(run.billing || run.commercial)ctx.addIssue({code:"custom",path:["billingV2"],message:"A run must use exactly one v1 or v2 financial writer"});
+      if(financial.ticketId!==run.linkedTicketId || financial.context.vendorId!==run.companyId || financial.context.billingSiteId!==run.stops[0]?.siteId)ctx.addIssue({code:"custom",path:["billingV2"],message:"Per-activity billing must retain its actual company, parent ticket and separate billing site"});
+    }
     if(run.runOrder&&(!run.routePlan||run.runOrder.companyId!==run.companyId||!run.runOrder.accessGroupIds.includes(run.fleetId)||!fleetRouteMatchesRunOrder(run.routePlan,run.runOrder)))ctx.addIssue({code:"custom",path:["runOrder"],message:"Activity must preserve its saved transport order and company access group"});
     if (
       run.routePlan &&

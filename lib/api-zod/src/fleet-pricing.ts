@@ -52,3 +52,24 @@ export const FleetChargeSchema = z.object({
 export type FleetCharge = z.infer<typeof FleetChargeSchema>;
 export const FleetTicketBillingV2Schema = z.object({ version: z.literal(2), revision: positiveId, vendorId: positiveId, partnerId: positiveId, billingSiteId: positiveId, afeNumber: z.string().max(200), workDate: z.iso.date(), currency: z.literal("USD"), batchingAllowed: z.boolean(), serviceIds: z.array(positiveId).min(1), reviewedChargeIds: z.array(z.uuid()), finalizedAt: timestamp.nullable(), finalizationOperationId: z.uuid().nullable() }).strict();
 export type FleetTicketBillingV2 = z.infer<typeof FleetTicketBillingV2Schema>;
+/** Canonical finance-only state, never an activity-create request field. The
+ * ticket groups work; every execution retains its own actual rate authority. */
+export const FleetRunBillingV2Schema=z.object({
+  version:z.literal(2),revision:positiveId,ticketId:positiveId,ticketRevisionAtBinding:positiveId,
+  context:FleetTicketBillingV2Schema.pick({vendorId:true,partnerId:true,billingSiteId:true,afeNumber:true,workDate:true,currency:true}),
+  serviceId:positiveId,pricing:FleetPricingIntentSchema,
+  review:z.discriminatedUnion("status",[
+    z.object({status:z.literal("pending"),reason:z.string().trim().min(1).max(2000).nullable()}).strict(),
+    z.object({status:z.literal("reviewed"),operationId:z.uuid(),reviewedByUserId:positiveId,reviewedAt:timestamp,chargeRevision:positiveId}).strict(),
+  ]),
+}).strict().superRefine((value,ctx)=>{
+  const issue=(message:string)=>ctx.addIssue({code:"custom",message});
+  if(value.pricing.mode==="unpriced"){
+    if(value.pricing.serviceId!==null && value.pricing.serviceId!==value.serviceId)issue("Unresolved pricing must retain the same service");
+    if(value.review.status==="reviewed")issue("Unpriced work requires actual office price resolution before financial approval");
+    return;
+  }
+  const card=value.pricing.rateCard;
+  if(card.vendorId!==value.context.vendorId || card.serviceId!==value.serviceId || (card.partnerId!==null && card.partnerId!==value.context.partnerId) || (card.billingSiteId!==null && card.billingSiteId!==value.context.billingSiteId) || card.currency!==value.context.currency)issue("Per-activity pricing authority must match the exact billing context");
+});
+export type FleetRunBillingV2=z.infer<typeof FleetRunBillingV2Schema>;

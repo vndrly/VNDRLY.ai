@@ -1095,6 +1095,19 @@ it("projects commercial routing without financial fields unless the current scop
   ).not.toHaveProperty("rateCents");
 });
 
+it("keeps complete v2 rate authority private to a current finance grant without mutating the saved snapshot",async()=>{
+  const f=fixture(),created=await f.service.create(manager,createInput),saved=f.state().runs[0],at="2026-10-01T00:00:00Z";
+  delete saved.billing;delete saved.commercial;saved.linkedTicketId=100;
+  const billingV2={version:2,revision:1,ticketId:100,ticketRevisionAtBinding:1,context:{vendorId:7,partnerId:8,billingSiteId:9,afeNumber:"SYNTHETIC",workDate:"2026-10-16",currency:"USD"},serviceId:3,pricing:{mode:"priced",rateCard:{id:crypto.randomUUID(),version:1,vendorId:7,partnerId:8,billingSiteId:9,serviceId:3,approvalRef:{type:"partner_approval",id:"synthetic",revision:"1"},basis:"per_barrel",unitRate:"0.0125",currency:"USD",currencyScale:2,currencyRounding:"half_away_from_zero",effectiveFrom:at,effectiveUntil:null,approvedByUserId:1,approvedAt:at,minimum:null,detention:null,extras:[],notes:"Synthetic price"}},review:{status:"pending",reason:null}};
+  Object.assign(saved,{billingV2});
+  expect(await f.service.detail(driver,created.id)).not.toHaveProperty("billingV2");
+  expect(await f.service.detail(manager,created.id)).not.toHaveProperty("billingV2");
+  f.state().grants.find(g=>g.userId===1)!.financeRead=true;
+  expect(await f.service.detail(manager,created.id)).toHaveProperty("billingV2",billingV2);
+  expect(f.state().runs[0]).toHaveProperty("billingV2",billingV2);
+  expect((await f.service.detail(manager,created.id)).allowedActions).not.toContain("link_ticket");
+});
+
 it("prevents Fleet start at the lower service boundary when the driver's training is required", async () => {
   const f = fixture();
   let run = await f.service.create(manager, createInput);

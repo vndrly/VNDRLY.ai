@@ -180,7 +180,7 @@ function allowed(
   ) {
     if (run.status === "draft") result.push("dispatch");
     result.push("reassign", "cancel");
-    if (!run.billing) result.push("link_ticket");
+    if (!run.billing && !run.billingV2) result.push("link_ticket");
   }
   if (!permitted(state, actor, run, "perform_run")) return result;
   if (
@@ -270,8 +270,10 @@ function project(
     const { rateCents: _rate, billedLineId: _line, ...routing } = commercial;
     commercial = routing;
   }
+  const {billingV2,...operationalRun}=run;
   return {
-    ...run,
+    ...operationalRun,
+    ...(billingV2&&permitted(state,actor,run,"view_finance")?{billingV2}:{}),
     ...(commercial ? { commercial } : {}),
     ...(billing ? { billing } : {}),
     labels: actor.labels?.get(labelKey(run)) ?? {
