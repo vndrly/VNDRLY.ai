@@ -70,6 +70,7 @@ export async function executeFleetWorkCommand(
   const service = createFleetWorkCanonicalService(context, {
     ...options,
     originalWorkOperationId: command.operationId,
+    originalWorkCapture: { capturedAt: command.capturedAt, timeZone: command.timeZone },
     afterCommit: (effect) => {
       afterCommit.push(effect);
     },
@@ -454,6 +455,20 @@ export async function executeFleetWorkCommand(
           version: current.run.version,
         },
       ]);
+    }
+    case "activity.edit": {
+      const current = await activity(command.payload.activity), ticket = await mapped(command.payload.ticket);
+      if (ticket.kind !== "ticket" || current.run.linkedTicketId !== ticket.id)
+        throw new FleetError("fleet.ticket_link_changed", 409);
+      // A local mapping retains its creation receipt forever. The original
+      // edit carries its own exact CAS revision; do not rewrite that mapping
+      // or mistake its initial version for every later queued edit's version.
+      if ((command.payload.activity.type === "canonical" && current.run.version !== current.reference.version) || current.run.version !== command.payload.edit.expectedVersion)
+        throw new FleetError("fleet.version_conflict", 409);
+      if (!fleetDetailSnapshotIdentityMatches(current.run.resourceAssignment?.snapshot, command.payload.baseAssignment))
+        throw new FleetError("fleet.assignment_changed", 409);
+      const saved = await service.editDraft({ ...actor }, current.run.id, command.payload.edit);
+      return result([{ type: "canonical", kind: "activity", id: saved.id, version: saved.version }]);
     }
     case "activity.action": {
       const current = await activity(command.payload.activity),

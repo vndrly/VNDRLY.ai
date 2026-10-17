@@ -428,6 +428,8 @@ async function setupSites(client: PoolClient, companyId: number) {
 export type FleetServiceOptions={
   /** Set only by the verified original-scope receipt transaction adapter. */
   originalWorkOperationId?: string;
+  /** Exact capture from the verified receipt command, never a legacy body flag. */
+  originalWorkCapture?: { capturedAt: string; timeZone: string };
   afterCommit?:(effect:()=>Promise<unknown>)=>void;
   compliance?:Parameters<typeof createFleetComplianceOperations>[2];
   /** Internal original-scope command adapter, never an HTTP create field. */
@@ -552,7 +554,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
         return readFleetReviewPacket(client, run);
       });
     },
-    ...createFleetPlanningOperations(transaction, permitted, eligible, project),
+    ...createFleetPlanningOperations(transaction, permitted, eligible, project, options),
     ...createFleetAvailabilityManagement(transaction),
     ...createFleetMaintenanceOperations(transaction, companyGrantFor),
     ...createFleetWorkdayOperations(),

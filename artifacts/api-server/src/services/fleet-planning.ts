@@ -8,6 +8,8 @@ import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
 import { rescheduleFleetRunDetail } from "./fleet-run-details";
+import { isFleetBillingV2TicketOpen } from "./fleet-billing-v2";
+import { requireFleetRunCommercialAuthority } from "./fleet-commercial-authority";
 type Transaction = <T>(
   actor: FleetActor,
   operation: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -27,6 +29,7 @@ export function createFleetPlanningOperations(
     run: FleetRun,
   ) => Promise<void>,
   project: (state: FleetState, actor: FleetActor, run: FleetRun) => FleetRun,
+  options: { originalWorkOperationId?: string; originalWorkCapture?: { capturedAt: string; timeZone: string } } = {},
 ) {
   return {
     editDraft: (actor: FleetActor, runId: string, input: unknown) => {
@@ -60,6 +63,13 @@ export function createFleetPlanningOperations(
           throw new FleetError("fleet.action_forbidden", 403);
         if (run.version !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict");
+        if (run.billingV2) {
+          if (options.originalWorkOperationId !== body.operationId)
+            throw new FleetError("fleet.work_command_required", 409);
+          const ticket = (await client.query("SELECT id,status FROM tickets WHERE id=$1 AND vendor_id=$2 FOR UPDATE",[run.linkedTicketId,bound.companyId])).rows[0];
+          if (!ticket || !isFleetBillingV2TicketOpen(ticket.status)) throw new FleetError("fleet.ticket_closed",409);
+          await requireFleetRunCommercialAuthority(client, run);
+        }
         if (run.events.length >= 200 || state.operations.length >= 2000)
           throw new FleetError("fleet.store_capacity_reached");
         const next = {
@@ -96,7 +106,7 @@ export function createFleetPlanningOperations(
         if (body.routePlan)
           await assertFleetPhysicalRoute(client, bound, state, next, true);
         if (
-          run.billing &&
+          (run.billing || run.billingV2) &&
           (next.stops[0]?.kind !== "pickup" ||
             next.stops[0].siteId !== run.stops[0].siteId)
         )
@@ -112,7 +122,14 @@ export function createFleetPlanningOperations(
           type: "draft_edited",
           actorUserId: bound.userId,
           recordedAt: new Date().toISOString(),
+          ...(run.billingV2 && options.originalWorkCapture ? {
+            capturedAt: new Date(options.originalWorkCapture.capturedAt).toISOString(), source: "user_report" as const,
+          } : {}),
           details: {
+            ...(run.billingV2 && options.originalWorkCapture ? { originalCapture: {
+              ...options.originalWorkCapture,
+              clockStatus: Date.parse(options.originalWorkCapture.capturedAt) > Date.now() + 300000 ? "ahead_of_server" : "reported_capture_time",
+            } } : {}),
             changedFields: Object.keys(body).filter(
               (key) => !["operationId", "expectedVersion"].includes(key),
             ),

@@ -444,6 +444,64 @@ it("reads retained phone observations through an explicit scoped map page instea
   expect(run.status).toBe("draft");
 });
 
+it("edits a retained draft only through its exact original-scope receipt and open billing ticket", async () => {
+  const f = await fixture(), created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied" || f.command.kind !== "activity.create") throw Error("Expected actual creation");
+  const activity = created.canonicalReferences.find(ref => ref.kind === "activity")!,
+    ticket = created.canonicalReferences.find(ref => ref.kind === "ticket")!;
+  const service = createFleetService(databaseFleetRepository), id = String(activity.id);
+  const original = await service.detail({ ...f.actor }, id);
+  await expect(service.editDraft({ ...f.actor }, id, { operationId: randomUUID(), expectedVersion: original.version, title: "Legacy bypass" })).rejects.toMatchObject({ code: "fleet.work_command_required", status: 409 });
+  const operationId = randomUUID();
+  const command = FleetWorkCommandSchema.parse({ ...f.command, kind: "activity.edit", operationId, payload: {
+    activity, ticket, baseAssignment: original.resourceAssignment!.snapshot,
+    edit: { operationId, expectedVersion: original.version, title: "Actual office draft correction" },
+  } });
+  expect((await f.work.apply(f.actor, command)).status).toBe("applied");
+  let saved = await service.detail({ ...f.actor }, id);
+  expect(saved).toMatchObject({ title: "Actual office draft correction", status: "draft", version: original.version + 1 });
+  expect(saved.billingV2).toEqual(original.billingV2);
+  expect(saved.events.at(-1)).toMatchObject({ operationId, type: "draft_edited", source: "user_report",
+    details: { originalCapture: { capturedAt: command.capturedAt, timeZone: command.timeZone } } });
+  expect((await f.work.apply(f.actor, command)).status).toBe("duplicate");
+  const localId = randomUUID();
+  const localEdit = FleetWorkCommandSchema.parse({ ...command, operationId: localId,
+    dependencies: [operationId], payload: { ...command.payload,
+      activity: { type: "local", kind: "activity", id: f.command.payload.activityId },
+      edit: { operationId: localId, expectedVersion: saved.version, title: "Second queued draft correction" } } });
+  expect((await f.work.apply(f.actor, localEdit)).status).toBe("applied");
+  saved = await service.detail({ ...f.actor }, id);
+  expect(saved).toMatchObject({ version: original.version + 2, title: "Second queued draft correction", status: "draft" });
+  expect(saved.billingV2).toEqual(original.billingV2);
+  expect((await f.work.apply(f.actor, command)).status).toBe("duplicate");
+  expect((await service.detail({ ...f.actor }, id)).version).toBe(saved.version);
+  const mapping = (await pool.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-mapping' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+    [f.vendor, `${command.scope.provisioningId}:activity:${f.command.payload.activityId}`])).rows[0].tool_output;
+  expect(mapping.mapping.canonical).toMatchObject({ id, version: original.version });
+  const staleId = randomUUID();
+  const stale = FleetWorkCommandSchema.parse({ ...command, operationId: staleId, payload: { ...command.payload, edit: { operationId: staleId, expectedVersion: original.version, title: "Stale correction" } } });
+  expect(await f.work.apply(f.actor, stale)).toMatchObject({ status: "needs_reconciliation", reason: "stale_revision" });
+  const changedId = randomUUID();
+  const changedAssignment = FleetWorkCommandSchema.parse({ ...command, operationId: changedId, payload: { ...command.payload,
+    activity: { ...activity, version: saved.version },
+    baseAssignment: { ...original.resourceAssignment!.snapshot, detail: { ...original.resourceAssignment!.snapshot.detail, id: randomUUID() } },
+    edit: { operationId: changedId, expectedVersion: saved.version, title: "Changed Detail correction" } } });
+  expect(await f.work.apply(f.actor, changedAssignment)).toMatchObject({ status: "needs_reconciliation", reason: "changed_assignment" });
+  const siteChangeId = randomUUID();
+  const siteChange = FleetWorkCommandSchema.parse({ ...command, operationId: siteChangeId, payload: { ...command.payload,
+    activity: { ...activity, version: saved.version }, edit: { operationId: siteChangeId, expectedVersion: saved.version,
+      stops: saved.stops.map((stop, index) => index === 0 ? { ...stop, kind: "delivery" } : stop) } } });
+  expect((await f.work.apply(f.actor, siteChange)).status).toBe("needs_reconciliation");
+  expect((await service.detail({ ...f.actor }, id)).stops).toEqual(saved.stops);
+  await pool.query("UPDATE tickets SET status='submitted' WHERE id=$1 AND vendor_id=$2", [ticket.id, f.vendor]);
+  const closedId = randomUUID();
+  const closed = FleetWorkCommandSchema.parse({ ...command, operationId: closedId, payload: { ...command.payload,
+    activity: { ...activity, version: saved.version }, edit: { operationId: closedId, expectedVersion: saved.version, title: "Closed parent correction" } } });
+  expect(await f.work.apply(f.actor, closed)).toMatchObject({ status: "needs_reconciliation", reason: "closed_ticket" });
+  expect((await service.detail({ ...f.actor }, id)).title).toBe(saved.title);
+  expect((await pool.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1", [ticket.id])).rows).toEqual([]);
+});
+
 it("reads retained trip facts and scoped subject choices without relying on the legacy active view", async () => {
   const f = await fixture(),
     created = await f.work.apply(f.actor, f.command);

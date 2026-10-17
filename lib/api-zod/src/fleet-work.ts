@@ -8,6 +8,7 @@ import {FleetPricingIntentSchema,FleetQuantityEvidenceSchema,FleetQuantityReview
 import {FleetActionPolicySnapshotSchema} from "./fleet-action-policy";
 import {FleetCompliancePolicySchema,FleetComplianceSubjectSchema} from "./fleet-compliance";
 import {FleetActionInputSchema} from "./fleet";
+import {FleetDraftEditSchema} from "./fleet-planning";
 import {FleetComplianceSaveSchema,FleetComplianceVerifySchema,FleetComplianceFactsSaveSchema,FleetComplianceRequirementAdoptSchema} from "./fleet-compliance-register";
 
 const uuid=FleetCanonicalIdSchema,id=z.number().int().positive(),revision=z.number().int().positive(),timestamp=z.iso.datetime({offset:true});
@@ -47,6 +48,7 @@ const activityCreate=z.object({...base,kind:z.literal("activity.create"),payload
 }).strict()}).strict();
 const note=z.object({...base,kind:z.literal("activity.note"),payload:z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,notes:z.string().trim().min(1).max(4000)}).strict()}).strict();
 const action=z.object({...base,kind:z.literal("activity.action"),payload:z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,baseAssignment:FleetDetailSnapshotSchema,action:FleetActionInputSchema}).strict()}).strict();
+const edit=z.object({...base,kind:z.literal("activity.edit"),payload:z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,baseAssignment:FleetDetailSnapshotSchema,edit:FleetDraftEditSchema}).strict()}).strict();
 export const FleetLegacyAssignmentSchema=z.object({runId:uuid,companyId:id,driverUserId:id,vehicleAssetId:uuid,trailerAssetId:uuid.nullable(),version:revision}).strict();
 export const FleetWorkResolutionSchema=z.discriminatedUnion("kind",[
  z.object({kind:z.literal("link_open_ticket"),ticket:FleetWorkTicketReferenceSchema.refine(ref=>ref.type==="canonical","Choose a canonical open ticket")}).strict(),
@@ -58,7 +60,7 @@ export const FleetWorkResolutionSchema=z.discriminatedUnion("kind",[
 ]);
 const command=<K extends string,T extends z.ZodType>(kind:K,payload:T)=>z.object({...base,kind:z.literal(kind),payload}).strict();
 export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
- activityCreate,note,action,
+ activityCreate,note,action,edit,
  command("activity.legacy_action",z.object({activity:activityRef.refine(ref=>ref.type==="canonical"),base:FleetLegacyAssignmentSchema,ticket:z.object({id,version:z.null(),source:z.literal("legacy_cached_run_link")}).strict(),action:FleetActionInputSchema,source:z.literal("retained_v1"),legacyState:z.enum(["unsynced","conflict","revoked"]),legacySessionVersion:z.number().int().nonnegative(),legacyCaptureZoneSource:z.literal("stored_utc_timestamp"),legacyCompliance:z.literal("not_recorded")}).strict()),
  command("activity.reconcile",z.object({caseId:uuid,expectedVersion:revision,activity:activityRef,originalTicket:FleetWorkTicketReferenceSchema,reason:z.string().trim().min(1).max(2000),resolution:FleetWorkResolutionSchema}).strict()),
  command("detail.save",FleetDetailSaveSchema),command("rig_package.save",FleetRigPackageSaveSchema),
@@ -91,6 +93,10 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  if(value.kind==="workday.event"){
    const p=value.payload;
    if(p.scope.userId!==value.scope.userId||p.scope.membershipId!==value.scope.membershipId||p.scope.sessionVersion!==value.scope.sessionVersion||p.scope.owner.type!==value.scope.owner.type||p.scope.owner.id!==value.scope.owner.id||p.capturedAt!==value.capturedAt||p.timezone!==value.timeZone)issue("Shift intent must retain the same worker, employer, session and captured time");
+ }
+ if(value.kind==="activity.edit"){
+   const p=value.payload;
+   if(p.edit.operationId!==value.operationId||p.baseAssignment.detail.companyId!==value.scope.owner.id||p.baseAssignment.carrierOfRecordId!==value.scope.owner.id||(p.activity.type==="canonical"&&p.activity.version!==p.edit.expectedVersion))issue("Draft edit must retain original operation, activity revision and assignment scope");
  }
  if(value.kind==="activity.action"){
    const p=value.payload;

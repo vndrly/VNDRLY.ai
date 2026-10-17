@@ -23,6 +23,19 @@ function creation(){
  const truck=id(5),detail=id(6),point={type:"provisional",localId:id(7),name:"Synthetic origin",address:"1 Yard Road",latitude:null,longitude:null,capturedAt:at};
  return {...base(),kind:"activity.create",payload:{activityId:id(3),title:"Haul crude",detailReference:ref("detail",6,"canonical"),detailSnapshot:{detail:{id:detail,companyId:11,version:1,name:"Driver / service truck",vehicleAssetId:truck,rigPackageId:null,rigPackageVersion:null,driverUserId:7,accessGroupIds:[id(8)],effectiveFrom:at,effectiveUntil:null,archivedAt:null},rigPackage:null,labels:{truck:"Truck",driver:"Synthetic driver",rigPackage:null,components:[]},carrierOfRecordId:11,snapshottedAt:at},route:{origin:point,stops:[{id:id(9),kind:"delivery",sequence:0,cycleId:null,location:{...point,localId:id(10),name:"Synthetic destination"}}],returnPolicy:"delivery_only",base:null,plannedWindow:null},runOrderReference:null,billing:{choice:"new_ticket",ticket:ref("ticket",4),partnerId:12,billingSiteId:13,afeNumber:"AFE-1",workDate:"2026-10-16",currency:"USD",serviceId:null,agreementReference:null},pricingIntent:{mode:"unpriced",reason:"offline_reference_missing",serviceId:null,approvalRef:null},capturePolicy:null,compliance:{mode:"warn_only",status:"red",evaluatedAt:at,warnings:[{category:"regulatory_review",reason:"unverified"}]}}};
 }
+it("binds draft edits to the original operation, assignment and activity revision",()=>{
+ const commands=schema("FleetWorkCommandSchema"),created=creation();
+ const payload={activity:ref("activity",3,"canonical"),ticket:{type:"canonical",kind:"ticket",id:123,version:1},baseAssignment:created.payload.detailSnapshot,edit:{operationId:id(2),expectedVersion:1,title:"Corrected transport instructions"}};
+ const command={...base(),kind:"activity.edit",payload};
+ expect(commands.safeParse(command).success).toBe(true);
+ expect(commands.safeParse({...command,payload:{...payload,activity:ref("activity",3),edit:{...payload.edit,expectedVersion:2}}}).success).toBe(true);
+ for(const bad of [
+  {...payload,edit:{...payload.edit,operationId:id(99)}},
+  {...payload,edit:{...payload.edit,expectedVersion:2}},
+  {...payload,baseAssignment:{...payload.baseAssignment,carrierOfRecordId:99}},
+  {...payload,edit:{...payload.edit,driverStarted:true}},
+ ])expect(commands.safeParse({...command,payload:bad}).success).toBe(false);
+});
 it("distinguishes pending local tickets from canonical integer ticket numbers without coercion",()=>{
  const references=schema("FleetWorkReferenceSchema"),label=(contracts as any).fleetWorkReferenceLabel;
  expect(references.parse(ref("ticket",4))).toEqual(ref("ticket",4));expect(label(ref("ticket",4))).toBe("Local ticket — pending sync");

@@ -28,6 +28,9 @@ const captureSchema = z
     pricingIntent: FleetPricingIntentSchema,
   })
   .strict();
+export function isFleetBillingV2TicketOpen(status: string) {
+  return open.has(status);
+}
 /** Internal binding step inside the authenticated outer create/receipt
  * transaction. The caller still performs canonical resource/reservation/route
  * checks. This never dispatches, approves a charge or submits a ticket. */
