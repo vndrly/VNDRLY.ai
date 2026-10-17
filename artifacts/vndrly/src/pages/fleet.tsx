@@ -75,7 +75,7 @@ export default function FleetPage() {
       navigate("/fleet", { replace: true });
   }, [user, location, navigate]);
   if (!user || location === "/fleet/dispatch") return null;
-  if(location==="/fleet/compliance")return <main className="fleet-workspace space-y-4 p-4 md:p-6"><header className="flex items-center gap-3"><PageBackButton fallbackHref="/fleet"/><h1 className="text-2xl font-semibold">{fleetCopy(i18n.language).compliance}</h1></header><FleetComplianceRegister key={`${user.userId}:${user.activeMembershipId}:${user.vendorId}`} identity={`${user.userId}:${user.activeMembershipId}:${user.vendorId}`}/></main>;
+  if(location==="/fleet/compliance")return <main className="fleet-workspace space-y-4 p-4 md:p-6"><header className="flex items-center gap-3"><PageBackButton fallbackHref="/fleet"/><h1 className="text-2xl font-semibold">{fleetCopy(i18n.language).compliance}</h1></header><FleetComplianceRegister companyId={user.vendorId??undefined} key={`${user.userId}:${user.activeMembershipId}:${user.vendorId}`} identity={`${user.userId}:${user.activeMembershipId}:${user.vendorId}`}/></main>;
   if (location === "/fleet/destinations")
     return (
       <FleetDestinationsPage

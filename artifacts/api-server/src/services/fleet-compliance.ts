@@ -161,6 +161,9 @@ export function createFleetComplianceOperations(
         subject.kind === "driver" &&
         subject.id === actor.userId &&
         grant?.roles.includes("driver")
+      ) &&
+      !(
+        !write&&subject.kind==="carrier"&&subject.id===actor.companyId&&grant?.roles.includes("driver")
       )
     )
       throw new FleetError("fleet.compliance_subject_required", 403);

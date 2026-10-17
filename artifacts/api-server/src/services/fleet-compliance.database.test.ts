@@ -184,6 +184,14 @@ async function fixture() {
   };
 }
 describe("Private Fleet compliance register", () => {
+  it("lets company drivers read safe carrier applicability without site grants, private files or reviewer writes",async()=>{
+    const f=await fixture();await f.appoint();const subject={kind:"carrier" as const,id:f.admin.companyId};
+    await f.service.recordFleetComplianceFacts(f.reviewer,{operationId:randomUUID(),expectedVersion:0,subject,facts:{interstate:null},source:f.source});
+    expect(await f.service.readFleetComplianceFacts(f.driver,subject)).toMatchObject({subject,facts:{interstate:null}});
+    await expect(f.service.readFleetComplianceFacts(f.driver,{kind:"carrier",id:subject.id+999})).rejects.toMatchObject({status:403});
+    await expect(f.service.recordFleetComplianceFacts(f.driver,{operationId:randomUUID(),expectedVersion:1,subject,facts:{interstate:false},source:f.source})).rejects.toMatchObject({status:403});
+    const record=f.record();await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});await expect(f.service.readPrivateComplianceRecord(f.driver,record.evidence.id)).rejects.toMatchObject({status:403});
+  });
   it("detects substituted private document bytes before serving the retained original", async () => {
     const f = await fixture();
     await f.appoint();

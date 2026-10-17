@@ -3,6 +3,7 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { it, expect, vi, afterEach } from "vitest";
 import FleetComplianceRegister from "./FleetComplianceRegister";
 vi.mock("./FleetEvidenceReview",()=>({default:()=> <div>Private reviewer opened</div>}));
+vi.mock("./FleetComplianceFacts",()=>({default:({subject}:any)=><div>Applicability opened {subject.kind}:{subject.id}</div>}));
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
 vi.mock("@/lib/auth", () => ({
@@ -42,6 +43,9 @@ vi.mock("./FleetChoiceField", () => ({
 afterEach(() => {
   cleanup();
   mocks.api.mockReset();
+});
+it("starts carrier applicability from current company identity without requiring an evidence row",async()=>{
+ mocks.api.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<FleetComplianceRegister companyId={7}/>);fireEvent.click(screen.getByRole("button",{name:"Carrier applicability"}));expect(screen.getByText("Applicability opened carrier:7")).toBeTruthy();
 });
 it("requires an explicit reviewer selection and clears private review when switching registers",async()=>{
  mocks.api.mockResolvedValue({entries:[{id:"11111111-1111-4111-8111-111111111111",revision:1,subject:{kind:"carrier",id:7},requirementId:"authority",requirementVersion:1,kind:"credential",verification:"document_received",status:"red",reasons:["unverified"],validUntil:null,evaluatedAt:"2026-10-16T18:00:00Z",maskedIdentifier:null,mayReview:true}],mode:"warn_only",nextCursor:null});

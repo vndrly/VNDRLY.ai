@@ -13,8 +13,10 @@ import TogglePillButton from "./TogglePillButton";
 import FleetChoiceField from "./FleetChoiceField";
 import FleetEvidenceReview from "./FleetEvidenceReview";
 import FleetComplianceReviewers from "./FleetComplianceReviewers";
+import FleetComplianceFacts from "./FleetComplianceFacts";
 
-export default function FleetComplianceRegister() {
+export default function FleetComplianceRegister({companyId}:{companyId?:number}={}) {
+  const [factsSubject,setFactsSubject]=useState<FleetComplianceSubject|null>(null);
   const [selected,setSelected]=useState<{id:string;revision:number}|null>(null);
   const copy = useFleetCopy(),
     colors = useColors(),
@@ -90,6 +92,7 @@ export default function FleetComplianceRegister() {
     busy.current = false;
     setEntries([]);
     setSelected(null);
+    setFactsSubject(null);
     setAfter(null);
     void load();
     return () => {
@@ -112,7 +115,8 @@ export default function FleetComplianceRegister() {
       <Text style={[text, { fontSize: 20, fontWeight: "700" }]}>
         {copy("Compliance registers")}
       </Text>
-      <FleetComplianceReviewers onChanged={()=>{setSelected(null);setRefresh(value=>value+1);}}/>
+      <FleetComplianceReviewers onChanged={()=>{setSelected(null);setFactsSubject(null);setRefresh(value=>value+1);}}/>
+      {typeof companyId==="number"&&Number.isInteger(companyId)&&companyId>0&&<TogglePillButton onPress={()=>{setSelected(null);setFactsSubject({kind:"carrier",id:companyId});}}>{copy("Carrier applicability")}</TogglePillButton>}
       <View style={card}>
         <Text style={text}>
           {copy(
@@ -157,6 +161,7 @@ export default function FleetComplianceRegister() {
         </Text>
       )}
       {selected&&!error&&<FleetEvidenceReview evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);setRefresh(value=>value+1);}}/>}
+      {factsSubject&&!error&&<FleetComplianceFacts subject={factsSubject} onClose={()=>setFactsSubject(null)} onSaved={()=>{setFactsSubject(null);setRefresh(value=>value+1);}}/>}
       {entries.map((entry) => (
         <View key={entry.id} style={card}>
           <Text style={[text, { fontWeight: "700" }]}>
@@ -200,7 +205,8 @@ export default function FleetComplianceRegister() {
           <Text style={text}>
             {copy("Evaluated")}: {new Date(entry.evaluatedAt).toLocaleString()}
           </Text>
-          {entry.mayReview&&<TogglePillButton onPress={()=>setSelected({id:entry.id,revision:entry.revision})}>{copy("Review evidence")}</TogglePillButton>}
+          {entry.mayReview&&<TogglePillButton onPress={()=>{setFactsSubject(null);setSelected({id:entry.id,revision:entry.revision});}}>{copy("Review evidence")}</TogglePillButton>}
+          <TogglePillButton onPress={()=>{setSelected(null);setFactsSubject(entry.subject);}}>{copy("Applicability facts")}</TogglePillButton>
         </View>
       ))}
       {!!after && !error && (

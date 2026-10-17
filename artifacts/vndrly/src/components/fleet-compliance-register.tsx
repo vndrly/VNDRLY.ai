@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery,useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { FleetComplianceSubject } from "@workspace/api-zod";
 import { fleetClient } from "@/lib/fleet-client";
 import { PngPillButton } from "./png-pill-rollover";
 import {FleetEvidenceReview} from "./fleet-evidence-review";
 import {FleetComplianceReviewers} from "./fleet-compliance-reviewers";
+import {FleetComplianceFactsEditor} from "./fleet-compliance-facts";
 
-export function FleetComplianceRegister({ identity }: { identity: string }) {
+export function FleetComplianceRegister({ identity,companyId }: { identity: string;companyId?:number }) {
+  const cache=useQueryClient(),[factsSubject,setFactsSubject]=useState<FleetComplianceSubject|null>(null);
   const { i18n } = useTranslation(),
     es = i18n.language.startsWith("es");
   const [kind, setKind] = useState<"" | FleetComplianceSubject["kind"]>("");
@@ -56,7 +58,8 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
       aria-label={es ? "Registros de cumplimiento" : "Compliance registers"}
     >
       <h2>{es ? "Registros de cumplimiento" : "Compliance registers"}</h2>
-      <FleetComplianceReviewers identity={identity} onChanged={()=>{setSelected(null);void query.refetch();}}/>
+      <FleetComplianceReviewers identity={identity} onChanged={()=>{setSelected(null);setFactsSubject(null);void query.refetch();}}/>
+      {typeof companyId==="number"&&Number.isInteger(companyId)&&companyId>0&&<PngPillButton onClick={()=>{setSelected(null);setFactsSubject({kind:"carrier",id:companyId});}}>{es?"Aplicabilidad del transportista":"Carrier applicability"}</PngPillButton>}
       <div className="fleet-detail-group">
         <p>
           {es
@@ -73,7 +76,7 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
         {es ? "Registro" : "Register"}
         <select
           value={kind}
-          onChange={(event) => {setSelected(null);setKind(event.target.value as typeof kind);}}
+          onChange={(event) => {setSelected(null);setFactsSubject(null);setKind(event.target.value as typeof kind);}}
         >
           <option value="">
             {es
@@ -110,7 +113,8 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
             : "No evidence recorded in this view. This does not establish compliance."}
         </p>
       )}
-      {selected&&!query.isError&&<FleetEvidenceReview identity={identity} evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);void query.refetch();}}/>}
+      {selected&&!query.isError&&<FleetEvidenceReview identity={identity} evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
+      {factsSubject&&!query.isError&&<FleetComplianceFactsEditor identity={identity} subject={factsSubject} onClose={()=>setFactsSubject(null)} onSaved={()=>{setFactsSubject(null);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
       <div className="grid gap-3 md:grid-cols-2">
         {entries.map((entry) => (
           <article key={entry.id} className="fleet-detail-group space-y-2">
@@ -156,7 +160,8 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
             <p>
               {es ? "Evaluado" : "Evaluated"}: {date(entry.evaluatedAt)}
             </p>
-            {entry.mayReview&&<PngPillButton onClick={()=>setSelected({id:entry.id,revision:entry.revision})}>{es?"Revisar evidencia":"Review evidence"}</PngPillButton>}
+            {entry.mayReview&&<PngPillButton onClick={()=>{setFactsSubject(null);setSelected({id:entry.id,revision:entry.revision});}}>{es?"Revisar evidencia":"Review evidence"}</PngPillButton>}
+            <PngPillButton onClick={()=>{setSelected(null);setFactsSubject(entry.subject);}}>{es?"Hechos de aplicabilidad":"Applicability facts"}</PngPillButton>
           </article>
         ))}
       </div>

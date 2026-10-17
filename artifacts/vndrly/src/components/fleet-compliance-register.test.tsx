@@ -14,6 +14,7 @@ vi.mock("@/lib/fleet-client", () => ({
 }));
 vi.mock("./fleet-evidence-review",()=>({FleetEvidenceReview:()=> <div>Private reviewer opened</div>}));
 vi.mock("./fleet-compliance-reviewers",()=>({FleetComplianceReviewers:()=>null}));
+vi.mock("./fleet-compliance-facts",()=>({FleetComplianceFactsEditor:({subject}:any)=><div>Applicability opened {subject.kind}:{subject.id}</div>}));
 vi.mock("./png-pill-rollover", () => ({
   PngPillButton: ({ children, ...props }: any) => (
     <button {...props}>{children}</button>
@@ -37,6 +38,9 @@ const entry = {
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
+});
+it("opens carrier applicability for the actual company independently of evidence rows",async()=>{
+ mocks.register.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><FleetComplianceRegister identity="company7" companyId={7}/></QueryClientProvider>);fireEvent.click(screen.getByRole("button",{name:"Carrier applicability"}));expect(screen.getByText("Applicability opened carrier:7")).toBeTruthy();
 });
 it("opens a private review only on an appointed reviewer's explicit selection and clears it on filter changes",async()=>{
  mocks.register.mockResolvedValue({entries:[{...entry,mayReview:true}],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><FleetComplianceRegister identity="reviewer7"/></QueryClientProvider>);
