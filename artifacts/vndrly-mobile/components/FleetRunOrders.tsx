@@ -5,6 +5,8 @@ import {
   FleetCanonicalIdSchema,
   FleetDestinationDirectorySchema,
   FleetRunOrderHistorySchema,
+  FleetRunOrderLocationsSchema,
+  fleetRunOrderWithReviewedLocations,
   fleetRunOrderRoute,
   type FleetRunOrder,
   type FleetRoutePlan,
@@ -48,6 +50,11 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
       typeof FleetRunOrderHistorySchema
     > | null>(null),
     [loadingHistory, setLoadingHistory] = useState(false),
+    [loadingLocations, setLoadingLocations] = useState(false),
+    [locationReview, setLocationReview] = useState<z.infer<
+      typeof FleetRunOrderLocationsSchema
+    > | null>(null),
+    [reviewedPlaces, setReviewedPlaces] = useState<FleetDestination[]>([]),
     [error, setError] = useState("");
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   useEffect(() => {
@@ -95,6 +102,9 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
     setEditing(false);
     setRoute(null);
     setHistory(null);
+    setLocationReview(null);
+    setLoadingLocations(false);
+    setReviewedPlaces([]);
     setLoadingHistory(false);
     setError("");
     setZone(
@@ -135,6 +145,35 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
       if (current() && request === generation.current) setLoadingHistory(false);
     }
   }
+  async function reviewLocations() {
+    if (!selected || pending || loadingLocations || !current()) return;
+    const request = generation.current;
+    setLoadingLocations(true);
+    setLocationReview(null);
+    setError("");
+    try {
+      const review = FleetRunOrderLocationsSchema.parse(
+        await apiFetch<unknown>(
+          `/api/fleet/run-orders/${selected.id}/locations`,
+          {},
+          scope.current,
+        ),
+      );
+      if (!current() || request !== generation.current) return;
+      if (
+        review.orderId !== selected.id ||
+        review.orderVersion !== selected.version
+      )
+        throw new Error("Run changed.");
+      setLocationReview(review);
+    } catch {
+      if (current() && request === generation.current)
+        setError(copy("Locations cannot be reviewed. Reload the Run."));
+    } finally {
+      if (current() && request === generation.current)
+        setLoadingLocations(false);
+    }
+  }
   const text = { color: colors.text },
     card = {
       borderWidth: 2,
@@ -155,6 +194,7 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
             ]
           : []),
         ...(context?.places ?? []),
+        ...reviewedPlaces,
       ].map((place) => [place.id, place]),
     ).values(),
   ];
@@ -204,10 +244,8 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
                 <TogglePillButton
                   disabled={pending}
                   onPress={() => {
-                    setSelected(null);
-                    setRoute(null);
+                    choose(null);
                     setEditing(true);
-                    setHistory(null);
                   }}
                 >
                   {copy("New saved Run")}
@@ -245,11 +283,89 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
                       "Changes apply to future dispatch. Existing activities keep their saved Run revision.",
                     )}
                   </Text>
+                  {selected && (
+                    <TogglePillButton
+                      disabled={pending || loadingLocations}
+                      onPress={() => void reviewLocations()}
+                    >
+                      {copy("Review current locations")}
+                    </TogglePillButton>
+                  )}
+                  {locationReview && (
+                    <View style={card}>
+                      <Text style={text}>
+                        {copy(
+                          "Apply this Run's current locations to the draft. Previous activities retain their locations.",
+                        )}
+                      </Text>
+                      {locationReview.locations.map((place) => (
+                        <Text key={place.id} style={text}>
+                          {place.name} · {place.address} · {copy("Revision")}{" "}
+                          {place.revision}
+                        </Text>
+                      ))}
+                      {!!locationReview.unavailableLocationIds.length && (
+                        <Text
+                          accessibilityRole="alert"
+                          style={{ color: colors.destructive }}
+                        >
+                          {copy(
+                            "A location is no longer available. Choose an authorized route before saving.",
+                          )}
+                        </Text>
+                      )}
+                      <TogglePillButton
+                        disabled={
+                          pending ||
+                          !!locationReview.unavailableLocationIds.length
+                        }
+                        onPress={() => {
+                          if (!selected) return;
+                          try {
+                            setRoute(
+                              fleetRunOrderRoute(
+                                fleetRunOrderWithReviewedLocations(
+                                  selected,
+                                  locationReview,
+                                ),
+                                Crypto.randomUUID,
+                              ),
+                            );
+                            setReviewedPlaces(locationReview.locations);
+                            setLocationReview(null);
+                          } catch {
+                            setError(
+                              copy("Reload the Run and review its locations."),
+                            );
+                          }
+                        }}
+                      >
+                        {copy("Use reviewed locations")}
+                      </TogglePillButton>
+                      <TogglePillButton
+                        disabled={pending}
+                        onPress={() => setLocationReview(null)}
+                      >
+                        {copy("Dismiss location review")}
+                      </TogglePillButton>
+                    </View>
+                  )}
                   <FleetRouteFields
                     key={`${selected?.id ?? "new"}:${selected?.version ?? 0}`}
                     value={route}
-                    destinations={places}
-                    disabled={pending || !canManage}
+                    destinations={[
+                      ...new Map(
+                        [...places, ...(locationReview?.locations ?? [])].map(
+                          (place) => [place.id, place],
+                        ),
+                      ).values(),
+                    ]}
+                    disabled={
+                      pending ||
+                      !canManage ||
+                      loadingLocations ||
+                      !!locationReview
+                    }
                     onChange={setRoute}
                   />
                   <FleetChoiceField
@@ -274,7 +390,9 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
                       initialOrder={selected ?? undefined}
                       route={route}
                       timeZone={zone}
-                      disabled={!canManage}
+                      disabled={
+                        !canManage || loadingLocations || !!locationReview
+                      }
                       onPending={setPending}
                       onSaved={() => {
                         setEditing(false);
@@ -288,6 +406,9 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
                     onPress={() => {
                       setEditing(false);
                       setRoute(null);
+                      generation.current++;
+                      setLoadingLocations(false);
+                      setLocationReview(null);
                     }}
                   >
                     {copy("Close Run editor")}

@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   FleetRunOrderHistorySchema,
+  FleetRunOrderLocationsSchema,
+  fleetRunOrderWithReviewedLocations,
   fleetRunOrderRoute,
   type FleetRunOrder,
   type FleetRoutePlan,
@@ -42,6 +44,13 @@ export function FleetRunOrders({
       typeof FleetRunOrderHistorySchema
     > | null>(null),
     [loadingHistory, setLoadingHistory] = useState(false),
+    [loadingLocations, setLoadingLocations] = useState(false),
+    [locationReview, setLocationReview] = useState<z.infer<
+      typeof FleetRunOrderLocationsSchema
+    > | null>(null),
+    [reviewedPlaces, setReviewedPlaces] = useState<
+      z.infer<typeof FleetRunOrderLocationsSchema>["locations"]
+    >([]),
     [error, setError] = useState("");
   useEffect(() => {
     alive.current = true;
@@ -61,6 +70,9 @@ export function FleetRunOrders({
     setEditing(false);
     setRoute(null);
     setHistory(null);
+    setLocationReview(null);
+    setLoadingLocations(false);
+    setReviewedPlaces([]);
     setLoadingHistory(false);
     setError("");
     setZone(
@@ -73,6 +85,35 @@ export function FleetRunOrders({
     setZone(selected.timeZone);
     setEditing(true);
     setHistory(null);
+  }
+  async function reviewLocations() {
+    if (!selected || pending || loadingLocations) return;
+    const request = generation.current;
+    setLoadingLocations(true);
+    setLocationReview(null);
+    setError("");
+    try {
+      const review = FleetRunOrderLocationsSchema.parse(
+        await fleetClient.runOrderLocations(selected.id),
+      );
+      if (!alive.current || request !== generation.current) return;
+      if (
+        review.orderId !== selected.id ||
+        review.orderVersion !== selected.version
+      )
+        throw new Error("Run changed.");
+      setLocationReview(review);
+    } catch {
+      if (alive.current && request === generation.current)
+        setError(
+          es
+            ? "No se pueden revisar las ubicaciones. Recargue el recorrido."
+            : "Locations cannot be reviewed. Reload the Run.",
+        );
+    } finally {
+      if (alive.current && request === generation.current)
+        setLoadingLocations(false);
+    }
   }
   async function loadHistory(more = false) {
     if (!selected || loadingHistory) return;
@@ -122,6 +163,7 @@ export function FleetRunOrders({
             ]
           : []),
         ...(directory.data?.destinations ?? []),
+        ...reviewedPlaces,
       ].map((place) => [place.id, place]),
     ).values(),
   ];
@@ -172,10 +214,8 @@ export function FleetRunOrders({
             <PngPillButton
               disabled={pending}
               onClick={() => {
-                setSelected(null);
-                setRoute(null);
+                choose(null);
                 setEditing(true);
-                setHistory(null);
               }}
             >
               {es ? "Nuevo recorrido guardado" : "New saved Run"}
@@ -203,11 +243,94 @@ export function FleetRunOrders({
                   ? "Los cambios se aplican a futuros despachos. Las actividades anteriores conservan su versión guardada."
                   : "Changes apply to future dispatch. Existing activities keep their saved Run revision."}
               </p>
-              <fieldset disabled={pending}>
+              {selected && (
+                <PngPillButton
+                  disabled={pending || loadingLocations}
+                  onClick={() => void reviewLocations()}
+                >
+                  {es
+                    ? "Revisar ubicaciones actuales"
+                    : "Review current locations"}
+                </PngPillButton>
+              )}
+              {locationReview && (
+                <div
+                  role="region"
+                  aria-label={
+                    es ? "Revisión de ubicaciones" : "Location review"
+                  }
+                  className="rounded-xl border-2 p-3 space-y-2"
+                >
+                  <p>
+                    {es
+                      ? "Aplicar las ubicaciones actuales de este recorrido al borrador. Los viajes anteriores conservan sus ubicaciones."
+                      : "Apply this Run's current locations to the draft. Previous activities retain their locations."}
+                  </p>
+                  {locationReview.locations.map((place) => (
+                    <p key={place.id}>
+                      {place.name} · {place.address} ·{" "}
+                      {es ? "Versión" : "Revision"} {place.revision}
+                    </p>
+                  ))}
+                  {!!locationReview.unavailableLocationIds.length && (
+                    <p role="alert">
+                      {es
+                        ? "Una ubicación ya no está disponible. Elija una ruta autorizada antes de guardar."
+                        : "A location is no longer available. Choose an authorized route before saving."}
+                    </p>
+                  )}
+                  <PngPillButton
+                    disabled={
+                      pending || !!locationReview.unavailableLocationIds.length
+                    }
+                    onClick={() => {
+                      if (!selected) return;
+                      try {
+                        setRoute(
+                          fleetRunOrderRoute(
+                            fleetRunOrderWithReviewedLocations(
+                              selected,
+                              locationReview,
+                            ),
+                            () => crypto.randomUUID(),
+                          ),
+                        );
+                        setReviewedPlaces(locationReview.locations);
+                        setLocationReview(null);
+                      } catch {
+                        setError(
+                          es
+                            ? "Recargue el recorrido y revise las ubicaciones."
+                            : "Reload the Run and review its locations.",
+                        );
+                      }
+                    }}
+                  >
+                    {es
+                      ? "Usar ubicaciones revisadas"
+                      : "Use reviewed locations"}
+                  </PngPillButton>
+                  <PngPillButton
+                    disabled={pending}
+                    onClick={() => setLocationReview(null)}
+                  >
+                    {es ? "Cerrar revisión" : "Dismiss location review"}
+                  </PngPillButton>
+                </div>
+              )}
+              <fieldset
+                disabled={pending || loadingLocations || !!locationReview}
+              >
                 <FleetRouteFields
                   key={`${selected?.id ?? "new"}:${selected?.version ?? 0}`}
                   value={route}
-                  destinations={places}
+                  destinations={[
+                    ...new Map(
+                      [...places, ...(locationReview?.locations ?? [])].map(
+                        (place) => [place.id, place],
+                      ),
+                    ).values(),
+                  ]}
                   onChange={setRoute}
                 />
               </fieldset>
@@ -241,7 +364,7 @@ export function FleetRunOrders({
                   initialOrder={selected ?? undefined}
                   route={route}
                   timeZone={zone}
-                  disabled={!canManage}
+                  disabled={!canManage || loadingLocations || !!locationReview}
                   onPending={setPending}
                   onSaved={() => {
                     setEditing(false);
@@ -258,6 +381,9 @@ export function FleetRunOrders({
                 onClick={() => {
                   setEditing(false);
                   setRoute(null);
+                  generation.current++;
+                  setLoadingLocations(false);
+                  setLocationReview(null);
                 }}
               >
                 {es ? "Cerrar editor" : "Close Run editor"}

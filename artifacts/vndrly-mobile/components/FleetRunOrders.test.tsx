@@ -102,6 +102,7 @@ it("prepares and revises reusable Runs in the company library with canonical his
         sites: [],
         sitePolicy: null,
       };
+    if(path.endsWith("/locations"))return {orderId:original.id,orderVersion:original.version,locations:[{...original.origin,revision:2,address:"Moved tank entrance"},original.destination],unavailableLocationIds:[]};
     if (options?.method === "POST") {
       body = JSON.parse(options.body);
       current = body.order;
@@ -133,6 +134,11 @@ it("prepares and revises reusable Runs in the company library with canonical his
   fireEvent.click(
     await screen.findByRole("button", { name: "Edit selected Run" }),
   );
+  fireEvent.click(screen.getByRole("button",{name:"Review current locations"}));
+  await screen.findByText(/Moved tank entrance/);
+  expect(body).toBeUndefined();
+  expect((screen.getByRole("button",{name:"Save Run changes"}) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button",{name:"Use reviewed locations"}));
   fireEvent.change(screen.getByLabelText("Saved Run name"), {
     target: { value: "Revised Run" },
   });
@@ -151,5 +157,7 @@ it("prepares and revises reusable Runs in the company library with canonical his
     order: { id: original.id, version: 5 },
   });
   expect(body.order).not.toHaveProperty("linkedTicketId");
+  expect(body.order.origin).toMatchObject({revision:2,address:"Moved tank entrance"});
+  expect(original.origin.revision).toBe(1);
   expect(original.version).toBe(4);
 });

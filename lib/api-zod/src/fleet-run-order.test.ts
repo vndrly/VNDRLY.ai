@@ -29,6 +29,16 @@ const order = () => ({
   timeZone: "America/Chicago",
   archivedAt: null,
 });
+it("requires an explicit complete location review for the exact saved order revision without mutating its history",()=>{
+  const original=contracts.FleetRunOrderSchema.parse(order());
+  expect(api.fleetRunOrderWithReviewedLocations).toBeTypeOf("function");
+  const review={orderId:original.id,orderVersion:original.version,locations:[{...original.origin,revision:2,address:"Moved access road"},original.destination],unavailableLocationIds:[]};
+  const candidate=api.fleetRunOrderWithReviewedLocations(original,review);
+  expect(candidate.origin).toMatchObject({revision:2,address:"Moved access road"});expect(original.origin.revision).toBe(1);expect(candidate.version).toBe(original.version);
+  expect(()=>api.fleetRunOrderWithReviewedLocations(original,{...review,orderVersion:99})).toThrow();
+  expect(()=>api.fleetRunOrderWithReviewedLocations(original,{...review,locations:[original.origin],unavailableLocationIds:[original.destination.id]})).toThrow();
+  expect(()=>api.fleetRunOrderWithReviewedLocations(original,{...review,locations:[{...original.origin,ownerId:99},original.destination]})).toThrow();
+});
 it("defines a reusable Origin/Destination transport order without driver, Detail, ticket or execution identities", () => {
   const schema = api.FleetRunOrderSchema;
   expect(schema).toBeDefined();

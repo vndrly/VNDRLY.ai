@@ -5,6 +5,8 @@ import {
   FleetRunOrderSchema,
   FleetRunOrderSaveSchema,
   FleetRunOrderReceiptSchema,
+  FleetRunOrderLocationsSchema,
+  FleetCommercialSettingsSchema,
   fleetRunOrderRoute,
   type FleetRunOrder,
 } from "@workspace/api-zod";
@@ -142,6 +144,69 @@ export function createFleetRunOrderOperations(
     return FleetRunOrderReceiptSchema.parse(rows.rows[0].tool_output);
   }
   return {
+    fleetRunOrderLocations: (actor: FleetActor, id: string) =>
+      transaction(actor, async (state, client) => {
+        const order = await read(client, actor, id);
+        await permittedRecord(state, client, actor, order);
+        const saved = [
+          ...new Map(
+            [
+              order.origin,
+              order.destination,
+              ...(order.base ? [order.base] : []),
+            ].map((place) => [place.id, place]),
+          ).values(),
+        ];
+        const owners = new Map<
+          string,
+          ReturnType<typeof FleetCommercialSettingsSchema.parse>["destinations"]
+        >();
+        const locations: typeof saved = [],
+          unavailableLocationIds: string[] = [];
+        for (const place of saved) {
+          const key = `${place.ownerType}:${place.ownerId}`;
+          if (!owners.has(key)) {
+            const table = place.ownerType === "vendor" ? "vendors" : "partners";
+            const row = (
+              await client.query(
+                `SELECT fleet_commercial_settings FROM ${table} WHERE id=$1 FOR SHARE`,
+                [place.ownerId],
+              )
+            ).rows[0];
+            owners.set(
+              key,
+              FleetCommercialSettingsSchema.parse(
+                row?.fleet_commercial_settings ?? {},
+              ).destinations,
+            );
+          }
+          const current = owners
+            .get(key)!
+            .find(
+              (item) =>
+                item.id === place.id &&
+                item.ownerType === place.ownerType &&
+                item.ownerId === place.ownerId,
+            );
+          if (
+            !current?.active ||
+            (current.permittedCompanyIds?.length &&
+              !current.permittedCompanyIds.includes(actor.companyId)) ||
+            (current.activeFrom &&
+              Date.parse(current.activeFrom) > Date.now()) ||
+            (current.activeUntil &&
+              Date.parse(current.activeUntil) <= Date.now())
+          )
+            unavailableLocationIds.push(place.id);
+          else locations.push(current);
+        }
+        return FleetRunOrderLocationsSchema.parse({
+          orderId: order.id,
+          orderVersion: order.version,
+          locations,
+          unavailableLocationIds,
+        });
+      }),
     saveFleetRunOrder: (actor: FleetActor, raw: unknown) =>
       transaction(actor, async (state, client) => {
         const grant = scope(state, actor, true),

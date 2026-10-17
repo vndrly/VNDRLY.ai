@@ -36,6 +36,44 @@ export const FleetRunOrderSchema = z
       });
   });
 export type FleetRunOrder = z.infer<typeof FleetRunOrderSchema>;
+/** Read-only proposal. Applying this does not persist a Run revision. */
+export const FleetRunOrderLocationsSchema = z
+  .object({
+    orderId: FleetCanonicalIdSchema,
+    orderVersion: z.number().int().positive(),
+    locations: z.array(FleetDestinationSchema).max(3),
+    unavailableLocationIds: z.array(FleetCanonicalIdSchema).max(3),
+  })
+  .strict();
+export function fleetRunOrderWithReviewedLocations(
+  raw: FleetRunOrder,
+  input: unknown,
+): FleetRunOrder {
+  const order = FleetRunOrderSchema.parse(raw),
+    review = FleetRunOrderLocationsSchema.parse(input);
+  if (
+    review.orderId !== order.id ||
+    review.orderVersion !== order.version ||
+    review.unavailableLocationIds.length
+  )
+    throw new Error("Saved Run locations need review.");
+  const replace = (saved: FleetRunOrder["origin"]) => {
+    const current = review.locations.find(
+      (place) =>
+        place.id === saved.id &&
+        place.ownerType === saved.ownerType &&
+        place.ownerId === saved.ownerId,
+    );
+    if (!current?.active) throw new Error("Saved Run location unavailable.");
+    return current;
+  };
+  return FleetRunOrderSchema.parse({
+    ...order,
+    origin: replace(order.origin),
+    destination: replace(order.destination),
+    base: order.base ? replace(order.base) : null,
+  });
+}
 export const FleetRunOrderSelectionSchema = z
   .object({ id: FleetCanonicalIdSchema, version: z.number().int().positive() })
   .strict();

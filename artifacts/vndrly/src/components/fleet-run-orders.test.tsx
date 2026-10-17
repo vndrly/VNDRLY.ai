@@ -6,6 +6,7 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  within,
 } from "@testing-library/react";
 import { afterEach, it, expect, vi } from "vitest";
 import { FleetRunOrderSchema } from "@workspace/api-zod";
@@ -16,6 +17,7 @@ const api = vi.hoisted(() => ({
   saveRunOrder: vi.fn(),
   runOrderReceipt: vi.fn(),
   runOrderHistory: vi.fn(),
+  runOrderLocations: vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", () => ({ fleetClient: api }));
 vi.mock("react-i18next", () => ({
@@ -67,6 +69,7 @@ it("manages reusable Runs and their revision history independently of tickets an
     canManage: true,
   }));
   api.runOrder.mockImplementation(async () => current);
+  api.runOrderLocations.mockResolvedValue({orderId:original.id,orderVersion:original.version,locations:[{...original.origin,revision:2,address:"Moved tank entrance"},original.destination],unavailableLocationIds:[]});
   api.commercial.mockResolvedValue({
     version: 1,
     defaultMode: "batch",
@@ -112,6 +115,11 @@ it("manages reusable Runs and their revision history independently of tickets an
   fireEvent.click(
     await screen.findByRole("button", { name: "Edit selected Run" }),
   );
+  fireEvent.click(screen.getByRole("button",{name:"Review current locations"}));
+  await within(await screen.findByRole("region",{name:"Location review"})).findByText(/Moved tank entrance/);
+  expect(api.saveRunOrder).not.toHaveBeenCalled();
+  expect((screen.getByRole("button",{name:"Save Run changes"}) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button",{name:"Use reviewed locations"}));
   fireEvent.change(screen.getByLabelText("Saved Run name"), {
     target: { value: "Revised Run" },
   });
@@ -127,5 +135,7 @@ it("manages reusable Runs and their revision history independently of tickets an
   await screen.findByText(/Revision 4.*Original Run/);
   expect(screen.getByText(/Revision 5.*Revised Run/)).toBeTruthy();
   expect(body.order).not.toHaveProperty("linkedTicketId");
+  expect(body.order.origin).toMatchObject({revision:2,address:"Moved tank entrance"});
+  expect(original.origin.revision).toBe(1);
   expect(original.version).toBe(4);
 });

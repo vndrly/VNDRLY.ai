@@ -214,6 +214,13 @@ describe("canonical Detail persistence", () => {
     const body={operationId:randomUUID(),expectedVersion:0,order:{id:randomUUID(),companyId:f.vendor.id,version:1,name:"Crude tank to collection",accessGroupIds:[f.groupId],origin:places[0],destination:places[1],base:null,returnPolicy:"delivery_only",instructions:"Unload crude at the collection point",timeZone:"America/Chicago",archivedAt:null}};
     const before=(await f.pool.query("SELECT fleet_resources FROM vendors WHERE id=$1",[f.vendor.id])).rows[0].fleet_resources;
     const saved=await service.saveFleetRunOrder(f.actor,body);
+    expect((service as any).fleetRunOrderLocations).toBeTypeOf("function");
+    const changedPlaces=places.map((place,index)=>index===0?{...place,revision:2,address:"Moved company entrance"}:place);
+    await f.pool.query("UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[f.vendor.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:changedPlaces}))]);
+    const locationReview=await (service as any).fleetRunOrderLocations(f.actor,saved.id);
+    expect(locationReview).toMatchObject({orderId:saved.id,orderVersion:1,locations:expect.arrayContaining([expect.objectContaining({id:places[0].id,revision:2})]),unavailableLocationIds:[]});
+    expect((await service.fleetRunOrder(f.actor,saved.id)).origin.revision).toBe(1);
+    await f.pool.query("UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[f.vendor.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:places}))]);
     expect(saved).toEqual(body.order);
     expect(await service.saveFleetRunOrder(f.actor,body)).toEqual(saved);
     expect((await service.readFleetRunOrders(f.actor,{})).orders).toEqual([saved]);
@@ -698,12 +705,16 @@ describe("canonical Detail persistence", () => {
     const partnerPlaces=places.slice(0,2).map(place=>({...place,id:randomUUID(),ownerType:"partner" as const,ownerId:partner.id}));
     await f.pool.query("UPDATE partners SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[partner.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:partnerPlaces}))]);
     const partnerOrder=await service.saveFleetRunOrder(actors[0],{operationId:randomUUID(),expectedVersion:0,order:{...order,id:randomUUID(),origin:partnerPlaces[0],destination:partnerPlaces[1],base:null,returnPolicy:"delivery_only"}});
+    const partnerChanges=[{...partnerPlaces[0],revision:2,address:"Partner moved entrance"},{...partnerPlaces[1],revision:2,permittedCompanyIds:[f.vendor.id+999]}];
+    await f.pool.query("UPDATE partners SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[partner.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:partnerChanges}))]);
+    expect(await service.fleetRunOrderLocations(actors[0],partnerOrder.id)).toMatchObject({orderId:partnerOrder.id,orderVersion:1,locations:[expect.objectContaining({id:partnerPlaces[0].id,revision:2})],unavailableLocationIds:[partnerPlaces[1].id]});
     const currentState=FleetStateSchema.parse((await f.pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[f.vendor.id])).rows[0].fleet_ops_state);
     currentState.grants.find(grant=>grant.userId===actors[1].userId)!.roles=["driver","fleet_manager"];
     await f.pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[f.vendor.id,JSON.stringify(currentState)]);
     // Own assigned activity access does not grant a manager/driver access to
     // the customer's transport-order directory or permission to create one.
     await expect(service.fleetRunOrder(actors[1],partnerOrder.id)).rejects.toMatchObject({code:"fleet.run_order_not_found"});
+    await expect(service.fleetRunOrderLocations(actors[1],partnerOrder.id)).rejects.toMatchObject({code:"fleet.run_order_not_found"});
     await expect(service.saveFleetRunOrder(actors[1],{operationId:randomUUID(),expectedVersion:0,order:{...partnerOrder,id:randomUUID()}})).rejects.toMatchObject({code:"fleet.run_order_not_found"});
   });
   it("does not let a scoped manager read, replay or overwrite another group's package", async () => {

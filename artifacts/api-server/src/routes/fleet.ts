@@ -26,6 +26,7 @@ router.use(createFleetComplianceRouter(service, actor));
 router.get("/fleet/run-orders",endpoint(req=>service.readFleetRunOrders(actor(req),req.query)));
 router.get("/fleet/run-orders/operations/:operationId",endpoint(req=>service.fleetRunOrderReceipt(actor(req),z.uuid().parse(req.params.operationId))));
 router.get("/fleet/run-orders/:id/history",endpoint(req=>service.fleetRunOrderHistory(actor(req),z.uuid().parse(req.params.id),req.query)));
+router.get("/fleet/run-orders/:id/locations",endpoint(req=>service.fleetRunOrderLocations(actor(req),z.uuid().parse(req.params.id))));
 router.get("/fleet/run-orders/:id",endpoint(req=>service.fleetRunOrder(actor(req),z.uuid().parse(req.params.id))));
 router.post("/fleet/run-orders",endpoint(req=>service.saveFleetRunOrder(actor(req),req.body)));
 router.patch("/fleet/run-orders/:id",endpoint(req=>{

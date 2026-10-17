@@ -25,6 +25,7 @@ import {
   FleetRunOrderSaveSchema,
   FleetRunOrderReceiptSchema,
   FleetRunOrderHistorySchema,
+  FleetRunOrderLocationsSchema,
   FleetDestinationReceiptSchema,
   FleetDestinationDirectorySchema,
   FleetDetailPageSchema,
@@ -129,6 +130,7 @@ async function request<T>(
 export const fleetClient = {
   runOrders:(after?:number)=>request<unknown>(`/run-orders${after?`?after=${after}`:""}`).then(value=>FleetRunOrderPageSchema.parse(value)),
   runOrder:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}`).then(value=>FleetRunOrderSchema.parse(value)),
+  runOrderLocations:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/locations`).then(value=>FleetRunOrderLocationsSchema.parse(value)),
   saveRunOrder:(input:z.input<typeof FleetRunOrderSaveSchema>)=>request<unknown>("/run-orders",FleetRunOrderSaveSchema.parse(input)).then(value=>FleetRunOrderSchema.parse(value)),
   runOrderReceipt:(id:string)=>request<unknown>(`/run-orders/operations/${encodeURIComponent(id)}`).then(value=>FleetRunOrderReceiptSchema.parse(value)),
   runOrderHistory:(id:string,after?:number)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/history${after?`?after=${after}`:""}`).then(value=>FleetRunOrderHistorySchema.parse(value)),
