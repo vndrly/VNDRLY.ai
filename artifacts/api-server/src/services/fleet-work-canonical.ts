@@ -23,6 +23,7 @@ import { FleetError, type FleetRepository } from "./fleet-repository";
 import type { FleetWorkExecutionContext } from "./fleet-work-repository";
 import type { FleetWorkExecution } from "./fleet-work";
 import { fleetWorkFingerprint } from "./fleet-work";
+import { reviewFleetQuantityEvidence } from "./fleet-quantity-review";
 import {
   createWorkdayService,
   withVerifiedWorkdayClient,
@@ -96,6 +97,15 @@ export async function executeFleetWorkCommand(
     };
   };
   switch (command.kind) {
+    case "quantity.review": {
+      const current = await activity(command.payload.activity), ticket = await mapped(command.payload.ticket);
+      if (ticket.kind !== "ticket" || current.run.linkedTicketId !== ticket.id)
+        throw new FleetError("fleet.ticket_link_changed");
+      if (current.run.version !== current.reference.version)
+        throw new FleetError("fleet.version_conflict");
+      await reviewFleetQuantityEvidence(context, command, current.run);
+      return result([current.reference]);
+    }
     case "activity.create": {
       const p = command.payload, detailRef = await mapped(p.detailReference);
       if (detailRef.kind !== "detail" || typeof detailRef.id !== "string")

@@ -7,6 +7,22 @@ function schema(name: string): ZodType {
   expect(value, name).toBeDefined();
   return value;
 }
+it("keeps an office quantity endorsement distinct from independent instrument verification", () => {
+  const id = "11111111-1111-4111-8111-111111111111", at = "2026-10-16T18:00:00Z";
+  const review = { version: 2, revision: 1, operationId: id, vendorId: 11, evidenceId: id,
+    reportOperationId: id, reportFingerprint: "a".repeat(64), activityId: id, originalActivityVersion: 1,
+    ticketId: 123, decision: "accept_as_billable", reason: "Office checked retained report",
+    reviewedByUserId: 7, reviewedAt: at, reportedReviewAt: at, reportedReviewTimeZone: "America/Chicago",
+    quantity: { id, cycleId: null, kind: "billable", quantity: "123.456789", unit: "barrel", source: "manual", evidenceReferences: [], capturedAt: at, recordedByUserId: 8 },
+    independentInstrumentVerification: false,
+  };
+  const contract = schema("FleetQuantityReviewSchema");
+  expect(contract.safeParse(review).success).toBe(true);
+  for (const bad of [{ ...review, independentInstrumentVerification: true }, { ...review, quantity: null },
+    { ...review, decision: "reject" }, { ...review, quantity: { ...review.quantity, id: "22222222-2222-4222-8222-222222222222" } }])
+    expect(contract.safeParse(bad).success).toBe(false);
+  expect(contract.safeParse({ ...review, decision: "reject", quantity: null }).success).toBe(true);
+});
 it("preserves exact prices as strings and rejects excess precision or floating wire prices", () => {
   const decimal = schema("FleetExactDecimalSchema");
   expect(decimal.safeParse("0.000125").success).toBe(true);

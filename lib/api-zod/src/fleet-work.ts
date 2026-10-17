@@ -4,7 +4,7 @@ import {FleetCanonicalIdSchema,FleetTimeZoneSchema,FleetDetailSnapshotSchema,Fle
 import {FleetRoutePlanSchema} from "./fleet-route";
 import {FleetRunOrderSaveSchema} from "./fleet-run-order";
 import {FleetDestinationSaveSchema} from "./fleet-commercial";
-import {FleetPricingIntentSchema,FleetQuantityEvidenceSchema} from "./fleet-pricing";
+import {FleetPricingIntentSchema,FleetQuantityEvidenceSchema,FleetQuantityReviewSelectionSchema} from "./fleet-pricing";
 import {FleetActionPolicySnapshotSchema} from "./fleet-action-policy";
 import {FleetCompliancePolicySchema,FleetComplianceSubjectSchema} from "./fleet-compliance";
 import {FleetActionInputSchema} from "./fleet";
@@ -68,6 +68,7 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  command("compliance.facts",FleetComplianceFactsSaveSchema),command("requirements.adopt",FleetComplianceRequirementAdoptSchema),
  command("workday.event",WorkdayCommandSchema),
  command("quantity.record",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,evidence:FleetQuantityEvidenceSchema}).strict()),
+ command("quantity.review",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,selections:z.array(FleetQuantityReviewSelectionSchema).min(1).max(100).refine(rows=>new Set(rows.map(row=>row.evidenceId)).size===rows.length,"Select each original quantity report once")}).strict()),
  command("ticket.finalize",z.object({ticket:FleetWorkTicketReferenceSchema,expectedVersion:revision}).strict()),
  command("evidence.stage",z.object({evidence:reference("evidence"),activity:activityRef,ticket:FleetWorkTicketReferenceSchema,kind:z.enum(["photo","scale","receipt","signature"]),...media,notes:z.string().max(2000),assignment:FleetDetailSnapshotSchema}).strict()),
 ]).superRefine((value,ctx)=>{

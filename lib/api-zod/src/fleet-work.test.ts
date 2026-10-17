@@ -6,6 +6,12 @@ const scope={owner:{type:"vendor",id:11},userId:7,membershipId:9,sessionVersion:
 const ref=(kind:string,n:number,type="local")=>({type,kind,id:id(n),...(type==="canonical"?{version:1}:{})});
 function schema(name:string):any{const value=(contracts as any)[name];expect(value,name).toBeDefined();return value;}
 const base=()=>({version:2,operationId:id(2),scope,capturedAt:at,timeZone:"America/Chicago",dependencies:[]});
+it("requires explicit revisioned quantity review and derives reviewer identity from the original session",()=>{
+ const commands=schema("FleetWorkCommandSchema"),selection={evidenceId:id(31),expectedReviewRevision:0,decision:"accept_as_billable",reason:"Office checked receipt"};
+ const command={...base(),kind:"quantity.review",payload:{activity:ref("activity",30,"canonical"),ticket:{type:"canonical",kind:"ticket",id:123,version:1},selections:[selection]}};
+ expect(commands.safeParse(command).success).toBe(true);
+ for(const payload of [{...command.payload,reviewedByUserId:999},{...command.payload,selections:[]},{...command.payload,selections:[selection,selection]},{...command.payload,selections:[{...selection,expectedReviewRevision:-1}]},{...command.payload,selections:[{...selection,quantity:"999"}]}])expect(commands.safeParse({...command,payload}).success).toBe(false);
+});
 it("distinguishes a new local location identity from an edit of a canonical saved location",()=>{
  const commands=schema("FleetWorkCommandSchema"),payload={operationId:id(2),expectedVersion:1,localReference:ref("location",44),destination:{name:"New yard",kind:"yard",address:"Synthetic yard",latitude:null,longitude:null,active:true}};
  expect(commands.safeParse({...base(),kind:"location.save",payload}).success).toBe(true);

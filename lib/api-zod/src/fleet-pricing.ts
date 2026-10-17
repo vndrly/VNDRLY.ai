@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { FleetTimeZoneSchema } from "./fleet-details";
 
 export const FleetExactDecimalSchema = z.string().regex(/^-?(?:0|[1-9]\d{0,14})(?:\.\d{1,9})?$/, "Exact numeric(24,9) decimal string required");
 const nonnegativeDecimal = FleetExactDecimalSchema.refine(value => !value.startsWith("-") || /^-0(?:\.0+)?$/.test(value), "Nonnegative decimal required");
@@ -35,6 +36,27 @@ export const FleetQuantityEvidenceSchema = z.object({ id: z.uuid(), cycleId: z.u
   if ((value.source === "reviewed_conversion") !== Boolean(value.conversion)) ctx.addIssue({ code: "custom", path: ["conversion"], message: "Conversion source and reviewed factor must be recorded together" });
 });
 export type FleetQuantityEvidence = z.infer<typeof FleetQuantityEvidenceSchema>;
+/** A reviewer selects retained source identities, never replaces the driver's
+ * original quantity or supplies a different reviewer identity. */
+export const FleetQuantityReviewSelectionSchema = z.object({
+  evidenceId: z.uuid(), expectedReviewRevision: z.number().int().nonnegative(),
+  decision: z.enum(["accept_as_billable", "reject"]),
+  reason: z.string().trim().min(1).max(2000),
+}).strict();
+export const FleetQuantityReviewSchema = z.object({
+  version: z.literal(2), revision: positiveId, operationId: z.uuid(), vendorId: positiveId,
+  evidenceId: z.uuid(), reportOperationId: z.uuid(), reportFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  activityId: z.uuid(), originalActivityVersion: positiveId, ticketId: positiveId,
+  decision: z.enum(["accept_as_billable", "reject"]), reason: z.string().trim().min(1).max(2000),
+  reviewedByUserId: positiveId, reviewedAt: timestamp,
+  reportedReviewAt: timestamp, reportedReviewTimeZone: FleetTimeZoneSchema,
+  quantity: FleetQuantityEvidenceSchema.nullable(), independentInstrumentVerification: z.literal(false),
+}).strict().superRefine((value, ctx) => {
+  if ((value.decision === "accept_as_billable") !== (value.quantity !== null) ||
+      (value.quantity && (value.quantity.kind !== "billable" || value.quantity.id !== value.evidenceId)))
+    ctx.addIssue({ code: "custom", message: "Endorsement requires its exact original report identity; rejection has no billable quantity" });
+});
+export type FleetQuantityReview = z.infer<typeof FleetQuantityReviewSchema>;
 export const FleetChargeSchema = z.object({
   billingContext:z.object({vendorId:positiveId,partnerId:positiveId,billingSiteId:positiveId,afeNumber:z.string().max(200),workDate:z.iso.date(),minimumGroupKey:z.string().min(1).max(500)}).strict().optional(),
   calculation:z.object({kind:z.literal("detention_minutes"),billableMinutes:nonnegativeDecimal,ratePerHour:nonnegativeDecimal,quantityDisplayScale:z.literal(9),amountDisplayScale:z.literal(36)}).strict().optional(),
