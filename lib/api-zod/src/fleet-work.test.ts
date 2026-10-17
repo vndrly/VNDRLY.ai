@@ -42,3 +42,9 @@ it("retains the explicit capture policy or unresolved red status without inventi
 it("stages private compliance document metadata separately from activity photos and refuses embedded document bytes",()=>{
  const commands=schema("FleetWorkCommandSchema"),command={...base(),kind:"compliance.document.stage",payload:{recordId:id(40),subject:{kind:"driver",id:7},expectedRecordVersion:0,evidence:ref("evidence",41),byteSize:100,sha256:"a".repeat(64),contentType:"application/pdf"}};expect(commands.safeParse(command).success).toBe(true);expect(commands.safeParse({...command,payload:{...command.payload,bodyBase64:"PRIVATE"}}).success).toBe(false);
 });
+it("offers narrow office resolutions while retaining original ticket context and refusing implicit reopening",()=>{
+ const commands=schema("FleetWorkCommandSchema"),payload={caseId:id(50),expectedVersion:2,activity:ref("activity",3,"canonical"),originalTicket:{type:"canonical",kind:"ticket",id:123,version:4},reason:"Office reviewed original performed work",resolution:{kind:"link_open_ticket",ticket:{type:"canonical",kind:"ticket",id:456,version:2}}};
+ expect(commands.safeParse({...base(),kind:"activity.reconcile",payload}).success).toBe(true);expect(commands.safeParse({...base(),kind:"activity.reconcile",payload:{...payload,resolution:{kind:"reopen_ticket",ticketId:123}}}).success).toBe(false);
+ expect(commands.safeParse({...base(),kind:"activity.reconcile",payload:{...payload,resolution:{kind:"create_ticket",billing:creation().payload.billing}}}).success).toBe(true);
+ expect(commands.safeParse({...base(),kind:"activity.reconcile",payload:{...payload,resolution:{kind:"create_ticket",billing:{...creation().payload.billing,choice:"existing_ticket"}}}}).success).toBe(false);
+});

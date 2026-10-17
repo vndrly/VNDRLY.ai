@@ -70,3 +70,4 @@ export * from "./fleet-insurance-evaluation";
 export * from "./fleet-compliance-work";
 export * from "./fleet-work";
 export * from "./fleet-work-state";
+export * from "./fleet-work-cache";

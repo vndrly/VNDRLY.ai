@@ -1,7 +1,7 @@
 import {z} from "zod/v4";
 import {FleetWorkCommandSchema,FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetWorkMappingSchema,FleetWorkReferenceSchema,type FleetWorkReference,type FleetWorkCommand,type FleetWorkScope} from "./fleet-work";
 const time=z.iso.datetime({offset:true});
-export const FleetWorkJournalEntrySchema=z.object({command:FleetWorkCommandSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),sequence:z.number().int().positive(),delivery:z.object({state:z.enum(["pending","sending","outcome_unknown","retry_later","needs_reconciliation","denied","applied"]),attempts:z.number().int().nonnegative(),lastAttemptAt:time.nullable(),retryAt:time.nullable(),receipt:FleetWorkReceiptSchema.nullable()}).strict()}).strict();
+export const FleetWorkJournalEntrySchema=z.object({command:FleetWorkCommandSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),sequence:z.number().int().positive(),delivery:z.object({state:z.enum(["pending","sending","outcome_unknown","retry_later","needs_reconciliation","denied","applied"]),attempts:z.number().int().nonnegative(),lookupAttempts:z.number().int().nonnegative().default(0),lastAttemptAt:time.nullable(),retryAt:time.nullable(),receipt:FleetWorkReceiptSchema.nullable()}).strict()}).strict();
 export const FleetWorkStateSchema=z.object({version:z.literal(2),scope:FleetWorkScopeSchema,locked:z.boolean(),entries:z.array(FleetWorkJournalEntrySchema),mappings:z.array(FleetWorkMappingSchema)}).strict().superRefine((value,ctx)=>{
  const operations=new Set<string>(),sequences=new Set<number>(),mappings=new Set<string>();
  for(const entry of value.entries){
@@ -30,25 +30,37 @@ export function appendFleetWorkIntent(input:FleetWorkState,command:unknown,finge
  if(!/^[a-f0-9]{64}$/.test(fingerprint))throw new Error("A verified command digest is required");
  const prior=state.entries.find(row=>row.command.operationId===value.operationId);
  if(prior){if(prior.fingerprint!==fingerprint||serializeFleetWorkCommand(prior.command)!==serializeFleetWorkCommand(value))throw new Error("An operation cannot be reused with changed original facts");return state;}
- state.entries.push({command:value,fingerprint,sequence:state.entries.reduce((max,row)=>Math.max(max,row.sequence),0)+1,delivery:{state:"pending",attempts:0,lastAttemptAt:null,retryAt:null,receipt:null}});
+ state.entries.push({command:value,fingerprint,sequence:state.entries.reduce((max,row)=>Math.max(max,row.sequence),0)+1,delivery:{state:value.kind==="activity.legacy_action"?"outcome_unknown":"pending",attempts:0,lookupAttempts:0,lastAttemptAt:null,retryAt:null,receipt:null}});
  return state;
 }
 function update(input:FleetWorkState,operationId:string,work:(entry:FleetWorkState["entries"][number])=>void){const state=FleetWorkStateSchema.parse(input),entry=state.entries.find(row=>row.command.operationId===operationId);if(!entry)throw new Error("Original command not found");work(entry);return state;}
-export function markFleetWorkSending(state:FleetWorkState,operationId:string,at:string){return update(state,operationId,entry=>{if(state.locked||!["pending","retry_later"].includes(entry.delivery.state))throw new Error("Verify the original receipt before sending again");entry.delivery={...entry.delivery,state:"sending",attempts:entry.delivery.attempts+1,lastAttemptAt:time.parse(at)};});}
+export function markFleetWorkSending(state:FleetWorkState,operationId:string,at:string){time.parse(at);return update(state,operationId,entry=>{if(state.locked||!["pending","retry_later"].includes(entry.delivery.state)||(entry.delivery.retryAt&&Date.parse(entry.delivery.retryAt)>Date.parse(at)))throw new Error("Verify the original receipt and honor its retry delay before sending");entry.delivery={...entry.delivery,state:"sending",attempts:entry.delivery.attempts+1,lastAttemptAt:at,retryAt:null};});}
 export function markFleetWorkOutcomeUnknown(state:FleetWorkState,operationId:string){return update(state,operationId,entry=>{if(entry.delivery.state!=="sending")throw new Error("Only an attempted write can have an unknown outcome");entry.delivery.state="outcome_unknown";});}
-export function fleetWorkReceiptLookups(state:FleetWorkState){if(state.locked)return [];return state.entries.filter(row=>["sending","outcome_unknown"].includes(row.delivery.state)).map(row=>({operationId:row.command.operationId,scope:FleetWorkScopeSchema.parse(row.command.scope),fingerprint:row.fingerprint}));}
+export function fleetWorkBackoffAt(at:string,attempts:number,operationId:string):string{
+ time.parse(at);const id=z.uuid().parse(operationId);if(!Number.isSafeInteger(attempts)||attempts<0)throw new Error("A finite attempt count is required");
+ const delay=Math.min(300000,1000*2**Math.min(attempts,9)),jitter=Number.parseInt(id.replaceAll("-","").slice(0,8),16)%1000;
+ return new Date(Date.parse(at)+delay+jitter).toISOString();
+}
+export function recordFleetWorkLookupFailure(state:FleetWorkState,operationId:string,at:string){return update(state,operationId,entry=>{if(state.locked||!["sending","outcome_unknown"].includes(entry.delivery.state))throw new Error("Only an unknown write requires receipt lookup recovery");entry.delivery.lookupAttempts++;entry.delivery.retryAt=fleetWorkBackoffAt(at,entry.delivery.lookupAttempts,operationId);});}
+export function fleetWorkReceiptLookups(state:FleetWorkState,now:string){
+ time.parse(now);if(state.locked)return [];
+ return state.entries.filter(row=>["sending","outcome_unknown"].includes(row.delivery.state)&&(!row.delivery.retryAt||Date.parse(row.delivery.retryAt)<=Date.parse(now))).map(row=>{
+   const command=FleetWorkCommandSchema.parse(row.command);
+   return {operationId:command.operationId,scope:command.scope,fingerprint:row.fingerprint,...(command.kind==="activity.legacy_action"?{legacyRead:{activityId:command.payload.base.runId,originalAction:command.payload.action}}:{})};
+ });
+}
 const absenceSchema=z.object({operationId:z.uuid(),scope:FleetWorkScopeSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),found:z.literal(false),checkedAt:time}).strict();
 export function applyFleetWorkReceiptAbsence(input:FleetWorkState,raw:unknown):FleetWorkState{
  const result=absenceSchema.parse(raw);
  return update(input,result.operationId,entry=>{
-   if(input.locked||!sameScope(input.scope,result.scope)||entry.fingerprint!==result.fingerprint||!["sending","outcome_unknown"].includes(entry.delivery.state)||!entry.delivery.lastAttemptAt||Date.parse(result.checkedAt)<Date.parse(entry.delivery.lastAttemptAt))throw new Error("A current exact receipt lookup is required before retry");
+   if(input.locked||!sameScope(input.scope,result.scope)||entry.fingerprint!==result.fingerprint||!["sending","outcome_unknown"].includes(entry.delivery.state)||(!entry.delivery.lastAttemptAt&&entry.command.kind!=="activity.legacy_action")||(entry.delivery.lastAttemptAt&&Date.parse(result.checkedAt)<Date.parse(entry.delivery.lastAttemptAt)))throw new Error("A current exact receipt lookup is required before retry");
    entry.delivery.state="pending";entry.delivery.retryAt=null;
  });
 }
 const refKey=(ref:Pick<FleetWorkReference,"kind"|"id">)=>`${ref.kind}:${ref.id}`;
-function explicitLocalReferences(command:FleetWorkCommand){
+function localReferencesIn(input:unknown){
  const refs:Extract<FleetWorkReference,{type:"local"}>[]=[];
- const queue:unknown[]=[command.payload];
+ const queue:unknown[]=[input];
  for(let index=0;index<queue.length;index++){
    const value=queue[index];if(!value||typeof value!=="object")continue;
    const parsed=FleetWorkReferenceSchema.safeParse(value);if(parsed.success&&parsed.data.type==="local"){refs.push(parsed.data);continue;}
@@ -56,6 +68,8 @@ function explicitLocalReferences(command:FleetWorkCommand){
  }
  return refs;
 }
+const explicitLocalReferences=(command:FleetWorkCommand)=>localReferencesIn(command.payload);
+const requiredLocalReferences=(command:FleetWorkCommand)=>command.kind==="activity.reconcile"?localReferencesIn(command.payload.resolution):explicitLocalReferences(command);
 function createdLocalReferences(command:FleetWorkCommand):Array<{type:"local";kind:FleetWorkReference["kind"];id:string}>{
  if(command.kind==="activity.create")return [{type:"local",kind:"activity",id:command.payload.activityId},...(command.payload.billing.choice==="new_ticket"&&command.payload.billing.ticket.type==="local"?[command.payload.billing.ticket]:[])];
  if(command.kind==="detail.save"&&command.payload.expectedVersion===0)return [{type:"local",kind:"detail",id:command.payload.detail.id}];
@@ -64,6 +78,7 @@ function createdLocalReferences(command:FleetWorkCommand):Array<{type:"local";ki
  if(command.kind==="location.save")return [{type:"local",kind:"location",id:command.payload.destination.id??command.operationId}];
  if(command.kind==="compliance.receive"&&command.payload.source.expectedVersion===0)return [{type:"local",kind:"evidence",id:command.payload.source.record.evidence.id}];
  if((command.kind==="evidence.stage"||command.kind==="compliance.document.stage")&&command.payload.evidence.type==="local")return [command.payload.evidence];
+ if(command.kind==="activity.reconcile"&&command.payload.resolution.kind==="create_ticket"&&command.payload.resolution.billing.ticket.type==="local")return [command.payload.resolution.billing.ticket];
  return [];
 }
 export function applyFleetWorkReceipt(input:FleetWorkState,receipt:unknown):FleetWorkState{
@@ -79,6 +94,7 @@ export function applyFleetWorkReceipt(input:FleetWorkState,receipt:unknown):Flee
 }
 function group(command:FleetWorkCommand):string{
  const payload=command.payload;
+ if(command.kind==="activity.reconcile")return `case:${command.payload.caseId}`;
  if(command.kind==="activity.create")return `activity:${command.payload.activityId}`;
  if("activity" in payload)return `activity:${payload.activity.id}`;
  if(command.kind==="workday.event")return `workday:${command.scope.userId}`;
@@ -103,7 +119,7 @@ export function nextFleetWorkBatch(state:FleetWorkState,now:string):FleetWorkCom
    const key=group(entry.command);if(seen.has(key))continue;seen.add(key);
    if(!["pending","retry_later"].includes(entry.delivery.state)||entry.command.dependencies.some(id=>!completed.has(id))||(entry.delivery.retryAt&&Date.parse(entry.delivery.retryAt)>Date.parse(now)))continue;
    const created=new Set(createdLocalReferences(entry.command).map(refKey));
-   if(explicitLocalReferences(entry.command).some(ref=>!created.has(refKey(ref))&&!state.mappings.some(mapping=>refKey(mapping.local)===refKey(ref))))continue;
+   if(requiredLocalReferences(entry.command).some(ref=>!created.has(refKey(ref))&&!state.mappings.some(mapping=>refKey(mapping.local)===refKey(ref))))continue;
    result.push(FleetWorkCommandSchema.parse(entry.command));
  }
  return result;

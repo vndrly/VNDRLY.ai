@@ -10,8 +10,24 @@ const receipt=(command:any,status="applied",extra:any={})=>({version:2,operation
 it("isolates a conflicted activity while retaining new original facts and allowing another activity to synchronize",()=>{
  let state=call("createFleetWorkState",scope);const a=note(2),b=note(3,21);state=append(append(state,a),b);state=call("applyFleetWorkReceipt",state,receipt(a,"needs_reconciliation"));const original=JSON.stringify(state.entries[0].command);state=append(state,note(4));expect(call("nextFleetWorkBatch",state,at).map((row:any)=>row.operationId)).toEqual([b.operationId]);expect(state.entries).toHaveLength(3);expect(JSON.stringify(state.entries[0].command)).toBe(original);
 });
+it("lets an explicit office resolution reach its case while the original activity remains conflicted",()=>{
+ const original=note(2);let state=append(call("createFleetWorkState",scope),original);state=call("applyFleetWorkReceipt",state,receipt(original,"needs_reconciliation"));
+ const resolution={...note(3),kind:"activity.reconcile",payload:{caseId:uuid(99),expectedVersion:1,activity:original.payload.activity,originalTicket:{type:"local",kind:"ticket",id:uuid(30)},reason:"Office preserves the original and explicitly selects the correct open ticket",resolution:{kind:"link_open_ticket",ticket:{type:"canonical",kind:"ticket",id:456,version:1}}}};state=append(state,resolution);expect(call("nextFleetWorkBatch",state,at).map((row:any)=>row.operationId)).toEqual([uuid(3)]);expect(state.entries[0].delivery.state).toBe("needs_reconciliation");
+});
 it("never resubmits an unknown write outcome before looking up its exact scoped receipt",()=>{
- let state=append(call("createFleetWorkState",scope),note(2));state=call("markFleetWorkSending",state,uuid(2),at);state=call("markFleetWorkOutcomeUnknown",state,uuid(2));expect(call("nextFleetWorkBatch",state,at)).toEqual([]);expect(call("fleetWorkReceiptLookups",state)).toEqual([{operationId:uuid(2),scope,fingerprint:hash(2)}]);state=call("applyFleetWorkReceipt",state,receipt(note(2),"duplicate"));expect(call("fleetWorkReceiptLookups",state)).toEqual([]);
+ let state=append(call("createFleetWorkState",scope),note(2));state=call("markFleetWorkSending",state,uuid(2),at);state=call("markFleetWorkOutcomeUnknown",state,uuid(2));expect(call("nextFleetWorkBatch",state,at)).toEqual([]);expect(call("fleetWorkReceiptLookups",state,at)).toEqual([{operationId:uuid(2),scope,fingerprint:hash(2)}]);state=call("applyFleetWorkReceipt",state,receipt(note(2),"duplicate"));expect(call("fleetWorkReceiptLookups",state,at)).toEqual([]);
+});
+it("looks up retained v1 outcomes before ever sending a migrated action into canonical intake",()=>{
+ const command={...note(2),timeZone:"UTC",kind:"activity.legacy_action",payload:{activity:note(2).payload.activity,base:{runId:uuid(20),companyId:11,driverUserId:7,vehicleAssetId:uuid(21),trailerAssetId:null,version:1},ticket:{id:123,version:null,source:"legacy_cached_run_link"},action:{operationId:uuid(2),expectedVersion:1,action:"acknowledge",capturedAt:at},source:"retained_v1",legacyState:"unsynced",legacySessionVersion:2,legacyCaptureZoneSource:"stored_utc_timestamp",legacyCompliance:"not_recorded"}};
+ let state=append(call("createFleetWorkState",scope),command);expect(call("nextFleetWorkBatch",state,at)).toEqual([]);expect(call("fleetWorkReceiptLookups",state,at)[0]).toMatchObject({operationId:uuid(2),legacyRead:{activityId:uuid(20),originalAction:command.payload.action}});expect(state.entries[0].delivery.lastAttemptAt).toBeNull();state=call("applyFleetWorkReceiptAbsence",state,{operationId:uuid(2),scope,fingerprint:hash(2),found:false,checkedAt:at});expect(call("nextFleetWorkBatch",state,at)[0].operationId).toBe(uuid(2));
+});
+it("backs off failed receipt lookups without resubmitting writes or delaying unrelated capture",()=>{
+ let state=append(call("createFleetWorkState",scope),note(2));state=call("markFleetWorkSending",state,uuid(2),at);state=call("markFleetWorkOutcomeUnknown",state,uuid(2));state=call("recordFleetWorkLookupFailure",state,uuid(2),at);
+ expect(call("fleetWorkReceiptLookups",state,at)).toEqual([]);expect(call("fleetWorkReceiptLookups",state,"2026-10-16T18:10:00Z")).toHaveLength(1);state=append(state,note(3,21));expect(call("nextFleetWorkBatch",state,at).map((row:any)=>row.operationId)).toEqual([uuid(3)]);
+ const retry=call("fleetWorkBackoffAt",at,100000,uuid(2));expect(Date.parse(retry)-Date.parse(at)).toBeLessThanOrEqual(301000);expect(retry).toBe(call("fleetWorkBackoffAt",at,100000,uuid(2)));
+});
+it("does not let a transport bypass a definite retry delay",()=>{
+ let state=append(call("createFleetWorkState",scope),note(2));state=call("applyFleetWorkReceipt",state,receipt(note(2),"retry_later"));expect(()=>call("markFleetWorkSending",state,uuid(2),at)).toThrow();
 });
 it("allows an exact retry only after scoped receipt absence is checked, and refuses to undo an applied result",()=>{
  let state=append(call("createFleetWorkState",scope),note(2));state=call("markFleetWorkSending",state,uuid(2),at);state=call("markFleetWorkOutcomeUnknown",state,uuid(2));

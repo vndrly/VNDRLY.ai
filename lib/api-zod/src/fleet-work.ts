@@ -47,9 +47,20 @@ const activityCreate=z.object({...base,kind:z.literal("activity.create"),payload
 }).strict()}).strict();
 const note=z.object({...base,kind:z.literal("activity.note"),payload:z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,notes:z.string().trim().min(1).max(4000)}).strict()}).strict();
 const action=z.object({...base,kind:z.literal("activity.action"),payload:z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,baseAssignment:FleetDetailSnapshotSchema,action:FleetActionInputSchema}).strict()}).strict();
+export const FleetLegacyAssignmentSchema=z.object({runId:uuid,companyId:id,driverUserId:id,vehicleAssetId:uuid,trailerAssetId:uuid.nullable(),version:revision}).strict();
+export const FleetWorkResolutionSchema=z.discriminatedUnion("kind",[
+ z.object({kind:z.literal("link_open_ticket"),ticket:FleetWorkTicketReferenceSchema.refine(ref=>ref.type==="canonical","Choose a canonical open ticket")}).strict(),
+ z.object({kind:z.literal("create_ticket"),billing:FleetWorkBillingIntentSchema.refine(billing=>billing.choice==="new_ticket","A resolution must explicitly create a new ticket")}).strict(),
+ z.object({kind:z.literal("correct_assignment"),detailReference:reference("detail"),snapshot:FleetDetailSnapshotSchema}).strict(),
+ z.object({kind:z.literal("resolve_location"),original:reference("location").refine(ref=>ref.type==="local"),canonical:reference("location").refine(ref=>ref.type==="canonical")}).strict(),
+ z.object({kind:z.literal("resolve_price"),pricingIntent:FleetPricingIntentSchema.options[0]}).strict(),
+ z.object({kind:z.literal("retain_record_only"),explanation:z.string().trim().min(1).max(2000)}).strict(),
+]);
 const command=<K extends string,T extends z.ZodType>(kind:K,payload:T)=>z.object({...base,kind:z.literal(kind),payload}).strict();
 export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  activityCreate,note,action,
+ command("activity.legacy_action",z.object({activity:activityRef.refine(ref=>ref.type==="canonical"),base:FleetLegacyAssignmentSchema,ticket:z.object({id,version:z.null(),source:z.literal("legacy_cached_run_link")}).strict(),action:FleetActionInputSchema,source:z.literal("retained_v1"),legacyState:z.enum(["unsynced","conflict","revoked"]),legacySessionVersion:z.number().int().nonnegative(),legacyCaptureZoneSource:z.literal("stored_utc_timestamp"),legacyCompliance:z.literal("not_recorded")}).strict()),
+ command("activity.reconcile",z.object({caseId:uuid,expectedVersion:revision,activity:activityRef,originalTicket:FleetWorkTicketReferenceSchema,reason:z.string().trim().min(1).max(2000),resolution:FleetWorkResolutionSchema}).strict()),
  command("detail.save",FleetDetailSaveSchema),command("rig_package.save",FleetRigPackageSaveSchema),
  command("run_order.save",FleetRunOrderSaveSchema),command("location.save",FleetDestinationSaveSchema),
  command("compliance.receive",z.object({source:FleetComplianceSaveSchema,documentReference:reference("evidence").nullable()}).strict()),command("compliance.review",FleetComplianceVerifySchema),
@@ -85,7 +96,16 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
    if(p.action.operationId!==value.operationId||(p.action.capturedAt&&p.action.capturedAt!==value.capturedAt)||p.baseAssignment.detail.companyId!==value.scope.owner.id)issue("Action must retain original operation, capture and assignment scope");
    if(["acknowledge","inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout"].includes(p.action.action)&&p.baseAssignment.detail.driverUserId!==value.scope.userId)issue("Dispatch cannot impersonate the driver's physical actions");
  }
+ if(value.kind==="activity.legacy_action"){
+   const p=value.payload;
+   if(p.base.companyId!==value.scope.owner.id||p.base.runId!==p.activity.id||p.legacySessionVersion!==value.scope.sessionVersion||p.action.operationId!==value.operationId||(p.action.capturedAt&&p.action.capturedAt!==value.capturedAt)||value.timeZone!=="UTC")issue("Retained legacy facts must keep their exact original context");
+   if(["acknowledge","inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout"].includes(p.action.action)&&p.base.driverUserId!==value.scope.userId)issue("Legacy migration cannot impersonate another driver's physical actions");
+ }
  if(value.kind==="quantity.record"&&(value.payload.evidence.recordedByUserId!==value.scope.userId||value.payload.evidence.capturedAt!==value.capturedAt))issue("Quantity evidence must retain its actual recorder and captured time");
+ if(value.kind==="activity.reconcile"&&value.payload.resolution.kind==="correct_assignment"){
+   const resolution=value.payload.resolution;
+   if(resolution.snapshot.detail.companyId!==value.scope.owner.id||resolution.snapshot.carrierOfRecordId!==value.scope.owner.id||resolution.detailReference.id!==resolution.snapshot.detail.id)issue("Reconciliation must preserve an exact same-company Detail");
+ }
  if(value.kind==="detail.save"&&value.payload.detail.companyId!==value.scope.owner.id)issue("Detail belongs to another original company");
  if(value.kind==="rig_package.save"&&value.payload.package.companyId!==value.scope.owner.id)issue("Rig package belongs to another original company");
  if(value.kind==="run_order.save"&&value.payload.order.companyId!==value.scope.owner.id)issue("Run order belongs to another original company");

@@ -1,0 +1,16 @@
+import {it,expect} from "vitest";
+import * as module from "./index";
+const id="44444444-4444-4444-8444-444444444444",at="2026-10-16T18:00:00Z",scope={owner:{type:"vendor",id:11},userId:7,membershipId:9,sessionVersion:2,deviceId:"device",provisioningId:id};
+function cache(){return {scope,receivedAt:"2026-10-16T17:00:00Z",members:[{subject:{kind:"driver",id:7},facts:{cdlRequired:true}}],requirements:[{id:"license",version:1,category:"driver_license",label:"Reviewed license requirement",subjectKinds:["driver"],jurisdiction:"federal",classification:"company",effectiveFrom:"2026-01-01T00:00:00Z",effectiveUntil:null,applicability:{anyOf:[{allOf:[{fact:"cdlRequired",operator:"eq",value:true}]}]},renewalDays:null,expiryRequired:true,dueSoonDays:30,source:{url:"https://www.ecfr.gov/current/title-49/part-383",section:"Synthetic cached review",reviewedAt:"2026-10-16T16:00:00Z",reviewedByUserId:8}}],evidence:[{id,revision:2,subject:{kind:"driver",id:7},requirementId:"license",requirementVersion:1,status:"verified",validFrom:null,validUntil:at,verifiedAt:"2026-10-16T16:00:00Z",verifiedByUserId:8,restrictions:{}}]};}
+function evaluate(value:unknown,expectedScope:unknown=scope,when=at):any{const fn=(module as any).evaluateFleetWorkCachedCompliance;expect(fn).toBeTypeOf("function");return fn(value,expectedScope,when);}
+it("reevaluates cached evidence at capture time without rewriting the cached source or pretending it is a live lookup",()=>{
+ const value=cache(),before=JSON.stringify(value),current=evaluate(value,scope,"2026-10-16T17:59:59Z");expect(current.assessments[0]).toMatchObject({status:"green",freshness:"cached",evaluatedAt:"2026-10-16T17:59:59Z"});expect(evaluate(value).assessments[0]).toMatchObject({status:"red",freshness:"cached",reasons:[expect.objectContaining({reason:"expired"})]});expect(JSON.stringify(value)).toBe(before);expect(current.evidenceReferences).toEqual([{id,revision:2}]);
+});
+it("refuses cross-scope caches and raw private data, and keeps impossible clock ordering unverified",()=>{
+ const value=cache();expect(()=>evaluate(value,{...scope,userId:8})).toThrow();expect(evaluate(value,scope,"2026-10-16T16:30:00Z").assessments[0]).toMatchObject({status:"red",freshness:"unverified"});
+ const schema=(module as any).FleetWorkComplianceCacheSchema;expect(schema).toBeDefined();expect(schema.safeParse({...value,evidence:[{...value.evidence[0],privateDocumentRef:"PRIVATE-POLICY"}]}).success).toBe(false);expect(schema.safeParse({...value,members:[{subject:{kind:"driver",id:7},facts:{medicalDiagnosis:"PRIVATE"}}]}).success).toBe(false);
+ expect(schema.safeParse({...value,scope:{...scope,owner:{type:"partner",id:11}}}).success).toBe(false);
+});
+it("does not turn a verified policy document's generic cached metadata into work-specific coverage",()=>{
+ const value=cache(),carrier={kind:"carrier",id:11};const result=evaluate({...value,members:[{subject:carrier,facts:{}}],requirements:[{...value.requirements[0],category:"insurance",subjectKinds:["carrier"],applicability:{anyOf:[{allOf:[]}]}}],evidence:[{...value.evidence[0],subject:carrier,validUntil:"2027-01-01T00:00:00Z"}]});expect(result.assessments[0]).toMatchObject({status:"red",freshness:"cached",reasons:[expect.objectContaining({reason:"unverified"})]});
+});

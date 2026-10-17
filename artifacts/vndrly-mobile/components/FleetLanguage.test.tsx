@@ -41,7 +41,7 @@ describe("Fleet existing language choice", () => {
     render(<FleetSetup onSaved={vi.fn()} />);
     expect(await screen.findByRole("checkbox", { name: "Fleet Map" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Driver" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Guardar destacamentos de flota" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Guardar la configuración de acceso" })).toBeTruthy();
   });
   it("keeps English fallback and translates only supplied copy keys", () => {
     expect(fleetCopy("Refresh Fleet", "en")).toBe("Refresh Fleet");

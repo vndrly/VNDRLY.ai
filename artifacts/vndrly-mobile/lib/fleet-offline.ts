@@ -1,5 +1,7 @@
 export const FLEET_OFFLINE_MAX_ACTIONS = 64;
 export const FLEET_OFFLINE_MAX_BYTES = 64 * 1024;
+// Preparation preserves v1 originals; only a durable v2 transaction may import them.
+export { prepareFleetLegacyMigration } from "./fleet-work-legacy";
 import { FleetActionInputSchema, type FleetActionInput, type FleetOverview } from "@workspace/api-zod";
 import { z } from "zod/v4";
 
