@@ -37,7 +37,7 @@ export type FleetWorkTransaction = {
     operationId: string,
   ): Promise<FleetWorkReceipt | null>;
   saveReceipt(receipt: FleetWorkReceipt): Promise<void>;
-  saveCase(value: FleetReconciliationCase): Promise<void>;
+  saveCase(value: FleetReconciliationCase, original?:FleetWorkCommand): Promise<void>;
   execute(command: FleetWorkCommand): Promise<FleetWorkExecution>;
 };
 export type FleetWorkRepository = {
@@ -169,6 +169,7 @@ export function createFleetWorkService(
     const fingerprint = fleetWorkFingerprint(command),
       effects: Array<() => Promise<unknown>> = [];
     const transactionalActor = { ...actor };
+    if(command.kind==="activity.reconcile"&&command.payload.recoveryDriverUserId)transactionalActor.schedulingDriverUserIds=[command.payload.recoveryDriverUserId];
     if (command.kind === "detail.save")
       transactionalActor.schedulingDriverUserIds = [
         command.payload.detail.driverUserId,
@@ -264,7 +265,7 @@ export function createFleetWorkService(
               allowedResolutions: resolutions(failure.reason),
               createdAt: recordedAt,
             });
-          await tx.saveCase(value);
+          await tx.saveCase(value,command);
           const receipt = FleetWorkReceiptSchema.parse({
             ...base,
             status: failure.denied ? "denied" : "needs_reconciliation",

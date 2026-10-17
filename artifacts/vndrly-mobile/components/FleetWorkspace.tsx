@@ -1,5 +1,6 @@
 import FleetRetainedEvidence from "@/components/FleetRetainedEvidence";
 import FleetCommercialWork from "@/components/FleetCommercialWork";
+import FleetReconciliation from "@/components/FleetReconciliation";
 import {saveFleetWorkspaceCache,readFleetWorkspaceCache} from "@/lib/fleet-workspace-cache";
 import FleetMapOverview from "@/components/FleetMapOverview";
 import FleetRunBoard from "@/components/FleetRunBoard";
@@ -422,6 +423,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       <Text style={textStyle}>{copy("Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.")}</Text>
       {!!work.error && <Text accessibilityRole="alert" style={textStyle}>{work.error}</Text>}
       <TogglePillButton compactOnTablet disabled={busy} onPress={()=>void work.refresh()}>{copy("Verify and synchronize retained work")}</TogglePillButton>
+      <FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>
     </View>}
     {overview && <>
     <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:12}}>
@@ -530,7 +532,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         {fleet?.siteIds.map(siteId => <TogglePillButton disabled={busy || !!unresolved} key={siteId} onPress={() => setStopSites(s => [...s, { siteId, kind: stopKind }])}>{`${copy("Add site ")}${siteId}`}</TogglePillButton>)}
         <TogglePillButton disabled={busy || !!unresolved} onPress={() => setStopSites([])}>{copy("Clear stops")}</TogglePillButton>
         </View>}
-        <FleetRunBilling key={`billing:${identity}:${fleetId}:${useSavedPlan}`} siteId={useSavedPlan?nativePlan?.billingSiteId:stopSites[0]?.siteId} fleetId={fleetId || undefined} onChange={setBilling} disabled={busy || !!unresolved}/>
+        <FleetRunBilling workSession={work.session} key={`billing:${identity}:${fleetId}:${useSavedPlan}`} siteId={useSavedPlan?nativePlan?.billingSiteId:stopSites[0]?.siteId} fleetId={fleetId || undefined} onChange={setBilling} disabled={busy || !!unresolved}/>
         <TogglePillButton disabled={busy || !!unresolved || !!cachedAt} onPress={createRun}>{copy("Create draft run")}</TogglePillButton>
       </View>}
     </>}

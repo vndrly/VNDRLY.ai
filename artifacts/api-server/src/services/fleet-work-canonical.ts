@@ -1,4 +1,5 @@
-import { reviewFleetActivityCharges, finalizeFleetTicketV2, adjustFleetReviewedCharge } from "./fleet-charge-review";
+import { reviewFleetActivityCharges, finalizeFleetTicketV2, adjustFleetReviewedCharge,resolveFleetActivityPrice } from "./fleet-charge-review";
+import {resolveFleetReconciliation} from "./fleet-reconciliation";
 import {
   resolveFleetWorkReference,
   authorizeFleetOriginalDriverActivity,
@@ -100,6 +101,13 @@ export async function executeFleetWorkCommand(
     };
   };
   switch (command.kind) {
+    case "activity.reconcile":return resolveFleetReconciliation(context,command,(adopted)=>executeFleetWorkCommand(context,adopted,options));
+    case "price.resolve": {
+      const target=await activity(command.payload.activity),ticket=await mapped(command.payload.ticket);
+      if(target.run.version!==command.payload.expectedVersion||target.reference.version!==command.payload.expectedVersion||target.run.linkedTicketId!==ticket.id)throw new FleetError("fleet.version_conflict");
+      const run=state.runs.find(row=>row.id===target.run.id)!;const saved=await resolveFleetActivityPrice(context,command,run);
+      return result([{type:"canonical",kind:"activity",id:run.id,version:run.version},{type:"canonical",kind:"ticket",id:Number(ticket.id),version:saved.ticketVersion}]);
+    }
     case "charge.review": {
       const target=await activity(command.payload.activity),ticket=await mapped(command.payload.ticket);
       if(target.reference.version!==command.payload.expectedVersion||target.run.version!==command.payload.expectedVersion||target.run.linkedTicketId!==ticket.id)throw new FleetError("fleet.version_conflict");

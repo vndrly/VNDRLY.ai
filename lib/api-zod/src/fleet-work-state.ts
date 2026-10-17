@@ -1,7 +1,7 @@
 import {z} from "zod/v4";
 import {FleetWorkCommandSchema,FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetWorkMappingSchema,FleetWorkReferenceSchema,type FleetWorkReference,type FleetWorkCommand,type FleetWorkScope} from "./fleet-work";
 const time=z.iso.datetime({offset:true});
-export const FleetWorkJournalEntrySchema=z.object({command:FleetWorkCommandSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),sequence:z.number().int().positive(),delivery:z.object({state:z.enum(["pending","sending","outcome_unknown","retry_later","needs_reconciliation","denied","applied"]),attempts:z.number().int().nonnegative(),lookupAttempts:z.number().int().nonnegative().default(0),lastAttemptAt:time.nullable(),retryAt:time.nullable(),receipt:FleetWorkReceiptSchema.nullable()}).strict()}).strict();
+export const FleetWorkJournalEntrySchema=z.object({command:FleetWorkCommandSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),sequence:z.number().int().positive(),delivery:z.object({state:z.enum(["pending","sending","outcome_unknown","retry_later","needs_reconciliation","denied","retained","applied"]),attempts:z.number().int().nonnegative(),lookupAttempts:z.number().int().nonnegative().default(0),lastAttemptAt:time.nullable(),retryAt:time.nullable(),receipt:FleetWorkReceiptSchema.nullable()}).strict()}).strict();
 export const FleetWorkStateSchema=z.object({version:z.literal(2),scope:FleetWorkScopeSchema,locked:z.boolean(),entries:z.array(FleetWorkJournalEntrySchema),mappings:z.array(FleetWorkMappingSchema)}).strict().superRefine((value,ctx)=>{
  const operations=new Set<string>(),sequences=new Set<number>(),mappings=new Set<string>();
  for(const entry of value.entries){
@@ -10,6 +10,7 @@ export const FleetWorkStateSchema=z.object({version:z.literal(2),scope:FleetWork
    const receipt=entry.delivery.receipt;
    if(receipt&&(receipt.operationId!==entry.command.operationId||receipt.fingerprint!==entry.fingerprint||stable(receipt.scope)!==stable(value.scope)))ctx.addIssue({code:"custom",message:"Journal receipt differs from its original command"});
    if(entry.delivery.state==="applied"&&(!receipt||!["applied","duplicate"].includes(receipt.status)))ctx.addIssue({code:"custom",message:"Applied work requires an actual canonical receipt"});
+   if(entry.delivery.state==="retained"&&receipt?.status!=="retained")ctx.addIssue({code:"custom",message:"Record-only work requires an actual office disposition"});
  }
  for(const mapping of value.mappings){const key=`${mapping.local.kind}:${mapping.local.id}`;if(mappings.has(key))ctx.addIssue({code:"custom",message:"Journal contains duplicate canonical mappings"});mappings.add(key);}
 });
@@ -85,6 +86,7 @@ export function applyFleetWorkReceipt(input:FleetWorkState,receipt:unknown):Flee
  const state=FleetWorkStateSchema.parse(input),value=FleetWorkReceiptSchema.parse(receipt),entry=state.entries.find(row=>row.command.operationId===value.operationId);
  if(state.locked||!entry||!sameScope(state.scope,value.scope)||entry.fingerprint!==value.fingerprint)throw new Error("Receipt does not match the original scoped command");
  if(entry.delivery.state==="applied"&&!["applied","duplicate"].includes(value.status))throw new Error("A canonical applied receipt cannot be reversed");
+ if(entry.delivery.state==="retained"&&value.status!=="retained")throw new Error("A record-only disposition cannot silently become canonical work");
  if(value.status==="applied"||value.status==="duplicate")for(const mapping of value.mappings){
    if(![...explicitLocalReferences(entry.command),...createdLocalReferences(entry.command)].some(ref=>refKey(ref)===refKey(mapping.local)))throw new Error("Receipt maps an identity absent from the original intent");
    const old=state.mappings.find(row=>row.local.kind===mapping.local.kind&&row.local.id===mapping.local.id);if(old&&stable(old.canonical)!==stable(mapping.canonical))throw new Error("A local identity cannot be rebound to another canonical result");if(!old)state.mappings.push(mapping);
@@ -115,7 +117,7 @@ export function nextFleetWorkBatch(state:FleetWorkState,now:string):FleetWorkCom
  time.parse(now);
  const completed=new Set(state.entries.filter(row=>row.delivery.state==="applied").map(row=>row.command.operationId)),seen=new Set<string>(),result:FleetWorkCommand[]=[];
  for(const entry of [...state.entries].sort((a,b)=>a.sequence-b.sequence)){
-   if(entry.delivery.state==="applied")continue;
+   if(["applied","retained"].includes(entry.delivery.state))continue;
    const key=group(entry.command);if(seen.has(key))continue;seen.add(key);
    if(!["pending","retry_later"].includes(entry.delivery.state)||entry.command.dependencies.some(id=>!completed.has(id))||(entry.delivery.retryAt&&Date.parse(entry.delivery.retryAt)>Date.parse(now)))continue;
    const created=new Set(createdLocalReferences(entry.command).map(refKey));

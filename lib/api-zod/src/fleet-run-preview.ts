@@ -5,7 +5,7 @@ import type {FleetWorkState} from "./fleet-work-state";
 /** A device-only form projection. It never changes canonical status, map
  * telemetry or acceptance, and never silently rebases a changed assignment. */
 export function previewFleetWorkEntries(run:FleetRun,entries:FleetWorkState["entries"],userId:number){
- const pending=entries.filter(entry=>entry.delivery.state!=="applied"&&entry.command.kind==="activity.action"&&entry.command.payload.activity.id===run.id).sort((a,b)=>a.sequence-b.sequence);
+ const pending=entries.filter(entry=>!["applied","retained"].includes(entry.delivery.state)&&entry.command.kind==="activity.action"&&entry.command.payload.activity.id===run.id).sort((a,b)=>a.sequence-b.sequence);
  if(!pending.length)return null;
  const actions:FleetActionInput[]=[];
  for(const entry of pending){

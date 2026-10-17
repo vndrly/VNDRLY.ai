@@ -2,6 +2,7 @@ import {saveWebFleetWorkspace,readWebFleetWorkspace,activateWebFleetOffline} fro
 import {provisionFleetOfflineShell} from "@/lib/fleet-offline-shell";
 import {FleetRetainedEvidence} from "@/components/fleet-retained-evidence";
 import {FleetCommercialWork} from "@/components/fleet-commercial-work";
+import {FleetReconciliation} from "@/components/fleet-reconciliation";
 import { FleetRouteReplay } from "@/components/fleet-route-replay";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -669,6 +670,7 @@ function FleetWorkspace({
         <PngPillButton disabled={busy} onClick={()=>void work.refresh()}>Verify and synchronize retained work</PngPillButton>
         <PngPillButton disabled={busy||!!offlineAt} onClick={()=>void provisionOffline()}>Prepare this browser for offline Fleet work</PngPillButton>
         {!!offlineProvision&&<p role="status">{offlineProvision}</p>}
+        <FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();void queryClient.invalidateQueries({queryKey:["fleet",identity]});}}/>
       </section>}
       <nav
         className="fleet-nav flex flex-wrap text-sm"
@@ -1154,6 +1156,7 @@ function FleetWorkspace({
               </p>
             )}
             <FleetRunBillingFields
+              workSession={work.session}
               fleetId={fleetId}
               siteId={Number(pickup)}
               identity={identity}

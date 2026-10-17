@@ -54,13 +54,13 @@ export function createDurableFleetWorkJournal(options:{scope:FleetWorkScope;stor
  };
  return {
   append,appendFact:append,readState,nextBatch:async at=>nextFleetWorkBatch(await readState(),at),
-  async listPending(value,after=0){same(value);const state=await readState(),entries=state.entries.filter(row=>row.sequence>after&&row.delivery.state!=="applied");const page=entries.slice(0,100);return {commands:page.map(row=>row.command),nextCursor:entries.length>100?page.at(-1)!.sequence:null};},
+  async listPending(value,after=0){same(value);const state=await readState(),entries=state.entries.filter(row=>row.sequence>after&&!["applied","retained"].includes(row.delivery.state));const page=entries.slice(0,100);return {commands:page.map(row=>row.command),nextCursor:entries.length>100?page.at(-1)!.sequence:null};},
   async readMappings(value,ids){same(value);return (await readState()).mappings.filter(row=>ids.includes(String(row.local.id)));},
   async applyReceipt(value,raw){same(value);const receipt=FleetWorkReceiptSchema.parse(raw);same(receipt.scope);await update(receipt.operationId,state=>applyFleetWorkReceipt(state,receipt));},
   markSending:(id,at)=>update(id,state=>markFleetWorkSending(state,id,at)),markUnknown:id=>update(id,state=>markFleetWorkOutcomeUnknown(state,id)),
   recordLookupFailure:(id,at)=>update(id,state=>recordFleetWorkLookupFailure(state,id,at)),
   applyReceiptAbsence:async raw=>{const value=raw as {operationId:string};await update(value.operationId,state=>applyFleetWorkReceiptAbsence(state,raw));},
-  async readStatus(value){same(value);const state=await readState();return {pending:state.entries.filter(row=>!["applied","needs_reconciliation","denied"].includes(row.delivery.state)).length,needsReconciliation:state.entries.filter(row=>["needs_reconciliation","denied"].includes(row.delivery.state)).length,pendingEvidence:state.entries.filter(row=>["evidence.stage","compliance.document.stage"].includes(row.command.kind)&&row.delivery.state!=="applied").length,locked:state.locked};},
+  async readStatus(value){same(value);const state=await readState();return {pending:state.entries.filter(row=>!["applied","retained","needs_reconciliation","denied"].includes(row.delivery.state)).length,needsReconciliation:state.entries.filter(row=>["needs_reconciliation","denied"].includes(row.delivery.state)).length,pendingEvidence:state.entries.filter(row=>["evidence.stage","compliance.document.stage"].includes(row.command.kind)&&!["applied","retained"].includes(row.delivery.state)).length,locked:state.locked};},
   async lockScope(value){same(value);await transact(tx=>tx.set("meta","locked","true"));},
   async retainEvidence(id,metadata){await transact(async tx=>{await unlocked(tx);const raw=JSON.stringify({id,metadata}),prior=await tx.get("evidence",id);if(prior&&prior!==raw)throw Error("Original evidence metadata cannot be replaced");await tx.set("evidence",id,raw);});},
   evidence:()=>transact(async tx=>(await tx.values("evidence")).map(value=>JSON.parse(value) as {id:string;metadata:unknown})),

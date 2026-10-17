@@ -6,7 +6,7 @@ import type {DurableFleetWorkJournal} from "./fleet-work-journal";
 export async function synchronizeFleetEvidence(options:{scope:FleetWorkScope;journal:DurableFleetWorkJournal;isCurrent:()=>boolean;http:(path:string,body?:unknown)=>Promise<unknown>;put:(path:string,bytes:Uint8Array,sha256:string)=>Promise<unknown>;read:(id:string,offset:number,length:number)=>Promise<Uint8Array>;hash:(bytes:Uint8Array)=>Promise<string>}){
  const current=()=>{if(!options.isCurrent())throw Error("Original evidence account changed");};
  current();const state=await options.journal.readState();let applied=0,pending=0;
- for(const entry of state.entries.filter(row=>row.delivery.state!=="applied"&&["evidence.stage","compliance.document.stage"].includes(row.command.kind)).slice(0,10)){
+ for(const entry of state.entries.filter(row=>!["applied","retained"].includes(row.delivery.state)&&["evidence.stage","compliance.document.stage"].includes(row.command.kind)).slice(0,10)){
   const command=entry.command;if(command.kind!=="evidence.stage"&&command.kind!=="compliance.document.stage")continue;
   try{
    current();const upload=FleetEvidenceUploadSessionSchema.parse(await options.http("/api/fleet/work/evidence/begin",command));

@@ -28,6 +28,7 @@ import { createDatabaseFleetWorkRepository } from "./fleet-work-repository";
 import { executeFleetWorkCommand } from "./fleet-work-canonical";
 import { createFleetWorkService } from "./fleet-work";
 import { requireFleetRunCommercialAuthority } from "./fleet-commercial-authority";
+import {readFleetReconciliation,readFleetRecoveryOptions} from "./fleet-reconciliation";
 
 async function fixture(options: { rig?: boolean } = {}) {
   const f = await createFleetPricingFixture(),
@@ -1317,4 +1318,39 @@ it("reads exact quantity reports for office review while withholding charges and
  expect((await f.work.apply(driverActor,quantity)).status).toBe("applied");
  const office=await f.repository.readScope(f.actor,f.command.scope,context=>readFleetCommercialReview(context,{activityId:String(activity.id)}));expect(office.canReview).toBe(true);expect(office.billing).toBeTruthy();expect(office.quantities[0].evidence.quantity).toBe("123.456789");expect(office.quantities[0].review).toBeNull();
  const own=await f.repository.readScope(driverActor,provision.scope,context=>readFleetCommercialReview(context,{activityId:String(activity.id)}));expect(own.canReview).toBe(false);expect(own.billing).toBeNull();expect(own.charges).toEqual([]);expect(JSON.stringify(own)).not.toContain("rateCard");expect(own.quantities).toHaveLength(1);expect(JSON.stringify(own)).not.toContain("fingerprint");
+});
+it("retains failed original work privately and exposes only authorized office recovery summaries",async()=>{
+ const f=await fixture();f.rollback();const receipt=await f.work.apply(f.actor,f.command);expect(receipt.status).toBe("needs_reconciliation");if(receipt.status!=="needs_reconciliation")throw Error("Expected recovery case");
+ const page=await f.repository.readScope(f.actor,f.command.scope,context=>readFleetReconciliation(context,{}));expect(page.cases).toHaveLength(1);expect(page.cases[0]).toMatchObject({case:{id:receipt.caseId,reason:"stale_revision"},original:{kind:"activity.create",capturedAt:f.command.capturedAt},canResolve:true});
+ expect(JSON.stringify(page)).not.toContain("objectPath");expect(JSON.stringify(page)).not.toContain("detailSnapshot");
+ const choices=await f.repository.readScope(f.actor,f.command.scope,context=>readFleetRecoveryOptions(context,receipt.caseId));expect(choices.services).toEqual(expect.arrayContaining([expect.objectContaining({id:f.service})]));expect(choices.details.length).toBeGreaterThan(0);expect(JSON.stringify(choices)).not.toContain("rateCents");
+ if(f.command.kind!=="activity.create")throw Error("Expected original creation");
+ const current=createFleetWorkService(createDatabaseFleetWorkRepository({execute:executeFleetWorkCommand}));
+ expect((await current.apply(f.actor,{...f.command,operationId:randomUUID(),kind:"activity.reconcile",payload:{caseId:receipt.caseId,expectedVersion:1,activity:{type:"local",kind:"activity",id:f.command.payload.activityId},originalTicket:f.command.payload.billing.ticket,reason:"Office retains original discrepancy without inventing performed work",resolution:{kind:"retain_record_only",explanation:"No canonical work authorized"}}})).status).toBe("applied");
+ const closed=await f.repository.readScope(f.actor,f.command.scope,context=>readFleetReconciliation(context,{}));expect(closed.cases[0]).toMatchObject({case:{version:2,resolution:{kind:"retain_record_only"}},canResolve:false});expect((await current.read(f.actor,f.command.scope,f.command.operationId))?.status).toBe("retained");
+ const privateRecords=(await pool.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-original'",[f.vendor])).rows;expect(privateRecords).toHaveLength(1);expect(privateRecords[0].tool_output).toMatchObject({fingerprint:receipt.fingerprint});expect(privateRecords[0].tool_output).not.toHaveProperty("command");
+ const state=(await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[f.vendor])).rows[0].fleet_ops_state;state.grants=state.grants.filter((row:any)=>row.userId!==f.actor.userId);await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[f.vendor,JSON.stringify(state)]);
+ await expect(f.repository.readScope(f.actor,f.command.scope,context=>readFleetReconciliation(context,{}))).rejects.toThrow();
+});
+it("resolves unpriced captured work from saved approval without auto approving charges",async()=>{
+ const f=await fixture();await pool.query("UPDATE partner_vendor_work_type_approvals SET approved_by_user_id=NULL WHERE vendor_id=$1 AND partner_id=$2 AND work_type_id=$3",[f.vendor,f.partner,f.service]);
+ const created=await f.work.apply(f.actor,f.command);expect(created.status).toBe("applied");if(created.status!=="applied")return;const activity=created.canonicalReferences.find(ref=>ref.kind==="activity")!,ticket=created.canonicalReferences.find(ref=>ref.kind==="ticket")!;
+ const service=createFleetService(databaseFleetRepository);expect((await service.detail({...f.actor},String(activity.id))).billingV2?.pricing.mode).toBe("unpriced");
+ await pool.query("UPDATE partner_vendor_work_type_approvals SET approved_by_user_id=$4 WHERE vendor_id=$1 AND partner_id=$2 AND work_type_id=$3",[f.vendor,f.partner,f.service,f.user]);
+ const command={...f.command,operationId:randomUUID(),kind:"price.resolve",payload:{activity,ticket,expectedVersion:1,reason:"Office verified restored saved approval authority"}};
+ expect((await f.work.apply(f.actor,command)).status).toBe("applied");expect((await f.work.apply(f.actor,command)).status).toBe("duplicate");
+ const run=await service.detail({...f.actor},String(activity.id));expect(run.status).toBe("draft");expect(run.billingV2?.pricing).toMatchObject({mode:"priced",rateCard:{unitRate:"0.0125"}});expect(run.billingV2?.review.status).toBe("pending");expect((await pool.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1",[ticket.id])).rows).toHaveLength(0);
+});
+it("office recovers a closed-ticket creation onto a new ticket and the original device reads the resolution without a duplicate run",async()=>{
+ const f=await fixture(),first=await f.work.apply(f.actor,f.command);if(first.status!=="applied"||f.command.kind!=="activity.create")throw Error("Expected first activity");const originalTicket=first.canonicalReferences.find(ref=>ref.kind==="ticket")!;
+ await cancelWork(f,await createFleetService(databaseFleetRepository).detail({...f.actor},String(first.canonicalReferences.find(ref=>ref.kind==="activity")!.id)));
+ await pool.query("UPDATE tickets SET status='submitted',lifecycle_state='off_site' WHERE id=$1",[originalTicket.id]);
+ const original=FleetWorkCommandSchema.parse({...f.command,operationId:randomUUID(),payload:{...f.command.payload,activityId:randomUUID(),billing:{...f.command.payload.billing,choice:"existing_ticket",ticket:originalTicket}}});
+ if(original.kind!=="activity.create")throw Error("Expected original create");const held=await f.work.apply(f.actor,original);expect(held.status).toBe("needs_reconciliation");if(held.status!=="needs_reconciliation")return;expect(held.reason).toBe("closed_ticket");
+ const recovery={...f.command,operationId:randomUUID(),kind:"activity.reconcile",payload:{caseId:held.caseId,expectedVersion:1,activity:{type:"local",kind:"activity",id:original.payload.activityId},originalTicket,recoveryDriverUserId:f.driver.id,reason:"Office confirms performed order belongs on a new open ticket",resolution:{kind:"create_ticket",billing:{...original.payload.billing,choice:"new_ticket",ticket:{type:"local",kind:"ticket",id:randomUUID()}}}}};
+ const saved=await f.work.apply(f.actor,recovery);expect(saved.status).toBe("applied");expect((await f.work.apply(f.actor,recovery)).status).toBe("duplicate");
+ const receipt=await f.work.read(f.actor,original.scope,original.operationId);expect(receipt?.status).toBe("applied");expect(receipt?.resolution).toMatchObject({caseId:held.caseId,officeOperationId:recovery.operationId,reviewedByUserId:f.actor.userId});if(!receipt||receipt.status!=="applied")return;
+ expect(receipt.canonicalReferences.find(ref=>ref.kind==="ticket")?.id).not.toBe(originalTicket.id);expect(receipt.mappings).toHaveLength(1);expect(receipt.mappings[0].local).toMatchObject({kind:"activity",id:original.payload.activityId});
+ expect((await f.work.apply(f.actor,original)).status).toBe("duplicate");const originalStored=(await pool.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-operation' AND target_id=$2",[f.vendor,original.operationId])).rows;expect(originalStored).toHaveLength(1);expect(originalStored[0].tool_output.status).toBe("needs_reconciliation");
+ const run=await createFleetService(databaseFleetRepository).detail({...f.actor},String(receipt.canonicalReferences.find(ref=>ref.kind==="activity")!.id));expect(run.status).toBe("draft");expect(run.inspections).toEqual([]);expect(run.events.some(event=>event.type==="started")).toBe(false);
 });

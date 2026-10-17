@@ -2,6 +2,8 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 const spanish: Record<string, string> = {
+"Downloaded choices are unverified; authority is checked again when work synchronizes.":"Opciones descargadas sin verificar; se revisará la autoridad al sincronizar.",
+"per barrel":"por barril","per load":"por carga","per mile":"por milla","per us gallon":"por galón estadounidense","per short ton":"por tonelada corta","per job":"por trabajo","lump sum":"suma global","Agreement unresolved":"Acuerdo sin resolver",
 "Renew / correct source": "Renovar / corregir fuente",
 "I reviewed the listed coverage scope": "Revisé el alcance de cobertura indicado",
 "I reviewed the excess follow-form terms": "Revisé los términos de seguimiento de póliza base",

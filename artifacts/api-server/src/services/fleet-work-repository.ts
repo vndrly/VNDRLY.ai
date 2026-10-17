@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import {retainFleetWorkOriginal} from "./fleet-work-originals";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod/v4";
 import {
@@ -32,6 +33,7 @@ const provisionSchema = z
     expiresAt: z.iso.datetime(),
     appVersion: z.string().trim().min(1).max(100),
     revokedAt: z.iso.datetime().nullable(),
+    renewedAt:z.iso.datetime().optional(),
   })
   .strict();
 const provisionInput = z
@@ -192,7 +194,7 @@ export function createDatabaseFleetWorkRepository(options: {
           async readReceipt(scope, operationId) {
             z.uuid().parse(operationId);
             const rows = await client.query(
-              "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+              "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type IN ('fleet-work-operation','fleet-work-resolution-receipt') AND target_id=$2 ORDER BY id DESC LIMIT 1",
               [actor.companyId, operationId],
             );
             if (!rows.rows.length) return null;
@@ -244,7 +246,8 @@ export function createDatabaseFleetWorkRepository(options: {
               FleetWorkReceiptSchema.parse(receipt),
             );
           },
-          async saveCase(value) {
+          async saveCase(value,original) {
+            if(original)await retainFleetWorkOriginal(client,original);
             await append(
               client,
               actor,
@@ -300,5 +303,12 @@ export function createDatabaseFleetWorkRepository(options: {
       await tx.requireProvisioning(FleetWorkScopeSchema.parse(scope), false);
       return work(context);
     });
-  return { ...repository, provision, withScope, readScope };
+  const renewProvision=(actor:FleetActor,raw:unknown)=>scopedTransaction(actor,async(tx,context)=>{
+    const {scope}=z.object({scope:FleetWorkScopeSchema}).strict().parse(raw);await tx.requireProvisioning(scope,false);
+    if(actor.readOnly||!context.state.enabled||!(actor.membershipRole==="admin"||context.state.grants.some(grant=>grant.userId===actor.userId&&grant.roles.length&&grant.fleetIds.some(id=>context.state.fleets.some(group=>group.id===id)))))throw new FleetError("fleet.grant_required",403);
+    const row=(await context.client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-provision' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,scope.provisioningId])).rows[0];
+    const original=provisionSchema.parse(row.tool_output),renewedAt=now().toISOString(),saved=provisionSchema.parse({...original,renewedAt,expiresAt:new Date(Date.parse(renewedAt)+7*86400000).toISOString()});
+    await append(context.client,actor,"fleet-work-provision",scope.provisioningId,saved);return saved;
+  });
+  return { ...repository, provision, renewProvision, withScope, readScope };
 }

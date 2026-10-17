@@ -1,0 +1,10 @@
+import React from "react";import {it,expect,vi} from "vitest";import {render,screen,fireEvent,waitFor} from "@testing-library/react";
+import {FleetReconciliation} from "./fleet-reconciliation";
+vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:"en"}})}));vi.mock("./png-pill-rollover",()=>({PngPillButton:({children,...props}:any)=><button {...props}>{children}</button>}));
+it("requires an explicit office reason and confirmation to retain a discrepancy without inventing canonical work",async()=>{
+ const item={case:{id:"case",version:1,reason:"closed_ticket",allowedResolutions:["retain_record_only"],createdAt:"2026-10-17T20:00:00Z"},original:{title:"Original haul",kind:"activity.create",capturedAt:"2026-10-17T19:00:00Z",timeZone:"America/Chicago",activity:{id:"local"},ticket:{id:12}},canResolve:true};
+ let resolved=false;const captureReconciliation=vi.fn().mockImplementation(async()=>{resolved=true;return {canonicalApplied:true};}),session={reconciliation:vi.fn().mockImplementation(async()=>({cases:[{...item,...(resolved?{case:{...item.case,resolution:{kind:"retain_record_only",reason:"Office retained original discrepancy"}},canResolve:false}:{})}],nextCursor:null})),captureReconciliation} as any;
+ render(<FleetReconciliation session={session} pendingCaseIds={[]} onChanged={()=>{}}/>);fireEvent.click(screen.getByRole("button",{name:"Read retained work requiring review"}));await screen.findByText("Original haul");expect(captureReconciliation).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText("Recovery reason"),{target:{value:"Office retained original discrepancy"}});fireEvent.click(screen.getByRole("button",{name:"Retain discrepancy only"}));fireEvent.click(screen.getByRole("button",{name:"Apply explicit recovery"}));
+ await waitFor(()=>expect(captureReconciliation).toHaveBeenCalledWith(expect.anything(),{kind:"retain_record_only",explanation:"Office retained original discrepancy"},"Office retained original discrepancy"));expect(await screen.findByText("Discrepancy retained. No run or ticket was created.")).toBeTruthy();
+});

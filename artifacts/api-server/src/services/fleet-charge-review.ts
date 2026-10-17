@@ -6,11 +6,11 @@ import type {PoolClient} from "pg";
 import type {FleetWorkExecutionContext} from "./fleet-work-repository";
 import {FleetError} from "./fleet-repository";
 import {calculateFleetCharges,type FleetChargeCalculation,FleetPricingError} from "./fleet-pricing";
-import {readRetainedFleetRateAuthority} from "./fleet-rate-authority";
+import {readRetainedFleetRateAuthority,resolveFleetRateAuthority} from "./fleet-rate-authority";
 import {readFleetReviewPacket} from "./fleet-review-packet";
 import {readFleetTicketRuns,canOfficeFinalize,assertFleetTicketFinalizable} from "./fleet-billing";
 import {isFleetBillingV2TicketOpen} from "./fleet-billing-v2";
-import {appendFleetRunEvent} from "./fleet-run-events";
+import {appendFleetRunEvent,readCompleteFleetRunEvents} from "./fleet-run-events";
 import {resolveFleetCommercialAuthority,requireFleetCommercialAuthority,assessFleetActionPolicy,readFleetAuthoritySites} from "./fleet-commercial-authority";
 async function office(context:FleetWorkExecutionContext,run?:FleetRun){
  const {actor,state}=context,g=state.grants.find(row=>row.userId===actor.userId);
@@ -42,7 +42,19 @@ async function saveCharge(context:FleetWorkExecutionContext,charge:FleetCharge){
 async function rate(context:FleetWorkExecutionContext,run:FleetRun){
  const billing=run.billingV2;if(!billing||billing.pricing.mode!=="priced")throw new FleetError("fleet.price_authority_unresolved");
  const {vendorId:_vendor,...billingContext}=billing.context;
- return readRetainedFleetRateAuthority(context.client,context.actor,{billingContext,serviceId:billing.serviceId,workAt:run.events[0].capturedAt??run.events[0].recordedAt,pricing:billing.pricing});
+ const original=(await readCompleteFleetRunEvents(context.client,run))[0];
+ return readRetainedFleetRateAuthority(context.client,context.actor,{billingContext,serviceId:billing.serviceId,workAt:original.capturedAt??original.recordedAt,pricing:billing.pricing});
+}
+export async function resolveFleetActivityPrice(context:FleetWorkExecutionContext,command:Extract<FleetWorkCommand,{kind:"price.resolve"}>,run:FleetRun){
+ await office(context,run);const billing=run.billingV2;if(!billing||run.version!==command.payload.expectedVersion)throw new FleetError("fleet.version_conflict");
+ if(billing.pricing.mode!=="unpriced"||billing.review.status!=="pending")throw new FleetError("fleet.price_already_bound",409);
+ const {plan}=await parent(context,billing.ticketId);if(command.payload.ticket.type!=="canonical"||command.payload.ticket.version!==plan.revision)throw new FleetError("fleet.version_conflict");
+ const {vendorId:_,...billingContext}=billing.context,original=(await readCompleteFleetRunEvents(context.client,run))[0];
+ const pricing=await resolveFleetRateAuthority(context.client,context.actor,{billingContext,serviceId:billing.serviceId,workAt:original.capturedAt??original.recordedAt,approvalRef:null,purpose:"office_submit"});
+ if(pricing.mode!=="priced")throw new FleetError("fleet.price_authority_unresolved",409);
+ const before=billing.pricing,recordedAt=new Date().toISOString();run.billingV2=FleetRunBillingV2Schema.parse({...billing,revision:billing.revision+1,pricing});run.version++;
+ appendFleetRunEvent(run,{id:randomUUID(),operationId:command.operationId,type:"price_resolved",actorUserId:context.actor.userId,recordedAt,capturedAt:new Date(command.capturedAt).toISOString(),source:"user_report",details:{reason:command.payload.reason,originalPricing:before,approvalRef:pricing.rateCard.approvalRef}});
+ return {ticketVersion:plan.revision};
 }
 export async function reviewFleetActivityCharges(context:FleetWorkExecutionContext,command:Extract<FleetWorkCommand,{kind:"charge.review"}>,run:FleetRun){
  await office(context,run);const p=command.payload,billing=run.billingV2;

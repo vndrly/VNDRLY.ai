@@ -1,6 +1,8 @@
 import {z} from "zod/v4";
 import {CreateFleetRunSchema,type FleetRun,type FleetActionInput} from "./fleet";
 import {FleetDetailSnapshotSchema} from "./fleet-details";
+import {FleetPricingBasisSchema} from "./fleet-pricing";
+export const FleetWorkBillingOptionsSchema=z.object({workTypes:z.array(z.object({id:z.number().int().positive(),name:z.string(),unit:FleetPricingBasisSchema.nullable(),afeNumber:z.string()}).strict()),tickets:z.array(z.object({id:z.number().int().positive(),ticketNumber:z.number().int().positive(),siteId:z.number().int().positive(),afeNumber:z.string(),workDate:z.iso.date(),planVersion:z.number().int().positive()}).strict()),afeRequired:z.boolean(),siteAfe:z.string(),referenceFreshness:z.enum(["current","cached_unverified"]),downloadedAt:z.iso.datetime()}).strict();
 import {FleetWorkScopeSchema,FleetWorkCommandSchema,type FleetWorkScope} from "./fleet-work";
 export const FleetWorkPreparationSchema=z.object({snapshot:FleetDetailSnapshotSchema,billingSiteId:z.number().int().positive(),partnerId:z.number().int().positive(),ticket:z.object({id:z.number().int().positive(),version:z.number().int().positive(),serviceId:z.number().int().positive()}).strict().nullable()}).strict();
 export function buildFleetCreateIntent(options:{scope:unknown;preparation:unknown;input:unknown;now:()=>Date;uuid:()=>string}){

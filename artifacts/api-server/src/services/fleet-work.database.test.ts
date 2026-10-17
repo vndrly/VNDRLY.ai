@@ -1147,3 +1147,9 @@ it("completes a real private source document through its current authorization b
   expect(JSON.stringify(rows.rows)).not.toContain(body.toString("base64"));
   expect(JSON.stringify(rows.rows)).not.toContain("SYNTHETIC-PRIVATE-LICENSE");
 });
+it("renews only the same current original provision and cannot renew a revoked device",async()=>{
+ const f=await fixture();const old=(await pool.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-provision' AND target_id=$2 ORDER BY id DESC LIMIT 1",[f.actor.companyId,f.scope.provisioningId])).rows[0].tool_output;
+ old.expiresAt='2026-10-01T00:00:00Z';await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','synthetic_expiry','fixture','fleet-work-provision',$3,$4::jsonb,'completed')",[f.actor.userId,f.actor.companyId,f.scope.provisioningId,JSON.stringify(old)]);
+ const saved=await f.repository.renewProvision(f.actor,{scope:f.scope});expect(saved.scope).toEqual(f.scope);expect(Date.parse(saved.expiresAt)).toBeGreaterThan(Date.now());expect((await f.service.apply(f.actor,f.command())).status).toBe('applied');
+ await pool.query('UPDATE work_hub_devices SET revoked_at=now() WHERE id=$1',[f.device.id]);await expect(f.repository.renewProvision(f.actor,{scope:f.scope})).rejects.toThrow();
+});

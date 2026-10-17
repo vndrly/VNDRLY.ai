@@ -89,3 +89,8 @@ it("offers narrow office resolutions while retaining original ticket context and
  expect(commands.safeParse({...base(),kind:"activity.reconcile",payload:{...payload,resolution:{kind:"create_ticket",billing:creation().payload.billing}}}).success).toBe(true);
  expect(commands.safeParse({...base(),kind:"activity.reconcile",payload:{...payload,resolution:{kind:"create_ticket",billing:{...creation().payload.billing,choice:"existing_ticket"}}}}).success).toBe(false);
 });
+it("resolves missing pricing only through an explicit original office command without a caller supplied rate",()=>{
+ const commands=schema("FleetWorkCommandSchema"),payload={activity:ref("activity",30,"canonical"),ticket:{type:"canonical",kind:"ticket",id:123,version:1},expectedVersion:1,reason:"Resolve saved authorized agreement"};
+ expect(commands.safeParse({...base(),kind:"price.resolve",payload}).success).toBe(true);
+ expect(commands.safeParse({...base(),kind:"price.resolve",payload:{...payload,unitRate:"0"}}).success).toBe(false);
+});

@@ -1,0 +1,33 @@
+import React,{useState} from "react";
+import {useTranslation} from "react-i18next";
+import {fleetRecoveryCopy,type FleetWorkSession,type FleetReconciliationPage,type FleetRecoveryOptionsSchema} from "@workspace/api-zod";
+import type {z} from "zod/v4";
+import {PngPillButton} from "./png-pill-rollover";
+type Item=FleetReconciliationPage["cases"][number];
+function RecoveryCase({session,item,pending,onChanged,onRead}:{session:FleetWorkSession;item:Item;pending:boolean;onChanged:()=>void;onRead:()=>Promise<void>}){
+ const {i18n}=useTranslation(),c=fleetRecoveryCopy(i18n.resolvedLanguage??i18n.language),[reason,setReason]=useState(""),[mode,setMode]=useState(""),[busy,setBusy]=useState(false),[retained,setRetained]=useState(false),[message,setMessage]=useState(""),[options,setOptions]=useState<z.infer<typeof FleetRecoveryOptionsSchema>|null>(null),[ticket,setTicket]=useState(""),[service,setService]=useState(String(item.original.billing?.serviceId??"")),[detail,setDetail]=useState("");
+ const locked=busy||pending||retained,available=item.case.allowedResolutions;
+ async function choices(after?:string){setBusy(true);try{const result=await session.recoveryOptions(item.case.id,after);setOptions(prior=>after&&prior?{...result,details:[...prior.details,...result.details]}:result);}catch(error){setMessage(error instanceof Error?error.message:c.unknown);}finally{setBusy(false);}}
+ async function resolve(){if(locked||!reason.trim())return;setBusy(true);try{
+  const resolution=mode==="retain_record_only"?{kind:"retain_record_only" as const,explanation:reason}:mode==="create_ticket"&&item.original.billing&&options?.services.some(row=>row.id===Number(service))?{kind:"create_ticket" as const,billing:{...item.original.billing,serviceId:Number(service)}}:mode==="link_open_ticket"&&options?.tickets.find(row=>row.id===Number(ticket))?{kind:"link_open_ticket" as const,ticket:{type:"canonical" as const,kind:"ticket" as const,id:Number(ticket),version:options.tickets.find(row=>row.id===Number(ticket))!.version}}:mode==="correct_assignment"&&detail?{kind:"correct_assignment" as const,detailReference:{type:"canonical" as const,kind:"detail" as const,id:detail,version:options!.details.find(row=>row.id===detail)!.version},snapshot:await session.recoveryDetail(detail)}:null;
+  if(!resolution)throw Error(c.choose);const saved=await session.captureReconciliation(item,resolution,reason);onChanged();if(!saved.canonicalApplied){setRetained(true);setMessage(c.pending);}else{await onRead();setMode("");setMessage(mode==="retain_record_only"?c.retained:c.saved);}
+ }catch(error){setMessage(error instanceof Error?error.message:c.unknown);}finally{setBusy(false);}}
+ return <article className="fleet-detail-group space-y-2"><h4>{item.original.title??item.original.kind}</h4><p>{item.case.reason} · {item.original.capturedAt} · {item.original.timeZone}</p><p>{item.case.createdAt}</p>
+  {item.case.resolution&&<p>{item.case.resolution.kind} · {item.case.resolution.reason}</p>}
+  {item.canResolve&&item.original.activity&&item.original.ticket&&<><label>{c.reason}<textarea aria-label={c.reason} value={reason} maxLength={2000} disabled={locked} onChange={e=>setReason(e.target.value)}/></label>
+   {available.includes("retain_record_only")&&<PngPillButton disabled={locked} onClick={()=>setMode("retain_record_only")}>{c.retain}</PngPillButton>}
+   {item.original.kind==="activity.create"&&<><PngPillButton disabled={locked} onClick={()=>void choices()}>{c.options}</PngPillButton>
+    {available.includes("create_ticket")&&<><label>{c.service}<select aria-label={c.service} disabled={locked} value={service} onChange={e=>setService(e.target.value)}><option value="">{c.choose}</option>{options?.services.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label><PngPillButton disabled={locked||!options?.services.some(row=>row.id===Number(service))} onClick={()=>setMode("create_ticket")}>{c.fresh}</PngPillButton></>}
+    {available.includes("link_open_ticket")&&<><label>{c.ticket}<select aria-label={c.ticket} disabled={locked} value={ticket} onChange={e=>setTicket(e.target.value)}><option value="">{c.choose}</option>{options?.tickets.map(row=><option key={row.id} value={row.id}>#{row.ticketNumber}</option>)}</select></label><PngPillButton disabled={locked||!ticket} onClick={()=>setMode("link_open_ticket")}>{c.existing}</PngPillButton></>}
+    {available.includes("correct_assignment")&&<><label>{c.detail}<select aria-label={c.detail} disabled={locked} value={detail} onChange={e=>setDetail(e.target.value)}><option value="">{c.choose}</option>{options?.details.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label><PngPillButton disabled={locked||!detail} onClick={()=>setMode("correct_assignment")}>{c.assignment}</PngPillButton>{options?.nextDetailCursor&&<PngPillButton disabled={locked} onClick={()=>void choices(options.nextDetailCursor!)}>{c.moreDetails}</PngPillButton>}</>}
+   </>}
+   {!!mode&&<><p>{c.warning}</p><p>{mode}</p><PngPillButton disabled={locked||!reason.trim()} onClick={()=>void resolve()}>{c.confirm}</PngPillButton></>}
+  </>}{!!message&&<p role="status">{message}</p>}
+ </article>;
+}
+export function FleetReconciliation({session,pendingCaseIds,onChanged}:{session:FleetWorkSession;pendingCaseIds:readonly string[];onChanged:()=>void}){
+ const {i18n}=useTranslation(),c=fleetRecoveryCopy(i18n.resolvedLanguage??i18n.language),[page,setPage]=useState<FleetReconciliationPage|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
+ async function read(after?:string){const saved=await session.reconciliation(after);setPage(prior=>after&&prior?{...saved,cases:[...prior.cases,...saved.cases]}:saved);}
+ async function refresh(after?:string){setBusy(true);try{await read(after);}catch(error){setMessage(error instanceof Error?error.message:c.unknown);}finally{setBusy(false);}}
+ return <section className="fleet-panel space-y-3"><h3>{c.heading}</h3><PngPillButton disabled={busy} onClick={()=>void refresh()}>{c.read}</PngPillButton>{page?.cases.length===0&&<p>{c.empty}</p>}{page?.cases.map(item=><RecoveryCase key={item.case.id} session={session} item={item} pending={pendingCaseIds.includes(item.case.id)} onChanged={onChanged} onRead={()=>read()}/>)}{page?.nextCursor&&<PngPillButton disabled={busy} onClick={()=>void refresh(page.nextCursor!)}>{c.more}</PngPillButton>}{!!message&&<p role="alert">{message}</p>}</section>;
+}

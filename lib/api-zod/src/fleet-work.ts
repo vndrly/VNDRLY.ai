@@ -62,7 +62,7 @@ const command=<K extends string,T extends z.ZodType>(kind:K,payload:T)=>z.object
 export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  activityCreate,note,action,edit,
  command("activity.legacy_action",z.object({activity:activityRef.refine(ref=>ref.type==="canonical"),base:FleetLegacyAssignmentSchema,ticket:z.object({id,version:z.null(),source:z.literal("legacy_cached_run_link")}).strict(),action:FleetActionInputSchema,source:z.literal("retained_v1"),legacyState:z.enum(["unsynced","conflict","revoked"]),legacySessionVersion:z.number().int().nonnegative(),legacyCaptureZoneSource:z.literal("stored_utc_timestamp"),legacyCompliance:z.literal("not_recorded")}).strict()),
- command("activity.reconcile",z.object({caseId:uuid,expectedVersion:revision,activity:activityRef,originalTicket:FleetWorkTicketReferenceSchema,reason:z.string().trim().min(1).max(2000),resolution:FleetWorkResolutionSchema}).strict()),
+ command("activity.reconcile",z.object({caseId:uuid,expectedVersion:revision,activity:activityRef,originalTicket:FleetWorkTicketReferenceSchema,recoveryDriverUserId:id.optional(),reason:z.string().trim().min(1).max(2000),resolution:FleetWorkResolutionSchema}).strict()),
  command("detail.save",FleetDetailSaveSchema),command("rig_package.save",FleetRigPackageSaveSchema),
  command("run_order.save",FleetRunOrderSaveSchema),command("location.save",FleetDestinationSaveSchema.extend({localReference:reference("location").refine(ref=>ref.type==="local","A new location needs its local identity").nullable()})),
  command("compliance.receive",z.object({source:FleetComplianceSaveSchema,documentReference:reference("evidence").nullable()}).strict()),command("compliance.review",FleetComplianceVerifySchema),
@@ -71,6 +71,7 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  command("workday.event",WorkdayCommandSchema),
  command("quantity.record",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,evidence:FleetQuantityEvidenceSchema}).strict()),
  command("quantity.review",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,selections:z.array(FleetQuantityReviewSelectionSchema).min(1).max(100).refine(rows=>new Set(rows.map(row=>row.evidenceId)).size===rows.length,"Select each original quantity report once")}).strict()),
+ command("price.resolve",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,expectedVersion:revision,reason:z.string().trim().min(1).max(2000)}).strict()),
  command("charge.review",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,expectedVersion:revision,quantityReviews:z.array(z.object({evidenceId:uuid,revision:revision}).strict()).min(1).max(100),taxTreatment:z.enum(["existing_ticket_rubric","reviewed_taxable","reviewed_exempt"]),intervals:z.array(z.object({id:uuid,kind:z.enum(["waiting","hourly_service"]),startAt:timestamp,endAt:timestamp}).strict()).max(500),additionalCharges:z.array(z.object({code:z.string().min(1).max(100),quantity:FleetExactDecimalSchema,evidenceIds:z.array(uuid)}).strict()).max(100)}).strict()),
  command("charge.adjust",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,chargeId:uuid,expectedRevision:revision,delta:FleetExactDecimalSchema,reason:z.string().trim().min(1).max(2000)}).strict()),
  command("ticket.finalize",z.object({ticket:FleetWorkTicketReferenceSchema,expectedVersion:revision,finalizeDayMinimums:z.boolean().default(false)}).strict()),
@@ -124,16 +125,17 @@ export type FleetWorkCommand=z.infer<typeof FleetWorkCommandSchema>;
 export const FleetWorkCanonicalReferenceSchema=z.union([FleetWorkReferenceSchema.options[1],FleetWorkReferenceSchema.options[2]]);
 export const FleetWorkMappingSchema=z.object({local:FleetWorkReferenceSchema.options[0],canonical:FleetWorkCanonicalReferenceSchema}).strict().superRefine((value,ctx)=>{if(value.local.kind!==value.canonical.kind)ctx.addIssue({code:"custom",message:"A mapping cannot change resource kind"});});
 export const FleetWorkReconciliationReasonSchema=z.enum(["closed_ticket","changed_assignment","resource_conflict","missing_authority","unresolved_location","unresolved_price","expired_session","invalid_dependency","invalid_command","stale_revision","temporarily_unavailable","storage_unavailable"]);
-const receiptBase={version:z.literal(2),operationId:uuid,scope:FleetWorkScopeSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),recordedAt:timestamp};
+const receiptBase={version:z.literal(2),operationId:uuid,scope:FleetWorkScopeSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),recordedAt:timestamp,resolution:z.object({caseId:uuid,officeOperationId:uuid,reviewedByUserId:id,reason:z.string().min(1).max(2000)}).strict().optional()};
 const applied={...receiptBase,mappings:z.array(FleetWorkMappingSchema),canonicalReferences:z.array(FleetWorkCanonicalReferenceSchema)};
 export const FleetWorkReceiptSchema=z.discriminatedUnion("status",[
  z.object({...applied,status:z.literal("applied")}).strict(),z.object({...applied,status:z.literal("duplicate")}).strict(),
  z.object({...receiptBase,status:z.literal("needs_reconciliation"),reason:FleetWorkReconciliationReasonSchema,caseId:uuid}).strict(),
  z.object({...receiptBase,status:z.literal("denied"),reason:FleetWorkReconciliationReasonSchema,caseId:uuid.nullable()}).strict(),
+ z.object({...receiptBase,status:z.literal("retained"),reason:FleetWorkReconciliationReasonSchema,caseId:uuid,resolution:receiptBase.resolution.unwrap()}).strict(),
  z.object({...receiptBase,status:z.literal("retry_later"),reason:FleetWorkReconciliationReasonSchema,retryAt:timestamp}).strict(),
 ]);
 export type FleetWorkReceipt=z.infer<typeof FleetWorkReceiptSchema>;
-export const FleetReconciliationCaseSchema=z.object({id:uuid,version:revision,scope:FleetWorkScopeSchema,operationId:uuid,reason:FleetWorkReconciliationReasonSchema,originalReferences:z.array(FleetWorkReferenceSchema),allowedResolutions:z.array(z.enum(["link_open_ticket","create_ticket","correct_assignment","resolve_location","resolve_price","renew_authority","retain_record_only"])),createdAt:timestamp}).strict();
+export const FleetReconciliationCaseSchema=z.object({id:uuid,version:revision,scope:FleetWorkScopeSchema,operationId:uuid,reason:FleetWorkReconciliationReasonSchema,originalReferences:z.array(FleetWorkReferenceSchema),allowedResolutions:z.array(z.enum(["link_open_ticket","create_ticket","correct_assignment","resolve_location","resolve_price","renew_authority","retain_record_only"])),createdAt:timestamp,resolution:z.object({kind:z.string(),operationId:uuid,reviewedByUserId:id,reviewedAt:timestamp,reason:z.string().min(1).max(2000),canonicalReferences:z.array(FleetWorkReferenceSchema)}).strict().optional()}).strict();
 export type FleetReconciliationCase=z.infer<typeof FleetReconciliationCaseSchema>;
 /** A persistence adapter emits this only after its actual durable transaction. */
 export const FleetLocalSaveReceiptSchema=z.object({operationId:uuid,storedAt:timestamp,durability:z.literal("durable"),canonicalApplied:z.literal(false)}).strict();
