@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as contracts from "./index";
 
 const subject = { kind: "vehicle", id: "11111111-1111-4111-8111-111111111111" };
-const requirement = { id: "periodic_inspection", version: 1, category: "vehicle_inspection", label: "Periodic inspection", subjectKinds: ["vehicle"], jurisdiction: "federal", classification: "legal", effectiveFrom: "2026-01-01T00:00:00Z", effectiveUntil: null, applicability: { anyOf: [{ allOf: [{ fact: "interstate", operator: "eq", value: true }] }] }, renewalDays: 365, dueSoonDays: 30, source: { url: "https://www.ecfr.gov/current/title-49/part-396", section: "396.17", reviewedAt: "2026-10-16T00:00:00Z", reviewedByUserId: 7 } };
+const requirement = { id: "periodic_inspection", version: 1, category: "vehicle_inspection", label: "Periodic inspection", subjectKinds: ["vehicle"], jurisdiction: "federal", classification: "legal", effectiveFrom: "2026-01-01T00:00:00Z", effectiveUntil: null, applicability: { anyOf: [{ allOf: [{ fact: "interstate", operator: "eq", value: true }] }] }, renewalDays: null, expiryRequired: true, dueSoonDays: 30, source: { url: "https://www.ecfr.gov/current/title-49/part-396", section: "396.17", reviewedAt: "2026-10-16T00:00:00Z", reviewedByUserId: 7 } };
 const evidence = { id: "22222222-2222-4222-8222-222222222222", revision: 1, subject, requirementId: requirement.id, requirementVersion: 1, status: "verified", validFrom: "2026-01-01T00:00:00Z", validUntil: "2026-10-16T12:00:00Z", verifiedAt: "2026-01-01T00:00:00Z", verifiedByUserId: 7, source: "Carrier reviewer", privateDocumentRef: "private-review-only", restrictions: { states: ["OK", "TX"], cargoCodes: ["crude"], carrierIds: [11], equipmentIds: [subject.id] } };
 const input = { facts: { interstate: true, state: "OK", cargoCode: "crude", carrierId: 11 }, members: [{ subject, facts: {} }], requirements: [requirement], evidence: [evidence], at: "2026-10-16T11:59:59Z", freshness: "current" };
 type Assessment = { subject: typeof subject; status: string; evaluatedAt: string; findings: Array<{ reason: string; explanation: string }>; dueSoon: unknown[] };
@@ -14,6 +14,11 @@ function call(name: string, value: unknown): unknown {
 function evaluate(value: unknown): Assessment[] { return call("evaluateFleetCompliance", value) as Assessment[]; }
 
 describe("recorded Fleet compliance assessments", () => {
+  it("requires a reviewed source expiry without inventing a fixed-day renewal period",()=>{
+    const sourceDated={...requirement,renewalDays:null,expiryRequired:true};
+    expect(evaluate({...input,requirements:[sourceDated],evidence:[{...evidence,validUntil:null}]})[0]).toMatchObject({status:"red",findings:[{reason:"unverified"}]});
+    expect(evaluate({...input,requirements:[sourceDated]})[0].status).toBe("green");
+  });
   it("distinguishes a missing record from a confirmed revoked credential", () => {
     expect(evaluate({ ...input, evidence: [] })[0]).toMatchObject({ status: "red", findings: [{ reason: "missing" }] });
     expect(evaluate({ ...input, evidence: [{ ...evidence, status: "revoked" }] })[0].findings[0].reason).toBe("revoked");

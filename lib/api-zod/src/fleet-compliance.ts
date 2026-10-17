@@ -24,6 +24,7 @@ export const FleetRequirementVersionSchema = z.object({
   label: z.string().trim().min(1).max(200), subjectKinds: z.array(z.enum(["carrier", "driver", "vehicle", "component", "trip"])).min(1).max(5),
   jurisdiction: z.enum(["federal", "OK", "TX", "carrier", "customer"]), classification: z.enum(["legal", "contract", "company"]),
   effectiveFrom: timestamp, effectiveUntil: timestamp.nullable(), applicability: z.object({ anyOf: z.array(z.object({ allOf: z.array(predicate).max(50) }).strict()).min(1).max(50) }).strict(),
+  expiryRequired: z.boolean().optional(),
   renewalDays: z.number().int().positive().nullable(), dueSoonDays: z.number().int().nonnegative().max(365),
   source: z.object({ url: z.url().refine(url => /^https:\/\//i.test(url), "HTTPS source required"), section: z.string().trim().min(1).max(500), reviewedAt: timestamp, reviewedByUserId: positiveId }).strict(),
 }).strict().superRefine((value, ctx) => {

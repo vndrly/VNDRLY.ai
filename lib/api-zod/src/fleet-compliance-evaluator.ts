@@ -58,7 +58,7 @@ export function evaluateFleetCompliance(input: unknown): FleetComplianceAssessme
       if (evidence.status === "revoked" || evidence.status === "failed") { add(rule, evidence.status); continue; }
       if (evidence.validUntil && Date.parse(evidence.validUntil) <= now) { add(rule, "expired"); continue; }
       if (evidence.status !== "verified" || (evidence.validFrom && Date.parse(evidence.validFrom) > now) || (evidence.verifiedAt && Date.parse(evidence.verifiedAt) > now)) { add(rule, "unverified"); continue; }
-      if (rule.renewalDays !== null && evidence.validUntil === null) { add(rule, "unverified"); continue; }
+      if ((rule.expiryRequired === true || rule.renewalDays !== null) && evidence.validUntil === null) { add(rule, "unverified"); continue; }
       const restriction = restrictionStatus(evidence, facts, member.subject.id);
       if (restriction) { add(rule, restriction); continue; }
       if (evidence.validUntil && Date.parse(evidence.validUntil) - now <= rule.dueSoonDays * 86400000) assessment.dueSoon.push({ requirementId: rule.id, dueAt: evidence.validUntil });
