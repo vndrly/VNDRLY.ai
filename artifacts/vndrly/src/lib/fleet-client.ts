@@ -40,6 +40,11 @@ import {
   FleetComplianceFactsSaveSchema,
   FleetComplianceSubjectSchema,
   FleetComplianceRequirementAdoptSchema,
+  FleetComplianceSubjectChoicesQuerySchema,
+  FleetComplianceSubjectChoicesPageSchema,
+  FleetComplianceDocumentUploadSchema,
+  FleetComplianceDocumentReceiptSchema,
+  FleetComplianceSaveSchema,
   FleetRequirementVersionSchema,
   FleetDestinationReceiptSchema,
   FleetDestinationDirectorySchema,
@@ -157,6 +162,13 @@ export const fleetClient = {
   complianceConfiguration:()=>request<unknown>("/compliance/configuration").then(value=>FleetComplianceConfigurationViewSchema.parse(value)),
   saveComplianceReviewers:(input:z.input<typeof FleetComplianceReviewerSaveSchema>)=>request<unknown>("/compliance/reviewers",FleetComplianceReviewerSaveSchema.parse(input)).then(value=>FleetComplianceConfigurationViewSchema.pick({version:true,reviewerUserIds:true}).parse(value)),
   complianceRequirements:()=>request<unknown>("/compliance/requirements").then(value=>FleetComplianceRequirementsViewSchema.parse(value)),
+  complianceSubjects:(input:z.input<typeof FleetComplianceSubjectChoicesQuerySchema>)=>{
+    const value=FleetComplianceSubjectChoicesQuerySchema.parse(input),query=new URLSearchParams({kind:value.kind,search:value.search,limit:String(value.limit)});if(value.after)query.set("after",value.after);
+    return request<unknown>(`/compliance/subjects?${query}`).then(value=>FleetComplianceSubjectChoicesPageSchema.parse(value));
+  },
+  uploadComplianceDocument:(input:z.input<typeof FleetComplianceDocumentUploadSchema>)=>request<unknown>("/compliance/documents",FleetComplianceDocumentUploadSchema.parse(input)).then(value=>FleetComplianceDocumentReceiptSchema.parse(value)),
+  receiveComplianceSource:(input:z.input<typeof FleetComplianceSaveSchema>)=>request<unknown>("/compliance",FleetComplianceSaveSchema.parse(input)).then(value=>FleetComplianceRecordReceiptSchema.parse(value)),
+  complianceReceipt:(id:string,revision:number)=>request<unknown>(`/compliance/${encodeURIComponent(id)}/receipt?revision=${revision}`).then(value=>FleetComplianceRecordReceiptSchema.parse(value)),
   complianceFacts:(raw:z.input<typeof FleetComplianceSubjectSchema>,revision?:number)=>{const subject=FleetComplianceSubjectSchema.parse(raw);if(revision!==undefined)FleetComplianceFactsViewSchema.shape.version.parse(revision);return request<unknown>(`/compliance/facts/${subject.kind}/${subject.id}${revision===undefined?"":`?revision=${revision}`}`).then(value=>FleetComplianceFactsViewSchema.nullable().parse(value));},
   saveComplianceFacts:(input:z.input<typeof FleetComplianceFactsSaveSchema>)=>request<unknown>("/compliance/facts",FleetComplianceFactsSaveSchema.parse(input)).then(value=>FleetComplianceConfigurationViewSchema.pick({version:true}).parse(value)),
   adoptComplianceRequirement:(input:z.input<typeof FleetComplianceRequirementAdoptSchema>)=>request<unknown>("/compliance/requirements",FleetComplianceRequirementAdoptSchema.parse(input)).then(value=>FleetRequirementVersionSchema.parse(value)),

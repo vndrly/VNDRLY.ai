@@ -55,6 +55,7 @@ export function createFleetComplianceRouter(
     endpoint((req) => service.adoptFleetRequirement(actor(req), req.body)),
   );
   router.get("/fleet/compliance/requirements",endpoint(req=>service.readFleetComplianceRequirements(actor(req))));
+  router.get("/fleet/compliance/subjects",endpoint(req=>service.readFleetComplianceSubjects(actor(req),req.query)));
   router.get("/fleet/compliance/facts/:kind/:subjectId",endpoint(req=>{
     const kind=z.enum(["carrier","driver","vehicle","component","trip"]).parse(req.params.kind);
     const id=kind==="carrier"||kind==="driver"?z.coerce.number().int().positive().parse(req.params.subjectId):z.uuid().parse(req.params.subjectId);
@@ -94,6 +95,10 @@ export function createFleetComplianceRouter(
         throw new FleetError("fleet.invalid_request", 400);
       return service.verifyFleetComplianceEvidence(actor(req), req.body);
     }),
+  );
+  router.get(
+    "/fleet/compliance/:id/receipt",
+    endpoint(req => service.readFleetComplianceReceipt(actor(req), z.uuid().parse(req.params.id), z.coerce.number().int().positive().parse(req.query.revision))),
   );
   router.get(
     "/fleet/compliance/:id/private",

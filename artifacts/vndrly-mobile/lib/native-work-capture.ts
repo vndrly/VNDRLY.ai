@@ -6,6 +6,8 @@ import { currentNativeCaptureContext } from "./native-capture-context";
 import {
   NativeScanDraftSchema,
   NativeSummaryDraftSchema,
+  NativeDocumentDraftSchema,
+  NativeDocumentBytesSchema,
 } from "./native-work-capture-policy";
 
 let listening = false;
@@ -50,6 +52,28 @@ export async function scanWorkDocumentDraft() {
       .catch(() => undefined);
     throw error;
   }
+}
+
+/** The system picker returns a private local draft only. Upload, evidence
+ * receipt and source verification remain separate canonical operations. */
+export async function pickWorkDocumentDraft() {
+  const context = await currentCapture();
+  if (typeof context.native.pickDocument !== "function") throw new Error("native_work_document_picker_unavailable");
+  const raw = await context.native.pickDocument(context.binding);
+  try { context.assertCurrent(); return NativeDocumentDraftSchema.parse(raw); }
+  catch (error) {
+    const id = z.object({fileId:z.uuid()}).safeParse(raw);
+    if(id.success) await context.native.discardDraft({contextBinding:context.binding,fileIds:[id.data.fileId]}).catch(()=>undefined);
+    throw error;
+  }
+}
+export async function readWorkDocumentDraft(input:z.infer<typeof NativeDocumentDraftSchema>){
+ const picked=NativeDocumentDraftSchema.parse(input),context=await currentCapture();
+ if(typeof context.native.readDocumentDraft!=="function")throw new Error("native_work_document_read_unavailable");
+ const raw=await context.native.readDocumentDraft({contextBinding:context.binding,fileId:picked.fileId});context.assertCurrent();
+ const result=NativeDocumentBytesSchema.parse(raw);
+ if(result.fileId!==picked.fileId||result.byteSize!==picked.byteSize||result.sha256!==picked.sha256||result.contentType!==picked.contentType)throw new Error("native_work_document_changed");
+ return result;
 }
 
 export async function summarizeWorkDraft(text: string, language: "en" | "es") {

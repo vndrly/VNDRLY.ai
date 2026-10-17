@@ -15,9 +15,11 @@ import FleetEvidenceReview from "./FleetEvidenceReview";
 import FleetComplianceReviewers from "./FleetComplianceReviewers";
 import FleetComplianceFacts from "./FleetComplianceFacts";
 import FleetComplianceRules from "./FleetComplianceRules";
+import FleetComplianceIntake from "./FleetComplianceIntake";
 
 export default function FleetComplianceRegister({companyId}:{companyId?:number}={}) {
   const [rulesOpen,setRulesOpen]=useState(false);
+  const [intakeOpen,setIntakeOpen]=useState(false);
   const [factsSubject,setFactsSubject]=useState<FleetComplianceSubject|null>(null);
   const [selected,setSelected]=useState<{id:string;revision:number}|null>(null);
   const copy = useFleetCopy(),
@@ -117,9 +119,10 @@ export default function FleetComplianceRegister({companyId}:{companyId?:number}=
       <Text style={[text, { fontSize: 20, fontWeight: "700" }]}>
         {copy("Compliance registers")}
       </Text>
-      <FleetComplianceReviewers onChanged={()=>{setRulesOpen(false);setSelected(null);setFactsSubject(null);setRefresh(value=>value+1);}}/>
-      <TogglePillButton onPress={()=>{setSelected(null);setFactsSubject(null);setRulesOpen(true);}}>{copy("Requirements and history")}</TogglePillButton>
-      {typeof companyId==="number"&&Number.isInteger(companyId)&&companyId>0&&<TogglePillButton onPress={()=>{setRulesOpen(false);setSelected(null);setFactsSubject({kind:"carrier",id:companyId});}}>{copy("Carrier applicability")}</TogglePillButton>}
+      <FleetComplianceReviewers onChanged={()=>{setIntakeOpen(false);setRulesOpen(false);setSelected(null);setFactsSubject(null);setRefresh(value=>value+1);}}/>
+      <TogglePillButton onPress={()=>{setIntakeOpen(true);setSelected(null);setFactsSubject(null);setRulesOpen(false);}}>{copy("Receive evidence")}</TogglePillButton>
+      <TogglePillButton onPress={()=>{setIntakeOpen(false);setSelected(null);setFactsSubject(null);setRulesOpen(true);}}>{copy("Requirements and history")}</TogglePillButton>
+      {typeof companyId==="number"&&Number.isInteger(companyId)&&companyId>0&&<TogglePillButton onPress={()=>{setIntakeOpen(false);setRulesOpen(false);setSelected(null);setFactsSubject({kind:"carrier",id:companyId});}}>{copy("Carrier applicability")}</TogglePillButton>}
       <View style={card}>
         <Text style={text}>
           {copy(
@@ -142,11 +145,11 @@ export default function FleetComplianceRegister({companyId}:{companyId?:number}=
             label: copy(label),
           })),
         ]}
-        onChange={(value) => {setRulesOpen(false);setKind(value as typeof kind);}}
+        onChange={(value) => {setIntakeOpen(false);setRulesOpen(false);setKind(value as typeof kind);}}
       />
       <TogglePillButton
         disabled={loading}
-        onPress={() => {setRulesOpen(false);setRefresh((value) => value + 1);}}
+        onPress={() => {setIntakeOpen(false);setRulesOpen(false);setRefresh((value) => value + 1);}}
       >
         {copy("Refresh compliance")}
       </TogglePillButton>
@@ -163,6 +166,7 @@ export default function FleetComplianceRegister({companyId}:{companyId?:number}=
           )}
         </Text>
       )}
+      {intakeOpen&&!error&&<FleetComplianceIntake onClose={()=>setIntakeOpen(false)} onSaved={()=>{setIntakeOpen(false);setRefresh(value=>value+1);}}/>}
       {rulesOpen&&!error&&<FleetComplianceRules onClose={()=>setRulesOpen(false)} onSaved={()=>setRefresh(value=>value+1)}/>}
       {selected&&!error&&<FleetEvidenceReview evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);setRefresh(value=>value+1);}}/>}
       {factsSubject&&!error&&<FleetComplianceFacts subject={factsSubject} onClose={()=>setFactsSubject(null)} onSaved={()=>{setFactsSubject(null);setRefresh(value=>value+1);}}/>}
@@ -209,8 +213,8 @@ export default function FleetComplianceRegister({companyId}:{companyId?:number}=
           <Text style={text}>
             {copy("Evaluated")}: {new Date(entry.evaluatedAt).toLocaleString()}
           </Text>
-          {entry.mayReview&&<TogglePillButton onPress={()=>{setRulesOpen(false);setFactsSubject(null);setSelected({id:entry.id,revision:entry.revision});}}>{copy("Review evidence")}</TogglePillButton>}
-          <TogglePillButton onPress={()=>{setRulesOpen(false);setSelected(null);setFactsSubject(entry.subject);}}>{copy("Applicability facts")}</TogglePillButton>
+          {entry.mayReview&&<TogglePillButton onPress={()=>{setIntakeOpen(false);setRulesOpen(false);setFactsSubject(null);setSelected({id:entry.id,revision:entry.revision});}}>{copy("Review evidence")}</TogglePillButton>}
+          <TogglePillButton onPress={()=>{setIntakeOpen(false);setRulesOpen(false);setSelected(null);setFactsSubject(entry.subject);}}>{copy("Applicability facts")}</TogglePillButton>
         </View>
       ))}
       {!!after && !error && (

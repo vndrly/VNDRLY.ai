@@ -90,3 +90,7 @@ vi.mock("./FleetComplianceRules",()=>({default:()=> <div>Requirements opened</di
 it("opens native requirement history only on request",async()=>{
  mocks.api.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<FleetComplianceRegister/>);expect(screen.queryByText("Requirements opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Requirements and history"}));expect(screen.getByText("Requirements opened")).toBeTruthy();
 });
+vi.mock("./FleetComplianceIntake",()=>({default:()=> <div>Source intake opened</div>}));
+it("opens native received-source intake only after choosing it",async()=>{
+ mocks.api.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<FleetComplianceRegister/>);expect(screen.queryByText("Source intake opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Receive evidence"}));expect(screen.getByText("Source intake opened")).toBeTruthy();
+});

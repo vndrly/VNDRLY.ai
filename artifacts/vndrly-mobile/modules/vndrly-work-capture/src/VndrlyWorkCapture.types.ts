@@ -1,4 +1,5 @@
 export type WorkCaptureCapabilities = {
+  documentPicker?: boolean;
   scanner: boolean;
   ocr: boolean;
   onDeviceDraft: boolean;
@@ -9,6 +10,13 @@ export type WorkCaptureCapabilities = {
     | "sdk_unavailable";
   backgroundUpload: boolean;
 };
+export type WorkCaptureDocument = WorkCaptureFile & {
+  source: "system_document_picker";
+  contentType: "application/pdf" | "image/jpeg" | "image/png" | "image/webp";
+  reviewRequired: true;
+  canonicalSaved: false;
+};
+export type WorkCaptureDocumentBytes=Pick<WorkCaptureDocument,"fileId"|"contentType"|"byteSize"|"sha256">&{bodyBase64:string};
 export type WorkCapturePage = {
   fileId: string;
   uri: string;

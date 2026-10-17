@@ -1,15 +1,27 @@
 import { describe, it, expect } from "vitest";
+import {Buffer} from "node:buffer";
 import {
   validateNativeUploadDestination,
   readNativeTransport,
   NativeScanDraftSchema,
   NativeSummaryDraftSchema,
+  NativeDocumentBytesSchema,
 } from "./native-work-capture-policy";
 const id = "10000000-0000-4000-8000-000000000001",
   fileId = "10000000-0000-4000-8000-000000000002",
   digest = "a".repeat(64);
 const signed = `https://vndrly.ai/api/storage/upload/${id}?expires=2000&signature=${digest}`;
 describe("native private work capture boundaries", () => {
+  it("accepts the full ten-MiB selected source without truncating or exhausting the byte-receipt validator",()=>{
+    const bytes=Buffer.alloc(10*1024*1024);bytes.write("%PDF-");
+    const receipt=NativeDocumentBytesSchema.parse({fileId,contentType:"application/pdf",byteSize:bytes.length,sha256:digest,bodyBase64:bytes.toString("base64")});
+    expect(receipt.byteSize).toBe(10*1024*1024);expect(receipt.bodyBase64.length).toBe(13981016);
+  });
+  it("refuses interior padding, invalid source alphabet and contradictory byte length",()=>{
+    const value={fileId,contentType:"application/pdf",byteSize:14,sha256:digest,bodyBase64:"JVBERi1zeW50aGV0aWM="};
+    for(const bodyBase64 of ["JVBERi=zeW50aGV0aWM=","JVBERi-zeW50aGV0aWM=","JVBERi1zeW50aGV0aWM==="]){expect(NativeDocumentBytesSchema.safeParse({...value,bodyBase64}).success).toBe(false);}
+    expect(NativeDocumentBytesSchema.safeParse({...value,byteSize:15}).success).toBe(false);
+  });
   it("accepts only the current canonical signed upload transport", () => {
     expect(
       validateNativeUploadDestination(signed, "https://vndrly.ai", 1000),

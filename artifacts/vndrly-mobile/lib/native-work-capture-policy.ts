@@ -1,6 +1,20 @@
 import { z } from "zod/v4";
 
 export const NativeCaptureContextSchema = z.string().min(1).max(300);
+export const NativeDocumentDraftSchema = z.object({
+  source: z.literal("system_document_picker"), reviewRequired: z.literal(true), canonicalSaved: z.literal(false),
+  fileId: z.uuid(), uri: z.string().startsWith("file://"),
+  contentType: z.enum(["application/pdf", "image/jpeg", "image/png", "image/webp"]),
+  byteSize: z.number().int().positive().max(10 * 1024 * 1024), sha256: z.string().regex(/^[a-f0-9]{64}$/),
+}).strict();
+export const NativeDocumentBytesSchema=NativeDocumentDraftSchema.pick({fileId:true,contentType:true,byteSize:true,sha256:true}).extend({bodyBase64:z.string().min(1).max(14_000_000)}).strict().superRefine((value,ctx)=>{
+ const padding=value.bodyBase64.endsWith("==")?2:value.bodyBase64.endsWith("=")?1:0;
+ // A repeated four-character regex group exhausts the JS regexp stack for
+ // legitimate ten-MiB sources. Scan the alphabet once with constant stack use.
+ const payload=value.bodyBase64.slice(0,value.bodyBase64.length-padding);
+ if(value.bodyBase64.length%4!==0||/[^A-Za-z0-9+/]/.test(payload))ctx.addIssue({code:"custom",path:["bodyBase64"],message:"Invalid source encoding"});
+ const length=value.bodyBase64.length/4*3-padding;if(length!==value.byteSize)ctx.addIssue({code:"custom",path:["byteSize"],message:"Source bytes do not match metadata"});
+});
 export const NativeScanDraftSchema = z
   .object({
     source: z.literal("visionkit_document_scan"),

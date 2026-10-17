@@ -2,6 +2,13 @@ import express from "express";
 import request from "supertest";
 import { it, expect, vi } from "vitest";
 import { FleetError } from "../services/fleet-repository";
+it("reads a typed evidence revision receipt without invoking a private reader",async()=>{
+ const module=await import("./fleet-compliance"),actor={userId:7,companyId:2},service={readFleetComplianceReceipt:vi.fn(async()=>({id:"11111111-1111-4111-8111-111111111111",revision:1}))};
+ const app=express();app.use(module.createFleetComplianceRouter(service as never,()=>actor));
+ const path="/fleet/compliance/11111111-1111-4111-8111-111111111111/receipt";
+ expect((await request(app).get(`${path}?revision=1`)).status).toBe(200);expect(service.readFleetComplianceReceipt).toHaveBeenLastCalledWith(actor,"11111111-1111-4111-8111-111111111111",1);
+ expect((await request(app).get(`${path}?revision=0`)).status).toBe(400);expect((await request(app).get(path)).status).toBe(400);
+});
 it("reads reviewed requirements and typed operational facts through current company authority without caching",async()=>{
  const module=await import("./fleet-compliance"),actor={userId:7,companyId:2},service={readFleetComplianceRequirements:vi.fn(async()=>({requirements:[],canAdopt:false,mode:"warn_only"})),readFleetComplianceFacts:vi.fn(async()=>null)};
  const app=express();app.use(module.createFleetComplianceRouter(service as never,()=>actor));

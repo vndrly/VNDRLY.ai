@@ -82,3 +82,7 @@ it("opens requirement review and history only on request",async()=>{
  mocks.register.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient()}><FleetComplianceRegister identity="reviewer7"/></QueryClientProvider>);
  expect(screen.queryByText("Requirements opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Requirements and history"}));expect(screen.getByText("Requirements opened")).toBeTruthy();
 });
+vi.mock("./fleet-compliance-intake",()=>({FleetComplianceIntake:()=> <div>Source intake opened</div>}));
+it("opens received-source intake on request without a private evidence read",async()=>{
+ mocks.register.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient()}><FleetComplianceRegister identity="company7"/></QueryClientProvider>);expect(screen.queryByText("Source intake opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Receive evidence"}));expect(screen.getByText("Source intake opened")).toBeTruthy();
+});

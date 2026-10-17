@@ -184,6 +184,59 @@ async function fixture() {
   };
 }
 describe("Private Fleet compliance register", () => {
+  it("does not let a reviewed medical source establish a later adopted license rule or accept a new mismatched binding",async()=>{
+    const f=await fixture();await f.appoint();const original=f.record("driver_medical"),record={...original,evidence:{...original.evidence,requirementId:"synthetic-license-kind"}};
+    await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+    await f.service.verifyFleetComplianceEvidence(f.reviewer,{operationId:randomUUID(),evidenceId:record.evidence.id,expectedVersion:1,decision:"verified",source:f.source,reviewedAt:"2026-10-16T17:00:00Z"});
+    await f.service.adoptFleetRequirement(f.reviewer,{operationId:randomUUID(),expectedVersion:0,requirement:{id:record.evidence.requirementId,version:1,label:"Synthetic license rule",category:"driver_license",subjectKinds:["driver"],jurisdiction:"federal",classification:"legal",effectiveFrom:"2026-01-01T00:00:00Z",effectiveUntil:null,expiryRequired:true,renewalDays:null,dueSoonDays:60,applicability:{anyOf:[{allOf:[{fact:"cdlRequired",operator:"eq",value:true}]}]},source:{url:"https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-383",section:"Synthetic scope fixture; 49 CFR 383"}}});
+    await f.service.recordFleetComplianceFacts(f.reviewer,{operationId:randomUUID(),expectedVersion:0,subject:record.evidence.subject,facts:{cdlRequired:true},source:f.source});
+    const assessed=await f.service.assessFleetComplianceSubjects(f.dispatcher,{subjects:[record.evidence.subject]});expect(assessed.assessments[0].status).toBe("red");
+    await expect(f.service.verifyFleetComplianceEvidence(f.reviewer,{operationId:randomUUID(),evidenceId:record.evidence.id,expectedVersion:2,decision:"verified",source:f.source,reviewedAt:"2026-10-16T17:00:00Z"})).rejects.toMatchObject({code:"fleet.evidence_requirement_mismatch"});
+    await expect(f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record:{...record,evidence:{...record.evidence,id:randomUUID()}}})).rejects.toMatchObject({code:"fleet.evidence_requirement_mismatch"});
+  });
+  it("does not verify a received testing program or issuer that has not been identified",async()=>{
+    const f=await fixture();await f.appoint();
+    for(const attributes of [{kind:"driver_testing",program:null,result:"eligible",clearinghouseConsentAt:null,queryReference:null},{kind:"credential",credentialType:"Training",reference:null,issuingAuthority:null,states:[],cargoCodes:[]}]){
+      const base=f.record(),record={...base,attributes};await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+      await expect(f.service.verifyFleetComplianceEvidence(f.reviewer,{operationId:randomUUID(),evidenceId:base.evidence.id,expectedVersion:1,decision:"verified",source:f.source,reviewedAt:"2026-10-16T17:00:00Z"})).rejects.toMatchObject({code:"fleet.credential_not_eligible"});
+    }
+  });
+  it("offers a scoped source-intake directory with company drivers and canonical Fleet assets, without site assignment or private data",async()=>{
+    const f=await fixture(),driverPage=await f.service.readFleetComplianceSubjects(f.driver,{kind:"driver"});
+    expect(driverPage.entries.map(row=>row.subject)).toEqual([{kind:"driver",id:f.driver.userId}]);expect(driverPage.entries[0].canSubmit).toBe(true);
+    const carrier=await f.service.readFleetComplianceSubjects(f.admin,{kind:"carrier"});expect(carrier.entries[0]).toMatchObject({subject:{kind:"carrier",id:f.admin.companyId},canSubmit:true});
+    expect((await f.service.readFleetComplianceSubjects(f.driver,{kind:"carrier"})).entries[0].canSubmit).toBe(false);
+    const {db,assetsTable}=await import("@workspace/db"),ids=[];
+    for(const name of ["A truck","B truck","Other inventory"]){const [asset]=await db.insert(assetsTable).values({name,category:"truck",legalOwnerName:"Synthetic",responsibleOrgType:"vendor",responsibleOrgId:f.admin.companyId}).returning();ids.push(asset.id);}
+    await f.pool.query("UPDATE vendors SET fleet_ops_state=jsonb_set(fleet_ops_state,'{fleets,0,equipmentAssetIds}',$2::jsonb) WHERE id=$1",[f.admin.companyId,JSON.stringify(ids.slice(0,2))]);
+    const first=await f.service.readFleetComplianceSubjects(f.dispatcher,{kind:"vehicle",limit:1});expect(first.entries).toHaveLength(1);expect(first.nextCursor).toBeTruthy();
+    const second=await f.service.readFleetComplianceSubjects(f.dispatcher,{kind:"vehicle",limit:1,after:first.nextCursor});expect(second.entries).toHaveLength(1);expect(second.entries[0].subject.id).not.toBe(first.entries[0].subject.id);expect(second.nextCursor).toBeNull();
+    expect((await f.service.readFleetComplianceSubjects(f.driver,{kind:"vehicle"})).entries).toEqual([]);
+    expect((await f.service.readFleetComplianceSubjects(f.admin,{kind:"vehicle",search:"Other inventory"})).entries).toEqual([]);
+    const other=await fixture();expect((await other.service.readFleetComplianceSubjects(other.admin,{kind:"vehicle"})).entries).toEqual([]);
+    expect(JSON.stringify(first)).not.toMatch(/licenseNumber|privateDocument|objectPath/);
+    expect((await f.service.readFleetComplianceSubjects({...f.admin,readOnly:true},{kind:"carrier"})).entries[0].canSubmit).toBe(false);
+  });
+  it("receives unread driver identifiers without fabrication and refuses verification while identity is unknown", async()=>{
+    const f=await fixture();await f.appoint();const base=f.record();
+    const record={...base,attributes:{kind:"driver_license",issuingState:null,licenseNumber:null,licenseClass:null,endorsements:[],restrictions:[],licenseStatus:"active",sourceRecordId:null}};
+    await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+    const source=await f.service.readPrivateComplianceRecord(f.reviewer,base.evidence.id,1);expect(source.attributes).toMatchObject({issuingState:null,licenseNumber:null,licenseClass:null});
+    const publicRows=await f.service.readFleetComplianceRegister(f.dispatcher,{});expect(publicRows.entries[0].maskedIdentifier).toBeNull();
+    await expect(f.service.verifyFleetComplianceEvidence(f.reviewer,{operationId:randomUUID(),evidenceId:base.evidence.id,expectedVersion:1,decision:"verified",source:f.source,reviewedAt:"2026-10-16T17:00:00Z"})).rejects.toMatchObject({code:"fleet.credential_not_eligible"});
+  });
+  it("reads an immutable safe receipt for one's own received evidence without opening a private source", async () => {
+    const f=await fixture(),record=f.record();
+    const saved=await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+    const receipt=await f.service.readFleetComplianceReceipt(f.driver,record.evidence.id,1);
+    expect(receipt).toEqual(saved);
+    expect(JSON.stringify(receipt)).not.toMatch(/PRIVATE|licenseNumber|objectPath|privateDocumentRef/);
+    await expect(f.service.readPrivateComplianceRecord(f.driver,record.evidence.id,1)).rejects.toMatchObject({status:403});
+    await f.appoint();await f.service.verifyFleetComplianceEvidence(f.reviewer,{operationId:randomUUID(),evidenceId:record.evidence.id,expectedVersion:1,decision:"verified",source:f.source,reviewedAt:"2026-10-16T17:00:00Z"});
+    expect(await f.service.readFleetComplianceReceipt(f.driver,record.evidence.id,1)).toEqual(receipt);
+    expect(await f.service.readFleetComplianceReceipt(f.driver,record.evidence.id,2)).toMatchObject({revision:2,status:"verified"});
+    const other=await fixture();await expect(other.service.readFleetComplianceReceipt(other.driver,record.evidence.id,1)).rejects.toMatchObject({status:404});
+  });
   it("receives an unread insurance source without inventing a policy identity or zero limit, keeping private values out of the operational register",async()=>{
     const f=await fixture();await f.appoint();const base=f.record(),id=randomUUID();
     const record={...base,evidence:{...base.evidence,id,subject:{kind:"carrier",id:f.admin.companyId},requirementId:"insurance"},attributes:{kind:"insurance",coverage:{id,revision:1,policyNumber:null,insuredLegalEntity:null,privateDocumentRef:null,coverageType:"auto_liability",state:"document_received",reviewedByUserId:null,reviewedAt:null,validFrom:base.evidence.validFrom,validUntil:base.evidence.validUntil,carrierIds:null,states:null,cargoCodes:null,equipmentIds:null,scopesReviewed:false,limitUSD:null,filingStatus:"unverified",filingVerifiedAt:null,underlyingPolicyId:null,attachmentPointUSD:null,followFormReviewed:false}},retentionClass:"insurance"};

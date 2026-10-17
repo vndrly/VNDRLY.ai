@@ -30,9 +30,9 @@ const attributes = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.literal("driver_license"),
-      issuingState: state,
-      licenseNumber: text,
-      licenseClass: z.enum(["A", "B", "C", "other"]),
+      issuingState: state.nullable(),
+      licenseNumber: text.nullable(),
+      licenseClass: z.enum(["A", "B", "C", "other"]).nullable(),
       endorsements: z.array(text).max(30),
       restrictions: z.array(text).max(30),
       licenseStatus: z.enum([
@@ -61,7 +61,7 @@ const attributes = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.literal("driver_testing"),
-      program: z.enum(["DOT", "non_DOT"]),
+      program: z.enum(["DOT", "non_DOT"]).nullable(),
       result: z.enum(["eligible", "prohibited", "pending", "unverified"]),
       clearinghouseConsentAt: timestamp.nullable(),
       queryReference: text.nullable(),
@@ -112,7 +112,7 @@ const attributes = z.discriminatedUnion("kind", [
       kind: z.literal("credential"),
       credentialType: text,
       reference: text.nullable(),
-      issuingAuthority: text,
+      issuingAuthority: text.nullable(),
       states: z.array(state).max(60),
       cargoCodes: z.array(text).max(100),
     })
@@ -431,3 +431,21 @@ export const FleetComplianceRecordReceiptSchema = z
     updatedAt: timestamp,
   })
   .strict();
+export const FleetComplianceSubjectChoicesQuerySchema = z.object({
+  kind: z.enum(["carrier", "driver", "vehicle", "component", "trip"]),
+  search: z.string().trim().max(120).default(""),
+  after: z.string().max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+}).strict().superRefine((value, ctx) => {
+  if (value.after !== undefined && (value.kind === "carrier" || !(value.kind === "driver" ? /^[1-9]\d*$/.test(value.after) && Number.isSafeInteger(Number(value.after)) : z.uuid().safeParse(value.after).success))) ctx.addIssue({code:"custom",path:["after"],message:"Cursor must match the subject identity"});
+});
+export const FleetComplianceSubjectChoicesPageSchema = z.object({
+  entries: z.array(z.object({ subject: FleetComplianceSubjectSchema, label: z.string().min(1).max(500), canSubmit: z.boolean() }).strict()).max(100),
+  nextCursor: z.string().max(100).nullable(),
+}).strict();
+export const FleetComplianceDocumentUploadSchema = z.object({
+  operationId: z.uuid(), subject: FleetComplianceSubjectSchema, recordId: z.uuid(),
+  contentType: z.enum(["application/pdf", "image/jpeg", "image/png", "image/webp"]),
+  bodyBase64: z.string().min(1).max(14_000_000),
+}).strict();
+export const FleetComplianceDocumentReceiptSchema = z.object({objectPath:z.string().regex(/^\/objects\/fleet-compliance-private\/[0-9]+\/[0-9a-f-]{36}\/documents\/[0-9a-f]{64}$/)}).strict();

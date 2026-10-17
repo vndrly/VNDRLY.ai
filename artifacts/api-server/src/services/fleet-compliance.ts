@@ -17,9 +17,15 @@ import {
   FleetComplianceFactsViewSchema,
   FleetComplianceFactRecordSchema,
   FleetRequirementVersionSchema,
+  FleetComplianceRecordReceiptSchema,
+  FleetComplianceSubjectChoicesQuerySchema,
+  FleetComplianceSubjectChoicesPageSchema,
+  FleetComplianceDocumentUploadSchema,
   evaluateFleetCompliance,
   projectFleetComplianceForDispatch,
   fleetComplianceSubjectKey,
+  fleetComplianceSourceSupportsRequirement,
+  type FleetRequirementVersion,
   type FleetComplianceRecord,
   type FleetComplianceIndexEntry,
   type FleetComplianceSubject,
@@ -42,20 +48,7 @@ type Access = (
   actor: FleetActor,
 ) => { fleetIds: readonly string[]; roles: readonly string[] } | null;
 type Configuration = z.infer<typeof FleetComplianceConfigurationSchema>;
-const uploadSchema = z
-  .object({
-    operationId: z.uuid(),
-    subject: FleetComplianceSubjectSchema,
-    recordId: z.uuid(),
-    contentType: z.enum([
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ]),
-    bodyBase64: z.string().min(1).max(14_000_000),
-  })
-  .strict();
+const uploadSchema = FleetComplianceDocumentUploadSchema;
 const receiptSchema = z
   .object({
     actorUserId: z.number().int().positive(),
@@ -364,12 +357,47 @@ export function createFleetComplianceOperations(
   // A verified insurance document is not a work-specific coverage decision.
   // The coverage evaluator additionally needs the complete planned work scope,
   // required limit and filing source. A generic register cannot infer those.
-  const operationalEvidence = (record: FleetComplianceRecord) =>
-    record.attributes.kind === "insurance" &&
-    record.evidence.status === "verified"
+  function matchesRequirement(record:FleetComplianceRecord,requirements:FleetRequirementVersion[]){
+    const rule=requirements.find(row=>row.id===record.evidence.requirementId&&row.version===record.evidence.requirementVersion);
+    return !rule||(rule.subjectKinds.includes(record.evidence.subject.kind)&&fleetComplianceSourceSupportsRequirement(record.attributes.kind,rule.category));
+  }
+  const operationalEvidence = (record: FleetComplianceRecord,requirements:FleetRequirementVersion[]) =>
+    (record.attributes.kind === "insurance" || !matchesRequirement(record,requirements)) && record.evidence.status === "verified"
       ? { ...record.evidence, status: "reviewed" as const }
       : record.evidence;
   return {
+    readFleetComplianceSubjects: (actor: FleetActor, input: unknown) => {
+      const query=FleetComplianceSubjectChoicesQuerySchema.parse(input);
+      return transaction(actor,async(state,client)=>{
+        if(!state.enabled)throw new FleetError("fleet.unavailable",403);
+        const config=await readConfig(client,actor),grant=access(state,actor),admin=actor.role==="vendor"&&actor.membershipRole==="admin",reviewer=isReviewer(config,actor);
+        const manager=admin||reviewer||!!grant?.roles.some(role=>["fleet_manager","dispatcher"].includes(role));
+        let rows:Array<{subject:FleetComplianceSubject;label:string}>=[];
+        if(query.kind==="carrier"){
+          await canUseSubject(state,client,actor,config,{kind:"carrier",id:actor.companyId});
+          const company=await client.query("SELECT name FROM vendors WHERE id=$1 AND name ILIKE $2",[actor.companyId,`%${query.search}%`]);
+          if(company.rows.length)rows=[{subject:{kind:"carrier",id:actor.companyId},label:company.rows[0].name}];
+        } else if(query.kind==="driver"){
+          const ids=state.grants.filter(row=>row.roles.includes("driver")&&(admin||reviewer||(manager&&row.fleetIds.some(id=>grant?.fleetIds.includes(id)))||row.userId===actor.userId)).map(row=>row.userId);
+          const people=await client.query("SELECT DISTINCT u.id,COALESCE(NULLIF(u.display_name,''),u.username) AS label FROM user_org_memberships m JOIN users u ON u.id=m.user_id WHERE m.vendor_id=$1 AND m.org_type='vendor' AND u.suspended_at IS NULL AND ($2::integer[] IS NULL OR u.id=ANY($2::integer[])) AND u.id>$3 AND COALESCE(NULLIF(u.display_name,''),u.username) ILIKE $4 ORDER BY u.id LIMIT $5",[actor.companyId,ids,Number(query.after??0),`%${query.search}%`,query.limit+1]);
+          rows=people.rows.map(row=>({subject:{kind:"driver",id:row.id},label:row.label}));
+        } else if(query.kind==="vehicle"||query.kind==="component"){
+          const ids=manager?[...new Set(state.fleets.filter(group=>admin||reviewer||grant?.fleetIds.includes(group.id)).flatMap(group=>group.equipmentAssetIds))]:[];
+          const assets=await client.query("SELECT id,name FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND id=ANY($2::uuid[]) AND retired_at IS NULL AND merged_into_id IS NULL AND ($3::uuid IS NULL OR id>$3::uuid) AND name ILIKE $4 AND ((category=ANY($5::text[]))=$6::boolean) ORDER BY id LIMIT $7",[actor.companyId,ids,query.after??null,`%${query.search}%`,["truck","vehicle","service_vehicle","support_vehicle"],query.kind==="vehicle",query.limit+1]);
+          rows=assets.rows.map(row=>({subject:{kind:query.kind as "vehicle"|"component",id:row.id},label:row.name}));
+        } else {
+          rows=manager?state.runs.filter(run=>grant?.fleetIds.includes(run.fleetId)&&(!query.after||run.id>query.after)&&run.title.toLocaleLowerCase().includes(query.search.toLocaleLowerCase())).sort((a,b)=>a.id.localeCompare(b.id)).slice(0,query.limit+1).map(run=>({subject:{kind:"trip",id:run.id},label:run.title})):[];
+        }
+        const entries=[];
+        for(const row of rows.slice(0,query.limit)){
+          await canUseSubject(state,client,actor,config,row.subject);
+          let canSubmit=false;
+          if(!actor.readOnly){try{await canUseSubject(state,client,actor,config,row.subject,true);canSubmit=true;}catch(error){if(!(error instanceof FleetError)||![403,404].includes(error.status))throw error;}}
+          entries.push({...row,canSubmit});
+        }
+        return FleetComplianceSubjectChoicesPageSchema.parse({entries,nextCursor:rows.length>query.limit?String(entries.at(-1)!.subject.id):null});
+      });
+    },
     readFleetComplianceRequirements:(actor:FleetActor)=>transaction(actor,async(state,client)=>{
       const config=await readConfig(client,actor),reviewer=isReviewer(config,actor);
       if(!reviewer&&(!state.enabled||!access(state,actor)&&!(actor.role==="vendor"&&actor.membershipRole==="admin")))throw new FleetError("fleet.dispatch_required",403);
@@ -503,7 +531,7 @@ export function createFleetComplianceOperations(
         )) {
           try {
             evidence.push(
-              operationalEvidence(await privateRecord(entry, actor)),
+              operationalEvidence(await privateRecord(entry, actor),config.requirements),
             );
           } catch {
             /* Missing private storage remains missing/red, never blocks capture. */
@@ -600,6 +628,7 @@ export function createFleetComplianceOperations(
         );
         const prior = await receipt(client, actor, value.operationId, value);
         if (prior) return prior as { id: string; revision: number };
+        if(!matchesRequirement(value.record,config.requirements))throw new FleetError("fleet.evidence_requirement_mismatch");
         const previous = config.entries.find(
           (row) => row.id === value.record.evidence.id,
         );
@@ -668,13 +697,15 @@ export function createFleetComplianceOperations(
           throw new FleetError("fleet.future_review", 400);
         const old = await privateRecord(entry, actor),
           attr = old.attributes;
+        if(value.decision==="verified"&&!matchesRequirement(old,config.requirements))throw new FleetError("fleet.evidence_requirement_mismatch");
         if (
           value.decision === "verified" &&
           ((attr.kind === "driver_license" &&
-            attr.licenseStatus !== "active") ||
+            (attr.licenseStatus !== "active" || attr.licenseNumber === null || attr.issuingState === null || attr.licenseClass === null)) ||
             (attr.kind === "driver_medical" &&
               attr.qualification !== "qualified") ||
-            (attr.kind === "driver_testing" && attr.result !== "eligible") ||
+            (attr.kind === "driver_testing" && (attr.result !== "eligible" || attr.program === null)) ||
+            (attr.kind === "credential" && attr.issuingAuthority === null) ||
             (attr.kind === "driver_qualification" &&
               attr.result !== "satisfactory") ||
             (attr.kind === "duty" &&
@@ -738,6 +769,15 @@ export function createFleetComplianceOperations(
         return result;
       });
     },
+    readFleetComplianceReceipt: (actor: FleetActor, id: string, revision: number) =>
+      transaction(actor, async (state, client) => {
+        z.uuid().parse(id); z.number().int().positive().parse(revision);
+        const config = await readConfig(client, actor), entry = await locate(client, actor, config, id, revision);
+        await canUseSubject(state, client, actor, config, entry.subject, false, true);
+        // Deliberately do not fetch the source object. Workers can establish that
+        // their exact revision was received without reviewer/private-file access.
+        return FleetComplianceRecordReceiptSchema.parse({ id: entry.id, revision: entry.revision, subject: entry.subject, status: entry.status, updatedAt: entry.updatedAt });
+      }),
     readPrivateComplianceRecord: (
       actor: FleetActor,
       id: string,
@@ -811,7 +851,7 @@ export function createFleetComplianceOperations(
           )) {
             try {
               subjectEvidence.push(
-                operationalEvidence(await privateRecord(related, actor)),
+                operationalEvidence(await privateRecord(related, actor),config.requirements),
               );
             } catch {}
           }

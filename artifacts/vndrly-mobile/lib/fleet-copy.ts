@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 const spanish: Record<string, string> = {
+"Receive evidence": "Recibir evidencia",
 "Requirements and history": "Requisitos e historial",
 "USDOT registration required": "Se requiere registro USDOT",
 "Texas carrier registration required": "Se requiere registro de transportista de Texas",
