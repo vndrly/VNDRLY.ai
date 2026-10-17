@@ -17,11 +17,13 @@ export default function FleetRunOrderChoice({
   groupId,
   disabled,
   onChange,
+  onCanManage,
 }: {
   companyId: number;
   groupId: string;
   disabled: boolean;
   onChange: (order: FleetRunOrder | null) => void;
+  onCanManage?: (allowed: boolean) => void;
 }) {
   const colors = useColors(),
     copy = useFleetCopy(),
@@ -29,8 +31,10 @@ export default function FleetRunOrderChoice({
     alive = useRef(true),
     generation = useRef(0),
     selection = useRef(0),
-    changed = useRef(onChange);
+    changed = useRef(onChange),
+    permission = useRef(onCanManage);
   changed.current = onChange;
+  permission.current = onCanManage;
   const [orders, setOrders] = useState<FleetRunOrder[]>([]),
     [next, setNext] = useState<number | null>(null),
     [selected, setSelected] = useState(""),
@@ -41,6 +45,7 @@ export default function FleetRunOrderChoice({
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   useEffect(() => {
     alive.current = true;
+    permission.current?.(false);
     const request = ++generation.current;
     selection.current++;
     setOrders([]);
@@ -57,9 +62,12 @@ export default function FleetRunOrderChoice({
         if (page.orders.some((order) => order.companyId !== companyId))
           throw new Error("Company scope changed.");
         setOrders(page.orders);
+        permission.current?.(page.canManage);
         setNext(page.nextCursor);
       })
       .catch(() => {
+        if (current() && request === generation.current)
+          permission.current?.(false);
         if (current() && request === generation.current)
           setError(copy("Saved Runs unavailable. Reload to check access."));
       })
@@ -132,6 +140,7 @@ export default function FleetRunOrderChoice({
         ).values(),
       ]);
       setNext(page.nextCursor);
+      permission.current?.(page.canManage);
     } catch {
       if (current() && request === generation.current)
         setError(copy("Saved Runs unavailable. Reload to check access."));

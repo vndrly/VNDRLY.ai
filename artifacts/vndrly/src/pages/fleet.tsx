@@ -14,6 +14,7 @@ import { FleetDestinationsPage } from "@/components/fleet-destinations";
 import { FleetRouteFields } from "@/components/fleet-route-fields";
 import { FleetRunOrderChoice } from "@/components/fleet-run-order-choice";
 import { FleetSaveRunOrder } from "@/components/fleet-save-run-order";
+import { FleetRunOrders } from "@/components/fleet-run-orders";
 import {
   FleetRunBillingFields,
   FleetBillingTicketPanel,
@@ -738,6 +739,7 @@ function FleetWorkspace({
         )}
       </div>
       {notice && <p role="status">{notice}</p>}
+      {!routeRunId&&section==="runs"&&(data.capabilities.canManageResources||data.capabilities.canDispatch)&&<FleetRunOrders key={identity} identity={identity} companyId={data.companyId} groups={data.fleets}/>}
       {!routeRunId && ["desk", "runs"].includes(section) && (
         <div className="fleet-lanes" role="group" aria-label={c.runBoard}>
           {(["ready", "working", "review", "finished"] as const).map(

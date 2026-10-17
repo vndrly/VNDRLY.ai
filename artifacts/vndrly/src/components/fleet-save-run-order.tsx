@@ -17,7 +17,8 @@ export function FleetSaveRunOrder({
   groupId,
   route,
   timeZone,
-  initialName = "",
+  initialOrder,
+  initialName = initialOrder?.name ?? "",
   disabled,
   onPending,
   onSaved,
@@ -28,6 +29,7 @@ export function FleetSaveRunOrder({
   route: FleetRoutePlan;
   timeZone: string;
   initialName?: string;
+  initialOrder?: FleetRunOrder;
   disabled: boolean;
   onPending: (pending: boolean) => void;
   onSaved: (order: FleetRunOrder) => void;
@@ -40,6 +42,11 @@ export function FleetSaveRunOrder({
     request = useRef<z.infer<typeof FleetRunOrderSaveSchema> | null>(null);
   latest.current = identity;
   const [name, setName] = useState(initialName),
+    [instructions, setInstructions] = useState(
+      initialOrder?.instructions ??
+        route.stops.find((stop) => stop.kind === "delivery")?.instructions ??
+        "",
+    ),
     [pending, setPending] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -53,18 +60,28 @@ export function FleetSaveRunOrder({
   async function save() {
     if (disabled || busy || !current()) return;
     try {
+      if (
+        initialOrder &&
+        (initialOrder.companyId !== companyId ||
+          !initialOrder.accessGroupIds.includes(groupId))
+      )
+        throw new Error("Saved Run scope changed.");
       if (!request.current)
         request.current = FleetRunOrderSaveSchema.parse({
           operationId: crypto.randomUUID(),
-          expectedVersion: 0,
-          order: fleetRunOrderFromRoute({
-            id: crypto.randomUUID(),
-            companyId,
-            accessGroupIds: [groupId],
-            name,
-            timeZone,
-            route,
-          }),
+          expectedVersion: initialOrder?.version ?? 0,
+          order: {
+            ...fleetRunOrderFromRoute({
+              id: initialOrder?.id ?? crypto.randomUUID(),
+              companyId,
+              accessGroupIds: initialOrder?.accessGroupIds ?? [groupId],
+              name,
+              timeZone,
+              route,
+            }),
+            version: (initialOrder?.version ?? 0) + 1,
+            instructions,
+          },
         });
     } catch {
       setError(
@@ -136,6 +153,16 @@ export function FleetSaveRunOrder({
           onChange={(event) => setName(event.target.value)}
         />
       </label>
+      <label className="block">
+        {es ? "Instrucciones del recorrido" : "Run instructions"}
+        <textarea
+          className="block w-full rounded border-2 p-2"
+          value={instructions}
+          disabled={disabled || pending || busy}
+          maxLength={2000}
+          onChange={(event) => setInstructions(event.target.value)}
+        />
+      </label>
       <PngPillButton
         disabled={disabled || busy || (!pending && !name.trim())}
         onClick={() => void save()}
@@ -143,10 +170,14 @@ export function FleetSaveRunOrder({
         {es
           ? pending
             ? "Reintentar guardar el recorrido"
-            : "Guardar esta ruta como recorrido"
+            : initialOrder
+              ? "Guardar cambios del recorrido"
+              : "Guardar esta ruta como recorrido"
           : pending
             ? "Retry saving this Run"
-            : "Save this route as a Run"}
+            : initialOrder
+              ? "Save Run changes"
+              : "Save this route as a Run"}
       </PngPillButton>
       {!!error && <p role="alert">{error}</p>}
     </div>

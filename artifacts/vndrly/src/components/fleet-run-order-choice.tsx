@@ -11,18 +11,22 @@ export function FleetRunOrderChoice({
   groupId,
   disabled,
   onChange,
+  onCanManage,
 }: {
   identity: string;
   companyId: number;
   groupId: string;
   disabled: boolean;
   onChange: (order: FleetRunOrder | null) => void;
+  onCanManage?: (allowed: boolean) => void;
 }) {
   const { i18n } = useTranslation(),
     es = i18n.language.startsWith("es"),
     changed = useRef(onChange),
-    generation = useRef(0);
+    generation = useRef(0),
+    permission = useRef(onCanManage);
   changed.current = onChange;
+  permission.current = onCanManage;
   const [selected, setSelected] = useState(""),
     [loading, setLoading] = useState(false),
     [error, setError] = useState("");
@@ -34,6 +38,14 @@ export function FleetRunOrderChoice({
     retry: false,
   });
   useEffect(() => {
+    permission.current?.(
+      !list.isError &&
+        !!list.data?.pages.length &&
+        list.data.pages.every((page) => page.canManage),
+    );
+    if (list.isError) changed.current(null);
+  }, [list.isError, list.data]);
+  useEffect(() => {
     generation.current++;
     setSelected("");
     setError("");
@@ -44,7 +56,7 @@ export function FleetRunOrderChoice({
     };
   }, [identity, groupId, companyId]);
   const orders =
-    list.data?.pages
+    (!list.isError ? list.data : undefined)?.pages
       .flatMap((page) => page.orders)
       .filter(
         (order) =>

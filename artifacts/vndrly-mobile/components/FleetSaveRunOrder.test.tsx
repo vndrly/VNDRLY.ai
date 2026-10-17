@@ -1,7 +1,13 @@
 import React from "react";
 import FleetSaveRunOrder from "./FleetSaveRunOrder";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { it, expect, vi } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
+import { it, expect, vi, afterEach } from "vitest";
 import { fleetRunOrderRoute, FleetRunOrderSchema } from "@workspace/api-zod";
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
@@ -28,6 +34,85 @@ vi.mock("./TogglePillButton", () => ({
     </button>
   ),
 }));
+afterEach(() => {
+  cleanup();
+  mocks.api.mockReset();
+});
+it("revises the same saved order while preserving its resource scopes and leaving prior activities untouched", async () => {
+  const id = () => crypto.randomUUID(),
+    group = id(),
+    otherGroup = id(),
+    place = (name: string) => ({
+      id: id(),
+      revision: 1,
+      name,
+      kind: "pickup",
+      address: name,
+      latitude: null,
+      longitude: null,
+      ownerType: "vendor",
+      ownerId: 7,
+    });
+  const order = FleetRunOrderSchema.parse({
+    id: id(),
+    companyId: 7,
+    version: 4,
+    name: "Original Run",
+    accessGroupIds: [group, otherGroup],
+    origin: place("Tank"),
+    destination: place("Terminal"),
+    base: null,
+    returnPolicy: "delivery_only",
+    instructions: "Existing instructions",
+    timeZone: "America/Chicago",
+    archivedAt: null,
+  });
+  let body: any;
+  mocks.api.mockImplementation(async (_path, options) => {
+    if (options?.method === "POST") {
+      body = JSON.parse(options.body);
+      return body.order;
+    }
+    return {
+      operationId: body.operationId,
+      fingerprint: "a".repeat(64),
+      order: body.order,
+    };
+  });
+  const saved = vi.fn();
+  render(
+    <FleetSaveRunOrder
+      companyId={7}
+      groupId={group}
+      initialOrder={order}
+      route={fleetRunOrderRoute(order, id)}
+      timeZone="America/Chicago"
+      disabled={false}
+      onPending={() => {}}
+      onSaved={saved}
+    />,
+  );
+  fireEvent.change(screen.getByLabelText("Saved Run name"), {
+    target: { value: "Revised Run" },
+  });
+  fireEvent.change(screen.getByLabelText("Run instructions"), {
+    target: { value: "Updated transport instructions" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save Run changes" }));
+  await waitFor(() => expect(saved).toHaveBeenCalled());
+  expect(body).toMatchObject({
+    expectedVersion: 4,
+    order: {
+      id: order.id,
+      version: 5,
+      name: "Revised Run",
+      accessGroupIds: [group, otherGroup],
+      instructions: "Updated transport instructions",
+    },
+  });
+  expect(order.name).toBe("Original Run");
+  expect(order.version).toBe(4);
+});
 it("retains one exact transport-order request through lost readback and reports success only after its receipt", async () => {
   const Save = FleetSaveRunOrder;
   const id = () => crypto.randomUUID(),

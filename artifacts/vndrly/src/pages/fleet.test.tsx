@@ -113,6 +113,10 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("prepares saved Runs before customer dispatch is enabled",async()=>{
+    const initial=await api.overviewPage(),group="99999999-9999-4999-8999-999999999999";api.location="/fleet/runs";api.overviewPage.mockResolvedValue({...initial,capabilities:{canDrive:false,canDispatch:false,canManage:false,canManageResources:true},fleets:[{id:group,name:"Company resources",siteIds:[],equipmentAssetIds:[]}],runs:[]});api.resources.mockResolvedValue({drivers:[],equipment:[]});api.commercial.mockResolvedValue({version:1,defaultMode:"batch",destinations:[],canManage:true,sites:[],sitePolicy:null});api.runOrders.mockResolvedValue({orders:[],nextCursor:null,canManage:true});
+    mount();expect(await screen.findByRole("heading",{name:"Saved Runs"})).toBeTruthy();await waitFor(()=>expect((screen.getByRole("button",{name:"New saved Run"}) as HTMLButtonElement).disabled).toBe(false));expect(screen.queryByRole("button",{name:"Create run"})).toBeNull();
+  });
   it("matches a saved transport Run to a Detail and a new billing ticket on Fleet Dispatch",async()=>{
     const id=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,"0")}`,group=id(1),truck=id(2),detailId=id(3);
     const place=(n:number)=>({id:id(n),revision:1,name:`Place ${n}`,address:`${n} Manual street`,kind:"pickup",latitude:null,longitude:null,ownerType:"vendor",ownerId:1,active:true,materials:[],hours:"",instructions:""});

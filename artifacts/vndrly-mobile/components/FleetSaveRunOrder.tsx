@@ -20,7 +20,8 @@ export default function FleetSaveRunOrder({
   groupId,
   route,
   timeZone,
-  initialName = "",
+  initialOrder,
+  initialName = initialOrder?.name ?? "",
   disabled,
   onPending,
   onSaved,
@@ -30,6 +31,7 @@ export default function FleetSaveRunOrder({
   route: FleetRoutePlan;
   timeZone: string;
   initialName?: string;
+  initialOrder?: FleetRunOrder;
   disabled: boolean;
   onPending: (pending: boolean) => void;
   onSaved: (order: FleetRunOrder) => void;
@@ -40,6 +42,11 @@ export default function FleetSaveRunOrder({
     alive = useRef(true),
     request = useRef<z.infer<typeof FleetRunOrderSaveSchema> | null>(null);
   const [name, setName] = useState(initialName),
+    [instructions, setInstructions] = useState(
+      initialOrder?.instructions ??
+        route.stops.find((stop) => stop.kind === "delivery")?.instructions ??
+        "",
+    ),
     [pending, setPending] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -53,18 +60,28 @@ export default function FleetSaveRunOrder({
   async function save() {
     if (disabled || busy || !current()) return;
     try {
+      if (
+        initialOrder &&
+        (initialOrder.companyId !== companyId ||
+          !initialOrder.accessGroupIds.includes(groupId))
+      )
+        throw new Error("Saved Run scope changed.");
       if (!request.current)
         request.current = FleetRunOrderSaveSchema.parse({
           operationId: Crypto.randomUUID(),
-          expectedVersion: 0,
-          order: fleetRunOrderFromRoute({
-            id: Crypto.randomUUID(),
-            companyId,
-            accessGroupIds: [groupId],
-            name,
-            timeZone,
-            route,
-          }),
+          expectedVersion: initialOrder?.version ?? 0,
+          order: {
+            ...fleetRunOrderFromRoute({
+              id: initialOrder?.id ?? Crypto.randomUUID(),
+              companyId,
+              accessGroupIds: initialOrder?.accessGroupIds ?? [groupId],
+              name,
+              timeZone,
+              route,
+            }),
+            version: (initialOrder?.version ?? 0) + 1,
+            instructions,
+          },
         });
     } catch {
       setError(
@@ -158,11 +175,33 @@ export default function FleetSaveRunOrder({
           padding: 10,
         }}
       />
+      <TextInput
+        accessibilityLabel={copy("Run instructions")}
+        placeholder={copy("Run instructions")}
+        value={instructions}
+        editable={!disabled && !pending && !busy}
+        multiline
+        maxLength={2000}
+        onChangeText={setInstructions}
+        style={{
+          color: colors.text,
+          borderWidth: 2,
+          borderColor: colors.primary,
+          borderRadius: 8,
+          padding: 10,
+        }}
+      />
       <TogglePillButton
         disabled={disabled || busy || (!pending && !name.trim())}
         onPress={() => void save()}
       >
-        {copy(pending ? "Retry saving this Run" : "Save this route as a Run")}
+        {copy(
+          pending
+            ? "Retry saving this Run"
+            : initialOrder
+              ? "Save Run changes"
+              : "Save this route as a Run",
+        )}
       </TogglePillButton>
       {!!error && (
         <Text accessibilityRole="alert" style={{ color: colors.destructive }}>
