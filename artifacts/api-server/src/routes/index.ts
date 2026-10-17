@@ -1,4 +1,5 @@
 import workHubLibraryRouter from "./workHubLibrary";
+import workdayRouter from "./workday";
 import workHubFormCampaignsRouter from "./workHubFormCampaigns";
 import fleetCommercialPolicyRouter from "./fleetCommercialPolicy";
 import nativeOperationsRouter from "./nativeOperations";
@@ -184,6 +185,7 @@ router.use(workHubDevicesRouter);
 router.use(workHubExportsRouter);
 router.use(workHubGovernanceRouter);
 router.use(workHubOperationsRouter);
+router.use(workdayRouter);
 router.use(workHubLiveMeetingsRouter);
 router.use(workHubFormCampaignsRouter);
 router.use(workHubLibraryRouter);

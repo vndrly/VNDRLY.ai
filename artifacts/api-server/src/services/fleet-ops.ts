@@ -8,6 +8,7 @@ import { createFleetInventoryOperations } from "./fleet-inventory";
 import { createFleetDetailsOperations } from "./fleet-details";
 import { createFleetRunOrderOperations } from "./fleet-run-orders";
 import { createFleetComplianceOperations } from "./fleet-compliance";
+import { createFleetWorkdayOperations } from "./fleet-workday";
 import {
   assignFleetRunDetail,
   assertFleetDetailResources,
@@ -533,6 +534,7 @@ export function createFleetService(repository: FleetRepository) {
     ...createFleetPlanningOperations(transaction, permitted, eligible, project),
     ...createFleetAvailabilityManagement(transaction),
     ...createFleetMaintenanceOperations(transaction, companyGrantFor),
+    ...createFleetWorkdayOperations(),
     ...createFleetReportingOperations(transaction, grantFor),
     ...createFleetGateOperations(transaction, permitted),
     overview: (actor: FleetActor): Promise<FleetOverview> =>

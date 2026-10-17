@@ -799,6 +799,11 @@ function CalendarModule() {
                       {i.kind}
                     </span>
                     <h2 className="font-semibold">{i.route ? <a className="underline" href={i.route}>{i.title}</a> : i.title}</h2>
+                    {i.kind === "Fleet Run" && <p className="text-sm">
+                      {i.employeeName ? `${i.employeeName} · ` : ""}
+                      {i.linkedTicketId ? `Ticket #${i.linkedTicketId} · ` : ""}
+                      {i.timeBasis === "dispatch_recorded" ? "Dispatch recorded · no planned time" : "Planned run time"}
+                    </p>}
                   </div>
                   <time className="text-sm">{displayDate(i.startsAt)}</time>
                 </article>

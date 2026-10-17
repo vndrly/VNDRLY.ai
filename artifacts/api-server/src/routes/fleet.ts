@@ -23,6 +23,10 @@ import {
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
 router.use(createFleetComplianceRouter(service, actor));
+router.post("/fleet/workdays/events", endpoint(req => service.recordWorkday(actor(req), req.body)));
+router.get("/fleet/workdays/operations/:operationId", endpoint(req => service.workdayOperation(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/workdays/:id", endpoint(req => service.workday(actor(req), z.uuid().parse(req.params.id))));
+router.get("/fleet/drivers/:driverUserId/workdays", endpoint(req => service.driverWorkdays(actor(req), z.coerce.number().int().positive().parse(req.params.driverUserId), req.query)));
 router.get("/fleet/run-orders",endpoint(req=>service.readFleetRunOrders(actor(req),req.query)));
 router.get("/fleet/run-orders/operations/:operationId",endpoint(req=>service.fleetRunOrderReceipt(actor(req),z.uuid().parse(req.params.operationId))));
 router.get("/fleet/run-orders/:id/history",endpoint(req=>service.fleetRunOrderHistory(actor(req),z.uuid().parse(req.params.id),req.query)));

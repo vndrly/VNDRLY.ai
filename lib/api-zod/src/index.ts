@@ -60,3 +60,6 @@ export * from "./fleet-insurance";
 export * from "./fleet-compliance-register";
 export * from "./fleet-compliance-rulebook";
 export * from "./fleet-resource-readiness";
+export * from "./fleet-calendar";
+export * from "./fleet-workday";
+export * from "./workday";
