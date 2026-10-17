@@ -2,6 +2,12 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 const spanish: Record<string, string> = {
+"Requirements and history": "Requisitos e historial",
+"USDOT registration required": "Se requiere registro USDOT",
+"Texas carrier registration required": "Se requiere registro de transportista de Texas",
+"Oklahoma carrier authority required": "Se requiere autorización de transportista de Oklahoma",
+"Periodic inspection required": "Se requiere inspección periódica",
+"Driver qualification file required": "Se requiere expediente de calificación",
 "Applicability facts": "Datos de aplicabilidad",
 "Carrier applicability": "Aplicabilidad del transportista",
 "Unknown does not mean a requirement is inapplicable. These operational facts exclude private clinical and test results.": "Desconocido no significa que un requisito no corresponda. Estos datos operativos excluyen resultados clínicos y de pruebas privados.",

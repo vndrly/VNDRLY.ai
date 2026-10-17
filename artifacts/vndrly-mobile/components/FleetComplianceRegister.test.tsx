@@ -86,3 +86,7 @@ it("shows safe native evidence status and never fetches private records to draw 
   await screen.findByRole("alert");
   expect(screen.queryByText("••••1234")).toBeNull();
 });
+vi.mock("./FleetComplianceRules",()=>({default:()=> <div>Requirements opened</div>}));
+it("opens native requirement history only on request",async()=>{
+ mocks.api.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<FleetComplianceRegister/>);expect(screen.queryByText("Requirements opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Requirements and history"}));expect(screen.getByText("Requirements opened")).toBeTruthy();
+});

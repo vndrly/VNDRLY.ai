@@ -77,3 +77,8 @@ it("presents warning-only registers with masked evidence and no automatic privat
     ),
   );
 });
+vi.mock("./fleet-compliance-rules",()=>({FleetComplianceRules:()=> <div>Requirements opened</div>}));
+it("opens requirement review and history only on request",async()=>{
+ mocks.register.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient()}><FleetComplianceRegister identity="reviewer7"/></QueryClientProvider>);
+ expect(screen.queryByText("Requirements opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Requirements and history"}));expect(screen.getByText("Requirements opened")).toBeTruthy();
+});

@@ -63,3 +63,4 @@ export * from "./fleet-resource-readiness";
 export * from "./fleet-calendar";
 export * from "./fleet-workday";
 export * from "./workday";
+export * from "./fleet-requirement-templates";

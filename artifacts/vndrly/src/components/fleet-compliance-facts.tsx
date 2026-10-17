@@ -80,6 +80,11 @@ function FactsForm({ subject, onSaved, onClose }: Props) {
     ["interstate", es ? "Comercio interestatal" : "Interstate commerce"],
     ["forHire", es ? "Transporte por contrato" : "For-hire operation"],
     ["cmv", es ? "Vehículo comercial" : "Commercial motor vehicle"],
+    ["usdotRequired", es ? "Se requiere registro USDOT" : "USDOT registration required"],
+    ["txCarrierRegistrationRequired", es ? "Se requiere registro de transportista de Texas" : "Texas carrier registration required"],
+    ["okCarrierAuthorityRequired", es ? "Se requiere autorización de transportista de Oklahoma" : "Oklahoma carrier authority required"],
+    ["periodicInspectionRequired", es ? "Se requiere inspección periódica" : "Periodic inspection required"],
+    ["driverQualificationRequired", es ? "Se requiere expediente de calificación" : "Driver qualification file required"],
     [
       "cdlRequired",
       es ? "CDL requerido para este trabajo" : "CDL required for this work",

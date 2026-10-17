@@ -7,8 +7,10 @@ import { PngPillButton } from "./png-pill-rollover";
 import {FleetEvidenceReview} from "./fleet-evidence-review";
 import {FleetComplianceReviewers} from "./fleet-compliance-reviewers";
 import {FleetComplianceFactsEditor} from "./fleet-compliance-facts";
+import {FleetComplianceRules} from "./fleet-compliance-rules";
 
 export function FleetComplianceRegister({ identity,companyId }: { identity: string;companyId?:number }) {
+  const [rulesOpen,setRulesOpen]=useState(false);
   const cache=useQueryClient(),[factsSubject,setFactsSubject]=useState<FleetComplianceSubject|null>(null);
   const { i18n } = useTranslation(),
     es = i18n.language.startsWith("es");
@@ -58,8 +60,9 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
       aria-label={es ? "Registros de cumplimiento" : "Compliance registers"}
     >
       <h2>{es ? "Registros de cumplimiento" : "Compliance registers"}</h2>
-      <FleetComplianceReviewers identity={identity} onChanged={()=>{setSelected(null);setFactsSubject(null);void query.refetch();}}/>
-      {typeof companyId==="number"&&Number.isInteger(companyId)&&companyId>0&&<PngPillButton onClick={()=>{setSelected(null);setFactsSubject({kind:"carrier",id:companyId});}}>{es?"Aplicabilidad del transportista":"Carrier applicability"}</PngPillButton>}
+      <FleetComplianceReviewers identity={identity} onChanged={()=>{setRulesOpen(false);setSelected(null);setFactsSubject(null);void query.refetch();}}/>
+      <PngPillButton onClick={()=>{setSelected(null);setFactsSubject(null);setRulesOpen(true);}}>{es?"Requisitos e historial":"Requirements and history"}</PngPillButton>
+      {typeof companyId==="number"&&Number.isInteger(companyId)&&companyId>0&&<PngPillButton onClick={()=>{setRulesOpen(false);setSelected(null);setFactsSubject({kind:"carrier",id:companyId});}}>{es?"Aplicabilidad del transportista":"Carrier applicability"}</PngPillButton>}
       <div className="fleet-detail-group">
         <p>
           {es
@@ -76,7 +79,7 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
         {es ? "Registro" : "Register"}
         <select
           value={kind}
-          onChange={(event) => {setSelected(null);setFactsSubject(null);setKind(event.target.value as typeof kind);}}
+          onChange={(event) => {setRulesOpen(false);setSelected(null);setFactsSubject(null);setKind(event.target.value as typeof kind);}}
         >
           <option value="">
             {es
@@ -92,7 +95,7 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
       </label>
       <PngPillButton
         disabled={query.isFetching}
-        onClick={() => void query.refetch()}
+        onClick={() => {setRulesOpen(false);setSelected(null);setFactsSubject(null);void query.refetch();}}
       >
         {es ? "Actualizar cumplimiento" : "Refresh compliance"}
       </PngPillButton>
@@ -113,6 +116,7 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
             : "No evidence recorded in this view. This does not establish compliance."}
         </p>
       )}
+      {rulesOpen&&!query.isError&&<FleetComplianceRules identity={identity} onClose={()=>setRulesOpen(false)} onSaved={()=>{void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
       {selected&&!query.isError&&<FleetEvidenceReview identity={identity} evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
       {factsSubject&&!query.isError&&<FleetComplianceFactsEditor identity={identity} subject={factsSubject} onClose={()=>setFactsSubject(null)} onSaved={()=>{setFactsSubject(null);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
       <div className="grid gap-3 md:grid-cols-2">
@@ -160,8 +164,8 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
             <p>
               {es ? "Evaluado" : "Evaluated"}: {date(entry.evaluatedAt)}
             </p>
-            {entry.mayReview&&<PngPillButton onClick={()=>{setFactsSubject(null);setSelected({id:entry.id,revision:entry.revision});}}>{es?"Revisar evidencia":"Review evidence"}</PngPillButton>}
-            <PngPillButton onClick={()=>{setSelected(null);setFactsSubject(entry.subject);}}>{es?"Hechos de aplicabilidad":"Applicability facts"}</PngPillButton>
+            {entry.mayReview&&<PngPillButton onClick={()=>{setRulesOpen(false);setFactsSubject(null);setSelected({id:entry.id,revision:entry.revision});}}>{es?"Revisar evidencia":"Review evidence"}</PngPillButton>}
+            <PngPillButton onClick={()=>{setRulesOpen(false);setSelected(null);setFactsSubject(entry.subject);}}>{es?"Hechos de aplicabilidad":"Applicability facts"}</PngPillButton>
           </article>
         ))}
       </div>
