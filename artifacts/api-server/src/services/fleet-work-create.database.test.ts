@@ -25,6 +25,7 @@ import {
 import { createDatabaseFleetWorkRepository } from "./fleet-work-repository";
 import { executeFleetWorkCommand } from "./fleet-work-canonical";
 import { createFleetWorkService } from "./fleet-work";
+import { requireFleetRunCommercialAuthority } from "./fleet-commercial-authority";
 
 async function fixture() {
   const f = await createFleetPricingFixture(),
@@ -258,6 +259,132 @@ async function fixture() {
     },
   };
 }
+
+it("checks each mixed-service activity's own approval rather than the shared ticket's first service", async () => {
+  const f = await fixture(),
+    first = await f.work.apply(f.actor, f.command);
+  if (first.status !== "applied" || f.command.kind !== "activity.create")
+    throw Error("Expected actual activity");
+  const service = createFleetService(databaseFleetRepository);
+  const activity = first.canonicalReferences.find(
+      (r) => r.kind === "activity",
+    )!,
+    ticket = first.canonicalReferences.find((r) => r.kind === "ticket")!;
+  await service.action({ ...f.actor }, String(activity.id), {
+    operationId: randomUUID(),
+    expectedVersion: activity.version,
+    action: "cancel",
+    reason: "Synthetic release for second service",
+  });
+  const secondService = (
+    await pool.query(
+      "INSERT INTO work_types(name,category) VALUES($1,'Synthetic') RETURNING id",
+      [`Second service ${randomUUID()}`],
+    )
+  ).rows[0].id;
+  await pool.query(
+    "INSERT INTO vendor_work_types(vendor_id,work_type_id,unit_price,precise_unit_price,unit,currency) VALUES($1,$2,'12','12','per_barrel','USD')",
+    [f.vendor, secondService],
+  );
+  await pool.query(
+    "INSERT INTO site_work_assignments(vendor_id,work_type_id,site_location_id,afe) VALUES($1,$2,$3,'AFE1')",
+    [f.vendor, secondService, f.site],
+  );
+  await pool.query(
+    "INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id,approved_unit_price,precise_unit_price,approved_unit,approved_currency,approved_by_user_id,approved_at) VALUES($1,$2,$3,'12','12','per_barrel','USD',$4,'2026-10-01T00:00:00Z')",
+    [f.partner, f.vendor, secondService, f.user],
+  );
+  const next = structuredClone(f.command);
+  next.operationId = randomUUID();
+  next.payload.activityId = randomUUID();
+  next.payload.billing = {
+    ...next.payload.billing,
+    choice: "existing_ticket",
+    ticket,
+    serviceId: secondService,
+  };
+  next.payload.pricingIntent = {
+    mode: "unpriced",
+    reason: "offline_reference_missing",
+    serviceId: secondService,
+    approvalRef: null,
+  };
+  const receipt = await f.work.apply(f.actor, next);
+  if (receipt.status !== "applied")
+    throw Error(`Expected shared activity: ${JSON.stringify(receipt)}`);
+  const run = await service.detail(
+    { ...f.actor },
+    String(receipt.canonicalReferences.find((r) => r.kind === "activity")!.id),
+  );
+  expect(run.billingV2?.serviceId).toBe(secondService);
+  expect(
+    (
+      await pool.query("SELECT work_type_id FROM tickets WHERE id=$1", [
+        ticket.id,
+      ])
+    ).rows[0].work_type_id,
+  ).toBe(f.service);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SAVEPOINT source_revocation");
+    // Exact synthetic approval rows in this fresh retained loopback database.
+    await client.query(
+      "DELETE FROM partner_vendor_work_type_approvals WHERE vendor_id=$1 AND partner_id=$2 AND work_type_id=$3",
+      [f.vendor, f.partner, f.service],
+    );
+    expect(await requireFleetRunCommercialAuthority(client, run)).toMatchObject(
+      { allowed: true },
+    );
+    await client.query("ROLLBACK TO SAVEPOINT source_revocation");
+    await client.query(
+      "DELETE FROM partner_vendor_work_type_approvals WHERE vendor_id=$1 AND partner_id=$2 AND work_type_id=$3",
+      [f.vendor, f.partner, secondService],
+    );
+    await expect(
+      requireFleetRunCommercialAuthority(client, run),
+    ).rejects.toMatchObject({
+      status: 403,
+      code: "fleet.site_service_forbidden",
+    });
+  } finally {
+    await client.query("ROLLBACK");
+    client.release();
+  }
+});
+
+it("holds a v2 activity when the actual parent billing site changes instead of rebasing it", async () => {
+  const f = await fixture(),
+    created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied") throw Error("Expected actual activity");
+  const run = await createFleetService(databaseFleetRepository).detail(
+    { ...f.actor },
+    String(created.canonicalReferences.find((r) => r.kind === "activity")!.id),
+  );
+  const otherSite = (
+    await pool.query(
+      "INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code) VALUES($1,'Other billing pad','Synthetic',35,-97,$2) RETURNING id",
+      [f.partner, randomUUID()],
+    )
+  ).rows[0].id;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      "UPDATE tickets SET site_location_id=$2 WHERE id=$1 AND vendor_id=$3",
+      [run.linkedTicketId, otherSite, f.vendor],
+    );
+    await expect(
+      requireFleetRunCommercialAuthority(client, run),
+    ).rejects.toMatchObject({
+      status: 409,
+      code: "fleet.billing_ticket_mismatch",
+    });
+  } finally {
+    await client.query("ROLLBACK");
+    client.release();
+  }
+});
 
 it("atomically creates the real Detail reservation, approved ticket and mappings once after response loss", async () => {
   const f = await fixture(),

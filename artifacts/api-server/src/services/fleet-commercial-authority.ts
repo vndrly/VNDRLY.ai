@@ -373,11 +373,16 @@ export async function requireFleetRunCommercialAuthority(
   const ticket = (
     await client.query(
       `SELECT t.work_type_id,t.site_location_id,s.partner_id
-    FROM tickets t JOIN site_locations s ON s.id=t.site_location_id WHERE t.id=$1 AND t.vendor_id=$2`,
+    FROM tickets t JOIN site_locations s ON s.id=t.site_location_id WHERE t.id=$1 AND t.vendor_id=$2 FOR SHARE OF t,s`,
       [run.linkedTicketId, run.companyId],
     )
   ).rows[0];
   if (!ticket) throw new FleetError("fleet.ticket_not_found", 404);
+  const binding = run.billingV2;
+  if (binding && (
+    binding.ticketId !== run.linkedTicketId || binding.context.vendorId !== run.companyId ||
+    binding.context.partnerId !== ticket.partner_id || binding.context.billingSiteId !== ticket.site_location_id
+  )) throw new FleetError("fleet.billing_ticket_mismatch", 409);
   return requireFleetCommercialAuthority(
     await resolveFleetCommercialAuthority(
       client,
@@ -385,9 +390,9 @@ export async function requireFleetRunCommercialAuthority(
       {
         partnerId: ticket.partner_id,
         billingSiteId: ticket.site_location_id,
-        workTypeId: ticket.work_type_id,
+        workTypeId: binding?.serviceId ?? ticket.work_type_id,
         workDate:
-          run.billing?.workDate ?? new Date().toISOString().slice(0, 10),
+          binding?.context.workDate ?? run.billing?.workDate ?? new Date().toISOString().slice(0, 10),
         purpose,
         policyAt: new Date().toISOString(),
       },
