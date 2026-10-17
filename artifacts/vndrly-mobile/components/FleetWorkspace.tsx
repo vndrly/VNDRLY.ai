@@ -1,4 +1,5 @@
 import FleetRetainedEvidence from "@/components/FleetRetainedEvidence";
+import FleetCommercialWork from "@/components/FleetCommercialWork";
 import {saveFleetWorkspaceCache,readFleetWorkspaceCache} from "@/lib/fleet-workspace-cache";
 import FleetMapOverview from "@/components/FleetMapOverview";
 import FleetRunBoard from "@/components/FleetRunBoard";
@@ -499,12 +500,13 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         <FleetReplacement key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetCargo key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetReviewPacket key={`${identity}:${run.id}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0}/>
+        {work.session&&run.ticketReference&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>}
         {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>}
         <FleetEta key={`${identity}:${run.id}:${run.version}`} runId={run.id} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0}/>
         <FleetGate key={`${identity}:${run.id}:${run.version}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0} onChanged={() => setRevision(n => n + 1)}/>
         {run.linkedTicketId && <Text style={textStyle}>{copy("Open the linked ticket for its authorized camera attachments and consented ticket location workflow. These remain ticket records; opening the screen does not save Fleet proof or start Fleet tracking.")}</Text>}
         {run.billing && <Text style={textStyle}>{copy("Ticket #")}{run.linkedTicketId} · {copy("AFE")}: {run.billing.afeNumber} · {copy("Work date")}: {run.billing.workDate}</Text>}
-        {run.linkedTicketId && (overview.capabilities.canManage || overview.capabilities.canSetup) && !cachedAt && <FleetTicketFinalization key={`finalize:${identity}:${run.linkedTicketId}:${run.version}`} ticketId={run.linkedTicketId} onChanged={()=>setRevision(n=>n+1)}/>}
+        {run.linkedTicketId && !run.ticketReference && (overview.capabilities.canManage || overview.capabilities.canSetup) && !cachedAt && <FleetTicketFinalization key={`finalize:${identity}:${run.linkedTicketId}:${run.version}`} ticketId={run.linkedTicketId} onChanged={()=>setRevision(n=>n+1)}/>}
         {run.linkedTicketId && <TogglePillButton onPress={() => router.push(`/ticket/${run.linkedTicketId}` as never)}>{copy("Open linked ticket")}</TogglePillButton>}
         {run.commercial && (run.commercial.rateCents !== undefined || overview.capabilities.canSetup) && !cachedAt && <FleetTicketPlan key={`plan:${identity}:${run.commercial.ticketId}`} ticketId={run.commercial.ticketId} onChanged={()=>setRevision(n=>n+1)}/>}
         <TextInput accessibilityLabel={copy("Fleet action reason")} placeholder={copy("Reason")} value={reason} onChangeText={setReason} style={fieldStyle}/>

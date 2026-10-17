@@ -3,7 +3,7 @@ import {synchronizeFleetEvidence} from "./fleet-work-evidence-client";
 import {z} from "zod/v4";
 import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetWorkCommandSchema,type FleetWorkScope,type FleetWorkCommand} from "./fleet-work";
 import {FleetQuantityEvidenceSchema} from "./fleet-pricing";
-import {FleetCommercialReviewSchema} from "./fleet-commercial-review";
+import {FleetCommercialReviewSchema,type FleetCommercialReview,type FleetOfficeReviewAction} from "./fleet-commercial-review";
 import type {FleetJournalStore,DurableFleetWorkJournal} from "./fleet-work-journal";
 import {synchronizeFleetWork} from "./fleet-work-runtime";
 import {buildFleetCreateIntent,buildFleetActionIntent,FleetWorkPreparationSchema} from "./fleet-work-builder";
@@ -52,6 +52,12 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
   readRun:async(id:string)=>{const value=await journal.readCache(`run:${z.uuid().parse(id)}`);return value?FleetRunSchema.parse(value):null;},
   async evidencePage(activityId:string,cursor:string|null=null){current();const page=FleetWorkEvidencePageSchema.parse(await options.http(`/api/fleet/work/activities/${z.uuid().parse(activityId)}/evidence`,{scope,cursor}));if(page.evidence.some(row=>row.record.runId!==activityId||row.record.companyId!==account.companyId))throw Error("Evidence readback scope changed");return page;},
   async commercialReview(activityId:string,after?:string){current();const id=z.uuid().parse(activityId),page=FleetCommercialReviewSchema.parse(await options.http(`/api/fleet/work/activities/${id}/commercial-review`,{scope,after}));current();if(page.activityId!==id)throw Error("Commercial review readback scope changed");return page;},
+  async captureOfficeReview(page:FleetCommercialReview,input:FleetOfficeReviewAction,timeZone:string){
+   current();if(!page.canReview||page.billing?.context.vendorId!==account.companyId)throw Error("Current office commercial authority is required");
+   const activity={type:"canonical" as const,kind:"activity" as const,id:page.activityId,version:page.activityVersion},ticket={type:"canonical" as const,kind:"ticket" as const,id:page.ticket.id,version:page.ticket.version};
+   const payload=input.kind==="ticket.finalize"?{ticket,expectedVersion:page.ticket.version,finalizeDayMinimums:input.finalizeDayMinimums}:input.kind==="quantity.review"?{activity,ticket,selections:input.selections}:{activity,ticket,expectedVersion:page.activityVersion,quantityReviews:input.quantityReviews,taxTreatment:input.taxTreatment,intervals:input.intervals,additionalCharges:input.additionalCharges};
+   return execute(FleetWorkCommandSchema.parse({version:2,scope,operationId:options.uuid(),capturedAt:new Date().toISOString(),timeZone,dependencies:[],kind:input.kind,payload}));
+  },
   async captureQuantity(run:FleetRun,raw:FleetReportedQuantityInput){
    current();if(!run.ticketReference||run.companyId!==account.companyId||run.driverUserId!==account.userId||run.resourceAssignment?.snapshot?.detail.driverUserId!==account.userId)throw Error("Original own-driver quantity context is required");
    const input=FleetReportedQuantityInputSchema.parse(raw),capturedAt=new Date().toISOString();

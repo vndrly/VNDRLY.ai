@@ -84,7 +84,7 @@ afterEach(() => {
 describe("mobile Fleet authorization", () => {
   it("retains modern driver acknowledgement before transport and labels its pending outcome",async()=>{
     const run={id:"20000000-0000-4000-8000-000000000001",title:"Retained crude activity",version:4,driverUserId:1,status:"dispatched",allowedActions:["acknowledge"],currentStopId:null,loads:[],inspections:[],records:[],events:[],stops:[],ticketReference:{id:500,version:1}};
-    mocks.api.mockResolvedValue({...overview,runs:[run]});const captureAction=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"});mocks.work.session={captureAction,scope:{userId:1}};
+    mocks.api.mockResolvedValue({...overview,runs:[run]});const captureAction=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"});mocks.work.session={captureAction,commercialReview:vi.fn().mockRejectedValue(Error("offline")),scope:{userId:1}};
     render(<FleetWorkspace initialRunId={run.id}/>);await screen.findByText(run.title);fireEvent.click(screen.getByRole("button",{name:"acknowledge"}));
     await waitFor(()=>expect(captureAction).toHaveBeenCalledOnce());expect(captureAction.mock.calls[0][1]).toMatchObject({expectedVersion:4,action:"acknowledge"});
     expect(mocks.api.mock.calls.some(call=>call[0].endsWith("/actions"))).toBe(false);expect(await screen.findByText(/Saved on this device.*pending sync/)).toBeTruthy();

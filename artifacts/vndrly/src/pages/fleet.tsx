@@ -1,6 +1,7 @@
 import {saveWebFleetWorkspace,readWebFleetWorkspace,activateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
 import {provisionFleetOfflineShell} from "@/lib/fleet-offline-shell";
 import {FleetRetainedEvidence} from "@/components/fleet-retained-evidence";
+import {FleetCommercialWork} from "@/components/fleet-commercial-work";
 import { FleetRouteReplay } from "@/components/fleet-route-replay";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -1286,7 +1287,7 @@ function FleetWorkspace({
             ) : (
               <>
                 <h3 className="text-lg">{run.title}</h3>
-                {run.linkedTicketId &&
+                {run.linkedTicketId && !run.ticketReference &&
                   (data.capabilities.canManage ||
                     data.capabilities.canDispatch) && (
                     <FleetBillingTicketPanel
@@ -1483,6 +1484,7 @@ function FleetWorkspace({
                     runId={run.id}
                   />
                   <FleetReviewPacketPanel run={run} identity={identity} />
+                  {work.session&&run.ticketReference&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();void queryClient.invalidateQueries({queryKey:["fleet",identity]});}}/>}
                   {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidencePanel
                     key={run.id}
                     run={run}

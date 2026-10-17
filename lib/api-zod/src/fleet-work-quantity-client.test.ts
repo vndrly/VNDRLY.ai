@@ -3,6 +3,7 @@ import {randomUUID,createHash} from "node:crypto";
 import {openFleetWorkSession} from "./fleet-work-session";
 import {createDurableFleetWorkJournal,type FleetJournalStore} from "./fleet-work-journal";
 import type {FleetRun} from "./fleet";
+import type {FleetCommercialReview} from "./fleet-commercial-review";
 
 async function device(){
  const rows=new Map<string,string>(),storage:FleetJournalStore={transaction:async work=>work({get:async(k,id)=>rows.get(`${k}:${id}`)??null,set:async(k,id,v)=>{rows.set(`${k}:${id}`,v)},values:async k=>[...rows].filter(([key])=>key.startsWith(`${k}:`)).map(([,v])=>v)})};
@@ -32,4 +33,13 @@ it("refuses another driver's report and invented billable or converted authority
  await expect(client.captureQuantity(run,{...input,source:"reviewed_conversion"} as never)).rejects.toThrow();
  await expect(client.captureQuantity(run,{...input,quantity:"1e3"})).rejects.toThrow();
  expect((await journal.readState()).entries).toHaveLength(0);
+});
+it("retains explicit office review and ticket finalization as separate original commands",async()=>{
+ const {client,journal,run}=await device(),evidenceId=randomUUID();
+ const page={activityId:run.id,activityVersion:4,canReview:true,ticket:{id:12,version:3,status:"in_progress"},billing:{context:{vendorId:7}}} as unknown as FleetCommercialReview;
+ await expect(client.captureOfficeReview({...page,canReview:false},{kind:"ticket.finalize",finalizeDayMinimums:false},"America/Chicago")).rejects.toThrow("office");
+ await client.captureOfficeReview(page,{kind:"quantity.review",selections:[{evidenceId,expectedReviewRevision:0,decision:"accept_as_billable",reason:"Office read original scale receipt"}]},"America/Chicago");
+ let entries=(await journal.readState()).entries;expect(entries).toHaveLength(1);expect(entries[0].command).toMatchObject({kind:"quantity.review",payload:{activity:{id:run.id,version:4},ticket:{id:12,version:3},selections:[{evidenceId,expectedReviewRevision:0}]}});
+ await client.captureOfficeReview(page,{kind:"ticket.finalize",finalizeDayMinimums:false},"America/Chicago");
+ entries=(await journal.readState()).entries;expect(entries).toHaveLength(2);expect(entries[1].command).toMatchObject({kind:"ticket.finalize",payload:{ticket:{id:12,version:3},expectedVersion:3,finalizeDayMinimums:false}});expect(entries[1].command.operationId).not.toBe(entries[0].command.operationId);
 });
