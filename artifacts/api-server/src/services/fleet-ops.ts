@@ -425,6 +425,8 @@ async function setupSites(client: PoolClient, companyId: number) {
   }));
 }
 export type FleetServiceOptions={
+  /** Set only by the verified original-scope receipt transaction adapter. */
+  originalWorkOperationId?: string;
   afterCommit?:(effect:()=>Promise<unknown>)=>void;
   compliance?:Parameters<typeof createFleetComplianceOperations>[2];
   /** Internal original-scope command adapter, never an HTTP create field. */
@@ -1006,6 +1008,8 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           if (options.billingV2Create) {
             if (options.billingV2Create.operationId !== body.operationId)
               throw new FleetError("fleet.operation_conflict");
+            if (options.originalWorkOperationId !== body.operationId)
+              throw new FleetError("fleet.work_command_required", 409);
             await attachFleetBillingV2(
               { client, actor, state }, run,
               options.billingV2Create.intent, options.billingV2Create.capture,
@@ -1121,6 +1125,8 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           // correction and the driver's factual work remain available.
           if (run.billingV2 && body.action === "review" && body.decision === "accept")
             throw new FleetError("fleet.office_charge_review_required", 409);
+          if (run.billingV2 && options.originalWorkOperationId !== body.operationId)
+            throw new FleetError("fleet.work_command_required", 409);
           if (!["cancel", "pause"].includes(body.action))
             await requireFleetRunCommercialAuthority(client, run);
           if (run.events.length >= 200 || state.operations.length >= 2000)

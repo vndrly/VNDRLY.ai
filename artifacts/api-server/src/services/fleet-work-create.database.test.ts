@@ -14,6 +14,7 @@ import {
   FleetRunSchema,
   FleetWorkCommandSchema,
   fleetRunOrderRoute,
+  type FleetRun,
 } from "@workspace/api-zod";
 import { createFleetPricingFixture } from "../test-utils/fleet-pricing";
 import { createFleetService } from "./fleet-ops";
@@ -260,6 +261,77 @@ async function fixture() {
   };
 }
 
+async function cancelWork(
+  f: Awaited<ReturnType<typeof fixture>>,
+  run: FleetRun,
+) {
+  if (!run.resourceAssignment || !run.billingV2)
+    throw Error("Expected actual Detail and billing binding");
+  const operationId = randomUUID(),
+    capturedAt = new Date().toISOString();
+  return f.work.apply(
+    f.actor,
+    FleetWorkCommandSchema.parse({
+      version: 2,
+      operationId,
+      scope: f.command.scope,
+      capturedAt,
+      timeZone: "America/Chicago",
+      dependencies: [],
+      kind: "activity.action",
+      payload: {
+        activity: {
+          type: "canonical",
+          kind: "activity",
+          id: run.id,
+          version: run.version,
+        },
+        ticket: {
+          type: "canonical",
+          kind: "ticket",
+          id: run.billingV2.ticketId,
+          version: run.billingV2.ticketRevisionAtBinding,
+        },
+        baseAssignment: run.resourceAssignment.snapshot,
+        action: {
+          operationId,
+          expectedVersion: run.version,
+          action: "cancel",
+          reason: "Synthetic office cancellation",
+          capturedAt,
+          source: "user_report",
+        },
+      },
+    }),
+  );
+}
+
+it("requires an original-scope receipt transaction for v2 actions while retaining actual office cancellation", async () => {
+  const f = await fixture(),
+    created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied") throw Error("Expected actual creation");
+  const service = createFleetService(databaseFleetRepository),
+    run = await service.detail(
+      { ...f.actor },
+      String(
+        created.canonicalReferences.find((r) => r.kind === "activity")!.id,
+      ),
+    );
+  await expect(
+    service.action({ ...f.actor }, run.id, {
+      operationId: randomUUID(),
+      expectedVersion: run.version,
+      action: "cancel",
+      reason: "Legacy bypass attempt",
+    }),
+  ).rejects.toMatchObject({ code: "fleet.work_command_required", status: 409 });
+  expect((await service.detail({ ...f.actor }, run.id)).status).toBe("draft");
+  expect((await cancelWork(f, run)).status).toBe("applied");
+  expect((await service.detail({ ...f.actor }, run.id)).status).toBe(
+    "cancelled",
+  );
+});
+
 it("checks each mixed-service activity's own approval rather than the shared ticket's first service", async () => {
   const f = await fixture(),
     first = await f.work.apply(f.actor, f.command);
@@ -270,12 +342,14 @@ it("checks each mixed-service activity's own approval rather than the shared tic
       (r) => r.kind === "activity",
     )!,
     ticket = first.canonicalReferences.find((r) => r.kind === "ticket")!;
-  await service.action({ ...f.actor }, String(activity.id), {
-    operationId: randomUUID(),
-    expectedVersion: activity.version,
-    action: "cancel",
-    reason: "Synthetic release for second service",
-  });
+  expect(
+    (
+      await cancelWork(
+        f,
+        await service.detail({ ...f.actor }, String(activity.id)),
+      )
+    ).status,
+  ).toBe("applied");
   const secondService = (
     await pool.query(
       "INSERT INTO work_types(name,category) VALUES($1,'Synthetic') RETURNING id",
@@ -554,12 +628,7 @@ it("keeps canonical labels, holds changed resources and joins an explicitly sele
   expect(run.resourceAssignment?.snapshot.labels.driver).toBe(
     "Synthetic pool driver",
   );
-  await service.action({ ...f.actor }, run.id, {
-    operationId: randomUUID(),
-    expectedVersion: run.version,
-    action: "cancel",
-    reason: "Synthetic release before next assignment",
-  });
+  expect((await cancelWork(f, run)).status).toBe("applied");
   await pool.query(
     "UPDATE partner_vendor_work_type_approvals SET precise_unit_price='12' WHERE vendor_id=$1",
     [f.vendor],
@@ -592,12 +661,7 @@ it("keeps canonical labels, holds changed resources and joins an explicitly sele
     (await pool.query("SELECT id FROM tickets WHERE vendor_id=$1", [f.vendor]))
       .rows,
   ).toHaveLength(1);
-  await service.action({ ...f.actor }, secondRun.id, {
-    operationId: randomUUID(),
-    expectedVersion: secondRun.version,
-    action: "cancel",
-    reason: "Synthetic completion of test resource use",
-  });
+  expect((await cancelWork(f, secondRun)).status).toBe("applied");
   await pool.query("UPDATE tickets SET status='submitted' WHERE id=$1", [
     ticket.id,
   ]);

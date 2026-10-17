@@ -69,6 +69,7 @@ export async function executeFleetWorkCommand(
     afterCommit: Array<() => Promise<unknown>> = [];
   const service = createFleetWorkCanonicalService(context, {
     ...options,
+    originalWorkOperationId: command.operationId,
     afterCommit: (effect) => {
       afterCommit.push(effect);
     },
@@ -169,6 +170,7 @@ export async function executeFleetWorkCommand(
       const originId = `${digest.slice(0,8)}-${digest.slice(8,12)}-4${digest.slice(13,16)}-8${digest.slice(17,20)}-${digest.slice(20,32)}`;
       const creator = createFleetWorkCanonicalService(context, {
         ...options,
+        originalWorkOperationId: command.operationId,
         afterCommit: effect => { afterCommit.push(effect); },
         billingV2Create: { operationId: command.operationId, timeZone: command.timeZone, intent: billing,
           capture: { workAt: command.capturedAt, pricingIntent: p.pricingIntent } },
