@@ -403,6 +403,7 @@ export async function assessFleetActionPolicy(
     action: string;
     requiredCertifications: string[];
     policyAt: string;
+    capturedAt?: string;
   },
 ) {
   const warnings: FleetActionPolicySnapshot["warnings"] = [];
@@ -457,7 +458,7 @@ export async function assessFleetActionPolicy(
         approvalSnapshotId: authority.approvalSnapshotId,
       });
   }
-  const subjects=await readFleetRunComplianceCheckpoint(client,actor.companyId,input.run,input.policyAt);
+  const subjects=await readFleetRunComplianceCheckpoint(client,actor.companyId,input.run,input.policyAt,{pendingEvent:["start","submit_closeout"].includes(input.action)?{type:input.action,recordedAt:input.policyAt,...(input.capturedAt?{capturedAt:input.capturedAt}:{})}:undefined});
   if(subjects.some(subject=>subject.status==="red"))warnings.push({category:"regulatory_review",reason:"unverified"});
   const authority =
     input.run.linkedTicketId && !["cancel", "pause"].includes(input.action)

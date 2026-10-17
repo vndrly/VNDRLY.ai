@@ -1463,6 +1463,7 @@ export function createFleetService(repository: FleetRepository) {
           const fleetCompliance = await assessFleetActionPolicy(client, actor, {
             run,
             action: body.action,
+            capturedAt: body.capturedAt,
             requiredCertifications:
               state.fleets.find((f) => f.id === run.fleetId)
                 ?.requiredCertifications ?? [],

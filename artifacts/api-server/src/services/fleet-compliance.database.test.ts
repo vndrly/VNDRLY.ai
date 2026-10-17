@@ -110,11 +110,12 @@ async function fixture() {
       work,
       actor,
     );
+  let storeUnavailable=false;
   const service = module!.createFleetComplianceOperations(
     tx,
     (s, a) => s.grants.find((row) => row.userId === a.userId) ?? null,
     {
-      store: () => store,
+      store: () => {if(storeUnavailable)throw new Error("Synthetic unavailable source store");return store;},
       secret: () => "synthetic-test-hmac-not-a-credential",
       now: () => new Date("2026-10-16T18:00:00Z"),
     },
@@ -181,9 +182,14 @@ async function fixture() {
     record,
     source,
     appoint,
+    failStore:()=>{storeUnavailable=true;},
   };
 }
 describe("Private Fleet compliance register", () => {
+  it("returns the safe unavailable-source contract when the private storage provider itself cannot open",async()=>{
+    const f=await fixture();await f.appoint();const record=f.record();await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});f.failStore();
+    await expect(f.service.readPrivateComplianceRecord(f.reviewer,record.evidence.id,1)).rejects.toMatchObject({code:"fleet.private_record_unavailable",status:503});
+  });
   it("maps an explicitly unmapped received source to a compatible adopted requirement as a new revision, preserving its history",async()=>{
     const f=await fixture();await f.appoint();const base=f.record(),record={...base,evidence:{...base.evidence,requirementId:"unmapped:driver_license"}};await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
     await f.service.adoptFleetRequirement(f.reviewer,{operationId:randomUUID(),expectedVersion:0,requirement:{id:"mapped-license",version:1,label:"Mapped license fixture",category:"driver_license",subjectKinds:["driver"],jurisdiction:"federal",classification:"legal",effectiveFrom:"2026-01-01T00:00:00Z",effectiveUntil:null,renewalDays:null,dueSoonDays:60,applicability:{anyOf:[{allOf:[]}]},source:{url:"https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-383",section:"Synthetic mapping fixture"}}});

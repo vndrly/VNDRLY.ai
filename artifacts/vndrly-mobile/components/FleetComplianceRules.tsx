@@ -1,3 +1,4 @@
+import FleetCoverageRequirementFields from "./FleetCoverageRequirementFields";
 import React, { useEffect, useRef, useState } from "react";
 import { Linking, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -330,6 +331,7 @@ function Rules({ onSaved, onClose }: Props) {
               })
             }
           />
+          {draft.category==="insurance"&&<FleetCoverageRequirementFields key={`${choice}:${draft.id}:${draft.version}`} value={draft.coverage} disabled={disabled} onChange={coverage=>setDraft({...draft,coverage})}/>}
           <FleetCheckbox
             label={say(
               "Require the source's actual expiry",

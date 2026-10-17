@@ -6,6 +6,14 @@ import type { PoolClient } from "pg";
 import type { ObjectStore } from "../lib/objectStore";
 const at="2026-10-16T18:00:00Z",truck="11111111-1111-4111-8111-111111111111",trailer="22222222-2222-4222-8222-222222222222",activity="33333333-3333-4333-8333-333333333333";
 const run=()=>FleetRunSchema.parse({id:activity,fleetId:truck,companyId:11,title:"Synthetic activity",driverUserId:7,vehicleAssetId:truck,trailerAssetId:trailer,siteIds:[9],status:"draft",phase:null,version:1,stops:[{id:truck,siteId:9,kind:"delivery",sequence:0}],loads:[],inspections:[],currentStopId:null,visitedStopIds:[],events:[],linkedTicketId:null,allowedActions:[]});
+it("includes the actual closeout being committed before its immutable event is appended, preserving capture and receipt time",()=>{
+ const window=(module as any).fleetComplianceRunWorkWindow;expect(window).toBeTypeOf("function");const original={...run(),events:[{id:truck,operationId:truck,type:"start",actorUserId:7,recordedAt:"2026-10-16T11:00:00Z",capturedAt:"2026-10-16T10:00:00Z"}]};
+ expect(window(original,at,{type:"submit_closeout",recordedAt:at,capturedAt:"2026-10-16T17:00:00Z"})).toEqual({startAt:"2026-10-16T10:00:00Z",endAt:"2026-10-16T17:00:00Z",valid:true});
+ expect(window(original,at)).toEqual({startAt:"2026-10-16T10:00:00Z",endAt:null,valid:true});
+ expect(window(original,at,{type:"submit_closeout",recordedAt:at,capturedAt:"2026-10-17T17:00:00Z"}).valid).toBe(false);
+ expect(window(original,at,{type:"submit_closeout",recordedAt:at,capturedAt:"2026-10-16T09:00:00Z"}).valid).toBe(false);
+ expect(original.events).toHaveLength(1);
+});
 it("binds work-scope review to resources and physical/billing order, but not authentication or activity phase",()=>{
  const digest=(module as any).fleetComplianceRunScopeFingerprint;expect(digest).toBeTypeOf("function");const original=run();
  expect(digest({...original,status:"in_progress",phase:"traveling",version:12})).toBe(digest(original));

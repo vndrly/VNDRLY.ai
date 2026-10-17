@@ -1,3 +1,4 @@
+import {FleetCoverageRequirementFields} from "./fleet-coverage-requirement-fields";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -301,6 +302,7 @@ function Rules({
               }
             />
           </label>
+          {draft.category==="insurance"&&<FleetCoverageRequirementFields key={`${choice}:${draft.id}:${draft.version}`} value={draft.coverage} disabled={disabled} onChange={coverage=>setDraft({...draft,coverage})}/>}
           <label className="flex items-center gap-2">
             <BrandedCheckbox
               disabled={disabled}

@@ -240,7 +240,7 @@ export function createFleetComplianceOperations(
       { actorUserId: actor.userId, fingerprint: digest(input), result },
     );
   }
-  const privateRecord=(entry:FleetComplianceIndexEntry,actor:FleetActor)=>readFleetPrivateComplianceSource(entry,actor.companyId,store(),digest);
+  const privateRecord=(entry:FleetComplianceIndexEntry,actor:FleetActor)=>readFleetPrivateComplianceSource(entry,actor.companyId,store,digest);
   async function persistRecord(
     client: PoolClient,
     actor: FleetActor,
