@@ -171,7 +171,7 @@ function EvidenceReviewForm({
     employer_record: es ? "Registro del empleador" : "Employer record",
     ELD_record: es ? "Registro ELD" : "ELD record",
   };
-  const fields: Array<[string, string]> = !attr
+  const fields: Array<[string, string | null]> = !attr
     ? []
     : attr.kind === "driver_license"
       ? [

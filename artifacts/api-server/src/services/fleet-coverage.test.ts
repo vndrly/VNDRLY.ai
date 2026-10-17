@@ -31,6 +31,7 @@ const policy = () => ({
 });
 const work = () => ({
   carrierId: 7,
+  insuredLegalEntity: "Synthetic Carrier",
   states: ["OK"],
   cargoCode: "synthetic-crude",
   equipmentIds: [id(9)],
@@ -43,7 +44,75 @@ const work = () => ({
   evaluatedAt: "2026-10-16T11:00:00Z",
 });
 describe("Fleet insurance coverage assessment", () => {
-  it("keeps excess-layer intermediate precision beyond an individual stored limit",()=>{const primary={...policy(),limitUSD:"900000000000000"},excess={...policy(),id:id(2),coverageType:"excess",limitUSD:"900000000000000",underlyingPolicyId:primary.id,attachmentPointUSD:primary.limitUSD,followFormReviewed:true};expect(evaluateFleetInsuranceCoverage({work:{...work(),requiredLimitUSD:"999999999999999"},records:[primary,excess]})).toMatchObject({status:"green",limitUSD:"1800000000000000"});});
+  it("retains unread policy identity or limits as unknown rather than requiring invented zero values", () => {
+    for (const unknown of [
+      { policyNumber: null },
+      { insuredLegalEntity: null },
+      { limitUSD: null },
+    ])
+      expect(
+        evaluateFleetInsuranceCoverage({
+          work: work(),
+          records: [{ ...policy(), state: "document_received", ...unknown }],
+        }),
+      ).toMatchObject({
+        status: "red",
+        limitUSD: null,
+        reasons: expect.arrayContaining(["unverified"]),
+      });
+  });
+  it("matches the actual insured legal entity, not only a carrier number supplied on a policy record", () => {
+    expect(
+      evaluateFleetInsuranceCoverage({
+        work: { ...work(), insuredLegalEntity: "A different legal entity" },
+        records: [policy()],
+      }),
+    ).toMatchObject({
+      status: "red",
+      reasons: expect.arrayContaining(["insured_entity_mismatch"]),
+    });
+  });
+  it("does not infer the intended legal entity and keeps a known zero limit distinct from an unread limit", () => {
+    const { insuredLegalEntity: _entity, ...unknownEntity } = work();
+    expect(
+      evaluateFleetInsuranceCoverage({
+        work: unknownEntity,
+        records: [policy()],
+      }),
+    ).toMatchObject({
+      status: "red",
+      limitUSD: null,
+      reasons: expect.arrayContaining(["unverified"]),
+    });
+    expect(
+      evaluateFleetInsuranceCoverage({
+        work: work(),
+        records: [{ ...policy(), limitUSD: "0" }],
+      }),
+    ).toMatchObject({
+      status: "red",
+      limitUSD: "0",
+      reasons: expect.arrayContaining(["insufficient_limit"]),
+    });
+  });
+  it("keeps excess-layer intermediate precision beyond an individual stored limit", () => {
+    const primary = { ...policy(), limitUSD: "900000000000000" },
+      excess = {
+        ...policy(),
+        id: id(2),
+        coverageType: "excess",
+        limitUSD: "900000000000000",
+        underlyingPolicyId: primary.id,
+        attachmentPointUSD: primary.limitUSD,
+        followFormReviewed: true,
+      };
+    expect(
+      evaluateFleetInsuranceCoverage({
+        work: { ...work(), requiredLimitUSD: "999999999999999" },
+        records: [primary, excess],
+      }),
+    ).toMatchObject({ status: "green", limitUSD: "1800000000000000" });
+  });
   it("separates document receipt, actual coverage review and verified regulatory filing", () => {
     for (const state of ["document_received", "reviewed"]) {
       expect(

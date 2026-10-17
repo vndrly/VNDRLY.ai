@@ -21,8 +21,8 @@ export const FleetInsuranceCoverageSchema = z
   .object({
     id: z.uuid(),
     revision: positiveId,
-    policyNumber: z.string().trim().min(1).max(200),
-    insuredLegalEntity: z.string().trim().min(1).max(300),
+    policyNumber: z.string().trim().min(1).max(200).nullable(),
+    insuredLegalEntity: z.string().trim().min(1).max(300).nullable(),
     privateDocumentRef: z.string().trim().min(1).max(1000).nullable(),
     coverageType: FleetCoverageTypeSchema,
     state: z.enum([
@@ -45,7 +45,7 @@ export const FleetInsuranceCoverageSchema = z
     cargoCodes: z.array(z.string().trim().min(1).max(100)).max(100).nullable(),
     equipmentIds: z.array(z.uuid()).max(500).nullable(),
     scopesReviewed: z.boolean(),
-    limitUSD: money,
+    limitUSD: money.nullable(),
     filingStatus: z.enum([
       "unverified",
       "not_required",
@@ -77,6 +77,13 @@ export type FleetInsuranceCoverage = z.infer<
 export const FleetInsuranceWorkScopeSchema = z
   .object({
     carrierId: positiveId,
+    insuredLegalEntity: z
+      .string()
+      .trim()
+      .min(1)
+      .max(300)
+      .nullable()
+      .default(null),
     states: z
       .array(z.string().regex(/^[A-Z]{2}$/))
       .min(1)
@@ -116,6 +123,7 @@ export const FleetCoverageAssessmentSchema = z
         "expired",
         "not_yet_effective",
         "carrier_mismatch",
+        "insured_entity_mismatch",
         "territory_mismatch",
         "cargo_mismatch",
         "equipment_mismatch",

@@ -184,6 +184,13 @@ async function fixture() {
   };
 }
 describe("Private Fleet compliance register", () => {
+  it("receives an unread insurance source without inventing a policy identity or zero limit, keeping private values out of the operational register",async()=>{
+    const f=await fixture();await f.appoint();const base=f.record(),id=randomUUID();
+    const record={...base,evidence:{...base.evidence,id,subject:{kind:"carrier",id:f.admin.companyId},requirementId:"insurance"},attributes:{kind:"insurance",coverage:{id,revision:1,policyNumber:null,insuredLegalEntity:null,privateDocumentRef:null,coverageType:"auto_liability",state:"document_received",reviewedByUserId:null,reviewedAt:null,validFrom:base.evidence.validFrom,validUntil:base.evidence.validUntil,carrierIds:null,states:null,cargoCodes:null,equipmentIds:null,scopesReviewed:false,limitUSD:null,filingStatus:"unverified",filingVerifiedAt:null,underlyingPolicyId:null,attachmentPointUSD:null,followFormReviewed:false}},retentionClass:"insurance"};
+    const saved=await f.service.saveFleetComplianceEvidence(f.admin,{operationId:randomUUID(),expectedVersion:0,record});expect(saved).toMatchObject({id,revision:1});
+    const source=await f.service.readPrivateComplianceRecord(f.reviewer,id,1);expect(source.attributes).toMatchObject({kind:"insurance",coverage:{limitUSD:null,policyNumber:null,insuredLegalEntity:null,state:"document_received"}});
+    const publicRows=await f.service.readFleetComplianceRegister(f.dispatcher,{}),serialized=JSON.stringify(publicRows);expect(serialized).not.toContain("policyNumber");expect(serialized).not.toContain("insuredLegalEntity");expect(serialized).not.toContain("limitUSD");
+  });
   it("lets company drivers read safe carrier applicability without site grants, private files or reviewer writes",async()=>{
     const f=await fixture();await f.appoint();const subject={kind:"carrier" as const,id:f.admin.companyId};
     await f.service.recordFleetComplianceFacts(f.reviewer,{operationId:randomUUID(),expectedVersion:0,subject,facts:{interstate:null},source:f.source});

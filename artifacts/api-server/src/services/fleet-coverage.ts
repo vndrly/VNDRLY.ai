@@ -32,6 +32,20 @@ function restrictions(
 ): FleetCoverageAssessment["reasons"] {
   const reasons: FleetCoverageAssessment["reasons"] = [];
   if (
+    record.policyNumber === null ||
+    record.insuredLegalEntity === null ||
+    record.limitUSD === null ||
+    work.insuredLegalEntity === null
+  )
+    reasons.push("unverified");
+  if (
+    record.insuredLegalEntity !== null &&
+    work.insuredLegalEntity !== null &&
+    record.insuredLegalEntity.trim().toUpperCase() !==
+      work.insuredLegalEntity.trim().toUpperCase()
+  )
+    reasons.push("insured_entity_mismatch");
+  if (
     record.state === "revoked" ||
     record.state === "cancelled" ||
     record.state === "failed"
@@ -145,6 +159,7 @@ export function evaluateFleetInsuranceCoverage(
           !ids.includes(row.id),
       )) {
         if (
+          excess.limitUSD === null ||
           !excess.followFormReviewed ||
           excess.attachmentPointUSD === null ||
           compare(excess.attachmentPointUSD, limit) !== 0n
@@ -158,6 +173,7 @@ export function evaluateFleetInsuranceCoverage(
         ]);
       }
     };
+    if (primary.limitUSD === null) continue;
     walk(primary, parseExactDecimal(primary.limitUSD), [primary.id]);
   }
   if (highest !== null && compare(highest, work.requiredLimitUSD) >= 0n)

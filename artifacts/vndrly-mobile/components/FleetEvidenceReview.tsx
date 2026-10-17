@@ -163,7 +163,7 @@ function EvidenceReviewForm({ evidenceId, revision, onSaved, onClose }: Props) {
     employer_record: "Employer record",
     ELD_record: "ELD record",
   };
-  const fields: Array<[string, string]> = !attr
+  const fields: Array<[string, string | null]> = !attr
     ? []
     : attr.kind === "driver_license"
       ? [
