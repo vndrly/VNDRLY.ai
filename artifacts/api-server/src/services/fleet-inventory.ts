@@ -8,6 +8,7 @@ import {
   FleetInventoryDetailSchema,
   FleetInventoryReceiptSchema,
   FleetRunSchema,
+  fleetRunAssetIds,
   type FleetInventoryAsset,
   type FleetRun,
 } from "@workspace/api-zod";
@@ -139,18 +140,15 @@ export function createFleetInventoryOperations(
     const assigned = s.runs.filter(
       (run) =>
         run.driverUserId === a.userId &&
+        fleets.some(fleet=>fleet.id===run.fleetId) &&
         !["completed", "cancelled"].includes(run.status) &&
         viewRun(s, a, run, "view"),
     );
     return [
       ...new Set(
-        assigned.flatMap((run) =>
-          [run.vehicleAssetId, run.trailerAssetId].filter((id): id is string =>
-            Boolean(id),
-          ),
-        ),
+        assigned.flatMap(fleetRunAssetIds),
       ),
-    ].filter((id) => fleets.some((f) => f.equipmentAssetIds.includes(id)));
+    ];
   }
   async function currentAsset(c: PoolClient, a: FleetActor, id: string) {
     const result = await c.query(
@@ -332,16 +330,17 @@ export function createFleetInventoryOperations(
           [id],
         );
         const historical = await c.query(
-          "SELECT tool_output FROM (SELECT DISTINCT ON(target_id) tool_output,target_id,id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' ORDER BY target_id,id DESC) latest WHERE tool_output->>'vehicleAssetId'=$2 OR tool_output->>'trailerAssetId'=$2 ORDER BY id DESC LIMIT 101",
+          "SELECT latest.tool_output FROM (SELECT DISTINCT ON(target_id) tool_output,target_id,id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' ORDER BY target_id,id DESC) latest WHERE EXISTS(SELECT 1 FROM assistant_action_audit refs WHERE refs.vendor_id=$1 AND refs.target_type='fleet-run' AND refs.target_id=latest.target_id AND (refs.tool_output->>'vehicleAssetId'=$2 OR refs.tool_output->>'trailerAssetId'=$2 OR EXISTS(SELECT 1 FROM jsonb_array_elements(COALESCE(refs.tool_output#>'{resourceAssignment,snapshot,rigPackage,components}','[]'::jsonb)) component WHERE component->>'assetId'=$2))) ORDER BY latest.id DESC LIMIT 101",
           [a.companyId, id],
         );
         const allRuns = new Map<string, FleetRun>();
+        const historicalRunIds=new Set(historical.rows.map(row=>String(row.tool_output.id)));
         for (const r of [
           ...historical.rows.map((x) => FleetRunSchema.parse(x.tool_output)),
           ...s.runs,
         ])
           if (
-            (r.vehicleAssetId === id || r.trailerAssetId === id) &&
+            (fleetRunAssetIds(r).includes(id)||historicalRunIds.has(r.id)) &&
             viewRun(s, a, r, "view")
           )
             allRuns.set(r.id, r);

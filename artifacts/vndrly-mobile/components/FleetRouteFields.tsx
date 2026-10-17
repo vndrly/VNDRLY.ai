@@ -9,6 +9,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import FleetChoiceField from "./FleetChoiceField";
 import TogglePillButton from "./TogglePillButton";
+import {useFleetCopy} from "@/lib/fleet-copy";
 type Cycle = {
   id: string;
   pickupId: string;
@@ -20,12 +21,14 @@ export default function FleetRouteFields({
   value,
   destinations,
   onChange,
+  disabled=false,
 }: {
   value: FleetRoutePlan | null;
   destinations: FleetDestination[];
   onChange: (value: FleetRoutePlan | null) => void;
+  disabled?:boolean;
 }) {
-  const colors = useColors(),
+  const colors = useColors(),copy=useFleetCopy(),
     text = { color: colors.text };
   const idOf = (reference: FleetRoutePlan["origin"] | null) =>
     reference?.type === "canonical" ? reference.location.id : "";
@@ -136,40 +139,44 @@ export default function FleetRouteFields({
       }}
     >
       <Text style={[text, { fontSize: 18, fontWeight: "700" }]}>
-        Physical route
+        {copy("Physical route")}
       </Text>
       <Text style={text}>
-        Actual places visited. Billing site, customer and AFE stay separate.
+        {copy("Actual places visited. Billing site, customer and AFE stay separate.")}
       </Text>
       {cycles.map((cycle, index) => (
         <View key={cycle.id} style={{ gap: 10 }}>
-          <Text style={text}>Cycle {index + 1}</Text>
+          <Text style={text}>{copy("Cycle")} {index + 1}</Text>
           <FleetChoiceField
-            label={index ? `Origin ${index + 1}` : "Origin"}
+            label={index ? `${copy("Origin")} ${index + 1}` : copy("Origin")}
+            disabled={disabled}
             value={cycle.origin}
             options={options}
             onChange={(id) => update(index, "origin", id)}
           />
           <FleetChoiceField
-            label={index ? `Destination ${index + 1}` : "Destination"}
+            label={index ? `${copy("Destination")} ${index + 1}` : copy("Destination")}
+            disabled={disabled}
             value={cycle.destination}
             options={options}
             onChange={(id) => update(index, "destination", id)}
           />
           {index > 0 && (
             <TogglePillButton
+              disabled={disabled}
               onPress={() => {
                 const next = cycles.filter((item) => item.id !== cycle.id);
                 setCycles(next);
                 publish(next, policy, base);
               }}
             >
-              Remove cycle {index + 1}
+              {copy("Remove cycle")} {index + 1}
             </TogglePillButton>
           )}
         </View>
       ))}
       <TogglePillButton
+        disabled={disabled}
         onPress={() => {
           const last = cycles.at(-1)!;
           const next = [
@@ -185,14 +192,15 @@ export default function FleetRouteFields({
           publish(next, policy, base);
         }}
       >
-        Repeat pickup / delivery cycle
+        {copy("Repeat pickup / delivery cycle")}
       </TogglePillButton>
       <FleetChoiceField
-        label="Return policy"
+        label={copy("Return policy")}
+        disabled={disabled}
         value={policy}
         options={[
-          { id: "delivery_only", label: "Delivery only" },
-          { id: "return_required", label: "Return to base before closeout" },
+          { id: "delivery_only", label: copy("Delivery only") },
+          { id: "return_required", label: copy("Return to base before closeout") },
         ]}
         onChange={(id) => {
           const next = id as typeof policy;
@@ -202,7 +210,8 @@ export default function FleetRouteFields({
       />
       {policy === "return_required" && (
         <FleetChoiceField
-          label="Return base"
+          label={copy("Return base")}
+          disabled={disabled}
           value={base}
           options={options}
           onChange={(id) => {
@@ -212,8 +221,7 @@ export default function FleetRouteFields({
         />
       )}
       <Text style={text}>
-        GPS unverified locations remain selectable. Estimates require
-        coordinates.
+        {copy("GPS unverified locations remain selectable. Estimates require coordinates.")}
       </Text>
     </View>
   );

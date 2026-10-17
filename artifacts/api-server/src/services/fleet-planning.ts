@@ -2,7 +2,7 @@ import {
   validateCommercialStops,
   assertFleetPhysicalRoute,
 } from "./fleet-commercial";
-import { FleetDraftEditSchema, type FleetRun } from "@workspace/api-zod";
+import { FleetDraftEditSchema, fleetRouteMatchesSchedule, fleetRouteMatchesRunOrder, type FleetRun } from "@workspace/api-zod";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
@@ -74,6 +74,9 @@ export function createFleetPlanningOperations(
               }
             : {}),
         };
+        if(body.routePlan&&!fleetRouteMatchesSchedule(body.routePlan,next.schedule))throw new FleetError("fleet.route_schedule_mismatch",400);
+        if(next.routePlan&&body.schedule!==undefined&&!body.routePlan)next.routePlan={...next.routePlan,plannedWindow:next.schedule?{startAt:next.schedule.plannedStartAt,endAt:next.schedule.plannedEndAt,timeZone:next.schedule.timezone}:null};
+        if(next.routePlan&&next.resourceAssignment)next.resourceAssignment={...next.resourceAssignment,returnPolicy:next.routePlan.returnPolicy};
         const fleet = state.fleets.find((row) => row.id === run.fleetId),
           grant = state.grants.find((row) => row.userId === bound.userId);
         if (
@@ -88,6 +91,7 @@ export function createFleetPlanningOperations(
           next.stops.some((row, index) => row.sequence !== index)
         )
           throw new FleetError("fleet.invalid_stops", 400);
+        if(next.runOrder&&(!next.routePlan||!fleetRouteMatchesRunOrder(next.routePlan,next.runOrder)))throw new FleetError("fleet.run_order_route_mismatch",409);
         validateCommercialStops(next);
         if (body.routePlan)
           await assertFleetPhysicalRoute(client, bound, state, next, true);

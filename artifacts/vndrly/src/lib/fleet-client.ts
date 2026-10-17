@@ -20,6 +20,11 @@ import type {
 } from "@workspace/api-zod";
 import {
   FleetDestinationSaveSchema,
+  FleetRunOrderPageSchema,
+  FleetRunOrderSchema,
+  FleetRunOrderSaveSchema,
+  FleetRunOrderReceiptSchema,
+  FleetRunOrderHistorySchema,
   FleetDestinationReceiptSchema,
   FleetDestinationDirectorySchema,
   FleetDetailPageSchema,
@@ -73,7 +78,7 @@ export function fleetErrorMessage(error: unknown, fallback: string) {
     "fleet.driver_unavailable":
       "The driver is not currently available in this company.",
     "fleet.driver_grant_required":
-      "The driver needs an explicit grant for this fleet and every run site.",
+      "Choose a current driver from the company's available pool with access to this Detail's resource group.",
     "fleet.equipment_on_hold":
       "This equipment has an active hold. Choose eligible equipment.",
     "fleet.equipment_unavailable":
@@ -122,8 +127,13 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
-  commercial: () =>
-    request<unknown>("/commercial").then((value) =>
+  runOrders:(after?:number)=>request<unknown>(`/run-orders${after?`?after=${after}`:""}`).then(value=>FleetRunOrderPageSchema.parse(value)),
+  runOrder:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}`).then(value=>FleetRunOrderSchema.parse(value)),
+  saveRunOrder:(input:z.input<typeof FleetRunOrderSaveSchema>)=>request<unknown>("/run-orders",FleetRunOrderSaveSchema.parse(input)).then(value=>FleetRunOrderSchema.parse(value)),
+  runOrderReceipt:(id:string)=>request<unknown>(`/run-orders/operations/${encodeURIComponent(id)}`).then(value=>FleetRunOrderReceiptSchema.parse(value)),
+  runOrderHistory:(id:string,after?:number)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/history${after?`?after=${after}`:""}`).then(value=>FleetRunOrderHistorySchema.parse(value)),
+  commercial: (siteId?:number) =>
+    request<unknown>(`/commercial${siteId?`?siteId=${siteId}`:""}`).then((value) =>
       FleetDestinationDirectorySchema.parse(value),
     ),
   saveDestination: (input: z.infer<typeof FleetDestinationSaveSchema>) =>

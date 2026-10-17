@@ -16,6 +16,8 @@ All master constraints apply. A local reference is never a canonical ticket numb
 
 ## Review Focus
 
+October 16 scope clarification: journal saved Run-definition references separately from each ticket-bound activity. A Run is an Origin/Destination transport order; dispatch matches a reusable Detail to that order. Repeating it on one ticket creates distinct activities, not duplicate order definitions. Driver pool and assigned activity access require current company/Detail authority, not a driver-to-site assignment; customer/billing authority remains explicit at canonical reconciliation.
+
 - Server commits before response loss: look up the operation receipt and return exactly the same canonical result.
 - One run conflicts with a changed assignment/closed ticket: other runs sync and this run continues collecting facts.
 - OS kills the app after journal/photo writes: original records and bytes survive without dangling success labels.

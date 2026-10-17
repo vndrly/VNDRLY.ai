@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
+import {FleetRunSchema} from "@workspace/api-zod";
 import type { PoolClient } from "pg";
 import {
   emptyFleetState,
@@ -237,14 +238,16 @@ describe("Fleet Inventory uses canonical assets", () => {
       another = randomUUID();
     f.state().fleets[0].equipmentAssetIds = [assetId, another];
     f.state().runs = [
-      {
+      FleetRunSchema.parse({
         id: randomUUID(),
+        companyId:7,fleetId,title:"Own assigned transport",version:1,phase:null,
         driverUserId: 1,
         vehicleAssetId: assetId,
         trailerAssetId: null,
         status: "dispatched",
-      },
-    ] as FleetState["runs"];
+        stops:[{id:randomUUID(),siteId:9,kind:"pickup",sequence:0}],siteIds:[9],loads:[],inspections:[],records:[],events:[],currentStopId:null,visitedStopIds:[],linkedTicketId:null,allowedActions:[],
+      }),
+    ];
     f.assets.set(another, {
       id: another,
       version: 1,

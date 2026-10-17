@@ -269,7 +269,7 @@ describe("Fleet commercial ticket contracts", () => {
     ).rejects.toMatchObject({ code: "fleet.office_finalize_required" });
     expect(f.ticket.fleet_plan.closedAt).toBeNull();
   });
-  it.each(["disabled", "revoked sites", "removed fleet", "driver"])(
+  it.each(["disabled", "removed fleet", "driver"])(
     "rejects destination writes for %s authority",
     async (reason) => {
       const f = fixture(),
@@ -294,7 +294,6 @@ describe("Fleet commercial ticket contracts", () => {
         },
       ];
       if (reason === "disabled") f.state.enabled = false;
-      if (reason === "revoked sites") manager.currentSiteIds = [];
       if (reason === "removed fleet") f.state.fleets = [];
       if (reason === "driver") f.state.grants[0].roles = ["driver"];
       const { revision, ownerId, ownerType, ...input } = destination();
@@ -308,9 +307,9 @@ describe("Fleet commercial ticket contracts", () => {
       expect(f.query).not.toHaveBeenCalled();
     },
   );
-  it("permits a current manager's destination save but excludes operation metadata from settings", async () => {
+  it("permits company-owned location setup before customer access, excluding operation metadata", async () => {
     const f = fixture(),
-      manager = { ...actor, membershipRole: "member" };
+      manager = { ...actor, membershipRole: "member",currentSiteIds:[] };
     f.state.fleets = [
       {
         id: id(3),

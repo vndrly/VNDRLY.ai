@@ -41,7 +41,7 @@ it("filters current company memberships, exact Fleet/site roles and own assignme
     grants: [1, 2, 3, 4, 5].map((userId) => ({
       userId,
       fleetIds: [userId === 4 ? randomUUID() : run.fleetId],
-      siteIds: [userId === 5 ? 10 : 9],
+      siteIds: userId === 2 ? [] : [userId === 5 ? 10 : 9],
       roles: [userId === 1 ? "fleet_manager" : "driver"] as (
         | "fleet_manager"
         | "driver"

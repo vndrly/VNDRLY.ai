@@ -26,6 +26,7 @@ import FleetGate from "@/components/FleetGate";
 import FleetDestinationDirectory from "@/components/FleetDestinationDirectory";
 import FleetTicketPlan from "@/components/FleetTicketPlan";
 import FleetRunBilling, { type FleetBillingChoice } from "@/components/FleetRunBilling";
+import FleetRunPlanComposer,{createFleetRunFromPlan,type FleetRunPlan} from "@/components/FleetRunPlan";
 import FleetTicketFinalization from "@/components/FleetTicketFinalization";
 import FleetReports from "@/components/FleetReports";
 import FleetMaintenance from "@/components/FleetMaintenance";
@@ -81,6 +82,8 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     }[]>([]);
     const [stopKind, setStopKind] = useState<"pickup" | "delivery" | "return">("pickup");
     const [billing, setBilling] = useState<FleetBillingChoice | null>(null);
+    const [useSavedPlan,setUseSavedPlan]=useState(false);
+    const [nativePlan,setNativePlan]=useState<FleetRunPlan|null>(null);
     const [reason, setReason] = useState("");
     const [unresolved, setUnresolved] = useState<{
         path: string;
@@ -106,6 +109,8 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         setTrailer(null);
         setStopSites([]);
         setBilling(null);
+        setUseSavedPlan(false);
+        setNativePlan(null);
         setSettingsOpen(false);
         setReason("");
         setUnresolved(null);
@@ -128,7 +133,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
                     const exact = await apiFetch<FleetRun>(`/api/fleet/runs/${initialRunId}`);
                     overview = { ...overview, runs: [...overview.runs, exact] };
                 }
-                const resources = overview.capabilities.canDispatch ? await apiFetch<FleetResources>("/api/fleet/resources") : { drivers: [], equipment: [] };
+                const resources = (overview.capabilities.canDispatch || overview.capabilities.canManageResources) ? await apiFetch<FleetResources>("/api/fleet/resources") : { drivers: [], equipment: [] };
                 if (alive && identityRef.current === identity) {
                     setData({ identity, overview, resources });
                     if (preferenceScope.current !== identity) { setFleetFilter(overview.preference?.selectedFleetId ?? null); preferenceScope.current = identity; }
@@ -286,6 +291,11 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     }
     function createRun() {
         if (!billing) { setError(copy("Choose new ticket or an eligible open ticket, AFE and work date.")); return; }
+        if(useSavedPlan){
+            if(!nativePlan){setError(copy("Choose a saved Detail, billing site and complete physical route."));return;}
+            try{const result=createFleetRunFromPlan({operationId:Crypto.randomUUID(),originStopId:Crypto.randomUUID(),fleetId,title,plan:nativePlan,billing});void write("/api/fleet/runs",result);}catch{setError(copy("Choose a saved Detail, billing site and complete physical route."));}
+            return;
+        }
         const result = CreateFleetRunSchema.safeParse({ operationId: Crypto.randomUUID(), fleetId, title, driverUserId: driver, vehicleAssetId: vehicle, trailerAssetId: trailer, billing,
             stops: stopSites.map((stop, sequence) => ({ id: Crypto.randomUUID(), ...stop, sequence })) });
         if (!result.success) {
@@ -376,7 +386,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}>{([
         [overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"My Run":"Fleet Dispatch",overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"my-day":"desk","truck"],
         ...(overview.capabilities.canDrive&&overview.capabilities.canDispatch?[["My Run","my-day","user"]]:[]),
-        ["Inventory and Details","inventory","truck"], ["Origins and Destinations","locations","map-pin"], ...(overview.capabilities.canDispatch?[["Drivers","directory","users"]]:[]),["Reports","reports","bar-chart-2"],
+        ["Inventory and Details","inventory","truck"], ["Origins and Destinations","locations","map-pin"], ...((overview.capabilities.canDispatch||overview.capabilities.canManageResources)?[["Drivers","directory","users"]]:[]),["Reports","reports","bar-chart-2"],
         ["Map","map","map"]
       ] as const).map(([label,value,icon])=><Pressable key={value} accessibilityRole="button" accessibilityState={{selected:mode===value}} onPress={()=>setMode(value as typeof mode)} style={{paddingHorizontal:16,paddingVertical:12,borderRadius:12,borderWidth:2,borderColor:colors.primary,backgroundColor:mode===value?colors.primary:colors.card,flexDirection:"row",gap:8,alignItems:"center"}}><Feather name={icon as any} size={18} color={mode===value?"#ffffff":colors.primary}/><Text style={{color:mode===value?"#ffffff":colors.foreground,fontWeight:"600"}}>{copy(label)}</Text></Pressable>)}</View>
       <Pressable accessibilityRole="button" accessibilityLabel={copy("Fleet settings")} onPress={()=>setSettingsOpen(!settingsOpen)} style={{padding:12}}><Feather name="settings" size={23} color={colors.primary}/></Pressable>
@@ -401,8 +411,9 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     {unresolved && <View style={{ gap: 8 }}><Text style={textStyle}>{copy("Unverified operation: ")}{unresolved.operationId}{copy(". No new action can be started until this outcome is resolved.")}</Text><TogglePillButton disabled={busy || !current} onPress={() => void write(unresolved.path, unresolved.body)}>{copy("Retry same operation after readback")}</TogglePillButton></View>}
     {!current && !error && <ActivityIndicator />}
     {overview && !overview.enabled && <Text style={textStyle}>{copy("Fleet is not enabled for your current company and grants.")}</Text>}
-    {mode === "directory" && current && overview?.capabilities.canDispatch && !cachedAt && <View style={{gap:14}}>
-      <Text style={[textStyle,{fontSize:20,fontWeight:"700"}]}>{copy("Drivers & dispatch readiness")}</Text>
+    {mode === "directory" && current && (overview?.capabilities.canDispatch || overview?.capabilities.canManageResources) && !cachedAt && <View style={{gap:14}}>
+      <Text style={[textStyle,{fontSize:20,fontWeight:"700"}]}>{copy("Company driver pool")}</Text>
+      <Text style={textStyle}>{copy("Assign a driver to a Detail, then dispatch that Detail to a Run—an Origin and Destination transport order. Drivers do not need a site assignment.")}</Text>
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:12}}>{current.resources.equipment.filter(asset=>!fleetFilter||overview.fleets.find(fleet=>fleet.id===fleetFilter)?.equipmentAssetIds.includes(asset.id)).map(asset=><View key={asset.id} style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:1,borderRadius:14,padding:16,gap:10,minWidth:220,flexGrow:1}}><Feather name="truck" size={28} color={colors.primary}/><Text style={[textStyle,{fontSize:18,fontWeight:"700"}]}>{asset.name}</Text><Text style={textStyle}>{copy(asset.category)} · {copy(asset.status)}</Text><Text style={{color:asset.dispatchable?colors.primary:colors.mutedForeground}}>{copy(asset.dispatchable?"Available for dispatch":"Not ready for dispatch")}</Text>{overview.capabilities.canMaintain&&<TogglePillButton compactOnTablet onPress={()=>setMode("maintenance")}>{copy("Maintenance")}</TogglePillButton>}</View>)}</View>
       {!current.resources.equipment.length&&<Text style={textStyle}>{copy("No equipment configured yet.")}</Text>}
       {current.resources.drivers.filter(driver=>!fleetFilter||driver.fleetIds.includes(fleetFilter)).map(driver=><View key={driver.userId} style={{backgroundColor:colors.card,borderRadius:14,padding:16,gap:8}}><Text style={[textStyle,{fontWeight:"700"}]}>{driver.name}</Text><FleetDriverAvailability driverUserId={driver.userId} actorUserId={user!.id} companyId={overview.companyId}/></View>)}
@@ -464,7 +475,9 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       {overview.capabilities.canDispatch && mode === "dispatch" && <View style={{ gap: 12 }}>
         <Text style={[textStyle, { fontWeight: "700" }]}>{copy("Dispatch resources / new run")}</Text>
         <TextInput editable={!busy && !unresolved} accessibilityLabel={copy("Fleet run title")} placeholder={copy("Run title")} value={title} onChangeText={setTitle} style={fieldStyle}/>
-        {overview.fleets.map(f => <TogglePillButton disabled={busy || !!unresolved} key={f.id} solid={fleetId === f.id} onPress={() => { setFleetId(f.id); setStopSites([]); setBilling(null); setDriver(null); setVehicle(""); setTrailer(null); }}>{f.name}</TogglePillButton>)}
+        {overview.fleets.map(f => <TogglePillButton disabled={busy || !!unresolved} key={f.id} solid={fleetId === f.id} onPress={() => { setFleetId(f.id); setStopSites([]); setBilling(null); setDriver(null); setVehicle(""); setTrailer(null);setNativePlan(null); }}>{f.name}</TogglePillButton>)}
+        <TogglePillButton disabled={busy||!!unresolved||!fleetId} onPress={()=>{setUseSavedPlan(value=>!value);setNativePlan(null);setBilling(null);}}>{copy(useSavedPlan?"Use individual resources and site stops":"Use saved Detail and physical route")}</TogglePillButton>
+        {useSavedPlan&&fleet?<FleetRunPlanComposer key={`plan:${identity}:${fleetId}`} groupId={fleetId} companyId={overview.companyId} siteIds={fleet.siteIds} disabled={busy||!!unresolved||!!cachedAt} onChange={setNativePlan}/>:<View style={{gap:12}}>
         {current.resources.drivers.filter(d => d.fleetIds.includes(fleetId)).map(d => <TogglePillButton disabled={busy || !!unresolved} key={d.userId} solid={driver === d.userId} onPress={() => setDriver(d.userId)}>{d.name}</TogglePillButton>)}
         {current.resources.equipment.filter(e => e.dispatchable && fleet?.equipmentAssetIds.includes(e.id)).map(e => <View key={e.id} style={{ gap: 8 }}><Text style={textStyle}>{e.name}{copy(" \u00B7 ")}{copy(e.category)}{copy(" \u00B7 ")}{copy(e.status)}</Text>{["vehicle", "truck"].includes(e.category) && <TogglePillButton disabled={busy || !!unresolved} solid={vehicle === e.id} onPress={() => setVehicle(e.id)}>{copy("Use as truck")}</TogglePillButton>}{e.category === "trailer" && <TogglePillButton disabled={busy || !!unresolved} solid={trailer === e.id} onPress={() => setTrailer(e.id)}>{copy("Use as trailer")}</TogglePillButton>}</View>)}
         <TogglePillButton disabled={busy || !!unresolved} onPress={() => setTrailer(null)}>{copy("No trailer")}</TogglePillButton>
@@ -472,7 +485,8 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         {(["pickup", "delivery", "return"] as const).map(kind => <TogglePillButton disabled={busy || !!unresolved} key={kind} solid={stopKind === kind} onPress={() => setStopKind(kind)}>{`${copy(kind)}${copy(" stop")}`}</TogglePillButton>)}
         {fleet?.siteIds.map(siteId => <TogglePillButton disabled={busy || !!unresolved} key={siteId} onPress={() => setStopSites(s => [...s, { siteId, kind: stopKind }])}>{`${copy("Add site ")}${siteId}`}</TogglePillButton>)}
         <TogglePillButton disabled={busy || !!unresolved} onPress={() => setStopSites([])}>{copy("Clear stops")}</TogglePillButton>
-        <FleetRunBilling key={`billing:${identity}:${fleetId}`} siteId={stopSites[0]?.siteId} fleetId={fleetId || undefined} onChange={setBilling} disabled={busy || !!unresolved}/>
+        </View>}
+        <FleetRunBilling key={`billing:${identity}:${fleetId}:${useSavedPlan}`} siteId={useSavedPlan?nativePlan?.billingSiteId:stopSites[0]?.siteId} fleetId={fleetId || undefined} onChange={setBilling} disabled={busy || !!unresolved}/>
         <TogglePillButton disabled={busy || !!unresolved || !!cachedAt} onPress={createRun}>{copy("Create draft run")}</TogglePillButton>
       </View>}
     </>}

@@ -16,6 +16,8 @@ All master constraints apply. No invented production price, silent zero for unpr
 
 ## Review Focus
 
+October 16 scope clarification: price/review each execution of a saved Run transport order. One Detail may execute the same Origin/Destination order repeatedly on an eligible shared ticket, then another order on another ticket. The saved Run definition is independent of ticket identity and the company driver pool; no driver-to-site assignment is required. Preserve canonical activity IDs and immutable per-activity billing snapshots.
+
 - A second shared-ticket run has a different approved rate: do not inherit the first ticket's single rate.
 - A small decimal rate times a large quantity differs between ticket, invoice and report because a reader truncates at four decimals.
 - Detention overlaps hourly service, or a ticket minimum is charged once for every run.

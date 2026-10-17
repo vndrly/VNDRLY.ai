@@ -6,7 +6,9 @@ Research date: October 16, 2026. Status: proposed product scope for review; not 
 
 ## 1. Operating model
 
-Use the existing Inventory, people, run, evidence, maintenance, ticket and notification records. A **Detail** is a reusable, revisable combination of a truck/power unit, an optional towed rig/package, and a driver whose qualification/compliance status remains visible. Reservations are temporary; the combination can remain available for subsequent work until changed. A **run** is a particular assignment using a versioned snapshot of that Detail, a route, cargo/work instructions, and a mandatory billing ticket.
+Use the existing Inventory, people, run, evidence, maintenance, ticket and notification records. Drivers form the company's available driver pool; they are not assigned to partner sites. A **Detail** is a reusable, revisable combination of a truck/power unit, an optional towed rig/package, and a driver whose qualification/compliance status remains visible. Reservations are temporary; the combination can remain available for subsequent work until changed.
+
+**User clarification, October 16:** a **Run** is a saved transport order between an **Origin and Destination**. Dispatch matches a **Detail to a Run**. Each performance of that order is a separate **run activity** with its own versioned Detail/order snapshots, operational facts, and mandatory new/shared billing ticket. A Detail can perform the same Run ten times on one eligible ticket, then perform another Run for a different site on another ticket. A Run definition does not itself reserve equipment, acknowledge an assignment, start work or submit billing. Optional return-to-base instructions remain explicit. Preserve existing execution IDs and history through a versioned adapter rather than reinterpreting historical records as saved transport orders.
 
 Keep four identities separate:
 
@@ -26,7 +28,7 @@ Read-only inspection of the current release source found these foundations. Code
 | Area | Existing foundation | Work to add or refine |
 | --- | --- | --- |
 | Fleet Inventory | Canonical assets, enrollment, asset detail, history, maintenance references | Regulatory vehicle specifications, rig packages, a true Detail builder |
-| Authorization | Company, role, site and legacy `fleetIds` grants; separate safety-release and finance permissions | Preserve this access model while introducing Detail identity; never repurpose a permission group as an assembled vehicle |
+| Authorization | Company, role, site and legacy `fleetIds` grants; separate safety-release and finance permissions | Company driver pool and assigned Detail/activity access do not require driver-to-site grants. Preserve dispatcher/company customer and billing authority; never repurpose a permission group as an assembled vehicle |
 | Run lifecycle | Dispatch, acknowledgement, inspection, start/pause/resume, ordered stops, loads/deliveries, driver closeout, office review | Clear stage-oriented driver experience, Detail selection, reservations and route-location references |
 | Billing | Required new/shared ticket, canonical charges and explicit office finalization | Keep it; expose review and batching clearly on dispatch/ticket surfaces |
 | Qualifications | Verified, unexpired named employee certifications | Structured CDL class/restrictions, medical status, DQ records, testing/Clearinghouse and HOS eligibility |

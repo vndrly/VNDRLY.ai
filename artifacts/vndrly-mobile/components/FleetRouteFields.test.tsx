@@ -1,6 +1,7 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { expect, it, vi } from "vitest";
+import { fireEvent, render, screen,cleanup } from "@testing-library/react";
+import { expect, it, vi,afterEach } from "vitest";
+afterEach(cleanup);
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({
     text: "white",
@@ -22,6 +23,7 @@ vi.mock("@/components/TogglePillButton", () => ({
   ),
 }));
 import FleetRouteFields from "./FleetRouteFields";
+it("locks every physical route control while an exact operation is pending",()=>{render(<FleetRouteFields value={null} destinations={[]} onChange={()=>{}} disabled/>);expect((screen.getByRole("button",{name:"Origin"}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole("button",{name:"Destination"}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole("button",{name:"Repeat pickup / delivery cycle"}) as HTMLButtonElement).disabled).toBe(true);});
 const place = (id: string, name: string) => ({
   id,
   revision: 1,

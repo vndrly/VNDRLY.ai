@@ -23,6 +23,15 @@ import {
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
 router.use(createFleetComplianceRouter(service, actor));
+router.get("/fleet/run-orders",endpoint(req=>service.readFleetRunOrders(actor(req),req.query)));
+router.get("/fleet/run-orders/operations/:operationId",endpoint(req=>service.fleetRunOrderReceipt(actor(req),z.uuid().parse(req.params.operationId))));
+router.get("/fleet/run-orders/:id/history",endpoint(req=>service.fleetRunOrderHistory(actor(req),z.uuid().parse(req.params.id),req.query)));
+router.get("/fleet/run-orders/:id",endpoint(req=>service.fleetRunOrder(actor(req),z.uuid().parse(req.params.id))));
+router.post("/fleet/run-orders",endpoint(req=>service.saveFleetRunOrder(actor(req),req.body)));
+router.patch("/fleet/run-orders/:id",endpoint(req=>{
+ if(FleetCanonicalIdSchema.parse(req.body?.order?.id)!==FleetCanonicalIdSchema.parse(req.params.id))throw new FleetError("fleet.invalid_request",400);
+ return service.saveFleetRunOrder(actor(req),req.body);
+}));
 router.get("/fleet/details", endpoint(req => service.readFleetDetails(actor(req), req.query)));
 router.get("/fleet/details/operations/:operationId", endpoint(req => service.fleetResourceReceipt(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/details/:id/history", endpoint(req => service.fleetResourceHistory(actor(req), "detail", z.uuid().parse(req.params.id), req.query)));

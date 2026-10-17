@@ -17,6 +17,7 @@ import {
   type FleetRun,
   type FleetTicketPlan,
   type FleetDestination,
+  type FleetRoutePlan,
 } from "@workspace/api-zod";
 import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
@@ -56,6 +57,11 @@ function managing(state: FleetState, actor: FleetActor) {
           ),
       ))
   );
+}
+/** Company-owned physical places can be prepared before customer billing
+ * setup. This does not grant ticket, partner or commercial default authority. */
+function managingCompanyLocations(state:FleetState,actor:FleetActor){
+ return state.enabled&&(actor.membershipRole==="admin"||state.grants.some(grant=>grant.userId===actor.userId&&grant.roles.some(role=>["dispatcher","fleet_manager"].includes(role))&&grant.fleetIds.some(id=>state.fleets.some(group=>group.id===id))));
 }
 async function sites(c: PoolClient, a: FleetActor, state: FleetState) {
   const ids = a.membershipRole === "admin" ? null : (a.currentSiteIds ?? []);
@@ -303,10 +309,18 @@ export async function assertFleetPhysicalRoute(
   exactRevision = false,
 ) {
   if (!run.routePlan) return;
+  await assertFleetRouteLocations(c,a,state,run.routePlan,exactRevision);
+  validateCommercialStops(run);
+}
+/** Saved transport orders also validate locations without fabricating billing,
+ * a driver assignment or an operational execution. */
+export async function assertFleetRouteLocations(
+  c:PoolClient,a:FleetActor,state:FleetState,route:FleetRoutePlan,exactRevision=false,
+) {
   const locations = [
-    run.routePlan.origin,
-    ...run.routePlan.stops.map((stop) => stop.location),
-    ...(run.routePlan.base ? [run.routePlan.base] : []),
+    route.origin,
+    ...route.stops.map((stop) => stop.location),
+    ...(route.base ? [route.base] : []),
   ];
   const authorized = await sites(c, a, state);
   const owners = new Map<string, FleetDestination[]>();
@@ -355,7 +369,6 @@ export async function assertFleetPhysicalRoute(
     if (exactRevision && JSON.stringify(current) !== JSON.stringify(saved))
       throw new FleetError("fleet.destination_revision_conflict", 409);
   }
-  validateCommercialStops(run);
 }
 const destinationInput = FleetDestinationInputSchema;
 export function createFleetCommercialOperations(
@@ -408,7 +421,7 @@ export function createFleetCommercialOperations(
             latitude: s.latitude,
             longitude: s.longitude,
           })),
-          canManage: managing(state, a),
+          canManage: managingCompanyLocations(state, a),
         };
       }),
     commercialSettings: (a: FleetActor, siteId?: number) =>
@@ -434,7 +447,7 @@ export function createFleetCommercialOperations(
           defaultMode: value.defaultMode,
           destinations: [...value.destinations, ...shared],
           sitePolicy: site?.fleet_ticket_policy ?? null,
-          canManage: managing(state, a),
+          canManage: managingCompanyLocations(state, a),
           sites: choices.map((s) => ({ siteId: s.id, name: s.name })),
         };
       }),
@@ -547,7 +560,7 @@ export function createFleetCommercialOperations(
     },
     saveDestination: (a: FleetActor, input: unknown) =>
       transaction(a, async (state, c) => {
-        if (!managing(state, a))
+        if (!managingCompanyLocations(state, a))
           throw new FleetError("fleet.dispatch_required", 403);
         const body = z
             .object({

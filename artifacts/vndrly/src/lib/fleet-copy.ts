@@ -16,7 +16,7 @@ const en = {
   dispatchHint: "Prepare draft runs and assign the right resources.",
   activeHint: "Dispatched, acknowledged and in-progress runs.",
   reviewHint: "Review saved closeout records and resolve exceptions.",
-  driverHint: "Review drivers, fleet access and recorded availability.",
+  driverHint: "Choose from your company's driver pool to build reusable Details.",
   maintenanceHint: "Review defects, service records and safety holds.",
   mapSummary:
     "Latest recorded position per vehicle. Select a vehicle to inspect its work.",
@@ -221,7 +221,7 @@ const en = {
   dispatchUnavailable: "Unavailable for dispatch",
   noTrailer: "No trailer assigned",
   driverDirectoryScope:
-    "Directory is available to dispatch authority. Drivers see their own assigned runs.",
+    "Company driver pool. Assign a driver to a Detail, then dispatch that Detail to a Run—an Origin and Destination transport order. Drivers do not need a site assignment.",
   readinessTitle: "Recorded readiness",
   readinessReported:
     "Inspection and meter entries are user reports. Certifications, holds and assignment eligibility are rechecked by the server; these entries do not prove regulatory clearance.",
@@ -486,7 +486,7 @@ const es: Record<keyof typeof en, string> = {
     "Prepare recorridos en borrador y asigne los recursos adecuados.",
   activeHint: "Recorridos despachados, confirmados y en curso.",
   reviewHint: "Revise los registros de cierre y resuelva excepciones.",
-  driverHint: "Revise conductores, acceso y disponibilidad registrada.",
+  driverHint: "Elija del grupo de conductores de su empresa para crear destacamentos reutilizables.",
   maintenanceHint: "Revise defectos, servicios y bloqueos de seguridad.",
   mapSummary:
     "Última posición registrada por vehículo. Seleccione un vehículo para revisar su trabajo.",
@@ -691,7 +691,7 @@ const es: Record<keyof typeof en, string> = {
   dispatchUnavailable: "No disponible para despacho",
   noTrailer: "Sin remolque asignado",
   driverDirectoryScope:
-    "El directorio requiere autoridad de despacho. Los conductores ven sus propios recorridos asignados.",
+    "Grupo de conductores de la empresa. Asigne un conductor a un destacamento y despache ese destacamento a un recorrido: una orden de transporte entre origen y destino. Los conductores no necesitan asignación a un sitio.",
   readinessTitle: "Preparación registrada",
   readinessReported:
     "Las inspecciones y lecturas son reportes del usuario. El servidor comprueba certificaciones, retenciones y elegibilidad; estos registros no prueban autorización normativa.",

@@ -78,6 +78,7 @@ function fixture() {
   }[] = [];
   const client = {
     query: async (sql: string, params: unknown[] = []) => {
+      if (sql.startsWith("SELECT fleet_resources FROM vendors")) return {rows:[{fleet_resources:null}]};
       if (sql.includes("FROM employee_certifications"))
         return { rows: certificationRows };
       if (sql.includes("FROM vendor_work_types"))
@@ -233,6 +234,43 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
+  it("dispatches from the company driver pool without assigning the driver to a site", async () => {
+    const f = fixture();
+    f.state().grants.find(g => g.userId === driver.userId)!.siteIds = [];
+    const created = await f.service.create(manager, createInput);
+    const dispatched = await f.service.action(manager, created.id, {
+      operationId: crypto.randomUUID(), action: "dispatch", expectedVersion: created.version,
+    });
+    const overview = await f.service.overview(driver);
+    expect(overview.capabilities.canDrive).toBe(true);
+    expect(overview.capabilities.canDispatch).toBe(false);
+    expect(overview.runs.map(run => run.id)).toEqual([created.id]);
+    const acknowledged = await f.service.action(driver, created.id, {
+      operationId: crypto.randomUUID(), action: "acknowledge", expectedVersion: dispatched.version,
+    });
+    expect(acknowledged.status).toBe("acknowledged");
+    await expect(f.service.create(driver, {...createInput,operationId:crypto.randomUUID()})).rejects.toMatchObject({code:"fleet.dispatch_required"});
+    f.state().grants.find(g => g.userId === driver.userId)!.roles = [];
+    await expect(f.service.detail(driver, created.id)).rejects.toMatchObject({code:"fleet.not_found"});
+  });
+  it("does not expose historical driver assignments after the current assignment changes", async () => {
+    const f = fixture();
+    const created = await f.service.create(manager, createInput);
+    f.state().grants.find(g => g.userId === driver.userId)!.siteIds = [];
+    const current = {...created,driverUserId:stranger.userId,version:created.version+1};
+    await expect(f.service.detail({...driver,currentRunsById:new Map([[created.id,current]])},created.id)).rejects.toMatchObject({code:"fleet.not_found"});
+  });
+  it("keeps the company driver and Detail directory usable before customer setup", async () => {
+    const f = fixture();
+    f.state().fleets[0].siteIds = [];
+    f.state().grants.forEach(g => {g.siteIds=[];});
+    const overview=await f.service.overview(manager);
+    expect(overview.capabilities).toMatchObject({canManageResources:true,canDispatch:false,canMaintain:true,canReportDefect:true});
+    expect(overview.fleets.map(group=>group.id)).toEqual([fleetId]);
+    await expect(f.service.resources(manager)).resolves.toHaveProperty("drivers");
+    await expect(f.service.readFleetDetails(manager,{})).resolves.toHaveProperty("details");
+    await expect(f.service.create(manager,createInput)).rejects.toMatchObject({code:"fleet.dispatch_required"});
+  });
   it("offers enrolled Inventory assets to a company administrator without changing access-group membership", async () => {
     const f = fixture();
     f.state().fleets[0].equipmentAssetIds = [];

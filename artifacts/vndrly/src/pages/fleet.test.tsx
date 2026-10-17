@@ -15,6 +15,8 @@ const api = vi.hoisted(() => ({
   details: vi.fn(),
   rigPackages: vi.fn(),
   commercial: vi.fn(),
+  runOrders: vi.fn(),
+  runOrder: vi.fn(),
   navigate: vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", () => ({
@@ -111,6 +113,23 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("matches a saved transport Run to a Detail and a new billing ticket on Fleet Dispatch",async()=>{
+    const id=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,"0")}`,group=id(1),truck=id(2),detailId=id(3);
+    const place=(n:number)=>({id:id(n),revision:1,name:`Place ${n}`,address:`${n} Manual street`,kind:"pickup",latitude:null,longitude:null,ownerType:"vendor",ownerId:1,active:true,materials:[],hours:"",instructions:""});
+    const order={id:id(4),companyId:1,version:2,name:"Crude to terminal",accessGroupIds:[group],origin:place(5),destination:place(6),base:null,returnPolicy:"delivery_only",instructions:"Unload crude",timeZone:"America/Chicago",archivedAt:null};
+    const initial=await api.overviewPage();api.location="/fleet";
+    api.overviewPage.mockResolvedValue({...initial,capabilities:{canDispatch:true,canManage:true},fleets:[{id:group,name:"Company access",siteIds:[10],equipmentAssetIds:[truck]}],runs:[],preference:{selectedFleetId:group}});
+    api.resources.mockResolvedValue({drivers:[{userId:7,name:"Bob Villa",fleetIds:[group]}],equipment:[{id:truck,name:"Truck 12",category:"truck",status:"available",dispatchable:true}]});
+    api.details.mockResolvedValue({details:[{id:detailId,companyId:1,version:1,name:"Bob with Truck 12",vehicleAssetId:truck,driverUserId:7,rigPackageId:null,rigPackageVersion:null,accessGroupIds:[group],effectiveFrom:"2026-01-01T00:00:00Z",effectiveUntil:null,archivedAt:null}],nextCursor:null,canManage:true});
+    api.rigPackages.mockResolvedValue({rigPackages:[],nextCursor:null});api.runOrders.mockResolvedValue({orders:[order],nextCursor:null,canManage:true});api.runOrder.mockResolvedValue(order);api.commercial.mockResolvedValue({destinations:[order.origin,order.destination]});
+    api.create.mockImplementation(async body=>{const saved={id:id(7),linkedTicketId:500,events:[{operationId:body.operationId}]};api.run.mockResolvedValue(saved);return saved;});
+    mount();fireEvent.click(await screen.findByRole("button",{name:"Create run"}));
+    fireEvent.change(screen.getByLabelText("Run title"),{target:{value:"First crude activity"}});fireEvent.change(await screen.findByLabelText("Saved Detail"),{target:{value:detailId}});
+    fireEvent.click(screen.getByRole("button",{name:"Use saved Run"}));await screen.findByRole("option",{name:/Crude to terminal/});fireEvent.change(screen.getByLabelText("Saved Run"),{target:{value:order.id}});
+    await waitFor(()=>expect(api.runOrder).toHaveBeenCalledWith(order.id));fireEvent.change(screen.getByLabelText("Billing site"),{target:{value:"10"}});
+    fireEvent.change(await screen.findByLabelText("Billing service"),{target:{value:"3"}});fireEvent.click(screen.getByRole("button",{name:"Save exact change"}));
+    await waitFor(()=>expect(api.create).toHaveBeenCalled());expect(api.create.mock.calls[0][0]).toMatchObject({runOrderSelection:{id:order.id,version:2},detailSelection:{detailId,detailVersion:1},driverUserId:7,billing:{mode:"new_ticket",workTypeId:3},stops:[{siteId:10,destination:{id:order.origin.id}},{siteId:10,destination:{id:order.destination.id}}]});
+  });
   it("offers physical origin/destination dropdowns separately from ticket billing", async () => {
     const initial = await api.overviewPage();
     api.location = "/fleet";

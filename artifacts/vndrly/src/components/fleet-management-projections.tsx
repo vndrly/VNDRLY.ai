@@ -45,7 +45,7 @@ export function FleetManagementProjections({
         <>
           <h2>{c.equipment}</h2>
           <Link href="/work-hub/inventory">{c.openInventory}</Link>
-          {data.capabilities.canDispatch ? (
+          {(data.capabilities.canDispatch || data.capabilities.canManageResources) ? (
             resources ? (
               resources.equipment
                 .filter(
@@ -92,7 +92,7 @@ export function FleetManagementProjections({
         <>
           <h2>{c.drivers}</h2>
           <p>{c.driverDirectoryScope}</p>
-          {data.capabilities.canDispatch ? (
+          {(data.capabilities.canDispatch || data.capabilities.canManageResources) ? (
             resources ? (
               resources.drivers
                 .filter(

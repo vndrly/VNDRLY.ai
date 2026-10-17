@@ -25,6 +25,7 @@ const drop = {
   name: "Collection terminal",
   kind: "delivery",
 };
+it("binds a physical route window to the actual run schedule and chosen time zone",()=>{const parsed=contracts.FleetRoutePlanSchema.parse(route);const input={operationId:crypto.randomUUID(),fleetId:crypto.randomUUID(),title:"Scheduled haul",driverUserId:8,vehicleAssetId:crypto.randomUUID(),trailerAssetId:null,billing:{mode:"new_ticket",workTypeId:3,afeNumber:"A1",workDate:"2026-10-16"},routePlan:parsed,stops:contracts.fleetRouteOperationalStops(parsed,9,crypto.randomUUID())};expect(contracts.CreateFleetRunSchema.safeParse(input).success).toBe(false);const schedule={plannedStartAt:parsed.plannedWindow!.startAt,plannedEndAt:parsed.plannedWindow!.endAt,timezone:parsed.plannedWindow!.timeZone};expect(contracts.CreateFleetRunSchema.safeParse({...input,schedule}).success).toBe(true);expect(contracts.CreateFleetRunSchema.safeParse({...input,schedule:{...schedule,timezone:"America/Denver"}}).success).toBe(false);});
 const route = {
   origin: { type: "canonical", location: origin },
   stops: [

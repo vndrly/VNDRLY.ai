@@ -21,9 +21,11 @@ import { FleetCanonicalIdSchema } from "./fleet-details";
 import {
   FleetRoutePlanSchema,
   fleetPhysicalStopsMatch,
+  fleetRouteMatchesSchedule,
   FleetRouteOperationalStopSchema,
 } from "./fleet-route";
 import { FleetAvailabilitySchema } from "./fleet-availability";
+import {FleetRunOrderSchema,FleetRunOrderSelectionSchema,fleetRouteMatchesRunOrder} from "./fleet-run-order";
 export const FleetRoleSchema = z.enum([
   "fleet_manager",
   "dispatcher",
@@ -127,6 +129,7 @@ export const FleetRunRecordSchema = z
   .strict();
 export const FleetRunSchema = z
   .object({
+    runOrder: FleetRunOrderSchema.optional(),
     routePlan: FleetRoutePlanSchema.optional(),
     resourceAssignment: FleetResourceAssignmentSchema.optional(),
     billing: FleetRunBillingSnapshotSchema.optional(),
@@ -190,6 +193,7 @@ export const FleetRunSchema = z
     availability: FleetAvailabilitySchema.optional(),
   })
   .superRefine((run, ctx) => {
+    if(run.runOrder&&(!run.routePlan||run.runOrder.companyId!==run.companyId||!run.runOrder.accessGroupIds.includes(run.fleetId)||!fleetRouteMatchesRunOrder(run.routePlan,run.runOrder)))ctx.addIssue({code:"custom",path:["runOrder"],message:"Activity must preserve its saved transport order and company access group"});
     if (
       run.routePlan &&
       !fleetPhysicalStopsMatch(run.routePlan, run.stops[0].siteId, run.stops)
@@ -201,6 +205,8 @@ export const FleetRunSchema = z
           "Operational stops must preserve the exact physical route and separate billing site",
       });
     const assignment = run.resourceAssignment;
+    if(run.routePlan&&!fleetRouteMatchesSchedule(run.routePlan,run.schedule))ctx.addIssue({code:"custom",path:["routePlan","plannedWindow"],message:"Physical route and run schedule must use the same planned window and time zone"});
+    if(run.routePlan&&assignment&&run.routePlan.returnPolicy!==assignment.returnPolicy)ctx.addIssue({code:"custom",path:["resourceAssignment","returnPolicy"],message:"Physical route and run assignment must use the same return policy"});
     if (!assignment) return;
     const { detail } = assignment.snapshot;
     const trailer =
@@ -264,6 +270,7 @@ export const FleetActionInputSchema = z
   .strict();
 export const CreateFleetRunSchema = z
   .object({
+    runOrderSelection: FleetRunOrderSelectionSchema.optional(),
     routePlan: FleetRoutePlanSchema.optional(),
     detailSelection: FleetDetailSelectionSchema.optional(),
     billing: FleetRunBillingInputSchema,
@@ -278,6 +285,7 @@ export const CreateFleetRunSchema = z
   })
   .strict()
   .superRefine((value, ctx) => {
+    if(value.runOrderSelection&&(!value.detailSelection||!value.routePlan))ctx.addIssue({code:"custom",path:["runOrderSelection"],message:"Dispatch a saved Run with a Detail and its physical route"});
     if (
       value.routePlan &&
       !fleetPhysicalStopsMatch(
@@ -292,6 +300,7 @@ export const CreateFleetRunSchema = z
         message:
           "Operational stops must preserve the exact physical route and separate billing site",
       });
+    if(value.routePlan&&!fleetRouteMatchesSchedule(value.routePlan,value.schedule))ctx.addIssue({code:"custom",path:["routePlan","plannedWindow"],message:"Physical route and run schedule must use the same planned window and time zone"});
     if (
       value.routePlan &&
       value.detailSelection &&
@@ -338,6 +347,7 @@ export type FleetOverview = {
   enabled: boolean;
   roles: z.infer<typeof FleetRoleSchema>[];
   capabilities: {
+    canManageResources?: boolean;
     canDispatch: boolean;
     canManage: boolean;
     canDrive: boolean;

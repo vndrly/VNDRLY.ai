@@ -32,6 +32,8 @@
 
 ## Review Focus
 
+**Binding October 16 clarification:** company drivers belong to an available pool, drivers join reusable Details, and dispatch matches a Detail to a saved Run (an Origin/Destination transport order). Each performance is a separately recorded, ticket-bound activity; repeat activities can share an eligible open ticket. Preserve canonical execution IDs/history. A owns saved Run definition revisions and company driver-pool access without driver-to-site assignment; B imports those exact references for offline capture; D prices/reviews each activity; M supplies the same vocabulary and workflow across web/native/Ask V/ChatGPT. Customer/billing authority remains with the company and authorized dispatcher, not a prerequisite site assignment on each driver.
+
 1. **RF1: server commits while the phone loses the response** — exact replay returns the same ticket/run/charge, and another run keeps synchronizing (B2/B3).
 2. **RF2: insurance expiry changes an approved relationship to `auto_unapproved`** — a proven compliance-only lapse warns without losing Fleet access; explicit commercial revocation still denies (C2).
 3. **RF3: one dolly/pump appears in two packages and a prior job overruns** — all canonical components stay reserved; apparent package availability cannot double-book them (A2).

@@ -2,11 +2,12 @@ import React,{useState} from "react";
 import {Text,TextInput,View} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Crypto from "expo-crypto";
-import {FleetDraftEditSchema,FleetRunSchema,type FleetRun,type FleetDefinitionSchema} from "@workspace/api-zod";
+import {FleetDraftEditSchema,FleetRunSchema,FleetDestinationDirectorySchema,fleetRouteOperationalStops,type FleetRun,type FleetDefinitionSchema,type FleetRoutePlan,type FleetDestination} from "@workspace/api-zod";
 import type {z} from "zod/v4";
 import {apiFetch} from "@/lib/api";
 import {useFleetCopy} from "@/lib/fleet-copy";
 import TogglePillButton from "@/components/TogglePillButton";
+import FleetRouteFields from "./FleetRouteFields";
 
 export default function FleetDraftEditor({run,fleet,disabled,onSaved}:{run:FleetRun;fleet:z.infer<typeof FleetDefinitionSchema>|undefined;disabled:boolean;onSaved:()=>void}) {
  const copy=useFleetCopy(),[title,setTitle]=useState(run.title),[stops,setStops]=useState(run.stops);
@@ -15,13 +16,18 @@ export default function FleetDraftEditor({run,fleet,disabled,onSaved}:{run:Fleet
  const [picker,setPicker]=useState<{field:"start"|"end";mode:"date"|"time"}|null>(null),[kind,setKind]=useState<"pickup"|"delivery"|"return">("pickup");
  const [pending,setPending]=useState<z.infer<typeof FleetDraftEditSchema>|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const [baseVersion,setBaseVersion]=useState(run.version);
+ const [route,setRoute]=useState<FleetRoutePlan|null>(run.routePlan??null),[routeDirty,setRouteDirty]=useState(false),[destinations,setDestinations]=useState<FleetDestination[]|null>(null),[directoryError,setDirectoryError]=useState(false);
  const alive=React.useRef(true);React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
+ React.useEffect(()=>{let current=true;setDestinations(null);setDirectoryError(false);if(run.routePlan&&!run.runOrder&&run.canEditDraft)void apiFetch<unknown>(`/api/fleet/commercial?siteId=${run.stops[0].siteId}`).then(raw=>{if(current&&alive.current)setDestinations(FleetDestinationDirectorySchema.parse(raw).destinations);}).catch(()=>{if(current&&alive.current)setDirectoryError(true);});return()=>{current=false;};},[run.id,run.companyId,run.canEditDraft,run.runOrder?.id]);
  const changed=run.version>baseVersion,waiting=run.version<baseVersion;
  const locked=disabled||busy||!!pending||changed||waiting;
  let validZone:string|undefined;try{new Intl.DateTimeFormat("en",{timeZone:timezone});validZone=timezone;}catch{validZone=undefined;}
  async function save(){
   if(disabled||busy||!run.canEditDraft||(!pending&&(changed||waiting)))return;
-  const parsed=FleetDraftEditSchema.safeParse(pending??{operationId:Crypto.randomUUID(),expectedVersion:baseVersion,title,schedule:scheduled?{plannedStartAt:start.toISOString(),plannedEndAt:end.toISOString(),timezone}:null,stops});
+  if(!pending&&routeDirty&&!route){setError("Choose a complete physical route before saving.");return;}
+  const schedule=scheduled?{plannedStartAt:start.toISOString(),plannedEndAt:end.toISOString(),timezone}:null;
+  const nextRoute=routeDirty&&route?{...route,plannedWindow:schedule?{startAt:schedule.plannedStartAt,endAt:schedule.plannedEndAt,timeZone:schedule.timezone}:null}:null;
+  const parsed=FleetDraftEditSchema.safeParse(pending??{operationId:Crypto.randomUUID(),expectedVersion:baseVersion,title,schedule,...(nextRoute?{routePlan:nextRoute,stops:fleetRouteOperationalStops(nextRoute,run.stops[0].siteId,run.stops[0].id)}:{stops})});
   if(!parsed.success){setError("Choose a title, ordered stops and a valid planned time window.");return;}
   const exact=parsed.data;setPending(exact);setBusy(true);setError("");
   try{
@@ -37,12 +43,17 @@ export default function FleetDraftEditor({run,fleet,disabled,onSaved}:{run:Fleet
   <TextInput accessibilityLabel={copy("Draft title")} editable={!locked} value={title} onChangeText={setTitle}/>
   <TogglePillButton disabled={locked} solid={scheduled} onPress={()=>setScheduled(!scheduled)}>{copy("Planned schedule")}</TogglePillButton>
   {scheduled&&<><Text>{start.toLocaleString(undefined,{timeZone:validZone})} → {end.toLocaleString(undefined,{timeZone:validZone})}</Text><TextInput accessibilityLabel={copy("Schedule timezone")} editable={!locked} value={timezone} onChangeText={setTimezone}/>{(["start","end"] as const).map(field=><View key={field}>{(["date","time"] as const).map(mode=><TogglePillButton key={mode} disabled={locked} onPress={()=>setPicker({field,mode})}>{copy(field)} {copy(mode)}</TogglePillButton>)}</View>)}{picker&&<DateTimePicker value={picker.field==="start"?start:end} mode={picker.mode} timeZoneName={validZone} onChange={(_,value)=>{const field=picker.field;setPicker(null);if(value)(field==="start"?setStart:setEnd)(value);}}/>}</>}
+  {run.routePlan?<>
+    {run.runOrder?<Text>{copy("Saved Run")} · {run.runOrder.name} · {run.runOrder.origin.name} → {run.runOrder.destination.name}</Text>:<FleetRouteFields value={route} destinations={destinations??[]} disabled={locked||!destinations} onChange={value=>{setRouteDirty(true);setRoute(value);}}/>}
+    {directoryError&&<Text accessibilityRole="alert">{copy("Locations unavailable. Title and schedule changes remain available; reload before changing the physical route.")}</Text>}
+  </>:<>
   {stops.map((stop,index)=><Text key={stop.id}>{index+1}. {copy(stop.kind)} · {run.labels?.sites.find(site=>site.siteId===stop.siteId)?.name??`site ${stop.siteId}`}</Text>)}
   {(["pickup","delivery","return"] as const).map(value=><TogglePillButton key={value} disabled={locked} solid={kind===value} onPress={()=>setKind(value)}>{copy(value)}</TogglePillButton>)}
   {fleet.siteIds.map(siteId=><TogglePillButton key={siteId} disabled={locked} onPress={()=>setStops(current=>[...current,{id:Crypto.randomUUID(),siteId,kind,sequence:current.length}])}>{copy("Add site ")}{run.labels?.sites.find(site=>site.siteId===siteId)?.name??siteId}</TogglePillButton>)}
   <TogglePillButton disabled={locked} onPress={()=>setStops(current=>current.slice(0,-1))}>{copy("Remove last draft stop")}</TogglePillButton>
+  </>}
   {!!error&&<Text accessibilityRole="alert">{copy(error)}</Text>}
-  {changed&&!pending&&<><Text>{copy("This draft changed. Reload its current fields before editing; local changes are not rebased.")}</Text><TogglePillButton disabled={disabled||busy} onPress={()=>{setBaseVersion(run.version);setTitle(run.title);setStops(run.stops);setScheduled(!!run.schedule);setStart(new Date(run.schedule?.plannedStartAt??Date.now()));setEnd(new Date(run.schedule?.plannedEndAt??Date.now()+3600000));setTimezone(run.schedule?.timezone??Intl.DateTimeFormat().resolvedOptions().timeZone);}}>{copy("Reload current draft")}</TogglePillButton></>}
+  {changed&&!pending&&<><Text>{copy("This draft changed. Reload its current fields before editing; local changes are not rebased.")}</Text><TogglePillButton disabled={disabled||busy} onPress={()=>{setBaseVersion(run.version);setTitle(run.title);setStops(run.stops);setRoute(run.routePlan??null);setRouteDirty(false);setScheduled(!!run.schedule);setStart(new Date(run.schedule?.plannedStartAt??Date.now()));setEnd(new Date(run.schedule?.plannedEndAt??Date.now()+3600000));setTimezone(run.schedule?.timezone??Intl.DateTimeFormat().resolvedOptions().timeZone);}}>{copy("Reload current draft")}</TogglePillButton></>}
   <TogglePillButton disabled={disabled||busy||(!pending&&(changed||waiting))} onPress={()=>void save()}>{copy(pending?"Verify and retry exact draft save":"Save Fleet draft changes")}</TogglePillButton>
  </View>;
 }

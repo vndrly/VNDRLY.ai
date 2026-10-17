@@ -12,6 +12,8 @@ import { FleetOperationsMap } from "@/components/fleet-operations-map";
 import { FleetInventoryPage } from "@/components/fleet-inventory";
 import { FleetDestinationsPage } from "@/components/fleet-destinations";
 import { FleetRouteFields } from "@/components/fleet-route-fields";
+import { FleetRunOrderChoice } from "@/components/fleet-run-order-choice";
+import { FleetSaveRunOrder } from "@/components/fleet-save-run-order";
 import {
   FleetRunBillingFields,
   FleetBillingTicketPanel,
@@ -55,6 +57,8 @@ import { fleetPositions, fleetVisibleRuns } from "@/lib/fleet-view";
 import {
   CreateFleetRunSchema,
   fleetRouteOperationalStops,
+  fleetRunOrderRoute,
+  type FleetRunOrder,
   type FleetRoutePlan,
   type FleetActionInput,
 } from "@workspace/api-zod";
@@ -170,7 +174,7 @@ function FleetWorkspace({
   const resources = useQuery({
     queryKey: ["fleet-resources", identity],
     queryFn: fleetClient.resources,
-    enabled: Boolean(overviewData?.capabilities.canDispatch),
+    enabled: Boolean(overviewData?.capabilities.canDispatch || overviewData?.capabilities.canManageResources),
     retry: false,
   });
   const createRetry = useRef<{
@@ -213,6 +217,8 @@ function FleetWorkspace({
   const [physicalMode, setPhysicalMode] = useState(false),
     [physicalRoute, setPhysicalRoute] = useState<FleetRoutePlan | null>(null),
     [selectedDetailId, setSelectedDetailId] = useState("");
+  const [useRunOrder,setUseRunOrder]=useState(false),[runOrder,setRunOrder]=useState<FleetRunOrder|null>(null);
+  const [orderPending,setOrderPending]=useState(false);
   const detailChoices = useQuery({
     queryKey: ["fleet-details", identity, "composer"],
     queryFn: () => fleetClient.details(),
@@ -281,6 +287,7 @@ function FleetWorkspace({
     !data?.enabled ||
     !(
       data.capabilities.canDrive ||
+      data.capabilities.canManageResources ||
       data.capabilities.canDispatch ||
       data.capabilities.canManage
     )
@@ -412,6 +419,7 @@ function FleetWorkspace({
     const retained = createUnverified && createRetry.current;
     if (
       busy ||
+      orderPending ||
       !data ||
       (!retained &&
         (!fleetId ||
@@ -419,6 +427,8 @@ function FleetWorkspace({
           !vehicle ||
           !pickup ||
           (physicalMode ? !physicalRoute : !delivery) ||
+          (useRunOrder && (!runOrder || !selectedDetailId)) ||
+          (runOrder && !selectedDetailId) ||
           (!physicalMode && extraStops.some((stop) => !stop.siteId)) ||
           !billingValid))
     )
@@ -446,6 +456,7 @@ function FleetWorkspace({
       physicalMode,
       physicalRoute,
       selectedDetailId,
+      runOrder,
     });
     if (!createUnverified && createRetry.current?.fingerprint !== fingerprint)
       createRetry.current = {
@@ -509,6 +520,7 @@ function FleetWorkspace({
         (item) => item.id === selectedDetailId,
       );
       const input = createRetry.current.input;
+      if(runOrder)input.runOrderSelection={id:runOrder.id,version:runOrder.version};
       if (physicalMode && physicalRoute) {
         input.routePlan = {
           ...physicalRoute,
@@ -533,7 +545,7 @@ function FleetWorkspace({
           detailVersion: chosen.version,
           timeZone:
             schedule.schedule?.timezone ??
-            Intl.DateTimeFormat().resolvedOptions().timeZone,
+            runOrder?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
           returnPolicy:
             input.routePlan?.returnPolicy ??
             (returnSite ? "return_required" : "delivery_only"),
@@ -639,10 +651,14 @@ function FleetWorkspace({
       >
         <select
           aria-label={c.fleet}
+          disabled={orderPending}
           className={selectClass}
           value={fleetId}
           onChange={(event) => {
             setFleetId(event.target.value);
+            setRunOrder(null);
+            setPhysicalRoute(null);
+            setSelectedDetailId("");
             setSiteId("");
             setDriver("");
             setPickup("");
@@ -906,7 +922,7 @@ function FleetWorkspace({
             <FleetScheduleFields
               value={scheduleDraft}
               onChange={setScheduleDraft}
-              disabled={busy}
+              disabled={busy||orderPending}
             />
             {detailChoices.data?.details.length ? (
               <label>
@@ -1013,14 +1029,20 @@ function FleetWorkspace({
                 ))}
             </select>
             <PngPillButton
+              disabled={orderPending}
               onClick={() => {
                 setPhysicalMode(!physicalMode);
                 setPhysicalRoute(null);
+                setUseRunOrder(false);
+                setRunOrder(null);
               }}
             >
               {physicalMode
                 ? "Use site-only route"
                 : "Use Origins and Destinations"}
+            </PngPillButton>
+            <PngPillButton disabled={orderPending} onClick={()=>{setUseRunOrder(value=>!value);setPhysicalMode(true);setPhysicalRoute(null);setRunOrder(null);}}>
+              {i18n.language.startsWith("es")?(useRunOrder?"Usar ruta de una sola vez":"Usar recorrido guardado"):(useRunOrder?"Use a one-time physical route":"Use saved Run")}
             </PngPillButton>
             {(["pickup", "delivery"] as const)
               .filter((kind) => !physicalMode || kind === "pickup")
@@ -1048,13 +1070,18 @@ function FleetWorkspace({
                     ))}
                 </select>
               ))}
-            {physicalMode && directory.data && (
+            {physicalMode && useRunOrder && <FleetRunOrderChoice key={`${identity}:${fleetId}`} identity={identity} companyId={data.companyId} groupId={fleetId} disabled={busy||createUnverified} onChange={order=>{setRunOrder(order);setPhysicalRoute(order?fleetRunOrderRoute(order,()=>crypto.randomUUID()):null);}}/>}
+            {physicalMode && !useRunOrder && directory.data && (
+              <fieldset disabled={orderPending}>
               <FleetRouteFields
                 value={physicalRoute}
                 destinations={directory.data.destinations}
-                onChange={setPhysicalRoute}
+                onChange={value=>{setRunOrder(null);setPhysicalRoute(value);}}
               />
+              </fieldset>
             )}
+            {physicalMode&&!useRunOrder&&physicalRoute&&!runOrder&&<FleetSaveRunOrder key={`${identity}:${fleetId}`} identity={identity} companyId={data.companyId} groupId={fleetId} route={physicalRoute} timeZone={scheduleDraft.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone} initialName={title} disabled={busy||createUnverified} onPending={setOrderPending} onSaved={order=>{setRunOrder(order);void queryClient.invalidateQueries({queryKey:["fleet-run-orders",identity]});}}/>}
+            {runOrder&&<p>{i18n.language.startsWith("es")?"Recorrido guardado":"Saved Run"} · {runOrder.name}</p>}
             {physicalMode && directory.isError && (
               <p role="alert">
                 Locations unavailable. Open Origins and Destinations to check
@@ -1139,6 +1166,7 @@ function FleetWorkspace({
             <PngPillButton
               disabled={
                 busy ||
+                orderPending ||
                 !billingValid ||
                 !title ||
                 !fleetId ||
@@ -1146,6 +1174,8 @@ function FleetWorkspace({
                 !vehicle ||
                 !pickup ||
                 (physicalMode ? !physicalRoute : !delivery) ||
+                (useRunOrder && (!runOrder || !selectedDetailId)) ||
+                (runOrder && !selectedDetailId) ||
                 (!physicalMode && extraStops.some((stop) => !stop.siteId))
               }
               onClick={() => void saveRun()}

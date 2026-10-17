@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { FleetDraftEditSchema, type FleetRun } from "@workspace/api-zod";
+import { FleetDraftEditSchema,FleetDestinationDirectorySchema,fleetRouteOperationalStops, type FleetRun,type FleetRoutePlan,type FleetDestination } from "@workspace/api-zod";
 import type { z } from "zod/v4";
 import { fleetClient } from "@/lib/fleet-client";
 import { fleetCopy } from "@/lib/fleet-copy";
@@ -10,6 +10,7 @@ import {
   fleetScheduleDraft,
   parseFleetSchedule,
 } from "./fleet-schedule-fields";
+import {FleetRouteFields} from "./fleet-route-fields";
 export function FleetDraftEditor({
   run,
   sites,
@@ -34,11 +35,14 @@ export function FleetDraftEditor({
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   const stale = baseVersion !== run.version;
+  const [route,setRoute]=useState<FleetRoutePlan|null>(run.routePlan??null),[routeDirty,setRouteDirty]=useState(false),[destinations,setDestinations]=useState<FleetDestination[]|null>(null),[directoryError,setDirectoryError]=useState(false);
+  useEffect(()=>{let current=true;setDestinations(null);setDirectoryError(false);if(open&&run.routePlan&&!run.runOrder)void fleetClient.commercial(run.stops[0].siteId).then(raw=>{if(current)setDestinations(FleetDestinationDirectorySchema.parse(raw).destinations);}).catch(()=>{if(current)setDirectoryError(true);});return()=>{current=false;};},[open,run.id,run.companyId,run.runOrder?.id]);
   const locked = busy || !!reviewed || stale;
   function reloadSaved() {
     setTitle(run.title);
     setSchedule(fleetScheduleDraft(run.schedule));
     setStops([...run.stops].sort((a, b) => a.sequence - b.sequence));
+    setRoute(run.routePlan??null);setRouteDirty(false);
     setBaseVersion(run.version);
     setReviewed(null);
     setMessage("");
@@ -47,12 +51,14 @@ export function FleetDraftEditor({
     if (stale) return;
     const parsedSchedule = parseFleetSchedule(schedule);
     if (!parsedSchedule.valid) return;
+    if(routeDirty&&!route)return;
+    const nextRoute=routeDirty&&route?{...route,plannedWindow:parsedSchedule.schedule?{startAt:parsedSchedule.schedule.plannedStartAt,endAt:parsedSchedule.schedule.plannedEndAt,timeZone:parsedSchedule.schedule.timezone}:null}:null;
     const parsed = FleetDraftEditSchema.safeParse({
       operationId: crypto.randomUUID(),
       expectedVersion: baseVersion,
       title,
       schedule: parsedSchedule.schedule,
-      stops: stops.map((stop, sequence) => ({ ...stop, sequence })),
+      ...(nextRoute?{routePlan:nextRoute,stops:fleetRouteOperationalStops(nextRoute,run.stops[0].siteId,run.stops[0].id)}:{stops:stops.map((stop, sequence) => ({ ...stop, sequence }))}),
     });
     if (
       parsed.success &&
@@ -111,6 +117,10 @@ export function FleetDraftEditor({
             onChange={setSchedule}
             disabled={locked}
           />
+          {run.routePlan?<>
+            {run.runOrder?<p>{i18n.language.startsWith("es")?"Recorrido guardado":"Saved Run"} · {run.runOrder.name} · {run.runOrder.origin.name} → {run.runOrder.destination.name}</p>:<fieldset disabled={locked||!destinations}><FleetRouteFields value={route} destinations={destinations??[]} onChange={value=>{setRouteDirty(true);setRoute(value);}}/></fieldset>}
+            {directoryError&&<p role="alert">{i18n.language.startsWith("es")?"Ubicaciones no disponibles. Puede cambiar el título y el horario; recargue antes de modificar la ruta física.":"Locations unavailable. Title and schedule changes remain available; reload before changing the physical route."}</p>}
+          </>:<>
           <ol>
             {stops.map((stop, index) => (
               <li className="flex flex-wrap gap-2 py-2" key={stop.id}>
@@ -200,6 +210,7 @@ export function FleetDraftEditor({
           >
             {c.addStop}
           </PngPillButton>
+          </>}
           {reviewed ? (
             <>
               <p>
@@ -207,7 +218,7 @@ export function FleetDraftEditor({
                 {reviewed.stops
                   ?.map(
                     (stop) =>
-                      `${stop.sequence + 1}. ${stop.kind} ${stop.siteId}`,
+                      `${stop.sequence + 1}. ${stop.kind} ${stop.destination?.name??stop.siteId}`,
                   )
                   .join(" → ")}
               </p>

@@ -6,6 +6,17 @@ import {
 } from "./fleet-client";
 afterEach(() => vi.unstubAllGlobals());
 describe("Fleet request errors", () => {
+  it("reads the saved Run directory through its own transport-order endpoint",async()=>{
+    const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({orders:[],nextCursor:null,canManage:true}),{status:200}));vi.stubGlobal("fetch",fetcher);
+    await expect((fleetClient as any).runOrders(42)).resolves.toEqual({orders:[],nextCursor:null,canManage:true});
+    expect(fetcher.mock.calls[0][0]).toBe("/api/fleet/run-orders?after=42");
+    expect(fetcher.mock.calls[0][1]).toMatchObject({credentials:"include"});
+  });
+  it("describes driver access through the company pool rather than a site assignment",()=>{
+    const message=fleetErrorMessage(new FleetRequestError("fleet.driver_grant_required",403),"Unavailable");
+    expect(message).toContain("company's available pool");
+    expect(message).not.toContain("run site");
+  });
   it("reads a saved Detail as the canonical record returned by the Details endpoint", async () => {
     const detail = {
       id: "11111111-1111-4111-8111-111111111111",

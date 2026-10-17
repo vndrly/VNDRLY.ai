@@ -107,6 +107,11 @@ export const FleetRoutePlanSchema = z
       });
   });
 export type FleetRoutePlan = z.infer<typeof FleetRoutePlanSchema>;
+export function fleetRouteMatchesSchedule(route:FleetRoutePlan,schedule:{plannedStartAt:string;plannedEndAt:string;timezone:string}|null|undefined):boolean{
+ const window=route.plannedWindow;
+ if(!schedule)return window===null;
+ return !!window&&Date.parse(window.startAt)===Date.parse(schedule.plannedStartAt)&&Date.parse(window.endAt)===Date.parse(schedule.plannedEndAt)&&window.timeZone===schedule.timezone;
+}
 
 /** siteId is the separately authorized billing context, never a physical
  * destination identity. Physical snapshots remain explicit on each stop. */

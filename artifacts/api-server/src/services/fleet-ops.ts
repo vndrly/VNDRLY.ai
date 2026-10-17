@@ -6,12 +6,13 @@ import {
 } from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
 import { createFleetDetailsOperations } from "./fleet-details";
+import { createFleetRunOrderOperations } from "./fleet-run-orders";
 import { createFleetComplianceOperations } from "./fleet-compliance";
 import {
   assignFleetRunDetail,
   assertFleetDetailResources,
 } from "./fleet-run-details";
-import { fleetRunInspectionMatches } from "@workspace/api-zod";
+import { fleetRunInspectionMatches, fleetRouteMatchesRunOrder } from "@workspace/api-zod";
 import {
   activateFleetReservation,
   releaseFleetReservation,
@@ -110,6 +111,14 @@ function grantFor(state: FleetState, actor: FleetActor): FleetGrant | null {
     ? { ...grant, siteIds, fleetIds, companyId: actor.companyId }
     : null;
 }
+/** Company resource access is independent of customer billing authority.
+ * Legacy fleetIds remain explicit access groups, never physical Details. */
+function companyGrantFor(state: FleetState, actor: FleetActor): FleetGrant | null {
+  const grant = state.grants.find(g => g.userId === actor.userId);
+  if (!state.enabled || !grant?.roles.length) return null;
+  const fleetIds = grant.fleetIds.filter(id => state.fleets.some(group => group.id === id));
+  return fleetIds.length ? {...grant,fleetIds,companyId:actor.companyId} : null;
+}
 function target(run: FleetRun) {
   return {
     companyId: run.companyId,
@@ -128,6 +137,14 @@ function permitted(
     ? actor.currentRunsById.get(run.id)
     : run;
   if (!current) return false;
+  // A driver receives only their actual assigned activity, not customer-wide
+  // access. Recheck both historical and current assignments before readback.
+  const driverGrant = companyGrantFor(state, actor);
+  if ((action === "view" || action === "perform_run") &&
+      driverGrant?.roles.includes("driver") &&
+      [run,current].every(record => record.companyId === actor.companyId &&
+        record.driverUserId === actor.userId && driverGrant.fleetIds.includes(record.fleetId)) &&
+      [...current.siteIds,...run.siteIds].every(id => actor.currentSiteIds?.includes(id))) return true;
   return (
     mayPerformFleetAction(actor.userId, grant, target(current), action) &&
     [...current.siteIds, ...run.siteIds].every(
@@ -291,8 +308,7 @@ async function eligible(
   const driver = state.grants.find((g) => g.userId === run.driverUserId);
   if (
     !driver?.roles.includes("driver") ||
-    !driver.fleetIds.includes(run.fleetId) ||
-    !run.siteIds.every((id) => driver.siteIds.includes(id))
+    !driver.fleetIds.includes(run.fleetId)
   )
     throw new FleetError("fleet.driver_grant_required", 403);
   const person = await client.query(
@@ -413,8 +429,15 @@ export function createFleetService(repository: FleetRepository) {
       actor.companyId,
       actor.userId,
       async (state, client) => {
-        const siteIds =
-          state.grants.find((g) => g.userId === actor.userId)?.siteIds ?? [];
+        const companyGrant = companyGrantFor(state, actor);
+        const assignedSites = companyGrant?.roles.includes("driver")
+          ? [...state.runs,...(actor.pageRuns ?? [])].flatMap(run => {
+              const current = actor.currentRunsById ? actor.currentRunsById.get(run.id) : run;
+              return current && current.driverUserId === actor.userId && run.driverUserId === actor.userId &&
+                current.companyId === actor.companyId && companyGrant.fleetIds.includes(current.fleetId)
+                  ? [...current.siteIds,...run.siteIds] : [];
+            }) : [];
+        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...assignedSites])];
         const sites = await readFleetAuthoritySites(client, actor.companyId, {
           siteIds,
         });
@@ -471,11 +494,13 @@ export function createFleetService(repository: FleetRepository) {
       actor,
     );
   const locations = createFleetLocationOperations(transaction, permitted);
+  const runOrders = createFleetRunOrderOperations(transaction, companyGrantFor);
   return {
+    ...runOrders,
     ...createFleetCommercialOperations(transaction),
     ...createFleetBillingOperations(transaction),
-    ...createFleetInventoryOperations(transaction, grantFor, permitted),
-    ...createFleetDetailsOperations(transaction, grantFor),
+    ...createFleetInventoryOperations(transaction, companyGrantFor, permitted),
+    ...createFleetDetailsOperations(transaction, companyGrantFor),
     // Qualification onboarding belongs to current company Fleet roles. It
     // cannot depend on already having a commercially authorized partner site.
     // Operational run dispatch continues to use the narrower grantFor above.
@@ -507,7 +532,7 @@ export function createFleetService(repository: FleetRepository) {
     },
     ...createFleetPlanningOperations(transaction, permitted, eligible, project),
     ...createFleetAvailabilityManagement(transaction),
-    ...createFleetMaintenanceOperations(transaction, grantFor),
+    ...createFleetMaintenanceOperations(transaction, companyGrantFor),
     ...createFleetReportingOperations(transaction, grantFor),
     ...createFleetGateOperations(transaction, permitted),
     overview: (actor: FleetActor): Promise<FleetOverview> =>
@@ -518,7 +543,9 @@ export function createFleetService(repository: FleetRepository) {
             "SELECT id FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND role='admin' AND id=$3",
             [actor.userId, actor.companyId, actor.activeMembershipId],
           );
-          const grant = grantFor(state, actor);
+          const commercialGrant = grantFor(state, actor);
+          const poolGrant = companyGrantFor(state, actor);
+          const grant = commercialGrant ?? (poolGrant?.roles.includes("driver") ? {...poolGrant,roles:["driver" as const],safetyRelease:false,financeRead:false} : null);
           const roles = grant?.roles ?? [];
           return {
             ...(Number.isInteger(actor.activeMembershipId) &&
@@ -544,22 +571,23 @@ export function createFleetService(repository: FleetRepository) {
             enabled: state.enabled,
             roles: [...roles],
             capabilities: {
+              canManageResources: poolGrant?.roles.some(role=>["fleet_manager","dispatcher"].includes(role)) === true,
               canDispatch:
                 roles.includes("fleet_manager") || roles.includes("dispatcher"),
               canManage: roles.includes("fleet_manager"),
               canDrive: roles.includes("driver"),
-              canMaintain: roles.includes("fleet_manager"),
+              canMaintain: poolGrant?.roles.includes("fleet_manager") === true,
               canReportDefect:
-                roles.includes("fleet_manager") || roles.includes("driver"),
+                poolGrant?.roles.some(role=>["fleet_manager","driver"].includes(role)) === true,
               canReleaseHold:
-                roles.includes("fleet_manager") &&
-                grant?.safetyRelease === true,
+                poolGrant?.roles.includes("fleet_manager") === true &&
+                poolGrant.safetyRelease === true,
               canSetup:
                 actor.role === "vendor" &&
                 actor.membershipRole === "admin" &&
                 admin.rows.length > 0,
             },
-            fleets: state.fleets.filter((f) => grant?.fleetIds.includes(f.id)),
+            fleets: state.fleets.filter((f) => poolGrant?.fleetIds.includes(f.id)),
             page: {
               limit: actor.runPage?.limit ?? 50,
               nextCursor: actor.nextRunCursor ?? null,
@@ -607,7 +635,7 @@ export function createFleetService(repository: FleetRepository) {
       }),
     resources: (actor: FleetActor): Promise<FleetResources> =>
       transaction(actor, async (state, client) => {
-        const grant = grantFor(state, actor);
+        const grant = companyGrantFor(state, actor);
         if (
           !grant?.roles.some((r) => r === "fleet_manager" || r === "dispatcher")
         )
@@ -633,7 +661,7 @@ export function createFleetService(repository: FleetRepository) {
           "SELECT t.id,t.site_location_id,t.status FROM tickets t WHERE t.vendor_id=$1 AND t.site_location_id=ANY($2::int[]) AND ($3::boolean OR t.field_employee_id=$4 OR t.foreman_user_id=$5 OR t.acting_foreman_user_id=$5 OR EXISTS(SELECT 1 FROM ticket_crew tc WHERE tc.ticket_id=t.id AND tc.employee_id=$4 AND tc.removed_at IS NULL)) ORDER BY t.id DESC LIMIT 201",
           [
             actor.companyId,
-            actor.currentSiteIds ?? [],
+            grantFor(state, actor)?.siteIds ?? [],
             actor.role === "vendor",
             actor.vendorPeopleId ?? null,
             actor.userId,
@@ -924,6 +952,7 @@ export function createFleetService(repository: FleetRepository) {
             operationId: _operationId,
             billing: _billing,
             detailSelection,
+            runOrderSelection,
             ...runFields
           } = body;
           const run: FleetRun = {
@@ -947,6 +976,13 @@ export function createFleetService(repository: FleetRepository) {
             linkedTicketId: null,
             allowedActions: [],
           };
+          if(runOrderSelection){
+            const orders=createFleetRunOrderOperations(async(_actor,work)=>work(state,client),companyGrantFor);
+            const order=await orders.fleetRunOrder(actor,runOrderSelection.id);
+            if(order.archivedAt||order.version!==runOrderSelection.version)throw new FleetError("fleet.run_order_revision_conflict",409);
+            if(!order.accessGroupIds.includes(run.fleetId)||!run.routePlan||!fleetRouteMatchesRunOrder(run.routePlan,order))throw new FleetError("fleet.run_order_route_mismatch",409);
+            run.runOrder=structuredClone(order);
+          }
           await attachFleetBilling(client, actor, state, run, body.billing);
           await assertFleetPhysicalRoute(client, actor, state, run, true);
           if (detailSelection)

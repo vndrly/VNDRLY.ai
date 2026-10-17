@@ -132,8 +132,7 @@ export function createFleetMaintenanceOperations(
         !run ||
         (!manager && run.driverUserId !== actor.userId) ||
         run.fleetId !== record.fleetId ||
-        ![run.vehicleAssetId, run.trailerAssetId].includes(record.assetId) ||
-        !run.siteIds.every((id: number) => grant.siteIds.includes(id))
+        !fleetRunAssetIds(run).includes(record.assetId)
       )
         throw new FleetError("fleet.maintenance_not_found", 404);
     }

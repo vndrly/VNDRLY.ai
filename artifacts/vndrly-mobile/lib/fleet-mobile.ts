@@ -21,6 +21,7 @@ export function fleetErrorMessage(error: unknown): string {
   const messages: Record<string, string> = {
     "fleet.version_conflict": "This run changed. Refresh its current assignment before trying again.",
     "fleet.assignment_conflict": "The driver or equipment already has conflicting work.",
+    "fleet.driver_grant_required": "Choose a current driver from the company's available pool with access to this Detail's resource group.",
     "fleet.qualifications_required": "The driver does not have every required current qualification.",
     "fleet.equipment_on_hold": "This equipment has a safety hold. Dispatch cannot release it.",
     "fleet.equipment_custody_conflict": "This equipment is in another person's custody.",

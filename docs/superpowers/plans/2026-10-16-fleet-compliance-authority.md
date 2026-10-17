@@ -16,6 +16,8 @@ All master constraints apply. Initial `warn_only` applies at every canonical act
 
 ## Review Focus
 
+October 16 scope clarification: drivers belong to the company's available pool and join reusable Details; they are not assigned to sites. Qualification onboarding and assigned-activity access must work without driver site grants. Assess the saved Run transport order's Origin/Destination/cargo/time scope for each dispatched activity while preserving company/dispatcher commercial authority and immutable activity checkpoints.
+
 - `auto_unapproved` may come from insurance expiry or a real commercial revocation: only provable compliance-only lapses retain scoped Fleet access.
 - Company history lacks enough evidence of approval: do not invent an approval or delete performed work; reconcile it.
 - Certificate upload is not policy/filing verification; expired/excluded coverage cannot become green because a COI exists.

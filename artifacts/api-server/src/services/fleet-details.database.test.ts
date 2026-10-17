@@ -201,6 +201,38 @@ async function fixture() {
 }
 
 describe("canonical Detail persistence", () => {
+  it("stores reusable transport orders independently of Details, tickets and reservations with scoped versioned readback", async()=>{
+    const f=await fixture();
+    const module=await import("./fleet-run-orders").catch(()=>null);expect(module,"Saved Run transport-order service").not.toBeNull();
+    const companyService=createFleetService({transaction:(_companyId,_userId,work)=>f.transaction(f.actor,work)});
+    const yard=await companyService.saveDestination(f.actor,{operationId:randomUUID(),expectedVersion:1,destination:{name:"Company base before customer setup",kind:"yard",address:"Manual base road",latitude:null,longitude:null,active:true}});
+    expect(yard).toMatchObject({destination:{ownerType:"vendor",ownerId:f.vendor.id}});
+    const {FleetDestinationSchema,FleetCommercialSettingsSchema}=await import("@workspace/api-zod");
+    const places=[0,1,2].map(index=>FleetDestinationSchema.parse({id:randomUUID(),revision:1,name:`Order location ${index}`,kind:index===0?"pickup":"delivery",address:`${index} Manual street`,latitude:null,longitude:null,ownerType:"vendor",ownerId:f.vendor.id}));
+    await f.pool.query("UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[f.vendor.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:places}))]);
+    const service=module!.createFleetRunOrderOperations(f.transaction,(state,actor)=>state.grants.find(g=>g.userId===actor.userId)??null);
+    const body={operationId:randomUUID(),expectedVersion:0,order:{id:randomUUID(),companyId:f.vendor.id,version:1,name:"Crude tank to collection",accessGroupIds:[f.groupId],origin:places[0],destination:places[1],base:null,returnPolicy:"delivery_only",instructions:"Unload crude at the collection point",timeZone:"America/Chicago",archivedAt:null}};
+    const before=(await f.pool.query("SELECT fleet_resources FROM vendors WHERE id=$1",[f.vendor.id])).rows[0].fleet_resources;
+    const saved=await service.saveFleetRunOrder(f.actor,body);
+    expect(saved).toEqual(body.order);
+    expect(await service.saveFleetRunOrder(f.actor,body)).toEqual(saved);
+    expect((await service.readFleetRunOrders(f.actor,{})).orders).toEqual([saved]);
+    await expect(service.saveFleetRunOrder(f.actor,{...body,order:{...body.order,name:"Changed same operation"}})).rejects.toMatchObject({code:"fleet.operation_conflict"});
+    await expect(service.saveFleetRunOrder(f.actor,{...body,operationId:randomUUID(),expectedVersion:1,order:{...saved,version:2,destination:{...places[1],address:"Forged address"}}})).rejects.toMatchObject({code:"fleet.destination_revision_conflict"});
+    const updated=await service.saveFleetRunOrder(f.actor,{...body,operationId:randomUUID(),expectedVersion:1,order:{...saved,version:2,name:"Second revision"}});
+    expect(updated.version).toBe(2);
+    expect((await service.fleetRunOrderReceipt(f.actor,body.operationId)).order).toEqual(saved);
+    expect((await service.fleetRunOrderHistory(f.actor,saved.id,{})).records.map(row=>row.order.version)).toEqual([2,1]);
+    await expect(service.saveFleetRunOrder(f.actor,{...body,operationId:randomUUID()})).rejects.toMatchObject({code:"fleet.version_conflict"});
+    await expect(service.readFleetRunOrders({...f.actor,userId:f.staff[1].id},{})).rejects.toMatchObject({code:"fleet.dispatch_required"});
+    await f.pool.query("UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[f.vendor.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:places.map(place=>({...place,active:false}))}))]);
+    const archived=await service.saveFleetRunOrder(f.actor,{...body,operationId:randomUUID(),expectedVersion:2,order:{...updated,version:3,archivedAt:new Date().toISOString()}});
+    expect((await service.readFleetRunOrders(f.actor,{})).orders).toEqual([]);
+    expect(await service.fleetRunOrder(f.actor,archived.id)).toEqual(archived);
+    expect((await f.pool.query("SELECT fleet_resources FROM vendors WHERE id=$1",[f.vendor.id])).rows[0].fleet_resources).toEqual(before);
+    await f.pool.query("UPDATE vendors SET fleet_ops_state=jsonb_set(fleet_ops_state,'{grants}','[]'::jsonb) WHERE id=$1",[f.vendor.id]);
+    await expect(service.fleetRunOrderReceipt(f.actor,body.operationId)).rejects.toMatchObject({code:"fleet.dispatch_required"});
+  });
   it("binds canonical runs to all components, preserves revisions, and releases only after the chosen return without waiting for office", async () => {
     const f = await fixture(),
       tag = randomUUID();
@@ -246,7 +278,8 @@ describe("canonical Detail persistence", () => {
       ).rows[0].fleet_ops_state,
     );
     state.fleets[0].siteIds = [site.id];
-    for (const grant of state.grants) grant.siteIds = [site.id];
+    // Drivers belong to the company's pool; only dispatch/customer authority is site scoped.
+    for (const grant of state.grants) grant.siteIds = grant.roles.includes("fleet_manager") ? [site.id] : [];
     await f.pool.query(
       "UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",
       [f.vendor.id, JSON.stringify(state)],
@@ -345,6 +378,8 @@ describe("canonical Detail persistence", () => {
       stops: fleetRouteOperationalStops(physicalPlan, site.id, randomUUID()),
     });
     let run = await service.create(actors[0], input(0));
+    await expect.soft(service.fleetInventoryDetail(actors[1],f.assets[0].id)).resolves.toMatchObject({asset:{id:f.assets[0].id}});
+    await expect.soft(service.fleetInventoryDetail(actors[1],f.assets[4].id)).resolves.toMatchObject({asset:{id:f.assets[4].id},runs:expect.arrayContaining([expect.objectContaining({id:run.id})])});
     expect(run.routePlan?.origin).toMatchObject({
       type: "canonical",
       location: { id: places[0].id, latitude: null },
@@ -365,6 +400,10 @@ describe("canonical Detail persistence", () => {
         stops: fleetRouteOperationalStops(forged, site.id, run.stops[0].id),
       }),
     ).rejects.toMatchObject({ code: "fleet.destination_revision_conflict" });
+    const deliveryOnly=FleetRoutePlanSchema.parse({...physicalPlan,base:null,returnPolicy:"delivery_only",stops:physicalPlan.stops.filter(stop=>stop.kind!=="return")});
+    run=await service.editDraft(actors[0],run.id,{operationId:randomUUID(),expectedVersion:run.version,routePlan:deliveryOnly,stops:fleetRouteOperationalStops(deliveryOnly,site.id,run.stops[0].id)});
+    expect.soft(run.resourceAssignment?.returnPolicy).toBe("delivery_only");
+    run=await service.editDraft(actors[0],run.id,{operationId:randomUUID(),expectedVersion:run.version,routePlan:physicalPlan,stops:fleetRouteOperationalStops(physicalPlan,site.id,run.stops[0].id)});
     expect(run.resourceAssignment?.reservation.assetIds).toEqual([
       f.assets[0].id,
       f.assets[2].id,
@@ -497,6 +536,7 @@ describe("canonical Detail persistence", () => {
       replacement.id,
       acceptance,
     );
+    await expect.soft(service.fleetInventoryDetail(actors[0],f.assets[0].id)).resolves.toMatchObject({runs:expect.arrayContaining([expect.objectContaining({id:run.id})])});
     run = await service.detail(actors[1], run.id);
     expect(run.resourceAssignment?.snapshot.detail.id).toBe(
       replacementDetail.id,
@@ -619,6 +659,7 @@ describe("canonical Detail persistence", () => {
       startAt: start.toISOString(),
       plannedEndAt: end.toISOString(),
     });
+    expect.soft(next.routePlan?.plannedWindow).toEqual({startAt:start.toISOString(),endAt:end.toISOString(),timeZone:"America/Chicago"});
     next = await service.action(actors[0], next.id, {
       operationId: randomUUID(),
       expectedVersion: next.version,
@@ -637,6 +678,33 @@ describe("canonical Detail persistence", () => {
           row.current_holder_user_id === null && row.status === "available",
       ),
     ).toBe(true);
+    const {fleetRunOrderRoute}=await import("@workspace/api-zod");
+    const order=await service.saveFleetRunOrder(actors[0],{operationId:randomUUID(),expectedVersion:0,order:{id:randomUUID(),companyId:f.vendor.id,version:1,name:"Saved tank to terminal Run",accessGroupIds:[f.groupId],origin:places[0],destination:places[1],base:places[2],returnPolicy:"return_required",instructions:"Repeat transport order",timeZone:"America/Chicago",archivedAt:null}});
+    const route=fleetRunOrderRoute(order,randomUUID);
+    const selected={...input(0),operationId:randomUUID(),detailSelection:{...input(0).detailSelection,detailVersion:2},runOrderSelection:{id:order.id,version:order.version},routePlan:route,stops:fleetRouteOperationalStops(route,site.id,randomUUID())};
+    const firstActivity=await service.create(actors[0],selected);
+    expect(firstActivity.runOrder).toEqual(order);
+    expect(firstActivity.linkedTicketId).not.toBeNull();
+    const replayedActivity=await service.create(actors[0],selected);
+    expect(replayedActivity).toMatchObject({id:firstActivity.id,linkedTicketId:firstActivity.linkedTicketId,version:firstActivity.version,runOrder:order,resourceAssignment:firstActivity.resourceAssignment,events:firstActivity.events});
+    await expect(service.create(actors[0],{...selected,operationId:randomUUID(),runOrderSelection:{id:order.id,version:99}})).rejects.toMatchObject({code:"fleet.run_order_revision_conflict"});
+    await expect(service.editDraft(actors[0],firstActivity.id,{operationId:randomUUID(),expectedVersion:firstActivity.version,routePlan:deliveryOnly,stops:fleetRouteOperationalStops(deliveryOnly,site.id,firstActivity.stops[0].id)})).rejects.toMatchObject({code:"fleet.run_order_route_mismatch"});
+    await service.action(actors[0],firstActivity.id,{operationId:randomUUID(),expectedVersion:firstActivity.version,action:"cancel",reason:"Synthetic first activity"});
+    const secondActivity=await service.create(actors[0],{...selected,operationId:randomUUID(),billing:{mode:"existing_ticket",ticketId:firstActivity.linkedTicketId!,afeNumber:"A1",workDate:"2026-10-16"}});
+    expect(secondActivity.id).not.toBe(firstActivity.id);
+    expect(secondActivity.runOrder).toEqual(order);
+    expect(secondActivity.linkedTicketId).toBe(firstActivity.linkedTicketId);
+    const {FleetCommercialSettingsSchema}=await import("@workspace/api-zod");
+    const partnerPlaces=places.slice(0,2).map(place=>({...place,id:randomUUID(),ownerType:"partner" as const,ownerId:partner.id}));
+    await f.pool.query("UPDATE partners SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[partner.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:partnerPlaces}))]);
+    const partnerOrder=await service.saveFleetRunOrder(actors[0],{operationId:randomUUID(),expectedVersion:0,order:{...order,id:randomUUID(),origin:partnerPlaces[0],destination:partnerPlaces[1],base:null,returnPolicy:"delivery_only"}});
+    const currentState=FleetStateSchema.parse((await f.pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[f.vendor.id])).rows[0].fleet_ops_state);
+    currentState.grants.find(grant=>grant.userId===actors[1].userId)!.roles=["driver","fleet_manager"];
+    await f.pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[f.vendor.id,JSON.stringify(currentState)]);
+    // Own assigned activity access does not grant a manager/driver access to
+    // the customer's transport-order directory or permission to create one.
+    await expect(service.fleetRunOrder(actors[1],partnerOrder.id)).rejects.toMatchObject({code:"fleet.run_order_not_found"});
+    await expect(service.saveFleetRunOrder(actors[1],{operationId:randomUUID(),expectedVersion:0,order:{...partnerOrder,id:randomUUID()}})).rejects.toMatchObject({code:"fleet.run_order_not_found"});
   });
   it("does not let a scoped manager read, replay or overwrite another group's package", async () => {
     const f = await fixture(),

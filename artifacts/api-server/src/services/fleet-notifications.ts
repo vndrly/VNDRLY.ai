@@ -36,10 +36,9 @@ export async function fleetRunNotificationRecipients(
     .filter(
       (grant) =>
         grant.fleetIds.includes(run.fleetId) &&
-        run.siteIds.every((id) => grant.siteIds.includes(id)) &&
         grant.roles.length &&
-        (grant.roles.includes("fleet_manager") ||
-          grant.roles.includes("dispatcher") ||
+        (((grant.roles.includes("fleet_manager") ||
+          grant.roles.includes("dispatcher")) && run.siteIds.every(id => grant.siteIds.includes(id))) ||
           (grant.roles.includes("driver") &&
             run.driverUserId === grant.userId)),
     )

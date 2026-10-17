@@ -145,6 +145,11 @@ const fixture = () => {
   };
 };
 describe("Fleet maintenance authority and retained outcomes", () => {
+  it("allows own-driver equipment damage reporting without a personal customer-site grant",async()=>{
+    const f=fixture();f.grants.get(2)!.siteIds=[];
+    const reported=await f.create(2);expect(reported.allowedActions).toEqual([]);expect(f.holds()).toHaveLength(1);
+    await expect(f.service.maintenanceAction(f.actor(2),reported.id,{operationId:randomUUID(),expectedVersion:1,action:"record_repair",notes:"Driver cannot release their own damage report"})).rejects.toMatchObject({status:403});
+  });
   it("binds driver reports to actual own equipment/run, without manager impersonation", async () => {
     const f = fixture();
     const report = await f.create(2);
