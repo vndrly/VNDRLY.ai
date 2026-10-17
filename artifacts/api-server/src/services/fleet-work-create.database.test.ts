@@ -29,7 +29,7 @@ import { executeFleetWorkCommand } from "./fleet-work-canonical";
 import { createFleetWorkService } from "./fleet-work";
 import { requireFleetRunCommercialAuthority } from "./fleet-commercial-authority";
 
-async function fixture() {
+async function fixture(options: { rig?: boolean } = {}) {
   const f = await createFleetPricingFixture(),
     group = randomUUID();
   const [driver] = await db
@@ -73,6 +73,12 @@ async function fixture() {
     "INSERT INTO asset_attachment_links(asset_id,attachment_type,attachment_id,linked_by_user_id) VALUES($1,'fleet_inventory',$2,$3)",
     [truck.id, String(f.vendor), f.manager.userId],
   );
+  const rigAssets = options.rig ? await db.insert(assetsTable).values(
+    ["trailer", "dolly"].map(category => ({
+      name: `Synthetic ${category}`, category, legalOwnerName: "Synthetic",
+      responsibleOrgType: "vendor", responsibleOrgId: f.vendor,
+    })),
+  ).returning() : [];
   await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1", [
     f.vendor,
     JSON.stringify({
@@ -83,7 +89,7 @@ async function fixture() {
           id: group,
           name: "Dispatch access",
           siteIds: [f.site],
-          equipmentAssetIds: [truck.id],
+          equipmentAssetIds: [truck.id, ...rigAssets.map(asset => asset.id)],
           requiredCertifications: [],
         },
       ],
@@ -109,6 +115,14 @@ async function fixture() {
   ]);
   const service = createFleetService(databaseFleetRepository),
     actor = f.manager;
+  const rig = rigAssets.length ? await service.saveFleetRigPackage({ ...actor }, {
+    operationId: randomUUID(), expectedVersion: 0,
+    package: {
+      id: randomUUID(), companyId: f.vendor, version: 1, name: "Synthetic tow package",
+      components: rigAssets.map((asset, sequence) => ({ assetId: asset.id, role: asset.category, sequence })),
+      effectiveFrom: "2026-01-01T00:00:00Z", effectiveUntil: null, archivedAt: null,
+    },
+  }) : null;
   const detail = await service.saveFleetDetail(
     { ...actor },
     {
@@ -120,8 +134,8 @@ async function fixture() {
         version: 1,
         name: "Synthetic Detail",
         vehicleAssetId: truck.id,
-        rigPackageId: null,
-        rigPackageVersion: null,
+        rigPackageId: rig?.id ?? null,
+        rigPackageVersion: rig?.version ?? null,
         driverUserId: driver.id,
         accessGroupIds: [group],
         effectiveFrom: "2026-01-01T00:00:00Z",
@@ -253,6 +267,7 @@ async function fixture() {
     driverMembership,
     driverPerson,
     truck,
+    rigAssets,
     command,
     repository,
     work: createFleetWorkService(repository),
@@ -331,6 +346,73 @@ it("requires an original-scope receipt transaction for v2 actions while retainin
   expect((await service.detail({ ...f.actor }, run.id)).status).toBe(
     "cancelled",
   );
+});
+
+it("shows Inventory for a pool driver's current retained assignment without personal site grants", async () => {
+  const f = await fixture({ rig: true }), created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied") throw Error("Expected actual creation");
+  const id = String(created.canonicalReferences.find(ref => ref.kind === "activity")!.id);
+  const service = createFleetService(databaseFleetRepository);
+  const driver = {
+    ...f.actor, userId: f.driver.id, role: "field_employee", membershipRole: "field_employee",
+    activeMembershipId: f.driverMembership.id, sv: f.driver.sessionVersion,
+    vendorPeopleId: f.driverPerson.id,
+  };
+  const inventory = await service.fleetInventory({ ...driver });
+  expect(inventory.canManage).toBe(false);
+  expect(inventory.assets.map(asset => asset.id).sort()).toEqual([f.truck.id, ...f.rigAssets.map(asset => asset.id)].sort());
+  expect(await service.fleetInventoryDetail({ ...driver }, f.truck.id)).toMatchObject({
+    canManage: false, asset: { id: f.truck.id }, runs: [{ id }],
+  });
+  for (const asset of f.rigAssets) expect(await service.fleetInventoryDetail({ ...driver }, asset.id)).toMatchObject({
+    canManage: false, asset: { id: asset.id }, runs: [{ id }],
+  });
+  const [unassigned] = await db.insert(assetsTable).values({
+    name: "Synthetic unrelated company truck", category: "truck", legalOwnerName: "Synthetic",
+    responsibleOrgType: "vendor", responsibleOrgId: f.vendor,
+  }).returning();
+  await pool.query("INSERT INTO asset_attachment_links(asset_id,attachment_type,attachment_id,linked_by_user_id) VALUES($1,'fleet_inventory',$2,$3)",
+    [unassigned.id, String(f.vendor), f.manager.userId]);
+  await expect(service.fleetInventoryDetail({ ...driver }, unassigned.id)).rejects.toMatchObject({ status: 404 });
+  const state = (await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1", [f.vendor])).rows[0].fleet_ops_state;
+  expect(state.grants.find((grant: { userId: number }) => grant.userId === f.driver.id).siteIds).toEqual([]);
+  expect(state.runs).toEqual([]);
+  const snapshots = await pool.query("SELECT count(*)::int AS n FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' AND target_id=$2", [f.vendor, id]);
+  expect(snapshots.rows[0].n).toBe(1);
+  const run = await service.detail({ ...f.actor }, id);
+  expect((await cancelWork(f, run)).status).toBe("applied");
+  expect((await service.fleetInventory({ ...driver })).assets).toEqual([]);
+  await expect(service.fleetInventoryDetail({ ...driver }, f.truck.id)).rejects.toMatchObject({ status: 404 });
+});
+
+it("does not resurrect historical Inventory assignment when the latest driver or current grant changes", async () => {
+  const f = await fixture(), created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied") throw Error("Expected actual creation");
+  const id = String(created.canonicalReferences.find(ref => ref.kind === "activity")!.id);
+  const service = createFleetService(databaseFleetRepository);
+  const driver = {
+    ...f.actor, userId: f.driver.id, role: "field_employee", membershipRole: "field_employee",
+    activeMembershipId: f.driverMembership.id, sv: f.driver.sessionVersion,
+    vendorPeopleId: f.driverPerson.id,
+  };
+  expect((await service.fleetInventory(driver)).assets.map(asset => asset.id)).toEqual([f.truck.id]);
+  // Retained-history fixture: the current head no longer names this driver.
+  // No driver action, acknowledgement, inspection or physical start is claimed.
+  const original = await service.detail({ ...f.actor }, id);
+  const reassigned = structuredClone(original);
+  reassigned.version += 1;
+  reassigned.driverUserId = f.actor.userId;
+  reassigned.resourceAssignment!.snapshot.detail.driverUserId = f.actor.userId;
+  reassigned.resourceAssignment!.reservation.driverUserId = f.actor.userId;
+  FleetRunSchema.parse(reassigned);
+  await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','synthetic_assignment_fixture','fleet-run-snapshot','fleet-run',$3,$4::jsonb,'completed')",
+    [f.actor.userId, f.vendor, id, JSON.stringify(reassigned)]);
+  expect((await service.fleetInventory(driver)).assets).toEqual([]);
+  await expect(service.fleetInventoryDetail(driver, f.truck.id)).rejects.toMatchObject({ status: 404 });
+  const state = (await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1", [f.vendor])).rows[0].fleet_ops_state;
+  state.grants.find((grant: { userId: number }) => grant.userId === f.driver.id).roles = [];
+  await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1", [f.vendor, JSON.stringify(state)]);
+  await expect(service.fleetInventory(driver)).rejects.toMatchObject({ status: 403 });
 });
 
 it("reads retained trip facts and scoped subject choices without relying on the legacy active view", async () => {

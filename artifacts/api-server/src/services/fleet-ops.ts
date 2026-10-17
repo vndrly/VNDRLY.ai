@@ -6,6 +6,7 @@ import {
   recordFleetBillingCharge,
 } from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
+import { readFleetDriverAssignmentSites } from "./fleet-driver-assignment-context";
 import { createFleetDetailsOperations } from "./fleet-details";
 import { createFleetRunOrderOperations } from "./fleet-run-orders";
 import { createFleetComplianceOperations } from "./fleet-compliance";
@@ -454,7 +455,10 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
                 current.companyId === actor.companyId && companyGrant.fleetIds.includes(current.fleetId)
                   ? [...current.siteIds,...run.siteIds] : [];
             }) : [];
-        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...assignedSites])];
+        const retainedAssignedSites = companyGrant?.roles.includes("driver")
+          ? await readFleetDriverAssignmentSites(client, actor, companyGrant.fleetIds)
+          : [];
+        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...assignedSites,...retainedAssignedSites])];
         const sites = await readFleetAuthoritySites(client, actor.companyId, {
           siteIds,
         });

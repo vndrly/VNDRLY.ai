@@ -18,6 +18,7 @@ import { FleetError, type FleetState } from "./fleet-repository";
 import { authorizeAssetHoldRelease } from "./asset-hold-release";
 import { AssetServiceError } from "./assets";
 import type { SessionPayload } from "../lib/session";
+import { readFleetDriverAssignedAssetIds } from "./fleet-driver-assignment-context";
 
 type Transaction = <T>(
   a: FleetActor,
@@ -129,8 +130,9 @@ export function createFleetInventoryOperations(
       throw e;
     }
   }
-  function visibleAssetIds(
+  async function visibleAssetIds(
     s: FleetState,
+    c: PoolClient,
     a: FleetActor,
     fleets: FleetState["fleets"],
     roles: readonly string[],
@@ -146,7 +148,8 @@ export function createFleetInventoryOperations(
     );
     return [
       ...new Set(
-        assigned.flatMap(fleetRunAssetIds),
+        [...assigned.flatMap(fleetRunAssetIds),
+          ...await readFleetDriverAssignedAssetIds(c, a, fleets.map(fleet => fleet.id))],
       ),
     ];
   }
@@ -279,8 +282,9 @@ export function createFleetInventoryOperations(
         const { fleets, grant } = scope(s, a);
         if (input.fleetId && !fleets.some((f) => f.id === input.fleetId))
           throw new FleetError("fleet.inventory_required", 403);
-        const ids = visibleAssetIds(
+        const ids = await visibleAssetIds(
           s,
+          c,
           a,
           fleets.filter((f) => !input.fleetId || f.id === input.fleetId),
           grant.roles,
@@ -322,7 +326,7 @@ export function createFleetInventoryOperations(
         if (
           !inPool ||
           (!companyInventoryManager &&
-            !visibleAssetIds(s, a, fleets, grant.roles).includes(id))
+            !(await visibleAssetIds(s, c, a, fleets, grant.roles)).includes(id))
         )
           throw new FleetError("fleet.asset_not_found", 404);
         const history = await c.query(
