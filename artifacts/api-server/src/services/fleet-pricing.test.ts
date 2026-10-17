@@ -85,6 +85,15 @@ it("selects an immutable approved sub-cent rate ahead of a live catalog and refu
   const selected = selectFleetRateAuthority([live, approved], scope);
   expect(selected).toEqual({ mode: "priced", rateCard: approved });
   expect(
+    selectFleetRateAuthority([approved], {
+      vendorId: 7,
+      partnerId: 8,
+      billingSiteId: 9,
+      serviceId: 3,
+      workAt: at,
+    }),
+  ).toEqual(selected);
+  expect(
     selectFleetRateAuthority([approved, card({ id: id(9) })], scope),
   ).toMatchObject({ mode: "unpriced", reason: "agreement_unresolved" });
   expect(

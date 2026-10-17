@@ -115,9 +115,21 @@ function cardMatches(
  * evidence that the company/partner actually approved that authority. */
 export function selectFleetRateAuthority(
   candidates: FleetRateCardRevision[],
-  scope: FleetChargeCalculation["scope"],
+  scope: Pick<
+    FleetChargeCalculation["scope"],
+    "vendorId" | "partnerId" | "billingSiteId" | "serviceId" | "workAt"
+  >,
 ): FleetPricingIntent {
-  scope = scopeSchema.parse(scope);
+  scope = scopeSchema
+    .pick({
+      vendorId: true,
+      partnerId: true,
+      billingSiteId: true,
+      serviceId: true,
+      workAt: true,
+    })
+    .strip()
+    .parse(scope);
   const priority = {
     approved_quote: 0,
     site_agreement: 1,
