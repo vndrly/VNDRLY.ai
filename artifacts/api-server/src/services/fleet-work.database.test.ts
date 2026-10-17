@@ -16,6 +16,7 @@ import { executeFleetWorkCommand } from "./fleet-work-canonical";
 import { workdayService } from "./workday";
 import { createDatabaseFleetEvidenceUploadRepository } from "./fleet-evidence-upload-repository";
 import { createFleetEvidenceUploadService } from "./fleet-evidence-upload";
+import { createFleetEvidenceCanonicalHandlers } from "./fleet-evidence-upload-canonical";
 import type { ObjectStore, StoredObject } from "../lib/objectStore";
 import { createHash } from "node:crypto";
 import type { FleetActor } from "./fleet-ops";
@@ -473,4 +474,226 @@ it("persists resumable byte metadata and canonical association in the original d
     ),
   ).toHaveLength(1);
   expect(JSON.stringify(rows.rows)).not.toContain(body.toString("base64"));
+});
+it("completes a real private source document through its current authorization boundary without auto-creating or verifying a qualification", async () => {
+  const f = await fixture(),
+    objects = new Map<string, StoredObject>(),
+    body = Buffer.from([255, 216, 255, 1, 2]),
+    hash = createHash("sha256").update(body).digest("hex"),
+    seed = f.command();
+  const store = {
+    kind: "filesystem",
+    getObject: async (path: string) => objects.get(path) ?? null,
+    getObjectAcl: async (path: string) => objects.get(path)?.acl ?? null,
+    putObject: async (
+      path: string,
+      type: string,
+      bytes: Buffer,
+      acl: StoredObject["acl"],
+    ) => {
+      objects.set(path, {
+        contentType: type,
+        size: bytes.length,
+        body: Buffer.from(bytes),
+        acl,
+      });
+    },
+  } as unknown as ObjectStore;
+  const handlers = createFleetEvidenceCanonicalHandlers({
+      store: () => store,
+      secret: () => "synthetic-upload-hmac-not-a-credential",
+    }),
+    service = createFleetEvidenceUploadService(
+      createDatabaseFleetEvidenceUploadRepository(f.repository, handlers),
+      () => store,
+    );
+  const command = FleetWorkCommandSchema.parse({
+      ...seed,
+      kind: "compliance.document.stage",
+      payload: {
+        recordId: randomUUID(),
+        subject: { kind: "driver", id: f.actor.userId },
+        expectedRecordVersion: 0,
+        evidence: { type: "local", kind: "evidence", id: randomUUID() },
+        byteSize: body.length,
+        sha256: hash,
+        contentType: "image/jpeg",
+      },
+    }),
+    saved = await service.begin(f.actor, command);
+  const work = createFleetWorkService(
+    createDatabaseFleetWorkRepository({ execute: executeFleetWorkCommand }),
+  );
+  expect(await work.apply(f.actor, command)).toMatchObject({
+    status: "retry_later",
+    reason: "invalid_dependency",
+  });
+  await service.put(f.actor, {
+    scope: f.scope,
+    sessionId: saved.id,
+    partNumber: 0,
+    sha256: hash,
+    bytes: body,
+  });
+  const receipt = await service.complete(f.actor, {
+    scope: f.scope,
+    sessionId: saved.id,
+    operationId: command.operationId,
+  });
+  expect(receipt).toMatchObject({
+    status: "complete",
+    physicalProofVerified: false,
+    signatureIdentityVerified: false,
+  });
+  expect(
+    await service.complete(f.actor, {
+      scope: f.scope,
+      sessionId: saved.id,
+      operationId: command.operationId,
+    }),
+  ).toEqual(receipt);
+  expect(
+    (
+      await pool.query(
+        "SELECT id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-compliance-revision'",
+        [f.actor.companyId],
+      )
+    ).rowCount,
+  ).toBe(0);
+  expect(await work.apply(f.actor, command)).toMatchObject({
+    status: "applied",
+    mappings: [
+      {
+        local: { type: "local", kind: "evidence", id: saved.localEvidenceId },
+        canonical: {
+          type: "canonical",
+          kind: "evidence",
+          id: saved.canonicalEvidenceId,
+          version: 1,
+        },
+      },
+    ],
+  });
+  expect((await work.apply(f.actor, command)).status).toBe("duplicate");
+  const receivedId = randomUUID();
+  if (command.kind !== "compliance.document.stage")
+    throw Error("Expected source document stage");
+  const sourceCommand = FleetWorkCommandSchema.parse({
+    ...seed,
+    operationId: receivedId,
+    dependencies: [command.operationId],
+    kind: "compliance.receive",
+    payload: {
+      documentReference: {
+        type: "local",
+        kind: "evidence",
+        id: saved.localEvidenceId,
+      },
+      source: {
+        operationId: receivedId,
+        expectedVersion: 0,
+        record: {
+          evidence: {
+            id: command.payload.recordId,
+            revision: 1,
+            subject: command.payload.subject,
+            requirementId: "unmapped:driver_license",
+            requirementVersion: 1,
+            status: "document_received",
+            validFrom: "2026-01-01T00:00:00Z",
+            validUntil: "2027-01-01T00:00:00Z",
+            verifiedAt: null,
+            verifiedByUserId: null,
+            source: "Synthetic received file",
+            privateDocumentRef: null,
+            restrictions: {},
+          },
+          attributes: {
+            kind: "driver_license",
+            issuingState: "OK",
+            licenseNumber: "SYNTHETIC-PRIVATE-LICENSE",
+            licenseClass: "A",
+            endorsements: [],
+            restrictions: [],
+            licenseStatus: "active",
+            sourceRecordId: null,
+          },
+          retentionClass: "qualification",
+          retainUntil: null,
+          legalHold: false,
+        },
+      },
+    },
+  });
+  const sourceWork = createFleetWorkService(
+    createDatabaseFleetWorkRepository({
+      execute: (context, value) =>
+        executeFleetWorkCommand(context, value, {
+          compliance: {
+            store: () => store,
+            secret: () => "synthetic-upload-hmac-not-a-credential",
+          },
+        }),
+    }),
+  );
+  if (sourceCommand.kind !== "compliance.receive")
+    throw Error("Expected source receipt intent");
+  const badId = randomUUID(),
+    bad = {
+      ...sourceCommand,
+      operationId: badId,
+      payload: {
+        ...sourceCommand.payload,
+        source: {
+          ...sourceCommand.payload.source,
+          operationId: badId,
+          record: {
+            ...sourceCommand.payload.source.record,
+            evidence: {
+              ...sourceCommand.payload.source.record.evidence,
+              id: randomUUID(),
+            },
+          },
+        },
+      },
+    };
+  expect(await sourceWork.apply(f.actor, bad)).toMatchObject({
+    status: "needs_reconciliation",
+    reason: "invalid_command",
+  });
+  expect((await sourceWork.apply(f.actor, sourceCommand)).status).toBe(
+    "applied",
+  );
+  expect((await sourceWork.apply(f.actor, sourceCommand)).status).toBe(
+    "duplicate",
+  );
+  expect(
+    sourceCommand.payload.source.record.evidence.privateDocumentRef,
+  ).toBeNull();
+  const privateRecords = [...objects.values()]
+    .filter((object) => object.contentType === "application/json")
+    .map((object) => JSON.parse(object.body.toString()));
+  expect(privateRecords).toEqual([
+    expect.objectContaining({
+      evidence: expect.objectContaining({
+        status: "document_received",
+        privateDocumentRef: receipt.objectPath,
+      }),
+      attributes: expect.objectContaining({
+        licenseNumber: "SYNTHETIC-PRIVATE-LICENSE",
+      }),
+    }),
+  ]);
+  const rows = await pool.query(
+    "SELECT target_type,tool_output FROM assistant_action_audit WHERE vendor_id=$1",
+    [f.actor.companyId],
+  );
+  expect(
+    rows.rows.filter((row) => row.target_type === "fleet-compliance-document"),
+  ).toHaveLength(1);
+  expect(
+    rows.rows.filter((row) => row.target_type === "fleet-compliance-revision"),
+  ).toHaveLength(1);
+  expect(JSON.stringify(rows.rows)).not.toContain(body.toString("base64"));
+  expect(JSON.stringify(rows.rows)).not.toContain("SYNTHETIC-PRIVATE-LICENSE");
 });

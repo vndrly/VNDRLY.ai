@@ -186,6 +186,21 @@ async function fixture() {
   };
 }
 describe("Private Fleet compliance register", () => {
+  it("authorizes a resumable private document against the exact current record revision without creating a source or verifying it",async()=>{
+    const f=await fixture(),record=f.record(),subject=record.evidence.subject,input={recordId:record.evidence.id,subject,expectedRecordVersion:0};
+    expect(await f.service.authorizeFleetComplianceDocument(f.driver,input)).toEqual({recordId:record.evidence.id,subject,revision:0});expect(f.objects.size).toBe(0);
+    await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+    await expect(f.service.authorizeFleetComplianceDocument(f.driver,input)).rejects.toMatchObject({code:"fleet.version_conflict"});
+    expect(await f.service.authorizeFleetComplianceDocument(f.driver,{...input,expectedRecordVersion:1})).toEqual({recordId:record.evidence.id,subject,revision:1});
+    expect((await f.service.readFleetComplianceReceipt(f.driver,record.evidence.id,1)).status).toBe("document_received");
+  });
+  it("rechecks submitter authority and refuses binding a private upload to another subject or a read-only session",async()=>{
+    const f=await fixture(),record=f.record(),input={recordId:record.evidence.id,subject:record.evidence.subject,expectedRecordVersion:0};await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+    await expect(f.service.authorizeFleetComplianceDocument({...f.driver,readOnly:true},{...input,expectedRecordVersion:1})).rejects.toMatchObject({status:403});
+    await expect(f.service.authorizeFleetComplianceDocument(f.driver,{...input,subject:{kind:"driver",id:f.admin.userId},expectedRecordVersion:1})).rejects.toMatchObject({status:403});
+    await expect(f.service.authorizeFleetComplianceDocument(f.admin,{...input,subject:{kind:"driver",id:f.admin.userId},expectedRecordVersion:1})).rejects.toMatchObject({code:"fleet.evidence_identity_conflict"});
+    expect(f.objects.size).toBe(1);
+  });
   it("returns the safe unavailable-source contract when the private storage provider itself cannot open",async()=>{
     const f=await fixture();await f.appoint();const record=f.record();await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});f.failStore();
     await expect(f.service.readPrivateComplianceRecord(f.reviewer,record.evidence.id,1)).rejects.toMatchObject({code:"fleet.private_record_unavailable",status:503});

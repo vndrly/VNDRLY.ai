@@ -277,3 +277,16 @@ it("limits a closed-ticket case to explicit ticket replacement or retention with
     "retain_record_only",
   ]);
 });
+it("keeps an unresolved media/reference dependency retryable without recording a permanent business refusal", async () => {
+  const f = fixture();
+  f.execute.mockRejectedValueOnce(
+    new FleetError("fleet.work_dependency_unresolved"),
+  );
+  expect(await f.service.apply(actor, command())).toMatchObject({
+    status: "retry_later",
+    reason: "invalid_dependency",
+  });
+  expect(f.receipts).toHaveLength(0);
+  expect(f.cases).toHaveLength(0);
+  expect((await f.service.apply(actor, command(3))).status).toBe("applied");
+});

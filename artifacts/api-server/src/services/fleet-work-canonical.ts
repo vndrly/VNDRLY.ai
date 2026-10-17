@@ -6,14 +6,16 @@ import {
   FleetWorkScopeSchema,
   FleetRunSchema,
   FleetDestinationReceiptSchema,
+  FleetEvidenceUploadSessionSchema,
   type FleetWorkCommand,
   type FleetWorkReference,
   type FleetWorkReceipt,
 } from "@workspace/api-zod";
-import { createFleetService } from "./fleet-ops";
+import { createFleetService, type FleetServiceOptions } from "./fleet-ops";
 import { FleetError, type FleetRepository } from "./fleet-repository";
 import type { FleetWorkExecutionContext } from "./fleet-work-repository";
 import type { FleetWorkExecution } from "./fleet-work";
+import { fleetWorkFingerprint } from "./fleet-work";
 import {
   createWorkdayService,
   withVerifiedWorkdayClient,
@@ -27,12 +29,11 @@ const mappingSchema = z
 /** These are existing business operations under the enclosing real transaction,
  * not a second permissive implementation. New handler kinds stay unavailable
  * until their authoritative path is implemented; no v2 UI is activated yet. */
-export async function executeFleetWorkCommand(
+export function createFleetWorkCanonicalService(
   context: FleetWorkExecutionContext,
-  command: FleetWorkCommand,
-): Promise<FleetWorkExecution> {
-  const { actor, state, client } = context,
-    afterCommit: Array<() => Promise<unknown>> = [];
+  options: FleetServiceOptions = {},
+) {
+  const { actor, state, client } = context;
   const bound: FleetRepository = {
     async transaction(companyId, userId, operation, authority) {
       if (
@@ -52,7 +53,17 @@ export async function executeFleetWorkCommand(
       return operation(state, client);
     },
   };
-  const service = createFleetService(bound, {
+  return createFleetService(bound, options);
+}
+export async function executeFleetWorkCommand(
+  context: FleetWorkExecutionContext,
+  command: FleetWorkCommand,
+  options: Omit<FleetServiceOptions, "afterCommit"> = {},
+): Promise<FleetWorkExecution> {
+  const { actor, state, client } = context,
+    afterCommit: Array<() => Promise<unknown>> = [];
+  const service = createFleetWorkCanonicalService(context, {
+    ...options,
     afterCommit: (effect) => {
       afterCommit.push(effect);
     },
@@ -99,6 +110,63 @@ export async function executeFleetWorkCommand(
     };
   };
   switch (command.kind) {
+    case "evidence.stage":
+    case "compliance.document.stage": {
+      const pointerRows = await client.query(
+        "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-evidence-upload-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+        [actor.companyId, command.operationId],
+      );
+      const pointer = pointerRows.rows[0];
+      if (!pointer) throw new FleetError("fleet.work_dependency_unresolved");
+      const binding = z
+        .object({ scope: FleetWorkScopeSchema, sessionId: z.uuid() })
+        .strict()
+        .parse(pointer.tool_output);
+      if (
+        pointer.user_id !== actor.userId ||
+        !isDeepStrictEqual(binding.scope, command.scope)
+      )
+        throw new FleetError("fleet.work_scope_changed", 403);
+      const rows = await client.query(
+        "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-evidence-upload-session' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+        [actor.companyId, binding.sessionId],
+      );
+      const row = rows.rows[0];
+      if (!row) throw new FleetError("fleet.work_dependency_unresolved");
+      const upload = FleetEvidenceUploadSessionSchema.parse(row.tool_output);
+      if (
+        row.user_id !== actor.userId ||
+        !isDeepStrictEqual(upload.scope, command.scope)
+      )
+        throw new FleetError("fleet.work_scope_changed", 403);
+      if (
+        upload.fingerprint !== fleetWorkFingerprint(command) ||
+        command.payload.evidence.type !== "local" ||
+        command.payload.evidence.id !== upload.localEvidenceId
+      )
+        throw new FleetError("fleet.operation_conflict");
+      if (!upload.completion)
+        throw new FleetError("fleet.work_dependency_unresolved");
+      const canonical: Canonical = {
+        type: "canonical",
+        kind: "evidence",
+        id: upload.canonicalEvidenceId,
+        version: 1,
+      };
+      return result(
+        [canonical],
+        [
+          {
+            local: {
+              type: "local",
+              kind: "evidence",
+              id: upload.localEvidenceId,
+            },
+            canonical,
+          },
+        ],
+      );
+    }
     case "location.save": {
       const { localReference, ...payload } = command.payload;
       const saved = FleetDestinationReceiptSchema.parse(
@@ -323,14 +391,49 @@ export async function executeFleetWorkCommand(
         },
       ]);
     }
-    case "compliance.receive":
-      if (command.payload.documentReference?.type === "local")
-        throw new FleetError("fleet.work_dependency_unresolved", 409);
-      await service.saveFleetComplianceEvidence(
-        { ...actor },
-        command.payload.source,
-      );
+    case "compliance.receive": {
+      const source = structuredClone(command.payload.source),
+        document = command.payload.documentReference;
+      if (document) {
+        if (source.reusePriorDocument)
+          throw new FleetError("fleet.document_choice_required", 400);
+        const reference = await mapped(document);
+        const rows = await client.query(
+          "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-evidence-upload-session' AND tool_output->>'canonicalEvidenceId'=$2 ORDER BY id DESC LIMIT 1",
+          [actor.companyId, reference.id],
+        );
+        if (!rows.rows.length)
+          throw new FleetError("fleet.work_dependency_unresolved");
+        const upload = FleetEvidenceUploadSessionSchema.parse(
+          rows.rows[0].tool_output,
+        );
+        if (
+          upload.scope.owner.type !== "vendor" ||
+          upload.scope.owner.id !== actor.companyId ||
+          upload.binding.kind !== "compliance" ||
+          upload.binding.recordId !== source.record.evidence.id ||
+          !isDeepStrictEqual(
+            upload.binding.subject,
+            source.record.evidence.subject,
+          )
+        )
+          throw new FleetError("fleet.evidence_identity_conflict");
+        if (upload.binding.expectedRecordVersion !== source.expectedVersion)
+          throw new FleetError("fleet.version_conflict");
+        if (!upload.completion)
+          throw new FleetError("fleet.work_dependency_unresolved");
+        if (
+          source.record.evidence.privateDocumentRef !== null &&
+          source.record.evidence.privateDocumentRef !==
+            upload.completion.objectPath
+        )
+          throw new FleetError("fleet.evidence_identity_conflict");
+        source.record.evidence.privateDocumentRef =
+          upload.completion.objectPath;
+      }
+      await service.saveFleetComplianceEvidence({ ...actor }, source);
       return result();
+    }
     case "compliance.review":
       await service.verifyFleetComplianceEvidence(
         { ...actor },

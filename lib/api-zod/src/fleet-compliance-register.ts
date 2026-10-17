@@ -463,6 +463,7 @@ export const FleetComplianceDocumentUploadSchema = z.object({
   contentType: z.enum(["application/pdf", "image/jpeg", "image/png", "image/webp"]),
   bodyBase64: z.string().min(1).max(14_000_000),
 }).strict();
+export const FleetComplianceDocumentAuthorizationSchema=z.object({recordId:z.uuid(),subject:FleetComplianceSubjectSchema,expectedRecordVersion:z.number().int().nonnegative()}).strict();
 export const FleetComplianceDocumentReceiptSchema = z.object({objectPath:z.string().regex(/^\/objects\/fleet-compliance-private\/[0-9]+\/[0-9a-f-]{36}\/documents\/[0-9a-f]{64}$/)}).strict();
 export const FleetComplianceSourceContextSchema=z.object({
  id:z.uuid(),revision:z.number().int().positive(),subject:FleetComplianceSubjectSchema,

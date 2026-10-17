@@ -241,6 +241,16 @@ export function createFleetWorkService(
         try {
           execution = await tx.execute(command);
         } catch (error) {
+          if (
+            error instanceof FleetError &&
+            error.code === "fleet.work_dependency_unresolved"
+          )
+            return FleetWorkReceiptSchema.parse({
+              ...base,
+              status: "retry_later",
+              reason: "invalid_dependency",
+              retryAt: new Date(Date.parse(recordedAt) + 5000).toISOString(),
+            });
           const failure = refusal(error);
           if (!failure) throw error;
           const caseId = randomUUID(),

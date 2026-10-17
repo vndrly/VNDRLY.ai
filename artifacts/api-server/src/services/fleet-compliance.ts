@@ -23,6 +23,7 @@ import {
   FleetComplianceSubjectChoicesQuerySchema,
   FleetComplianceSubjectChoicesPageSchema,
   FleetComplianceDocumentUploadSchema,
+  FleetComplianceDocumentAuthorizationSchema,
   FleetComplianceSourceContextSchema,
   evaluateFleetCompliance,
   projectFleetComplianceForDispatch,
@@ -886,6 +887,17 @@ export function createFleetComplianceOperations(
           nextCursor: rows.length > query.limit ? page.at(-1)!.id : null,
           mode: "warn_only",
         });
+      });
+    },
+    authorizeFleetComplianceDocument:(actor:FleetActor,input:unknown)=>{
+      const value=FleetComplianceDocumentAuthorizationSchema.parse(input);
+      return transaction(actor,async(state,client)=>{
+        const config=await readConfig(client,actor);
+        await canUseSubject(state,client,actor,config,value.subject,true);
+        const existing=config.entries.find(entry=>entry.id===value.recordId);
+        if(existing&&fleetComplianceSubjectKey(existing.subject)!==fleetComplianceSubjectKey(value.subject))throw new FleetError("fleet.evidence_identity_conflict");
+        if((existing?.revision??0)!==value.expectedRecordVersion)throw new FleetError("fleet.version_conflict");
+        return {recordId:value.recordId,subject:value.subject,revision:existing?.revision??0};
       });
     },
     uploadComplianceDocument: (actor: FleetActor, input: unknown) => {

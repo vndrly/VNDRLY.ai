@@ -421,7 +421,8 @@ async function setupSites(client: PoolClient, companyId: number) {
     name: row.name as string,
   }));
 }
-export function createFleetService(repository: FleetRepository,options:{afterCommit?:(effect:()=>Promise<unknown>)=>void}={}) {
+export type FleetServiceOptions={afterCommit?:(effect:()=>Promise<unknown>)=>void;compliance?:Parameters<typeof createFleetComplianceOperations>[2]};
+export function createFleetService(repository: FleetRepository,options:FleetServiceOptions={}) {
   const transaction = <T>(
     actor: FleetActor,
     operation: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -510,7 +511,7 @@ export function createFleetService(repository: FleetRepository,options:{afterCom
       if(!state.enabled||!grant?.roles.length)return null;
       const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id));
       return fleetIds.length?{roles:grant.roles,fleetIds}:null;
-    }),
+    },options.compliance),
     recordLocation: locations.record,
     locationObservations: locations.observations,
     locationHistory: locations.history,
