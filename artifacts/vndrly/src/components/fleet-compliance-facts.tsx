@@ -285,6 +285,8 @@ function FactsForm({ subject, onSaved, onClose }: Props) {
                 />
               </label>
             ))}
+            {subject.kind==="trip"&&<label>{es?"Estados revisados de la ruta (un código por línea)":"Reviewed route states (one code per line)"}<textarea value={facts.states?.join("\n")??""} onChange={event=>setFacts(prior=>({...prior,states:event.target.value.trim()?event.target.value.split(/\r?\n/).map(value=>value.trim().toUpperCase()).filter(Boolean):null}))} maxLength={500}/></label>}
+            {subject.kind==="carrier"&&<label>{es?"Entidad legal operadora revisada":"Reviewed operating legal entity"}<input value={facts.insuredLegalEntity??""} onChange={event=>setFacts(prior=>({...prior,insuredLegalEntity:event.target.value.trim()||null}))} maxLength={500}/></label>}
             {textFields.map(([key, label]) => (
               <label key={key}>
                 {label}

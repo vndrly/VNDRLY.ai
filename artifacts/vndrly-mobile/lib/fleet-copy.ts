@@ -16,6 +16,8 @@ const spanish: Record<string, string> = {
 "Covered equipment": "Equipo cubierto",
 "Underlying policy evidence": "Evidencia de póliza base",
 "Excess attachment USD": "Activación del exceso USD",
+"Reviewed route states (one code per line)": "Estados revisados de la ruta (un código por línea)",
+"Reviewed operating legal entity": "Entidad legal operadora revisada",
 "Receive evidence": "Recibir evidencia",
 "Requirements and history": "Requisitos e historial",
 "USDOT registration required": "Se requiere registro USDOT",

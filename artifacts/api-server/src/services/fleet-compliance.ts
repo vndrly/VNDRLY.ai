@@ -1,3 +1,5 @@
+import { readFleetPrivateComplianceSource } from "./fleet-compliance-source";
+import { fleetComplianceRunScopeFingerprint } from "./fleet-compliance-work";
 import { createHmac } from "node:crypto";
 import { z } from "zod/v4";
 import {
@@ -238,39 +240,7 @@ export function createFleetComplianceOperations(
       { actorUserId: actor.userId, fingerprint: digest(input), result },
     );
   }
-  async function privateRecord(
-    entry: FleetComplianceIndexEntry,
-    actor: FleetActor,
-  ): Promise<FleetComplianceRecord> {
-    try {
-      const obj = await store().getObject(entry.objectPath);
-      if (
-        !obj ||
-        obj.acl?.purpose !== "fleet-compliance-private" ||
-        obj.acl.visibility !== "private" ||
-        obj.acl.owner !== owner(actor.companyId)
-      )
-        throw new FleetError("fleet.private_record_unavailable", 503);
-      const record = FleetComplianceRecordSchema.parse(
-        JSON.parse(obj.body.toString("utf8")),
-      );
-      if (
-        entry.objectPath !==
-        `${keyPrefix(actor.companyId)}${entry.id}/${entry.revision}/${digest(record)}`
-      )
-        throw new FleetError("fleet.private_record_unavailable", 503);
-      if (
-        record.evidence.id !== entry.id ||
-        record.evidence.revision !== entry.revision ||
-        fleetComplianceSubjectKey(record.evidence.subject) !==
-          fleetComplianceSubjectKey(entry.subject)
-      )
-        throw new FleetError("fleet.private_record_unavailable", 503);
-      return record;
-    } catch {
-      throw new FleetError("fleet.private_record_unavailable", 503);
-    }
-  }
+  const privateRecord=(entry:FleetComplianceIndexEntry,actor:FleetActor)=>readFleetPrivateComplianceSource(entry,actor.companyId,store(),digest);
   async function persistRecord(
     client: PoolClient,
     actor: FleetActor,
@@ -455,6 +425,7 @@ export function createFleetComplianceOperations(
           reviewedByUserId: actor.userId,
           sourceKind: value.source.kind,
           sourceObjectPath: path,
+          ...(value.subject.kind==="trip"?{workScopeFingerprint:fleetComplianceRunScopeFingerprint(state.runs.find(run=>run.id===value.subject.id)!)}:{}),
         };
         config.facts = config.facts.filter(
           (row) => fleetComplianceSubjectKey(row.subject) !== key,

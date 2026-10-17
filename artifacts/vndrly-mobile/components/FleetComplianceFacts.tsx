@@ -280,6 +280,8 @@ function FactsForm({ subject, onSaved, onClose }: Props) {
               />
             </View>
           ))}
+          {subject.kind==="trip"&&<View><Text style={text}>{copy("Reviewed route states (one code per line)")}</Text><TextInput style={field} accessibilityLabel={copy("Reviewed route states (one code per line)")} editable={!disabled} multiline value={facts.states?.join("\n")??""} onChangeText={value=>setFacts(prior=>({...prior,states:value.trim()?value.split(/\r?\n/).map(code=>code.trim().toUpperCase()).filter(Boolean):null}))} maxLength={500}/></View>}
+          {subject.kind==="carrier"&&<View><Text style={text}>{copy("Reviewed operating legal entity")}</Text><TextInput style={field} accessibilityLabel={copy("Reviewed operating legal entity")} editable={!disabled} value={facts.insuredLegalEntity??""} onChangeText={value=>setFacts(prior=>({...prior,insuredLegalEntity:value.trim()||null}))} maxLength={500}/></View>}
           {textFields.map(([key, label]) => (
             <View key={key}>
               <Text style={text}>{copy(label)}</Text>

@@ -22,7 +22,13 @@ function applies(requirement: FleetRequirementVersion, facts: FleetApplicability
   return alternatives.includes(true) ? true : alternatives.includes("unknown") ? "unknown" : false;
 }
 function restrictionStatus(evidence: FleetComplianceEvidence, facts: FleetApplicabilityFacts, assetId: string | number): "excluded" | "unverified" | null {
-  const comparisons: Array<[unknown[] | undefined, unknown]> = [[evidence.restrictions.states, facts.state], [evidence.restrictions.cargoCodes, facts.cargoCode], [evidence.restrictions.carrierIds, facts.carrierId], [evidence.restrictions.equipmentIds, typeof assetId === "string" ? assetId : facts.vehicleAssetId]];
+  // An explicitly reviewed route supersedes a person's single home-state fact.
+  if (evidence.restrictions.states?.length && facts.states !== undefined) {
+    const states = facts.states;
+    if (!Array.isArray(states) || !states.length || states.some(state => typeof state !== "string" || !/^[A-Z]{2}$/.test(state))) return "unverified";
+    if (states.some(state => !evidence.restrictions.states!.includes(String(state)))) return "excluded";
+  }
+  const comparisons: Array<[unknown[] | undefined, unknown]> = [[facts.states === undefined ? evidence.restrictions.states : undefined, facts.state], [evidence.restrictions.cargoCodes, facts.cargoCode], [evidence.restrictions.carrierIds, facts.carrierId], [evidence.restrictions.equipmentIds, typeof assetId === "string" ? assetId : facts.vehicleAssetId]];
   let unknown = false;
   for (const [allowed, actual] of comparisons) {
     if (!allowed?.length) continue;
@@ -38,8 +44,10 @@ export function evaluateFleetCompliance(input: unknown): FleetComplianceAssessme
   return value.members.map(member => {
     const facts = { ...value.facts, ...member.facts };
     const assessment: FleetComplianceAssessment = { subject: member.subject, status: "green", findings: [], evaluatedAt: value.at, ruleVersions: [], evidenceRefs: [], dueSoon: [], freshness: value.freshness };
-    const candidateRules = value.requirements.filter(rule => rule.subjectKinds.includes(member.subject.kind));
-    const currentRules = candidateRules.filter(rule => Date.parse(rule.effectiveFrom) <= now && (rule.effectiveUntil === null || now < Date.parse(rule.effectiveUntil)));
+    const effectiveRules = value.requirements.filter(rule => Date.parse(rule.effectiveFrom) <= now && (rule.effectiveUntil === null || now < Date.parse(rule.effectiveUntil)));
+    const newestRules = new Map<string, FleetRequirementVersion>();
+    for (const rule of effectiveRules) if (!newestRules.has(rule.id) || newestRules.get(rule.id)!.version < rule.version) newestRules.set(rule.id, rule);
+    const currentRules = [...newestRules.values()].filter(rule => rule.subjectKinds.includes(member.subject.kind));
     const latest = new Map<string, FleetRequirementVersion>();
     for (const rule of currentRules) if (!latest.has(rule.id) || latest.get(rule.id)!.version < rule.version) latest.set(rule.id, rule);
     const add = (rule: Pick<FleetRequirementVersion, "id" | "version" | "category">, reason: FleetComplianceFinding["reason"]) => assessment.findings.push({ requirementId: rule.id, requirementVersion: rule.version, subject: member.subject, category: rule.category, reason, explanation: reasonLabels[reason], evaluatedAt: value.at });

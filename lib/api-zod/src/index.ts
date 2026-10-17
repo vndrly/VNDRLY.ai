@@ -65,3 +65,6 @@ export * from "./fleet-workday";
 export * from "./workday";
 export * from "./fleet-requirement-templates";
 export * from "./fleet-compliance-intake";
+
+export * from "./fleet-insurance-evaluation";
+export * from "./fleet-compliance-work";

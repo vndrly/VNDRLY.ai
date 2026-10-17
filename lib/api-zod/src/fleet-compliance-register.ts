@@ -311,6 +311,8 @@ export const FleetComplianceFactsSchema = z
     driverQualificationRequired: z.boolean().nullable().optional(),
     placarded: z.boolean().nullable().optional(),
     state: state.nullable().optional(),
+    states: z.array(state).min(1).max(60).nullable().optional(),
+    insuredLegalEntity: text.nullable().optional(),
     cargoCode: text.nullable().optional(),
     hazmatClass: text.nullable().optional(),
     gvwrLb: z.number().int().nonnegative().nullable().optional(),
@@ -329,6 +331,7 @@ export const FleetComplianceFactRecordSchema = z
     reviewedAt: timestamp,
     reviewedByUserId: z.number().int().positive(),
     sourceKind: FleetComplianceReviewSourceSchema.shape.kind,
+    workScopeFingerprint: z.string().regex(/^[0-9a-f]{64}$/).optional(),
     sourceObjectPath: z
       .string()
       .startsWith("/objects/fleet-compliance-private/"),

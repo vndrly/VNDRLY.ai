@@ -14,6 +14,16 @@ function call(name: string, value: unknown): unknown {
 function evaluate(value: unknown): Assessment[] { return call("evaluateFleetCompliance", value) as Assessment[]; }
 
 describe("recorded Fleet compliance assessments", () => {
+  it("checks every reviewed route jurisdiction instead of treating the driver's home state as the work scope",()=>{
+    const route={...input,facts:{...input.facts,states:["OK","TX"]},members:[{subject,facts:{state:"OK"}}],evidence:[{...evidence,restrictions:{...evidence.restrictions,states:["OK"]}}]};
+    expect(evaluate(route)[0]).toMatchObject({status:"red",findings:[{reason:"excluded"}]});
+    expect(evaluate({...route,evidence:[evidence]})[0].status).toBe("green");
+    expect(evaluate({...route,members:[{subject,facts:{state:"NM"}}],evidence:[evidence]})[0].status).toBe("green");
+    expect(evaluate({...route,facts:{...route.facts,states:[]}})[0]).toMatchObject({status:"red",findings:[{reason:"unverified"}]});
+  });
+  it("does not revive an older rule for an asset when the current revision changes its subject scope",()=>{
+    expect(evaluate({...input,requirements:[requirement,{...requirement,version:2,subjectKinds:["driver"]}]})[0]).toMatchObject({status:"red",findings:[{requirementId:"requirements_unconfigured"}]});
+  });
   it("requires a reviewed source expiry without inventing a fixed-day renewal period",()=>{
     const sourceDated={...requirement,renewalDays:null,expiryRequired:true};
     expect(evaluate({...input,requirements:[sourceDated],evidence:[{...evidence,validUntil:null}]})[0]).toMatchObject({status:"red",findings:[{reason:"unverified"}]});

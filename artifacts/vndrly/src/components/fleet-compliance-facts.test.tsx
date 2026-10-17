@@ -87,3 +87,10 @@ it("keeps applicability unknown until sourced review and reconciles the exact sa
   expect(first.facts).toEqual({ cdlRequired: true });
   expect(first).not.toHaveProperty("medicalDiagnosis");
 });
+
+it("records reviewed route jurisdictions and independently named operating entity without guessing from a license or policy",async()=>{
+ const subject={kind:"trip" as const,id:"11111111-1111-4111-8111-111111111111"},saved=vi.fn();let body:any;
+ api.complianceRequirements.mockResolvedValue({requirements:[],canAdopt:true,mode:"warn_only"});api.complianceFacts.mockImplementation(async(_subject,version)=>version?{subject,version:1,facts:body.facts,reviewedAt:"2026-10-16T18:00:00Z",reviewedByUserId:2,sourceKind:body.source.kind}:null);api.saveComplianceFacts.mockImplementation(async input=>{body=input;return {version:1};});
+ render(<FleetComplianceFactsEditor identity="company7" subject={subject} onSaved={saved} onClose={vi.fn()}/>);
+ fireEvent.change(await screen.findByLabelText("Reviewed route states (one code per line)"),{target:{value:"ok\nTX"}});fireEvent.change(screen.getByLabelText("Reviewed cargo classification"),{target:{value:"crude"}});fireEvent.change(screen.getByLabelText("Verification source"),{target:{value:"qualified_reviewer"}});fireEvent.change(screen.getByLabelText("Source reference"),{target:{value:"Reviewed actual route"}});fireEvent.click(screen.getByRole("checkbox",{name:"I reviewed these facts against this source"}));fireEvent.click(screen.getByRole("button",{name:"Prepare applicability facts"}));fireEvent.click(screen.getByRole("button",{name:"Save applicability facts"}));await waitFor(()=>expect(saved).toHaveBeenCalledOnce());expect(body.facts).toEqual({states:["OK","TX"],cargoCode:"crude"});expect(body).not.toHaveProperty("workScopeFingerprint");
+});

@@ -1,3 +1,4 @@
+import { readFleetRunComplianceCheckpoint } from "./fleet-compliance-work";
 import { z } from "zod/v4";
 import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
@@ -456,9 +457,8 @@ export async function assessFleetActionPolicy(
         approvalSnapshotId: authority.approvalSnapshotId,
       });
   }
-  // Until reviewed applicability/evidence is available, a legacy checklist is
-  // never represented as complete Federal/State clearance. C3 supplies that register.
-  warnings.push({ category: "regulatory_review", reason: "unverified" });
+  const subjects=await readFleetRunComplianceCheckpoint(client,actor.companyId,input.run,input.policyAt);
+  if(subjects.some(subject=>subject.status==="red"))warnings.push({category:"regulatory_review",reason:"unverified"});
   const authority =
     input.run.linkedTicketId && !["cancel", "pause"].includes(input.action)
       ? await requireFleetRunCommercialAuthority(
@@ -469,7 +469,8 @@ export async function assessFleetActionPolicy(
       : undefined;
   return FleetActionPolicySnapshotSchema.parse({
     mode: "warn_only",
-    status: "red",
+    status: warnings.length?"red":"green",
+    subjects,
     evaluatedAt: input.policyAt,
     ...(authority ? { authoritySnapshotId: authority.approvalSnapshotId } : {}),
     warnings,

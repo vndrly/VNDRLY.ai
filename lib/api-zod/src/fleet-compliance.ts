@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { FleetInsuranceWorkScopeSchema } from "./fleet-insurance";
 
 const timestamp = z.iso.datetime({ offset: true });
 const positiveId = z.number().int().positive();
@@ -24,10 +25,12 @@ export const FleetRequirementVersionSchema = z.object({
   label: z.string().trim().min(1).max(200), subjectKinds: z.array(z.enum(["carrier", "driver", "vehicle", "component", "trip"])).min(1).max(5),
   jurisdiction: z.enum(["federal", "OK", "TX", "carrier", "customer"]), classification: z.enum(["legal", "contract", "company"]),
   effectiveFrom: timestamp, effectiveUntil: timestamp.nullable(), applicability: z.object({ anyOf: z.array(z.object({ allOf: z.array(predicate).max(50) }).strict()).min(1).max(50) }).strict(),
+  coverage: z.object({coverageType:FleetInsuranceWorkScopeSchema.shape.coverageType,requiredLimitUSD:FleetInsuranceWorkScopeSchema.shape.requiredLimitUSD,filingRequired:z.boolean()}).strict().optional(),
   expiryRequired: z.boolean().optional(),
   renewalDays: z.number().int().positive().nullable(), dueSoonDays: z.number().int().nonnegative().max(365),
   source: z.object({ url: z.url().refine(url => /^https:\/\//i.test(url), "HTTPS source required"), section: z.string().trim().min(1).max(500), reviewedAt: timestamp, reviewedByUserId: positiveId }).strict(),
 }).strict().superRefine((value, ctx) => {
+  if(value.coverage&&value.category!=="insurance")ctx.addIssue({code:"custom",path:["coverage"],message:"Coverage terms require an insurance requirement"});
   if (value.effectiveUntil && Date.parse(value.effectiveUntil) <= Date.parse(value.effectiveFrom)) ctx.addIssue({ code: "custom", path: ["effectiveUntil"], message: "Requirement end must follow start" });
 });
 export type FleetRequirementVersion = z.infer<typeof FleetRequirementVersionSchema>;

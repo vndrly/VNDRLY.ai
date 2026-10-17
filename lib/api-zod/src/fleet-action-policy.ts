@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { FleetPartnerComplianceSnapshotSchema } from "./fleet-compliance";
 
 /** Safe immutable checkpoint summary. Private document payloads never belong here. */
 export const FleetActionPolicySnapshotSchema = z
@@ -6,6 +7,7 @@ export const FleetActionPolicySnapshotSchema = z
     mode: z.literal("warn_only"),
     status: z.enum(["green", "red"]),
     evaluatedAt: z.iso.datetime({ offset: true }),
+    subjects: z.array(FleetPartnerComplianceSnapshotSchema).optional(),
     authoritySnapshotId: z.string().max(160).optional(),
     warnings: z.array(
       z
@@ -36,6 +38,7 @@ export const FleetComplianceCheckpointSchema = z
   .object({
     action: z.string(),
     recordedAt: z.iso.datetime({ offset: true }),
+    subjects: z.array(FleetPartnerComplianceSnapshotSchema).optional(),
     mode: z.literal("warn_only"),
     status: z.enum(["green", "red"]),
     reasons: z.array(
@@ -78,6 +81,7 @@ export function projectFleetComplianceCheckpoints(
         recordedAt: event.recordedAt,
         mode: parsed.data.mode,
         status: parsed.data.status,
+        ...(parsed.data.subjects?{subjects:parsed.data.subjects}:{}),
         reasons: parsed.data.warnings.map(({ category, reason }) => ({
           category,
           reason,

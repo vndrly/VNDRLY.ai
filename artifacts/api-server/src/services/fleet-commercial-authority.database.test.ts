@@ -250,6 +250,11 @@ it("preserves proven approval scope on document lapse, survives renewal, rejects
     ).toEqual([work.id]);
     let run = await service.create(staff[0], create);
     expect(run.linkedTicketId).toBeGreaterThan(0);
+    expect(run.events[0].details?.fleetCompliance).toMatchObject({subjects:expect.arrayContaining([
+      expect.objectContaining({subject:{kind:"carrier",id:vendor.id},status:"red"}),
+      expect.objectContaining({subject:{kind:"driver",id:staff[1].userId},status:"red"}),
+      expect.objectContaining({subject:{kind:"vehicle",id:truck.id},status:"red"}),
+    ])});
     expect(
       (await service.overview(staff[1])).runs.map((row) => row.id),
     ).toContain(run.id);
