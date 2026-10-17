@@ -33,3 +33,14 @@ export function prepareFleetLegacyMigration(originalDocument:string,rawScope:Fle
  });
  return plan;
 }
+
+/** Each source remains independently recoverable. A crash midway through import
+ * resumes by its original operation IDs; no legacy key or byte is deleted. */
+export async function importFleetLegacyWork(journal:import("@workspace/api-zod").DurableFleetWorkJournal,originalDocument:string,scope:FleetWorkScope,digest:(value:string)=>Promise<string>){
+ const plan=prepareFleetLegacyMigration(originalDocument,scope),key=`legacy-original:${await digest(originalDocument)}`,existing=await journal.readCache(key);
+ if(existing&&JSON.stringify((existing as {originalDocument:string}).originalDocument)!==JSON.stringify(originalDocument))throw Error("Legacy original changed; recovery required");
+ if(!existing)await journal.putCache(key,{originalDocument,recovery:plan.recovery,originalRetained:true});
+ for(const command of plan.commands)await journal.append(command);
+ const state=await journal.readState();for(const command of plan.commands){const saved=state.entries.find(row=>row.command.operationId===command.operationId);if(!saved||JSON.stringify(saved.command)!==JSON.stringify(command))throw Error("Legacy durable import readback failed; originals retained");}
+ const result={imported:plan.commands.length,recovery:plan.recovery,originalRetained:true as const};await journal.putCache(`${key}:verified`,result);return result;
+}

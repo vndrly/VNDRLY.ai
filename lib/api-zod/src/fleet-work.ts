@@ -1,3 +1,4 @@
+import {FleetTriggerSaveSchema} from "./fleet-monitoring";
 import {z} from "zod/v4";
 import {WorkdayScopeSchema,WorkdayCommandSchema} from "./workday";
 import {FleetCanonicalIdSchema,FleetTimeZoneSchema,FleetDetailSnapshotSchema,FleetDetailSaveSchema,FleetRigPackageSaveSchema} from "./fleet-details";
@@ -9,6 +10,8 @@ import {FleetActionPolicySnapshotSchema} from "./fleet-action-policy";
 import {FleetCompliancePolicySchema,FleetComplianceSubjectSchema} from "./fleet-compliance";
 import {FleetActionInputSchema} from "./fleet";
 import {FleetDraftEditSchema} from "./fleet-planning";
+import {FleetReplacementInputSchema,FleetReplacementActionSchema} from "./fleet-replacement";
+import {FleetCargoTransferInputSchema,FleetCargoTransferActionSchema} from "./fleet-cargo";
 import {FleetComplianceSaveSchema,FleetComplianceVerifySchema,FleetComplianceFactsSaveSchema,FleetComplianceRequirementAdoptSchema} from "./fleet-compliance-register";
 
 const uuid=FleetCanonicalIdSchema,id=z.number().int().positive(),revision=z.number().int().positive(),timestamp=z.iso.datetime({offset:true});
@@ -63,6 +66,7 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  activityCreate,note,action,edit,
  command("activity.legacy_action",z.object({activity:activityRef.refine(ref=>ref.type==="canonical"),base:FleetLegacyAssignmentSchema,ticket:z.object({id,version:z.null(),source:z.literal("legacy_cached_run_link")}).strict(),action:FleetActionInputSchema,source:z.literal("retained_v1"),legacyState:z.enum(["unsynced","conflict","revoked"]),legacySessionVersion:z.number().int().nonnegative(),legacyCaptureZoneSource:z.literal("stored_utc_timestamp"),legacyCompliance:z.literal("not_recorded")}).strict()),
  command("activity.reconcile",z.object({caseId:uuid,expectedVersion:revision,activity:activityRef,originalTicket:FleetWorkTicketReferenceSchema,recoveryDriverUserId:id.optional(),reason:z.string().trim().min(1).max(2000),resolution:FleetWorkResolutionSchema}).strict()),
+ command("monitoring.save",FleetTriggerSaveSchema),
  command("detail.save",FleetDetailSaveSchema),command("rig_package.save",FleetRigPackageSaveSchema),
  command("run_order.save",FleetRunOrderSaveSchema),command("location.save",FleetDestinationSaveSchema.extend({localReference:reference("location").refine(ref=>ref.type==="local","A new location needs its local identity").nullable()})),
  command("compliance.receive",z.object({source:FleetComplianceSaveSchema,documentReference:reference("evidence").nullable()}).strict()),command("compliance.review",FleetComplianceVerifySchema),
@@ -70,6 +74,10 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  command("compliance.facts",FleetComplianceFactsSaveSchema),command("requirements.adopt",FleetComplianceRequirementAdoptSchema),
  command("workday.event",WorkdayCommandSchema),
  command("quantity.record",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,evidence:FleetQuantityEvidenceSchema}).strict()),
+ command("replacement.propose",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,baseAssignment:FleetDetailSnapshotSchema,input:FleetReplacementInputSchema}).strict()),
+ command("replacement.action",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,baseAssignment:FleetDetailSnapshotSchema,replacementId:uuid,input:FleetReplacementActionSchema}).strict()),
+ command("cargo.propose",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,baseAssignment:FleetDetailSnapshotSchema,target:activityRef,targetTicket:FleetWorkTicketReferenceSchema,input:FleetCargoTransferInputSchema}).strict()),
+ command("cargo.action",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,baseAssignment:FleetDetailSnapshotSchema,transferId:uuid,input:FleetCargoTransferActionSchema}).strict()),
  command("quantity.review",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,selections:z.array(FleetQuantityReviewSelectionSchema).min(1).max(100).refine(rows=>new Set(rows.map(row=>row.evidenceId)).size===rows.length,"Select each original quantity report once")}).strict()),
  command("price.resolve",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,expectedVersion:revision,reason:z.string().trim().min(1).max(2000)}).strict()),
  command("charge.review",z.object({activity:activityRef,ticket:FleetWorkTicketReferenceSchema,expectedVersion:revision,quantityReviews:z.array(z.object({evidenceId:uuid,revision:revision}).strict()).min(1).max(100),taxTreatment:z.enum(["existing_ticket_rubric","reviewed_taxable","reviewed_exempt"]),intervals:z.array(z.object({id:uuid,kind:z.enum(["waiting","hourly_service"]),startAt:timestamp,endAt:timestamp}).strict()).max(500),additionalCharges:z.array(z.object({code:z.string().min(1).max(100),quantity:FleetExactDecimalSchema,evidenceIds:z.array(uuid)}).strict()).max(100)}).strict()),
@@ -112,6 +120,10 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
    if(["acknowledge","inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout"].includes(p.action.action)&&p.base.driverUserId!==value.scope.userId)issue("Legacy migration cannot impersonate another driver's physical actions");
  }
  if(value.kind==="quantity.record"&&(value.payload.evidence.recordedByUserId!==value.scope.userId||value.payload.evidence.capturedAt!==value.capturedAt))issue("Quantity evidence must retain its actual recorder and captured time");
+ if(value.kind==="replacement.propose"||value.kind==="replacement.action"||value.kind==="cargo.propose"||value.kind==="cargo.action"){
+  if(value.payload.input.operationId!==value.operationId||value.payload.baseAssignment.detail.companyId!==value.scope.owner.id)issue("Ancillary work must retain original operation and assignment scope");
+  if((value.kind==="replacement.action"&&value.payload.input.action==="accept"||value.kind==="cargo.action"&&["acknowledge_source","acknowledge_target"].includes(value.payload.input.action))&&value.payload.baseAssignment.detail.driverUserId!==value.scope.userId)issue("Dispatch cannot impersonate the driver's acceptance or cargo acknowledgment");
+ }
  if(value.kind==="activity.reconcile"&&value.payload.resolution.kind==="correct_assignment"){
    const resolution=value.payload.resolution;
    if(resolution.snapshot.detail.companyId!==value.scope.owner.id||resolution.snapshot.carrierOfRecordId!==value.scope.owner.id||resolution.detailReference.id!==resolution.snapshot.detail.id)issue("Reconciliation must preserve an exact same-company Detail");

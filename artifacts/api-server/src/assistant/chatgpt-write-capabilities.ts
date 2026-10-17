@@ -1,3 +1,4 @@
+import {FLEET_COMMERCIAL_DEFINITIONS} from "./fleet-commercial-tools";
 import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
 import { fleetInventoryAction, fleetInventoryArguments } from "./fleet-inventory-tools";
 import { WorkHubAvailabilityArgumentsSchema } from "./work-hub-availability-tools";
@@ -25,9 +26,9 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "company:settings": {label:"Prepare company administrator Field/Fleet/Gate category changes for explicit approval",tools:["set_company_operations"]},
   "fleet:maintenance": {label:"Prepare Fleet Manager maintenance and explicitly permitted hold release; no physical certification",tools:["manage_fleet_maintenance","report_fleet_defect"]},
   "fleet:admin":{label:"Prepare current company administrator Fleet settings and explicit role grants",tools:["manage_fleet_settings"]},
-  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["save_fleet_ticket_plan","save_fleet_destination","record_fleet_driver_availability","prepare_fleet_equipment_replacement","cancel_fleet_equipment_replacement","prepare_fleet_cargo_transfer","complete_fleet_cargo_transfer","cancel_fleet_cargo_transfer","edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
-  "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: ["accept_fleet_equipment_replacement","acknowledge_fleet_cargo_source","acknowledge_fleet_cargo_recipient","report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
-  "fleet:billing": { label: "Prepare office finalization and submission of fully reviewed Fleet billing tickets; no approval or payment", tools: ["finalize_fleet_ticket"] },
+  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: [...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:dispatch"||row.name==="act_on_fleet_ticketed_run").map(row=>row.name),"save_fleet_ticket_plan","save_fleet_destination","record_fleet_driver_availability","prepare_fleet_equipment_replacement","cancel_fleet_equipment_replacement","prepare_fleet_cargo_transfer","complete_fleet_cargo_transfer","cancel_fleet_cargo_transfer","edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: [...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:run"||row.name==="create_fleet_ticketed_run").map(row=>row.name),"accept_fleet_equipment_replacement","acknowledge_fleet_cargo_source","acknowledge_fleet_cargo_recipient","report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:billing": { label: "Prepare office finalization and submission of fully reviewed Fleet billing tickets; no approval or payment", tools: [...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:billing").map(row=>row.name),"finalize_fleet_ticket"] },
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
   "finance:write": { label: "Prepare authorized canonical invoice drafts or ticket payment records; never transfer money", tools: ["prepare_ticket_invoices", "record_ticket_payment", "reverse_ticket_payment_record"] },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
@@ -44,6 +45,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+ if(FLEET_COMMERCIAL_DEFINITIONS.some(row=>row.name===name)){const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
  if (name === "finalize_fleet_ticket") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
  if (fleetInventoryAction(name)) { const { operationId: _op, confirmed: _confirmed, ...fields } = input; return fields; }
  if(name === "set_company_operations") return {categories: input.categories};
@@ -75,6 +77,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+ const commercial=FLEET_COMMERCIAL_DEFINITIONS.find(row=>row.name===name);if(commercial){const {operationId:_op,confirmed:_c,...fields}=input;commercial.schema.parse(fields);return;}
   if(name==="manage_my_workday"){const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);WorkdayAssistantInputSchema.omit({operationId:true}).parse(fields);}
   if (fleetInventoryAction(name)) { const { operationId, ...fields } = input; if (operationId !== undefined) z.uuid().parse(operationId); fleetInventoryArguments(name).parse(fields); }
   if(name === "set_company_operations") z.object({categories:z.array(z.enum(["field","fleet","gate"])).min(1).max(3).refine(values=>new Set(values).size===values.length),operationId:z.uuid().optional()}).strict().parse(input);

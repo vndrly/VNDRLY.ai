@@ -1,3 +1,4 @@
+import {FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
 import { FLEET_INVENTORY_TOOLS } from "./fleet-inventory-tools";
 import { FLEET_CARGO_TOOLS } from "./fleet-cargo-tools";
 import { FLEET_REPLACEMENT_TOOLS } from "./fleet-replacement-tools";
@@ -73,6 +74,7 @@ const common = {
 };
 export const FLEET_TOOLS: AskVToolDefinition[] = [
   ...FLEET_INVENTORY_TOOLS,
+  ...FLEET_COMMERCIAL_TOOLS, ...FLEET_COMMERCIAL_READ_TOOLS,
   read("query_fleet_billing_options", "Read real vendor catalog work types/rates and eligible open tickets for the exact authorized origin site, AFE and work date. Every new run requires new_ticket or existing_ticket billing. Never invent a rate or silently reuse another company/site/AFE/day ticket.", {siteId:{type:"integer",minimum:1},afeNumber:{type:"string",maxLength:200},workDate:{type:"string",format:"date"}}, ["siteId","afeNumber","workDate"]),
   action("finalize_fleet_ticket", "Prepare explicit office finalization and submission of an exact Fleet billing ticket. First read query_fleet_ticket_plan and review every noncancelled run. Requires canFinalize, current plan version, separate fleet:billing consent and authenticated confirmation. Acceptance of one run never finalizes the shared ticket. Server binds operation ID; preserve it after uncertain outcomes and verify status, version and finalizationOperationId independently. Does not approve or pay the ticket.", {ticketId:{type:"integer",minimum:1},expectedVersion:{type:"integer",minimum:1}}, ["ticketId","expectedVersion"]),
 

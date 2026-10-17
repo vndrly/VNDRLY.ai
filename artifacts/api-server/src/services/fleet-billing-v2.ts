@@ -39,6 +39,7 @@ export async function attachFleetBillingV2(
   run: FleetRun,
   raw: z.infer<typeof FleetWorkBillingIntentSchema>,
   capture: z.infer<typeof captureSchema>,
+  ownUnplanned=false,
 ) {
   const { actor, state, client } = context,
     intent = FleetWorkBillingIntentSchema.parse(raw),
@@ -51,8 +52,8 @@ export async function attachFleetBillingV2(
     run.companyId !== actor.companyId ||
     !group ||
     !grant?.fleetIds.includes(group.id) ||
-    !grant.roles.some((r) => r === "fleet_manager" || r === "dispatcher") ||
-    !grant.siteIds.includes(intent.billingSiteId ?? 0) ||
+    !(ownUnplanned&&run.driverUserId===actor.userId&&grant.roles.includes("driver"))&&!grant.roles.some((r) => r === "fleet_manager" || r === "dispatcher") ||
+    (!ownUnplanned&&!grant.siteIds.includes(intent.billingSiteId ?? 0)) ||
     !group.siteIds.includes(intent.billingSiteId ?? 0)
   )
     throw new FleetError("fleet.dispatch_required", 403);

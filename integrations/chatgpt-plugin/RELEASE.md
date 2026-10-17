@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.18.0
+
+Ticketed commercial Fleet workflow: real company pool drivers, reusable Details and saved Origin/Destination Runs; original-scope create/action/recovery; exact quantity and office charge review; explicit ticket submission; scoped operational reads. Existing account/grants/identity are preserved. Deployment, installation, scoped live read/action and public review remain separately verified release steps.
+
 # VNDRLY plugin 1.17.0
 
 Every new Fleet run now requires an explicit new-ticket or eligible open-ticket billing choice by authorized origin, AFE and work date. Catalog services supply their real rates and assigned AFE; ordered stops stay intact. Close Run submits one run for office review. Accepting a run leaves its shared ticket open until office staff explicitly finalize and submit it. New `query_fleet_billing_options` and `finalize_fleet_ticket` tools match native/web behavior. Separate `fleet:billing` write consent preserves existing grants. Finalization checks all run reviews, current plan version, authenticated confirmation and exact operation readback; unknown outcomes recover the original action without another write.

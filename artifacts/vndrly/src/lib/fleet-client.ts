@@ -396,6 +396,8 @@ export const fleetClient = {
       input,
     ).then((value) => FleetCargoTransferSchema.parse(value)),
   resources: () => request<FleetResources>("/resources"),
+  monitoring:()=>request<unknown>("/monitoring"),
+  assignmentDelivery:(id:string)=>request<unknown>(`/runs/${encodeURIComponent(id)}/assignment-delivery`),
   run: (id: string) => request<FleetRun>(`/runs/${encodeURIComponent(id)}`),
   create: (input: z.infer<typeof CreateFleetRunSchema>) =>
     request<FleetRun>("/runs", input),

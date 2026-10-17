@@ -1,3 +1,4 @@
+import {fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
 import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
 import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
@@ -70,6 +71,10 @@ export function describeWorkHubToolResult(name: string, rawInput: unknown, resul
   if (Array.isArray(result) || result.ok === false || result.error) return result;
   if (name === "confirm_asset_custody_action" && ["conflict", "blocked"].includes(String(result.status)))
     return { ...result, ok: false, error: result.code ?? "The asset changed or this action is blocked. Read it again before preparing a new action." };
+  if(FLEET_COMMERCIAL_TOOLS.some(row=>row.name===name)&&result.receipt&&typeof result.receipt==="object"){
+    const receipt=result.receipt as Record<string,unknown>;const {status,operationId,canonicalReferences,caseId,reason,recordedAt}=receipt;
+    return {operationId,status,canonicalReferences,caseId,reason,recordedAt,checkedAt:result.checkedAt,physicalWorkStarted:result.physicalWorkStarted,canonicalApplied:status==="applied"||status==="duplicate",nextStep:status==="applied"||status==="duplicate"?"Read the exact canonical references before describing the saved result.":"Keep this original operation; read its reconciliation case. Do not create a replacement action."};
+  }
   const input = record(rawInput);
   if ((name === "prepare_work_hub_file_upload" || name === "manage_work_hub_file" && input.action === "new_version") && record(result.resource).fileId)
     return { ...result, state: "reserved", uploaded: false, finalized: false, nextStep: "Upload the selected bytes on the device, then finalize the returned documentId and fileId." };
@@ -220,6 +225,14 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     try { return fleetInventoryRequest(name, input); } catch { return { error: "Supply exact reviewed Fleet Inventory fields, current version and authorized asset ID." }; }
   }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
+    const commercial=fleetCommercialToolRequest(name,input);if(commercial)return commercial;
+    if(name==="query_fleet_monitoring_rules")return z.object({}).strict().safeParse(input).success?request("GET","/fleet/monitoring"):{error:"This read accepts no scope override."};
+    if(name==="query_fleet_assignment_delivery"){const body=z.object({runId:z.uuid()}).strict().safeParse(input);return body.success?request("GET",`/fleet/runs/${body.data.runId}/assignment-delivery`):{error:"Select an exact authorized run."};}
+    if(["query_fleet_details","query_fleet_rig_packages","query_fleet_run_orders"].includes(name)){const value=z.object({after:name==="query_fleet_run_orders"?z.number().int().positive().optional():z.uuid().optional()}).strict().safeParse(input);if(!value.success)return {error:"Use the exact returned next cursor."};const path=name==="query_fleet_details"?"details":name==="query_fleet_rig_packages"?"rig-packages":"run-orders";return request("GET",`/fleet/${path}${value.data.after?`?after=${value.data.after}`:""}`);}
+    if(name==="query_fleet_activity_commercial_review"){const value=z.object({runId:z.uuid(),after:z.string().optional()}).strict().safeParse(input);return value.success?request("POST","/fleet/work/assistant/review",value.data):{error:"Supply exact activity and returned cursor."};}
+    if(name==="query_fleet_retained_work")return request("POST","/fleet/work/assistant/recovery",input);
+    if(name==="query_fleet_compliance_subjects"){const value=z.object({after:z.string().optional(),limit:z.number().int().min(1).max(50).optional()}).strict().safeParse(input);return value.success?request("GET","/fleet/compliance/subjects?"+new URLSearchParams(Object.entries(value.data).map(([key,value])=>[key,String(value)]))):{error:"Use exact compliance cursor."};}
+
     if (name === "query_fleet_driver_availability") {
       if (!z.object({ driverUserId: z.number().int().positive() }).strict().safeParse(input).success) return { error: "Select an exact authorized Fleet driver." };
       return request("GET", `/fleet/drivers/${input.driverUserId}/availability`);
@@ -1191,6 +1204,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
+  if (FLEET_COMMERCIAL_TOOLS.some(row=>row.name===toolName)||FLEET_COMMERCIAL_READ_TOOLS.some(row=>row.name===toolName))return input;
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination", "finalize_fleet_ticket", "query_fleet_billing_options"].includes(toolName ?? "")) return input;
   if (["query_my_workday","manage_my_workday","query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;

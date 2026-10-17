@@ -26,3 +26,11 @@ it("keeps missing ticket links and changed assignment snapshots for explicit rec
 it("preserves definite legacy refusal state rather than recasting it as an ordinary network retry",()=>{
  const doc=fixture(),plan=prepareFleetLegacyMigration(JSON.stringify({...doc,actions:[{...doc.actions[0],state:"conflict",message:"Original assignment changed"}]}),scope);expect(plan.commands[0].payload.legacyState).toBe("conflict");expect(plan.commands[0].dependencies).toEqual([]);expect(plan.commands[0].payload.action.operationId).toBe(id(6));
 });
+
+it("durably imports originals once, verifies every operation and preserves unresolved records",async()=>{
+ const {importFleetLegacyWork}=await import("./fleet-work-legacy");const {createDurableFleetWorkJournal}=await import("@workspace/api-zod");const {createHash}=await import("node:crypto");
+ const rows=new Map<string,string>(),storage={transaction:async(work:any)=>work({get:async(k:string,id:string)=>rows.get(k+id)??null,set:async(k:string,id:string,value:string)=>{rows.set(k+id,value);},values:async(k:string)=>[...rows].filter(([key])=>key.startsWith(k)).map(([,value])=>value)})};
+ const journal=createDurableFleetWorkJournal({scope,storage,isCurrent:()=>true,digest:async value=>createHash("sha256").update(value).digest("hex")}),document=JSON.stringify(fixture());
+ expect(await importFleetLegacyWork(journal,document,scope,async value=>createHash("sha256").update(value).digest("hex"))).toMatchObject({imported:1,recovery:[],originalRetained:true});expect(await importFleetLegacyWork(journal,document,scope,async value=>createHash("sha256").update(value).digest("hex"))).toMatchObject({imported:1});expect((await journal.readState()).entries).toHaveLength(1);expect((await journal.readState()).entries[0].command.operationId).toBe(id(6));
+ expect([...rows.values()].some(value=>value.includes('originalDocument'))).toBe(true);
+});

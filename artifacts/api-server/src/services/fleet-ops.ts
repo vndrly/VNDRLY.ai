@@ -1,3 +1,4 @@
+import {createFleetMonitoringOperations} from "./fleet-monitoring";
 import { appendFleetRunEvent, readFleetRunEventPage } from "./fleet-run-events";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { attachFleetBillingV2 } from "./fleet-billing-v2";
@@ -169,6 +170,7 @@ function allowed(
   )
     return [];
   const result: FleetRun["allowedActions"] = [];
+  if(run.workOrigin==="driver_unplanned"&&run.driverUserId===actor.userId&&companyGrantFor(state,actor)?.roles.includes("driver")&&["draft","dispatched","acknowledged"].includes(run.status)){result.push("cancel");if(run.status==="draft")result.push("dispatch");}
   if (
     actor.currentRunsById &&
     actor.currentRunsById.get(run.id)?.version !== run.version
@@ -428,6 +430,7 @@ async function setupSites(client: PoolClient, companyId: number) {
   }));
 }
 export type FleetServiceOptions={
+  monitoringNow?:()=>Date;
   /** Set only by the verified original-scope receipt transaction adapter. */
   originalWorkOperationId?: string;
   /** Exact capture from the verified receipt command, never a legacy body flag. */
@@ -436,6 +439,7 @@ export type FleetServiceOptions={
   compliance?:Parameters<typeof createFleetComplianceOperations>[2];
   /** Internal original-scope command adapter, never an HTTP create field. */
   billingV2Create?: {
+    ownUnplanned?:boolean;
     operationId: string;
     timeZone: string;
     intent: Parameters<typeof attachFleetBillingV2>[2];
@@ -462,7 +466,8 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
         const retainedAssignedSites = companyGrant?.roles.includes("driver")
           ? await readFleetDriverAssignmentSites(client, actor, companyGrant.fleetIds)
           : [];
-        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...assignedSites,...retainedAssignedSites])];
+        const ownCaptureSites=options.billingV2Create?.ownUnplanned&&companyGrant?.roles.includes("driver")&&options.billingV2Create.intent.billingSiteId?[options.billingV2Create.intent.billingSiteId]:[];
+        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...assignedSites,...retainedAssignedSites,...ownCaptureSites])];
         const sites = await readFleetAuthoritySites(client, actor.companyId, {
           siteIds,
         });
@@ -535,6 +540,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
       const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id));
       return fleetIds.length?{roles:grant.roles,fleetIds}:null;
     },options.compliance),
+    ...createFleetMonitoringOperations(transaction,permitted,options.monitoringNow),
     recordLocation: locations.record,
     locationObservations: locations.observations,
     locationObservationPage: locations.observationPage,
@@ -552,8 +558,8 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
       permitted,
       locations.readObservations,
     ),
-    ...createFleetCargoOperations(transaction, permitted, eligible),
-    ...createFleetReplacementOperations(transaction, permitted, eligible),
+    ...createFleetCargoOperations(transaction, permitted, eligible,options),
+    ...createFleetReplacementOperations(transaction, permitted, eligible,options),
     ...createFleetEvidenceOperations(transaction, permitted),
     reviewPacket: (actor: FleetActor, runId: string) => {
       const bound = { ...actor, runId };
@@ -951,10 +957,11 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
         async (state, client) => {
           const body = CreateFleetRunSchema.parse(input);
           const fleet = state.fleets.find((f) => f.id === body.fleetId);
-          const grant = grantFor(state, actor);
+          const ownUnplanned=!!options.billingV2Create?.ownUnplanned&&options.originalWorkOperationId===body.operationId&&body.driverUserId===actor.userId&&!!body.detailSelection;
+          const grant = ownUnplanned?companyGrantFor(state,actor):grantFor(state, actor);
           if (
             !fleet ||
-            !mayPerformFleetAction(
+            !(ownUnplanned&&grant?.roles.includes("driver")&&grant.fleetIds.includes(body.fleetId))&&!mayPerformFleetAction(
               actor.userId,
               grant,
               { companyId: actor.companyId, fleetId: body.fleetId },
@@ -981,7 +988,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           const siteIds = [...new Set(body.stops.map((s) => s.siteId))];
           if (
             !siteIds.every(
-              (id) => fleet.siteIds.includes(id) && grant!.siteIds.includes(id),
+              (id) => fleet.siteIds.includes(id) && (ownUnplanned||grant!.siteIds.includes(id)),
             ) ||
             new Set(body.stops.map((s) => s.id)).size !== body.stops.length ||
             body.stops.some((s, i) => s.sequence !== i)
@@ -998,6 +1005,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             ...runFields,
             id: randomUUID(),
             companyId: actor.companyId,
+            ...(ownUnplanned?{workOrigin:"driver_unplanned" as const}:{}),
             operationalProfile: fleet.operationalProfile
               ? structuredClone(fleet.operationalProfile)
               : undefined,
@@ -1029,7 +1037,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
               throw new FleetError("fleet.work_command_required", 409);
             await attachFleetBillingV2(
               { client, actor, state }, run,
-              options.billingV2Create.intent, options.billingV2Create.capture,
+              options.billingV2Create.intent, options.billingV2Create.capture, ownUnplanned,
             );
           } else {
             await attachFleetBilling(client, actor, state, run, body.billing);
@@ -1062,6 +1070,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             } : {}),
             details: {
               fleetCompliance,
+              ...(ownUnplanned?{unplannedOwnWork:true,officeReviewRequired:true}:{}),
               ...(options.billingV2Create ? { originalCapture: {
                 capturedAt: options.billingV2Create.capture.workAt,
                 timeZone: options.billingV2Create.timeZone,

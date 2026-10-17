@@ -101,6 +101,24 @@ export async function executeFleetWorkCommand(
     };
   };
   switch (command.kind) {
+    case "monitoring.save":await service.saveFleetTrigger({...actor},command.payload);return result();
+    case "replacement.propose":case "replacement.action":case "cargo.propose":case "cargo.action": {
+      const p=command.payload,target=await activity(p.activity),ticket=await mapped(p.ticket),run=state.runs.find(row=>row.id===target.run.id)!;
+      if(target.reference.version!==run.version||run.linkedTicketId!==ticket.id||!run.resourceAssignment||!fleetDetailSnapshotIdentityMatches(run.resourceAssignment.snapshot,p.baseAssignment))throw new FleetError("fleet.work_assignment_changed",409);
+      if(command.kind==="replacement.propose")await service.proposeReplacement({...actor},run.id,command.payload.input);
+      else if(command.kind==="replacement.action")await service.replacementAction({...actor},run.id,command.payload.replacementId,command.payload.input);
+      else if(command.kind==="cargo.propose"){
+        const recipient=await activity(command.payload.target),recipientTicket=await mapped(command.payload.targetTicket);
+        if(command.payload.input.sourceRunId!==run.id||command.payload.input.targetRunId!==recipient.run.id||recipient.run.linkedTicketId!==recipientTicket.id||command.payload.input.targetExpectedVersion!==recipient.run.version)throw new FleetError("fleet.version_conflict",409);
+        await service.prepareCargoTransfer({...actor},command.payload.input);
+      }else{
+        const transfer=await service.cargoTransfer({...actor},command.payload.transferId);
+        if(transfer.sourceRunId!==run.id&&transfer.targetRunId!==run.id)throw new FleetError("fleet.action_forbidden",403);
+        await service.cargoAction({...actor},command.payload.transferId,command.payload.input);
+      }
+      await client.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','fleet_work','original-capture-retained','fleet-work-capture',$3,$4::jsonb,'completed')",[actor.userId,actor.companyId,command.operationId,JSON.stringify({version:2,activityId:run.id,kind:command.kind,capturedAt:command.capturedAt,timeZone:command.timeZone,receivedAt:new Date().toISOString(),source:"user_report"})]);
+      return result([{type:"canonical",kind:"activity",id:run.id,version:run.version}]);
+    }
     case "activity.reconcile":return resolveFleetReconciliation(context,command,(adopted)=>executeFleetWorkCommand(context,adopted,options));
     case "price.resolve": {
       const target=await activity(command.payload.activity),ticket=await mapped(command.payload.ticket);
@@ -163,12 +181,13 @@ export async function executeFleetWorkCommand(
       if (p.billing.billingSiteId === null || p.billing.serviceId === null)
         throw new FleetError("fleet.price_context_unresolved");
       const grant = state.grants.find(g => g.userId === actor.userId);
+      const ownUnplanned=snapshot.detail.driverUserId===actor.userId&&!!grant?.roles.includes("driver");
       const groups = state.fleets.filter(group =>
         grant?.fleetIds.includes(group.id) &&
         snapshot.detail.accessGroupIds.includes(group.id) &&
         (!orderGroups || orderGroups.includes(group.id)) &&
         group.siteIds.includes(p.billing.billingSiteId ?? 0) &&
-        grant.siteIds.includes(p.billing.billingSiteId ?? 0),
+        (ownUnplanned||grant.siteIds.includes(p.billing.billingSiteId ?? 0)),
       ).sort((a, b) => a.id.localeCompare(b.id));
       if (!groups.length) throw new FleetError("fleet.dispatch_required", 403);
       const billing = p.billing.choice === "new_ticket" ? p.billing : {
@@ -200,7 +219,7 @@ export async function executeFleetWorkCommand(
         ...options,
         originalWorkOperationId: command.operationId,
         afterCommit: effect => { afterCommit.push(effect); },
-        billingV2Create: { operationId: command.operationId, timeZone: command.timeZone, intent: billing,
+        billingV2Create: { ownUnplanned, operationId: command.operationId, timeZone: command.timeZone, intent: billing,
           capture: { workAt: command.capturedAt, pricingIntent: p.pricingIntent } },
       });
       const run = await creator.create({ ...actor }, {

@@ -13,6 +13,7 @@ import {
   type FleetRoutePlan,
   type FleetDestination,
   type FleetRunBillingInputSchema,
+  type FleetWorkSession,
 } from "@workspace/api-zod";
 import type { z } from "zod/v4";
 import { apiFetch } from "@/lib/api";
@@ -85,7 +86,9 @@ export default function FleetRunPlan({
   siteIds,
   disabled,
   onChange,
+  workSession,
 }: {
+  workSession?:FleetWorkSession|null;
   groupId: string;
   companyId: number;
   siteIds: readonly number[];
@@ -128,8 +131,8 @@ export default function FleetRunPlan({
     setLoading(true);
     setError("");
     void Promise.all([
-      apiFetch<unknown>("/api/fleet/details", {}, scope.current),
-      apiFetch<unknown>("/api/fleet/commercial", {}, scope.current),
+      workSession?workSession.detailChoices():apiFetch<unknown>("/api/fleet/details", {}, scope.current),
+      workSession?workSession.directory():apiFetch<unknown>("/api/fleet/commercial", {}, scope.current),
     ])
       .then(([rawDetails, rawDirectory]) => {
         if (!current() || request !== generation.current) return;
@@ -203,7 +206,7 @@ export default function FleetRunPlan({
     if (!expected) return;
     try {
       const value = FleetDetailSnapshotSchema.parse(
-        await apiFetch<unknown>(`/api/fleet/details/${id}`, {}, scope.current),
+        workSession?await workSession.recoveryDetail(id):await apiFetch<unknown>(`/api/fleet/details/${id}`, {}, scope.current),
       );
       if (!current() || request !== detailRequest.current) return;
       if (
@@ -226,7 +229,7 @@ export default function FleetRunPlan({
     const request = generation.current;
     try {
       const page = FleetDetailPageSchema.parse(
-        await apiFetch<unknown>(
+        workSession?await workSession.detailChoices(after):await apiFetch<unknown>(
           `/api/fleet/details?after=${encodeURIComponent(after)}`,
           {},
           scope.current,
@@ -258,6 +261,7 @@ export default function FleetRunPlan({
       if (current()) setLoading(false);
     }
   }
+  useEffect(()=>{if(workSession&&snapshot&&Number(billingSite)>0)void workSession.prepareSelection(snapshot.detail.id,Number(billingSite),null).catch(()=>undefined);},[workSession,snapshot,billingSite]);
   const now = Date.now(),
     options =
       details?.details
@@ -351,6 +355,7 @@ export default function FleetRunPlan({
       </TogglePillButton>
       {useOrder ? (
         <FleetRunOrderChoice
+          workSession={workSession}
           key={`${companyId}:${groupId}`}
           companyId={companyId}
           groupId={groupId}

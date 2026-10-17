@@ -1,3 +1,4 @@
+import FleetMonitoring from "@/components/FleetMonitoring";
 import FleetRetainedEvidence from "@/components/FleetRetainedEvidence";
 import FleetCommercialWork from "@/components/FleetCommercialWork";
 import FleetReconciliation from "@/components/FleetReconciliation";
@@ -104,6 +105,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     const work = useFleetWork(verifiedAccount, data?.identity === identity ? data.overview.runs : []);
     useEffect(()=>{let alive=true;const value=data?.identity===identity?data:null,account=value?.overview.accountScope;if(work.session&&value&&account)void saveFleetWorkspaceCache({userId:account.userId,companyId:account.companyId,membershipId:account.membershipId},{overview:value.overview,resources:value.resources},()=>alive&&identityRef.current===identity).catch(e=>{if(alive&&identityRef.current===identity)setError(e instanceof Error?e.message:"Fleet device cache unavailable");});return()=>{alive=false;};},[work.session,data,identity]);
     const scope: FleetOfflineScope | null = user?.id && companyId ? { userId: user.id, companyId, membershipId: activeMembershipId, ...(verifiedAccount?.userId === user.id && verifiedAccount.companyId === companyId && verifiedAccount.membershipId === activeMembershipId ? {sessionVersion:verifiedAccount.sessionVersion}: {}) } : null;
+    useEffect(()=>{if(work.session)setUseSavedPlan(true);},[work.session]);
     async function readQueue() { if (scope) {
         const document = await nativeFleetOffline.read(scope);
         if (identityRef.current === identity)
@@ -324,6 +326,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
             setError(e instanceof Error ? e.message : "Action unavailable.");
         }
     }
+    useEffect(()=>{if(work.session&&nativePlan&&billing)void work.session.prepareSelection(nativePlan.detail.detail.id,nativePlan.billingSiteId,billing.mode==="existing_ticket"?billing.ticketId:null).catch(()=>undefined);},[work.session,nativePlan,billing]);
     function createRun() {
         if (!billing) { setError(copy("Choose new ticket or an eligible open ticket, AFE and work date.")); return; }
         if(useSavedPlan){
@@ -444,7 +447,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     </View>}
     {overview.fleets.length>1&&<View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><TogglePillButton compactOnTablet solid={!fleetFilter} onPress={()=>setFleetFilter(null)}>{copy("All resource pools")}</TogglePillButton>{overview.fleets.map(fleet=><TogglePillButton compactOnTablet key={fleet.id} solid={fleetFilter===fleet.id} onPress={()=>setFleetFilter(fleet.id)}>{fleet.name}</TogglePillButton>)}</View>}
     {overview.enabled&&!overview.fleets.length&&overview.capabilities.canSetup&&mode!=="setup"&&mode!=="map"&&mode!=="log"&&<View style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:2,borderRadius:16,padding:20,gap:12}}><Feather name="truck" size={32} color={colors.primary}/><Text style={[textStyle,{fontSize:20,fontWeight:"700"}]}>{copy("Your Fleet workspace is ready")}</Text><Text style={textStyle}>{copy("Set up your vehicles and Fleet staff to begin.")}</Text><TogglePillButton compactOnTablet solid onPress={()=>setMode("setup")}>{copy("Set up Fleet")}</TogglePillButton></View>}
-    {overview.capabilities.canDispatch&&mode==="desk"&&overview.fleets.length>0&&<TogglePillButton compactOnTablet solid onPress={()=>setMode("dispatch")}>{copy("New run")}</TogglePillButton>}
+    {(overview.capabilities.canDispatch||work.session&&overview.capabilities.canDrive)&&["desk","my-day"].includes(mode)&&overview.fleets.length>0&&<TogglePillButton compactOnTablet solid onPress={()=>setMode("dispatch")}>{copy("New run")}</TogglePillButton>}
     </>}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Inventory and Details")}</TogglePillButton>}
@@ -485,7 +488,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         <TogglePillButton compactOnTablet onPress={()=>setDetailsOpen(!detailsOpen)}>{copy(detailsOpen?"Hide run details":"Details & evidence")}</TogglePillButton>
         {detailsOpen&&<View style={{gap:12}}>
         {!cachedAt && user && (run.driverUserId === user.id || overview.capabilities.canDispatch) && <FleetDriverAvailability key={`${identity}:${run.id}:availability`} driverUserId={run.driverUserId} actorUserId={user.id} companyId={overview.companyId} runId={run.id}/>}
-        <FleetDraftEditor key={`${identity}:${run.id}`} run={run} fleet={overview.fleets.find(fleet=>fleet.id===run.fleetId)} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onSaved={()=>setRevision(n=>n+1)}/>
+        <FleetDraftEditor workSession={work.session} key={`${identity}:${run.id}`} run={run} fleet={overview.fleets.find(fleet=>fleet.id===run.fleetId)} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onSaved={()=>setRevision(n=>n+1)}/>
         {run.schedule && <Text style={textStyle}>{copy("Planned schedule")}: {run.schedule.plannedStartAt} → {run.schedule.plannedEndAt} · {run.schedule.timezone} · {copy("Informational hours")}</Text>}
         {run.operationalProfile && <Text style={textStyle}>{copy("Saved operational profile")}: {run.operationalProfile.name}</Text>}
         <Text style={textStyle}>{fleetRunLabel(run, copy)}{copy(" \u00B7 revision ")}{run.version}</Text>
@@ -499,8 +502,9 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         {run.events.map(event => <Text key={event.id} style={textStyle}>{event.type}{copy(" \u00B7 captured ")}{event.capturedAt ?? copy("not separately supplied")}{copy(" \u00B7 accepted ")}{event.recordedAt}</Text>)}
         {run.driverUserId === user?.id && overview.capabilities.canDrive && verifiedAccount && !cachedAt && <FleetPhoneLocation key={`${identity}:${run.id}:${run.vehicleAssetId}:${run.trailerAssetId}`} run={run} account={verifiedAccount} disabled={busy || !!unresolved || pendingRun.length > 0}/>}
         {run.driverUserId === user?.id && overview.capabilities.canDrive && verifiedAccount && !cachedAt && <FleetLiveActivity key={`live:${identity}:${run.id}`} runId={run.id} active={run.status === "in_progress" && run.phase !== "paused"} disabled={busy || !!unresolved || pendingRun.length > 0} />}
-        <FleetReplacement key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
-        <FleetCargo key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        <FleetReplacement workSession={work.session} key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        <FleetCargo workSession={work.session} key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        <FleetMonitoring key={`monitoring:${identity}:${run.id}`} run={run} userId={user?.id??0} canDispatch={overview.capabilities.canDispatch} session={work.session}/>
         <FleetReviewPacket key={`${identity}:${run.id}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0}/>
         {work.session&&run.ticketReference&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>}
         {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>}
@@ -518,12 +522,12 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         </View>}
       </View>}
       </View>
-      {overview.capabilities.canDispatch && mode === "dispatch" && <View style={{ gap: 12 }}>
+      {(overview.capabilities.canDispatch||work.session&&overview.capabilities.canDrive) && mode === "dispatch" && <View style={{ gap: 12 }}>
         <Text style={[textStyle, { fontWeight: "700" }]}>{copy("Dispatch resources / new run")}</Text>
         <TextInput editable={!busy && !unresolved} accessibilityLabel={copy("Fleet run title")} placeholder={copy("Run title")} value={title} onChangeText={setTitle} style={fieldStyle}/>
         {overview.fleets.map(f => <TogglePillButton disabled={busy || !!unresolved} key={f.id} solid={fleetId === f.id} onPress={() => { setFleetId(f.id); setStopSites([]); setBilling(null); setDriver(null); setVehicle(""); setTrailer(null);setNativePlan(null); }}>{f.name}</TogglePillButton>)}
-        <TogglePillButton disabled={busy||!!unresolved||!fleetId} onPress={()=>{setUseSavedPlan(value=>!value);setNativePlan(null);setBilling(null);}}>{copy(useSavedPlan?"Use individual resources and site stops":"Use saved Detail and physical route")}</TogglePillButton>
-        {useSavedPlan&&fleet?<FleetRunPlanComposer key={`plan:${identity}:${fleetId}`} groupId={fleetId} companyId={overview.companyId} siteIds={fleet.siteIds} disabled={busy||!!unresolved||!!cachedAt} onChange={setNativePlan}/>:<View style={{gap:12}}>
+        <TogglePillButton disabled={busy||!!unresolved||!fleetId||!!work.session} onPress={()=>{setUseSavedPlan(value=>!value);setNativePlan(null);setBilling(null);}}>{copy(useSavedPlan?"Use individual resources and site stops":"Use saved Detail and physical route")}</TogglePillButton>
+        {useSavedPlan&&fleet?<FleetRunPlanComposer workSession={work.session} key={`plan:${identity}:${fleetId}`} groupId={fleetId} companyId={overview.companyId} siteIds={fleet.siteIds} disabled={busy||!!unresolved||!!cachedAt&&!work.session} onChange={setNativePlan}/>:<View style={{gap:12}}>
         {current.resources.drivers.filter(d => d.fleetIds.includes(fleetId)).map(d => <TogglePillButton disabled={busy || !!unresolved} key={d.userId} solid={driver === d.userId} onPress={() => setDriver(d.userId)}>{d.name}</TogglePillButton>)}
         {current.resources.equipment.filter(e => e.dispatchable && fleet?.equipmentAssetIds.includes(e.id)).map(e => <View key={e.id} style={{ gap: 8 }}><Text style={textStyle}>{e.name}{copy(" \u00B7 ")}{copy(e.category)}{copy(" \u00B7 ")}{copy(e.status)}</Text>{["vehicle", "truck"].includes(e.category) && <TogglePillButton disabled={busy || !!unresolved} solid={vehicle === e.id} onPress={() => setVehicle(e.id)}>{copy("Use as truck")}</TogglePillButton>}{e.category === "trailer" && <TogglePillButton disabled={busy || !!unresolved} solid={trailer === e.id} onPress={() => setTrailer(e.id)}>{copy("Use as trailer")}</TogglePillButton>}</View>)}
         <TogglePillButton disabled={busy || !!unresolved} onPress={() => setTrailer(null)}>{copy("No trailer")}</TogglePillButton>

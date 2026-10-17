@@ -94,3 +94,11 @@ it("resolves missing pricing only through an explicit original office command wi
  expect(commands.safeParse({...base(),kind:"price.resolve",payload}).success).toBe(true);
  expect(commands.safeParse({...base(),kind:"price.resolve",payload:{...payload,unitRate:"0"}}).success).toBe(false);
 });
+it("requires original replacement and cargo commands without granting a dispatcher the driver's acceptance",()=>{
+ const commands=schema('FleetWorkCommandSchema'),baseAssignment=creation().payload.detailSnapshot,payload={activity:ref('activity',3,'canonical'),ticket:{type:'canonical',kind:'ticket',id:123,version:1},baseAssignment,input:{operationId:id(2),expectedVersion:1,vehicleAssetId:id(80),trailerAssetId:null,reason:'Reported damage'}};
+ expect(commands.safeParse({...base(),kind:'replacement.propose',payload}).success).toBe(true);
+ const acceptance={...payload,replacementId:id(81),input:{operationId:id(2),expectedVersion:1,runExpectedVersion:1,action:'accept',notes:'Original assigned driver reports acceptance'}};
+ expect(commands.safeParse({...base(),kind:'replacement.action',payload:acceptance}).success).toBe(true);
+ expect(commands.safeParse({...base(),scope:{...scope,userId:99},kind:'replacement.action',payload:acceptance}).success).toBe(false);
+ expect(commands.safeParse({...base(),kind:'replacement.action',payload:{...acceptance,input:{...acceptance.input,operationId:id(83)}}}).success).toBe(false);
+});

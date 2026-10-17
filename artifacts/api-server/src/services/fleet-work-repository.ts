@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID,createHash } from "node:crypto";
 import {retainFleetWorkOriginal} from "./fleet-work-originals";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod/v4";
@@ -310,5 +310,19 @@ export function createDatabaseFleetWorkRepository(options: {
     const original=provisionSchema.parse(row.tool_output),renewedAt=now().toISOString(),saved=provisionSchema.parse({...original,renewedAt,expiresAt:new Date(Date.parse(renewedAt)+7*86400000).toISOString()});
     await append(context.client,actor,"fleet-work-provision",scope.provisioningId,saved);return saved;
   });
-  return { ...repository, provision, renewProvision, withScope, readScope };
+  const assistantProvision=(actor:FleetActor)=>base.transaction(actor.companyId,actor.userId,async(state,client)=>{
+    if(actor.readOnly||!state.enabled||!(actor.membershipRole==="admin"||state.grants.some(row=>row.userId===actor.userId&&row.roles.length)))throw new FleetError("fleet.grant_required",403);
+    const identity=(kind:string)=>{const hex=createHash("sha256").update(JSON.stringify(["fleet-assistant-v2",kind,actor.companyId,actor.userId,actor.activeMembershipId,actor.sv])).digest("hex");return `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-8${hex.slice(17,20)}-${hex.slice(20,32)}`;};
+    const deviceId=identity("channel"),provisioningId=identity("provision");
+    await client.query("INSERT INTO work_hub_devices(id,user_id,owner_org_type,owner_org_id,friendly_name,device_class,capabilities) VALUES($1,$2,'vendor',$3,'Fleet assistant command channel','other','{}'::jsonb) ON CONFLICT(id) DO NOTHING",[deviceId,actor.userId,actor.companyId]);
+    await requireDevice(client,actor,deviceId);
+    const scope=FleetWorkScopeSchema.parse({owner:{type:"vendor",id:actor.companyId},userId:actor.userId,membershipId:actor.activeMembershipId,sessionVersion:actor.sv,deviceId,provisioningId});
+    const row=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-provision' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,provisioningId])).rows[0];
+    const saved=row?provisionSchema.parse(row.tool_output):null,issuedAt=now().toISOString();
+    if(saved&&(!isDeepStrictEqual(saved.scope,scope)||saved.revokedAt))throw new FleetError("fleet.work_scope_changed",403);
+    if(saved&&Date.parse(saved.expiresAt)>now().getTime())return saved;
+    const value=provisionSchema.parse(saved?{...saved,renewedAt:issuedAt,expiresAt:new Date(now().getTime()+7*86400000).toISOString()}:{version:2,scope,appVersion:"fleet-assistant-v2",issuedAt,expiresAt:new Date(now().getTime()+7*86400000).toISOString(),revokedAt:null});
+    await append(client,actor,"fleet-work-provision",provisioningId,value);return value;
+  },actor);
+  return { ...repository, provision, renewProvision, assistantProvision, withScope, readScope };
 }

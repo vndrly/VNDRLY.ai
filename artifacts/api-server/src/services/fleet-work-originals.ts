@@ -5,11 +5,11 @@ import {FleetWorkCommandSchema,serializeFleetWorkCommand,type FleetWorkCommand} 
 import {getObjectStore,type ObjectStore} from "../lib/objectStore";
 import {FleetError} from "./fleet-repository";
 
-const recordSchema=z.object({version:z.literal(2),operationId:z.uuid(),companyId:z.number().int().positive(),owner:z.string(),objectPath:z.string(),fingerprint:z.string().regex(/^[a-f0-9]{64}$/),byteSize:z.number().int().positive()}).strict();
+const recordSchema=z.object({version:z.literal(2),operationId:z.uuid(),companyId:z.number().int().positive(),owner:z.string(),objectPath:z.string(),fingerprint:z.string().regex(/^[a-f0-9]{64}$/),requestFingerprint:z.string().regex(/^[a-f0-9]{64}$/).optional(),byteSize:z.number().int().positive()}).strict();
 /** Full originals are private documents, never ordinary audit/tool output. */
-export async function retainFleetWorkOriginal(client:PoolClient,command:FleetWorkCommand,store:ObjectStore=getObjectStore()){
+export async function retainFleetWorkOriginal(client:PoolClient,command:FleetWorkCommand,store:ObjectStore=getObjectStore(),requestFingerprint?:string){
  const body=Buffer.from(serializeFleetWorkCommand(command)),fingerprint=createHash("sha256").update(body).digest("hex"),companyId=command.scope.owner.id;
- const record=recordSchema.parse({version:2,operationId:command.operationId,companyId,owner:`fleet-work-original:${companyId}:${command.scope.userId}:${command.scope.provisioningId}`,objectPath:`/objects/fleet-work-originals/${companyId}/${command.scope.provisioningId}/${command.operationId}-${fingerprint}.json`,fingerprint,byteSize:body.length});
+ const record=recordSchema.parse({requestFingerprint,version:2,operationId:command.operationId,companyId,owner:`fleet-work-original:${companyId}:${command.scope.userId}:${command.scope.provisioningId}`,objectPath:`/objects/fleet-work-originals/${companyId}/${command.scope.provisioningId}/${command.operationId}-${fingerprint}.json`,fingerprint,byteSize:body.length});
  const existing=await store.getObject(record.objectPath);
  if(existing&&(existing.acl?.owner!==record.owner||existing.acl.visibility!=="private"||existing.acl.purpose!=="fleet-work-private"||!existing.body.equals(body)))throw new FleetError("fleet.original_identity_conflict",409);
  if(!existing)await store.putObject(record.objectPath,"application/json",body,{owner:record.owner,visibility:"private",purpose:"fleet-work-private"});
@@ -26,5 +26,5 @@ export async function readFleetWorkOriginal(client:PoolClient,companyId:number,o
  if(record.companyId!==companyId||record.operationId!==operationId||!object||object.size!==record.byteSize||object.acl?.owner!==record.owner||object.acl.visibility!=="private"||object.acl.purpose!=="fleet-work-private"||createHash("sha256").update(object.body).digest("hex")!==record.fingerprint)throw new FleetError("fleet.original_storage_unavailable",503);
  const command=FleetWorkCommandSchema.parse(JSON.parse(object.body.toString("utf8")));
  if(command.scope.owner.type!=="vendor"||command.scope.owner.id!==companyId||command.scope.userId!==row.user_id||command.operationId!==operationId||createHash("sha256").update(serializeFleetWorkCommand(command)).digest("hex")!==record.fingerprint)throw new FleetError("fleet.original_storage_unavailable",503);
- return {command,fingerprint:record.fingerprint};
+ return {command,fingerprint:record.fingerprint,requestFingerprint:record.requestFingerprint};
 }

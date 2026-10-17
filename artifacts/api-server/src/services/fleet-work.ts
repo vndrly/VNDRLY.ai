@@ -169,6 +169,10 @@ export function createFleetWorkService(
     const fingerprint = fleetWorkFingerprint(command),
       effects: Array<() => Promise<unknown>> = [];
     const transactionalActor = { ...actor };
+    if(command.kind==="replacement.propose"||command.kind==="replacement.action"||command.kind==="cargo.propose"||command.kind==="cargo.action"){
+      transactionalActor.schedulingDriverUserIds=[command.payload.baseAssignment.detail.driverUserId];
+      if(command.payload.activity.type==="canonical"&&typeof command.payload.activity.id==="string"){transactionalActor.runId=command.payload.activity.id;transactionalActor.schedulingRunId=command.payload.activity.id;}
+    }
     if(command.kind==="activity.reconcile"&&command.payload.recoveryDriverUserId)transactionalActor.schedulingDriverUserIds=[command.payload.recoveryDriverUserId];
     if (command.kind === "detail.save")
       transactionalActor.schedulingDriverUserIds = [

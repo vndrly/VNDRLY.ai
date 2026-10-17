@@ -85,3 +85,5 @@ export * from "./fleet-work-evidence-client";
 export * from "./fleet-work-browser-journal";
 export * from "./fleet-commercial-review";
 export * from "./fleet-reconciliation";
+
+export * from "./fleet-monitoring";

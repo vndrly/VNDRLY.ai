@@ -1,3 +1,4 @@
+import {currentFleetPositions,fleetCurrentPhoneSpeed} from "@workspace/api-zod";
 import React, { useState } from "react";
 import { Text, View, Pressable, useWindowDimensions } from "react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -164,10 +165,7 @@ function FleetMapPanel({
           .filter((id): id is number => id !== null),
       ),
     ];
-  const positions = [...new Map(view.observations.slice().reverse().map(point => {
-    const run = view.runs.find(item => item.id === point.runId)!;
-    return [point.vehicleAssetId ?? run.vehicleAssetId, point] as const;
-  })).values()].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt));
+  const positions = currentFleetPositions(view.observations.map(point=>({...point,vehicleAssetId:point.vehicleAssetId??view.runs.find(run=>run.id===point.runId)?.vehicleAssetId??point.runId}))).sort((a,b)=>Date.parse(b.recordedAt)-Date.parse(a.recordedAt));
   const shownPositions = positions.filter(point => includeOld || point.freshness === "recent");
   const oldCount = positions.filter(point => point.freshness !== "recent").length;
   const pins = [

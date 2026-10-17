@@ -146,6 +146,8 @@ export const FleetRunSchema = z
     resourceAssignment: FleetResourceAssignmentSchema.optional(),
     billing: FleetRunBillingSnapshotSchema.optional(),
     billingV2:FleetRunBillingV2Schema.optional(),
+    workOrigin:z.enum(["dispatch","driver_unplanned"]).optional(),
+    assignmentRecordedAt:z.iso.datetime().optional(),
     ticketReference:z.object({id:z.number().int().positive(),version:z.number().int().positive()}).strict().optional(),
     commercial: FleetRunCommercialSchema.optional(),
     activeReplacement: FleetReplacementMarkerSchema.optional(),
@@ -380,6 +382,9 @@ export type FleetOverview = {
     recordedAt: string;
     source: "driver_phone";
     freshness: "recent" | "stale" | "paused" | "unavailable";
+    speedMetersPerSecond?:number|null;
+    speedAccuracyMetersPerSecond?:number|null;
+    headingDegrees?:number|null;
   }[];
   unavailableIntegrations: string[];
   generatedAt: string;

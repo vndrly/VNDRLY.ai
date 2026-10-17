@@ -66,7 +66,8 @@ function managingCompanyLocations(state:FleetState,actor:FleetActor){
  return state.enabled&&(actor.membershipRole==="admin"||state.grants.some(grant=>grant.userId===actor.userId&&grant.roles.some(role=>["dispatcher","fleet_manager"].includes(role))&&grant.fleetIds.some(id=>state.fleets.some(group=>group.id===id))));
 }
 async function sites(c: PoolClient, a: FleetActor, state: FleetState) {
-  const ids = a.membershipRole === "admin" ? null : (a.currentSiteIds ?? []);
+  const grant=state.grants.find(row=>row.userId===a.userId),poolSites=state.enabled&&grant?.roles.includes("driver")?state.fleets.filter(row=>grant.fleetIds.includes(row.id)).flatMap(row=>row.siteIds):[];
+  const ids = a.membershipRole === "admin" ? null : [...new Set([...(a.currentSiteIds??[]),...poolSites])];
   return readFleetAuthoritySites(c, a.companyId, {
     ...(ids ? { siteIds: ids } : {}),
     activeOnly: true,

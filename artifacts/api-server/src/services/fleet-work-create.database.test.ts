@@ -1354,3 +1354,45 @@ it("office recovers a closed-ticket creation onto a new ticket and the original 
  expect((await f.work.apply(f.actor,original)).status).toBe("duplicate");const originalStored=(await pool.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-operation' AND target_id=$2",[f.vendor,original.operationId])).rows;expect(originalStored).toHaveLength(1);expect(originalStored[0].tool_output.status).toBe("needs_reconciliation");
  const run=await createFleetService(databaseFleetRepository).detail({...f.actor},String(receipt.canonicalReferences.find(ref=>ref.kind==="activity")!.id));expect(run.status).toBe("draft");expect(run.inspections).toEqual([]);expect(run.events.some(event=>event.type==="started")).toBe(false);
 });
+
+it("assistant retains one confirmed original across response loss and never pretends to start the driver",async()=>{
+ const f=await fixture();if(f.command.kind!=="activity.create")throw Error("Fixture");
+ const {applyFleetAssistantIntent}=await import("./fleet-work-assistant");const {fleetRouteOperationalStops}=await import("@workspace/api-zod");
+ const p=f.command.payload,operationId=randomUUID(),input={kind:"activity.create",operationId,fleetId:p.detailSnapshot.detail.accessGroupIds[0],title:p.title,driverUserId:p.detailSnapshot.detail.driverUserId,vehicleAssetId:p.detailSnapshot.detail.vehicleAssetId,trailerAssetId:p.detailSnapshot.rigPackage?.components.find(row=>row.role==="trailer")?.assetId??null,stops:fleetRouteOperationalStops(p.route,p.billing.billingSiteId!,randomUUID()),schedule:null,routePlan:p.route,detailSelection:{version:2,detailId:p.detailSnapshot.detail.id,detailVersion:p.detailSnapshot.detail.version,timeZone:f.command.timeZone,returnPolicy:"delivery_only"},billing:{mode:"new_ticket",workTypeId:p.billing.serviceId,afeNumber:p.billing.afeNumber,workDate:p.billing.workDate}};
+ const first=await applyFleetAssistantIntent(f.actor,input);expect(first.receipt.status).toBe("applied");expect(first.physicalWorkStarted).toBe(false);if(first.receipt.status!=="applied")throw Error("Expected applied");
+ const second=await applyFleetAssistantIntent(f.actor,JSON.parse(JSON.stringify(input)));expect(second.receipt.status).toBe("duplicate");if(second.receipt.status!=="duplicate")throw Error("Expected duplicate");expect(second.receipt.canonicalReferences).toEqual(first.receipt.canonicalReferences);
+ await expect(applyFleetAssistantIntent(f.actor,{...input,title:"Different confirmed request"})).rejects.toMatchObject({code:"fleet.operation_conflict"});
+ const id=first.receipt.canonicalReferences.find(row=>row.kind==="activity")!.id,run=await createFleetService(databaseFleetRepository).detail({...f.actor},String(id));expect(run.status).toBe("draft");expect(run.inspections).toHaveLength(0);
+ const channel=(await pool.query("SELECT device_class,capabilities FROM work_hub_devices WHERE user_id=$1 AND friendly_name='Fleet assistant command channel'",[f.actor.userId])).rows;expect(channel).toEqual([{device_class:"other",capabilities:{}}]);
+ await expect(applyFleetAssistantIntent(f.actor,{kind:"activity.action",operationId:randomUUID(),runId:run.id,input:{expectedVersion:run.version,action:"start",source:"user_report"}})).rejects.toBeDefined();
+});
+
+it("captures own unplanned ticketed work from the company driver pool without personal site grants",async()=>{
+ const f=await fixture(),driverActor={...f.actor,userId:f.driver.id,role:"field_employee",membershipRole:"field_employee",vendorPeopleId:f.driverPerson.id,sv:f.driver.sessionVersion,activeMembershipId:f.driverMembership.id};
+ const provision=await f.repository.assistantProvision(driverActor),command=FleetWorkCommandSchema.parse({...f.command,scope:provision.scope});
+ const receipt=await f.work.apply(driverActor,command);expect(receipt.status).toBe("applied");if(receipt.status!=="applied")throw Error("Expected own capture");
+ const run=await createFleetService(databaseFleetRepository).detail({...driverActor},String(receipt.canonicalReferences.find(row=>row.kind==="activity")!.id));expect(run.driverUserId).toBe(driverActor.userId);expect(run.status).toBe("draft");expect(run.events[0].details).toMatchObject({unplannedOwnWork:true,officeReviewRequired:true});expect(run.billingV2).toBeUndefined();
+ expect((await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[f.vendor])).rows[0].fleet_ops_state.grants.find((row:any)=>row.userId===driverActor.userId).siteIds).toEqual([]);
+});
+
+it("retains ancillary replacement through one original receipt and independent point-loaded proposal readback",async()=>{
+ const f=await fixture(),receipt=await f.work.apply(f.actor,f.command);if(receipt.status!=="applied")throw Error("Expected creation");
+ const service=createFleetService(databaseFleetRepository),reference=receipt.canonicalReferences.find(row=>row.kind==="activity")!,ticket=receipt.canonicalReferences.find(row=>row.kind==="ticket")!,run=await service.detail({...f.actor},String(reference.id));
+ const paused=FleetRunSchema.parse({...run,status:"in_progress",phase:"paused",pausedFromPhase:"driving"});
+ await pool.query("UPDATE assets SET status='checked_out',current_holder_user_id=$2 WHERE id=$1",[run.vehicleAssetId,f.driver.id]);
+ await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','synthetic_paused_fixture','snapshot','fleet-run',$3,$4::jsonb,'completed')",[f.actor.userId,f.vendor,run.id,JSON.stringify(paused)]);
+ const operationId=randomUUID(),input={operationId,expectedVersion:run.version,vehicleAssetId:run.vehicleAssetId,trailerAssetId:null,detailSelection:{version:2,detailId:run.resourceAssignment!.snapshot.detail.id,detailVersion:run.resourceAssignment!.snapshot.detail.version,timeZone:"America/Chicago",returnPolicy:run.resourceAssignment!.returnPolicy},reason:"Synthetic planned equipment review"};
+ await expect(service.proposeReplacement({...f.actor},run.id,input)).rejects.toMatchObject({code:"fleet.work_command_required",status:409});
+ const command=FleetWorkCommandSchema.parse({...f.command,kind:"replacement.propose",operationId,payload:{activity:reference,ticket,baseAssignment:run.resourceAssignment!.snapshot,input}}),saved=await f.work.apply(f.actor,command);expect(saved.status).toBe("applied");expect((await f.work.apply(f.actor,command)).status).toBe("duplicate");
+ const read=await service.replacements({...f.actor},run.id);expect(read.replacements).toHaveLength(1);expect(read.replacements[0]).toMatchObject({reason:input.reason,physicalExchangeVerified:false,inventoryCustodyChanged:false,events:[{operationId}]});
+});
+
+it("persists authorized monitoring rules, source-based cooldown and truthful assignment delivery",async()=>{
+ const f=await fixture(),created=await f.work.apply(f.actor,f.command);if(created.status!=="applied")throw Error("Expected creation");const reference=created.canonicalReferences.find(row=>row.kind==="activity")!,ticket=created.canonicalReferences.find(row=>row.kind==="ticket")!,service=createFleetService(databaseFleetRepository,{monitoringNow:()=>new Date(Date.now()+120000)}),run=await service.detail({...f.actor},String(reference.id));
+ const operationId=randomUUID(),dispatch=FleetWorkCommandSchema.parse({...f.command,kind:"activity.action",operationId,payload:{activity:reference,ticket,baseAssignment:run.resourceAssignment!.snapshot,action:{operationId,expectedVersion:run.version,action:"dispatch"}}});expect((await f.work.apply(f.actor,dispatch)).status).toBe("applied");
+ const rule={id:randomUUID(),version:1,fleetId:run.fleetId,kind:"no_ack",thresholdMinutes:1,cooldownMinutes:30,recipientUserIds:[f.actor.userId],enabled:true};await service.saveFleetTrigger({...f.actor},{operationId:randomUUID(),expectedVersion:0,rule});
+ expect((await service.readFleetMonitoring({...f.actor})).rules).toEqual([rule]);
+ expect((await service.evaluateFleetRunTriggers({...f.actor},run.id)).events).toHaveLength(1);expect((await service.evaluateFleetRunTriggers({...f.actor},run.id)).events).toHaveLength(0);
+ const delivery=await service.readFleetAssignmentDelivery({...f.actor},run.id);expect(delivery.committedAt).not.toBeNull();expect(delivery.acknowledgedAt).toBeNull();expect(delivery.physicalDepartureVerified).toBe(false);expect(delivery.channels.some(row=>row.channel==="sms"&&row.state==="delivered")).toBe(false);
+ await expect(service.saveFleetTrigger({...f.actor},{operationId:randomUUID(),expectedVersion:1,rule:{...rule,version:2,recipientUserIds:[99999999]}})).rejects.toMatchObject({code:"fleet.monitoring_recipient_forbidden"});
+});

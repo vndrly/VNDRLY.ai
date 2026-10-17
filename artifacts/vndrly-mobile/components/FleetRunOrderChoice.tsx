@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import {
   FleetRunOrderPageSchema,
   FleetRunOrderSchema,
-  type FleetRunOrder,
+  type FleetRunOrder,type FleetWorkSession,
 } from "@workspace/api-zod";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
@@ -18,7 +18,9 @@ export default function FleetRunOrderChoice({
   disabled,
   onChange,
   onCanManage,
+  workSession,
 }: {
+  workSession?:FleetWorkSession|null;
   companyId: number;
   groupId: string;
   disabled: boolean;
@@ -55,7 +57,7 @@ export default function FleetRunOrderChoice({
     changed.current(null);
     setLoading(true);
     setError("");
-    void apiFetch<unknown>("/api/fleet/run-orders", {}, scope.current)
+    void (workSession?workSession.runOrderChoices():apiFetch<unknown>("/api/fleet/run-orders", {}, scope.current))
       .then((raw) => {
         if (!current() || request !== generation.current) return;
         const page = FleetRunOrderPageSchema.parse(raw);
@@ -91,7 +93,7 @@ export default function FleetRunOrderChoice({
     setLoading(true);
     try {
       const order = FleetRunOrderSchema.parse(
-        await apiFetch<unknown>(
+        workSession?await workSession.runOrder(id):await apiFetch<unknown>(
           `/api/fleet/run-orders/${encodeURIComponent(id)}`,
           {},
           scope.current,
@@ -125,7 +127,7 @@ export default function FleetRunOrderChoice({
     setLoading(true);
     try {
       const page = FleetRunOrderPageSchema.parse(
-        await apiFetch<unknown>(
+        workSession?await workSession.runOrderChoices(next):await apiFetch<unknown>(
           `/api/fleet/run-orders?after=${next}`,
           {},
           scope.current,

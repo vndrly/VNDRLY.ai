@@ -48,7 +48,7 @@ export function createFleetRunOrderOperations(
     if (
       !state.enabled ||
       !grant?.roles.some((role) =>
-        ["fleet_manager", "dispatcher"].includes(role),
+        (write?["fleet_manager", "dispatcher"]:["fleet_manager","dispatcher","driver"]).includes(role),
       ) ||
       (write && actor.readOnly)
     )

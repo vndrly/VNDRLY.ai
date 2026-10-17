@@ -62,6 +62,7 @@ export function createFleetReplacementOperations(
     run: FleetRun,
     resourceSnapshot?: FleetDetailSnapshot,
   ) => Promise<void>,
+  options:{originalWorkOperationId?:string}={},
 ) {
   const hash = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -227,6 +228,7 @@ export function createFleetReplacementOperations(
         const run = runFor(state, bound, runId);
         if (!permitted(state, bound, run, "dispatch"))
           throw new FleetError("fleet.action_forbidden", 403);
+        if(run.billingV2&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         const fingerprint = hash({ runId, ...body }),
           saved = await replay(client, bound, body.operationId, fingerprint);
         if (saved) return saved;
@@ -328,6 +330,7 @@ export function createFleetReplacementOperations(
             : bound.userId === run.driverUserId &&
               permitted(state, bound, run, "perform_run");
         if (!authorized) throw new FleetError("fleet.action_forbidden", 403);
+        if(run.billingV2&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         const fingerprint = hash({ runId, id, ...body }),
           saved = await replay(client, bound, body.operationId, fingerprint);
         if (saved) return saved;

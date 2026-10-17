@@ -8,8 +8,9 @@ import {apiFetch} from "@/lib/api";
 import {useFleetCopy} from "@/lib/fleet-copy";
 import TogglePillButton from "@/components/TogglePillButton";
 import FleetRouteFields from "./FleetRouteFields";
+import type {FleetWorkSession} from "@workspace/api-zod";
 
-export default function FleetDraftEditor({run,fleet,disabled,onSaved}:{run:FleetRun;fleet:z.infer<typeof FleetDefinitionSchema>|undefined;disabled:boolean;onSaved:()=>void}) {
+export default function FleetDraftEditor({run,fleet,disabled,onSaved,workSession}:{run:FleetRun;fleet:z.infer<typeof FleetDefinitionSchema>|undefined;disabled:boolean;onSaved:()=>void;workSession?:FleetWorkSession|null}) {
  const copy=useFleetCopy(),[title,setTitle]=useState(run.title),[stops,setStops]=useState(run.stops);
  const [scheduled,setScheduled]=useState(!!run.schedule),[start,setStart]=useState(new Date(run.schedule?.plannedStartAt??Date.now())),[end,setEnd]=useState(new Date(run.schedule?.plannedEndAt??Date.now()+3600000));
  const [timezone,setTimezone]=useState(run.schedule?.timezone??Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -31,8 +32,10 @@ export default function FleetDraftEditor({run,fleet,disabled,onSaved}:{run:Fleet
   if(!parsed.success){setError("Choose a title, ordered stops and a valid planned time window.");return;}
   const exact=parsed.data;setPending(exact);setBusy(true);setError("");
   try{
+   const modern=!!workSession&&!!run.ticketReference;
+   if(modern){const outcome=await workSession!.captureDraft(run,exact);if(!outcome.canonicalApplied){setError("Saved on this device; awaiting sync.");onSaved();return;}}
    if(pending){const current=FleetRunSchema.parse(await apiFetch(`/api/fleet/runs/${run.id}`));if(!alive.current)return;if(current.id!==run.id)throw new Error("Draft save outcome needs verification.");if(current.events.some(event=>event.operationId===exact.operationId)){setPending(null);setBaseVersion(current.version);onSaved();return;}}
-   const saved=FleetRunSchema.parse(await apiFetch(`/api/fleet/runs/${run.id}/draft`,{method:"PATCH",body:JSON.stringify(exact)}));
+   const saved=FleetRunSchema.parse(modern?await apiFetch(`/api/fleet/runs/${run.id}`):await apiFetch(`/api/fleet/runs/${run.id}/draft`,{method:"PATCH",body:JSON.stringify(exact)}));
    if(saved.id!==run.id||!saved.events.some(event=>event.operationId===exact.operationId))throw new Error("Draft save outcome needs verification.");
    if(alive.current){setPending(null);setBaseVersion(saved.version);onSaved();}
   }catch(e){if(alive.current)setError(e instanceof Error?e.message:"Draft save outcome needs verification.");}

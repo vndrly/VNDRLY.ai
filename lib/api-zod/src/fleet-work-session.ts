@@ -1,3 +1,5 @@
+import {FleetDestinationDirectorySchema} from "./fleet-commercial";
+import {FleetRunOrderPageSchema,FleetRunOrderSchema} from "./fleet-run-order";
 import {FleetWorkEvidencePageSchema} from "./fleet-evidence-upload";
 import {synchronizeFleetEvidence} from "./fleet-work-evidence-client";
 import {z} from "zod/v4";
@@ -5,7 +7,10 @@ import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetWorkCommandSchema,type 
 import {FleetQuantityEvidenceSchema} from "./fleet-pricing";
 import {FleetCommercialReviewSchema,type FleetCommercialReview,type FleetOfficeReviewAction} from "./fleet-commercial-review";
 import {FleetReconciliationPageSchema,FleetRecoveryOptionsSchema,type FleetReconciliationPage} from "./fleet-reconciliation";
-import {FleetDetailSnapshotSchema} from "./fleet-details";
+import {FleetDetailSnapshotSchema,FleetDetailPageSchema} from "./fleet-details";
+import {FleetDraftEditSchema} from "./fleet-planning";
+import type {FleetReplacementInputSchema,FleetReplacementActionSchema} from "./fleet-replacement";
+import type {FleetCargoTransferInputSchema,FleetCargoTransferActionSchema} from "./fleet-cargo";
 import type {FleetJournalStore,DurableFleetWorkJournal} from "./fleet-work-journal";
 import {synchronizeFleetWork} from "./fleet-work-runtime";
 import {buildFleetCreateIntent,buildFleetActionIntent,FleetWorkPreparationSchema,FleetWorkBillingOptionsSchema} from "./fleet-work-builder";
@@ -16,6 +21,11 @@ export type FleetEvidenceJournal=DurableFleetWorkJournal & {stageEvidence?:(id:s
 const provisionSchema=z.object({scope:FleetWorkScopeSchema,expiresAt:z.iso.datetime()});
 export const FleetReportedQuantityInputSchema=FleetQuantityEvidenceSchema.pick({cycleId:true,quantity:true,unit:true,evidenceReferences:true}).extend({kind:z.enum(["planned","picked_up","delivered"]),source:z.enum(["meter","scale","manifest","recipient","manual"])}).strict();
 export type FleetReportedQuantityInput=z.infer<typeof FleetReportedQuantityInputSchema>;
+export type FleetAncillaryIntent=
+ |{kind:"replacement.propose";input:z.infer<typeof FleetReplacementInputSchema>}
+ |{kind:"replacement.action";recordId:string;input:z.infer<typeof FleetReplacementActionSchema>}
+ |{kind:"cargo.propose";target:FleetRun;input:z.infer<typeof FleetCargoTransferInputSchema>}
+ |{kind:"cargo.action";recordId:string;input:z.infer<typeof FleetCargoTransferActionSchema>};
 /** The account comes from an authenticated overview (or its original encrypted
  * cache). Provisioning is a device/session binding, never a new business grant.
  * A new account/session has a different index; old journals are never rebound. */
@@ -49,17 +59,32 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
    const entry=(await journal.readState()).entries.find(row=>row.command.operationId===command.operationId)!;
    return {state:entry.delivery.state,canonicalApplied:entry.delivery.state==="applied",receipt:entry.delivery.receipt,operationId:command.operationId};
  };
- const prepareCreate=async(raw:unknown)=>{
-  const input=CreateFleetRunSchema.parse(raw);if(!input.detailSelection)throw Error("Choose a saved Detail for durable Fleet work");
-  const body={scope,detailId:input.detailSelection.detailId,billingSiteId:input.stops[0].siteId,ticketId:input.billing.mode==="existing_ticket"?input.billing.ticketId:null},key=`prepare:${JSON.stringify(body)}`;
+ const prepareSelection=async(detailId:string,billingSiteId:number,ticketId:number|null)=>{
+  const body={scope,detailId:z.uuid().parse(detailId),billingSiteId:z.number().int().positive().parse(billingSiteId),ticketId:ticketId===null?null:z.number().int().positive().parse(ticketId)},key=`prepare:${JSON.stringify(body)}`;
   try{current();const prepared=FleetWorkPreparationSchema.parse(await options.http("/api/fleet/work/prepare-create",body));current();await journal.putCache(key,prepared);return prepared;}
   catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const saved=await journal.readCache(key);if(!saved)throw error;return FleetWorkPreparationSchema.parse(saved);}
  };
- return {scope,journal,get expiresAt(){return provision!.expiresAt;},enabled,synchronize,execute,prepareCreate,
+ const prepareCreate=async(raw:unknown)=>{const input=CreateFleetRunSchema.parse(raw);if(!input.detailSelection)throw Error("Choose a saved Detail for durable Fleet work");return prepareSelection(input.detailSelection.detailId,input.stops[0].siteId,input.billing.mode==="existing_ticket"?input.billing.ticketId:null);};
+
+ return {scope,journal,get expiresAt(){return provision!.expiresAt;},enabled,synchronize,execute,prepareCreate,prepareSelection,
+  async captureAncillary(run:FleetRun,intent:FleetAncillaryIntent){
+   current();if(run.companyId!==account.companyId||!run.ticketReference||!run.resourceAssignment)throw Error("An original ticketed Detail is required");
+   const source={kind:intent.kind,input:intent.input,recordId:"recordId" in intent?intent.recordId:null,targetId:"target" in intent?intent.target.id:null},key=`ancillary-source:${intent.input.operationId}`,prior=await journal.readCache(key),original=(await journal.readState()).entries.find(row=>row.command.operationId===intent.input.operationId);
+   if(prior&&JSON.stringify(prior)!==JSON.stringify(source))throw Error("Cannot change an original ancillary request");
+   if(original){if(!prior||original.command.kind!==intent.kind)throw Error("Retained ancillary work needs recovery");return execute(original.command);}
+   const payload={activity:{type:"canonical",kind:"activity",id:run.id,version:run.version},ticket:{type:"canonical",kind:"ticket",...run.ticketReference},baseAssignment:run.resourceAssignment.snapshot,input:intent.input};
+   let specific:unknown=payload;if(intent.kind==="replacement.action")specific={...payload,replacementId:intent.recordId};if(intent.kind==="cargo.action")specific={...payload,transferId:intent.recordId};if(intent.kind==="cargo.propose"){if(intent.target.companyId!==account.companyId||!intent.target.ticketReference)throw Error("Choose an authorized ticketed recipient");specific={...payload,target:{type:"canonical",kind:"activity",id:intent.target.id,version:intent.target.version},targetTicket:{type:"canonical",kind:"ticket",...intent.target.ticketReference}};}
+   const command=FleetWorkCommandSchema.parse({version:2,scope,operationId:intent.input.operationId,capturedAt:new Date().toISOString(),timeZone:run.schedule?.timezone??"UTC",dependencies:[],kind:intent.kind,payload:specific});await journal.putCache(key,source);return execute(command);
+  },
+  async captureDraft(run:FleetRun,raw:z.infer<typeof FleetDraftEditSchema>){current();const edit=FleetDraftEditSchema.parse(raw),original=(await journal.readState()).entries.find(row=>row.command.operationId===edit.operationId);if(original){if(original.command.kind!=="activity.edit"||JSON.stringify(original.command.payload.edit)!==JSON.stringify(edit))throw Error("Cannot change an original draft edit");return execute(original.command);}if(!run.ticketReference||!run.resourceAssignment||run.companyId!==account.companyId)throw Error("Original ticketed draft context is required");return execute(FleetWorkCommandSchema.parse({version:2,scope,operationId:edit.operationId,capturedAt:new Date().toISOString(),timeZone:edit.schedule?.timezone??run.schedule?.timezone??"UTC",dependencies:[],kind:"activity.edit",payload:{activity:{type:"canonical",kind:"activity",id:run.id,version:edit.expectedVersion},ticket:{type:"canonical",kind:"ticket",...run.ticketReference},baseAssignment:run.resourceAssignment.snapshot,edit}}));},
+  async directory(){current();const key="commercial-directory";try{const value=FleetDestinationDirectorySchema.parse(await options.http("/api/fleet/commercial"));current();await journal.putCache(key,value);return value;}catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const saved=await journal.readCache(key);if(!saved)throw error;return FleetDestinationDirectorySchema.parse(saved);}},
+  async runOrderChoices(after?:number){current();const key=`run-order-choices:${after??""}`;try{const value=FleetRunOrderPageSchema.parse(await options.http(`/api/fleet/run-orders${after?`?after=${after}`:""}`));current();if(value.orders.some(row=>row.companyId!==account.companyId))throw Error("Original company changed");await journal.putCache(key,value);for(const row of value.orders)await journal.putCache(`run-order:${row.id}`,row);return value;}catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const saved=await journal.readCache(key);if(!saved)throw error;return FleetRunOrderPageSchema.parse(saved);}},
+  async runOrder(id:string){current();id=z.uuid().parse(id);const key=`run-order:${id}`;try{const value=FleetRunOrderSchema.parse(await options.http(`/api/fleet/run-orders/${id}`));current();if(value.companyId!==account.companyId||value.id!==id)throw Error("Original company changed");await journal.putCache(key,value);return value;}catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const saved=await journal.readCache(key);if(!saved)throw error;return FleetRunOrderSchema.parse(saved);}},
+  async detailChoices(after?:string){current();const key=`detail-choices:${after??""}`;try{const saved=FleetDetailPageSchema.parse(await options.http(`/api/fleet/details?limit=50${after?`&after=${encodeURIComponent(after)}`:""}`));current();if(saved.details.some(row=>row.companyId!==account.companyId))throw Error("Original Detail company changed");await journal.putCache(key,saved);return saved;}catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const cached=await journal.readCache(key);if(!cached)throw error;return FleetDetailPageSchema.parse(cached);}},
   async billingOptions(input:{fleetId:string;siteId:number;afeNumber:string;workDate:string}){current();const key=`billing-options:${JSON.stringify(input)}`;try{const saved=FleetWorkBillingOptionsSchema.parse(await options.http("/api/fleet/work/billing-options",{scope,...input}));current();await journal.putCache(key,saved);return saved;}catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const cached=await journal.readCache(key);if(!cached)throw error;return FleetWorkBillingOptionsSchema.parse({...FleetWorkBillingOptionsSchema.parse(cached),referenceFreshness:"cached_unverified"});}},
   async reconciliation(after?:string){current();const result=FleetReconciliationPageSchema.parse(await options.http("/api/fleet/work/reconciliation",{scope,after}));current();return result;},
   async recoveryOptions(caseId:string,after?:string){current();const result=FleetRecoveryOptionsSchema.parse(await options.http(`/api/fleet/work/reconciliation/${z.uuid().parse(caseId)}/options`,{scope,after}));current();return result;},
-  async recoveryDetail(id:string){current();const result=FleetDetailSnapshotSchema.parse(await options.http(`/api/fleet/work/recovery-detail/${z.uuid().parse(id)}`,{scope}));current();return result;},
+  async recoveryDetail(id:string){current();const key=`detail-snapshot:${z.uuid().parse(id)}`;try{const result=FleetDetailSnapshotSchema.parse(await options.http(`/api/fleet/details/${id}`));current();if(result.detail.companyId!==account.companyId)throw Error("Original Detail company changed");await journal.putCache(key,result);return result;}catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const cached=await journal.readCache(key);if(!cached)throw error;return FleetDetailSnapshotSchema.parse(cached);}},
   async captureReconciliation(item:FleetReconciliationPage["cases"][number],resolution:Extract<FleetWorkCommand,{kind:"activity.reconcile"}>["payload"]["resolution"],reason:string){
    current();if(!item.canResolve||item.case.resolution||!item.original.activity||!item.original.ticket)throw Error("Current office recovery context is required");
    const selected=resolution.kind==="create_ticket"?{...resolution,billing:{...resolution.billing,choice:"new_ticket",ticket:{type:"local",kind:"ticket",id:options.uuid()}}}:resolution;

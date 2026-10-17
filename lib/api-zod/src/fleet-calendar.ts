@@ -1,5 +1,6 @@
 /** Calendar placement is not evidence of worked or payable hours. */
 export type FleetCalendarRun = {
+  assignmentRecordedAt?:string;
   schedule?: {
     plannedStartAt: string;
     plannedEndAt: string;
@@ -27,7 +28,8 @@ export function fleetCalendarTiming(run: FleetCalendarRun) {
       timeBasis: "planned" as const,
     };
   }
-  const dispatch = (run.events ?? [])
+  const retained=instant(run.assignmentRecordedAt);
+  const dispatch = retained??(run.events ?? [])
     .filter((event) => event.type === "dispatch")
     .map((event) => instant(event.recordedAt))
     .filter((time): time is string => time !== null)

@@ -2,6 +2,17 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 const spanish: Record<string, string> = {
+"Saved on this device; awaiting sync.":"Guardado en este dispositivo; pendiente de sincronización.",
+"Saved on this device; cargo pending sync.":"Guardado en este dispositivo; carga pendiente de sincronización.",
+"Saved on this device; replacement pending sync.":"Guardado en este dispositivo; reemplazo pendiente de sincronización.",
+"Online only.":"Solo en línea.",
+"Read available Details":"Leer Details disponibles",
+"More":"Más",
+"Replacement outcome unresolved. Reuse the exact operation. Retained work will reconcile when connected.":"Resultado del reemplazo sin resolver. Reutilice la operación exacta; se conciliará al conectar.",
+"Cargo operation outcome is unresolved. Reuse the exact retained operation when connected.":"Resultado de carga sin resolver. Reutilice la operación original al conectar.",
+"Both drivers acknowledge their own side; permitted dispatch completes the recorded transfer. User reports do not verify physical handoff or change Inventory custody.":"Cada conductor confirma su lado; despacho autorizado completa el traslado registrado. Los informes no verifican la entrega física ni cambian custodia de Inventario.",
+"Inventory must already record the assigned driver's custody. Only the assigned driver accepts; the run remains paused until a fresh replacement inspection and distance meter are reported. This does not verify a physical exchange or change Inventory custody.":"Inventario debe registrar la custodia del conductor asignado. Solo él acepta; la actividad permanece pausada hasta una nueva inspección y lectura de distancia. No verifica un intercambio físico ni cambia custodia.",
+
 "Downloaded choices are unverified; authority is checked again when work synchronizes.":"Opciones descargadas sin verificar; se revisará la autoridad al sincronizar.",
 "per barrel":"por barril","per load":"por carga","per mile":"por milla","per us gallon":"por galón estadounidense","per short ton":"por tonelada corta","per job":"por trabajo","lump sum":"suma global","Agreement unresolved":"Acuerdo sin resolver",
 "Renew / correct source": "Renovar / corregir fuente",

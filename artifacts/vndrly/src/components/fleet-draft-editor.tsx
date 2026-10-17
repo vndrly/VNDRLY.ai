@@ -1,6 +1,6 @@
 import { useState,useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { FleetDraftEditSchema,FleetDestinationDirectorySchema,fleetRouteOperationalStops, type FleetRun,type FleetRoutePlan,type FleetDestination } from "@workspace/api-zod";
+import { FleetDraftEditSchema,FleetDestinationDirectorySchema,fleetRouteOperationalStops, type FleetRun,type FleetRoutePlan,type FleetDestination,type FleetWorkSession } from "@workspace/api-zod";
 import type { z } from "zod/v4";
 import { fleetClient } from "@/lib/fleet-client";
 import { fleetCopy } from "@/lib/fleet-copy";
@@ -15,10 +15,12 @@ export function FleetDraftEditor({
   run,
   sites,
   onSaved,
+  workSession,
 }: {
   run: FleetRun;
   sites: number[];
   onSaved: () => Promise<void>;
+  workSession?:FleetWorkSession|null;
 }) {
   const { i18n } = useTranslation();
   const c = fleetCopy(i18n.language);
@@ -71,7 +73,9 @@ export function FleetDraftEditor({
     setBusy(true);
     setMessage("");
     try {
-      const saved = await fleetClient.editDraft(run.id, reviewed);
+      const modern=!!workSession&&!!run.ticketReference;
+      if(modern){const outcome=await workSession!.captureDraft(run,reviewed);if(!outcome.canonicalApplied){setMessage(i18n.language.startsWith("es")?"Guardado en el dispositivo; pendiente de sincronización.":"Saved on this device; awaiting sync.");await onSaved();return;}}
+      const saved = modern?await fleetClient.run(run.id):await fleetClient.editDraft(run.id, reviewed);
       if (
         saved.id !== run.id ||
         !saved.events.some(

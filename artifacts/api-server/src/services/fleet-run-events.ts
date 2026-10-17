@@ -11,6 +11,7 @@ type PendingEvent = { sequence: number; event: Event };
 // remains with its caller. This is not a client durability fallback.
 const pending = new WeakMap<FleetRun, PendingEvent[]>();
 export function appendFleetRunEvent(run: FleetRun, raw: Event) {
+  if(raw.type==="dispatch"||raw.type==="reassign")run.assignmentRecordedAt=z.iso.datetime().parse(raw.recordedAt);
   if (!run.billingV2) { run.events.push(raw); return; }
   const event = FleetRunEventSchema.parse(JSON.parse(JSON.stringify(raw)));
   if (run.events.some(existing => existing.id === event.id))

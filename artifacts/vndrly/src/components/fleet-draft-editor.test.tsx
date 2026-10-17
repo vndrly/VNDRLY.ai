@@ -150,3 +150,10 @@ it("requires explicit reload rather than rebasing unsaved fields on a newer revi
     screen.getByRole("button", { name: "Review exact draft changes" }),
   ).toHaveProperty("disabled", false);
 });
+
+it("retains a ticketed draft edit without calling the legacy writer or claiming sync",async()=>{
+ api.editDraft.mockClear();const captureDraft=vi.fn().mockResolvedValue({canonicalApplied:false});
+ render(<FleetDraftEditor run={{...run,ticketReference:{id:17,version:2}}} sites={[9]} workSession={{captureDraft} as any} onSaved={async()=>{}}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Edit saved draft"}));fireEvent.click(screen.getByRole("button",{name:"Review exact draft changes"}));fireEvent.click(screen.getByRole("button",{name:"Save reviewed draft changes"}));
+ expect(await screen.findByText("Saved on this device; awaiting sync.")).toBeTruthy();expect(captureDraft).toHaveBeenCalledTimes(1);expect(api.editDraft).not.toHaveBeenCalled();
+});

@@ -1,3 +1,4 @@
+import {startFleetMonitoringWorker,stopFleetMonitoringWorker} from "./services/fleet-monitoring";
 import {startOnboardingWorker,stopOnboardingWorker} from "./work-hub/onboarding-worker";
 import { startFormCampaignWorker, stopFormCampaignWorker } from "./work-hub/form-campaign-worker";
 import { startInternalVoicemailWorker, stopInternalVoicemailWorker } from "./work-hub/call-voicemail-worker";
@@ -196,6 +197,7 @@ startOnboardingWorker();
   startNotificationEmailDigest();
   startCertificationReminderWorker();
   startFleetComplianceReminderWorker();
+  startFleetMonitoringWorker();
   // Task #248 — every-6h sweep that emails + in-app notifies the
   // creator of any OA connection whose credentials have been revoked
   // or whose OAuth refresh appears stale.
@@ -270,6 +272,7 @@ stopOnboardingWorker();
   stopSignupAssistantDigest();
   stopCertificationReminderWorker();
   stopFleetComplianceReminderWorker();
+  stopFleetMonitoringWorker();
   stopOaConnectionReminderWorker();
   stopWorkHubExportWorker();
   const retentionPlannerStop = stopWorkHubRetentionPlannerWorker();

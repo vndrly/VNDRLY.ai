@@ -30,6 +30,7 @@ export function createFleetCargoOperations(
     client: PoolClient,
     run: FleetRun,
   ) => Promise<void>,
+  options:{originalWorkOperationId?:string}={},
 ) {
   const fingerprint = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -62,6 +63,7 @@ export function createFleetCargoOperations(
       if (run.companyId !== actor.companyId)
         throw new FleetError("fleet.not_found", 404);
       map.set(run.id, run);
+      state.runs.push(run);
       actor.currentRunsById?.set(run.id, run);
     }
     hydrated.set(actor, map);
@@ -275,9 +277,11 @@ export function createFleetCargoOperations(
       const body = FleetCargoTransferInputSchema.parse(input),
         bound = { ...actor, operationId: body.operationId };
       return transaction(bound, async (state, client) => {
+        await hydrate(state,bound,client,body);
         const { source, target } = pair(state, body);
         if (!manager(state, bound, source, target))
           throw new FleetError("fleet.not_found", 404);
+        if((source.billingV2||target.billingV2)&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         const hash = fingerprint(body),
           saved = await replay(client, bound, body.operationId, hash);
         if (saved)
@@ -385,6 +389,7 @@ export function createFleetCargoOperations(
           throw new FleetError("fleet.version_conflict");
         if (!visible.allowedActions.includes(body.action))
           throw new FleetError("fleet.action_forbidden", 403);
+        if((source.billingV2||target.billingV2)&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         if (body.action !== "cancel") {
           validateContext(source, target, record);
           if (

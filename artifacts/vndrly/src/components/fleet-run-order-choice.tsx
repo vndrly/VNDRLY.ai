@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { FleetRunOrderSchema, type FleetRunOrder } from "@workspace/api-zod";
+import { FleetRunOrderSchema, type FleetRunOrder,type FleetWorkSession } from "@workspace/api-zod";
 import { fleetClient } from "@/lib/fleet-client";
 import { PngPillButton } from "./png-pill-rollover";
 
@@ -12,7 +12,9 @@ export function FleetRunOrderChoice({
   disabled,
   onChange,
   onCanManage,
+  workSession,
 }: {
+  workSession?:FleetWorkSession|null;
   identity: string;
   companyId: number;
   groupId: string;
@@ -33,7 +35,7 @@ export function FleetRunOrderChoice({
   const list = useInfiniteQuery({
     queryKey: ["fleet-run-orders", identity, groupId],
     initialPageParam: undefined as number | undefined,
-    queryFn: ({ pageParam }) => fleetClient.runOrders(pageParam),
+    queryFn: ({ pageParam }) => workSession?workSession.runOrderChoices(pageParam):fleetClient.runOrders(pageParam),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: false,
   });
@@ -73,7 +75,7 @@ export function FleetRunOrderChoice({
     if (!expected) return;
     setLoading(true);
     try {
-      const saved = FleetRunOrderSchema.parse(await fleetClient.runOrder(id));
+      const saved = FleetRunOrderSchema.parse(workSession?await workSession.runOrder(id):await fleetClient.runOrder(id));
       if (request !== generation.current) return;
       if (
         saved.id !== id ||

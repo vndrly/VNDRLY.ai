@@ -1,3 +1,6 @@
+import {nativeFleetOffline} from "@/lib/fleet-offline-native";
+import {importFleetLegacyWork} from "@/lib/fleet-work-legacy";
+import {readFleetEvidencePending} from "@/lib/fleet-evidence-device-native";
 import {useEffect,useRef,useState} from "react";import {AppState,Platform} from "react-native";import * as Crypto from "expo-crypto";
 import {openFleetWorkSession,openFleetBrowserJournal,type FleetWorkAccount,type FleetWorkSession,type FleetWorkCommand,type FleetWorkState,type FleetRun} from "@workspace/api-zod";
 import {openNativeFleetWorkStorage,openNativeFleetWorkJournal} from "@/lib/fleet-work-journal-native";import {captureAuthScope,isAuthScopeCurrent} from "@/lib/auth";import {apiFetch} from "@/lib/api";
@@ -9,6 +12,15 @@ export function useFleetWork(account:FleetWorkAccount|undefined,runs:readonly Fl
   void(async()=>{try{const {storage:index}=await openNativeFleetWorkStorage(`fleet-account:${identity}`,current),client=await openFleetWorkSession({account,index,isCurrent:current,withSynchronizationLock:work=>Platform.OS==="web"&&typeof navigator!=="undefined"&&navigator.locks?.request?navigator.locks.request(`fleet-work-sync:${identity}`,work):work(),uuid:()=>Crypto.randomUUID(),hashBytes:async bytes=>Array.from(new Uint8Array(await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256,bytes.slice().buffer)),b=>b.toString(16).padStart(2,"0")).join(""),putEvidencePart:(path,bytes,hash,scope)=>apiFetch(path,{method:"PUT",headers:{"content-type":"application/octet-stream","x-content-sha256":hash,"x-fleet-work-scope":JSON.stringify(scope)},body:bytes.slice().buffer},auth),openJournal:async scope=>Platform.OS==="web"?openFleetBrowserJournal(scope,current):openNativeFleetWorkJournal(scope,current),http:(path,body)=>apiFetch(path,body?{method:"POST",body:JSON.stringify(body)}:{},auth)});if(current()){active.current=client;setSession(client);if(client){for(const run of runs)await client.cacheRun(run);await refresh();}}}catch(e){if(current())setError(e instanceof Error?e.message:"Retained Fleet work is unavailable");}})();
   const subscription=AppState.addEventListener("change",value=>{if(value==="active")void refresh()});const timer=setInterval(()=>{if(AppState.currentState==="active")void refresh()},15000);return()=>{alive=false;subscription.remove();clearInterval(timer);};
  },[identity]);
+ useEffect(()=>{let alive=true;if(!session||!account)return;const current=()=>alive&&identityRef.current===identity;
+  void(async()=>{const oldScope={...account},raw=await nativeFleetOffline.readOriginal({userId:account.userId,companyId:account.companyId,membershipId:account.membershipId,sessionVersion:account.sessionVersion});if(!current())return;
+   if(raw)await importFleetLegacyWork(session.journal,raw,session.scope,value=>Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256,value));
+   const photo=await readFleetEvidencePending();if(!current()||!photo)return;
+   if(photo.account.userId!==account.userId||photo.account.companyId!==account.companyId||photo.account.membershipId!==account.membershipId||photo.account.sessionVersion!==account.sessionVersion)return;
+   const key=`legacy-photo:${photo.input.operationId}`;if(await session.journal.readCache(`${key}:verified`))return;
+   await session.journal.putCache(key,{original:photo,originalRetained:true});if(session.journal.stageEvidence){const saved=await session.journal.stageEvidence(photo.input.evidenceId,photo.asset.uri,photo.asset.contentType);if(saved.sha256!==photo.asset.sha256)throw Error("Legacy photo changed; original retained for recovery");await session.journal.putCache(`${key}:verified`,{...saved,originalOperationId:photo.input.operationId,associationStatus:"legacy_outcome_requires_readback",originalRetained:true});}
+  })().then(()=>{if(current())void refresh(false);}).catch(error=>{if(current())setError(error instanceof Error?error.message:"Legacy originals retained for recovery");});return()=>{alive=false;};
+ },[session,identity]);
  const runSignature=JSON.stringify(runs);
  useEffect(()=>{if(!session)return;void Promise.all(runs.map(run=>session.cacheRun(run))).catch(()=>undefined);},[session,runSignature]);
  return {session,status,commands,entries,error,refresh};

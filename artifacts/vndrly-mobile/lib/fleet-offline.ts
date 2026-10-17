@@ -50,6 +50,7 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
       validateBase(scope, action);
       if (!["unsynced", "conflict", "revoked"].includes(action.state)) throw new Error("Fleet queue state is invalid.");
     }
+    if(scope.sessionVersion!==undefined&&value.scope.sessionVersion!==undefined&&scope.sessionVersion!==value.scope.sessionVersion)return {...value,overview:null,cachedAt:null,actions:value.actions.map(action=>({...action,state:"revoked" as const,message:"Original session changed; originals retained for recovery."}))};
     return value;
   }
   async function write(value: FleetOfflineDocument) { await store.setItem(fleetOfflineKey(value.scope), JSON.stringify(value)); }
@@ -62,13 +63,13 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
   }
   const api = {
     read,
+    readOriginal:async(scope:FleetOfflineScope)=>{await read(scope);return store.getItem(fleetOfflineKey(scope));},
     clear: (scope: FleetOfflineScope) => store.removeItem(fleetOfflineKey(scope)),
     async bindAccount(scope: FleetOfflineScope) {
       if (!Number.isInteger(scope.sessionVersion) || scope.sessionVersion! < 0) throw new Error("Fresh account verification is required before synchronization.");
       const value = await read(scope);
       if (value.scope.sessionVersion !== scope.sessionVersion) {
-        value.actions = value.actions.map(action => ({...action,state:"revoked",message:"The verified account session changed. This offline sequence was not submitted."}));
-        value.overview = null; value.cachedAt = null;
+        return; // The immutable old account envelope remains available for explicit recovery.
       }
       value.scope = scope; await write(value);
     },
@@ -120,6 +121,7 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
   return {
     exclusive: <T>(operation: () => Promise<T>) => serial(operation),
     read: (scope: FleetOfflineScope) => serial(() => api.read(scope)),
+    readOriginal:(scope:FleetOfflineScope)=>serial(()=>api.readOriginal(scope)),
     clear: (scope: FleetOfflineScope) => serial(() => api.clear(scope)),
     bindAccount: (scope: FleetOfflineScope) => serial(() => api.bindAccount(scope)),
     cache: (scope: FleetOfflineScope, overview: FleetOverview) => serial(() => api.cache(scope, overview)),

@@ -68,7 +68,7 @@ export function handleFleetBackgroundSample(sample:FleetBackgroundSample){const 
     else{if(value)await store({...value,enabled:false});emit("unavailable","Background delivery is unverified. Sharing stopped; explicitly restart to retry the exact pending report.");}
   }
 });}
-if(!isExpoGo && !TaskManager.isTaskDefined(FLEET_BACKGROUND_TASK))TaskManager.defineTask(FLEET_BACKGROUND_TASK,async({data,error})=>{if(error){await stopFleetBackgroundLocation(false);return;}const locations=(data as {locations?:Location.LocationObject[]})?.locations;const last=locations?.at(-1);if(last)await handleFleetBackgroundSample({latitude:last.coords.latitude,longitude:last.coords.longitude,accuracy:last.coords.accuracy,timestamp:last.timestamp});});
+if(!isExpoGo && !TaskManager.isTaskDefined(FLEET_BACKGROUND_TASK))TaskManager.defineTask(FLEET_BACKGROUND_TASK,async({data,error})=>{if(error){await stopFleetBackgroundLocation(false);return;}const locations=(data as {locations?:Location.LocationObject[]})?.locations;const last=locations?.at(-1);if(last)await handleFleetBackgroundSample({latitude:last.coords.latitude,longitude:last.coords.longitude,accuracy:last.coords.accuracy,speed:last.coords.speed,heading:last.coords.heading,timestamp:last.timestamp});});
 let observedScope=captureAuthScope();
 function authChanged(){if(!isAuthScopeCurrent(observedScope)){observedScope=captureAuthScope();void stopFleetBackgroundLocation(true).catch(()=>undefined);}}
 subscribeToken(authChanged);subscribeUser(authChanged);

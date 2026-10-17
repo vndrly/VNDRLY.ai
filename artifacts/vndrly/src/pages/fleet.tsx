@@ -1,3 +1,4 @@
+import {FleetMonitoring} from "@/components/fleet-monitoring";
 import {saveWebFleetWorkspace,readWebFleetWorkspace,activateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
 import {provisionFleetOfflineShell} from "@/lib/fleet-offline-shell";
 import {FleetRetainedEvidence} from "@/components/fleet-retained-evidence";
@@ -245,9 +246,10 @@ function FleetWorkspace({
     [selectedDetailId, setSelectedDetailId] = useState("");
   const [useRunOrder,setUseRunOrder]=useState(false),[runOrder,setRunOrder]=useState<FleetRunOrder|null>(null);
   const [orderPending,setOrderPending]=useState(false);
+  useEffect(()=>{if(work.session)setPhysicalMode(true);},[work.session]);
   const detailChoices = useQuery({
     queryKey: ["fleet-details", identity, "composer"],
-    queryFn: () => fleetClient.details(),
+    queryFn: () => work.session?work.session.detailChoices():fleetClient.details(),
     enabled: create,
     retry: false,
   });
@@ -259,7 +261,7 @@ function FleetWorkspace({
   });
   const directory = useQuery({
     queryKey: ["fleet-destinations", identity],
-    queryFn: () => fleetClient.commercial(),
+    queryFn: () => work.session?work.session.directory():fleetClient.commercial(),
     enabled: create && physicalMode,
     retry: false,
   });
@@ -297,6 +299,7 @@ function FleetWorkspace({
         setFleetId(preferred);
     }
   }, [overview.data]);
+  useEffect(()=>{if(work.session&&selectedDetailId&&Number(pickup)>0)void work.session.prepareSelection(selectedDetailId,Number(pickup),billing.mode==="existing_ticket"?Number(billing.ticketId):null).catch(()=>undefined);},[work.session,selectedDetailId,pickup,billing]);
   const [reason, setReason] = useState("");
   if (overview.isPending) return <p className="p-6">{c.loading}</p>;
   if (overview.isError)
@@ -797,8 +800,8 @@ function FleetWorkspace({
             setPending(null);
           }}
         />
-        {data.capabilities.canDispatch && (
-          <PngPillButton onClick={() => setCreate(!create)}>
+        {(data.capabilities.canDispatch||work.session&&data.capabilities.canDrive) && (
+          <PngPillButton onClick={() => {if(work.session)setPhysicalMode(true);setCreate(!create);}}>
             {c.create}
           </PngPillButton>
         )}
@@ -1003,6 +1006,7 @@ function FleetWorkspace({
                     );
                     setSelectedDetailId(e.target.value);
                     if (detail) {
+                      if(work.session)void work.session.recoveryDetail(detail.id).then(snapshot=>{setTrailer(snapshot.rigPackage?.components.find(row=>row.role==="trailer")?.assetId??"");}).catch(()=>undefined);
                       setDriver(String(detail.driverUserId));
                       setVehicle(detail.vehicleAssetId);
                       setTrailer(
@@ -1137,7 +1141,7 @@ function FleetWorkspace({
                     ))}
                 </select>
               ))}
-            {physicalMode && useRunOrder && <FleetRunOrderChoice key={`${identity}:${fleetId}`} identity={identity} companyId={data.companyId} groupId={fleetId} disabled={busy||createUnverified} onChange={order=>{setRunOrder(order);setPhysicalRoute(order?fleetRunOrderRoute(order,()=>crypto.randomUUID()):null);}}/>}
+            {physicalMode && useRunOrder && <FleetRunOrderChoice workSession={work.session} key={`${identity}:${fleetId}`} identity={identity} companyId={data.companyId} groupId={fleetId} disabled={busy||createUnverified} onChange={order=>{setRunOrder(order);setPhysicalRoute(order?fleetRunOrderRoute(order,()=>crypto.randomUUID()):null);}}/>}
             {physicalMode && !useRunOrder && directory.data && (
               <fieldset disabled={orderPending}>
               <FleetRouteFields
@@ -1344,6 +1348,7 @@ function FleetWorkspace({
                 )}
                 {run.canEditDraft === true && (
                   <FleetDraftEditor
+                    workSession={work.session}
                     key={run.id}
                     run={run}
                     sites={
@@ -1461,6 +1466,7 @@ function FleetWorkspace({
                     identity={identity}
                   />
                   <FleetReplacementPanel
+                    workSession={work.session}
                     key={run.id}
                     run={run}
                     identity={identity}
@@ -1474,6 +1480,7 @@ function FleetWorkspace({
                     onSaved={reload}
                   />
                   <FleetCargoPanel
+                    workSession={work.session}
                     key={run.id}
                     run={run}
                     runs={data.runs}
@@ -1486,6 +1493,7 @@ function FleetWorkspace({
                     driverUserId={run.driverUserId}
                     runId={run.id}
                   />
+                  <FleetMonitoring key={`monitoring:${identity}:${run.id}`} run={run} userId={userId} canDispatch={data.capabilities.canDispatch} session={work.session}/>
                   <FleetReviewPacketPanel run={run} identity={identity} />
                   {work.session&&run.ticketReference&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();void queryClient.invalidateQueries({queryKey:["fleet",identity]});}}/>}
                   {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidencePanel

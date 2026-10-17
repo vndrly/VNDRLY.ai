@@ -2,7 +2,7 @@ import { FleetLocationInputSchema, FleetLocationObservationSchema, type FleetLoc
 import type { FleetVerifiedAccount } from "./fleet-phone-location";
 
 export type FleetBackgroundBinding = {account:FleetVerifiedAccount;runId:string;vehicleAssetId:string;trailerAssetId:string|null;deviceId:string;pending:FleetLocationInput|null};
-export type FleetBackgroundSample = {latitude:number;longitude:number;accuracy:number|null;timestamp:number};
+export type FleetBackgroundSample = {latitude:number;longitude:number;accuracy:number|null;timestamp:number;speed?:number|null;speedAccuracy?:number|null;heading?:number|null};
 type Dependencies = {
   readCurrent():Promise<{account:FleetVerifiedAccount;run:FleetRun}>;
   consent():Promise<boolean>;permission():Promise<boolean>;contextCurrent():boolean;
@@ -17,7 +17,7 @@ export async function deliverFleetBackgroundSample(binding:FleetBackgroundBindin
   const a=current.account,b=binding.account,r=current.run;
   if(a.userId!==b.userId || a.companyId!==b.companyId || a.membershipId!==b.membershipId || a.sessionVersion!==b.sessionVersion || r.id!==binding.runId || r.companyId!==b.companyId || r.driverUserId!==b.userId || r.vehicleAssetId!==binding.vehicleAssetId || r.trailerAssetId!==binding.trailerAssetId || r.status!=="in_progress" || r.phase==="paused")throw Object.assign(new Error("Current background Fleet duty or assignment was refused."),{status:403});
   if(!await deps.consent() || !await deps.permission())throw Object.assign(new Error("Background device consent or permission is unavailable."),{status:403});check();
-  const input=binding.pending ?? FleetLocationInputSchema.parse({operationId:deps.operationId(),expectedVersion:r.version,deviceId:binding.deviceId,latitude:sample.latitude,longitude:sample.longitude,accuracyMeters:sample.accuracy,recordedAt:new Date(sample.timestamp).toISOString()});
+  const input=binding.pending ?? FleetLocationInputSchema.parse({operationId:deps.operationId(),expectedVersion:r.version,deviceId:binding.deviceId,latitude:sample.latitude,longitude:sample.longitude,accuracyMeters:sample.accuracy,...(sample.speed!=null&&sample.speed>=0?{speedMetersPerSecond:sample.speed,speedAccuracyMetersPerSecond:sample.speedAccuracy??null,headingDegrees:sample.heading!=null&&sample.heading>=0?sample.heading:null}:{}),recordedAt:new Date(sample.timestamp).toISOString()});
   FleetLocationInputSchema.parse(input);
   if(input.deviceId!==binding.deviceId)throw Object.assign(new Error("Background device binding changed."),{status:403});
   // Persist the exact report before transmission so a cold wake or lost response reuses its UUID/body.
