@@ -387,8 +387,11 @@ it("holds a v2 activity when the actual parent billing site changes instead of r
 });
 
 it("atomically creates the real Detail reservation, approved ticket and mappings once after response loss", async () => {
-  const f = await fixture(),
-    original = structuredClone(f.command);
+  const f = await fixture();
+  if (f.command.kind !== "activity.create") throw Error("Expected activity");
+  f.command.capturedAt = f.command.payload.compliance.evaluatedAt =
+    "2026-10-16T07:00:00-05:00";
+  const original = structuredClone(f.command);
   const receipts = await Promise.all([
     f.work.apply(f.actor, f.command),
     f.work.apply(f.actor, f.command),
@@ -430,6 +433,20 @@ it("atomically creates the real Detail reservation, approved ticket and mappings
     },
   });
   expect(run.events.map((e) => e.type)).toEqual(["created"]);
+  expect(run.events[0]).toMatchObject({
+    capturedAt: new Date(original.capturedAt).toISOString(),
+    source: "user_report",
+    details: {
+      originalCapture: {
+        capturedAt: original.capturedAt,
+        timeZone: original.timeZone,
+        clockStatus: "reported_capture_time",
+      },
+    },
+  });
+  expect(Date.parse(run.events[0].recordedAt)).toBeGreaterThan(
+    Date.parse(original.capturedAt),
+  );
   expect(
     (await pool.query("SELECT id FROM tickets WHERE vendor_id=$1", [f.vendor]))
       .rows,
@@ -462,6 +479,32 @@ it("atomically creates the real Detail reservation, approved ticket and mappings
     (await f.work.read(f.actor, f.command.scope, f.command.operationId))
       ?.status,
   ).toBe("applied");
+});
+
+it("preserves a future device capture as a clock warning instead of replacing server time or starting work", async () => {
+  const f = await fixture();
+  f.command.capturedAt = new Date(Date.now() + 3600000).toISOString();
+  const receipt = await f.work.apply(f.actor, f.command);
+  if (receipt.status !== "applied") throw Error("Expected retained creation");
+  const run = await createFleetService(databaseFleetRepository).detail(
+    { ...f.actor },
+    String(receipt.canonicalReferences.find((r) => r.kind === "activity")!.id),
+  );
+  expect(run.events[0]).toMatchObject({
+    capturedAt: f.command.capturedAt,
+    source: "user_report",
+    details: {
+      originalCapture: {
+        timeZone: "America/Chicago",
+        clockStatus: "ahead_of_server",
+      },
+    },
+  });
+  expect(Date.parse(run.events[0].recordedAt)).toBeLessThan(
+    Date.parse(f.command.capturedAt),
+  );
+  expect(run.status).toBe("draft");
+  expect(run.events.map((e) => e.type)).toEqual(["created"]);
 });
 
 it("rolls back the new ticket, run and reservation together before recording a reconciliation case", async () => {

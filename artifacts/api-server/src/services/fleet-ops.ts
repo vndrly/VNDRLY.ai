@@ -430,6 +430,7 @@ export type FleetServiceOptions={
   /** Internal original-scope command adapter, never an HTTP create field. */
   billingV2Create?: {
     operationId: string;
+    timeZone: string;
     intent: Parameters<typeof attachFleetBillingV2>[2];
     capture: Parameters<typeof attachFleetBillingV2>[3];
   };
@@ -1027,14 +1028,25 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             requiredCertifications: fleet.requiredCertifications,
             policyAt: new Date().toISOString(),
           });
+          const createdAt = new Date().toISOString();
           run.events.push({
             id: randomUUID(),
             operationId: body.operationId,
             type: "created",
             actorUserId: actor.userId,
-            recordedAt: new Date().toISOString(),
+            recordedAt: createdAt,
+            ...(options.billingV2Create ? {
+              capturedAt: new Date(options.billingV2Create.capture.workAt).toISOString(),
+              source: "user_report" as const,
+            } : {}),
             details: {
               fleetCompliance,
+              ...(options.billingV2Create ? { originalCapture: {
+                capturedAt: options.billingV2Create.capture.workAt,
+                timeZone: options.billingV2Create.timeZone,
+                clockStatus: Date.parse(options.billingV2Create.capture.workAt) > Date.parse(createdAt) + 300000
+                  ? "ahead_of_server" : "reported_capture_time",
+              } } : {}),
               ...(run.resourceAssignment
                 ? {
                     resourceAssignment: structuredClone(run.resourceAssignment),

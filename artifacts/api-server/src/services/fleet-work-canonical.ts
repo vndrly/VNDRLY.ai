@@ -170,7 +170,7 @@ export async function executeFleetWorkCommand(
       const creator = createFleetWorkCanonicalService(context, {
         ...options,
         afterCommit: effect => { afterCommit.push(effect); },
-        billingV2Create: { operationId: command.operationId, intent: billing,
+        billingV2Create: { operationId: command.operationId, timeZone: command.timeZone, intent: billing,
           capture: { workAt: command.capturedAt, pricingIntent: p.pricingIntent } },
       });
       const run = await creator.create({ ...actor }, {
