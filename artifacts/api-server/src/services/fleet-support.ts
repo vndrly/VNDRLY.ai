@@ -153,16 +153,21 @@ export function createFleetSupportService(
               current.has(run.id) &&
               permitted(current.get(run.id)!, companyId, access),
           )
-          .map((run) => ({
-            ...run,
-            allowedActions: [],
-            records: access.financeRead
-              ? run.records
-              : run.records.filter((record) => record.kind !== "fuel"),
-            events: access.financeRead
-              ? run.events
-              : run.events.filter((event) => event.type !== "record_fuel"),
-          }));
+          .map((run) => {
+            const {billingV2,commercial,billing,...operational}=run;
+            const events=access.financeRead?run.events:run.events.filter(event=>event.type!=="record_fuel");
+            const commercialRouting=commercial?(({rateCents:_rate,billedLineId:_line,...routing})=>routing)(commercial):undefined;
+            const billingRouting=billing?(({billedLineId:_line,...routing})=>routing)(billing):undefined;
+            return {
+              ...operational,allowedActions:[],
+              ...(billingV2&&access.financeRead?{billingV2}:{}),
+              ...(commercial?{commercial:access.financeRead?commercial:commercialRouting}:{}),
+              ...(billing?{billing:access.financeRead?billing:billingRouting}:{}),
+              records:access.financeRead?run.records:run.records.filter(record=>record.kind!=="fuel"),
+              events,
+              ...(run.eventHistory&&events.length!==run.events.length?{eventHistory:{...run.eventHistory,complete:false,visibility:"permission_filtered" as const}}:{}),
+            };
+          });
         await client.query(
           "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,result_status) VALUES($1,$2,'fleet','typed','canonical','fleet_support_read','support-read','vendor',$3,$4::jsonb,'completed')",
           [

@@ -1,3 +1,4 @@
+import { appendFleetRunEvent } from "./fleet-run-events";
 import { createHash, randomUUID } from "node:crypto";
 import {
   FleetEvidenceInputSchema,
@@ -123,7 +124,7 @@ export function createFleetEvidenceOperations(
           throw new FleetError("fleet.action_forbidden", 403);
         if (run.version !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict");
-        if (run.events.length >= 200)
+        if (!run.billingV2 && run.events.length >= 200)
           throw new FleetError("fleet.store_capacity_reached");
         if (!run.siteIds.every((id) => bound.activeSiteIds?.includes(id)))
           throw new FleetError("fleet.site_unavailable", 403);
@@ -227,7 +228,7 @@ export function createFleetEvidenceOperations(
           ],
         );
         run.version++;
-        run.events.push({
+        appendFleetRunEvent(run, {
           id: randomUUID(),
           operationId: body.operationId,
           type: "evidence_associated",

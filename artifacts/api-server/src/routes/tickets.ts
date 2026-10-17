@@ -1,3 +1,4 @@
+import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
 import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
@@ -2837,7 +2838,7 @@ router.post(
       // AP weekly digest so the dollar figure quoted in the email
       // matches what AP staff already see in their other VNDRLY emails.
       const totalRows = await db.execute<{ total: string }>(sql`
-        select coalesce(sum(quantity * unit_price), 0)::numeric(14,2)::text as total
+        select coalesce(sum(${sql.raw(effectiveFinancialAmountSql())}), 0)::numeric(14,2)::text as total
         from ticket_line_items
         where ticket_id = ${updated.id}
       `);
@@ -5521,6 +5522,8 @@ router.delete("/tickets/:id/line-items/:lineItemId", async (req, res): Promise<v
     // read cannot authorize a delayed deletion after the ticket was submitted.
     const [ticket]=await tx.select({status:ticketsTable.status,fleetPlan:ticketsTable.fleetPlan}).from(ticketsTable).where(eq(ticketsTable.id,params.data.id)).for("update");
     if(!ticket || !MUTABLE_TICKET_STATUSES.has(ticket.status))return false;
+    const [derived]=await tx.select({metadata:ticketLineItemsTable.fleetBillingMetadata}).from(ticketLineItemsTable).where(and(eq(ticketLineItemsTable.id,params.data.lineItemId),eq(ticketLineItemsTable.ticketId,params.data.id)));
+    if(derived?.metadata)return "derived_charge";
     if((ticket.fleetPlan as {billingWorkflow?:boolean}|null)?.billingWorkflow){
       const [line]=await tx.select({type:ticketLineItemsTable.type,description:ticketLineItemsTable.description}).from(ticketLineItemsTable).where(and(eq(ticketLineItemsTable.id,params.data.lineItemId),eq(ticketLineItemsTable.ticketId,params.data.id)));
       // Accepted run snapshots bind this generated line ID permanently. Generic

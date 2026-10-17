@@ -43,6 +43,7 @@ export type SiteTaxSnapshot = {
 };
 
 export type TicketLineTaxInput = {
+  preciseQuantity?:string|null;preciseUnitPrice?:string|null;fleetBillingMetadata?:unknown;
   type: string;
   quantity: string;
   unitPrice: string;
@@ -50,6 +51,7 @@ export type TicketLineTaxInput = {
 };
 
 export type TicketTaxPreview = {
+  preciseTotals?:{subtotal:string;taxAmount:string;grandTotal:string};
   subtotal: number;
   taxableSubtotal: number;
   exemptSubtotal: number;

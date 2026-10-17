@@ -586,3 +586,9 @@ describe("invoice-engine", () => {
     expect(snapshot.taxRateSource).toBe("tax_rates_table");
   });
 });
+
+it("copies approved Fleet precision and the original charge amount into the invoice without four-decimal repricing",()=>{
+ const metadata={version:2,charge:{id:"11111111-1111-4111-8111-111111111111",revision:1,quantity:"123.456789",unitRate:"0.000125",exactAmount:"0.015432098625",currencyAmount:"0.02",currency:"USD",reviewedByUserId:7,reviewedAt:"2026-10-17T18:00:00Z"}};
+ const ctx=makeCtx({lineItems:[{id:77,ticketId:100,type:"labor",description:"Synthetic Fleet barrels",quantity:"123.46",unitPrice:"0.00",preciseQuantity:"123.456789",preciseUnitPrice:"0.000125",fleetBillingMetadata:metadata}]});
+ const result=buildInvoiceLinesForTicket(ctx);expect(result.lines[0]).toMatchObject({quantity:"123.456789",unitPrice:"0.000125",amount:"0.02",preciseQuantity:"123.456789",preciseUnitPrice:"0.000125",fleetBillingMetadata:metadata});
+});

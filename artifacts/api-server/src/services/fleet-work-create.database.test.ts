@@ -502,6 +502,49 @@ it("edits a retained draft only through its exact original-scope receipt and ope
   expect((await pool.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1", [ticket.id])).rows).toEqual([]);
 });
 
+it("retains and pages a v2 activity beyond the legacy 200-event window without dropping original reports", async () => {
+  const f = await fixture(), created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied") throw Error("Expected actual creation");
+  const activity = created.canonicalReferences.find(ref => ref.kind === "activity")!,
+    ticket = created.canonicalReferences.find(ref => ref.kind === "ticket")!;
+  const service = createFleetService(databaseFleetRepository), id = String(activity.id);
+  const original = await service.detail({ ...f.actor }, id);
+  const retained = FleetRunSchema.parse({ ...original, eventHistory: undefined, version: 200,
+    events: [original.events[0], ...Array.from({ length: 199 }, (_, index) => ({
+      id: randomUUID(), operationId: randomUUID(), type: "draft_edited", actorUserId: f.actor.userId,
+      recordedAt: original.events[0].recordedAt, source: "user_report",
+      details: { notes: `Retained synthetic report ${index + 1}` },
+    }))],
+  });
+  // Retained-head migration fixture; no physical action/device acceptance is claimed.
+  await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','synthetic_history_fixture','fleet-run-snapshot','fleet-run',$3,$4::jsonb,'completed')",
+    [f.actor.userId, f.vendor, id, JSON.stringify(retained)]);
+  const operationId = randomUUID();
+  const command = FleetWorkCommandSchema.parse({ ...f.command, operationId, kind: "activity.edit", payload: {
+    activity: { ...activity, version: retained.version }, ticket, baseAssignment: retained.resourceAssignment!.snapshot,
+    edit: { operationId, expectedVersion: retained.version, title: "Continued recorded work" },
+  } });
+  expect((await f.work.apply(f.actor, command)).status).toBe("applied");
+  const current = await service.detail({ ...f.actor }, id);
+  expect(current.events.length).toBeLessThanOrEqual(200);
+  expect(current.eventHistory).toMatchObject({ version: 2, totalEvents: 201, complete: false });
+  expect(current.events[0].id).toBe(retained.events[0].id);
+  const reports: typeof retained.events = [];
+  let cursor: string | null = null;
+  do {
+    const page = await service.eventHistory({ ...f.actor }, id, { limit: 50, ...(cursor ? { cursor } : {}) });
+    reports.push(...page.events);
+    cursor = page.nextCursor;
+  } while (cursor);
+  expect(reports).toHaveLength(201);
+  expect(reports.slice(0, 200)).toEqual(retained.events);
+  expect(reports.at(-1)).toMatchObject({ operationId, type: "draft_edited" });
+  expect((await f.work.apply(f.actor, command)).status).toBe("duplicate");
+  const state = (await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1", [f.vendor])).rows[0].fleet_ops_state;
+  expect(state.operations).toEqual([]);
+  expect(state.runs).toEqual([]);
+});
+
 it("reads retained trip facts and scoped subject choices without relying on the legacy active view", async () => {
   const f = await fixture(),
     created = await f.work.apply(f.actor, f.command);
@@ -1219,4 +1262,31 @@ it("reviews original quantity reports with actual office identity without changi
       )
     ).rows[0].tool_output,
   ).toMatchObject({ decision: "reject", quantity: null });
+});
+
+it("office approves exact retained activity charges and explicitly finalizes the ticket once",async()=>{
+ const f=await fixture(),created=await f.work.apply(f.actor,f.command);if(created.status!=="applied")throw Error("Expected create");
+ const activity=created.canonicalReferences.find(r=>r.kind==="activity")!,ticket=created.canonicalReferences.find(r=>r.kind==="ticket")!;
+ const service=createFleetService(databaseFleetRepository),original=await service.detail({...f.actor},String(activity.id));
+ const driverActor={...f.actor,userId:f.driver.id,role:"field_employee",membershipRole:"field_employee",vendorPeopleId:f.driverPerson.id,sv:f.driver.sessionVersion,activeMembershipId:f.driverMembership.id};
+ const [device]=await db.insert(workHubDevicesTable).values({userId:f.driver.id,ownerOrgType:"vendor",ownerOrgId:f.vendor,friendlyName:"Synthetic billing driver",deviceClass:"ios",capabilities:{}}).returning();
+ const provision=await f.repository.provision(driverActor,{deviceId:device.id,appVersion:"test-v2"});
+ const at=new Date().toISOString(),quantity={id:randomUUID(),cycleId:null,kind:"delivered",quantity:"123.456789",unit:"barrel",source:"manual",evidenceReferences:[],capturedAt:at,recordedByUserId:f.driver.id};
+ expect((await f.work.apply(driverActor,{version:2,operationId:randomUUID(),scope:provision.scope,kind:"quantity.record",capturedAt:at,timeZone:"America/Chicago",dependencies:[],payload:{activity,ticket,evidence:quantity}})).status).toBe("applied");
+ expect((await f.work.apply(f.actor,{...f.command,operationId:randomUUID(),kind:"quantity.review",payload:{activity,ticket,selections:[{evidenceId:quantity.id,expectedReviewRevision:0,decision:"accept_as_billable",reason:"Office reviewed original receipt"}]}})).status).toBe("applied");
+ // Synthetic retained operational closeout fixture, not physical/device proof.
+ const pickup=original.stops.find(s=>s.kind==="pickup")!,delivery=original.stops.find(s=>s.kind==="delivery")!;
+ const closed=FleetRunSchema.parse({...original,version:2,status:"submitted_for_review",phase:null,currentStopId:null,visitedStopIds:original.stops.map(s=>s.id),
+  inspections:[{driverUserId:f.driver.id,vehicleAssetId:original.vehicleAssetId,trailerAssetId:original.trailerAssetId,outcome:"passed",notes:"Synthetic recorded inspection",recordedByUserId:f.driver.id,recordedAt:at,source:"user_report",inspectedAssetIds:[original.vehicleAssetId]}],
+  loads:[{id:randomUUID(),pickupStopId:pickup.id,deliveryStopId:delivery.id,commodity:"Crude",quantity:123.456789,unit:"barrel",manifestReference:"Synthetic",deliveryReference:"Synthetic",recordedByUserId:f.driver.id,recordedAt:at,deliveredAt:at,source:"user_report"}],
+  records:[1,2].map((reading)=>({id:randomUUID(),vehicleAssetId:original.vehicleAssetId,kind:"meter",quantity:null,reading,unit:"miles",notes:"Synthetic meter",recordedByUserId:f.driver.id,recordedAt:at,capturedAt:null,source:"user_report"})),
+ });
+ await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','synthetic_closeout_fixture','snapshot','fleet-run',$3,$4::jsonb,'completed')",[f.actor.userId,f.vendor,closed.id,JSON.stringify(closed)]);
+ const command={...f.command,operationId:randomUUID(),kind:"charge.review",payload:{activity:{...activity,version:2},ticket,expectedVersion:2,quantityReviews:[{evidenceId:quantity.id,revision:1}],taxTreatment:"existing_ticket_rubric",intervals:[],additionalCharges:[]}};
+ const approved=await f.work.apply(f.actor,command);expect(approved.status).toBe("applied");
+ const lines=(await pool.query("SELECT * FROM ticket_line_items WHERE ticket_id=$1",[ticket.id])).rows;expect(lines).toHaveLength(1);expect(lines[0].fleet_billing_metadata).toMatchObject({version:2,charge:{quantity:"123.456789",unitRate:"0.0125",exactAmount:"1.5432098625",currencyAmount:"1.54",reviewedByUserId:f.actor.userId}});
+ expect((await f.work.apply(f.actor,command)).status).toBe("duplicate");expect((await pool.query("SELECT status FROM tickets WHERE id=$1",[ticket.id])).rows[0].status).not.toBe("submitted");
+ const plan=(await pool.query("SELECT fleet_plan FROM tickets WHERE id=$1",[ticket.id])).rows[0].fleet_plan;
+ const finalize={...f.command,operationId:randomUUID(),kind:"ticket.finalize",payload:{ticket:{...ticket,version:plan.revision},expectedVersion:plan.revision}};
+ expect((await f.work.apply(f.actor,finalize)).status).toBe("applied");expect((await f.work.apply(f.actor,finalize)).status).toBe("duplicate");expect((await pool.query("SELECT status,lifecycle_state FROM tickets WHERE id=$1",[ticket.id])).rows[0]).toMatchObject({status:"submitted",lifecycle_state:"off_site"});expect((await pool.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1",[ticket.id])).rows).toHaveLength(1);
 });

@@ -1,3 +1,4 @@
+import {resolveEffectiveFinancialLine} from "./effective-financial-line";
 export type ProofPacketTicket = {
   status?: string | null;
   notes?: string | null;
@@ -18,6 +19,7 @@ export type ProofPacketTicket = {
 };
 
 export type ProofPacketLineItem = {
+  preciseQuantity?:string|null;preciseUnitPrice?:string|null;fleetBillingMetadata?:unknown;
   type?: string | null;
   quantity?: string | number | null;
   unitPrice?: string | number | null;
@@ -80,6 +82,7 @@ function formatMoney(amount: number): string {
 
 function costTotal(lineItems: readonly ProofPacketLineItem[]): number {
   return lineItems.reduce((sum, item) => {
+    if(item.fleetBillingMetadata)return sum+Number(resolveEffectiveFinancialLine(item).currencyAmount);
     const quantity = numberFrom(item.quantity);
     const unitPrice = numberFrom(item.unitPrice);
     if (quantity == null || unitPrice == null) return sum;

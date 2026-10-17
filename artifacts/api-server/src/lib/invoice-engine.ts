@@ -1,3 +1,4 @@
+import {resolveEffectiveFinancialLine} from "./effective-financial-line";
 import type {
   LateFeeRule,
   InvoiceLineType,
@@ -92,6 +93,7 @@ export type EngineLineItem = {
   quantity: string;
   unitPrice: string;
   taxableOverride?: boolean | null;
+  preciseQuantity?:string|null;preciseUnitPrice?:string|null;fleetBillingMetadata?:unknown;
 };
 
 export type EngineBillingSettings = {
@@ -151,6 +153,7 @@ export type EngineLine = {
   unit: string | null;
   unitPrice: string; // numeric string
   amount: string; // numeric string, 2-dp
+  preciseQuantity?:string|null;preciseUnitPrice?:string|null;fleetBillingMetadata?:unknown;
   taxable: boolean;
   taxState: string | null;
   taxRate: string | null;
@@ -691,7 +694,8 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
     const cls = classifyLineItemType(li.type);
     const qtyUnits = toFixedUnits(li.quantity);
     const priceUnits = toFixedUnits(li.unitPrice);
-    const amountUnits = mulUnits(qtyUnits, priceUnits);
+    const exact = li.fleetBillingMetadata ? resolveEffectiveFinancialLine(li) : null;
+    const amountUnits = exact ? toFixedUnits(exact.currencyAmount) : mulUnits(qtyUnits, priceUnits);
     const taxable = isLineTaxable(cls.lineType, ctx, li.taxableOverride);
     const lineTaxUnits = taxable ? combinedTaxRateUnits(ctx) : 0n;
     const taxAmt = taxable ? mulUnits(amountUnits, lineTaxUnits) : 0n;
@@ -702,9 +706,10 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
       afe: ctx.afe,
       lineType: cls.lineType,
       description: li.description || cls.lineType,
-      quantity: unitsToString4(qtyUnits),
+      quantity: exact?.quantity ?? unitsToString4(qtyUnits),
       unit: cls.defaultUnit,
-      unitPrice: unitsToString4(priceUnits),
+      unitPrice: exact?.unitPrice ?? unitsToString4(priceUnits),
+      ...(exact?{preciseQuantity:exact.quantity,preciseUnitPrice:exact.unitPrice,fleetBillingMetadata:exact.fleetBillingMetadata}:{}),
       amount: unitsToString2(amountUnits),
       taxable,
       taxState: taxable ? taxState : null,

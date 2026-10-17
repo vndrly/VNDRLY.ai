@@ -1,3 +1,4 @@
+import { reviewFleetActivityCharges, finalizeFleetTicketV2 } from "./fleet-charge-review";
 import {
   resolveFleetWorkReference,
   authorizeFleetOriginalDriverActivity,
@@ -99,6 +100,18 @@ export async function executeFleetWorkCommand(
     };
   };
   switch (command.kind) {
+    case "charge.review": {
+      const target=await activity(command.payload.activity),ticket=await mapped(command.payload.ticket);
+      if(target.reference.version!==command.payload.expectedVersion||target.run.version!==command.payload.expectedVersion||target.run.linkedTicketId!==ticket.id)throw new FleetError("fleet.version_conflict");
+      const run=state.runs.find(r=>r.id===target.run.id)!;
+      const saved=await reviewFleetActivityCharges(context,command,run);
+      return result([{type:"canonical",kind:"activity",id:run.id,version:run.version},{type:"canonical",kind:"ticket",id:Number(ticket.id),version:saved.ticketVersion}]);
+    }
+    case "ticket.finalize": {
+      const ticket=await mapped(command.payload.ticket);if(typeof ticket.id!=="number"||ticket.version!==command.payload.expectedVersion)throw new FleetError("fleet.version_conflict");
+      const saved=await finalizeFleetTicketV2(context,command,ticket.id);return result([{type:"canonical",kind:"ticket",id:ticket.id,version:saved.ticketVersion}]);
+    }
+
     case "quantity.review": {
       const current = await activity(command.payload.activity), ticket = await mapped(command.payload.ticket);
       if (ticket.kind !== "ticket" || current.run.linkedTicketId !== ticket.id)

@@ -1,3 +1,4 @@
+import {effectiveFinancialAmountSql} from "./effective-financial-line";
 // Weekly Accounts Payable digest (Task #505).
 //
 // For every partner with at least one approved ticket whose
@@ -95,7 +96,7 @@ export async function runApPaymentDigest(
       t.id                   as ticket_id,
       to_char(t.approved_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as approved_at,
       coalesce((
-        select sum(li.quantity * li.unit_price)
+        select sum(${sql.raw(effectiveFinancialAmountSql("li"))})
         from ticket_line_items li
         where li.ticket_id = t.id
       ), 0)::numeric(14,2)::text as total

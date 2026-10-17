@@ -1,3 +1,4 @@
+import { appendFleetRunEvent } from "./fleet-run-events";
 import { createHash, randomUUID } from "node:crypto";
 import {
   FleetReplacementInputSchema,
@@ -347,7 +348,7 @@ export function createFleetReplacementOperations(
             run.trailerAssetId !== record.priorTrailerAssetId
           )
             throw new FleetError("fleet.version_conflict");
-          if (run.events.length >= 200)
+          if (!run.billingV2 && run.events.length >= 200)
             throw new FleetError("fleet.store_capacity_reached");
           await custody(state, client, run, record);
           const priorResourceAssignment = run.resourceAssignment
@@ -405,7 +406,7 @@ export function createFleetReplacementOperations(
             recordCount: run.records.length,
           };
           run.version++;
-          run.events.push({
+          appendFleetRunEvent(run, {
             id: randomUUID(),
             operationId: body.operationId,
             type: "equipment_replacement_accepted",

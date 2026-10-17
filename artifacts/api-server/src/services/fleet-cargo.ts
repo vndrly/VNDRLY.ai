@@ -1,3 +1,4 @@
+import { appendFleetRunEvent } from "./fleet-run-events";
 import { createHash, randomUUID } from "node:crypto";
 import {
   checkFleetManifestRequirements,
@@ -414,8 +415,8 @@ export function createFleetCargoOperations(
           )
             throw new FleetError("fleet.site_unavailable", 403);
           if (
-            source.events.length >= 200 ||
-            target.events.length >= 200 ||
+            (!source.billingV2 && source.events.length >= 200) ||
+            (!target.billingV2 && target.events.length >= 200) ||
             target.loads.length >= 100 ||
             target.loads.some((row) => row.id === record.targetLoadId)
           )
@@ -458,7 +459,7 @@ export function createFleetCargoOperations(
           record.status = "completed";
           record.completedAt = time;
           for (const run of [source, target])
-            run.events.push({
+            appendFleetRunEvent(run, {
               id: randomUUID(),
               operationId: body.operationId,
               type: "cargo_transferred",

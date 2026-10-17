@@ -1,3 +1,4 @@
+import { appendFleetRunEvent, readFleetRunEventPage } from "./fleet-run-events";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { attachFleetBillingV2 } from "./fleet-billing-v2";
 import {
@@ -537,6 +538,14 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
     locationObservations: locations.observations,
     locationObservationPage: locations.observationPage,
     locationHistory: locations.history,
+    eventHistory: (actor: FleetActor, runId: string, query: unknown = {}) => {
+      const bound={...actor,runId};
+      return transaction(bound,async(state,client)=>{
+        const run=state.runs.find(row=>row.id===runId);
+        if(!run||!permitted(state,bound,run,"view"))throw new FleetError("fleet.not_found",404);
+        return readFleetRunEventPage(client,run,query);
+      });
+    },
     ...createFleetEtaOperations(
       transaction,
       permitted,
@@ -966,7 +975,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
               throw new FleetError("fleet.operation_conflict");
             return project(state, actor, replay.result);
           }
-          if (state.runs.length >= 1000 || state.operations.length >= 2000)
+          if (!options.billingV2Create && (state.runs.length >= 1000 || state.operations.length >= 2000))
             throw new FleetError("fleet.store_capacity_reached");
           const siteIds = [...new Set(body.stops.map((s) => s.siteId))];
           if (
@@ -1040,7 +1049,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             policyAt: new Date().toISOString(),
           });
           const createdAt = new Date().toISOString();
-          run.events.push({
+          appendFleetRunEvent(run, {
             id: randomUUID(),
             operationId: body.operationId,
             type: "created",
@@ -1066,7 +1075,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             },
           });
           state.runs.push(run);
-          state.operations.push({
+          if (!run.billingV2) state.operations.push({
             id: body.operationId,
             actorUserId: actor.userId,
             fingerprint,
@@ -1136,7 +1145,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             throw new FleetError("fleet.work_command_required", 409);
           if (!["cancel", "pause"].includes(body.action))
             await requireFleetRunCommercialAuthority(client, run);
-          if (run.events.length >= 200 || state.operations.length >= 2000)
+          if (!run.billingV2 && (run.events.length >= 200 || state.operations.length >= 2000))
             throw new FleetError("fleet.store_capacity_reached");
           if (
             body.action !== "reassign" &&
@@ -1522,7 +1531,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             policyAt: new Date().toISOString(),
           });
           run.version++;
-          run.events.push({
+          appendFleetRunEvent(run, {
             id: randomUUID(),
             operationId: body.operationId,
             type: body.action,
@@ -1539,7 +1548,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
               ...(body.action === "reassign" ? { priorAssignment } : {}),
             },
           });
-          state.operations.push({
+          if (!run.billingV2) state.operations.push({
             id: body.operationId,
             actorUserId: actor.userId,
             fingerprint,

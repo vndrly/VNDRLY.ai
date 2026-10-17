@@ -1,7 +1,9 @@
 import { FleetRecordedTimingSchema, type FleetRun, type FleetRecordedTiming } from "@workspace/api-zod";
 
+import { completeFleetRunEvents } from "./fleet-run-events";
+
 /** Saved server acceptance times describe record intervals, never physical duty or billable detention. */
-export function summarizeRecordedFleetTiming(runs: readonly FleetRun[]): FleetRecordedTiming {
+export function summarizeRecordedFleetTiming(runs: readonly FleetRun[], sources?: ReadonlyMap<string, readonly FleetRun["events"][number][]>): FleetRecordedTiming {
   const totals: FleetRecordedTiming = {
     source: "server_recorded_event_times", physicalPresenceVerified: false, contractualTimelinessVerified: false,
     eligibleRunCount: 0, invalidSequenceCount: 0, elapsedMinutes: 0, pausedMinutes: 0, activeMinutes: 0,
@@ -9,11 +11,12 @@ export function summarizeRecordedFleetTiming(runs: readonly FleetRun[]): FleetRe
     plannedFinishCount: 0, lateFinishCount: 0, finishOffsetTotalMinutes: 0,
   };
   for (const run of runs) {
-    const startIndex = run.events.findIndex(event => event.type === "start");
+    const events = completeFleetRunEvents(run, sources?.get(run.id));
+    const startIndex = events.findIndex(event => event.type === "start");
     if (startIndex < 0) continue;
-    const closeIndex = run.events.findIndex((event, index) => index > startIndex && event.type === "submit_closeout");
+    const closeIndex = events.findIndex((event, index) => index > startIndex && event.type === "submit_closeout");
     if (closeIndex < 0) continue;
-    const interval = run.events.slice(startIndex, closeIndex + 1);
+    const interval = events.slice(startIndex, closeIndex + 1);
     const times = interval.map(event => Date.parse(event.recordedAt));
     let invalid = times.some((time, index) => !Number.isFinite(time) || (index > 0 && time < times[index - 1]));
     let pausedAt: number | null = null, pausedMs = 0;

@@ -72,3 +72,7 @@ export * from "./fleet-work";
 export * from "./fleet-work-state";
 export * from "./fleet-work-cache";
 export * from "./fleet-evidence-upload";
+
+export * from "./fleet-work-journal";
+
+export * from "./fleet-work-runtime";

@@ -17,22 +17,25 @@ export type FleetSiteActor = {
   membershipRole: string;
   role: "partner";
 };
+import { completeFleetRunEvents, readCompleteFleetRunEvents } from "./fleet-run-events";
 export function projectFleetSiteRun(
   run: FleetRun,
   siteId: number,
   vendorName: string,
+  sourceEvents?: readonly FleetRun["events"][number][],
 ): FleetSiteActivity["records"][number] {
+  const events = completeFleetRunEvents(run,sourceEvents);
   const stops = run.stops.filter((s) => s.siteId === siteId),
     ids = new Set(stops.map((s) => s.id));
   return {
     runId: run.id,
     vendorName,
     status: run.status,
-    complianceCheckpoints:projectFleetComplianceCheckpoints(run.events),
+    complianceCheckpoints:projectFleetComplianceCheckpoints([...events]),
     stops: stops.map((stop) => ({
       stopId: stop.id,
       kind: stop.kind,
-      events: run.events
+      events: events
         .filter(
           (e) =>
             e.details?.stopId === stop.id &&
@@ -202,13 +205,14 @@ export function createFleetSiteActivityService(
           siteId,
           siteName: site.rows[0].name,
           window: { startsAt, endsAt, dateBasis: "run_created_at" },
-          records: selected.map((run) =>
+          records: await Promise.all(selected.map(async (run) =>
             projectFleetSiteRun(
               run,
               siteId,
               companies.rows.find((c) => c.id === run.companyId)!.name,
+              await readCompleteFleetRunEvents(client,run),
             ),
-          ),
+          )),
           source: "recorded_fleet_events",
           coordinateDisclosure: false,
           unavailableMetrics: [

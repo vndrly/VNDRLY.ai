@@ -1,3 +1,4 @@
+import { appendFleetRunEvent } from "./fleet-run-events";
 import {
   validateCommercialStops,
   assertFleetPhysicalRoute,
@@ -70,7 +71,7 @@ export function createFleetPlanningOperations(
           if (!ticket || !isFleetBillingV2TicketOpen(ticket.status)) throw new FleetError("fleet.ticket_closed",409);
           await requireFleetRunCommercialAuthority(client, run);
         }
-        if (run.events.length >= 200 || state.operations.length >= 2000)
+        if (!run.billingV2 && (run.events.length >= 200 || state.operations.length >= 2000))
           throw new FleetError("fleet.store_capacity_reached");
         const next = {
           ...run,
@@ -116,7 +117,7 @@ export function createFleetPlanningOperations(
           await rescheduleFleetRunDetail({ state, client }, bound, next);
         Object.assign(run, next);
         run.version++;
-        run.events.push({
+        appendFleetRunEvent(run, {
           id: randomUUID(),
           operationId: body.operationId,
           type: "draft_edited",
@@ -135,7 +136,7 @@ export function createFleetPlanningOperations(
             ),
           },
         });
-        state.operations.push({
+        if (!run.billingV2) state.operations.push({
           id: body.operationId,
           actorUserId: bound.userId,
           fingerprint,

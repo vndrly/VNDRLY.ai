@@ -1,3 +1,4 @@
+import { createFleetWorkRouter } from "./fleet-work";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { withNativeLocationCollection } from "../services/native-operations";
 import { NativeOperationError } from "../services/native-operations-policy";
@@ -23,6 +24,9 @@ import {
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
 router.use(createFleetComplianceRouter(service, actor));
+router.use(createFleetWorkRouter({actor}));
+router.get("/fleet/runs/:id/events", endpoint(req=>service.eventHistory(actor(req),z.uuid().parse(req.params.id),req.query)));
+router.get("/fleet/location-observations",endpoint(req=>service.locationObservationPage(actor(req),req.query)));
 router.post("/fleet/workdays/events", endpoint(req => service.recordWorkday(actor(req), req.body)));
 router.get("/fleet/workdays/operations/:operationId", endpoint(req => service.workdayOperation(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/workdays/:id", endpoint(req => service.workday(actor(req), z.uuid().parse(req.params.id))));

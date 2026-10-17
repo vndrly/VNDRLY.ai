@@ -12,6 +12,7 @@ import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
 import { summarizeRecordedFleetTiming } from "./fleet-recorded-timing";
+import { readCompleteFleetRunEvents } from "./fleet-run-events";
 type Access = (
   state: FleetState,
   actor: FleetActor,
@@ -29,6 +30,7 @@ export function summarizeFleetRecords(
   runs: FleetRun[],
   filters: FleetReportFilter,
   financeRead: boolean,
+  eventSources?: ReadonlyMap<string, readonly FleetRun["events"][number][]>,
 ): FleetReport {
   const loads = new Map<string, FleetReport["loadTotals"][number]>(),
     fuel = new Map<string, number>(),
@@ -94,7 +96,7 @@ export function summarizeFleetRecords(
         n + r.inspections.filter((i) => i.outcome === "defect_reported").length,
       0,
     ),
-    recordedTiming: summarizeRecordedFleetTiming(runs),
+    recordedTiming: summarizeRecordedFleetTiming(runs, eventSources),
     loadTotals: [...loads.values()],
     distanceTotals: [...distance].map(([unit, distance]) => ({
       unit,
@@ -201,7 +203,9 @@ export function createFleetReportingOperations(
               Date.parse(r.events[0]?.recordedAt ?? "") <
                 Date.parse(filters.endsAt)),
         );
-        return summarizeFleetRecords(runs, filters, grant.financeRead === true);
+        const sources = new Map<string, FleetRun["events"]>();
+        for (const run of runs) sources.set(run.id, await readCompleteFleetRunEvents(client,run));
+        return summarizeFleetRecords(runs, filters, grant.financeRead === true, sources);
       });
     },
     savedViews: (actor: FleetActor) =>

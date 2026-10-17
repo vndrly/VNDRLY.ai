@@ -5,6 +5,7 @@ import { FleetLocationInputSchema, FleetLocationObservationSchema, FleetLocation
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
 
+import { readCompleteFleetRunEvents } from "./fleet-run-events";
 type Transaction = <T>(actor: FleetActor, operation: (state: FleetState, client: PoolClient) => Promise<T>) => Promise<T>;
 type Permitted = (state: FleetState, actor: FleetActor, run: FleetRun, action: "view" | "dispatch" | "perform_run") => boolean;
 type SavedLocation = {operationId: string; fingerprint: string; deviceId: string; assignment: string; observation: FleetLocationObservation};
@@ -38,7 +39,7 @@ export function createFleetLocationOperations(transaction: Transaction, permitte
       // Reuse live-map authority and current device consent. Never expose another assignment's route.
       const rows=await client.query("SELECT tool_output FROM assistant_action_audit a WHERE vendor_id=$1 AND target_type='fleet-location' AND target_id=$2 AND tool_output->>'assignment'=$3 AND EXISTS(SELECT 1 FROM location_consents c WHERE c.user_id=(a.tool_output->'observation'->>'driverUserId')::int AND c.device_id=a.tool_output->>'deviceId' AND c.revoked_at IS NULL) ORDER BY (tool_output->'observation'->>'recordedAt')::timestamptz ASC,id ASC LIMIT 5001",[actor.companyId,runId,assignment(run)]);
       const parsed=rows.rows.flatMap(row=>{const saved=row.tool_output as SavedLocation, point=FleetLocationObservationSchema.safeParse(saved.observation);return point.success&&saved.assignment===assignment(run)&&point.data.runId===run.id?[currentObservation(point.data,run,clock())]:[];});
-      return {runId,points:parsed.slice(0,5000),truncated:rows.rows.length>5000,events:run.events.map((event,index)=>({id:event.id??String(index),recordedAt:event.recordedAt,label:event.type.replaceAll("_"," ")}))};
+      return {runId,points:parsed.slice(0,5000),truncated:rows.rows.length>5000,events:(await readCompleteFleetRunEvents(client,run)).map((event,index)=>({id:event.id??String(index),recordedAt:event.recordedAt,label:event.type.replaceAll("_"," ")}))};
     });},
     record: (actor: FleetActor, runId: string, input: unknown) => {
       const command=FleetLocationInputSchema.parse(input);

@@ -109,6 +109,7 @@ function fixture() {
   return {
     service: createFleetSupportService(pool, () => new Date(time)),
     state,
+    run,
     query,
     release,
     revokeAccount: () => {
@@ -156,6 +157,18 @@ describe("explicit company-bound Fleet support", () => {
       "Company-authorized synthetic diagnostic",
     );
     expect(String(audit?.[1][3])).not.toContain("Private fuel");
+  });
+  it("redacts precise billing and explicitly labels a permission-filtered archived event window", async () => {
+    const f=fixture(), item=f.run;
+    item.linkedTicketId=100;
+    item.billingV2={version:2,revision:1,ticketId:100,ticketRevisionAtBinding:1,context:{vendorId:7,partnerId:8,billingSiteId:9,afeNumber:"SYNTHETIC",workDate:"2026-10-07",currency:"USD"},serviceId:3,pricing:{mode:"unpriced",reason:"approval_required",serviceId:3,approvalRef:null},review:{status:"pending",reason:null}};
+    item.eventHistory={version:2,totalEvents:1,firstEventId:item.events[0].id,latestEventId:item.events[0].id,complete:true};
+    const result=await f.service.read(actor,7);
+    expect(result.runs[0].billingV2).toBeUndefined();
+    expect(result.runs[0].eventHistory).toMatchObject({totalEvents:1,complete:false,visibility:"permission_filtered"});
+    expect(FleetRunSchema.safeParse(result.runs[0]).success).toBe(true);
+    expect(item.billingV2).toBeDefined();
+    expect(item.eventHistory.complete).toBe(true);
   });
   it("rechecks actual current account and site/relationship authority on every read", async () => {
     const f = fixture();

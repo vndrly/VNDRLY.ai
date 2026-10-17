@@ -128,6 +128,17 @@ export const FleetRunRecordSchema = z
     source: z.literal("user_report"),
   })
   .strict();
+export const FleetRunEventSchema = z.object({
+  id: z.uuid(), operationId: z.uuid(), type: z.string(),
+  actorUserId: z.number().int().positive(), recordedAt: z.iso.datetime(),
+  capturedAt: z.iso.datetime().optional(), source: z.literal("user_report").optional(),
+  details: z.record(z.string(), z.unknown()).optional(),
+});
+export const FleetRunEventHistorySchema = z.object({
+  version: z.literal(2), totalEvents: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  firstEventId: z.uuid(), latestEventId: z.uuid(), complete: z.boolean(),
+  visibility: z.literal("permission_filtered").optional(),
+}).strict();
 export const FleetRunSchema = z
   .object({
     runOrder: FleetRunOrderSchema.optional(),
@@ -176,25 +187,20 @@ export const FleetRunSchema = z
     inspections: z.array(FleetInspectionSchema).max(100),
     currentStopId: z.uuid().nullable(),
     visitedStopIds: z.array(z.uuid()).max(50),
-    events: z
-      .array(
-        z.object({
-          id: z.uuid(),
-          operationId: z.uuid(),
-          type: z.string(),
-          actorUserId: z.number().int().positive(),
-          recordedAt: z.iso.datetime(),
-          capturedAt: z.iso.datetime().optional(),
-          source: z.literal("user_report").optional(),
-          details: z.record(z.string(), z.unknown()).optional(),
-        }),
-      )
-      .max(200),
+    events: z.array(FleetRunEventSchema).max(200),
+    // Operational archive metadata remains visible when financial fields are
+    // omitted for a driver. It does not assert financial or physical approval.
+    eventHistory: FleetRunEventHistorySchema.optional(),
     linkedTicketId: z.number().int().positive().nullable(),
     allowedActions: z.array(FleetRunActionSchema),
     availability: FleetAvailabilitySchema.optional(),
   })
   .superRefine((run, ctx) => {
+    if (run.eventHistory) {
+      const history=run.eventHistory;
+      if(history.totalEvents<run.events.length||(history.visibility ? history.complete : history.complete!==(history.totalEvents===run.events.length)||history.firstEventId!==run.events[0]?.id||history.latestEventId!==run.events.at(-1)?.id)||new Set(run.events.map(event=>event.id)).size!==run.events.length)
+        ctx.addIssue({code:"custom",path:["eventHistory"],message:"Event window must accurately describe its complete canonical archive"});
+    }
     if(run.billingV2){
       const financial=run.billingV2;
       if(run.billing || run.commercial)ctx.addIssue({code:"custom",path:["billingV2"],message:"A run must use exactly one v1 or v2 financial writer"});

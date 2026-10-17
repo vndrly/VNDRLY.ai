@@ -1,3 +1,4 @@
+import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
 import { Router, type IRouter } from "express";
 import { sql, eq, and, inArray, type SQL } from "drizzle-orm";
 import { getSessionFromRequest } from "../lib/session";
@@ -100,7 +101,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
   const revenueByType = await db
     .select({
       type: ticketLineItemsTable.type,
-      total: sql<string>`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0)::numeric(12,2)`,
+      total: sql<string>`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0)::numeric(12,2)`,
     })
     .from(ticketLineItemsTable)
     .innerJoin(ticketsTable, eq(ticketLineItemsTable.ticketId, ticketsTable.id))
@@ -109,7 +110,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
 
   const revenueByMonth = await db.execute<{ month: string; total: string }>(sql`
     SELECT to_char(m, 'YYYY-MM') AS month,
-           COALESCE(SUM(li.quantity * li.unit_price), 0)::numeric(12,2) AS total
+           COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("li"))}), 0)::numeric(12,2) AS total
     FROM generate_series(
       date_trunc('month', now()) - interval '3 months',
       date_trunc('month', now()),
@@ -123,7 +124,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
 
   const revenueByYear = await db.execute<{ year: string; total: string }>(sql`
     SELECT to_char(y, 'YYYY') AS year,
-           COALESCE(SUM(li.quantity * li.unit_price), 0)::numeric(12,2) AS total
+           COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("li"))}), 0)::numeric(12,2) AS total
     FROM generate_series(
       date_trunc('year', now()) - interval '3 years',
       date_trunc('year', now()),
@@ -137,7 +138,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
 
   const [totalRevenue] = await db
     .select({
-      total: sql<string>`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0)::numeric(12,2)`,
+      total: sql<string>`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0)::numeric(12,2)`,
     })
     .from(ticketLineItemsTable)
     .innerJoin(ticketsTable, eq(ticketLineItemsTable.ticketId, ticketsTable.id))
@@ -170,7 +171,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
     .from(fieldEmployeesTable)
     .leftJoin(ticketsTable, eq(fieldEmployeesTable.id, ticketsTable.fieldEmployeeId))
     .leftJoin(
-      sql`(SELECT ticket_id, SUM(quantity * unit_price) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
+      sql`(SELECT ticket_id, SUM(${sql.raw(effectiveFinancialAmountSql())}) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
       sql`sub.ticket_id = ${ticketsTable.id}`
     )
     .where(eq(fieldEmployeesTable.vendorId, vendorId))
@@ -187,7 +188,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
     .from(ticketsTable)
     .innerJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id))
     .leftJoin(
-      sql`(SELECT ticket_id, SUM(quantity * unit_price) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
+      sql`(SELECT ticket_id, SUM(${sql.raw(effectiveFinancialAmountSql())}) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
       sql`sub.ticket_id = ${ticketsTable.id}`
     )
     .where(eq(ticketsTable.vendorId, vendorId))
@@ -205,7 +206,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
     .from(ticketsTable)
     .innerJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
     .leftJoin(
-      sql`(SELECT ticket_id, SUM(quantity * unit_price) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
+      sql`(SELECT ticket_id, SUM(${sql.raw(effectiveFinancialAmountSql())}) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
       sql`sub.ticket_id = ${ticketsTable.id}`
     )
     .where(eq(ticketsTable.vendorId, vendorId))
@@ -329,7 +330,7 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
 
   const [totalCost] = await db
     .select({
-      total: sql<string>`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0)::numeric(12,2)`,
+      total: sql<string>`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0)::numeric(12,2)`,
     })
     .from(ticketLineItemsTable)
     .innerJoin(ticketsTable, eq(ticketLineItemsTable.ticketId, ticketsTable.id))
@@ -340,7 +341,7 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
       vendorId: vendorsTable.id,
       vendorName: vendorsTable.name,
       ticketCount: sql<number>`count(DISTINCT ${ticketsTable.id})::int`,
-      totalCost: sql<string>`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0)::numeric(12,2)`,
+      totalCost: sql<string>`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0)::numeric(12,2)`,
       approvedCount: sql<number>`count(DISTINCT ${ticketsTable.id}) FILTER (WHERE ${ticketsTable.status} = 'approved')::int`,
       kickedBackCount: sql<number>`count(DISTINCT ${ticketsTable.id}) FILTER (WHERE ${ticketsTable.status} = 'kicked_back')::int`,
     })
@@ -349,25 +350,25 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
     .leftJoin(ticketLineItemsTable, eq(ticketsTable.id, ticketLineItemsTable.ticketId))
     .where(sql`${ticketsTable.siteLocationId} IN (${partnerSites})`)
     .groupBy(vendorsTable.id, vendorsTable.name)
-    .orderBy(sql`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0) DESC`);
+    .orderBy(sql`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0) DESC`);
 
   const costBySite = await db
     .select({
       siteId: siteLocationsTable.id,
       siteName: siteLocationsTable.name,
       ticketCount: sql<number>`count(DISTINCT ${ticketsTable.id})::int`,
-      totalCost: sql<string>`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0)::numeric(12,2)`,
+      totalCost: sql<string>`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0)::numeric(12,2)`,
     })
     .from(siteLocationsTable)
     .leftJoin(ticketsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
     .leftJoin(ticketLineItemsTable, eq(ticketsTable.id, ticketLineItemsTable.ticketId))
     .where(eq(siteLocationsTable.partnerId, partnerId))
     .groupBy(siteLocationsTable.id, siteLocationsTable.name)
-    .orderBy(sql`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0) DESC`);
+    .orderBy(sql`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0) DESC`);
 
   const costByMonthRaw = await db.execute<{ month: string; total: string }>(sql`
     SELECT to_char(m, 'YYYY-MM') AS month,
-           COALESCE(SUM(li.quantity * li.unit_price), 0)::numeric(12,2) AS total
+           COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("li"))}), 0)::numeric(12,2) AS total
     FROM generate_series(
       date_trunc('month', now()) - interval '3 months',
       date_trunc('month', now()),
@@ -383,7 +384,7 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
 
   const costByYearRaw = await db.execute<{ year: string; total: string }>(sql`
     SELECT to_char(y, 'YYYY') AS year,
-           COALESCE(SUM(li.quantity * li.unit_price), 0)::numeric(12,2) AS total
+           COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("li"))}), 0)::numeric(12,2) AS total
     FROM generate_series(
       date_trunc('year', now()) - interval '3 years',
       date_trunc('year', now()),
@@ -400,7 +401,7 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
   const costByType = await db
     .select({
       type: ticketLineItemsTable.type,
-      total: sql<string>`COALESCE(SUM(${ticketLineItemsTable.quantity} * ${ticketLineItemsTable.unitPrice}), 0)::numeric(12,2)`,
+      total: sql<string>`COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("ticket_line_items"))}), 0)::numeric(12,2)`,
     })
     .from(ticketLineItemsTable)
     .innerJoin(ticketsTable, eq(ticketLineItemsTable.ticketId, ticketsTable.id))
@@ -420,7 +421,7 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
     .from(ticketsTable)
     .innerJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id))
     .leftJoin(
-      sql`(SELECT ticket_id, SUM(quantity * unit_price) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
+      sql`(SELECT ticket_id, SUM(${sql.raw(effectiveFinancialAmountSql())}) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
       sql`sub.ticket_id = ${ticketsTable.id}`
     )
     .where(sql`${ticketsTable.siteLocationId} IN (${partnerSites})`)

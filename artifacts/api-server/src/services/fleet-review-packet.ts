@@ -10,9 +10,11 @@ import {
 } from "@workspace/api-zod";
 import type { PoolClient } from "pg";
 import { FleetError } from "./fleet-repository";
+import { completeFleetRunEvents, readCompleteFleetRunEvents } from "./fleet-run-events";
 export function buildFleetReviewPacket(
   run: FleetRun,
   evidence: FleetEvidence[],
+  sourceEvents?: readonly FleetRun["events"][number][],
 ) {
   const actual = evidence.filter(
     (item) =>
@@ -87,7 +89,7 @@ export function buildFleetReviewPacket(
     runId: run.id,
     runVersion: run.version,
     status: run.status,
-    complianceCheckpoints:projectFleetComplianceCheckpoints(run.events),
+    complianceCheckpoints:projectFleetComplianceCheckpoints([...completeFleetRunEvents(run,sourceEvents)]),
     requirements,
     missingRequiredCount,
     readyForOperationalReview:
@@ -110,14 +112,21 @@ export function buildFleetReviewPacket(
   });
 }
 export async function readFleetReviewPacket(client: PoolClient, run: FleetRun) {
-  const result = await client.query(
-    "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-evidence' AND tool_output->'record'->>'runId'=$2 ORDER BY id LIMIT 101",
-    [run.companyId, run.id],
-  );
-  if (result.rows.length > 100)
-    throw new FleetError("fleet.store_capacity_reached");
-  return buildFleetReviewPacket(
-    run,
-    result.rows.map((row) => FleetEvidenceSchema.parse(row.tool_output.record)),
-  );
+  const evidence: FleetEvidence[] = [];
+  if(run.billingV2) {
+    let after=0;
+    for(;;) {
+      const result=await client.query("SELECT id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-evidence' AND tool_output->'record'->>'runId'=$2 AND id>$3 ORDER BY id LIMIT 500",[run.companyId,run.id,after]);
+      evidence.push(...result.rows.map(row=>FleetEvidenceSchema.parse(row.tool_output.record)));
+      if(result.rows.length<500)break;
+      const next=Number(result.rows.at(-1)!.id);
+      if(!Number.isSafeInteger(next)||next<=after)throw new FleetError("fleet.evidence_history_unavailable",503);
+      after=next;
+    }
+  } else {
+    const result=await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-evidence' AND tool_output->'record'->>'runId'=$2 ORDER BY id LIMIT 101",[run.companyId,run.id]);
+    if(result.rows.length>100)throw new FleetError("fleet.store_capacity_reached");
+    evidence.push(...result.rows.map(row=>FleetEvidenceSchema.parse(row.tool_output.record)));
+  }
+  return buildFleetReviewPacket(run,evidence,await readCompleteFleetRunEvents(client,run));
 }

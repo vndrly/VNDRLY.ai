@@ -1,6 +1,7 @@
 import { FleetRunSchema, type FleetRun } from "@workspace/api-zod";
 import { isDeepStrictEqual } from "node:util";
 import type { PoolClient } from "pg";
+import { archiveFleetRunEvents, pendingFleetRunEvents, clearPendingFleetRunEvents } from "./fleet-run-events";
 import type {
   FleetRepository,
   FleetSessionAuthority,
@@ -102,7 +103,10 @@ export function createItemizedFleetRepository(
                 !existing ||
                 !isDeepStrictEqual(storedRun(existing.tool_output), record)
               )
-                await appendSnapshot(client, companyId, actorUserId, record);
+                await appendSnapshot(client, companyId, actorUserId, record,
+                  loadedBefore.has(run.id) ? FleetRunSchema.parse(JSON.parse(loadedBefore.get(run.id)!)) : existing?.tool_output,
+                  pendingFleetRunEvents(run));
+              clearPendingFleetRunEvents(run);
             }
             // Preserve original open records, and merge all actually changed
             // records; a read-only historical page cannot overwrite live state.
@@ -134,7 +138,10 @@ async function appendSnapshot(
   companyId: number,
   actorUserId: number,
   run: FleetRun,
+  previous?: FleetRun,
+  added: ReturnType<typeof pendingFleetRunEvents> = [],
 ) {
+  await archiveFleetRunEvents(client,companyId,actorUserId,run,previous,added);
   await client.query(
     "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','fleet_run','fleet-run-snapshot','fleet-run',$3,$4::jsonb,'completed')",
     [actorUserId, companyId, run.id, JSON.stringify(storedRun(run))],
