@@ -11,8 +11,10 @@ import { useColors } from "@/hooks/useColors";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import TogglePillButton from "./TogglePillButton";
 import FleetChoiceField from "./FleetChoiceField";
+import FleetEvidenceReview from "./FleetEvidenceReview";
 
 export default function FleetComplianceRegister() {
+  const [selected,setSelected]=useState<{id:string;revision:number}|null>(null);
   const copy = useFleetCopy(),
     colors = useColors(),
     scope = useRef(captureAuthScope()),
@@ -86,6 +88,7 @@ export default function FleetComplianceRegister() {
     generation.current++;
     busy.current = false;
     setEntries([]);
+    setSelected(null);
     setAfter(null);
     void load();
     return () => {
@@ -151,6 +154,7 @@ export default function FleetComplianceRegister() {
           )}
         </Text>
       )}
+      {selected&&!error&&<FleetEvidenceReview evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);setRefresh(value=>value+1);}}/>}
       {entries.map((entry) => (
         <View key={entry.id} style={card}>
           <Text style={[text, { fontWeight: "700" }]}>
@@ -194,6 +198,7 @@ export default function FleetComplianceRegister() {
           <Text style={text}>
             {copy("Evaluated")}: {new Date(entry.evaluatedAt).toLocaleString()}
           </Text>
+          {entry.mayReview&&<TogglePillButton onPress={()=>setSelected({id:entry.id,revision:entry.revision})}>{copy("Review evidence")}</TogglePillButton>}
         </View>
       ))}
       {!!after && !error && (

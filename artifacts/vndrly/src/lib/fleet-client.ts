@@ -30,6 +30,9 @@ import {
   FleetComplianceSubjectsQuerySchema,
   FleetComplianceRegisterQuerySchema,
   FleetComplianceRegisterPageSchema,
+  FleetComplianceRecordSchema,
+  FleetComplianceVerifySchema,
+  FleetComplianceRecordReceiptSchema,
   FleetDestinationReceiptSchema,
   FleetDestinationDirectorySchema,
   FleetDetailPageSchema,
@@ -141,6 +144,8 @@ export const fleetClient = {
     Object.entries(parsed).forEach(([key,value])=>{if(value!==undefined)params.set(key,String(value));});
     return request<unknown>(`/compliance?${params}`).then(value=>FleetComplianceRegisterPageSchema.parse(value));
   },
+  privateComplianceRecord:(id:string,revision:number)=>request<unknown>(`/compliance/${encodeURIComponent(id)}/private?revision=${revision}`).then(value=>FleetComplianceRecordSchema.parse(value)),
+  reviewCompliance:(input:z.input<typeof FleetComplianceVerifySchema>)=>request<unknown>(`/compliance/${encodeURIComponent(input.evidenceId)}/review`,FleetComplianceVerifySchema.parse(input)).then(value=>FleetComplianceRecordReceiptSchema.parse(value)),
   saveRunOrder:(input:z.input<typeof FleetRunOrderSaveSchema>)=>request<unknown>("/run-orders",FleetRunOrderSaveSchema.parse(input)).then(value=>FleetRunOrderSchema.parse(value)),
   runOrderReceipt:(id:string)=>request<unknown>(`/run-orders/operations/${encodeURIComponent(id)}`).then(value=>FleetRunOrderReceiptSchema.parse(value)),
   runOrderHistory:(id:string,after?:number)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/history${after?`?after=${after}`:""}`).then(value=>FleetRunOrderHistorySchema.parse(value)),

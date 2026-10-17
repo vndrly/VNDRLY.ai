@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { it, expect, vi, afterEach } from "vitest";
 import FleetComplianceRegister from "./FleetComplianceRegister";
+vi.mock("./FleetEvidenceReview",()=>({default:()=> <div>Private reviewer opened</div>}));
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
 vi.mock("@/lib/auth", () => ({
@@ -41,6 +42,10 @@ vi.mock("./FleetChoiceField", () => ({
 afterEach(() => {
   cleanup();
   mocks.api.mockReset();
+});
+it("requires an explicit reviewer selection and clears private review when switching registers",async()=>{
+ mocks.api.mockResolvedValue({entries:[{id:"11111111-1111-4111-8111-111111111111",revision:1,subject:{kind:"carrier",id:7},requirementId:"authority",requirementVersion:1,kind:"credential",verification:"document_received",status:"red",reasons:["unverified"],validUntil:null,evaluatedAt:"2026-10-16T18:00:00Z",maskedIdentifier:null,mayReview:true}],mode:"warn_only",nextCursor:null});
+ render(<FleetComplianceRegister/>);const button=await screen.findByRole("button",{name:"Review evidence"});expect(screen.queryByText("Private reviewer opened")).toBeNull();fireEvent.click(button);expect(screen.getByText("Private reviewer opened")).toBeTruthy();fireEvent.change(screen.getByLabelText("Register"),{target:{value:"vehicle"}});expect(screen.queryByText("Private reviewer opened")).toBeNull();
 });
 it("shows safe native evidence status and never fetches private records to draw a compliance card", async () => {
   mocks.api.mockResolvedValue({

@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({ register: vi.fn() }));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: { complianceRegister: mocks.register },
 }));
+vi.mock("./fleet-evidence-review",()=>({FleetEvidenceReview:()=> <div>Private reviewer opened</div>}));
 vi.mock("./png-pill-rollover", () => ({
   PngPillButton: ({ children, ...props }: any) => (
     <button {...props}>{children}</button>
@@ -35,6 +36,10 @@ const entry = {
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
+});
+it("opens a private review only on an appointed reviewer's explicit selection and clears it on filter changes",async()=>{
+ mocks.register.mockResolvedValue({entries:[{...entry,mayReview:true}],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><FleetComplianceRegister identity="reviewer7"/></QueryClientProvider>);
+ const button=await screen.findByRole("button",{name:"Review evidence"});expect(screen.queryByText("Private reviewer opened")).toBeNull();fireEvent.click(button);expect(screen.getByText("Private reviewer opened")).toBeTruthy();fireEvent.change(screen.getByLabelText("Register"),{target:{value:"vehicle"}});expect(screen.queryByText("Private reviewer opened")).toBeNull();
 });
 it("presents warning-only registers with masked evidence and no automatic private reads, and discards old pages when a filter is denied", async () => {
   mocks.register.mockResolvedValue({

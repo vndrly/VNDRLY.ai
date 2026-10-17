@@ -4,11 +4,13 @@ import { useTranslation } from "react-i18next";
 import type { FleetComplianceSubject } from "@workspace/api-zod";
 import { fleetClient } from "@/lib/fleet-client";
 import { PngPillButton } from "./png-pill-rollover";
+import {FleetEvidenceReview} from "./fleet-evidence-review";
 
 export function FleetComplianceRegister({ identity }: { identity: string }) {
   const { i18n } = useTranslation(),
     es = i18n.language.startsWith("es");
   const [kind, setKind] = useState<"" | FleetComplianceSubject["kind"]>("");
+  const [selected,setSelected]=useState<{id:string;revision:number}|null>(null);
   const registers = {
     carrier: es ? "Transportista y seguros" : "Carrier & insurance",
     vehicle: es ? "Vehículos" : "Vehicles",
@@ -69,7 +71,7 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
         {es ? "Registro" : "Register"}
         <select
           value={kind}
-          onChange={(event) => setKind(event.target.value as typeof kind)}
+          onChange={(event) => {setSelected(null);setKind(event.target.value as typeof kind);}}
         >
           <option value="">
             {es
@@ -106,6 +108,7 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
             : "No evidence recorded in this view. This does not establish compliance."}
         </p>
       )}
+      {selected&&!query.isError&&<FleetEvidenceReview identity={identity} evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);void query.refetch();}}/>}
       <div className="grid gap-3 md:grid-cols-2">
         {entries.map((entry) => (
           <article key={entry.id} className="fleet-detail-group space-y-2">
@@ -151,6 +154,7 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
             <p>
               {es ? "Evaluado" : "Evaluated"}: {date(entry.evaluatedAt)}
             </p>
+            {entry.mayReview&&<PngPillButton onClick={()=>setSelected({id:entry.id,revision:entry.revision})}>{es?"Revisar evidencia":"Review evidence"}</PngPillButton>}
           </article>
         ))}
       </div>
