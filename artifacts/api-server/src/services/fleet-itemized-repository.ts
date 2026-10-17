@@ -1,4 +1,5 @@
 import { FleetRunSchema, type FleetRun } from "@workspace/api-zod";
+import { isDeepStrictEqual } from "node:util";
 import type { PoolClient } from "pg";
 import type {
   FleetRepository,
@@ -86,7 +87,22 @@ export function createItemizedFleetRepository(
           for (const run of state.runs) {
             const record = storedRun(run);
             if (loadedBefore.get(run.id) !== JSON.stringify(record)) {
-              await appendSnapshot(client, companyId, actorUserId, record);
+              // A local-reference/read handler may point-load a head after
+              // loadedBefore was captured. Reading it is not new work and
+              // must not reorder history or invent a new retained revision.
+              const existing = !loadedBefore.has(run.id)
+                ? (
+                    await client.query(
+                      "SELECT tool_output FROM assistant_action_audit WHERE target_type='fleet-run' AND target_id=$1 AND vendor_id=$2 ORDER BY id DESC LIMIT 1",
+                      [run.id, companyId],
+                    )
+                  ).rows[0]
+                : null;
+              if (
+                !existing ||
+                !isDeepStrictEqual(storedRun(existing.tool_output), record)
+              )
+                await appendSnapshot(client, companyId, actorUserId, record);
             }
             // Preserve original open records, and merge all actually changed
             // records; a read-only historical page cannot overwrite live state.
@@ -97,7 +113,12 @@ export function createItemizedFleetRepository(
               original.set(run.id, record);
           }
           state.runs = [...original.values()].filter(
-            (run) => !["completed", "cancelled"].includes(run.status),
+            // V2 heads are already durable above and are read by exact ID or
+            // bounded page. The old company JSON remains the legacy view;
+            // its capacity is not a ceiling on new canonical v2 work.
+            (run) =>
+              !run.billingV2 &&
+              !["completed", "cancelled"].includes(run.status),
           );
           if (state.runs.length > 500) throw capacityError();
           return result;

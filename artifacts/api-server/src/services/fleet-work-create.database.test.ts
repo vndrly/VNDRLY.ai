@@ -15,6 +15,7 @@ import {
   FleetWorkCommandSchema,
   fleetRunOrderRoute,
   type FleetRun,
+  type FleetWorkReference,
 } from "@workspace/api-zod";
 import { createFleetPricingFixture } from "../test-utils/fleet-pricing";
 import { createFleetService } from "./fleet-ops";
@@ -331,6 +332,84 @@ it("requires an original-scope receipt transaction for v2 actions while retainin
     "cancelled",
   );
 });
+
+it("creates and pages 501 actual active v2 activities without filling the legacy company aggregate", async () => {
+  const f = await fixture();
+  if (f.command.kind !== "activity.create") throw Error("Expected creation");
+  let ticket: FleetWorkReference | undefined;
+  const ids = new Set<string>();
+  const baseTime = Date.parse("2026-11-01T12:00:00Z");
+  for (let index = 0; index < 501; index++) {
+    const command = structuredClone(f.command);
+    command.operationId = randomUUID();
+    command.payload.activityId = randomUUID();
+    command.payload.title = `Synthetic capacity activity ${index + 1}`;
+    command.payload.billing.workDate = "2026-11-01";
+    if (ticket)
+      command.payload.billing = {
+        ...command.payload.billing,
+        choice: "existing_ticket",
+        ticket,
+      };
+    command.payload.route.plannedWindow = {
+      startAt: new Date(baseTime + index * 60000).toISOString(),
+      endAt: new Date(baseTime + (index + 1) * 60000).toISOString(),
+      timeZone: "America/Chicago",
+    };
+    const receipt = await f.work.apply(f.actor, command);
+    expect(receipt.status, `Canonical activity ${index + 1}`).toBe("applied");
+    if (receipt.status !== "applied")
+      throw Error("Expected actual canonical receipt");
+    ids.add(
+      String(
+        receipt.canonicalReferences.find((ref) => ref.kind === "activity")!.id,
+      ),
+    );
+    ticket ??= receipt.canonicalReferences.find(
+      (ref) => ref.kind === "ticket",
+    )!;
+  }
+  expect(ids.size).toBe(501);
+  expect(
+    (
+      await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1", [
+        f.vendor,
+      ])
+    ).rows[0].fleet_ops_state.runs,
+  ).toHaveLength(0);
+  expect(
+    (
+      await pool.query(
+        "SELECT COUNT(DISTINCT target_id)::int AS count FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run'",
+        [f.vendor],
+      )
+    ).rows[0].count,
+  ).toBe(501);
+  expect(
+    (await pool.query("SELECT id FROM tickets WHERE vendor_id=$1", [f.vendor]))
+      .rows,
+  ).toHaveLength(1);
+  expect(
+    (
+      await pool.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1", [
+        ticket!.id,
+      ])
+    ).rows,
+  ).toHaveLength(0);
+  const service = createFleetService(databaseFleetRepository),
+    read = new Set<string>();
+  let cursor: string | null = null;
+  do {
+    const page = await service.overview({
+      ...f.actor,
+      runPage: { limit: 50, ...(cursor ? { cursor } : {}) },
+    });
+    expect(page.runs.length).toBeLessThanOrEqual(50);
+    for (const run of page.runs) read.add(run.id);
+    cursor = page.page?.nextCursor ?? null;
+  } while (cursor);
+  expect(read).toEqual(ids);
+}, 120000);
 
 it("checks each mixed-service activity's own approval rather than the shared ticket's first service", async () => {
   const f = await fixture(),

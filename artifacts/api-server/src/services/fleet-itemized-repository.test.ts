@@ -122,6 +122,99 @@ function fixture(count = 0) {
   };
 }
 describe("itemized Fleet retained history", () => {
+  it("retains more than 500 active v2 heads outside the bounded legacy company view", async () => {
+    const f = fixture(501);
+    for (const r of f.state().runs) {
+      r.status = "draft";
+      r.linkedTicketId = 100;
+      r.billingV2 = {
+        version: 2,
+        revision: 1,
+        ticketId: 100,
+        ticketRevisionAtBinding: 1,
+        context: {
+          vendorId: 7,
+          partnerId: 8,
+          billingSiteId: 9,
+          afeNumber: "SYNTHETIC",
+          workDate: "2026-10-16",
+          currency: "USD",
+        },
+        serviceId: 3,
+        pricing: {
+          mode: "unpriced",
+          reason: "approval_required",
+          serviceId: 3,
+          approvalRef: null,
+        },
+        review: { status: "pending", reason: null },
+      };
+    }
+    const originals = structuredClone(f.state().runs);
+    await f.repository.transaction(7, 1, async () => null, {});
+    expect(f.state().runs).toHaveLength(0);
+    expect(f.audit.map((a) => a.tool_output)).toEqual(originals);
+    const target = originals[0];
+    const authority: FleetItemizedAuthority = { runId: target.id };
+    await f.repository.transaction(
+      7,
+      1,
+      async (state) => {
+        expect(state.runs).toHaveLength(1);
+        state.runs[0].title = "Actual next revision";
+        state.runs[0].version++;
+      },
+      authority,
+    );
+    expect(f.audit).toHaveLength(502);
+    expect(f.audit.at(-1)?.tool_output).toMatchObject({
+      id: target.id,
+      version: 3,
+      title: "Actual next revision",
+    });
+    expect(f.state().runs).toHaveLength(0);
+  });
+  it("does not turn an internally point-loaded v2 read into a new work snapshot", async () => {
+    const f = fixture(1),
+      r = f.state().runs[0];
+    r.status = "draft";
+    r.linkedTicketId = 100;
+    r.billingV2 = {
+      version: 2,
+      revision: 1,
+      ticketId: 100,
+      ticketRevisionAtBinding: 1,
+      context: {
+        vendorId: 7,
+        partnerId: 8,
+        billingSiteId: 9,
+        afeNumber: "SYNTHETIC",
+        workDate: "2026-10-16",
+        currency: "USD",
+      },
+      serviceId: 3,
+      pricing: {
+        mode: "unpriced",
+        reason: "approval_required",
+        serviceId: 3,
+        approvalRef: null,
+      },
+      review: { status: "pending", reason: null },
+    };
+    await f.repository.transaction(7, 1, async () => null, {});
+    // Simulate a local-reference resolver loading the retained record inside
+    // the callback, after the outer transaction loaded its bounded view.
+    await f.repository.transaction(
+      7,
+      1,
+      async (state) => {
+        state.runs = [structuredClone(f.audit[0].tool_output)];
+      },
+      {},
+    );
+    expect(f.audit).toHaveLength(1);
+    expect(f.state().runs).toHaveLength(0);
+  });
   it("keeps cursor snapshots separate from latest assignment authority", async () => {
     const f = fixture(3);
     await f.repository.transaction(7, 1, async () => null, {});
