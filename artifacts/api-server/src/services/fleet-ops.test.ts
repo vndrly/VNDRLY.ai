@@ -21,7 +21,7 @@ const fleetId = "11111111-1111-4111-8111-111111111111",
 const manager = { userId: 1, companyId: 7 },
   driver = { userId: 2, companyId: 7 },
   stranger = { userId: 3, companyId: 7 };
-function fixture() {
+function fixture(options?:{afterCommit?:(effect:()=>Promise<unknown>)=>void}) {
   let state: FleetState = {
     ...emptyFleetState(),
     enabled: true,
@@ -183,7 +183,7 @@ function fixture() {
     },
   };
   return {
-    service: createFleetService(repo),
+    service: createFleetService(repo,options),
     state: () => state,
     certificates: (rows: typeof certificationRows) => {
       certificationRows = rows;
@@ -234,6 +234,14 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
+  it("defers delivery to an enclosing real commit instead of sending during a nested transaction",async()=>{
+    const effects:Array<()=>Promise<unknown>>=[];
+    const f=fixture({afterCommit:effect=>{effects.push(effect);}});
+    const created=await f.service.create(manager,createInput);
+    await f.service.action(manager,created.id,{operationId:crypto.randomUUID(),action:"dispatch",expectedVersion:created.version});
+    expect(notifications).not.toHaveBeenCalled();expect(effects).toHaveLength(1);
+    await effects[0]();expect(notifications).toHaveBeenCalledOnce();
+  });
   it("saves a driver's workspace preference from company membership without a customer-site assignment",async()=>{
     const f=fixture();f.state().grants.find(g=>g.userId===driver.userId)!.siteIds=[];
     await expect(f.service.preference(driver,{expectedVersion:1,defaultWorkspace:"fleet_my_day",selectedFleetId:fleetId})).resolves.toMatchObject({defaultWorkspace:"fleet_my_day",selectedFleetId:fleetId});

@@ -75,7 +75,7 @@ function createdLocalReferences(command:FleetWorkCommand):Array<{type:"local";ki
  if(command.kind==="detail.save"&&command.payload.expectedVersion===0)return [{type:"local",kind:"detail",id:command.payload.detail.id}];
  if(command.kind==="rig_package.save"&&command.payload.expectedVersion===0)return [{type:"local",kind:"rig_package",id:command.payload.package.id}];
  if(command.kind==="run_order.save"&&command.payload.expectedVersion===0)return [{type:"local",kind:"run_order",id:command.payload.order.id}];
- if(command.kind==="location.save")return [{type:"local",kind:"location",id:command.payload.destination.id??command.operationId}];
+ if(command.kind==="location.save"&&command.payload.localReference)return [{type:"local",kind:"location",id:String(command.payload.localReference.id)}];
  if(command.kind==="compliance.receive"&&command.payload.source.expectedVersion===0)return [{type:"local",kind:"evidence",id:command.payload.source.record.evidence.id}];
  if((command.kind==="evidence.stage"||command.kind==="compliance.document.stage")&&command.payload.evidence.type==="local")return [command.payload.evidence];
  if(command.kind==="activity.reconcile"&&command.payload.resolution.kind==="create_ticket"&&command.payload.resolution.billing.ticket.type==="local")return [command.payload.resolution.billing.ticket];
@@ -102,7 +102,7 @@ function group(command:FleetWorkCommand):string{
  if(command.kind==="detail.save")return `detail:${command.payload.detail.id}`;
  if(command.kind==="rig_package.save")return `rig_package:${command.payload.package.id}`;
  if(command.kind==="run_order.save")return `run_order:${command.payload.order.id}`;
- if(command.kind==="location.save")return `location:${command.payload.destination.id??command.operationId}`;
+ if(command.kind==="location.save")return `location:${command.payload.localReference?.id??command.payload.destination.id}`;
  if(command.kind==="compliance.receive")return `source:${command.payload.source.record.evidence.id}`;
  if(command.kind==="compliance.document.stage")return `source:${command.payload.recordId}`;
  if(command.kind==="compliance.review")return `source:${command.payload.evidenceId}`;

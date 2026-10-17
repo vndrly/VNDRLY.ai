@@ -6,6 +6,13 @@ const scope={owner:{type:"vendor",id:11},userId:7,membershipId:9,sessionVersion:
 const ref=(kind:string,n:number,type="local")=>({type,kind,id:id(n),...(type==="canonical"?{version:1}:{})});
 function schema(name:string):any{const value=(contracts as any)[name];expect(value,name).toBeDefined();return value;}
 const base=()=>({version:2,operationId:id(2),scope,capturedAt:at,timeZone:"America/Chicago",dependencies:[]});
+it("distinguishes a new local location identity from an edit of a canonical saved location",()=>{
+ const commands=schema("FleetWorkCommandSchema"),payload={operationId:id(2),expectedVersion:1,localReference:ref("location",44),destination:{name:"New yard",kind:"yard",address:"Synthetic yard",latitude:null,longitude:null,active:true}};
+ expect(commands.safeParse({...base(),kind:"location.save",payload}).success).toBe(true);
+ expect(commands.safeParse({...base(),kind:"location.save",payload:{...payload,destination:{...payload.destination,id:id(45)}}}).success).toBe(false);
+ expect(commands.safeParse({...base(),kind:"location.save",payload:{...payload,localReference:null,destination:{...payload.destination,id:id(45)}}}).success).toBe(true);
+ expect(commands.safeParse({...base(),kind:"location.save",payload:{...payload,localReference:undefined}}).success).toBe(false);
+});
 function creation(){
  const truck=id(5),detail=id(6),point={type:"provisional",localId:id(7),name:"Synthetic origin",address:"1 Yard Road",latitude:null,longitude:null,capturedAt:at};
  return {...base(),kind:"activity.create",payload:{activityId:id(3),title:"Haul crude",detailReference:ref("detail",6,"canonical"),detailSnapshot:{detail:{id:detail,companyId:11,version:1,name:"Driver / service truck",vehicleAssetId:truck,rigPackageId:null,rigPackageVersion:null,driverUserId:7,accessGroupIds:[id(8)],effectiveFrom:at,effectiveUntil:null,archivedAt:null},rigPackage:null,labels:{truck:"Truck",driver:"Synthetic driver",rigPackage:null,components:[]},carrierOfRecordId:11,snapshottedAt:at},route:{origin:point,stops:[{id:id(9),kind:"delivery",sequence:0,cycleId:null,location:{...point,localId:id(10),name:"Synthetic destination"}}],returnPolicy:"delivery_only",base:null,plannedWindow:null},runOrderReference:null,billing:{choice:"new_ticket",ticket:ref("ticket",4),partnerId:12,billingSiteId:13,afeNumber:"AFE-1",workDate:"2026-10-16",currency:"USD",serviceId:null,agreementReference:null},pricingIntent:{mode:"unpriced",reason:"offline_reference_missing",serviceId:null,approvalRef:null},capturePolicy:null,compliance:{mode:"warn_only",status:"red",evaluatedAt:at,warnings:[{category:"regulatory_review",reason:"unverified"}]}}};

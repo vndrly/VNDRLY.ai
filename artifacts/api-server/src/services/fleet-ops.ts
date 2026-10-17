@@ -421,7 +421,7 @@ async function setupSites(client: PoolClient, companyId: number) {
     name: row.name as string,
   }));
 }
-export function createFleetService(repository: FleetRepository) {
+export function createFleetService(repository: FleetRepository,options:{afterCommit?:(effect:()=>Promise<unknown>)=>void}={}) {
   const transaction = <T>(
     actor: FleetActor,
     operation: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -1505,7 +1505,11 @@ export function createFleetService(repository: FleetRepository) {
           return project(state, actor, run);
         },
       );
-      if (notice) await emitFleetRunNotification(notice);
+      if (notice) {
+        const committedNotice=notice;
+        if(options.afterCommit)options.afterCommit(()=>emitFleetRunNotification(committedNotice));
+        else await emitFleetRunNotification(committedNotice);
+      }
       return result;
     },
   };

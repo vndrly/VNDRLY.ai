@@ -62,7 +62,7 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  command("activity.legacy_action",z.object({activity:activityRef.refine(ref=>ref.type==="canonical"),base:FleetLegacyAssignmentSchema,ticket:z.object({id,version:z.null(),source:z.literal("legacy_cached_run_link")}).strict(),action:FleetActionInputSchema,source:z.literal("retained_v1"),legacyState:z.enum(["unsynced","conflict","revoked"]),legacySessionVersion:z.number().int().nonnegative(),legacyCaptureZoneSource:z.literal("stored_utc_timestamp"),legacyCompliance:z.literal("not_recorded")}).strict()),
  command("activity.reconcile",z.object({caseId:uuid,expectedVersion:revision,activity:activityRef,originalTicket:FleetWorkTicketReferenceSchema,reason:z.string().trim().min(1).max(2000),resolution:FleetWorkResolutionSchema}).strict()),
  command("detail.save",FleetDetailSaveSchema),command("rig_package.save",FleetRigPackageSaveSchema),
- command("run_order.save",FleetRunOrderSaveSchema),command("location.save",FleetDestinationSaveSchema),
+ command("run_order.save",FleetRunOrderSaveSchema),command("location.save",FleetDestinationSaveSchema.extend({localReference:reference("location").refine(ref=>ref.type==="local","A new location needs its local identity").nullable()})),
  command("compliance.receive",z.object({source:FleetComplianceSaveSchema,documentReference:reference("evidence").nullable()}).strict()),command("compliance.review",FleetComplianceVerifySchema),
  command("compliance.document.stage",z.object({recordId:uuid,subject:FleetComplianceSubjectSchema,expectedRecordVersion:z.number().int().nonnegative(),evidence:reference("evidence"),...media}).strict()),
  command("compliance.facts",FleetComplianceFactsSaveSchema),command("requirements.adopt",FleetComplianceRequirementAdoptSchema),
@@ -107,6 +107,7 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
    if(resolution.snapshot.detail.companyId!==value.scope.owner.id||resolution.snapshot.carrierOfRecordId!==value.scope.owner.id||resolution.detailReference.id!==resolution.snapshot.detail.id)issue("Reconciliation must preserve an exact same-company Detail");
  }
  if(value.kind==="detail.save"&&value.payload.detail.companyId!==value.scope.owner.id)issue("Detail belongs to another original company");
+ if(value.kind==="location.save"&&((value.payload.localReference!==null&&value.payload.destination.id!==undefined)||(value.payload.localReference===null&&value.payload.destination.id===undefined)))issue("Choose a new local location or edit an exact canonical location, never both");
  if(value.kind==="rig_package.save"&&value.payload.package.companyId!==value.scope.owner.id)issue("Rig package belongs to another original company");
  if(value.kind==="run_order.save"&&value.payload.order.companyId!==value.scope.owner.id)issue("Run order belongs to another original company");
 });
@@ -124,6 +125,7 @@ export const FleetWorkReceiptSchema=z.discriminatedUnion("status",[
 ]);
 export type FleetWorkReceipt=z.infer<typeof FleetWorkReceiptSchema>;
 export const FleetReconciliationCaseSchema=z.object({id:uuid,version:revision,scope:FleetWorkScopeSchema,operationId:uuid,reason:FleetWorkReconciliationReasonSchema,originalReferences:z.array(FleetWorkReferenceSchema),allowedResolutions:z.array(z.enum(["link_open_ticket","create_ticket","correct_assignment","resolve_location","resolve_price","renew_authority","retain_record_only"])),createdAt:timestamp}).strict();
+export type FleetReconciliationCase=z.infer<typeof FleetReconciliationCaseSchema>;
 /** A persistence adapter emits this only after its actual durable transaction. */
 export const FleetLocalSaveReceiptSchema=z.object({operationId:uuid,storedAt:timestamp,durability:z.literal("durable"),canonicalApplied:z.literal(false)}).strict();
 export type FleetLocalSaveReceipt=z.infer<typeof FleetLocalSaveReceiptSchema>;

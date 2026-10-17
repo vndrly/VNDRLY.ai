@@ -63,14 +63,15 @@ function sessionScope(session: SessionPayload): WorkdayScope {
     throw new WorkdayError("workday.current_membership_required", 403);
   return parsed.data;
 }
-async function transaction<T>(
+/** Reuses the same clock inside an already-open canonical transaction.
+ * Revalidates the actual session/person; this helper never commits or releases
+ * the caller's connection and does not create an alternative clock. */
+export async function withVerifiedWorkdayClient<T>(
   session: SessionPayload,
+  client: PoolClient,
   work: (client: PoolClient, scope: WorkdayScope) => Promise<T>,
 ): Promise<T> {
-  const scope = sessionScope(session),
-    client = await pool.connect();
-  try {
-    await client.query("BEGIN");
+  const scope=sessionScope(session);
     const user = await client.query(
       "SELECT session_version,suspended_at,must_change_password FROM users WHERE id=$1 FOR SHARE",
       [scope.userId],
@@ -106,15 +107,22 @@ async function transaction<T>(
       )
         throw new WorkdayError("workday.current_person_required", 403);
     }
-    const result = await work(client, scope);
+  return work(client,scope);
+}
+async function transaction<T>(
+  session: SessionPayload,
+  work: (client: PoolClient, scope: WorkdayScope) => Promise<T>,
+): Promise<T> {
+  const client=await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result=await withVerifiedWorkdayClient(session,client,work);
     await client.query("COMMIT");
     return result;
-  } catch (error) {
+  } catch(error) {
     await client.query("ROLLBACK");
     throw error;
-  } finally {
-    client.release();
-  }
+  } finally { client.release(); }
 }
 function columns(scope: WorkdayScope) {
   return scope.owner.type === "vendor"
@@ -246,9 +254,9 @@ async function openWorkday(client: PoolClient, scope: WorkdayScope) {
 
 /** A single organization/worker workday for every portal and client. Domain
  * assignment, duty/contact policy, GPS and billable work remain separate facts. */
-export const workdayService = {
+export function createWorkdayService(run: typeof transaction = transaction) { return {
   record: (session: SessionPayload, raw: unknown) =>
-    transaction(session, async (client, scope) => {
+    run(session, async (client, scope) => {
       const command = WorkdayCommandSchema.parse(raw);
       if (!isDeepStrictEqual(command.scope, scope))
         throw new WorkdayError("workday.original_scope_required", 403);
@@ -331,12 +339,12 @@ export const workdayService = {
       return receipt;
     }),
   current: (session: SessionPayload) =>
-    transaction(session, async (client, scope) => {
+    run(session, async (client, scope) => {
       await lock(client, scope);
       return { scope, workday: await openWorkday(client, scope) };
     }),
   read: (session: SessionPayload, rawId: string) =>
-    transaction(session, async (client, scope) => {
+    run(session, async (client, scope) => {
       const id = z.uuid().parse(rawId),
         initial = await snapshot(client, scope, id);
       await authorizeRead(client, session, scope, initial.workerUserId);
@@ -347,7 +355,7 @@ export const workdayService = {
       return { ...saved, events: history };
     }),
   operation: (session: SessionPayload, rawId: string) =>
-    transaction(session, async (client, scope) => {
+    run(session, async (client, scope) => {
       const id = z.uuid().parse(rawId),
         saved = StoredOperationSchema.nullable().parse(
           await readRecord(client, scope, "workday-event", id),
@@ -357,7 +365,7 @@ export const workdayService = {
       return saved.receipt;
     }),
   list: (session: SessionPayload, rawWorkerUserId: number, raw: unknown) =>
-    transaction(session, async (client, scope) => {
+    run(session, async (client, scope) => {
       const workerUserId = z.number().int().positive().parse(rawWorkerUserId),
         input = RangeSchema.parse(raw);
       await authorizeRead(client, session, scope, workerUserId);
@@ -407,4 +415,5 @@ export const workdayService = {
             : null,
       };
     }),
-};
+};}
+export const workdayService=createWorkdayService();
