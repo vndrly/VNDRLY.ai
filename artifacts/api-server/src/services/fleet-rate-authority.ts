@@ -5,6 +5,7 @@ import {
   FleetApprovalReferenceSchema,
   FleetPricingBasisSchema,
   FleetRateCardRevisionSchema,
+  FleetPricingIntentSchema,
   type FleetPricingIntent,
 } from "@workspace/api-zod";
 import { parseExactDecimal, formatExact } from "@workspace/db/format";
@@ -182,4 +183,69 @@ export async function resolveFleetRateAuthority(
     [actor.companyId, snapshotId, JSON.stringify(proof)],
   );
   return pricing;
+}
+
+const retainedInputSchema = inputSchema
+  .omit({ approvalRef: true, purpose: true })
+  .extend({
+    pricing: FleetPricingIntentSchema.options[0],
+  })
+  .strict();
+const retainedProofSchema = z
+  .object({
+    version: z.literal(2),
+    companyId: positive,
+    billingContext: inputSchema.shape.billingContext,
+    pricing: FleetPricingIntentSchema.options[0],
+    commercialAuthoritySnapshotId: z.string().min(1).max(200),
+  })
+  .strict();
+/** Internal finance caller supplies an actual saved activity binding. Current
+ * commercial permission is still required; its retained approved price is
+ * read from canonical proof, never rebuilt from today's catalog/approval. This
+ * alone neither verifies performed work nor approves a financial charge. */
+export async function readRetainedFleetRateAuthority(
+  client: PoolClient,
+  actor: { companyId: number },
+  raw: z.infer<typeof retainedInputSchema>,
+): Promise<Extract<FleetPricingIntent, { mode: "priced" }>> {
+  const input = retainedInputSchema.parse(raw),
+    context = input.billingContext;
+  requireFleetCommercialAuthority(
+    await resolveFleetCommercialAuthority(client, actor, {
+      partnerId: context.partnerId,
+      billingSiteId: context.billingSiteId,
+      workTypeId: input.serviceId,
+      workDate: context.workDate,
+      purpose: "office_submit",
+      policyAt: new Date().toISOString(),
+    }),
+  );
+  const row = (
+    await client.query(
+      "SELECT target_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-rate-authority' AND tool_output->'billingContext'=$2::jsonb AND tool_output->'pricing'=$3::jsonb ORDER BY id DESC LIMIT 1",
+      [actor.companyId, JSON.stringify(context), JSON.stringify(input.pricing)],
+    )
+  ).rows[0];
+  if (!row) throw new FleetError("fleet.price_authority_unresolved", 409);
+  const parsed = retainedProofSchema.safeParse(row.tool_output);
+  if (!parsed.success || parsed.data.companyId !== actor.companyId)
+    throw new FleetError("fleet.price_authority_unavailable", 503);
+  const proof = parsed.data;
+  if (
+    row.target_id !==
+    `fleet-rate:${createHash("sha256").update(JSON.stringify(proof)).digest("hex")}`
+  )
+    throw new FleetError("fleet.price_authority_unavailable", 503);
+  const selected = selectFleetRateAuthority([proof.pricing.rateCard], {
+    vendorId: actor.companyId,
+    partnerId: context.partnerId,
+    billingSiteId: context.billingSiteId,
+    serviceId: input.serviceId,
+    workAt: input.workAt,
+    asOf: new Date().toISOString(),
+  });
+  if (selected.mode !== "priced")
+    throw new FleetError("fleet.price_authority_unresolved", 409);
+  return selected;
 }
