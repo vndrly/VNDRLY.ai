@@ -533,6 +533,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
     },options.compliance),
     recordLocation: locations.record,
     locationObservations: locations.observations,
+    locationObservationPage: locations.observationPage,
     locationHistory: locations.history,
     ...createFleetEtaOperations(
       transaction,

@@ -21,3 +21,17 @@ export const FleetLocationObservationSchema = z.object({
   physicalProofVerified: z.literal(false),
 }).strict();
 export type FleetLocationObservation = z.infer<typeof FleetLocationObservationSchema>;
+
+const locationCursor = z.string().regex(/^\d{1,10}:\d{1,10}$/);
+export const FleetLocationPageQuerySchema = z.object({
+  cursor: locationCursor.optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(50),
+}).strict();
+export const FleetLocationObservationPageSchema = z.object({
+  observations: z.array(FleetLocationObservationSchema).max(50),
+  page: z.object({
+    limit: z.number().int().min(1).max(50),
+    nextCursor: locationCursor.nullable(),
+  }).strict(),
+}).strict();
+export type FleetLocationObservationPage = z.infer<typeof FleetLocationObservationPageSchema>;

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { FleetRun } from "@workspace/api-zod";
-import { FleetLocationInputSchema, FleetLocationObservationSchema, type FleetLocationObservation } from "@workspace/api-zod";
+import { FleetLocationInputSchema, FleetLocationObservationSchema, FleetLocationPageQuerySchema, FleetLocationObservationPageSchema, type FleetLocationObservation } from "@workspace/api-zod";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
 
@@ -20,13 +20,14 @@ export function createFleetLocationOperations(transaction: Transaction, permitte
     return run;
   };
   const readObservations = async(state: FleetState, client: PoolClient, actor: FleetActor) => {
-    const runIds=state.runs.filter(run=>permitted(state,actor,run,"view")).map(run=>run.id);
+    const scopedRuns=actor.pageRuns ?? state.runs;
+    const runIds=scopedRuns.filter(run=>permitted(state,actor,run,"view")).map(run=>run.id);
     if(!runIds.length)return [];
     const rows=await client.query("SELECT tool_output FROM (SELECT DISTINCT ON(target_id) target_id,tool_output,id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-location' AND target_id=ANY($2::text[]) ORDER BY target_id,(tool_output->'observation'->>'recordedAt')::timestamptz DESC,id DESC) latest WHERE EXISTS(SELECT 1 FROM location_consents c WHERE c.user_id=(tool_output->'observation'->>'driverUserId')::int AND c.device_id=tool_output->>'deviceId' AND c.revoked_at IS NULL)",[actor.companyId,runIds]);
     return rows.rows.flatMap(row=>{
       const saved=row.tool_output as SavedLocation, parsed=FleetLocationObservationSchema.safeParse(saved.observation);
       if(!parsed.success) return [];
-      const run=state.runs.find(item=>item.id===parsed.data.runId);
+      const run=scopedRuns.find(item=>item.id===parsed.data.runId);
       if(!run || !permitted(state,actor,run,"view") || saved.assignment!==assignment(run))return [];
       return [currentObservation(parsed.data,run,clock())];
     });
@@ -59,7 +60,19 @@ export function createFleetLocationOperations(transaction: Transaction, permitte
         return observation;
       });
     },
-    observations: (actor: FleetActor) => transaction(actor,(state,client)=>readObservations(state,client,actor)),
+    observations: (actor: FleetActor) => transaction(actor,async(state,client)=>{
+      const retained=await client.query("SELECT 1 FROM (SELECT DISTINCT ON(target_id) tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' ORDER BY target_id,id DESC) latest WHERE jsonb_typeof(tool_output->'billingV2')='object' LIMIT 1",[actor.companyId]);
+      if(retained.rows.length)throw new FleetError("fleet.location_paging_required",409);
+      return readObservations(state,client,actor);
+    }),
+    observationPage: async (actor: FleetActor, raw: unknown = {}) => {
+      const query=FleetLocationPageQuerySchema.parse(raw);
+      const boundActor={...actor,runPage:query};
+      return transaction(boundActor,async(state,client)=>FleetLocationObservationPageSchema.parse({
+        observations:await readObservations(state,client,boundActor),
+        page:{limit:query.limit,nextCursor:boundActor.nextRunCursor??null},
+      }));
+    },
     readObservations,
   };
 }

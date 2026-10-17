@@ -415,6 +415,35 @@ it("does not resurrect historical Inventory assignment when the latest driver or
   await expect(service.fleetInventory(driver)).rejects.toMatchObject({ status: 403 });
 });
 
+it("reads retained phone observations through an explicit scoped map page instead of an empty legacy feed", async () => {
+  const f = await fixture(), created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied") throw Error("Expected actual creation");
+  const id = String(created.canonicalReferences.find(ref => ref.kind === "activity")!.id);
+  const service = createFleetService(databaseFleetRepository), run = await service.detail({ ...f.actor }, id);
+  const deviceId = `synthetic-map-${randomUUID()}`, recordedAt = new Date().toISOString();
+  await pool.query("INSERT INTO location_consents(user_id,device_id) VALUES($1,$2)", [f.driver.id, deviceId]);
+  // Explicit synthetic phone report fixture, not a claimed device/GPS acceptance.
+  const observation = { runId: id, vehicleAssetId: f.truck.id, driverUserId: f.driver.id,
+    latitude: 35, longitude: -97, accuracyMeters: 20, recordedAt, receivedAt: recordedAt,
+    source: "driver_phone", freshness: "recent", physicalProofVerified: false };
+  const saved = { operationId: randomUUID(), fingerprint: "synthetic-map-fixture", deviceId,
+    assignment: JSON.stringify([id, f.vendor, f.driver.id, f.truck.id, null]), observation };
+  await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','device','canonical','synthetic_map_fixture','device-report','fleet-location',$3,$4::jsonb,'completed')",
+    [f.driver.id, f.vendor, id, JSON.stringify(saved)]);
+  await expect(service.locationObservations({ ...f.actor })).rejects.toMatchObject({ status: 409, code: "fleet.location_paging_required" });
+  const readPage = () => service.locationObservationPage({ ...f.actor }, { limit: 1 });
+  expect(await readPage()).toMatchObject({ observations: [{ runId: id, source: "driver_phone", freshness: "stale", physicalProofVerified: false }], page: { limit: 1, nextCursor: null } });
+  const driver = { ...f.actor, userId: f.driver.id, role: "field_employee", membershipRole: "field_employee",
+    activeMembershipId: f.driverMembership.id, sv: f.driver.sessionVersion, vendorPeopleId: f.driverPerson.id };
+  expect(await service.locationObservationPage(driver, { limit: 1 })).toMatchObject({ observations: [{ runId: id, freshness: "stale" }] });
+  expect(await service.locationObservationPage({ ...f.actor, readOnly: true }, { limit: 1 })).toMatchObject({ observations: [{ runId: id }] });
+  await expect(service.locationObservationPage({ ...f.actor }, { limit: 51 })).rejects.toBeTruthy();
+  await expect(service.locationObservationPage({ ...f.actor }, { cursor: "not-a-cursor" })).rejects.toBeTruthy();
+  await pool.query("UPDATE location_consents SET revoked_at=now() WHERE user_id=$1 AND device_id=$2", [f.driver.id, deviceId]);
+  expect((await readPage()).observations).toEqual([]);
+  expect(run.status).toBe("draft");
+});
+
 it("reads retained trip facts and scoped subject choices without relying on the legacy active view", async () => {
   const f = await fixture(),
     created = await f.work.apply(f.actor, f.command);
@@ -562,6 +591,21 @@ it("creates and pages 501 actual active v2 activities without filling the legacy
     after = page.nextCursor;
   } while (after);
   expect(subjects).toEqual(ids);
+  const mapCursors = new Set<string>();
+  let mapCursor: string | null = null, mapPages = 0;
+  do {
+    const page = await service.locationObservationPage({ ...f.actor }, { limit: 50, ...(mapCursor ? { cursor: mapCursor } : {}) });
+    // There were no physical phone reports for these synthetic scheduled runs.
+    expect(page.observations).toEqual([]);
+    expect(page.page.limit).toBe(50);
+    mapPages += 1;
+    mapCursor = page.page.nextCursor;
+    if (mapCursor) {
+      expect(mapCursors.has(mapCursor)).toBe(false);
+      mapCursors.add(mapCursor);
+    }
+  } while (mapCursor);
+  expect(mapPages).toBe(11);
   expect(
     (
       await pool.query(

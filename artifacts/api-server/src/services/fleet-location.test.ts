@@ -14,6 +14,7 @@ function fixture(){
  const operations=new Map<string,unknown>(),latest=new Map<string,unknown>();
  let writes=0;
  const client={query:async(sql:string,args:unknown[]=[])=>{
+   if(sql.includes("jsonb_typeof(tool_output->'billingV2')"))return {rows:[]};
    if(sql.startsWith("SELECT id FROM location_consents"))return {rows:consent&&args[0]===2&&args[1]==="synthetic-device"?[{id:1}]:[]};
    if(sql.includes("target_type='fleet-location-operation'"))return {rows:operations.has(String(args[1]))?[{tool_output:operations.get(String(args[1]))}]:[]};
    if(sql.startsWith("INSERT INTO")){writes++;const target=args[2]==="fleet-location"?latest:operations;target.set(String(args[3]),JSON.parse(String(args[4])));return {rows:[]};}
