@@ -317,6 +317,8 @@ export const FleetComplianceFactRecordSchema = z
       .startsWith("/objects/fleet-compliance-private/"),
   })
   .strict();
+export const FleetComplianceFactsViewSchema=FleetComplianceFactRecordSchema.omit({sourceObjectPath:true});
+export const FleetComplianceRequirementsViewSchema=z.object({requirements:z.array(FleetRequirementVersionSchema),canAdopt:z.boolean(),mode:z.literal("warn_only")}).strict();
 export const FleetComplianceFactsSaveSchema = z
   .object({
     operationId: z.uuid(),

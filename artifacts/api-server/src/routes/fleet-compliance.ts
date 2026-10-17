@@ -54,6 +54,12 @@ export function createFleetComplianceRouter(
     "/fleet/compliance/requirements",
     endpoint((req) => service.adoptFleetRequirement(actor(req), req.body)),
   );
+  router.get("/fleet/compliance/requirements",endpoint(req=>service.readFleetComplianceRequirements(actor(req))));
+  router.get("/fleet/compliance/facts/:kind/:subjectId",endpoint(req=>{
+    const kind=z.enum(["carrier","driver","vehicle","component","trip"]).parse(req.params.kind);
+    const id=kind==="carrier"||kind==="driver"?z.coerce.number().int().positive().parse(req.params.subjectId):z.uuid().parse(req.params.subjectId);
+    return req.query.revision===undefined?service.readFleetComplianceFacts(actor(req),{kind,id}):service.readFleetComplianceFacts(actor(req),{kind,id},revision(req));
+  }));
   router.post(
     "/fleet/compliance/facts",
     endpoint((req) => service.recordFleetComplianceFacts(actor(req), req.body)),

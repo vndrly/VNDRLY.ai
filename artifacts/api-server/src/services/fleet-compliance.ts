@@ -13,6 +13,9 @@ import {
   FleetComplianceRequirementAdoptSchema,
   FleetComplianceSubjectsQuerySchema,
   FleetComplianceFactsSaveSchema,
+  FleetComplianceRequirementsViewSchema,
+  FleetComplianceFactsViewSchema,
+  FleetComplianceFactRecordSchema,
   FleetRequirementVersionSchema,
   evaluateFleetCompliance,
   projectFleetComplianceForDispatch,
@@ -364,6 +367,27 @@ export function createFleetComplianceOperations(
       ? { ...record.evidence, status: "reviewed" as const }
       : record.evidence;
   return {
+    readFleetComplianceRequirements:(actor:FleetActor)=>transaction(actor,async(state,client)=>{
+      const config=await readConfig(client,actor),reviewer=isReviewer(config,actor);
+      if(!reviewer&&(!state.enabled||!access(state,actor)&&!(actor.role==="vendor"&&actor.membershipRole==="admin")))throw new FleetError("fleet.dispatch_required",403);
+      return FleetComplianceRequirementsViewSchema.parse({requirements:config.requirements,canAdopt:state.enabled&&reviewer&&!actor.readOnly,mode:"warn_only"});
+    }),
+    readFleetComplianceFacts:(actor:FleetActor,raw:unknown,version?:number)=>{
+      const subject=FleetComplianceSubjectSchema.parse(raw);
+      if(version!==undefined)z.number().int().positive().parse(version);
+      return transaction(actor,async(state,client)=>{
+        const config=await readConfig(client,actor),key=fleetComplianceSubjectKey(subject);
+        let fact=config.facts.find(row=>fleetComplianceSubjectKey(row.subject)===key);
+        if(!(fact&&isReviewer(config,actor)))await canUseSubject(state,client,actor,config,subject);
+        if(version!==undefined&&fact?.version!==version){
+          const raw=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-compliance-facts' AND target_id=$2 AND tool_output->>'version'=$3 ORDER BY id DESC LIMIT 1",[actor.companyId,key,String(version)])).rows[0]?.tool_output;
+          if(!raw)throw new FleetError("fleet.not_found",404);
+          fact=FleetComplianceFactRecordSchema.parse(raw);
+          if(fact.version!==version||fleetComplianceSubjectKey(fact.subject)!==key)throw new FleetError("fleet.not_found",404);
+        }
+        return fact?FleetComplianceFactsViewSchema.parse({subject:fact.subject,version:fact.version,facts:fact.facts,reviewedAt:fact.reviewedAt,reviewedByUserId:fact.reviewedByUserId,sourceKind:fact.sourceKind}):null;
+      });
+    },
     recordFleetComplianceFacts: (actor: FleetActor, input: unknown) => {
       const value = FleetComplianceFactsSaveSchema.parse(input);
       return transaction(actor, async (state, client) => {

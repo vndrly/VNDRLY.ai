@@ -485,6 +485,9 @@ describe("Private Fleet compliance register", () => {
       expectedVersion: 0,
       requirement,
     });
+    expect(f.service.readFleetComplianceRequirements).toBeTypeOf("function");
+    const ruleView=await f.service.readFleetComplianceRequirements(f.dispatcher);
+    expect(ruleView).toMatchObject({mode:"warn_only",canAdopt:false,requirements:[expect.objectContaining({id:requirement.id,source:expect.objectContaining({reviewedByUserId:f.reviewer.userId})})]});
     await f.service.saveFleetComplianceEvidence(f.driver, {
       operationId: randomUUID(),
       expectedVersion: 0,
@@ -521,6 +524,12 @@ describe("Private Fleet compliance register", () => {
       facts: { cdlRequired: true },
       source: f.source,
     });
+    expect(f.service.readFleetComplianceFacts).toBeTypeOf("function");
+    const factView=await f.service.readFleetComplianceFacts(f.driver,record.evidence.subject);
+    expect(factView).toMatchObject({subject:record.evidence.subject,version:1,facts:{cdlRequired:true},reviewedByUserId:f.reviewer.userId});
+    expect(JSON.stringify(factView)).not.toMatch(/sourceObjectPath|PRIVATE-REGISTRY|fleet-compliance-private/);
+    await expect(f.service.readFleetComplianceFacts(f.driver,{kind:"driver",id:f.reviewer.userId})).rejects.toMatchObject({status:403});
+    expect((await f.service.readFleetComplianceRequirements({...f.reviewer,readOnly:true})).canAdopt).toBe(false);
     expect([...f.objects.keys()].some((path) => /[<>:"|?*]/.test(path))).toBe(
       false,
     );
@@ -537,6 +546,10 @@ describe("Private Fleet compliance register", () => {
         source: f.source,
       }),
     ).toThrow();
+    await f.service.recordFleetComplianceFacts(f.reviewer,{operationId:randomUUID(),expectedVersion:1,subject:record.evidence.subject,facts:{cdlRequired:false},source:f.source});
+    expect(await f.service.readFleetComplianceFacts(f.driver,record.evidence.subject)).toMatchObject({version:2,facts:{cdlRequired:false}});
+    expect(await f.service.readFleetComplianceFacts(f.driver,record.evidence.subject,1)).toMatchObject({version:1,facts:{cdlRequired:true}});
+    await expect(f.service.readFleetComplianceFacts(f.driver,record.evidence.subject,999)).rejects.toMatchObject({status:404});
   });
   it("requires a designated human to adopt a sourced rule and keeps earlier evidence bound to its rule version", async () => {
     const f = await fixture();

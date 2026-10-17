@@ -7,6 +7,10 @@ function schema(name: string) {
   expect(value, name).toBeDefined();
   return value;
 }
+it("exposes operational fact provenance without accepting private source pointers or clinical fields",()=>{
+ const view=schema("FleetComplianceFactsViewSchema"),value={subject:{kind:"driver",id:7},version:1,facts:{cdlRequired:true},reviewedAt:"2026-10-16T18:00:00Z",reviewedByUserId:2,sourceKind:"government_registry"};
+ expect(view.safeParse(value).success).toBe(true);expect(view.safeParse({...value,sourceObjectPath:"/objects/fleet-compliance-private/7/source"}).success).toBe(false);expect(view.safeParse({...value,facts:{medicalDiagnosis:"Private"}}).success).toBe(false);
+});
 const record = () => ({
   evidence: {
     id,
