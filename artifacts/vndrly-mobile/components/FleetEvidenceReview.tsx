@@ -14,6 +14,7 @@ import { useColors } from "@/hooks/useColors";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import TogglePillButton from "./TogglePillButton";
 import FleetChoiceField from "./FleetChoiceField";
+import FleetCheckbox from "./FleetCheckbox";
 type Attempt = z.infer<typeof FleetComplianceVerifySchema>;
 type Props = {
   evidenceId: string;
@@ -46,6 +47,9 @@ function EvidenceReviewForm({ evidenceId, revision, onSaved, onClose }: Props) {
     [reference, setReference] = useState(""),
     [url, setUrl] = useState(""),
     [checkedAt, setCheckedAt] = useState<string | null>(null);
+  const [scopesReviewed,setScopesReviewed]=useState(false),[followFormReviewed,setFollowFormReviewed]=useState(false),
+    [filingStatus,setFilingStatus]=useState<NonNullable<Attempt["coverageReview"]>["filingStatus"]>("unverified"),
+    [filingKind,setFilingKind]=useState(""),[filingReference,setFilingReference]=useState(""),[filingURL,setFilingURL]=useState("");
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   const privateRead = async (nextRevision: number) =>
     FleetComplianceRecordSchema.parse(
@@ -88,6 +92,8 @@ function EvidenceReviewForm({ evidenceId, revision, onSaved, onClose }: Props) {
         decision,
         source: { kind: sourceKind, reference, url: url.trim() || null },
         reviewedAt: checkedAt,
+        ...(record.attributes.kind==="insurance"?{coverageReview:{scopesReviewed,followFormReviewed,filingStatus,
+          filingSource:filingReference.trim()?{kind:filingKind,reference:filingReference,url:filingURL.trim()||null}:null}}:{}),
       });
       setPrepared(true);
       setError("");
@@ -126,6 +132,10 @@ function EvidenceReviewForm({ evidenceId, revision, onSaved, onClose }: Props) {
         JSON.stringify(saved.review?.source) !== JSON.stringify(attempt.source)
       )
         throw new Error("Review needs verification");
+      if(attempt.coverageReview){
+        const coverage=saved.attributes.kind==="insurance"?saved.attributes.coverage:null;
+        if(!coverage||coverage.scopesReviewed!==attempt.coverageReview.scopesReviewed||coverage.followFormReviewed!==attempt.coverageReview.followFormReviewed||coverage.filingStatus!==attempt.coverageReview.filingStatus||JSON.stringify(saved.review?.filingSource)!==JSON.stringify(attempt.coverageReview.filingSource))throw new Error("Coverage review needs verification");
+      }
       if (current()) {
         request.current = null;
         setUncertain(false);
@@ -163,6 +173,7 @@ function EvidenceReviewForm({ evidenceId, revision, onSaved, onClose }: Props) {
     employer_record: "Employer record",
     ELD_record: "ELD record",
   };
+  const scopeText=(value:readonly (string|number)[]|null)=>value===null?copy("Unknown scope"):value.length?value.join(", "):copy("Unrestricted scope");
   const fields: Array<[string, string | null]> = !attr
     ? []
     : attr.kind === "driver_license"
@@ -180,8 +191,12 @@ function EvidenceReviewForm({ evidenceId, revision, onSaved, onClose }: Props) {
             ["Insured entity", attr.coverage.insuredLegalEntity],
             ["Coverage type", attr.coverage.coverageType],
             ["USD limit", attr.coverage.limitUSD],
-            ["Territories", attr.coverage.states?.join(", ") ?? "—"],
-            ["Cargo", attr.coverage.cargoCodes?.join(", ") ?? "—"],
+            ["Covered carriers",scopeText(attr.coverage.carrierIds)],
+            ["Covered equipment",scopeText(attr.coverage.equipmentIds)],
+            ["Underlying policy evidence",attr.coverage.underlyingPolicyId],
+            ["Excess attachment USD",attr.coverage.attachmentPointUSD],
+            ["Territories", scopeText(attr.coverage.states)],
+            ["Cargo", scopeText(attr.coverage.cargoCodes)],
           ]
         : attr.kind === "credential"
           ? [
@@ -292,6 +307,14 @@ function EvidenceReviewForm({ evidenceId, revision, onSaved, onClose }: Props) {
             autoCapitalize="none"
             keyboardType="url"
           />
+          {attr?.kind==="insurance"&&<View style={{gap:10}}>
+            <FleetCheckbox label={copy("I reviewed the listed coverage scope")} checked={scopesReviewed} disabled={disabled} onChange={setScopesReviewed}/>
+            {attr.coverage.coverageType==="excess"&&<FleetCheckbox label={copy("I reviewed the excess follow-form terms")} checked={followFormReviewed} disabled={disabled} onChange={setFollowFormReviewed}/>}
+            <FleetChoiceField label={copy("Filing decision")} value={filingStatus} disabled={disabled} options={["unverified","not_required","pending","accepted","cancelled"].map(id=>({id,label:copy(id)}))} onChange={value=>setFilingStatus(value as typeof filingStatus)}/>
+            <FleetChoiceField label={copy("Filing verification source")} value={filingKind} disabled={disabled} options={Object.entries(sourceLabels).map(([id,label])=>({id,label:copy(label)}))} onChange={setFilingKind}/>
+            <TextInput style={field} accessibilityLabel={copy("Filing source reference")} placeholder={copy("Filing source reference")} value={filingReference} onChangeText={setFilingReference} editable={!disabled} maxLength={500}/>
+            <TextInput style={field} accessibilityLabel={copy("Filing source link (optional)")} placeholder={copy("Filing source link (optional)")} value={filingURL} onChangeText={setFilingURL} editable={!disabled} autoCapitalize="none" keyboardType="url"/>
+          </View>}
           <TogglePillButton
             disabled={disabled}
             onPress={() => setCheckedAt(new Date().toISOString())}

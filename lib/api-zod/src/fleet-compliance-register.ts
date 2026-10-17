@@ -251,7 +251,14 @@ export const FleetComplianceVerifySchema = z
       .strict()
       .optional(),
   })
-  .strict();
+  .strict().superRefine((value,ctx)=>{
+    const filing=value.coverageReview;
+    if(!filing)return;
+    if(["accepted","cancelled","not_required"].includes(filing.filingStatus)&&!filing.filingSource)
+      ctx.addIssue({code:"custom",path:["coverageReview","filingSource"],message:"A separately identified filing source is required"});
+    if(["accepted","cancelled"].includes(filing.filingStatus)&&filing.filingSource&&!['government_registry','insurer_confirmation'].includes(filing.filingSource.kind))
+      ctx.addIssue({code:"custom",path:["coverageReview","filingSource"],message:"Filing acceptance or cancellation requires a registry or insurer source"});
+  });
 export const FleetComplianceIndexEntrySchema = z
   .object({
     id: z.uuid(),

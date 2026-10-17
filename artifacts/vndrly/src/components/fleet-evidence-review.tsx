@@ -8,6 +8,7 @@ import {
 import type { z } from "zod/v4";
 import { fleetClient } from "@/lib/fleet-client";
 import { PngPillButton } from "./png-pill-rollover";
+import { BrandedCheckbox } from "./branded-checkbox";
 type Attempt = z.infer<typeof FleetComplianceVerifySchema>;
 /** Explicit reviewer interaction only. Private records remain component-local;
  * no React Query/localStorage/cache entry or general purpose JSON editor. */
@@ -51,6 +52,9 @@ function EvidenceReviewForm({
     [reference, setReference] = useState(""),
     [url, setUrl] = useState(""),
     [checkedAt, setCheckedAt] = useState<string | null>(null);
+  const [scopesReviewed,setScopesReviewed]=useState(false),[followFormReviewed,setFollowFormReviewed]=useState(false),
+    [filingStatus,setFilingStatus]=useState<NonNullable<Attempt["coverageReview"]>["filingStatus"]>("unverified"),
+    [filingKind,setFilingKind]=useState(""),[filingReference,setFilingReference]=useState(""),[filingURL,setFilingURL]=useState("");
   const current = () =>
     alive.current && originalScope.current === latestScope.current;
   useEffect(() => {
@@ -92,6 +96,8 @@ function EvidenceReviewForm({
         decision,
         source: { kind: sourceKind, reference, url: url.trim() || null },
         reviewedAt: checkedAt,
+        ...(record.attributes.kind==="insurance"?{coverageReview:{scopesReviewed,followFormReviewed,filingStatus,
+          filingSource:filingReference.trim()?{kind:filingKind,reference:filingReference,url:filingURL.trim()||null}:null}}:{}),
       });
       setPrepared(true);
       setError("");
@@ -128,6 +134,10 @@ function EvidenceReviewForm({
         JSON.stringify(saved.review?.source) !== JSON.stringify(attempt.source)
       )
         throw new Error("Review needs verification");
+      if(attempt.coverageReview){
+        const coverage=saved.attributes.kind==="insurance"?saved.attributes.coverage:null;
+        if(!coverage||coverage.scopesReviewed!==attempt.coverageReview.scopesReviewed||coverage.followFormReviewed!==attempt.coverageReview.followFormReviewed||coverage.filingStatus!==attempt.coverageReview.filingStatus||JSON.stringify(saved.review?.filingSource)!==JSON.stringify(attempt.coverageReview.filingSource))throw new Error("Coverage review needs verification");
+      }
       if (current()) {
         request.current = null;
         setUncertain(false);
@@ -171,6 +181,7 @@ function EvidenceReviewForm({
     employer_record: es ? "Registro del empleador" : "Employer record",
     ELD_record: es ? "Registro ELD" : "ELD record",
   };
+  const scopeText=(value:readonly (string|number)[]|null)=>value===null?(es?"Alcance desconocido":"Unknown scope"):value.length?value.join(", "):(es?"Alcance sin restricciones":"Unrestricted scope");
   const fields: Array<[string, string | null]> = !attr
     ? []
     : attr.kind === "driver_license"
@@ -194,13 +205,17 @@ function EvidenceReviewForm({
               attr.coverage.coverageType,
             ],
             [es ? "Límite USD" : "USD limit", attr.coverage.limitUSD],
+            [es?"Transportistas cubiertos":"Covered carriers",scopeText(attr.coverage.carrierIds)],
+            [es?"Equipo cubierto":"Covered equipment",scopeText(attr.coverage.equipmentIds)],
+            [es?"Evidencia de póliza base":"Underlying policy evidence",attr.coverage.underlyingPolicyId],
+            [es?"Activación del exceso USD":"Excess attachment USD",attr.coverage.attachmentPointUSD],
             [
               es ? "Territorios" : "Territories",
-              attr.coverage.states?.join(", ") ?? "—",
+              scopeText(attr.coverage.states),
             ],
             [
               es ? "Carga" : "Cargo",
-              attr.coverage.cargoCodes?.join(", ") ?? "—",
+              scopeText(attr.coverage.cargoCodes),
             ],
           ]
         : attr.kind === "credential"
@@ -339,6 +354,14 @@ function EvidenceReviewForm({
                 onChange={(event) => setUrl(event.target.value)}
               />
             </label>
+            {attr?.kind==="insurance"&&<div className="space-y-3">
+              <label className="flex items-center gap-2"><BrandedCheckbox aria-label={es?"Revisé el alcance de cobertura indicado":"I reviewed the listed coverage scope"} checked={scopesReviewed} onCheckedChange={value=>setScopesReviewed(value===true)}/>{es?"Revisé el alcance de cobertura indicado":"I reviewed the listed coverage scope"}</label>
+              {attr.coverage.coverageType==="excess"&&<label className="flex items-center gap-2"><BrandedCheckbox aria-label={es?"Revisé los términos de seguimiento de póliza base":"I reviewed the excess follow-form terms"} checked={followFormReviewed} onCheckedChange={value=>setFollowFormReviewed(value===true)}/>{es?"Revisé los términos de seguimiento de póliza base":"I reviewed the excess follow-form terms"}</label>}
+              <label>{es?"Decisión de presentación":"Filing decision"}<select value={filingStatus} onChange={event=>setFilingStatus(event.target.value as typeof filingStatus)}>{["unverified","not_required","pending","accepted","cancelled"].map(value=><option key={value} value={value}>{es?({unverified:"Sin verificar",not_required:"No requerida",pending:"Pendiente",accepted:"Aceptada",cancelled:"Cancelada"}[value]):value}</option>)}</select></label>
+              <label>{es?"Fuente de verificación de presentación":"Filing verification source"}<select value={filingKind} onChange={event=>setFilingKind(event.target.value)}><option value="">{es?"Elija una fuente":"Choose source"}</option>{Object.entries(sourceLabels).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
+              <label>{es?"Referencia de fuente de presentación":"Filing source reference"}<input value={filingReference} onChange={event=>setFilingReference(event.target.value)} maxLength={500}/></label>
+              <label>{es?"Enlace de fuente de presentación (opcional)":"Filing source link (optional)"}<input type="url" value={filingURL} onChange={event=>setFilingURL(event.target.value)}/></label>
+            </div>}
             <PngPillButton
               onClick={() => setCheckedAt(new Date().toISOString())}
             >

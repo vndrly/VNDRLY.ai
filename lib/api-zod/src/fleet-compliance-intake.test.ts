@@ -7,9 +7,16 @@ import {
   fleetComplianceSourceRequirements,
 } from "./fleet-compliance-intake";
 import { draftFleetRequirement } from "./fleet-requirement-templates";
-import { FleetComplianceSaveSchema } from "./fleet-compliance-register";
+import { FleetComplianceSaveSchema, FleetComplianceVerifySchema } from "./fleet-compliance-register";
 const id = "11111111-1111-4111-8111-111111111111",
   at = "2026-10-16T12:00:00Z";
+it("requires an independent filing source and refuses an employer statement as accepted government filing proof",()=>{
+ const source={kind:"qualified_reviewer",reference:"Policy review",url:null},command={operationId:id,evidenceId:id,expectedVersion:1,decision:"verified",source,reviewedAt:at,coverageReview:{scopesReviewed:true,followFormReviewed:false,filingStatus:"accepted",filingSource:null}};
+ expect(FleetComplianceVerifySchema.safeParse(command).success).toBe(false);
+ expect(FleetComplianceVerifySchema.safeParse({...command,coverageReview:{...command.coverageReview,filingSource:{...source,kind:"employer_record"}}}).success).toBe(false);
+ expect(FleetComplianceVerifySchema.safeParse({...command,coverageReview:{...command.coverageReview,filingSource:{...source,kind:"government_registry"}}}).success).toBe(true);
+ expect(FleetComplianceVerifySchema.safeParse({...command,coverageReview:{...command.coverageReview,filingStatus:"not_required",filingSource:source}}).success).toBe(true);
+});
 it("does not offer an obsolete compatible revision when the latest adopted rule has changed scope",()=>{
  const prior=draftFleetRequirement("driver-license",{version:1,effectiveFrom:at});
  const next={...prior,version:2,category:"driver_medical" as const};
@@ -101,6 +108,15 @@ it("transcribes private source fields exactly while leaving review, scope and fi
   expect(
     updateFleetComplianceSourceDraft(initial, { limitUSD: "" }).attributes,
   ).toMatchObject({ coverage: { limitUSD: null } });
+});
+it("transcribes insurance scope and exact excess-layer facts without asserting review or converting unknown scope to worldwide",()=>{
+ const original=createFleetComplianceSourceDraft({id,subject:{kind:"carrier",id:7},kind:"insurance",coverageType:"excess",source:"Policy schedule",at});
+ const record=updateFleetComplianceSourceDraft(original,{coverageStates:"ok\nTX",coverageCargoCodes:"crude\nwater",coverageCarrierIds:"7\n12",coverageEquipmentIds:id.toUpperCase(),underlyingPolicyId:"22222222-2222-4222-8222-222222222222",attachmentPointUSD:"750000.000000001"});
+ expect(record.attributes).toMatchObject({coverage:{states:["OK","TX"],cargoCodes:["crude","water"],carrierIds:[7,12],equipmentIds:[id],underlyingPolicyId:"22222222-2222-4222-8222-222222222222",attachmentPointUSD:"750000.000000001",scopesReviewed:false,followFormReviewed:false,filingStatus:"unverified"}});
+ expect(updateFleetComplianceSourceDraft(original,{coverageStates:""}).attributes).toMatchObject({coverage:{states:null}});
+ expect(updateFleetComplianceSourceDraft(original,{coverageStates:"*"}).attributes).toMatchObject({coverage:{states:[]}});
+ for(const fields of [{coverageCarrierIds:"9007199254740993"},{coverageEquipmentIds:"not-an-id"},{coverageStates:"Oklahoma"},{coverageStates:"*\nOK"},{scopesReviewed:"true"},{filingStatus:"accepted"}])expect(()=>updateFleetComplianceSourceDraft(original,fields)).toThrow();
+ expect(original.attributes).toMatchObject({coverage:{states:null,equipmentIds:null,attachmentPointUSD:null}});
 });
 it("requires the separately read exact received revision before calling a source saved", () => {
   const record = createFleetComplianceSourceDraft({

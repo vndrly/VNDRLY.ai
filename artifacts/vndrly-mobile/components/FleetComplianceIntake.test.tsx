@@ -130,6 +130,8 @@ it("stops the native intake chain when its original authentication context is lo
     screen.getByRole("button", { name: "Choose source document" }),
   );
   await screen.findByText(/Source document ready/);
+  // The file preview can render before the picker finishes leaving its busy state.
+  await waitFor(()=>expect((screen.getByRole("button",{name:"Choose source document"}) as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(
     screen.getByRole("checkbox", {
       name: "Save this as received, unverified evidence",
@@ -229,6 +231,8 @@ it("binds a selected private native source to its received revision and original
     screen.getByRole("button", { name: "Choose source document" }),
   );
   await screen.findByText(/Source document ready/);
+  // The file preview can render before the picker finishes leaving its busy state.
+  await waitFor(()=>expect((screen.getByRole("button",{name:"Choose source document"}) as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(
     screen.getByRole("checkbox", {
       name: "Save this as received, unverified evidence",

@@ -411,6 +411,12 @@ export function fleetComplianceSourceFields(
       ),
     ],
     insurance: [
+      field("coverageStates", "Covered states (one code per line; * only if unrestricted; blank if unknown)", "Estados cubiertos (un código por línea; * solo si no hay restricción; vacío si se desconoce)", undefined, true),
+      field("coverageCargoCodes", "Covered cargo codes (one per line; * only if unrestricted; blank if unknown)", "Códigos de carga cubiertos (uno por línea; * solo sin restricción; vacío si se desconoce)", undefined, true),
+      field("coverageCarrierIds", "Covered carrier company IDs (one per line; blank if unknown)", "Identificadores de transportistas cubiertos (uno por línea; vacío si se desconoce)", undefined, true),
+      field("coverageEquipmentIds", "Covered Inventory asset IDs (one per line; * only if unrestricted; blank if unknown)", "Identificadores de activos de Inventario cubiertos (uno por línea; * solo sin restricción; vacío si se desconoce)", undefined, true),
+      field("underlyingPolicyId", "Underlying policy evidence ID (excess only, if known)", "Identificador de evidencia de póliza base (solo exceso, si se conoce)"),
+      field("attachmentPointUSD", "Exact excess attachment point (USD), if known", "Punto exacto de activación del exceso (USD), si se conoce"),
       field("policyNumber", "Policy number", "Número de póliza"),
       field(
         "insuredLegalEntity",
@@ -487,7 +493,25 @@ export function updateFleetComplianceSourceDraft(
     else if (key === "credentialReference") attributes.reference = value;
     else if (original.attributes.kind === "insurance") {
       const coverage = attributes.coverage as Record<string, unknown>;
-      attributes.coverage = { ...coverage, [key]: value };
+      const scopeKeys: Record<string, string> = { coverageStates: "states", coverageCargoCodes: "cargoCodes", coverageCarrierIds: "carrierIds", coverageEquipmentIds: "equipmentIds" };
+      const scopeKey = scopeKeys[key];
+      let next: unknown = value;
+      if (scopeKey && value !== null) {
+        const items = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+        if (items.includes("*") && (items.length !== 1 || scopeKey === "carrierIds"))
+          throw new Error("Unrestricted scope must be explicitly stated on its own");
+        next = items[0] === "*" ? [] : items.map(item => {
+          if (scopeKey === "states") return item.toUpperCase();
+          if (scopeKey === "equipmentIds") return item.toLowerCase();
+          if (scopeKey === "carrierIds") {
+            if (!/^[1-9][0-9]*$/.test(item) || !Number.isSafeInteger(Number(item)))
+              throw new Error("A canonical carrier company ID is required");
+            return Number(item);
+          }
+          return item;
+        });
+      }
+      attributes.coverage = { ...coverage, [scopeKey ?? key]: key === "underlyingPolicyId" ? value?.toLowerCase() ?? null : next };
     } else
       attributes[key] =
         key === "issuingState" ? (value?.toUpperCase() ?? null) : value;
