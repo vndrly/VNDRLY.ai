@@ -3,8 +3,10 @@ import { createDurableFleetWorkJournal, type FleetJournalStore, type FleetJourna
 import { createHash,randomUUID } from "node:crypto";
 import { FleetWorkCommandSchema } from "./fleet-work";
 function fixture(){
- let rows=new Map<string,string>(), fail=false;
- const storage:FleetJournalStore={async transaction(work){const copy=new Map(rows);const tx:FleetJournalTransaction={get:async(kind,key)=>copy.get(`${kind}:${key}`)??null,set:async(kind,key,value)=>{copy.set(`${kind}:${key}`,value)},values:async kind=>[...copy].filter(([key])=>key.startsWith(`${kind}:`)).map(([,value])=>value)};const result=await work(tx);if(fail){fail=false;throw Error("Disk full");}rows=copy;return result;}};
+ const rows=new Map<string,string>();let fail=false;
+ // Buffer only transaction writes, like the itemized adapters. Cloning every
+ // retained row on each append made this fixture quadratic at 5000 events.
+ const storage:FleetJournalStore={async transaction(work){const writes=new Map<string,string>();const tx:FleetJournalTransaction={get:async(kind,key)=>writes.get(`${kind}:${key}`)??rows.get(`${kind}:${key}`)??null,set:async(kind,key,value)=>{writes.set(`${kind}:${key}`,value)},values:async kind=>[...new Map([...rows,...writes])].filter(([key])=>key.startsWith(`${kind}:`)).map(([,value])=>value)};const result=await work(tx);if(fail){fail=false;throw Error("Disk full");}for(const [key,value] of writes)rows.set(key,value);return result;}};
  const scope={owner:{type:"vendor" as const,id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()};
  const options={storage,scope,digest:async(text:string)=>createHash("sha256").update(text).digest("hex"),isCurrent:()=>true};
  const journal=()=>createDurableFleetWorkJournal(options);

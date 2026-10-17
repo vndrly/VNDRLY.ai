@@ -1,7 +1,9 @@
 import {FleetWorkEvidencePageSchema} from "./fleet-evidence-upload";
 import {synchronizeFleetEvidence} from "./fleet-work-evidence-client";
 import {z} from "zod/v4";
-import {FleetWorkScopeSchema,FleetWorkReceiptSchema,type FleetWorkScope,type FleetWorkCommand} from "./fleet-work";
+import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetWorkCommandSchema,type FleetWorkScope,type FleetWorkCommand} from "./fleet-work";
+import {FleetQuantityEvidenceSchema} from "./fleet-pricing";
+import {FleetCommercialReviewSchema} from "./fleet-commercial-review";
 import type {FleetJournalStore,DurableFleetWorkJournal} from "./fleet-work-journal";
 import {synchronizeFleetWork} from "./fleet-work-runtime";
 import {buildFleetCreateIntent,buildFleetActionIntent,FleetWorkPreparationSchema} from "./fleet-work-builder";
@@ -10,6 +12,8 @@ const accountSchema=z.object({userId:z.number().int().positive(),companyId:z.num
 export type FleetWorkAccount=z.infer<typeof accountSchema>;
 export type FleetEvidenceJournal=DurableFleetWorkJournal & {stageEvidence?:(id:string,source:unknown,contentType:string,makeCommand?:(media:{sha256:string;byteSize:number;contentType:string})=>FleetWorkCommand)=>Promise<{id:string;sha256:string;byteSize:number;contentType:string;durability:"durable"}>;readEvidencePart?:(id:string,offset:number,length:number)=>Promise<Uint8Array>};
 const provisionSchema=z.object({scope:FleetWorkScopeSchema,expiresAt:z.iso.datetime()});
+export const FleetReportedQuantityInputSchema=FleetQuantityEvidenceSchema.pick({cycleId:true,quantity:true,unit:true,evidenceReferences:true}).extend({kind:z.enum(["planned","picked_up","delivered"]),source:z.enum(["meter","scale","manifest","recipient","manual"])}).strict();
+export type FleetReportedQuantityInput=z.infer<typeof FleetReportedQuantityInputSchema>;
 /** The account comes from an authenticated overview (or its original encrypted
  * cache). Provisioning is a device/session binding, never a new business grant.
  * A new account/session has a different index; old journals are never rebound. */
@@ -47,6 +51,12 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
   cacheRun:async(run:FleetRun)=>{current();const saved=FleetRunSchema.parse(run);if(saved.companyId!==account.companyId)throw Error("Original Fleet run scope changed");await journal.putCache(`run:${saved.id}`,saved);},
   readRun:async(id:string)=>{const value=await journal.readCache(`run:${z.uuid().parse(id)}`);return value?FleetRunSchema.parse(value):null;},
   async evidencePage(activityId:string,cursor:string|null=null){current();const page=FleetWorkEvidencePageSchema.parse(await options.http(`/api/fleet/work/activities/${z.uuid().parse(activityId)}/evidence`,{scope,cursor}));if(page.evidence.some(row=>row.record.runId!==activityId||row.record.companyId!==account.companyId))throw Error("Evidence readback scope changed");return page;},
+  async commercialReview(activityId:string,after?:string){current();const id=z.uuid().parse(activityId),page=FleetCommercialReviewSchema.parse(await options.http(`/api/fleet/work/activities/${id}/commercial-review`,{scope,after}));current();if(page.activityId!==id)throw Error("Commercial review readback scope changed");return page;},
+  async captureQuantity(run:FleetRun,raw:FleetReportedQuantityInput){
+   current();if(!run.ticketReference||run.companyId!==account.companyId||run.driverUserId!==account.userId||run.resourceAssignment?.snapshot?.detail.driverUserId!==account.userId)throw Error("Original own-driver quantity context is required");
+   const input=FleetReportedQuantityInputSchema.parse(raw),capturedAt=new Date().toISOString();
+   return execute(FleetWorkCommandSchema.parse({version:2,scope,operationId:options.uuid(),capturedAt,timeZone:run.schedule?.timezone??"UTC",dependencies:[],kind:"quantity.record",payload:{activity:{type:"canonical",kind:"activity",id:run.id,version:run.version},ticket:{type:"canonical",kind:"ticket",...run.ticketReference},evidence:{...input,id:options.uuid(),capturedAt,recordedByUserId:account.userId}}}));
+  },
   async captureEvidence(run:FleetRun,source:unknown,contentType:string,kind:"photo"|"scale"|"receipt"|"signature",notes:string){
    current();if(!journal.stageEvidence||!run.resourceAssignment?.snapshot||!run.ticketReference||run.companyId!==account.companyId||run.driverUserId!==account.userId)throw Error("Original own-driver evidence context is required");
    const operationId=options.uuid(),id=options.uuid(),capturedAt=new Date().toISOString();

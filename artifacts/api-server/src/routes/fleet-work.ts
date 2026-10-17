@@ -11,6 +11,7 @@ import {createDatabaseFleetEvidenceUploadRepository} from "../services/fleet-evi
 import {createFleetEvidenceUploadService} from "../services/fleet-evidence-upload";
 import {getObjectStore} from "../lib/objectStore";
 import {prepareFleetWorkCreation} from "../services/fleet-work-preparation";
+import {readFleetCommercialReview} from "../services/fleet-commercial-review";
 const repository=createDatabaseFleetWorkRepository({execute:executeFleetWorkCommand});
 const service=createFleetWorkService(repository),handlers=createFleetEvidenceCanonicalHandlers();
 const evidence=createFleetEvidenceUploadService(createDatabaseFleetEvidenceUploadRepository(repository,handlers),getObjectStore);
@@ -26,6 +27,7 @@ export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;e
  router.post("/fleet/work/provision",endpoint(req=>repo.provision(options.actor(req),req.body)));
  router.post("/fleet/work/prepare-create",endpoint(req=>{const body=scopeInput.extend({detailId:z.uuid(),billingSiteId:z.number().int().positive(),ticketId:z.number().int().positive().nullable()}).parse(req.body);const {scope,...input}=body;return repo.readScope(options.actor(req),scope,context=>prepareFleetWorkCreation(context,input));}));
  router.post("/fleet/work/commands",endpoint(req=>work.apply(options.actor(req),req.body)));
+ router.post("/fleet/work/activities/:id/commercial-review",endpoint(req=>{const body=scopeInput.extend({after:z.string().optional(),limit:z.number().int().min(1).max(100).optional()}).parse(req.body);return repo.readScope(options.actor(req),body.scope,context=>readFleetCommercialReview(context,{activityId:z.uuid().parse(req.params.id),after:body.after,limit:body.limit}));}));
  router.post("/fleet/work/operations/:operationId",endpoint(async req=>({receipt:await work.read(options.actor(req),scopeInput.parse(req.body).scope,z.uuid().parse(req.params.operationId)),checkedAt:new Date().toISOString()})));
  router.post("/fleet/work/evidence/begin",endpoint(req=>uploads.begin(options.actor(req),req.body)));
  router.post("/fleet/work/evidence/:sessionId/status",endpoint(req=>uploads.read(options.actor(req),scopeInput.parse(req.body).scope,z.uuid().parse(req.params.sessionId))));
