@@ -76,3 +76,7 @@ describe("buildTicketProofPacket", () => {
     ]);
   });
 });
+it("sums reviewed payable cents exactly before converting the partner packet total to a number",()=>{
+ const rows=Array.from({length:500},(_,index)=>({type:"other",quantity:"123.46",unitPrice:"0.00",fleetBillingMetadata:{version:2,charge:{id:`11111111-1111-4111-8111-${String(index+1).padStart(12,"0")}`,revision:1,quantity:"123.456789",unitRate:"0.000125",exactAmount:"0.015432098625",currencyAmount:"0.02",currency:"USD",reviewedByUserId:7,reviewedAt:"2026-10-17T18:00:00Z"}}}));
+ const packet=buildTicketProofPacket(baseTicket,[...rows,{type:"parts",quantity:"1",unitPrice:"2.50"}]);expect(packet.lineItemTotal).toBe(12.5);expect(packet.sections.find(section=>section.id==="cost")?.detail).toBe("$12.50 captured");
+});
