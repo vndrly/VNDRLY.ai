@@ -29,6 +29,7 @@ import helmet from "helmet";
 import assistantConnectionRouter from "./routes/assistantConnection";
 import { organizationSubscriptionWebhook } from "./routes/organizationSubscription";
 import {demoRequestBoundary} from './lib/demo-request-boundary';
+import fleetComplianceDocumentBodyParser from "./lib/fleet-compliance-body-parser";
 
 const app: Express = express();
 
@@ -92,6 +93,7 @@ app.use("/api/organization-subscription/webhook", organizationSubscriptionWebhoo
 // Four MiB of native meeting audio expands to roughly 5.34 MiB in base64.
 // Keep the larger JSON allowance confined to this authenticated capture route.
 app.post(/^\/api\/work-hub\/meetings\/[^/]+\/transcribe-audio\/?$/, express.json({ limit: "6mb" }));
+app.use(fleetComplianceDocumentBodyParser);
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(demoRequestBoundary);
