@@ -142,6 +142,7 @@ export default function TabLayout() {
       fleetLog: fleetCopy("Fleet Log"),
       fleetMap: fleetCopy("Fleet Map"),
       fleetLocations: fleetCopy("Origins and Destinations"),
+      fleetCompliance: fleetCopy("Compliance"),
       fleetSiteActivity: fleetCopy("Fleet site activity"),
       fleetSupport: fleetCopy("Fleet support"),
       comms: t("tabs.comms"),
@@ -206,7 +207,7 @@ export default function TabLayout() {
         "shift-notes",
       ].includes(activeKey)) ||
     (categories.includes("fleet") &&
-      (["fleet", "fleet-log", "fleet-map", "fleet-locations"].includes(
+      (["fleet", "fleet-log", "fleet-map", "fleet-locations", "fleet-compliance"].includes(
         activeKey,
       ) ||
         pathname.includes("/fleet-run"))) ||

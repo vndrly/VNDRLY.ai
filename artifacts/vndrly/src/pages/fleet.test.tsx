@@ -18,6 +18,7 @@ const api = vi.hoisted(() => ({
   runOrders: vi.fn(),
   runOrder: vi.fn(),
   navigate: vi.fn(),
+  complianceRegister:vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: api,
@@ -113,6 +114,10 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("opens the compliance register without depending on dispatch resource loading",async()=>{
+    api.location="/fleet/compliance";api.complianceRegister.mockResolvedValue({entries:[],mode:"warn_only",nextCursor:null});
+    mount();expect(await screen.findByRole("heading",{name:"Compliance"})).toBeTruthy();expect(await screen.findByText(/No evidence recorded/)).toBeTruthy();expect(api.overviewPage).not.toHaveBeenCalled();expect(api.resources).not.toHaveBeenCalled();
+  });
   it("prepares saved Runs before customer dispatch is enabled",async()=>{
     const initial=await api.overviewPage(),group="99999999-9999-4999-8999-999999999999";api.location="/fleet/runs";api.overviewPage.mockResolvedValue({...initial,capabilities:{canDrive:false,canDispatch:false,canManage:false,canManageResources:true},fleets:[{id:group,name:"Company resources",siteIds:[],equipmentAssetIds:[]}],runs:[]});api.resources.mockResolvedValue({drivers:[],equipment:[]});api.commercial.mockResolvedValue({version:1,defaultMode:"batch",destinations:[],canManage:true,sites:[],sitePolicy:null});api.runOrders.mockResolvedValue({orders:[],nextCursor:null,canManage:true});
     mount();expect(await screen.findByRole("heading",{name:"Saved Runs"})).toBeTruthy();await waitFor(()=>expect((screen.getByRole("button",{name:"New saved Run"}) as HTMLButtonElement).disabled).toBe(false));expect(screen.queryByRole("button",{name:"Create run"})).toBeNull();

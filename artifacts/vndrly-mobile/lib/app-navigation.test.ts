@@ -99,6 +99,7 @@ describe("buildAppNavigation", () => {
       "fleet-log",
       "fleet-map",
       "fleet-locations",
+      "fleet-compliance",
       "work-hub",
       "profile",
     ]);

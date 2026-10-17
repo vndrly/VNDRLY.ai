@@ -79,6 +79,10 @@ afterEach(() => {
   mocks.actions = [];
 });
 describe("mobile Fleet authorization", () => {
+  it("opens compliance registers independently of dispatch resource loading",async()=>{
+    mocks.api.mockResolvedValue({entries:[],mode:"warn_only",nextCursor:null});render(<FleetWorkspace initialMode="compliance"/>);
+    expect(await screen.findByRole("heading",{name:"Compliance"})).toBeTruthy();expect(await screen.findByText(/No evidence recorded/)).toBeTruthy();expect(mocks.api.mock.calls.some(call=>call[0]==="/api/fleet/resources")).toBe(false);
+  });
   it("labels legacy permission setup as access settings rather than operational Details",async()=>{
     mocks.api.mockImplementation(async(path:string)=>path==="/api/fleet/setup"?{expectedVersion:1,enabled:true,fleets:[],grants:[],members:[],sites:[]}:path.startsWith("/api/fleet/commercial")?{version:1,destinations:[],canManage:false,defaultMode:"batch",sitePolicy:null,sites:[]}:{...overview,capabilities:{...overview.capabilities,canSetup:true}});
     render(<FleetWorkspace/>);

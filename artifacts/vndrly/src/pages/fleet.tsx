@@ -15,6 +15,7 @@ import { FleetRouteFields } from "@/components/fleet-route-fields";
 import { FleetRunOrderChoice } from "@/components/fleet-run-order-choice";
 import { FleetSaveRunOrder } from "@/components/fleet-save-run-order";
 import { FleetRunOrders } from "@/components/fleet-run-orders";
+import {FleetComplianceRegister} from "@/components/fleet-compliance-register";
 import {
   FleetRunBillingFields,
   FleetBillingTicketPanel,
@@ -67,12 +68,14 @@ import type { z } from "zod/v4";
 
 export default function FleetPage() {
   const { user } = useAuth();
+  const {i18n}=useTranslation();
   const [location, navigate] = useLocation();
   useEffect(() => {
     if (user && location === "/fleet/dispatch")
       navigate("/fleet", { replace: true });
   }, [user, location, navigate]);
   if (!user || location === "/fleet/dispatch") return null;
+  if(location==="/fleet/compliance")return <main className="fleet-workspace space-y-4 p-4 md:p-6"><header className="flex items-center gap-3"><PageBackButton fallbackHref="/fleet"/><h1 className="text-2xl font-semibold">{fleetCopy(i18n.language).compliance}</h1></header><FleetComplianceRegister key={`${user.userId}:${user.activeMembershipId}:${user.vendorId}`} identity={`${user.userId}:${user.activeMembershipId}:${user.vendorId}`}/></main>;
   if (location === "/fleet/destinations")
     return (
       <FleetDestinationsPage
@@ -634,6 +637,7 @@ function FleetWorkspace({
         )}
         <Link href="/fleet/equipment">{c.equipment}</Link>
         <Link href="/fleet/destinations">{c.destinations}</Link>
+        <Link href="/fleet/compliance">{c.compliance}</Link>
         <Link href="/fleet/drivers">{c.drivers}</Link>
         <Link href="/fleet/readiness">{c.readinessTitle}</Link>
         <Link href="/fleet/costs">{c.costs}</Link>

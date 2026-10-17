@@ -22,6 +22,7 @@ export type AppNavigationLabels = {
   fleetLog?: string;
   fleetMap?: string;
   fleetLocations?: string;
+  fleetCompliance?: string;
   fleetSiteActivity?: string;
   fleetSupport?: string;
   askv: string;
@@ -191,6 +192,7 @@ export function buildAppNavigation({
           labels.fleetLocations ?? "Origins and Destinations",
           "map-pin",
         ),
+        item("fleet-compliance","/(tabs)/fleet-compliance",labels.fleetCompliance??"Compliance","shield"),
       );
     return navigation;
   }
@@ -350,6 +352,7 @@ export function isGatekeeperRouteAllowed(
         child === "fleet" ||
         child === "fleet-log" ||
         child === "fleet-map" ||
+        child === "fleet-compliance" ||
         child === "fleet-run" ||
         child === "fleet-site-activity")) ||
     root === "work-hub" ||

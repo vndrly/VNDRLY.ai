@@ -28,6 +28,7 @@ import FleetTicketPlan from "@/components/FleetTicketPlan";
 import FleetRunBilling, { type FleetBillingChoice } from "@/components/FleetRunBilling";
 import FleetRunPlanComposer,{createFleetRunFromPlan,type FleetRunPlan} from "@/components/FleetRunPlan";
 import FleetRunOrders from "@/components/FleetRunOrders";
+import FleetComplianceRegister from "@/components/FleetComplianceRegister";
 import FleetTicketFinalization from "@/components/FleetTicketFinalization";
 import FleetReports from "@/components/FleetReports";
 import FleetMaintenance from "@/components/FleetMaintenance";
@@ -42,7 +43,7 @@ import { FLEET_OFFLINE_MAX_ACTIONS, fleetQueueBase, fleetQueueAssignmentMatches,
 export default function FleetWorkspace({ initialRunId, initialAssetId, initialMode = "desk" }: {
     initialRunId?: string;
     initialAssetId?: string;
-    initialMode?: "desk" | "my-day" | "log" | "map" | "inventory" | "locations" | "orders";
+    initialMode?: "desk" | "my-day" | "log" | "map" | "inventory" | "locations" | "orders" | "compliance";
 } = {}) {
     const colors = useColors();
     const { width } = useWindowDimensions();
@@ -65,8 +66,8 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         resources: FleetResources;
     } | null>(null);
     const [selected, setSelected] = useState<string | null>(initialRunId ?? null);
-    const [mode, setMode] = useState<"desk" | "my-day" | "dispatch" | "map" | "setup" | "maintenance" | "reports" | "directory" | "review" | "log" | "inventory" | "locations" | "orders">(initialMode);
-    const inventoryView = mode === "inventory" || mode === "locations" || mode === "orders";
+    const [mode, setMode] = useState<"desk" | "my-day" | "dispatch" | "map" | "setup" | "maintenance" | "reports" | "directory" | "review" | "log" | "inventory" | "locations" | "orders" | "compliance">(initialMode);
+    const inventoryView = mode === "inventory" || mode === "locations" || mode === "orders" || mode==="compliance";
     const [logSearch, setLogSearch] = useState("");
     const [fleetFilter, setFleetFilter] = useState<string | null>(null);
     const [error, setError] = useState("");
@@ -377,6 +378,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     // projection must not gate Inventory, locations or saved transport orders.
     if(mode==="orders")return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:16,gap:16}}><WorkHubPageTitle title={copy("Runs")} onBack={initialMode!=="orders"?()=>setMode(initialMode):undefined}/><FleetRunOrders key={identity} companyId={activeMembership?.orgId??user?.vendorId??0}/></ScrollView></ScreenSafeArea>;
     if (mode === "locations") return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:16,gap:16}}><WorkHubPageTitle title={copy("Origins and Destinations")} onBack={initialMode !== "locations" ? () => setMode(initialMode) : undefined}/><FleetDestinationDirectory key={`locations:${identity}`}/></ScrollView></ScreenSafeArea>;
+    if(mode==="compliance")return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:16,gap:16}}><WorkHubPageTitle title={copy("Compliance")} onBack={initialMode!=="compliance"?()=>setMode(initialMode):undefined}/><FleetComplianceRegister key={`compliance:${identity}`}/></ScrollView></ScreenSafeArea>;
     if (mode === "inventory") return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
       <WorkHubPageTitle title={copy("Inventory and Details")} onBack={initialMode !== "inventory" ? () => setMode(initialMode) : undefined} />
       <FleetInventory key={`${identity}:${initialAssetId ?? ""}`} identity={identity} initialAssetId={initialAssetId} onSaved={() => setRevision(n => n + 1)} />
@@ -389,7 +391,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         [overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"My Run":"Fleet Dispatch",overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"my-day":"desk","truck"],
         ...(overview.capabilities.canDrive&&overview.capabilities.canDispatch?[["My Run","my-day","user"]]:[]),
         ["Inventory and Details","inventory","truck"], ["Origins and Destinations","locations","map-pin"], ...((overview.capabilities.canDispatch||overview.capabilities.canManageResources)?[["Runs","orders","repeat"],["Drivers","directory","users"]]:[]),["Reports","reports","bar-chart-2"],
-        ["Map","map","map"]
+        ["Map","map","map"],["Compliance","compliance","shield"]
       ] as const).map(([label,value,icon])=><Pressable key={value} accessibilityRole="button" accessibilityState={{selected:mode===value}} onPress={()=>setMode(value as typeof mode)} style={{paddingHorizontal:16,paddingVertical:12,borderRadius:12,borderWidth:2,borderColor:colors.primary,backgroundColor:mode===value?colors.primary:colors.card,flexDirection:"row",gap:8,alignItems:"center"}}><Feather name={icon as any} size={18} color={mode===value?"#ffffff":colors.primary}/><Text style={{color:mode===value?"#ffffff":colors.foreground,fontWeight:"600"}}>{copy(label)}</Text></Pressable>)}</View>
       <Pressable accessibilityRole="button" accessibilityLabel={copy("Fleet settings")} onPress={()=>setSettingsOpen(!settingsOpen)} style={{padding:12}}><Feather name="settings" size={23} color={colors.primary}/></Pressable>
     </View>

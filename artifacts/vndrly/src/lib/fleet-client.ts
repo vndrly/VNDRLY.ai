@@ -28,6 +28,8 @@ import {
   FleetRunOrderLocationsSchema,
   FleetComplianceAssessmentsSchema,
   FleetComplianceSubjectsQuerySchema,
+  FleetComplianceRegisterQuerySchema,
+  FleetComplianceRegisterPageSchema,
   FleetDestinationReceiptSchema,
   FleetDestinationDirectorySchema,
   FleetDetailPageSchema,
@@ -134,6 +136,11 @@ export const fleetClient = {
   runOrder:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}`).then(value=>FleetRunOrderSchema.parse(value)),
   runOrderLocations:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/locations`).then(value=>FleetRunOrderLocationsSchema.parse(value)),
   assessCompliance:(subjects:z.input<typeof FleetComplianceSubjectsQuerySchema>["subjects"])=>request<unknown>("/compliance/assessments",FleetComplianceSubjectsQuerySchema.parse({subjects})).then(value=>FleetComplianceAssessmentsSchema.parse(value)),
+  complianceRegister:(query:z.input<typeof FleetComplianceRegisterQuerySchema>={})=>{
+    const parsed=FleetComplianceRegisterQuerySchema.parse(query),params=new URLSearchParams();
+    Object.entries(parsed).forEach(([key,value])=>{if(value!==undefined)params.set(key,String(value));});
+    return request<unknown>(`/compliance?${params}`).then(value=>FleetComplianceRegisterPageSchema.parse(value));
+  },
   saveRunOrder:(input:z.input<typeof FleetRunOrderSaveSchema>)=>request<unknown>("/run-orders",FleetRunOrderSaveSchema.parse(input)).then(value=>FleetRunOrderSchema.parse(value)),
   runOrderReceipt:(id:string)=>request<unknown>(`/run-orders/operations/${encodeURIComponent(id)}`).then(value=>FleetRunOrderReceiptSchema.parse(value)),
   runOrderHistory:(id:string,after?:number)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/history${after?`?after=${after}`:""}`).then(value=>FleetRunOrderHistorySchema.parse(value)),
