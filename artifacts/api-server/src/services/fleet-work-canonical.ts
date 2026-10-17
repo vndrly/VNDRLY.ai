@@ -11,6 +11,9 @@ import {
   FleetRunSchema,
   FleetDestinationReceiptSchema,
   FleetEvidenceUploadSessionSchema,
+  fleetRouteOperationalStops,
+  fleetDetailSnapshotIdentityMatches,
+  type FleetRouteLocation,
   type FleetWorkCommand,
   type FleetWorkReference,
   type FleetWorkReceipt,
@@ -93,6 +96,99 @@ export async function executeFleetWorkCommand(
     };
   };
   switch (command.kind) {
+    case "activity.create": {
+      const p = command.payload, detailRef = await mapped(p.detailReference);
+      if (detailRef.kind !== "detail" || typeof detailRef.id !== "string")
+        throw new FleetError("fleet.invalid_request", 400);
+      // Resolve current permission/resource records without trusting cached
+      // display labels or the time at which a client read its snapshot.
+      const snapshot = await service.fleetDetailSnapshot({ ...actor }, detailRef.id);
+      if (
+        snapshot.detail.version !== detailRef.version ||
+        !fleetDetailSnapshotIdentityMatches(snapshot, {
+          ...p.detailSnapshot, detail: { ...p.detailSnapshot.detail, id: detailRef.id },
+        })
+      ) throw new FleetError("fleet.work_assignment_changed");
+      let runOrderSelection: { id: string; version: number } | undefined;
+      let orderGroups: string[] | undefined;
+      if (p.runOrderReference) {
+        const ref = await mapped(p.runOrderReference);
+        if (ref.kind !== "run_order" || typeof ref.id !== "string")
+          throw new FleetError("fleet.invalid_request", 400);
+        const order = await service.fleetRunOrder({ ...actor }, ref.id);
+        if (order.version !== ref.version || order.archivedAt)
+          throw new FleetError("fleet.run_order_revision_conflict");
+        runOrderSelection = { id: ref.id, version: ref.version };
+        orderGroups = order.accessGroupIds;
+      }
+      if (p.billing.billingSiteId === null || p.billing.serviceId === null)
+        throw new FleetError("fleet.price_context_unresolved");
+      const grant = state.grants.find(g => g.userId === actor.userId);
+      const groups = state.fleets.filter(group =>
+        grant?.fleetIds.includes(group.id) &&
+        snapshot.detail.accessGroupIds.includes(group.id) &&
+        (!orderGroups || orderGroups.includes(group.id)) &&
+        group.siteIds.includes(p.billing.billingSiteId ?? 0) &&
+        grant.siteIds.includes(p.billing.billingSiteId ?? 0),
+      ).sort((a, b) => a.id.localeCompare(b.id));
+      if (!groups.length) throw new FleetError("fleet.dispatch_required", 403);
+      const billing = p.billing.choice === "new_ticket" ? p.billing : {
+        ...p.billing, ticket: await mapped(p.billing.ticket),
+      };
+      // A provisional place is resolved only through this original scope's
+      // explicit mapping. A mistyped canonical place is never auto-created.
+      const resolvePlace = async (place: FleetRouteLocation): Promise<FleetRouteLocation> => {
+        if (place.type === "canonical") return place;
+        const ref = await mapped({ type: "local", kind: "location", id: place.localId });
+        const directory = await service.commercialSettings({ ...actor }, p.billing.billingSiteId!);
+        const current = directory.destinations.find(d => d.id === ref.id && d.revision === ref.version);
+        if (!current) throw new FleetError("fleet.route_location_unresolved");
+        return { type: "canonical", location: current };
+      };
+      const route = { ...p.route, origin: await resolvePlace(p.route.origin),
+        base: p.route.base ? await resolvePlace(p.route.base) : null,
+        stops: await Promise.all(p.route.stops.map(async stop => ({ ...stop, location: await resolvePlace(stop.location) }))),
+      };
+      const prior = await client.query(
+        "SELECT id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-operation' AND target_id=$2 LIMIT 1",
+        [actor.companyId, command.operationId],
+      );
+      if (prior.rows.length || state.operations.some(op => op.id === command.operationId))
+        throw new FleetError("fleet.operation_conflict");
+      const digest = createHash("sha256").update(`${command.operationId}:origin`).digest("hex");
+      const originId = `${digest.slice(0,8)}-${digest.slice(8,12)}-4${digest.slice(13,16)}-8${digest.slice(17,20)}-${digest.slice(20,32)}`;
+      const creator = createFleetWorkCanonicalService(context, {
+        ...options,
+        afterCommit: effect => { afterCommit.push(effect); },
+        billingV2Create: { operationId: command.operationId, intent: billing,
+          capture: { workAt: command.capturedAt, pricingIntent: p.pricingIntent } },
+      });
+      const run = await creator.create({ ...actor }, {
+        operationId: command.operationId, fleetId: groups[0].id, title: p.title,
+        driverUserId: snapshot.detail.driverUserId, vehicleAssetId: snapshot.detail.vehicleAssetId,
+        trailerAssetId: snapshot.rigPackage?.components.find(c => c.role === "trailer")?.assetId ?? null,
+        detailSelection: { version: 2, detailId: detailRef.id, detailVersion: detailRef.version,
+          timeZone: command.timeZone, returnPolicy: route.returnPolicy },
+        ...(runOrderSelection ? { runOrderSelection } : {}), routePlan: route,
+        schedule: route.plannedWindow ? { plannedStartAt: new Date(route.plannedWindow.startAt).toISOString(),
+          plannedEndAt: new Date(route.plannedWindow.endAt).toISOString(), timezone: route.plannedWindow.timeZone } : null,
+        stops: fleetRouteOperationalStops(route, p.billing.billingSiteId, originId),
+        billing: billing.choice === "new_ticket"
+          ? { mode: "new_ticket", workTypeId: p.billing.serviceId, afeNumber: billing.afeNumber, workDate: billing.workDate }
+          : { mode: "existing_ticket", ticketId: billing.ticket.id, afeNumber: billing.afeNumber, workDate: billing.workDate },
+      });
+      const canonical: Canonical = { type: "canonical", kind: "activity", id: run.id, version: run.version };
+      // Operational projection can omit private pricing; the trusted durable
+      // result supplies the actual parent revision for the mapping receipt.
+      const saved = state.runs.find(row => row.id === run.id)!;
+      if (!saved.billingV2) throw new FleetError("fleet.billing_ticket_mismatch");
+      const ticket: Canonical = { type: "canonical", kind: "ticket", id: saved.billingV2.ticketId,
+        version: saved.billingV2.ticketRevisionAtBinding };
+      return result([canonical, ticket], [
+        { local: { type: "local", kind: "activity", id: p.activityId }, canonical },
+        ...(billing.choice === "new_ticket" ? [{ local: p.billing.ticket as Extract<FleetWorkReference, {type: "local"}>, canonical: ticket }] : []),
+      ]);
+    }
     case "quantity.record": {
       const {
         original,
@@ -353,7 +449,7 @@ export async function executeFleetWorkCommand(
       if (ticket.kind !== "ticket" || current.run.linkedTicketId !== ticket.id)
         throw new FleetError("fleet.ticket_link_changed", 409);
       if (
-        !isDeepStrictEqual(
+        !fleetDetailSnapshotIdentityMatches(
           current.run.resourceAssignment?.snapshot,
           command.payload.baseAssignment,
         )

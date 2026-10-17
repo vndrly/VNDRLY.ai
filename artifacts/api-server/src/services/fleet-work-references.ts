@@ -4,6 +4,7 @@ import {
   FleetWorkMappingSchema,
   FleetWorkScopeSchema,
   FleetRunSchema,
+  fleetDetailSnapshotIdentityMatches,
   type FleetWorkScope,
   type FleetWorkReference,
   type FleetDetailSnapshot,
@@ -70,7 +71,7 @@ export async function authorizeFleetOriginalDriverActivity(
   if (
     !original.resourceAssignment ||
     (assignment &&
-      !isDeepStrictEqual(original.resourceAssignment.snapshot, assignment)) ||
+      !fleetDetailSnapshotIdentityMatches(original.resourceAssignment.snapshot, assignment)) ||
     original.linkedTicketId !== ticket.id
   )
     throw new FleetError("fleet.work_assignment_changed");

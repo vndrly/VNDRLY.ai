@@ -429,6 +429,10 @@ it("retains late work photos on their original ticket and Detail without replayi
   const late = JSON.parse(JSON.stringify(command));
   late.operationId = randomUUID();
   late.payload.evidence.id = randomUUID();
+  // The cached read time/display name is not an equipment reassignment; the
+  // public canonical record must still retain the original server labels.
+  late.payload.assignment.snapshottedAt = "2026-10-01T00:00:00Z";
+  late.payload.assignment.labels.driver = "Older cached driver label";
   const laterSession = await upload.begin(f.actor, late);
   await upload.put(f.actor, {
     scope: f.scope,

@@ -38,6 +38,24 @@ const detailInput = {
 };
 
 describe("canonical Fleet Detail contracts", () => {
+  it("compares assigned resources and revisions independently of cached display labels and read time", () => {
+    const snapshot = schema("FleetDetailSnapshotSchema").parse({
+      detail: detailInput, rigPackage: packageInput,
+      labels: { truck: "Truck 1", rigPackage: "Tank package", driver: "Bob Villa", components: [{ assetId: trailer, label: "Tank 1" }] },
+      carrierOfRecordId: 11, snapshottedAt: "2026-10-16T12:05:00Z",
+    });
+    const matches = (contracts as any).fleetDetailSnapshotIdentityMatches;
+    expect(matches, "resource identity comparator").toBeTypeOf("function");
+    const cached = { ...snapshot, labels: { ...snapshot.labels, driver: "Cached display name" }, snapshottedAt: "2026-10-16T11:00:00Z" };
+    expect(matches(snapshot, cached)).toBe(true);
+    for (const changed of [
+      { ...cached, carrierOfRecordId: 12 },
+      { ...cached, detail: { ...cached.detail, driverUserId: 43 } },
+      { ...cached, detail: { ...cached.detail, vehicleAssetId: "99999999-9999-4999-8999-999999999999" } },
+      { ...cached, detail: { ...cached.detail, version: 2 } },
+      { ...cached, rigPackage: { ...cached.rigPackage, components: [{ assetId: "99999999-9999-4999-8999-999999999999", role: "trailer", sequence: 0 }] } },
+    ]) expect(matches(snapshot, changed)).toBe(false);
+  });
   it("normalizes UUID casing before duplicate and identity checks", () => {
     const mixed = "aabbccdd-eeee-4fff-8111-aaaaaaaaaaaa";
     expect(

@@ -1,4 +1,5 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
+import { attachFleetBillingV2 } from "./fleet-billing-v2";
 import {
   attachFleetBilling,
   createFleetBillingOperations,
@@ -423,7 +424,16 @@ async function setupSites(client: PoolClient, companyId: number) {
     name: row.name as string,
   }));
 }
-export type FleetServiceOptions={afterCommit?:(effect:()=>Promise<unknown>)=>void;compliance?:Parameters<typeof createFleetComplianceOperations>[2]};
+export type FleetServiceOptions={
+  afterCommit?:(effect:()=>Promise<unknown>)=>void;
+  compliance?:Parameters<typeof createFleetComplianceOperations>[2];
+  /** Internal original-scope command adapter, never an HTTP create field. */
+  billingV2Create?: {
+    operationId: string;
+    intent: Parameters<typeof attachFleetBillingV2>[2];
+    capture: Parameters<typeof attachFleetBillingV2>[3];
+  };
+};
 export function createFleetService(repository: FleetRepository,options:FleetServiceOptions={}) {
   const transaction = <T>(
     actor: FleetActor,
@@ -992,7 +1002,16 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             if(!order.accessGroupIds.includes(run.fleetId)||!run.routePlan||!fleetRouteMatchesRunOrder(run.routePlan,order))throw new FleetError("fleet.run_order_route_mismatch",409);
             run.runOrder=structuredClone(order);
           }
-          await attachFleetBilling(client, actor, state, run, body.billing);
+          if (options.billingV2Create) {
+            if (options.billingV2Create.operationId !== body.operationId)
+              throw new FleetError("fleet.operation_conflict");
+            await attachFleetBillingV2(
+              { client, actor, state }, run,
+              options.billingV2Create.intent, options.billingV2Create.capture,
+            );
+          } else {
+            await attachFleetBilling(client, actor, state, run, body.billing);
+          }
           await assertFleetPhysicalRoute(client, actor, state, run, true);
           if (detailSelection)
             await assignFleetRunDetail(

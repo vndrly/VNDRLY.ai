@@ -176,6 +176,18 @@ export const FleetDetailSnapshotSchema = z
       });
   });
 export type FleetDetailSnapshot = z.infer<typeof FleetDetailSnapshotSchema>;
+/** Cached display labels/read time cannot change an assignment. The actual
+ * Detail, component revisions and carrier must still match exactly. Invalid
+ * snapshots never acquire authority from this comparison. */
+export function fleetDetailSnapshotIdentityMatches(left: unknown, right: unknown): boolean {
+  const a = FleetDetailSnapshotSchema.safeParse(left), b = FleetDetailSnapshotSchema.safeParse(right);
+  if (!a.success || !b.success) return false;
+  const identity = (snapshot: FleetDetailSnapshot) => ({
+    detail: snapshot.detail, rigPackage: snapshot.rigPackage,
+    carrierOfRecordId: snapshot.carrierOfRecordId,
+  });
+  return JSON.stringify(identity(a.data)) === JSON.stringify(identity(b.data));
+}
 
 export const FleetReservationSchema = z
   .object({
