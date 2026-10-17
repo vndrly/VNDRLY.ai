@@ -68,3 +68,5 @@ export * from "./fleet-compliance-intake";
 
 export * from "./fleet-insurance-evaluation";
 export * from "./fleet-compliance-work";
+export * from "./fleet-work";
+export * from "./fleet-work-state";

@@ -106,6 +106,8 @@ export const FleetDetailSchema = z
       });
   });
 export type FleetDetail = z.infer<typeof FleetDetailSchema>;
+export const FleetDetailSaveSchema=z.object({operationId:FleetCanonicalIdSchema,expectedVersion:z.number().int().nonnegative(),detail:FleetDetailSchema}).strict();
+export const FleetRigPackageSaveSchema=z.object({operationId:FleetCanonicalIdSchema,expectedVersion:z.number().int().nonnegative(),package:FleetRigPackageSchema}).strict();
 
 export const FleetDetailSnapshotSchema = z
   .object({

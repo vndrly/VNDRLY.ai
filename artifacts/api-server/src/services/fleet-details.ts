@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { z } from "zod/v4";
 import {
   FleetDetailSchema,
+  FleetDetailSaveSchema,
+  FleetRigPackageSaveSchema,
   FleetDetailSnapshotSchema,
   FleetRigPackageSchema,
   FleetResourceReceiptSchema,
@@ -33,20 +35,7 @@ type Access = (
   state: FleetState,
   actor: FleetActor,
 ) => { fleetIds: readonly string[]; roles: readonly string[] } | null;
-const savePackage = z
-  .object({
-    operationId: FleetCanonicalIdSchema,
-    expectedVersion: z.number().int().nonnegative(),
-    package: FleetRigPackageSchema,
-  })
-  .strict();
-const saveDetail = z
-  .object({
-    operationId: FleetCanonicalIdSchema,
-    expectedVersion: z.number().int().nonnegative(),
-    detail: FleetDetailSchema,
-  })
-  .strict();
+const savePackage=FleetRigPackageSaveSchema,saveDetail=FleetDetailSaveSchema;
 const queryPage = z
   .object({
     after: FleetCanonicalIdSchema.optional(),
