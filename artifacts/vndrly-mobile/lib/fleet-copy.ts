@@ -2,6 +2,22 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 const spanish: Record<string, string> = {
+"Review the selected members.":"Revise los miembros seleccionados.",
+"Change evidence reviewers":"Cambiar revisores",
+"Review reviewer access":"Revisar acceso de revisores",
+"Reload reviewer access":"Recargar acceso de revisores",
+"Save reviewer access":"Guardar acceso de revisores",
+"Former member":"Miembro anterior",
+"Edit reviewer selection":"Editar selección",
+"Retry the same reviewer change":"Reintentar el mismo cambio",
+"Review these private-evidence permissions before saving.":"Revise estos permisos privados antes de guardarlos.",
+"Company members unavailable. Reload before changing access.":"Miembros no disponibles. Actualice antes de cambiar el acceso.",
+"Reviewer access changed again. Reload the current configuration.":"El acceso cambió nuevamente. Actualice la configuración actual.",
+"Configuration or permissions changed. Reload before trying again.":"La configuración o sus permisos cambiaron. Actualice antes de volver a intentarlo.",
+"Appointed reviewers can read and review full licenses and private medical, testing and coverage records. Dispatch and finance keep their separate permissions.":"Los revisores designados pueden leer y revisar licencias completas y registros médicos, de pruebas y de cobertura privados. Despacho y finanzas conservan sus permisos separados.",
+"Reviewer access needs verification. Retry the same change.":"Debe verificarse el acceso. Reintente el mismo cambio.",
+"Evidence reviewers":"Revisores de evidencia",
+
 "Recorded result":"Resultado registrado",
 "Verification source":"Fuente de verificación",
 "Source link (optional)":"Enlace de la fuente (opcional)",

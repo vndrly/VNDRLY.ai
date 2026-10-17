@@ -13,6 +13,7 @@ vi.mock("@/lib/fleet-client", () => ({
   fleetClient: { complianceRegister: mocks.register },
 }));
 vi.mock("./fleet-evidence-review",()=>({FleetEvidenceReview:()=> <div>Private reviewer opened</div>}));
+vi.mock("./fleet-compliance-reviewers",()=>({FleetComplianceReviewers:()=>null}));
 vi.mock("./png-pill-rollover", () => ({
   PngPillButton: ({ children, ...props }: any) => (
     <button {...props}>{children}</button>

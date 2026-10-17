@@ -12,6 +12,7 @@ import { useFleetCopy } from "@/lib/fleet-copy";
 import TogglePillButton from "./TogglePillButton";
 import FleetChoiceField from "./FleetChoiceField";
 import FleetEvidenceReview from "./FleetEvidenceReview";
+import FleetComplianceReviewers from "./FleetComplianceReviewers";
 
 export default function FleetComplianceRegister() {
   const [selected,setSelected]=useState<{id:string;revision:number}|null>(null);
@@ -111,6 +112,7 @@ export default function FleetComplianceRegister() {
       <Text style={[text, { fontSize: 20, fontWeight: "700" }]}>
         {copy("Compliance registers")}
       </Text>
+      <FleetComplianceReviewers onChanged={()=>{setSelected(null);setRefresh(value=>value+1);}}/>
       <View style={card}>
         <Text style={text}>
           {copy(

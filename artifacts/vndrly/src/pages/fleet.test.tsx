@@ -19,6 +19,7 @@ const api = vi.hoisted(() => ({
   runOrder: vi.fn(),
   navigate: vi.fn(),
   complianceRegister:vi.fn(),
+  complianceConfiguration:vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: api,
@@ -80,6 +81,7 @@ const run = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
+  api.complianceConfiguration.mockResolvedValue({version:1,isReviewer:false,mayAppointReviewers:false,reviewerUserIds:[]});
   window.history.replaceState({}, "", "/");
   api.location = "/fleet/my-day";
   api.billingOptions.mockResolvedValue({

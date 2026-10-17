@@ -5,6 +5,7 @@ import type { FleetComplianceSubject } from "@workspace/api-zod";
 import { fleetClient } from "@/lib/fleet-client";
 import { PngPillButton } from "./png-pill-rollover";
 import {FleetEvidenceReview} from "./fleet-evidence-review";
+import {FleetComplianceReviewers} from "./fleet-compliance-reviewers";
 
 export function FleetComplianceRegister({ identity }: { identity: string }) {
   const { i18n } = useTranslation(),
@@ -55,6 +56,7 @@ export function FleetComplianceRegister({ identity }: { identity: string }) {
       aria-label={es ? "Registros de cumplimiento" : "Compliance registers"}
     >
       <h2>{es ? "Registros de cumplimiento" : "Compliance registers"}</h2>
+      <FleetComplianceReviewers identity={identity} onChanged={()=>{setSelected(null);void query.refetch();}}/>
       <div className="fleet-detail-group">
         <p>
           {es
