@@ -1,0 +1,20 @@
+import {it,expect,vi} from "vitest";
+import {randomUUID,createHash} from "node:crypto";
+import * as client from "./fleet-work-evidence-client";
+import {createDurableFleetWorkJournal,type FleetJournalStore} from "./fleet-work-journal";
+import type {FleetWorkCommand} from "./fleet-work";
+it("resumes only unacknowledged evidence bytes and requires the actual server completion receipt before acceptance",async()=>{
+ const scope={owner:{type:"vendor" as const,id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()},rows=new Map<string,string>();
+ const storage:FleetJournalStore={transaction:async work=>work({get:async(k,id)=>rows.get(`${k}:${id}`)??null,set:async(k,id,v)=>{rows.set(`${k}:${id}`,v)},values:async k=>[...rows].filter(([key])=>key.startsWith(`${k}:`)).map(([,v])=>v)})};
+ const hash=(v:Uint8Array)=>createHash("sha256").update(v).digest("hex"),body=new Uint8Array([255,216,255,12]),operationId=randomUUID(),id=randomUUID(),canonicalId=randomUUID(),at=new Date().toISOString();
+ const journal=createDurableFleetWorkJournal({scope,storage,isCurrent:()=>true,digest:async s=>hash(Buffer.from(s))});
+ const command={version:2,scope,operationId,kind:"compliance.document.stage",capturedAt:at,timeZone:"UTC",dependencies:[],payload:{recordId:randomUUID(),subject:{kind:"driver",id:2},expectedRecordVersion:0,evidence:{type:"local",kind:"evidence",id},byteSize:4,sha256:hash(body),contentType:"image/jpeg"}} as FleetWorkCommand;
+ await journal.append(command);const fingerprint=(await journal.readState()).entries[0].fingerprint;
+ const upload={version:2,id:randomUUID(),scope,operationId,fingerprint,localEvidenceId:id,canonicalEvidenceId:canonicalId,capturedAt:at,timeZone:"UTC",createdAt:at,byteSize:4,sha256:hash(body),contentType:"image/jpeg",partCount:1,partSize:262144,binding:{kind:"compliance",recordId:command.kind==="compliance.document.stage"?command.payload.recordId:"",subject:{kind:"driver",id:2},expectedRecordVersion:0},completion:null as any};
+ const part={partNumber:0,sha256:hash(body),byteSize:4,recordedAt:at};let acknowledged=false,lose=true;
+ const http=vi.fn(async(path:string)=>{if(path.endsWith("begin"))return upload;if(path.endsWith("status"))return {session:upload,parts:acknowledged?[part]:[],completion:upload.completion};if(path.endsWith("complete")){upload.completion={status:"complete",sessionId:upload.id,operationId,evidenceId:canonicalId,byteSize:4,sha256:hash(body),contentType:"image/jpeg",objectPath:"/objects/fleet-compliance-private/7/file",fileUrl:null,completedAt:at,physicalProofVerified:false,signatureIdentityVerified:false};return upload.completion;}if(path.endsWith("receipt"))return {version:2,scope,operationId,fingerprint,recordedAt:at,status:"applied",mappings:[{local:{type:"local",kind:"evidence",id},canonical:{type:"canonical",kind:"evidence",id:canonicalId,version:1}}],canonicalReferences:[{type:"canonical",kind:"evidence",id:canonicalId,version:1}]};throw Error(path);});
+ const put=vi.fn(async()=>{acknowledged=true;if(lose){lose=false;throw Error("response lost");}return part;});
+ const options={scope,journal,http,put,isCurrent:()=>true,hash:async(v:Uint8Array)=>hash(v),read:async()=>body};
+ await client.synchronizeFleetEvidence(options);expect((await journal.readStatus(scope)).pendingEvidence).toBe(1);
+ await client.synchronizeFleetEvidence(options);expect(put).toHaveBeenCalledTimes(1);expect((await journal.readState()).entries[0].delivery.state).toBe("applied");expect((await journal.readState()).entries[0].command).toEqual(command);
+});

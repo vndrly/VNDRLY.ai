@@ -1,3 +1,5 @@
+import {FleetWorkEvidencePageSchema} from "./fleet-evidence-upload";
+import {synchronizeFleetEvidence} from "./fleet-work-evidence-client";
 import {z} from "zod/v4";
 import {FleetWorkScopeSchema,FleetWorkReceiptSchema,type FleetWorkScope,type FleetWorkCommand} from "./fleet-work";
 import type {FleetJournalStore,DurableFleetWorkJournal} from "./fleet-work-journal";
@@ -6,11 +8,12 @@ import {buildFleetCreateIntent,buildFleetActionIntent,FleetWorkPreparationSchema
 import {CreateFleetRunSchema,FleetRunSchema,FleetActionInputSchema,type FleetRun,type FleetActionInput} from "./fleet";
 const accountSchema=z.object({userId:z.number().int().positive(),companyId:z.number().int().positive(),membershipId:z.number().int().positive(),sessionVersion:z.number().int().nonnegative()}).strict();
 export type FleetWorkAccount=z.infer<typeof accountSchema>;
+export type FleetEvidenceJournal=DurableFleetWorkJournal & {stageEvidence?:(id:string,source:unknown,contentType:string,makeCommand?:(media:{sha256:string;byteSize:number;contentType:string})=>FleetWorkCommand)=>Promise<{id:string;sha256:string;byteSize:number;contentType:string;durability:"durable"}>;readEvidencePart?:(id:string,offset:number,length:number)=>Promise<Uint8Array>};
 const provisionSchema=z.object({scope:FleetWorkScopeSchema,expiresAt:z.iso.datetime()});
 /** The account comes from an authenticated overview (or its original encrypted
  * cache). Provisioning is a device/session binding, never a new business grant.
  * A new account/session has a different index; old journals are never rebound. */
-export async function openFleetWorkSession(options:{account:FleetWorkAccount;index:FleetJournalStore;openJournal:(scope:FleetWorkScope)=>Promise<DurableFleetWorkJournal>;isCurrent:()=>boolean;http:(path:string,body?:unknown)=>Promise<unknown>;uuid:()=>string}){
+export async function openFleetWorkSession(options:{account:FleetWorkAccount;index:FleetJournalStore;openJournal:(scope:FleetWorkScope)=>Promise<FleetEvidenceJournal>;isCurrent:()=>boolean;http:(path:string,body?:unknown)=>Promise<unknown>;uuid:()=>string;putEvidencePart?:(path:string,bytes:Uint8Array,sha256:string,scope:FleetWorkScope)=>Promise<unknown>;hashBytes?:(bytes:Uint8Array)=>Promise<string>}){
  const account=accountSchema.parse(options.account),key=JSON.stringify(account),current=()=>{if(!options.isCurrent())throw Error("Original Fleet work scope changed");};
  current();const raw=await options.index.transaction(tx=>tx.get("work-session",key));let provision=raw?provisionSchema.parse(JSON.parse(raw)):null;
  let enabled=true;try{enabled=z.object({enabled:z.boolean()}).parse(await options.http("/api/fleet/work/capabilities")).enabled;}catch(error){if(!provision)throw error;}
@@ -29,7 +32,7 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
   lookup:async(command:FleetWorkCommand)=>z.object({receipt:FleetWorkReceiptSchema.nullable(),checkedAt:z.iso.datetime()}).parse(await options.http(`/api/fleet/work/operations/${command.operationId}`,{scope})),
   apply:async(command:FleetWorkCommand)=>FleetWorkReceiptSchema.parse(await options.http("/api/fleet/work/commands",command)),
  };
- const synchronize=()=>synchronizeFleetWork(scope,{journal,transport,isCurrent:options.isCurrent});
+ const synchronize=async()=>{const result=await synchronizeFleetWork(scope,{journal,transport,isCurrent:options.isCurrent});if(journal.readEvidencePart&&options.putEvidencePart&&options.hashBytes)await synchronizeFleetEvidence({scope,journal,isCurrent:options.isCurrent,http:options.http,put:(path,bytes,hash)=>options.putEvidencePart!(path,bytes,hash,scope),read:(...args)=>journal.readEvidencePart!(...args),hash:options.hashBytes});return result;};
  const execute=async(command:FleetWorkCommand)=>{current();await journal.append(command);try{await synchronize();}catch{current();}
    const entry=(await journal.readState()).entries.find(row=>row.command.operationId===command.operationId)!;
    return {state:entry.delivery.state,canonicalApplied:entry.delivery.state==="applied",receipt:entry.delivery.receipt,operationId:command.operationId};
@@ -43,6 +46,13 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
  return {scope,journal,expiresAt:provision.expiresAt,enabled,synchronize,execute,prepareCreate,
   cacheRun:async(run:FleetRun)=>{current();const saved=FleetRunSchema.parse(run);if(saved.companyId!==account.companyId)throw Error("Original Fleet run scope changed");await journal.putCache(`run:${saved.id}`,saved);},
   readRun:async(id:string)=>{const value=await journal.readCache(`run:${z.uuid().parse(id)}`);return value?FleetRunSchema.parse(value):null;},
+  async evidencePage(activityId:string,cursor:string|null=null){current();const page=FleetWorkEvidencePageSchema.parse(await options.http(`/api/fleet/work/activities/${z.uuid().parse(activityId)}/evidence`,{scope,cursor}));if(page.evidence.some(row=>row.record.runId!==activityId||row.record.companyId!==account.companyId))throw Error("Evidence readback scope changed");return page;},
+  async captureEvidence(run:FleetRun,source:unknown,contentType:string,kind:"photo"|"scale"|"receipt"|"signature",notes:string){
+   current();if(!journal.stageEvidence||!run.resourceAssignment?.snapshot||!run.ticketReference||run.companyId!==account.companyId||run.driverUserId!==account.userId)throw Error("Original own-driver evidence context is required");
+   const operationId=options.uuid(),id=options.uuid(),capturedAt=new Date().toISOString();
+   await journal.stageEvidence(id,source,contentType,media=>({version:2,scope,operationId,capturedAt,timeZone:run.schedule?.timezone??"UTC",dependencies:[],kind:"evidence.stage",payload:{evidence:{type:"local",kind:"evidence",id},activity:{type:"canonical",kind:"activity",id:run.id,version:run.version},ticket:{type:"canonical",kind:"ticket",...run.ticketReference!},kind,byteSize:media.byteSize,sha256:media.sha256,contentType:contentType as "image/jpeg",notes,assignment:run.resourceAssignment!.snapshot}}));
+   return {operationId,localEvidenceId:id,canonicalApplied:false as const,durability:"durable" as const};
+  },
   async captureCreate(raw:unknown){const input=CreateFleetRunSchema.parse(raw),sourceKey=`create-source:${input.operationId}`,priorSource=await journal.readCache(sourceKey),original=(await journal.readState()).entries.find(row=>row.command.operationId===input.operationId);
    if(priorSource&&JSON.stringify(priorSource)!==JSON.stringify(input))throw Error("Cannot change an original Fleet request; use a new operation");
    if(original){if(original.command.kind!=="activity.create"||!priorSource)throw Error("Retained original Fleet request needs recovery");return execute(original.command);}

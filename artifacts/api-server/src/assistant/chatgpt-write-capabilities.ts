@@ -1,3 +1,4 @@
+import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
 import { fleetInventoryAction, fleetInventoryArguments } from "./fleet-inventory-tools";
 import { WorkHubAvailabilityArgumentsSchema } from "./work-hub-availability-tools";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
@@ -46,7 +47,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  if (name === "finalize_fleet_ticket") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
  if (fleetInventoryAction(name)) { const { operationId: _op, confirmed: _confirmed, ...fields } = input; return fields; }
  if(name === "set_company_operations") return {categories: input.categories};
- if(name==="manage_work_hub_availability"){const {operationId:_op,confirmed:_confirmed,...fields}=input;return fields;}
+ if(["manage_my_workday","manage_work_hub_availability"].includes(name)){const {operationId:_op,confirmed:_confirmed,...fields}=input;return fields;}
   if (name === "moderate_work_hub_meeting" && input.action === "request_to_speak") { const { operationId: _op, confirmed: _confirmed, ...fields } = input; return fields; }
   if (name === "send_work_hub_meeting_message") { const { operationId: _op, confirmed: _confirm, ...fields } = input; return fields; }
   if (name === "manage_work_hub_meeting" && input.action === "set_assistant") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
@@ -74,6 +75,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if(name==="manage_my_workday"){const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);WorkdayAssistantInputSchema.omit({operationId:true}).parse(fields);}
   if (fleetInventoryAction(name)) { const { operationId, ...fields } = input; if (operationId !== undefined) z.uuid().parse(operationId); fleetInventoryArguments(name).parse(fields); }
   if(name === "set_company_operations") z.object({categories:z.array(z.enum(["field","fleet","gate"])).min(1).max(3).refine(values=>new Set(values).size===values.length),operationId:z.uuid().optional()}).strict().parse(input);
   if(name === "save_fleet_destination") z.object({operationId:z.uuid().optional(),expectedVersion:z.number().int().positive(),destination:FleetDestinationInputSchema}).strict().parse(input);

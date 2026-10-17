@@ -145,3 +145,7 @@ export function workdayTimeInRange(
 ) {
   return fleetWorkdayTimeInRange(mathEvents(raw).events, start, end);
 }
+
+/** Assistants may report only the consenting current worker, at actual server
+ * execution time. Original-scope offline commands remain a separate capture. */
+export const WorkdayAssistantInputSchema=z.object({operationId:z.uuid(),action:WorkdayCommandSchema.shape.action,expectedShiftId:z.uuid().nullable(),timezone:WorkdayCommandSchema.shape.timezone}).strict();

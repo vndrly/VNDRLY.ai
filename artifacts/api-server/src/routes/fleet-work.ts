@@ -1,6 +1,6 @@
 import {Router,raw,type Request} from "express";
 import {z} from "zod/v4";
-import {FleetWorkScopeSchema} from "@workspace/api-zod";
+import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetEvidenceUploadStatusSchema} from "@workspace/api-zod";
 import {FleetError} from "../services/fleet-repository";
 import type {FleetActor} from "../services/fleet-ops";
 import {createDatabaseFleetWorkRepository} from "../services/fleet-work-repository";
@@ -29,6 +29,13 @@ export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;e
  router.post("/fleet/work/operations/:operationId",endpoint(async req=>({receipt:await work.read(options.actor(req),scopeInput.parse(req.body).scope,z.uuid().parse(req.params.operationId)),checkedAt:new Date().toISOString()})));
  router.post("/fleet/work/evidence/begin",endpoint(req=>uploads.begin(options.actor(req),req.body)));
  router.post("/fleet/work/evidence/:sessionId/status",endpoint(req=>uploads.read(options.actor(req),scopeInput.parse(req.body).scope,z.uuid().parse(req.params.sessionId))));
+ router.post("/fleet/work/evidence/:sessionId/receipt",endpoint(async req=>{
+  const scope=scopeInput.parse(req.body).scope,id=z.uuid().parse(req.params.sessionId),saved=FleetEvidenceUploadStatusSchema.parse(await uploads.read(options.actor(req),scope,id));
+  if(saved.session.id!==id||JSON.stringify(saved.session.scope)!==JSON.stringify(scope))throw new FleetError("fleet.work_scope_changed",403);
+  if(!saved.completion)throw new FleetError("fleet.evidence_association_pending",409);
+  const session=saved.session,canonical={type:"canonical",kind:"evidence",id:session.canonicalEvidenceId,version:1};
+  return FleetWorkReceiptSchema.parse({version:2,scope,operationId:session.operationId,fingerprint:session.fingerprint,recordedAt:saved.completion.completedAt,status:"applied",mappings:[{local:{type:"local",kind:"evidence",id:session.localEvidenceId},canonical}],canonicalReferences:[canonical]});
+ }));
  router.post("/fleet/work/evidence/:sessionId/complete",endpoint(req=>{const body=scopeInput.extend({operationId:z.uuid()}).parse(req.body);return uploads.complete(options.actor(req),{...body,sessionId:z.uuid().parse(req.params.sessionId)});}));
  router.put("/fleet/work/evidence/:sessionId/parts/:partNumber",raw({type:"application/octet-stream",limit:"1mb"}),endpoint(req=>{
   const scope=FleetWorkScopeSchema.parse(JSON.parse(z.string().max(3000).parse(req.headers["x-fleet-work-scope"])));

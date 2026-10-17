@@ -27,6 +27,7 @@ router.get(
   "/work-hub/workday",
   endpoint((session) => workdayService.current(session)),
 );
+router.post("/work-hub/workday/assistant-events",endpoint((session,req)=>workdayService.recordAssistant(session,req.body)));
 router.post(
   "/work-hub/workday/events",
   endpoint((session, req) => workdayService.record(session, req.body)),

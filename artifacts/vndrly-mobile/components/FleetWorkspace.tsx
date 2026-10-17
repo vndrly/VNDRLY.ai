@@ -1,3 +1,4 @@
+import FleetRetainedEvidence from "@/components/FleetRetainedEvidence";
 import FleetMapOverview from "@/components/FleetMapOverview";
 import FleetRunBoard from "@/components/FleetRunBoard";
 import { Feather } from "@expo/vector-icons";
@@ -495,7 +496,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         <FleetReplacement key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetCargo key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetReviewPacket key={`${identity}:${run.id}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0}/>
-        <FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>}
         <FleetEta key={`${identity}:${run.id}:${run.version}`} runId={run.id} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0}/>
         <FleetGate key={`${identity}:${run.id}:${run.version}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0} onChanged={() => setRevision(n => n + 1)}/>
         {run.linkedTicketId && <Text style={textStyle}>{copy("Open the linked ticket for its authorized camera attachments and consented ticket location workflow. These remain ticket records; opening the screen does not save Fleet proof or start Fleet tracking.")}</Text>}

@@ -122,7 +122,7 @@ describe("Fleet driver workspace", () => {
   it("retains a modern driver action through the durable journal without claiming server acceptance",async()=>{
     const initial=await api.overviewPage();
     api.overviewPage.mockResolvedValue({...initial,runs:[{...run,ticketReference:{id:500,version:1}}]});
-    const captureAction=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"});api.work.session={captureAction};
+    const captureAction=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"});api.work.session={captureAction,scope:{userId:7}};
     mount();fireEvent.click(await screen.findByText("Own pickup"));fireEvent.click(screen.getByText("Acknowledge assignment"));fireEvent.click(screen.getByText("Save exact change"));
     await waitFor(()=>expect(captureAction).toHaveBeenCalledOnce());
     expect(captureAction.mock.calls[0][1]).toMatchObject({expectedVersion:2,action:"acknowledge"});

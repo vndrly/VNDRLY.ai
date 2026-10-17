@@ -81,3 +81,5 @@ export * from "./workday-client";
 export * from "./fleet-work-browser-storage";
 export * from "./fleet-work-session";
 export * from "./fleet-work-builder";
+export * from "./fleet-work-evidence-client";
+export * from "./fleet-work-browser-journal";

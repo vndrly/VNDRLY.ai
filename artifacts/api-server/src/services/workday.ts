@@ -1,10 +1,11 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod/v4";
 import { pool } from "@workspace/db";
 import {
   WorkdayScopeSchema,
   WorkdayCommandSchema,
+  WorkdayAssistantInputSchema,
   WorkdayEventSchema,
   WorkdaySnapshotSchema,
   WorkdayReceiptSchema,
@@ -255,6 +256,25 @@ async function openWorkday(client: PoolClient, scope: WorkdayScope) {
 /** A single organization/worker workday for every portal and client. Domain
  * assignment, duty/contact policy, GPS and billable work remain separate facts. */
 export function createWorkdayService(run: typeof transaction = transaction) { return {
+  recordAssistant:(session:SessionPayload,raw:unknown)=>run(session,async(client,scope)=>{
+    const input=WorkdayAssistantInputSchema.parse(raw);
+    if(session.realm==="demo"||session.publicDemo)throw new WorkdayError("workday.read_only",403);
+    await lock(client,scope);
+    const prior=StoredOperationSchema.nullable().parse(await readRecord(client,scope,"workday-event",input.operationId));
+    if(prior){
+      const saved=await snapshot(client,scope,prior.event.shiftId);
+      if(prior.event.workerUserId!==scope.userId||prior.event.kind!==input.action||saved.timezone!==input.timezone||(input.action!=="start_shift"&&input.expectedShiftId!==prior.event.shiftId)||(input.action==="start_shift"&&input.expectedShiftId!==null))throw new WorkdayError("workday.operation_conflict");
+      return prior.receipt;
+    }
+    const current=await openWorkday(client,scope);
+    if((current?.id??null)!==input.expectedShiftId)throw new WorkdayError("workday.current_shift_changed");
+    if(input.action==="start_shift"&&current)throw new WorkdayError("workday.already_open");
+    if(input.action!=="start_shift"&&!current)throw new WorkdayError("workday.not_found",404);
+    // Reuse the same transaction and canonical clock; neither portal nor model
+    // owns a second timecard or supplies a backdated worker timestamp.
+    const canonical=createWorkdayService(async(_session,work)=>work(client,scope));
+    return canonical.record(session,{operationId:input.operationId,shiftId:current?.id??randomUUID(),scope,action:input.action,timezone:input.timezone,capturedAt:new Date().toISOString()});
+  }),
   record: (session: SessionPayload, raw: unknown) =>
     run(session, async (client, scope) => {
       const command = WorkdayCommandSchema.parse(raw);

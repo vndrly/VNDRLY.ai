@@ -1,3 +1,4 @@
+import {FleetRetainedEvidence} from "@/components/fleet-retained-evidence";
 import { FleetRouteReplay } from "@/components/fleet-route-replay";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -1463,7 +1464,7 @@ function FleetWorkspace({
                     runId={run.id}
                   />
                   <FleetReviewPacketPanel run={run} identity={identity} />
-                  <FleetEvidencePanel
+                  {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidencePanel
                     key={run.id}
                     run={run}
                     identity={identity}
@@ -1474,7 +1475,7 @@ function FleetWorkspace({
                       ["acknowledged", "in_progress"].includes(run.status)
                     }
                     onSaved={reload}
-                  />
+                  />}
                   <FleetGateObservationsPanel
                     key={run.id}
                     run={run}

@@ -6,6 +6,16 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import {buildTestCookie} from "../test-utils/session";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
+it("starts and ends only the confirmed assistant worker's current day with server time and exact receipt retries",async()=>{
+ const f=await fixture(),operationId=randomUUID();
+ const start={operationId,action:"start_shift",expectedShiftId:null,timezone:"America/Chicago"};
+ const before=Date.now(),first=await f.service.recordAssistant(f.worker,start);expect(Date.parse(first.event.capturedAt)).toBeGreaterThanOrEqual(before);
+ expect(await f.service.recordAssistant(f.worker,start)).toEqual(first);
+ await expect(f.service.recordAssistant(f.worker,{...start,timezone:"UTC"})).rejects.toMatchObject({code:"workday.operation_conflict"});
+ await expect(f.service.recordAssistant(f.office,{operationId:randomUUID(),action:"end_shift",expectedShiftId:first.shiftId,timezone:"America/Chicago"})).rejects.toMatchObject({code:"workday.current_shift_changed"});
+ const ended=await f.service.recordAssistant(f.worker,{operationId:randomUUID(),action:"end_shift",expectedShiftId:first.shiftId,timezone:"America/Chicago"});expect(ended.summary.state).toBe("ended");expect((await f.service.current(f.worker)).workday).toBeNull();
+ await expect(f.service.recordAssistant(f.worker,{...start,operationId:randomUUID(),capturedAt:"2000-01-01T00:00:00Z"})).rejects.toThrow();
+});
 
 async function fixture() {
   assertFreshLocalTestDatabaseEnvironment(process.env);

@@ -12,6 +12,20 @@ export type FleetJournalTransaction={get(kind:string,key:string):Promise<string|
 /** Native SQLCipher and browser IndexedDB adapters must resolve only after commit.
  * Originals are immutable individual rows, never a bounded aggregate or cache. */
 export type FleetJournalStore={transaction<T>(work:(tx:FleetJournalTransaction)=>Promise<T>):Promise<T>};
+/** Reused inside the evidence byte transaction, so its original intent and
+ * owned bytes either both commit or neither commits. */
+export async function appendFleetJournalCommand(tx:FleetJournalTransaction,scope:FleetWorkScope,raw:FleetWorkCommand,fingerprint:string){
+ const command=FleetWorkCommandSchema.parse(raw),identity=JSON.stringify(FleetWorkScopeSchema.parse(scope));
+ if(JSON.stringify(command.scope)!==identity||!/^[a-f0-9]{64}$/.test(fingerprint))throw Error("Original work scope or digest changed");
+ const owner=await tx.get("meta","scope");if(owner&&owner!==identity)throw Error("Journal belongs to another original scope");
+ if(await tx.get("meta","locked")==="true")throw Error("Original work scope is locked");
+ if(!owner)await tx.set("meta","scope",identity);
+ const prior=await tx.get("entry",command.operationId);
+ if(prior){const entry=FleetWorkJournalEntrySchema.parse(JSON.parse(prior));if(entry.fingerprint!==fingerprint||serializeFleetWorkCommand(entry.command)!==serializeFleetWorkCommand(command))throw Error("An operation cannot be reused with changed original facts");return;}
+ const next=Number(await tx.get("meta","sequence")??"0")+1;if(!Number.isSafeInteger(next)||next<1)throw Error("Journal sequence is invalid");
+ const entry=appendFleetWorkIntent(createFleetWorkState(scope),command,fingerprint).entries[0];entry.sequence=next;
+ await tx.set("entry",command.operationId,JSON.stringify(entry));await tx.set("meta","sequence",String(next));
+}
 export type DurableFleetWorkJournal=FleetWorkJournal&{
  readState():Promise<FleetWorkState>;nextBatch(at:string):Promise<FleetWorkCommand[]>;
  markSending(id:string,at:string):Promise<void>;markUnknown(id:string):Promise<void>;
@@ -35,13 +49,7 @@ export function createDurableFleetWorkJournal(options:{scope:FleetWorkScope;stor
  });
  const append=async(raw:FleetWorkCommand)=>{
   const command=FleetWorkCommandSchema.parse(raw);same(command.scope);current();const fingerprint=await options.digest(serializeFleetWorkCommand(command));
-  await transact(async tx=>{
-   await unlocked(tx);const prior=await tx.get("entry",command.operationId);
-   if(prior){const entry=FleetWorkJournalEntrySchema.parse(JSON.parse(prior));if(entry.fingerprint!==fingerprint||serializeFleetWorkCommand(entry.command)!==serializeFleetWorkCommand(command))throw Error("An operation cannot be reused with changed original facts");return;}
-   const next=Number(await tx.get("meta","sequence")??"0")+1;if(!Number.isSafeInteger(next)||next<1)throw Error("Journal sequence is invalid");
-   const entry=appendFleetWorkIntent(createFleetWorkState(scope),command,fingerprint).entries[0];entry.sequence=next;
-   await tx.set("entry",command.operationId,JSON.stringify(entry));await tx.set("meta","sequence",String(next));
-  });
+  await transact(tx=>appendFleetJournalCommand(tx,scope,command,fingerprint));
   return {operationId:command.operationId,storedAt:now().toISOString(),durability:"durable" as const,canonicalApplied:false as const};
  };
  return {

@@ -1,3 +1,4 @@
+import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
 import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
 import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
@@ -211,6 +212,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     const transitions: Record<string, string> = { accept: "accept", deny: "deny", reinvite: "reinvite", submit: "submit", approve: "approve", kickback: "kickback", awaiting_payment: "awaiting-payment", cancel: "cancel", reactivate: "reactivate" };
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
   }
+  if(name==="query_my_workday")return z.object({}).strict().safeParse(input).success?request("GET","/work-hub/workday"):{error:"Workday reads accept no other-worker target"};
+  if(name==="manage_my_workday"){const {confirmed:_confirmed,...business}=input;const parsed=WorkdayAssistantInputSchema.safeParse(business);return parsed.success?request("POST","/work-hub/workday/assistant-events",parsed.data):{error:"Supply only your confirmed action, exact current shift and timezone; worker identity and capture time are server-owned"};}
   if(name==='query_work_hub_availability') return z.object({}).strict().safeParse(input).success ? request('GET','/work-hub/availability') : {error:'Personal availability accepts no other-user target.'};
   if(name==='manage_work_hub_availability') { const {confirmed:_confirmed,...business}=input;const parsed=WorkHubAvailabilityInputSchema.safeParse(business);return parsed.success?request('POST','/work-hub/availability',parsed.data):{error:'Supply the exact personal availability fingerprint and reviewed interval.'}; }
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === name)) {
@@ -1190,7 +1193,7 @@ export function bindWorkHubToolScope(
   const input = record(rawInput);
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination", "finalize_fleet_ticket", "query_fleet_billing_options"].includes(toolName ?? "")) return input;
-  if (["query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
+  if (["query_my_workday","manage_my_workday","query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any
   // caller-supplied owner/context instead of silently discarding those fields.
