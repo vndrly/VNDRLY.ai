@@ -263,6 +263,23 @@ export function fleetComplianceSourceSupportsRequirement(
   };
   return categories[kind].includes(category);
 }
+/** Select the newest adopted revision before considering source compatibility. */
+export function fleetComplianceSourceRequirements(
+  requirements: readonly FleetRequirementVersion[],
+  subjectKind: z.infer<typeof FleetComplianceSubjectSchema>["kind"],
+  sourceKind: keyof typeof FLEET_COMPLIANCE_SOURCE_KINDS,
+  boundRequirementId?: string,
+): FleetRequirementVersion[] {
+  const latest = new Map<string, FleetRequirementVersion>();
+  for (const rule of requirements) {
+    if (!latest.has(rule.id) || latest.get(rule.id)!.version < rule.version)
+      latest.set(rule.id, rule);
+  }
+  return [...latest.values()].filter(rule =>
+    (!boundRequirementId || rule.id === boundRequirementId) &&
+    rule.subjectKinds.includes(subjectKind) &&
+    fleetComplianceSourceSupportsRequirement(sourceKind, rule.category));
+}
 export function fleetComplianceSourceFields(
   kind: keyof typeof FLEET_COMPLIANCE_SOURCE_KINDS,
 ): SourceField[] {

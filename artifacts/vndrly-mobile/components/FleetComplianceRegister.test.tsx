@@ -90,7 +90,11 @@ vi.mock("./FleetComplianceRules",()=>({default:()=> <div>Requirements opened</di
 it("opens native requirement history only on request",async()=>{
  mocks.api.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<FleetComplianceRegister/>);expect(screen.queryByText("Requirements opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Requirements and history"}));expect(screen.getByText("Requirements opened")).toBeTruthy();
 });
-vi.mock("./FleetComplianceIntake",()=>({default:()=> <div>Source intake opened</div>}));
+vi.mock("./FleetComplianceIntake",()=>({default:({existing}:any)=> <><div>Source intake opened</div>{existing&&<div>Renew {existing.id}:{existing.revision}</div>}</>}));
+it("opens the selected native source revision without replacing its identity",async()=>{
+ const id="11111111-1111-4111-8111-111111111111";mocks.api.mockResolvedValue({entries:[{id,revision:2,subject:{kind:"driver",id:7},requirementId:"OK-license",requirementVersion:1,kind:"driver_license",verification:"document_received",status:"red",reasons:["unverified"],validUntil:null,evaluatedAt:"2026-10-16T18:00:00Z",maskedIdentifier:null,mayReview:false}],mode:"warn_only",nextCursor:null});render(<FleetComplianceRegister/>);
+ fireEvent.click(await screen.findByRole("button",{name:"Renew / correct source"}));expect(screen.getByText(`Renew ${id}:2`)).toBeTruthy();fireEvent.click(screen.getByRole("button",{name:"Receive evidence"}));expect(screen.queryByText(`Renew ${id}:2`)).toBeNull();
+});
 it("opens native received-source intake only after choosing it",async()=>{
  mocks.api.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<FleetComplianceRegister/>);expect(screen.queryByText("Source intake opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Receive evidence"}));expect(screen.getByText("Source intake opened")).toBeTruthy();
 });

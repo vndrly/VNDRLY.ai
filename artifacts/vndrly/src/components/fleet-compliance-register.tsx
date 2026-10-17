@@ -13,6 +13,7 @@ import {FleetComplianceIntake} from "./fleet-compliance-intake";
 export function FleetComplianceRegister({ identity,companyId }: { identity: string;companyId?:number }) {
   const [rulesOpen,setRulesOpen]=useState(false);
   const [intakeOpen,setIntakeOpen]=useState(false);
+  const [renewSource,setRenewSource]=useState<{id:string;revision:number}|undefined>();
   const cache=useQueryClient(),[factsSubject,setFactsSubject]=useState<FleetComplianceSubject|null>(null);
   const { i18n } = useTranslation(),
     es = i18n.language.startsWith("es");
@@ -63,7 +64,7 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
     >
       <h2>{es ? "Registros de cumplimiento" : "Compliance registers"}</h2>
       <FleetComplianceReviewers identity={identity} onChanged={()=>{setIntakeOpen(false);setRulesOpen(false);setSelected(null);setFactsSubject(null);void query.refetch();}}/>
-      <PngPillButton onClick={()=>{setIntakeOpen(true);setSelected(null);setFactsSubject(null);setRulesOpen(false);}}>{es?"Recibir evidencia":"Receive evidence"}</PngPillButton>
+      <PngPillButton onClick={()=>{setRenewSource(undefined);setIntakeOpen(true);setSelected(null);setFactsSubject(null);setRulesOpen(false);}}>{es?"Recibir evidencia":"Receive evidence"}</PngPillButton>
       <PngPillButton onClick={()=>{setIntakeOpen(false);setSelected(null);setFactsSubject(null);setRulesOpen(true);}}>{es?"Requisitos e historial":"Requirements and history"}</PngPillButton>
       {typeof companyId==="number"&&Number.isInteger(companyId)&&companyId>0&&<PngPillButton onClick={()=>{setIntakeOpen(false);setRulesOpen(false);setSelected(null);setFactsSubject({kind:"carrier",id:companyId});}}>{es?"Aplicabilidad del transportista":"Carrier applicability"}</PngPillButton>}
       <div className="fleet-detail-group">
@@ -119,7 +120,7 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
             : "No evidence recorded in this view. This does not establish compliance."}
         </p>
       )}
-      {intakeOpen&&!query.isError&&<FleetComplianceIntake identity={identity} onClose={()=>setIntakeOpen(false)} onSaved={()=>{setIntakeOpen(false);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
+      {intakeOpen&&!query.isError&&<FleetComplianceIntake existing={renewSource} identity={identity} onClose={()=>setIntakeOpen(false)} onSaved={()=>{setIntakeOpen(false);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
       {rulesOpen&&!query.isError&&<FleetComplianceRules identity={identity} onClose={()=>setRulesOpen(false)} onSaved={()=>{void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
       {selected&&!query.isError&&<FleetEvidenceReview identity={identity} evidenceId={selected.id} revision={selected.revision} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
       {factsSubject&&!query.isError&&<FleetComplianceFactsEditor identity={identity} subject={factsSubject} onClose={()=>setFactsSubject(null)} onSaved={()=>{setFactsSubject(null);void query.refetch();void cache.invalidateQueries({queryKey:["fleet-detail-compliance",identity]});}}/>}
@@ -168,6 +169,7 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
             <p>
               {es ? "Evaluado" : "Evaluated"}: {date(entry.evaluatedAt)}
             </p>
+            <PngPillButton onClick={()=>{setRenewSource({id:entry.id,revision:entry.revision});setIntakeOpen(true);setSelected(null);setRulesOpen(false);setFactsSubject(null);}}>{es?"Renovar / corregir fuente":"Renew / correct source"}</PngPillButton>
             {entry.mayReview&&<PngPillButton onClick={()=>{setIntakeOpen(false);setRulesOpen(false);setFactsSubject(null);setSelected({id:entry.id,revision:entry.revision});}}>{es?"Revisar evidencia":"Review evidence"}</PngPillButton>}
             <PngPillButton onClick={()=>{setIntakeOpen(false);setRulesOpen(false);setSelected(null);setFactsSubject(entry.subject);}}>{es?"Hechos de aplicabilidad":"Applicability facts"}</PngPillButton>
           </article>

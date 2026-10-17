@@ -2,6 +2,10 @@ import express from "express";
 import request from "supertest";
 import { it, expect, vi } from "vitest";
 import { FleetError } from "../services/fleet-repository";
+it("requires an exact source revision to read renewal context without invoking a private reader",async()=>{
+ const module=await import("./fleet-compliance"),actor={userId:7,companyId:2},service={readFleetComplianceSourceContext:vi.fn(async()=>({revision:1}))};const app=express();app.use(module.createFleetComplianceRouter(service as never,()=>actor));const path="/fleet/compliance/11111111-1111-4111-8111-111111111111/source-context";
+ const result=await request(app).get(`${path}?revision=1`);expect(result.status).toBe(200);expect(result.headers["cache-control"]).toContain("no-store");expect(service.readFleetComplianceSourceContext).toHaveBeenLastCalledWith(actor,"11111111-1111-4111-8111-111111111111",1);expect((await request(app).get(path)).status).toBe(400);
+});
 it("reads a typed evidence revision receipt without invoking a private reader",async()=>{
  const module=await import("./fleet-compliance"),actor={userId:7,companyId:2},service={readFleetComplianceReceipt:vi.fn(async()=>({id:"11111111-1111-4111-8111-111111111111",revision:1}))};
  const app=express();app.use(module.createFleetComplianceRouter(service as never,()=>actor));

@@ -6,10 +6,12 @@ import {
   verifyFleetComplianceSourceReceipt,
   fleetComplianceSourceFields,
   fleetComplianceSourceChoiceLabel,
-  fleetComplianceSourceSupportsRequirement,
+  fleetComplianceSourceRequirements,
   FLEET_COMPLIANCE_SOURCE_KINDS,
   FleetCoverageTypeSchema,
   FleetComplianceSaveSchema,
+  FleetComplianceRecordSchema,
+  FleetComplianceSourceContextSchema,
   fleetComplianceSubjectKey,
   type FleetComplianceSubject,
   type FleetRequirementVersion,
@@ -39,34 +41,41 @@ type Choice = {
   label: string;
   canSubmit: boolean;
 };
-export function FleetComplianceIntake(props: {
-  identity: string;
-  onSaved: () => void;
-  onClose: () => void;
-}) {
-  return <Intake key={props.identity} {...props} />;
+type SourceContext=z.infer<typeof FleetComplianceSourceContextSchema>;
+type Props={identity:string;onSaved:()=>void;onClose:()=>void;existing?:{id:string;revision:number}};
+export function FleetComplianceIntake(props:Props) {
+  return props.existing?<RenewEntry key={`${props.identity}:${props.existing.id}:${props.existing.revision}`} {...props} existing={props.existing}/>:<Intake key={props.identity} {...props} />;
+}
+function RenewEntry(props:Props&{existing:{id:string;revision:number}}){
+ const {i18n}=useTranslation(),es=(i18n.resolvedLanguage??i18n.language??"en").startsWith("es"),alive=useRef(true);
+ const [context,setContext]=useState<SourceContext|null>(null),[error,setError]=useState(false);
+ useEffect(()=>{alive.current=true;void fleetClient.complianceSourceContext(props.existing.id,props.existing.revision).then(raw=>{const value=FleetComplianceSourceContextSchema.parse(raw);if(value.id!==props.existing.id||value.revision!==props.existing.revision)throw new Error("Source changed");if(alive.current)setContext(value);}).catch(()=>{if(alive.current)setError(true);});return()=>{alive.current=false;};},[]);
+ if(context?.canSubmit)return <Intake {...props} context={context}/>;
+ return <section className="fleet-detail-group space-y-3"><p>{error?(es?"Cambió el acceso o la revisión. Actualice antes de renovar.":"Source access or revision changed. Refresh before renewing."):context?(es?"La fuente es de solo lectura con su acceso actual.":"This source is view-only under your current access."):(es?"Cargando contexto de la fuente…":"Loading source context…")}</p><PngPillButton onClick={props.onClose}>{es?"Cerrar fuente":"Close source"}</PngPillButton></section>;
 }
 function Intake({
   onSaved,
   onClose,
+  context,
 }: {
   onSaved: () => void;
   onClose: () => void;
+  context?:SourceContext;
 }) {
   const { i18n } = useTranslation(),
     lang = (i18n.resolvedLanguage ?? i18n.language ?? "en").startsWith("es")
       ? "es"
       : "en",
     say = (en: string, es: string) => (lang === "es" ? es : en);
-  const [kind, setKind] = useState<FleetComplianceSubject["kind"]>("driver"),
+  const [kind, setKind] = useState<FleetComplianceSubject["kind"]>(context?.subject.kind??"driver"),
     [search, setSearch] = useState(""),
-    [choices, setChoices] = useState<Choice[]>([]),
+    [choices, setChoices] = useState<Choice[]>(context?[{subject:context.subject,label:context.label,canSubmit:context.canSubmit}]:[]),
     [after, setAfter] = useState<string | null>(null),
-    [selection, setSelection] = useState("");
+    [selection, setSelection] = useState(context?fleetComplianceSubjectKey(context.subject):"");
   const [rules, setRules] = useState<FleetRequirementVersion[]>([]),
     [rule, setRule] = useState(""),
-    [type, setType] = useState<SourceKind | "">(""),
-    [coverageType, setCoverageType] = useState(""),
+    [type, setType] = useState<SourceKind | "">(context?.attributeKind??""),
+    [coverageType, setCoverageType] = useState(context?.coverageType??""),
     [source, setSource] = useState(""),
     [fields, setFields] = useState<Record<string, string>>({});
   const [document, setDocument] = useState<FileSource | null>(null),
@@ -79,6 +88,7 @@ function Intake({
     [error, setError] = useState(""),
     [fatal, setFatal] = useState(false),
     [done, setDone] = useState(false);
+  const [reusePriorDocument,setReusePriorDocument]=useState(false);
   const alive = useRef(true),
     epoch = useRef(0),
     lock = useRef(false),
@@ -141,7 +151,7 @@ function Intake({
     }
   }
   useEffect(() => {
-    void load();
+    if(!context)void load();
   }, [kind, search]);
   function reset() {
     setSelection("");
@@ -192,7 +202,7 @@ function Intake({
         contentType = "image/webp";
       else throw new Error("type");
       if (alive.current && token === epoch.current)
-        setDocument({ bodyBase64, contentType, size: file.size });
+        {setDocument({ bodyBase64, contentType, size: file.size });setReusePriorDocument(false);}
     } catch {
       if (alive.current && token === epoch.current) {
         setDocument(null);
@@ -207,39 +217,35 @@ function Intake({
       if (alive.current) setReading(false);
     }
   }
-  const latest = new Map<string, FleetRequirementVersion>();
-  for (const row of rules)
-    if (
-      row.subjectKinds.includes(kind) &&
-      type &&
-      fleetComplianceSourceSupportsRequirement(type, row.category) &&
-      (!latest.has(row.id) || latest.get(row.id)!.version < row.version)
-    )
-      latest.set(row.id, row);
+  const latest = new Map((type ? fleetComplianceSourceRequirements(
+    rules, kind, type,
+    context && context.requirementId !== `unmapped:${context.attributeKind}` ? context.requirementId : undefined,
+  ) : []).map(row => [row.id, row]));
   function prepare() {
     if (!selected?.canSubmit || !type || !affirmed || busy || reading || fatal)
       return;
     try {
-      const requirement = rule ? latest.get(rule) : undefined;
+      const requirement = rule ? latest.get(rule) : context?{id:context.requirementId,version:context.requirementVersion,label:rules.find(row=>row.id===context.requirementId&&row.version===context.requirementVersion)?.label??FLEET_COMPLIANCE_SOURCE_KINDS[context.attributeKind][lang]}:undefined;
       if (rule && !requirement) throw new Error("Requirement selection changed");
-      const id = crypto.randomUUID(),
+      const id = context?.id??crypto.randomUUID(),
         draft = createFleetComplianceSourceDraft({
           id,
           subject: selected.subject,
           kind: type,
-          source: source.trim() || (document ? "User provided document" : ""),
+          source: source.trim() || (document ? "User provided document" : reusePriorDocument?"Previously received source document":""),
           at: new Date().toISOString(),
           ...(requirement ? { requirement: { id:requirement.id,version:requirement.version,label:requirement.label } } : {}),
           ...(type === "insurance"
             ? { coverageType: FleetCoverageTypeSchema.parse(coverageType) }
             : {}),
         });
-      const record = updateFleetComplianceSourceDraft(draft, fields);
+      const initial = updateFleetComplianceSourceDraft(draft, fields),record=context?FleetComplianceRecordSchema.parse({...initial,evidence:{...initial.evidence,revision:context.revision+1},attributes:initial.attributes.kind==="insurance"?{...initial.attributes,coverage:{...initial.attributes.coverage,revision:context.revision+1}}:initial.attributes}):initial;
       attempt.current = {
         command: FleetComplianceSaveSchema.parse({
           operationId: crypto.randomUUID(),
-          expectedVersion: 0,
+          expectedVersion: context?.revision??0,
           record,
+          ...(context?{preserveExistingRetention:true,...(reusePriorDocument&&!document?{reusePriorDocument:true}:{}),...(requirement&&requirement.id!==context.requirementId?{mapUnmappedRequirement:true}:{})}:{}),
         }),
         upload: document
           ? {
@@ -408,7 +414,7 @@ function Intake({
           <label>
             {say("Resource category", "Categoría de recurso")}
             <select
-              disabled={disabled}
+              disabled={disabled||!!context}
               value={kind}
               onChange={(e) => {
                 reset();
@@ -425,7 +431,7 @@ function Intake({
           <label>
             {say("Search people or assets", "Buscar personas o activos")}
             <input
-              disabled={disabled}
+              disabled={disabled||!!context}
               value={search}
               onChange={(e) => {
                 reset();
@@ -436,7 +442,7 @@ function Intake({
           <label>
             {say("For", "Para")}
             <select
-              disabled={disabled || loading}
+              disabled={disabled || loading||!!context}
               value={selection}
               onChange={(e) => {
                 setSelection(e.target.value);
@@ -485,7 +491,7 @@ function Intake({
               <label>
                 {say("Source type", "Tipo de fuente")}
                 <select
-                  disabled={disabled}
+                  disabled={disabled||!!context}
                   value={type}
                   onChange={(e) => {
                     setType(e.target.value as SourceKind);
@@ -537,8 +543,8 @@ function Intake({
                     >
                       <option value="">
                         {say(
-                          "Unmapped source — keep for review",
-                          "Fuente sin asignar — conservar para revisión",
+                        context?`Keep the source requirement · ${context.requirementVersion}`:"Unmapped source — keep for review",
+                        context?`Conservar requisito de fuente · ${context.requirementVersion}`:"Fuente sin asignar — conservar para revisión",
                         )}
                       </option>
                       {Array.from(latest.values()).map((row) => (
@@ -569,6 +575,7 @@ function Intake({
                       onChange={(e) => void fileChanged(e.target.files?.[0])}
                     />
                   </label>
+                  {context?.hasDocument&&<label className="flex items-center gap-2"><BrandedCheckbox disabled={disabled||!!document} checked={reusePriorDocument} onCheckedChange={value=>setReusePriorDocument(value===true)}/>{say("Reuse the previously received source document","Reutilizar el documento fuente recibido anteriormente")}</label>}
                   {document && (
                     <p>
                       {say(

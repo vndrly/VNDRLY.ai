@@ -21,6 +21,7 @@ import {
   FleetComplianceSubjectChoicesQuerySchema,
   FleetComplianceSubjectChoicesPageSchema,
   FleetComplianceDocumentUploadSchema,
+  FleetComplianceSourceContextSchema,
   evaluateFleetCompliance,
   projectFleetComplianceForDispatch,
   fleetComplianceSubjectKey,
@@ -634,26 +635,33 @@ export function createFleetComplianceOperations(
         );
         if ((previous?.revision ?? 0) !== value.expectedVersion)
           throw new FleetError("fleet.version_conflict");
+        let record=value.record;
         if (previous) {
           const old = await privateRecord(previous, actor);
+          const mapping=value.mapUnmappedRequirement&&old.evidence.requirementId===`unmapped:${old.attributes.kind}`&&config.requirements.some(row=>row.id===value.record.evidence.requirementId&&row.version===value.record.evidence.requirementVersion&&row.subjectKinds.includes(value.record.evidence.subject.kind)&&fleetComplianceSourceSupportsRequirement(value.record.attributes.kind,row.category));
           if (
             fleetComplianceSubjectKey(old.evidence.subject) !==
               fleetComplianceSubjectKey(value.record.evidence.subject) ||
-            old.evidence.requirementId !==
-              value.record.evidence.requirementId ||
+            (old.evidence.requirementId !==
+              value.record.evidence.requirementId && !mapping) ||
             old.attributes.kind !== value.record.attributes.kind
           )
             throw new FleetError("fleet.evidence_identity_conflict");
+          if(value.preserveExistingRetention)record=FleetComplianceRecordSchema.parse({...record,retentionClass:old.retentionClass,legalHold:old.legalHold||record.legalHold,retainUntil:old.retainUntil&&(!record.retainUntil||Date.parse(old.retainUntil)>Date.parse(record.retainUntil))?old.retainUntil:record.retainUntil});
+          if(value.reusePriorDocument){
+            const privateDocumentRef=old.evidence.privateDocumentRef;if(!privateDocumentRef)throw new FleetError("fleet.private_document_unavailable");
+            record=FleetComplianceRecordSchema.parse({...record,evidence:{...record.evidence,privateDocumentRef},attributes:record.attributes.kind==="insurance"?{...record.attributes,coverage:{...record.attributes.coverage,privateDocumentRef}}:record.attributes});
+          }
           if (
-            (old.legalHold && !value.record.legalHold) ||
+            (old.legalHold && !record.legalHold) ||
             (old.retainUntil &&
-              (!value.record.retainUntil ||
-                Date.parse(value.record.retainUntil) <
+              (!record.retainUntil ||
+                Date.parse(record.retainUntil) <
                   Date.parse(old.retainUntil)))
           )
             throw new FleetError("fleet.retention_cannot_shorten");
         }
-        const path = value.record.evidence.privateDocumentRef;
+        const path = record.evidence.privateDocumentRef;
         if (path) {
           const acl = await store().getObjectAcl(path);
           const grant = await client.query(
@@ -676,7 +684,7 @@ export function createFleetComplianceOperations(
           )
             throw new FleetError("fleet.private_document_required", 403);
         }
-        const result = await persistRecord(client, actor, config, value.record);
+        const result = await persistRecord(client, actor, config, record);
         await saveReceipt(client, actor, value.operationId, value, result);
         return result;
       });
@@ -769,6 +777,18 @@ export function createFleetComplianceOperations(
         return result;
       });
     },
+    readFleetComplianceSourceContext:(actor:FleetActor,id:string,revision:number)=>transaction(actor,async(state,client)=>{
+      z.uuid().parse(id);z.number().int().positive().parse(revision);const config=await readConfig(client,actor),entry=await locate(client,actor,config,id);
+      await canUseSubject(state,client,actor,config,entry.subject,false,true);if(entry.revision!==revision)throw new FleetError("fleet.version_conflict");
+      let canSubmit=false;if(!actor.readOnly){try{await canUseSubject(state,client,actor,config,entry.subject,true);canSubmit=true;}catch(error){if(!(error instanceof FleetError)||![403,404].includes(error.status))throw error;}}
+      let label="";const subject=entry.subject;
+      if(subject.kind==="driver")label=(await client.query("SELECT COALESCE(NULLIF(u.display_name,''),u.username) AS label FROM users u JOIN user_org_memberships m ON m.user_id=u.id WHERE u.id=$1 AND m.org_type='vendor' AND m.vendor_id=$2 LIMIT 1",[subject.id,actor.companyId])).rows[0]?.label??`Recorded driver · ${subject.id}`;
+      else if(subject.kind==="carrier")label=(await client.query("SELECT name AS label FROM vendors WHERE id=$1",[actor.companyId])).rows[0]?.label??"Recorded carrier";
+      else if(subject.kind==="trip")label=state.runs.find(row=>row.id===subject.id)?.title??`Recorded activity · ${subject.id.slice(-6)}`;
+      else label=(await client.query("SELECT name AS label FROM assets WHERE id=$1 AND responsible_org_type='vendor' AND responsible_org_id=$2",[subject.id,actor.companyId])).rows[0]?.label??`Recorded asset · ${subject.id.slice(-6)}`;
+      const source=await privateRecord(entry,actor);
+      return FleetComplianceSourceContextSchema.parse({id:entry.id,revision:entry.revision,subject,attributeKind:entry.attributeKind,requirementId:entry.requirementId,requirementVersion:entry.requirementVersion,label,hasDocument:source.evidence.privateDocumentRef!==null,canSubmit,coverageType:source.attributes.kind==="insurance"?source.attributes.coverage.coverageType:null});
+    }),
     readFleetComplianceReceipt: (actor: FleetActor, id: string, revision: number) =>
       transaction(actor, async (state, client) => {
         z.uuid().parse(id); z.number().int().positive().parse(revision);

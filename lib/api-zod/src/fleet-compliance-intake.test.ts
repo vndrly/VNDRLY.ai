@@ -4,10 +4,19 @@ import {
   verifyFleetComplianceSourceReceipt,
   updateFleetComplianceSourceDraft,
   fleetComplianceSourceSupportsRequirement,
+  fleetComplianceSourceRequirements,
 } from "./fleet-compliance-intake";
+import { draftFleetRequirement } from "./fleet-requirement-templates";
 import { FleetComplianceSaveSchema } from "./fleet-compliance-register";
 const id = "11111111-1111-4111-8111-111111111111",
   at = "2026-10-16T12:00:00Z";
+it("does not offer an obsolete compatible revision when the latest adopted rule has changed scope",()=>{
+ const prior=draftFleetRequirement("driver-license",{version:1,effectiveFrom:at});
+ const next={...prior,version:2,category:"driver_medical" as const};
+ expect(fleetComplianceSourceRequirements([next,prior],"driver","driver_license")).toEqual([]);
+ expect(fleetComplianceSourceRequirements([prior,{...prior,version:3}],"driver","driver_license").map(row=>row.version)).toEqual([3]);
+ expect(fleetComplianceSourceRequirements([prior],"vehicle","driver_license")).toEqual([]);
+});
 it("requires an actual source as-of time before transcribing ELD clearance instead of using capture time", () => {
   const draft = createFleetComplianceSourceDraft({
     id,

@@ -82,7 +82,11 @@ it("opens requirement review and history only on request",async()=>{
  mocks.register.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient()}><FleetComplianceRegister identity="reviewer7"/></QueryClientProvider>);
  expect(screen.queryByText("Requirements opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Requirements and history"}));expect(screen.getByText("Requirements opened")).toBeTruthy();
 });
-vi.mock("./fleet-compliance-intake",()=>({FleetComplianceIntake:()=> <div>Source intake opened</div>}));
+vi.mock("./fleet-compliance-intake",()=>({FleetComplianceIntake:({existing}:any)=> <><div>Source intake opened</div>{existing&&<div>Renew {existing.id}:{existing.revision}</div>}</>}));
+it("renews the selected canonical source revision and clears it when receiving a new source",async()=>{
+ mocks.register.mockResolvedValue({entries:[entry],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient()}><FleetComplianceRegister identity="company7"/></QueryClientProvider>);
+ fireEvent.click(await screen.findByRole("button",{name:"Renew / correct source"}));expect(screen.getByText(`Renew ${entry.id}:2`)).toBeTruthy();fireEvent.click(screen.getByRole("button",{name:"Receive evidence"}));expect(screen.queryByText(`Renew ${entry.id}:2`)).toBeNull();expect(screen.getByText("Source intake opened")).toBeTruthy();
+});
 it("opens received-source intake on request without a private evidence read",async()=>{
  mocks.register.mockResolvedValue({entries:[],nextCursor:null,mode:"warn_only"});render(<QueryClientProvider client={new QueryClient()}><FleetComplianceRegister identity="company7"/></QueryClientProvider>);expect(screen.queryByText("Source intake opened")).toBeNull();fireEvent.click(screen.getByRole("button",{name:"Receive evidence"}));expect(screen.getByText("Source intake opened")).toBeTruthy();
 });

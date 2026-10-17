@@ -15,6 +15,7 @@ const api = vi.hoisted(() => ({
   uploadComplianceDocument: vi.fn(),
   receiveComplianceSource: vi.fn(),
   complianceReceipt: vi.fn(),
+  complianceSourceContext: vi.fn(),
 }));
 vi.mock("@/lib/fleet-client", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -28,6 +29,21 @@ vi.mock("./png-pill-rollover", () => ({
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
+});
+it("does not open renewal fields for a retained view-only source or an obsolete revision",async()=>{
+ const id="11111111-1111-4111-8111-111111111111";api.complianceSourceContext.mockResolvedValue({id,revision:4,subject:{kind:"driver",id:7},attributeKind:"driver_license",requirementId:"unmapped:driver_license",requirementVersion:1,label:"Recorded driver",hasDocument:true,canSubmit:false,coverageType:null});
+ const view=render(<FleetComplianceIntake identity="company11" existing={{id,revision:4}} onSaved={vi.fn()} onClose={vi.fn()}/>);await screen.findByText("This source is view-only under your current access.");expect(screen.queryByRole("button",{name:"Prepare source"})).toBeNull();expect(api.complianceRequirements).not.toHaveBeenCalled();
+ api.complianceSourceContext.mockResolvedValue({id,revision:6,subject:{kind:"driver",id:7},attributeKind:"driver_license",requirementId:"unmapped:driver_license",requirementVersion:1,label:"Recorded driver",hasDocument:true,canSubmit:true,coverageType:null});view.rerender(<FleetComplianceIntake identity="company11" existing={{id,revision:5}} onSaved={vi.fn()} onClose={vi.fn()}/>);await screen.findByText("Source access or revision changed. Refresh before renewing.");expect(api.receiveComplianceSource).not.toHaveBeenCalled();
+});
+it("explicitly maps an unmapped renewal to a compatible adopted rule without changing source identity",async()=>{
+ const id="11111111-1111-4111-8111-111111111111",saved=vi.fn(),rule=draftFleetRequirement("driver-license",{version:3,effectiveFrom:"2026-10-16T12:00:00Z"});
+ api.complianceSourceContext.mockResolvedValue({id,revision:4,subject:{kind:"driver",id:7},attributeKind:"driver_license",requirementId:"unmapped:driver_license",requirementVersion:1,label:"Synthetic driver",hasDocument:false,canSubmit:true,coverageType:null});api.complianceRequirements.mockResolvedValue({requirements:[rule],canAdopt:false,mode:"warn_only"});const receipt={id,revision:5,subject:{kind:"driver",id:7},status:"document_received",updatedAt:"2026-10-16T22:00:00Z"};api.receiveComplianceSource.mockResolvedValue(receipt);api.complianceReceipt.mockResolvedValue(receipt);
+ render(<FleetComplianceIntake identity="company11" existing={{id,revision:4}} onSaved={saved} onClose={vi.fn()}/>);await screen.findByRole("option",{name:"Driver license, class and endorsements · 3"});fireEvent.change(screen.getByLabelText("Adopted requirement"),{target:{value:"driver-license"}});fireEvent.change(screen.getByLabelText("Source reference or description"),{target:{value:"New license source"}});fireEvent.click(screen.getByRole("checkbox",{name:"Save this as received, unverified evidence"}));fireEvent.click(screen.getByRole("button",{name:"Prepare source"}));fireEvent.click(screen.getByRole("button",{name:"Save received evidence"}));await waitFor(()=>expect(saved).toHaveBeenCalledOnce());expect(api.receiveComplianceSource.mock.calls[0][0]).toMatchObject({expectedVersion:4,mapUnmappedRequirement:true,preserveExistingRetention:true,record:{evidence:{id,revision:5,requirementId:"driver-license",requirementVersion:3}}});
+});
+it("renews the same evidence identity using only safe context and explicit prior-document reuse",async()=>{
+ api.complianceSubjects.mockResolvedValue({entries:[],nextCursor:null});
+ const id="11111111-1111-4111-8111-111111111111",saved=vi.fn();api.complianceSourceContext.mockResolvedValue({id,revision:4,subject:{kind:"driver",id:7},attributeKind:"driver_license",requirementId:"unmapped:driver_license",requirementVersion:1,label:"Synthetic driver",hasDocument:true,canSubmit:true,coverageType:null});api.complianceRequirements.mockResolvedValue({requirements:[],canAdopt:false,mode:"warn_only"});api.receiveComplianceSource.mockResolvedValue({id,revision:5,subject:{kind:"driver",id:7},status:"document_received",updatedAt:"2026-10-16T22:00:00Z"});api.complianceReceipt.mockResolvedValue({id,revision:5,subject:{kind:"driver",id:7},status:"document_received",updatedAt:"2026-10-16T22:00:00Z"});
+ render(<FleetComplianceIntake identity="company11" existing={{id,revision:4}} onSaved={saved} onClose={vi.fn()}/>);fireEvent.click(await screen.findByRole("checkbox",{name:"Reuse the previously received source document"}));fireEvent.click(screen.getByRole("checkbox",{name:"Save this as received, unverified evidence"}));fireEvent.click(screen.getByRole("button",{name:"Prepare source"}));fireEvent.click(screen.getByRole("button",{name:"Save received evidence"}));await waitFor(()=>expect(saved).toHaveBeenCalledOnce());const command=api.receiveComplianceSource.mock.calls[0][0];expect(command).toMatchObject({expectedVersion:4,preserveExistingRetention:true,reusePriorDocument:true,record:{evidence:{id,revision:5,requirementId:"unmapped:driver_license",status:"document_received",privateDocumentRef:null}}});expect(api.complianceSubjects).not.toHaveBeenCalled();expect(api.uploadComplianceDocument).not.toHaveBeenCalled();
 });
 it("pins the selected adopted requirement into the received source without copying its review into the upload",async()=>{
  const reference=draftFleetRequirement("driver-license",{version:3,effectiveFrom:"2026-10-16T12:00:00Z"});

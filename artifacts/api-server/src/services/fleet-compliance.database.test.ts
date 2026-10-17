@@ -184,6 +184,34 @@ async function fixture() {
   };
 }
 describe("Private Fleet compliance register", () => {
+  it("maps an explicitly unmapped received source to a compatible adopted requirement as a new revision, preserving its history",async()=>{
+    const f=await fixture();await f.appoint();const base=f.record(),record={...base,evidence:{...base.evidence,requirementId:"unmapped:driver_license"}};await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+    await f.service.adoptFleetRequirement(f.reviewer,{operationId:randomUUID(),expectedVersion:0,requirement:{id:"mapped-license",version:1,label:"Mapped license fixture",category:"driver_license",subjectKinds:["driver"],jurisdiction:"federal",classification:"legal",effectiveFrom:"2026-01-01T00:00:00Z",effectiveUntil:null,renewalDays:null,dueSoonDays:60,applicability:{anyOf:[{allOf:[]}]},source:{url:"https://www.ecfr.gov/current/title-49/subtitle-B/chapter-III/subchapter-B/part-383",section:"Synthetic mapping fixture"}}});
+    const next={...record,evidence:{...record.evidence,revision:2,requirementId:"mapped-license"}},command={operationId:randomUUID(),expectedVersion:1,record:next,preserveExistingRetention:true};
+    await expect(f.service.saveFleetComplianceEvidence(f.driver,command)).rejects.toMatchObject({code:"fleet.evidence_identity_conflict"});
+    const receipt=await f.service.saveFleetComplianceEvidence(f.driver,{...command,operationId:randomUUID(),mapUnmappedRequirement:true});expect(receipt).toMatchObject({id:record.evidence.id,revision:2,status:"document_received"});
+    expect((await f.service.readPrivateComplianceRecord(f.reviewer,record.evidence.id,1)).evidence.requirementId).toBe("unmapped:driver_license");expect((await f.service.readPrivateComplianceRecord(f.reviewer,record.evidence.id,2)).evidence.requirementId).toBe("mapped-license");
+    await expect(f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:2,mapUnmappedRequirement:true,record:{...next,evidence:{...next.evidence,revision:3,requirementId:"unmapped:driver_license"}}})).rejects.toMatchObject({code:"fleet.evidence_identity_conflict"});
+  });
+  it("provides an exact safe renewal context without exposing a worker's prior private evidence or retention policy",async()=>{
+    const f=await fixture(),record={...f.record("driver_medical"),legalHold:true,retainUntil:"2031-01-01T00:00:00Z"};
+    await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});
+    const context=await f.service.readFleetComplianceSourceContext(f.driver,record.evidence.id,1);expect(context).toMatchObject({id:record.evidence.id,revision:1,subject:record.evidence.subject,attributeKind:"driver_medical",requirementId:"driver_medical",canSubmit:true,hasDocument:false,label:"Driver"});expect(JSON.stringify(context)).not.toMatch(/PRIVATE|examinerReference|retainUntil|legalHold|privateDocumentRef/);
+    await expect(f.service.readFleetComplianceSourceContext(f.driver,record.evidence.id,2)).rejects.toMatchObject({code:"fleet.version_conflict"});
+    expect((await f.service.readFleetComplianceSourceContext({...f.driver,readOnly:true},record.evidence.id,1)).canSubmit).toBe(false);
+    const other=await fixture();await expect(other.service.readFleetComplianceSourceContext(other.driver,record.evidence.id,1)).rejects.toMatchObject({status:404});
+  });
+  it("renews the same source identity while preserving private retention and an explicitly reused prior document",async()=>{
+    const f=await fixture();await f.appoint();const base=f.record("driver_medical");
+    const uploaded=await f.service.uploadComplianceDocument(f.driver,{operationId:randomUUID(),recordId:base.evidence.id,subject:base.evidence.subject,contentType:"application/pdf",bodyBase64:Buffer.from("%PDF-synthetic").toString("base64")});
+    const original={...base,evidence:{...base.evidence,privateDocumentRef:uploaded.objectPath},legalHold:true,retainUntil:"2031-01-01T00:00:00Z"};await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record:original});
+    const fresh={...base,evidence:{...base.evidence,revision:2,source:"Updated worker source"},attributes:{kind:"driver_medical",qualification:"unverified",examinerReference:null,restrictions:[]},retainUntil:null,legalHold:false};
+    const command={operationId:randomUUID(),expectedVersion:1,record:fresh,preserveExistingRetention:true,reusePriorDocument:true};
+    const received=await f.service.saveFleetComplianceEvidence(f.driver,command);expect(received).toMatchObject({id:base.evidence.id,revision:2,status:"document_received"});expect(await f.service.saveFleetComplianceEvidence(f.driver,command)).toEqual(received);
+    const current=await f.service.readPrivateComplianceRecord(f.reviewer,base.evidence.id,2);expect(current).toMatchObject({retainUntil:original.retainUntil,legalHold:true,retentionClass:"medical",evidence:{privateDocumentRef:uploaded.objectPath},attributes:{qualification:"unverified",examinerReference:null}});
+    expect(await f.service.readPrivateComplianceRecord(f.reviewer,base.evidence.id,1)).toEqual(original);
+    await expect(f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:2,record:{...fresh,evidence:{...fresh.evidence,revision:3}}})).rejects.toMatchObject({code:"fleet.retention_cannot_shorten"});
+  });
   it("does not let a reviewed medical source establish a later adopted license rule or accept a new mismatched binding",async()=>{
     const f=await fixture();await f.appoint();const original=f.record("driver_medical"),record={...original,evidence:{...original.evidence,requirementId:"synthetic-license-kind"}};
     await f.service.saveFleetComplianceEvidence(f.driver,{operationId:randomUUID(),expectedVersion:0,record});

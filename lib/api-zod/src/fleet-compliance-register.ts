@@ -186,10 +186,15 @@ export const FleetComplianceSaveSchema = z
     operationId: z.uuid(),
     expectedVersion: z.number().int().nonnegative(),
     record: FleetComplianceRecordSchema,
+    preserveExistingRetention: z.boolean().optional(),
+    reusePriorDocument: z.boolean().optional(),
+    mapUnmappedRequirement: z.boolean().optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
     const evidence = value.record.evidence;
+    if((value.preserveExistingRetention||value.reusePriorDocument||value.mapUnmappedRequirement)&&value.expectedVersion===0)ctx.addIssue({code:"custom",message:"Renewal options require an existing source revision"});
+    if(value.reusePriorDocument&&evidence.privateDocumentRef!==null)ctx.addIssue({code:"custom",message:"Choose a new document or explicitly reuse the prior document"});
     if (value.record.review)
       ctx.addIssue({
         code: "custom",
@@ -449,3 +454,8 @@ export const FleetComplianceDocumentUploadSchema = z.object({
   bodyBase64: z.string().min(1).max(14_000_000),
 }).strict();
 export const FleetComplianceDocumentReceiptSchema = z.object({objectPath:z.string().regex(/^\/objects\/fleet-compliance-private\/[0-9]+\/[0-9a-f-]{36}\/documents\/[0-9a-f]{64}$/)}).strict();
+export const FleetComplianceSourceContextSchema=z.object({
+ id:z.uuid(),revision:z.number().int().positive(),subject:FleetComplianceSubjectSchema,
+ attributeKind:FleetComplianceIndexEntrySchema.shape.attributeKind,requirementId:z.string().min(1).max(160),requirementVersion:z.number().int().positive(),
+ label:z.string().min(1).max(500),hasDocument:z.boolean(),canSubmit:z.boolean(),coverageType:FleetInsuranceCoverageSchema.shape.coverageType.nullable(),
+}).strict();

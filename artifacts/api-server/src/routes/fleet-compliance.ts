@@ -97,6 +97,10 @@ export function createFleetComplianceRouter(
     }),
   );
   router.get(
+    "/fleet/compliance/:id/source-context",
+    endpoint(req=>service.readFleetComplianceSourceContext(actor(req),z.uuid().parse(req.params.id),z.coerce.number().int().positive().parse(req.query.revision))),
+  );
+  router.get(
     "/fleet/compliance/:id/receipt",
     endpoint(req => service.readFleetComplianceReceipt(actor(req), z.uuid().parse(req.params.id), z.coerce.number().int().positive().parse(req.query.revision))),
   );
