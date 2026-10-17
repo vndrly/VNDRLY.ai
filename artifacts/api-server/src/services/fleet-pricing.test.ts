@@ -278,6 +278,29 @@ it("keeps independent mixed shared-ticket rates and deterministic retry identiti
     currencyAmount: "0.02",
   });
 });
+it("distinguishes work-effective time from actual later office approval without accepting future approval", () => {
+  const retroactive = card({ approvedAt: "2026-10-17T00:00:00Z" }),
+    scope = input().scope;
+  expect(selectFleetRateAuthority([retroactive], scope)).toMatchObject({
+    mode: "unpriced",
+  });
+  expect(
+    selectFleetRateAuthority([retroactive], {
+      ...scope,
+      asOf: "2026-10-17T01:00:00Z",
+    }),
+  ).toMatchObject({ mode: "priced" });
+  expect(
+    selectFleetRateAuthority([retroactive], {
+      ...scope,
+      asOf: "2026-10-16T23:00:00Z",
+    }),
+  ).toMatchObject({ mode: "unpriced" });
+  expect(calculateFleetCharges(input(retroactive))[0]).toMatchObject({
+    currencyAmount: "100",
+    approvalRef: retroactive.approvalRef,
+  });
+});
 it("applies scoped minimum top-ups once at the proper finalization boundary", () => {
   const rate = card({ minimum: { amount: "100", scope: "ticket" } }),
     first = input(rate, "4"),

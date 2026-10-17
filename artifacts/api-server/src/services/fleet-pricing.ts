@@ -107,8 +107,7 @@ function cardMatches(
     (card.billingSiteId === null ||
       card.billingSiteId === scope.billingSiteId) &&
     time >= Date.parse(card.effectiveFrom) &&
-    (card.effectiveUntil === null || time < Date.parse(card.effectiveUntil)) &&
-    Date.parse(card.approvedAt) <= time
+    (card.effectiveUntil === null || time < Date.parse(card.effectiveUntil))
   );
 }
 /** Selection is over trusted saved candidates; a client-supplied card is never
@@ -118,7 +117,7 @@ export function selectFleetRateAuthority(
   scope: Pick<
     FleetChargeCalculation["scope"],
     "vendorId" | "partnerId" | "billingSiteId" | "serviceId" | "workAt"
-  >,
+  > & { asOf?: string },
 ): FleetPricingIntent {
   scope = scopeSchema
     .pick({
@@ -128,6 +127,7 @@ export function selectFleetRateAuthority(
       serviceId: true,
       workAt: true,
     })
+    .extend({ asOf: timestamp.optional() })
     .strip()
     .parse(scope);
   const priority = {
@@ -139,7 +139,11 @@ export function selectFleetRateAuthority(
   };
   const valid = candidates
     .map((c) => FleetRateCardRevisionSchema.parse(c))
-    .filter((c) => cardMatches(c, scope))
+    .filter(
+      (c) =>
+        cardMatches(c, scope) &&
+        Date.parse(c.approvedAt) <= Date.parse(scope.asOf ?? scope.workAt),
+    )
     .sort(
       (a, b) => priority[a.approvalRef.type] - priority[b.approvalRef.type],
     );

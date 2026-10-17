@@ -127,6 +127,48 @@ it("resolves the actual approved precise price, pins immutable readback, and nev
       "UPDATE partner_vendor_work_type_approvals SET fleet_rate_card=NULL WHERE vendor_id=$1",
       [vendor],
     );
+    const laterApproval = "2026-10-17T00:00:00.000Z",
+      retroactive = {
+        ...selected.rateCard,
+        approvedAt: laterApproval,
+        approvalRef: {
+          ...selected.rateCard.approvalRef,
+          revision: laterApproval,
+        },
+      };
+    await client.query(
+      "UPDATE partner_vendor_work_type_approvals SET approved_at=$2,fleet_rate_card=$3::jsonb WHERE vendor_id=$1",
+      [vendor, laterApproval, JSON.stringify(retroactive)],
+    );
+    expect(await resolveFleetRateAuthority(client, actor, input)).toMatchObject(
+      {
+        mode: "priced",
+        rateCard: {
+          approvedAt: laterApproval,
+          effectiveFrom: "2026-10-01T00:00:00.000Z",
+        },
+      },
+    );
+    const futureApproval = "2099-01-01T00:00:00.000Z";
+    await client.query(
+      "UPDATE partner_vendor_work_type_approvals SET approved_at=$2,fleet_rate_card=$3::jsonb WHERE vendor_id=$1",
+      [
+        vendor,
+        futureApproval,
+        JSON.stringify({
+          ...retroactive,
+          approvedAt: futureApproval,
+          approvalRef: { ...retroactive.approvalRef, revision: futureApproval },
+        }),
+      ],
+    );
+    expect(await resolveFleetRateAuthority(client, actor, input)).toMatchObject(
+      { mode: "unpriced" },
+    );
+    await client.query(
+      "UPDATE partner_vendor_work_type_approvals SET approved_at='2026-10-01T00:00:00Z',fleet_rate_card=NULL WHERE vendor_id=$1",
+      [vendor],
+    );
     await expect(
       resolveFleetRateAuthority(client, actor, {
         ...input,

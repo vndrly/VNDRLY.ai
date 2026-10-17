@@ -57,7 +57,8 @@ export async function resolveFleetRateAuthority(
   raw: z.infer<typeof inputSchema>,
 ): Promise<FleetPricingIntent> {
   const input = inputSchema.parse(raw),
-    context = input.billingContext;
+    context = input.billingContext,
+    serverNow = new Date().toISOString();
   positive.parse(actor.companyId);
   const authority = requireFleetCommercialAuthority(
     await resolveFleetCommercialAuthority(client, actor, {
@@ -66,7 +67,7 @@ export async function resolveFleetRateAuthority(
       workTypeId: input.serviceId,
       workDate: context.workDate,
       purpose: input.purpose,
-      policyAt: new Date().toISOString(),
+      policyAt: serverNow,
     }),
   );
   const rows = await client.query(
@@ -164,6 +165,7 @@ export async function resolveFleetRateAuthority(
     billingSiteId: context.billingSiteId,
     serviceId: input.serviceId,
     workAt: input.workAt,
+    asOf: serverNow,
   });
   if (pricing.mode === "unpriced")
     return { ...pricing, approvalRef: input.approvalRef };
