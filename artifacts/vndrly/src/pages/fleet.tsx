@@ -8,6 +8,7 @@ import {
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
+import { useFleetWork } from "@/hooks/use-fleet-work";
 import { FleetOperationsMap } from "@/components/fleet-operations-map";
 import { FleetInventoryPage } from "@/components/fleet-inventory";
 import { FleetDestinationsPage } from "@/components/fleet-destinations";
@@ -58,6 +59,7 @@ import { FleetGateObservationsPanel } from "@/components/fleet-gate-observations
 import { fleetPositions, fleetVisibleRuns } from "@/lib/fleet-view";
 import {
   CreateFleetRunSchema,
+  previewFleetWorkEntries,
   fleetRouteOperationalStops,
   fleetRunOrderRoute,
   type FleetRunOrder,
@@ -175,6 +177,7 @@ function FleetWorkspace({
     ],
     observations: overview.data!.pages.flatMap((page) => page.observations),
   };
+  const work = useFleetWork(overviewData?.accountScope, overviewData?.runs ?? []);
   const resources = useQuery({
     queryKey: ["fleet-resources", identity],
     queryFn: fleetClient.resources,
@@ -365,6 +368,11 @@ function FleetWorkspace({
     (item) => !lane || runLane(item.status) === lane,
   );
   const run = runs.find((item) => item.id === selected);
+  let devicePreview:ReturnType<typeof previewFleetWorkEntries>=null,devicePreviewError="";
+  if(run?.ticketReference){try{devicePreview=previewFleetWorkEntries(run,work.entries??[],userId);}catch(error){devicePreviewError=error instanceof Error?error.message:"Original work needs verification";}}
+  const actionRun=run&&devicePreview?{...run,version:devicePreview.expectedVersion,currentStopId:devicePreview.currentStopId,allowedActions:devicePreview.allowedActions}:run;
+  const formRun=actionRun&&devicePreview?{...actionRun,loads:devicePreview.loads}:actionRun;
+
   const observations = fleetPositions(
     data,
     new Set(runs.map((item) => item.id)),
@@ -401,14 +409,26 @@ function FleetWorkspace({
       busy ||
       !run ||
       pending.id !== run.id ||
-      !run.allowedActions.includes(pending.input.action) ||
-      !fleetActionComplete(pending.input, run)
+      !actionRun?.allowedActions.includes(pending.input.action) ||
+      !!devicePreviewError ||
+      !fleetActionComplete(pending.input, formRun)
     )
       return;
     setBusy(true);
     setNotice("");
     try {
-      await fleetClient.action(pending.id, pending.input);
+      if (run.ticketReference) {
+        if (!work.session) throw new Error("Verify the original Fleet device before recording this activity");
+        const result = await work.session.captureAction(run, pending.input, run.schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+        await work.refresh(false);
+        setPending(null);
+        if (!result.canonicalApplied) {
+          setNotice(result.state === "needs_reconciliation" || result.state === "denied" ? "Saved on this device — office reconciliation required" : "Saved on this device — pending sync");
+          return;
+        }
+        const saved = await fleetClient.run(run.id);
+        if (saved.version <= pending.input.expectedVersion) throw new Error("Saved action needs canonical readback verification");
+      } else await fleetClient.action(pending.id, pending.input);
       setPending(null);
       setNotice(c.saved);
       await reload();
@@ -562,9 +582,21 @@ function FleetWorkspace({
     }
     let creationAccepted = false;
     try {
-      const created = await fleetClient.create(
-        CreateFleetRunSchema.parse(creation.input),
-      );
+      const input = CreateFleetRunSchema.parse(creation.input);
+      let created: {id:string};
+      if (work.session) {
+        const result = await work.session.captureCreate(input);
+        await work.refresh(false);
+        if (!result.canonicalApplied) {
+          createRetry.current = null; setCreateUnverified(false); setCreate(false);
+          setNotice(result.state === "needs_reconciliation" || result.state === "denied" ? "Saved on this device — office reconciliation required" : "Saved on this device — pending sync");
+          return;
+        }
+        creationAccepted = true;
+        const reference = (result.receipt?.status === "applied" || result.receipt?.status === "duplicate") ? result.receipt.canonicalReferences.find(ref=>ref.kind === "activity") : undefined;
+        if (!reference) throw new Error("Created activity needs canonical readback verification");
+        created = {id:String(reference.id)};
+      } else created = await fleetClient.create(input);
       creationAccepted = true;
       const saved = await fleetClient.run(created.id);
       if (
@@ -611,6 +643,12 @@ function FleetWorkspace({
         </div>
         <PngPillButton onClick={() => void reload()}>{c.refresh}</PngPillButton>
       </header>
+      {work.session && <section className="fleet-panel space-y-2" aria-label="Retained Fleet work">
+        <p>{work.status.pending} pending sync · {work.status.needsReconciliation} needing office reconciliation · {work.status.pendingEvidence} pending evidence</p>
+        <p>Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.</p>
+        {!!work.error && <p role="alert">{work.error}</p>}
+        <PngPillButton disabled={busy} onClick={()=>void work.refresh()}>Verify and synchronize retained work</PngPillButton>
+      </section>}
       <nav
         className="fleet-nav flex flex-wrap text-sm"
         aria-label={c.workspace}
@@ -1444,11 +1482,13 @@ function FleetWorkspace({
                     onSaved={reload}
                   />
                 </div>
+                {devicePreview && <p>Device-only sequence — pending server acceptance. The map and run status show canonical records.</p>}
+                {!!devicePreviewError && <p role="alert">{devicePreviewError}</p>}
                 <div className="flex flex-wrap gap-2">
-                  {run.allowedActions.map((action) => (
+                  {actionRun!.allowedActions.map((action) => (
                     <PngPillButton
                       key={action}
-                      disabled={busy}
+                      disabled={busy || !!devicePreviewError}
                       onClick={async () => {
                         if (action === "submit_closeout") {
                           setBusy(true);
@@ -1479,7 +1519,7 @@ function FleetWorkspace({
                           id: run.id,
                           input: {
                             operationId: crypto.randomUUID(),
-                            expectedVersion: run.version,
+                            expectedVersion: actionRun!.version,
                             capturedAt: new Date().toISOString(),
                             source: "user_report",
                             action,
@@ -1636,7 +1676,7 @@ function FleetWorkspace({
                     )}
                     <FleetActionFields
                       tickets={candidates?.tickets}
-                      run={run}
+                      run={formRun!}
                       input={pending.input}
                       disabled={busy}
                       onChange={(input) =>
@@ -1648,7 +1688,7 @@ function FleetWorkspace({
                     />
                     <PngPillButton
                       disabled={
-                        busy || !fleetActionComplete(pending.input, run)
+                        busy || !fleetActionComplete(pending.input, formRun)
                       }
                       onClick={() => void saveAction()}
                     >

@@ -79,3 +79,5 @@ export * from "./fleet-work-runtime";
 
 export * from "./workday-client";
 export * from "./fleet-work-browser-storage";
+export * from "./fleet-work-session";
+export * from "./fleet-work-builder";

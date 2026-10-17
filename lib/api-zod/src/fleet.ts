@@ -146,6 +146,7 @@ export const FleetRunSchema = z
     resourceAssignment: FleetResourceAssignmentSchema.optional(),
     billing: FleetRunBillingSnapshotSchema.optional(),
     billingV2:FleetRunBillingV2Schema.optional(),
+    ticketReference:z.object({id:z.number().int().positive(),version:z.number().int().positive()}).strict().optional(),
     commercial: FleetRunCommercialSchema.optional(),
     activeReplacement: FleetReplacementMarkerSchema.optional(),
     canEditDraft: z.boolean().optional(),

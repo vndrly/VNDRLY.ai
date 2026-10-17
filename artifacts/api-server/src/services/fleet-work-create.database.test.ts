@@ -1297,3 +1297,14 @@ it("office approves exact retained activity charges and explicitly finalizes the
  const finalize={...f.command,operationId:randomUUID(),kind:"ticket.finalize",payload:{ticket:{...ticket,version:plan.revision},expectedVersion:plan.revision}};
  expect((await f.work.apply(f.actor,finalize)).status).toBe("applied");expect((await f.work.apply(f.actor,finalize)).status).toBe("duplicate");expect((await pool.query("SELECT status,lifecycle_state FROM tickets WHERE id=$1",[ticket.id])).rows[0]).toMatchObject({status:"submitted",lifecycle_state:"off_site"});expect((await pool.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1",[ticket.id])).rows).toHaveLength(2);
 });
+
+it("prepares current saved Detail and billing references without granting driver finance or pretending a driver started",async()=>{
+ const f=await fixture(),{prepareFleetWorkCreation}=await import("./fleet-work-preparation");
+ if(f.command.kind!=="activity.create")throw Error("Expected creation fixture");
+ const body={detailId:f.command.payload.detailReference.id,billingSiteId:f.site,ticketId:null};
+ const prepared=await f.repository.readScope(f.actor,f.command.scope,ctx=>prepareFleetWorkCreation(ctx,body));expect(prepared.snapshot.detail).toEqual(f.command.payload.detailSnapshot.detail);expect(prepared).toMatchObject({billingSiteId:f.site,partnerId:f.partner,ticket:null});
+ await expect(f.repository.readScope(f.actor,f.command.scope,ctx=>prepareFleetWorkCreation(ctx,{...body,billingSiteId:f.site+100000}))).rejects.toMatchObject({status:403});
+ const receipt=await f.work.apply(f.actor,f.command);if(receipt.status!=="applied")throw Error("Expected create");const activity=receipt.canonicalReferences.find(r=>r.kind==="activity")!,ticket=receipt.canonicalReferences.find(r=>r.kind==="ticket")!;
+ const service=createFleetService(databaseFleetRepository),driverActor={...f.actor,userId:f.driver.id,role:"field_employee",membershipRole:"field_employee",vendorPeopleId:f.driverPerson.id,sv:f.driver.sessionVersion,activeMembershipId:f.driverMembership.id};
+ const own=await service.detail(driverActor,String(activity.id));expect(own.billingV2).toBeUndefined();expect(own.ticketReference).toEqual({id:ticket.id,version:ticket.version});expect(own.status).toBe("draft");expect(own.events.some(event=>["acknowledge","inspect","start"].includes(event.type))).toBe(false);
+});

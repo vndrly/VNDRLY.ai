@@ -20,7 +20,9 @@ const api = vi.hoisted(() => ({
   navigate: vi.fn(),
   complianceRegister:vi.fn(),
   complianceConfiguration:vi.fn(),
+  work: {session:null as any,status:{pending:0,needsReconciliation:0,pendingEvidence:0,locked:false},commands:[],error:"",refresh:vi.fn()},
 }));
+vi.mock("@/hooks/use-fleet-work",()=>({useFleetWork:()=>api.work}));
 vi.mock("@/lib/fleet-client", () => ({
   fleetClient: api,
   FleetRequestError: class extends Error {
@@ -81,6 +83,7 @@ const run = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
+  api.work.session=null;
   api.complianceConfiguration.mockResolvedValue({version:1,isReviewer:false,mayAppointReviewers:false,reviewerUserIds:[]});
   window.history.replaceState({}, "", "/");
   api.location = "/fleet/my-day";
@@ -116,6 +119,15 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("retains a modern driver action through the durable journal without claiming server acceptance",async()=>{
+    const initial=await api.overviewPage();
+    api.overviewPage.mockResolvedValue({...initial,runs:[{...run,ticketReference:{id:500,version:1}}]});
+    const captureAction=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"});api.work.session={captureAction};
+    mount();fireEvent.click(await screen.findByText("Own pickup"));fireEvent.click(screen.getByText("Acknowledge assignment"));fireEvent.click(screen.getByText("Save exact change"));
+    await waitFor(()=>expect(captureAction).toHaveBeenCalledOnce());
+    expect(captureAction.mock.calls[0][1]).toMatchObject({expectedVersion:2,action:"acknowledge"});
+    expect(api.action).not.toHaveBeenCalled();expect(await screen.findByText(/Saved on this device.*pending sync/)).toBeTruthy();
+  });
   it("opens the compliance register without depending on dispatch resource loading",async()=>{
     api.location="/fleet/compliance";api.complianceRegister.mockResolvedValue({entries:[],mode:"warn_only",nextCursor:null});
     mount();expect(await screen.findByRole("heading",{name:"Compliance"})).toBeTruthy();expect(await screen.findByText(/No evidence recorded/)).toBeTruthy();expect(api.overviewPage).not.toHaveBeenCalled();expect(api.resources).not.toHaveBeenCalled();

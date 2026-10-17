@@ -11,7 +11,9 @@ const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   membership: 1,
   actions: [] as any[],
+  work:{session:null as any,status:{pending:0,needsReconciliation:0,pendingEvidence:0,locked:false},commands:[],error:"",refresh:vi.fn()},
 }));
+vi.mock("@/hooks/use-fleet-work",()=>({useFleetWork:()=>mocks.work}));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
 vi.mock("@/lib/auth", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth")>()),
@@ -77,8 +79,16 @@ afterEach(() => {
   mocks.api.mockReset();
   mocks.membership = 1;
   mocks.actions = [];
+  mocks.work.session=null;
 });
 describe("mobile Fleet authorization", () => {
+  it("retains modern driver acknowledgement before transport and labels its pending outcome",async()=>{
+    const run={id:"20000000-0000-4000-8000-000000000001",title:"Retained crude activity",version:4,driverUserId:1,status:"dispatched",allowedActions:["acknowledge"],currentStopId:null,loads:[],inspections:[],records:[],events:[],stops:[],ticketReference:{id:500,version:1}};
+    mocks.api.mockResolvedValue({...overview,runs:[run]});const captureAction=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"});mocks.work.session={captureAction};
+    render(<FleetWorkspace initialRunId={run.id}/>);await screen.findByText(run.title);fireEvent.click(screen.getByRole("button",{name:"acknowledge"}));
+    await waitFor(()=>expect(captureAction).toHaveBeenCalledOnce());expect(captureAction.mock.calls[0][1]).toMatchObject({expectedVersion:4,action:"acknowledge"});
+    expect(mocks.api.mock.calls.some(call=>call[0].endsWith("/actions"))).toBe(false);expect(await screen.findByText(/Saved on this device.*pending sync/)).toBeTruthy();
+  });
   it("opens compliance registers independently of dispatch resource loading",async()=>{
     mocks.api.mockResolvedValue({entries:[],mode:"warn_only",nextCursor:null});render(<FleetWorkspace initialMode="compliance"/>);
     expect(await screen.findByRole("heading",{name:"Compliance"})).toBeTruthy();expect(await screen.findByText(/No evidence recorded/)).toBeTruthy();expect(mocks.api.mock.calls.some(call=>call[0]==="/api/fleet/resources")).toBe(false);

@@ -276,6 +276,7 @@ function project(
   const {billingV2,...operationalRun}=run;
   return {
     ...operationalRun,
+    ...(billingV2?{ticketReference:{id:billingV2.ticketId,version:billingV2.ticketRevisionAtBinding}}:{}),
     ...(billingV2&&permitted(state,actor,run,"view_finance")?{billingV2}:{}),
     ...(commercial ? { commercial } : {}),
     ...(billing ? { billing } : {}),

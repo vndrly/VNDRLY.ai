@@ -9,6 +9,7 @@ import type {
   FleetRun,
   FleetResources,
 } from "@workspace/api-zod";
+type FleetActionRun=Pick<FleetRun,"stops"|"siteIds"|"events"|"operationalProfile"|"billing"> & {loads:Array<{id:string;commodity:string;quantity:number;unit:string;manifestReference:string;deliveredAt?:string|null;delivered?:boolean;transferOut?:unknown;transferredOut?:boolean}>};
 export function FleetActionFields({
   run,
   input,
@@ -16,7 +17,7 @@ export function FleetActionFields({
   disabled,
   tickets = [],
 }: {
-  run: FleetRun;
+  run: FleetActionRun;
   input: FleetActionInput;
   onChange: (input: FleetActionInput) => void;
   disabled: boolean;
@@ -301,7 +302,7 @@ export function FleetActionFields({
             >
               <option value="">Choose undelivered load</option>
               {run.loads
-                .filter((load) => !load.deliveredAt && !load.transferOut)
+                .filter((load) => !load.deliveredAt && !load.delivered && !load.transferOut && !load.transferredOut)
                 .map((load) => (
                   <option key={load.id} value={load.id}>
                     {load.commodity} · {load.quantity} {load.unit} ·{" "}
@@ -338,7 +339,7 @@ export function FleetActionFields({
 }
 export function fleetActionComplete(
   input: FleetActionInput,
-  run?: FleetRun,
+  run?: FleetActionRun,
 ): boolean {
   const present = (value?: string) => Boolean(value?.trim());
   switch (input.action) {
@@ -409,8 +410,8 @@ export function fleetActionComplete(
           run.loads.some(
             (load) =>
               load.id === input.loadId &&
-              !load.deliveredAt &&
-              !load.transferOut,
+              !load.deliveredAt && !load.delivered &&
+              !load.transferOut && !load.transferredOut,
           ))
       );
     case "review":

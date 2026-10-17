@@ -1,5 +1,22 @@
 import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "./fleet-planning";
 import type { FleetActionInput, FleetRun } from "./fleet";
+import type {FleetWorkState} from "./fleet-work-state";
+
+/** A device-only form projection. It never changes canonical status, map
+ * telemetry or acceptance, and never silently rebases a changed assignment. */
+export function previewFleetWorkEntries(run:FleetRun,entries:FleetWorkState["entries"],userId:number){
+ const pending=entries.filter(entry=>entry.delivery.state!=="applied"&&entry.command.kind==="activity.action"&&entry.command.payload.activity.id===run.id).sort((a,b)=>a.sequence-b.sequence);
+ if(!pending.length)return null;
+ const actions:FleetActionInput[]=[];
+ for(const entry of pending){
+  const command=entry.command;if(command.kind!=="activity.action")continue;
+  if(userId!==run.driverUserId||command.scope.userId!==userId||command.scope.owner.type!=="vendor"||command.scope.owner.id!==run.companyId)throw Error("Original driver scope changed");
+  if(["needs_reconciliation","denied"].includes(entry.delivery.state))throw Error("Original work needs office reconciliation; no sequence was rebased");
+  if(!run.resourceAssignment||JSON.stringify(command.payload.baseAssignment)!==JSON.stringify(run.resourceAssignment.snapshot))throw Error("Original assignment changed; no sequence was rebased");
+  actions.push(command.payload.action);
+ }
+ return previewFleetRunActions(run,actions);
+}
 
 export type FleetRunPreview = {
   unsynced: true;

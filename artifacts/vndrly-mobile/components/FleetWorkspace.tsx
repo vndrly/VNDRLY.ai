@@ -15,7 +15,7 @@ import { ActivityIndicator, AppState, Pressable, useWindowDimensions, ScrollView
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import type { FleetOverview, FleetRun, FleetResources, FleetActionInput } from "@workspace/api-zod";
-import { CreateFleetRunSchema, previewFleetRunActions } from "@workspace/api-zod";
+import { CreateFleetRunSchema, previewFleetRunActions, previewFleetWorkEntries } from "@workspace/api-zod";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import TogglePillButton from "@/components/TogglePillButton";
@@ -35,6 +35,7 @@ import FleetMaintenance from "@/components/FleetMaintenance";
 import FleetSetup from "@/components/FleetSetup";
 import FleetInventory from "@/components/FleetInventory";
 import { useAuth } from "@/hooks/use-auth";
+import { useFleetWork } from "@/hooks/use-fleet-work";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { fleetActionInput, fleetErrorMessage, fleetQueueErrorMessage, fleetRunLabel } from "@/lib/fleet-mobile";
@@ -96,6 +97,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     const [queued, setQueued] = useState<FleetQueuedAction[]>([]);
     const companyId = activeMembership ? (activeMembership.orgType === "vendor" ? activeMembership.orgId : null) : user?.vendorId;
     const verifiedAccount = data?.identity === identity ? data.overview.accountScope : undefined;
+    const work = useFleetWork(verifiedAccount, data?.identity === identity ? data.overview.runs : []);
     const scope: FleetOfflineScope | null = user?.id && companyId ? { userId: user.id, companyId, membershipId: activeMembershipId, ...(verifiedAccount?.userId === user.id && verifiedAccount.companyId === companyId && verifiedAccount.membershipId === activeMembershipId ? {sessionVersion:verifiedAccount.sessionVersion}: {}) } : null;
     async function readQueue() { if (scope) {
         const document = await nativeFleetOffline.read(scope);
@@ -203,6 +205,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
             proposed = previewFleetRunActions(run, pendingRun.map(item => item.input));
         } catch (e) { previewError = e instanceof Error ? e.message : "Offline sequence cannot continue."; }
     }
+    if(run?.ticketReference){try{proposed=previewFleetWorkEntries(run,work.entries??[],user?.id??0);}catch(e){previewError=e instanceof Error?e.message:"Retained sequence needs verification";}}
     const actionRun = run && proposed ? { ...run, version: proposed.expectedVersion, currentStopId: proposed.currentStopId, allowedActions: proposed.allowedActions } : run;
     const formRun = actionRun && proposed ? { ...actionRun, loads: proposed.loads } : actionRun;
     const visibleRuns = overview?.runs.filter(item => (!fleetFilter || item.fleetId === fleetFilter) && (mode !== "my-day" || item.driverUserId === user?.id) && (mode !== "review" || item.status === "submitted_for_review")) ?? [];
@@ -212,9 +215,31 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     async function write(path: string, body: unknown) {
         const requestIdentity = identity;
         let creationAccepted = false;
+        let durableAttempt = false;
         setBusy(true);
         setError("");
         try {
+            const target = overview?.runs.find(item=>path === `/api/fleet/runs/${item.id}/actions`);
+            if ((path === "/api/fleet/runs" && work.session) || target?.ticketReference) {
+                durableAttempt = true;
+                if (!work.session) throw new Error("Verify the original Fleet device before recording this activity");
+                const result = path === "/api/fleet/runs" ? await work.session.captureCreate(body) : await work.session.captureAction(target!,body as FleetActionInput,target!.schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+                await work.refresh(false);
+                if (identityRef.current !== requestIdentity) return;
+                setUnresolved(null);
+                if (!result.canonicalApplied) {
+                    setError(result.state === "needs_reconciliation" || result.state === "denied" ? "Saved on this device — office reconciliation required" : "Saved on this device — pending sync");
+                    return;
+                }
+                creationAccepted = true;
+                const reference = (result.receipt?.status === "applied" || result.receipt?.status === "duplicate") ? result.receipt.canonicalReferences.find(ref=>ref.kind === "activity") : undefined;
+                const id = target?.id ?? (reference ? String(reference.id) : null);
+                if (!id) throw new Error("Saved activity needs canonical readback verification");
+                const canonical = await apiFetch<FleetRun>(`/api/fleet/runs/${id}`);
+                if (!canonical.ticketReference || !canonical.linkedTicketId || (target && canonical.version <= (body as FleetActionInput).expectedVersion)) throw new Error("Saved activity needs canonical readback verification");
+                if (identityRef.current === requestIdentity) {setSelected(canonical.id);setRevision(n=>n+1);}
+                return;
+            }
             const saved = await apiFetch<FleetRun>(path, { method: "POST", body: JSON.stringify(body) });
             if (path === "/api/fleet/runs") {
                 creationAccepted = true;
@@ -234,6 +259,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         catch (e) {
             if (identityRef.current !== requestIdentity)
                 return;
+            if (durableAttempt) {setError(e instanceof Error ? e.message : "Retained Fleet work needs verification"); await work.refresh(false); return;}
             const status = (e as {
                 status?: number;
             }).status;
@@ -278,7 +304,8 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         try {
             const body = fleetActionInput(target, name, Crypto.randomUUID(), name === "reassign" ? { driverUserId: driver ?? undefined, vehicleAssetId: vehicle || undefined, trailerAssetId: trailer, reason: reason || undefined } : fields);
             Object.assign(body, { capturedAt: new Date().toISOString(), source: "user_report" });
-            if (scope && (cachedAt || queued.some(item => item.runId === target.id))) {
+            if (target.ticketReference) {void write(`/api/fleet/runs/${target.id}/actions`, body);}
+            else if (scope && (cachedAt || queued.some(item => item.runId === target.id))) {
                 const original = overview?.runs.find(item => item.id === target.id);
                 if (!original || original.driverUserId !== scope.userId) throw new Error("Only assigned driver facts can be stored offline.");
                 const base = queued.find(item => item.runId === target.id)?.base ?? fleetQueueBase(original);
@@ -385,6 +412,12 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     </ScrollView></ScreenSafeArea>;
     return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
     <WorkHubPageTitle onBack={mode !== initialMode ? () => { setMode(initialMode); setSettingsOpen(false); } : undefined} title={copy(mode === "setup" ? "Fleet access settings" : mode === "my-day" || (overview?.roles.includes("driver") && !overview.capabilities.canDispatch) ? "My Fleet Day" : mode === "log" ? "Fleet Log" : mode === "map" ? "Fleet Map" : "Fleet Dispatch")}/>
+    {work.session && <View accessibilityLabel="Retained Fleet work" style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:2,borderRadius:12,padding:16,gap:10}}>
+      <Text style={textStyle}>{work.status.pending} {copy("pending sync")} · {work.status.needsReconciliation} {copy("needing office reconciliation")} · {work.status.pendingEvidence} {copy("pending evidence")}</Text>
+      <Text style={textStyle}>{copy("Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.")}</Text>
+      {!!work.error && <Text accessibilityRole="alert" style={textStyle}>{work.error}</Text>}
+      <TogglePillButton compactOnTablet disabled={busy} onPress={()=>void work.refresh()}>{copy("Verify and synchronize retained work")}</TogglePillButton>
+    </View>}
     {overview && <>
     <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:12}}>
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}>{([
@@ -408,6 +441,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     </>}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Inventory and Details")}</TogglePillButton>}
+    {run?.ticketReference && proposed && <Text style={textStyle}>{copy("Device-only sequence — pending server acceptance. The map and run status show canonical records.")}</Text>}
     {cachedAt && <Text style={textStyle}>{copy("Offline assigned-work cache from ")}{cachedAt}{copy(". Permissions and readiness are unverified. Entries remain unsynced until the server accepts them; no location is collected.")}</Text>}
     {queued.length > 0 && <Text style={textStyle}>{copy("Queued entries")}: {queued.length}/{FLEET_OFFLINE_MAX_ACTIONS} · {copy("Device storage is bounded; longer reports may need synchronization before another capture.")}</Text>}
     {queued.map(item => <View key={item.input.operationId} style={{ gap: 8 }}><Text style={textStyle}>{copy(item.input.action === "submit_closeout" ? "Close Run" : item.input.action.replaceAll("_", " "))}{copy(": ")}{copy(item.state)}{copy(" \u00B7 captured ")}{item.capturedAt}{copy(" \u00B7 run ")}{item.runId}{copy(" \u00B7 ")}{item.message ? copy(item.message) : copy("Not accepted by the server")}</Text>{["commodity", "quantity", "unit", "manifestReference", "deliveryReference", "notes", "reason", "reading", "inspectionOutcome"].map(field => (item.input as Record<string, unknown>)[field] !== undefined && <Text key={field} style={textStyle}>{copy(field)}: {String((item.input as Record<string, unknown>)[field])}</Text>)}{item.input.inspectionResponses?.map(response=><Text key={response.id} style={textStyle}>{overview?.runs.find(run=>run.id===item.runId)?.operationalProfile?.inspectionItems.find(rule=>rule.id===response.id)?.label??response.id}: {copy(response.outcome)}{response.notes?` · ${response.notes}`:""}</Text>)}{Object.entries(item.input.manifestValues??{}).map(([id,value])=><Text key={id} style={textStyle}>{overview?.runs.find(run=>run.id===item.runId)?.operationalProfile?.manifestFields.find(rule=>rule.id===id)?.label??id}: {value}</Text>)}{item.state === "unsynced" ? <TogglePillButton disabled={busy || !!cachedAt} onPress={() => void synchronize(item)}>{copy("Verify and synchronize queued operation")}</TogglePillButton> : <TogglePillButton disabled={busy} onPress={() => { if (scope)

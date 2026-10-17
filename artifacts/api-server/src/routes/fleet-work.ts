@@ -10,6 +10,7 @@ import {createFleetEvidenceCanonicalHandlers} from "../services/fleet-evidence-u
 import {createDatabaseFleetEvidenceUploadRepository} from "../services/fleet-evidence-upload-repository";
 import {createFleetEvidenceUploadService} from "../services/fleet-evidence-upload";
 import {getObjectStore} from "../lib/objectStore";
+import {prepareFleetWorkCreation} from "../services/fleet-work-preparation";
 const repository=createDatabaseFleetWorkRepository({execute:executeFleetWorkCommand});
 const service=createFleetWorkService(repository),handlers=createFleetEvidenceCanonicalHandlers();
 const evidence=createFleetEvidenceUploadService(createDatabaseFleetEvidenceUploadRepository(repository,handlers),getObjectStore);
@@ -23,6 +24,7 @@ export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;e
  };
  router.get("/fleet/work/capabilities",(req,res)=>{res.setHeader("Cache-Control","no-store");try{options.actor(req);res.json({version:2,enabled:enabled(),complianceMode:"warn_only",offlineRetentionDays:7});}catch(error){res.status(error instanceof FleetError?error.status:500).json({code:"fleet.login_required"});}});
  router.post("/fleet/work/provision",endpoint(req=>repo.provision(options.actor(req),req.body)));
+ router.post("/fleet/work/prepare-create",endpoint(req=>{const body=scopeInput.extend({detailId:z.uuid(),billingSiteId:z.number().int().positive(),ticketId:z.number().int().positive().nullable()}).parse(req.body);const {scope,...input}=body;return repo.readScope(options.actor(req),scope,context=>prepareFleetWorkCreation(context,input));}));
  router.post("/fleet/work/commands",endpoint(req=>work.apply(options.actor(req),req.body)));
  router.post("/fleet/work/operations/:operationId",endpoint(async req=>({receipt:await work.read(options.actor(req),scopeInput.parse(req.body).scope,z.uuid().parse(req.params.operationId)),checkedAt:new Date().toISOString()})));
  router.post("/fleet/work/evidence/begin",endpoint(req=>uploads.begin(options.actor(req),req.body)));
