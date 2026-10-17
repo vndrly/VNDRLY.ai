@@ -382,7 +382,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       <FleetInventory key={`${identity}:${initialAssetId ?? ""}`} identity={identity} initialAssetId={initialAssetId} onSaved={() => setRevision(n => n + 1)} />
     </ScrollView></ScreenSafeArea>;
     return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-    <WorkHubPageTitle onBack={mode !== initialMode ? () => { setMode(initialMode); setSettingsOpen(false); } : undefined} title={copy(mode === "setup" ? "Details" : mode === "my-day" || (overview?.roles.includes("driver") && !overview.capabilities.canDispatch) ? "My Fleet Day" : mode === "log" ? "Fleet Log" : mode === "map" ? "Fleet Map" : "Fleet Dispatch")}/>
+    <WorkHubPageTitle onBack={mode !== initialMode ? () => { setMode(initialMode); setSettingsOpen(false); } : undefined} title={copy(mode === "setup" ? "Fleet access settings" : mode === "my-day" || (overview?.roles.includes("driver") && !overview.capabilities.canDispatch) ? "My Fleet Day" : mode === "log" ? "Fleet Log" : mode === "map" ? "Fleet Map" : "Fleet Dispatch")}/>
     {overview && <>
     <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:12}}>
       <View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}>{([
@@ -396,11 +396,11 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     {settingsOpen&&<View style={{gap:10,padding:16,backgroundColor:colors.card,borderColor:colors.primary,borderWidth:1,borderRadius:14}}>
       <Text style={[textStyle,{fontWeight:"700"}]}>{copy("Fleet settings")}</Text>
       {!cachedAt && (overview.capabilities.canDispatch || overview.capabilities.canSetup) && <FleetDestinationDirectory key={`directory:${identity}`} onChanged={()=>setRevision(n=>n+1)}/>}
-      {overview.capabilities.canSetup&&<TogglePillButton compactOnTablet onPress={()=>{setMode("setup");setSettingsOpen(false);}}>{copy("Details")}</TogglePillButton>}
+      {overview.capabilities.canSetup&&<TogglePillButton compactOnTablet onPress={()=>{setMode("setup");setSettingsOpen(false);}}>{copy("Fleet access settings")}</TogglePillButton>}
       {(overview.capabilities.canMaintain||overview.capabilities.canReportDefect)&&<TogglePillButton compactOnTablet onPress={()=>{setMode("maintenance");setSettingsOpen(false);}}>{copy("Fleet maintenance")}</TogglePillButton>}
       {overview.preference&&!cachedAt&&<><TogglePillButton compactOnTablet disabled={busy} onPress={()=>void saveHome(overview.preference!.defaultWorkspace)}>{copy("Save this Fleet filter")}</TogglePillButton><TogglePillButton compactOnTablet disabled={busy} onPress={()=>void saveHome("standard")}>{copy("Use standard home")}</TogglePillButton></>}
     </View>}
-    {overview.fleets.length>1&&<View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><TogglePillButton compactOnTablet solid={!fleetFilter} onPress={()=>setFleetFilter(null)}>{copy("All Details")}</TogglePillButton>{overview.fleets.map(fleet=><TogglePillButton compactOnTablet key={fleet.id} solid={fleetFilter===fleet.id} onPress={()=>setFleetFilter(fleet.id)}>{fleet.name}</TogglePillButton>)}</View>}
+    {overview.fleets.length>1&&<View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><TogglePillButton compactOnTablet solid={!fleetFilter} onPress={()=>setFleetFilter(null)}>{copy("All resource pools")}</TogglePillButton>{overview.fleets.map(fleet=><TogglePillButton compactOnTablet key={fleet.id} solid={fleetFilter===fleet.id} onPress={()=>setFleetFilter(fleet.id)}>{fleet.name}</TogglePillButton>)}</View>}
     {overview.enabled&&!overview.fleets.length&&overview.capabilities.canSetup&&mode!=="setup"&&mode!=="map"&&mode!=="log"&&<View style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:2,borderRadius:16,padding:20,gap:12}}><Feather name="truck" size={32} color={colors.primary}/><Text style={[textStyle,{fontSize:20,fontWeight:"700"}]}>{copy("Your Fleet workspace is ready")}</Text><Text style={textStyle}>{copy("Set up your vehicles and Fleet staff to begin.")}</Text><TogglePillButton compactOnTablet solid onPress={()=>setMode("setup")}>{copy("Set up Fleet")}</TogglePillButton></View>}
     {overview.capabilities.canDispatch&&mode==="desk"&&overview.fleets.length>0&&<TogglePillButton compactOnTablet solid onPress={()=>setMode("dispatch")}>{copy("New run")}</TogglePillButton>}
     </>}

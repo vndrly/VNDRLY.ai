@@ -457,7 +457,7 @@ describe("Fleet driver workspace", () => {
       });
       mount();
       fireEvent.click(await screen.findByText("Create run"));
-      fireEvent.change(screen.getByLabelText("Detail"), {
+      fireEvent.change(screen.getByLabelText("Resource pool"), {
         target: { value: fleetId },
       });
       await screen.findByText("Driver seven");

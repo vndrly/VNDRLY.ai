@@ -234,6 +234,10 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
+  it("saves a driver's workspace preference from company membership without a customer-site assignment",async()=>{
+    const f=fixture();f.state().grants.find(g=>g.userId===driver.userId)!.siteIds=[];
+    await expect(f.service.preference(driver,{expectedVersion:1,defaultWorkspace:"fleet_my_day",selectedFleetId:fleetId})).resolves.toMatchObject({defaultWorkspace:"fleet_my_day",selectedFleetId:fleetId});
+  });
   it("dispatches from the company driver pool without assigning the driver to a site", async () => {
     const f = fixture();
     f.state().grants.find(g => g.userId === driver.userId)!.siteIds = [];

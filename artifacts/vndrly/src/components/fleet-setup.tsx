@@ -83,7 +83,7 @@ function FleetSetupForm({
     setDraft({
       ...draft,
       grants: draft.grants.map((g) =>
-        g.userId === userId ? { ...g, ...fields } : g,
+        g.userId === userId ? { ...g, ...fields,siteIds:(fields.roles??g.roles).some(role=>["fleet_manager","dispatcher"].includes(role))?(fields.siteIds??g.siteIds):[] } : g,
       ),
     });
   async function save() {
@@ -95,7 +95,7 @@ function FleetSetupForm({
           expectedVersion: draft.expectedVersion,
           enabled: draft.enabled,
           fleets: draft.fleets,
-          grants: draft.grants,
+          grants: draft.grants.map(grant=>grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role))?grant:{...grant,siteIds:[]}),
           ...(draft.supportGrants !== undefined
             ? { supportGrants: draft.supportGrants }
             : {}),
@@ -303,7 +303,7 @@ function FleetSetupForm({
                 </label>
               ))}
             </div>
-            <div>
+            {grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role))?<div>
               {sites
                 .filter((site) =>
                   draft.fleets.some(
@@ -328,7 +328,7 @@ function FleetSetupForm({
                     {site.name}
                   </label>
                 ))}
-            </div>
+            </div>:<p>{c.driverPoolAccess}</p>}
             <div className="space-y-2">
               {(["safetyRelease", "financeRead"] as const).map((authority) => (
                 <label className="block" key={authority}>

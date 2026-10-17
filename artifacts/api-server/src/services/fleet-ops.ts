@@ -717,7 +717,7 @@ export function createFleetService(repository: FleetRepository) {
         );
         if ((current?.version ?? 1) !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict");
-        const grant = grantFor(state, actor);
+        const grant = companyGrantFor(state, actor);
         if (
           body.defaultWorkspace === "fleet_desk" &&
           !grant?.roles.some((r) => ["fleet_manager", "dispatcher"].includes(r))
@@ -790,6 +790,10 @@ export function createFleetService(repository: FleetRepository) {
     setup: (actor: FleetActor, input: unknown) =>
       transaction(actor, async (state, client) => {
         const body = FleetSetupInputSchema.parse(input);
+        // Driver membership authorizes their Detail/activity, not customer-site
+        // dispatch. Accept legacy driver-site fields without preserving that
+        // misleading scope; mixed office/driver roles retain office authority.
+        body.grants=body.grants.map(grant=>grant.roles.includes("driver")&&!grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role))?{...grant,siteIds:[]}:grant);
         const member = await client.query(
           "SELECT id FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND role='admin'",
           [actor.userId, actor.companyId],

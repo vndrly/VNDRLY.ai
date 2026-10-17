@@ -79,6 +79,13 @@ afterEach(() => {
   mocks.actions = [];
 });
 describe("mobile Fleet authorization", () => {
+  it("labels legacy permission setup as access settings rather than operational Details",async()=>{
+    mocks.api.mockImplementation(async(path:string)=>path==="/api/fleet/setup"?{expectedVersion:1,enabled:true,fleets:[],grants:[],members:[],sites:[]}:path.startsWith("/api/fleet/commercial")?{version:1,destinations:[],canManage:false,defaultMode:"batch",sitePolicy:null,sites:[]}:{...overview,capabilities:{...overview.capabilities,canSetup:true}});
+    render(<FleetWorkspace/>);
+    fireEvent.click(await screen.findByRole("button",{name:"Fleet settings"}));fireEvent.click(screen.getByRole("button",{name:"Fleet access settings"}));
+    expect(await screen.findByRole("heading",{name:"Fleet access settings"})).toBeTruthy();
+    expect(screen.queryByRole("heading",{name:"Details"})).toBeNull();
+  });
   it("opens the saved Run library independently of the bounded dispatch resources endpoint",async()=>{
     mocks.api.mockImplementation(async(path:string)=>path==="/api/fleet"?{...overview,fleets:[]}:{version:1,destinations:[],canManage:true,defaultMode:"batch",sitePolicy:null,sites:[]});
     render(<FleetWorkspace initialMode="orders"/>);expect(await screen.findByRole("heading",{name:"Runs"})).toBeTruthy();await screen.findByText("Set up company resource access to prepare Runs.");expect(mocks.api.mock.calls.some(call=>call[0]==="/api/fleet/resources")).toBe(false);
