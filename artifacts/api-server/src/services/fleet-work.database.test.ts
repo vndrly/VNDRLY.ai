@@ -485,6 +485,94 @@ it("retains late work photos on their original ticket and Detail without replayi
     ),
   );
   expect(file.object.body).toEqual(bytes);
+  const quantity = FleetWorkCommandSchema.parse({
+    ...f.command(),
+    capturedAt,
+    kind: "quantity.record",
+    payload: {
+      activity: { type: "canonical", kind: "activity", id, version: 1 },
+      ticket: { type: "canonical", kind: "ticket", id: ticket, version: 1 },
+      evidence: {
+        id: randomUUID(),
+        cycleId: null,
+        kind: "billable",
+        quantity: "123.456789",
+        unit: "barrel",
+        source: "manual",
+        evidenceReferences: [session.canonicalEvidenceId],
+        capturedAt,
+        recordedByUserId: f.actor.userId,
+      },
+    },
+  });
+  const actualWork = createFleetWorkService(
+    createDatabaseFleetWorkRepository({ execute: executeFleetWorkCommand }),
+  );
+  if (quantity.kind !== "quantity.record")
+    throw Error("Expected reported quantity");
+  expect(await actualWork.apply(f.actor, quantity)).toMatchObject({
+    status: "applied",
+  });
+  expect(await actualWork.apply(f.actor, quantity)).toMatchObject({
+    status: "duplicate",
+  });
+  const quantities = (
+    await pool.query(
+      "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-quantity'",
+      [f.actor.companyId],
+    )
+  ).rows;
+  expect(quantities).toHaveLength(1);
+  expect(quantities[0].tool_output).toMatchObject({
+    activityId: id,
+    activityVersion: 1,
+    ticketId: ticket,
+    assignment,
+    evidence: quantity.payload.evidence,
+    officeReviewRequired: true,
+    quantitySourceVerified: false,
+  });
+  expect(
+    (
+      await pool.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1", [
+        ticket,
+      ])
+    ).rows,
+  ).toHaveLength(0);
+  const collision = JSON.parse(JSON.stringify(quantity));
+  collision.operationId = randomUUID();
+  collision.payload.evidence.quantity = "999";
+  expect(await actualWork.apply(f.actor, collision)).toMatchObject({
+    status: "needs_reconciliation",
+  });
+  await pool.query(
+    "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) SELECT $1,$2,'fleet','typed','canonical','synthetic_quantity','quantity-reported','fleet-work-quantity',synthetic_id::text,jsonb_set($3::jsonb,'{evidence,id}',to_jsonb(synthetic_id::text)),'completed' FROM (SELECT gen_random_uuid() AS synthetic_id FROM generate_series(1,201)) synthetic",
+    [
+      f.actor.userId,
+      f.actor.companyId,
+      JSON.stringify(quantities[0].tool_output),
+    ],
+  );
+  const laterQuantity = JSON.parse(JSON.stringify(quantity));
+  laterQuantity.operationId = randomUUID();
+  laterQuantity.payload.evidence.id = randomUUID();
+  laterQuantity.capturedAt = laterQuantity.payload.evidence.capturedAt =
+    new Date(Date.now() + 7200000).toISOString();
+  expect(await actualWork.apply(f.actor, laterQuantity)).toMatchObject({
+    status: "applied",
+  });
+  const retainedQuantities = (
+    await pool.query(
+      "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-quantity' ORDER BY id DESC",
+      [f.actor.companyId],
+    )
+  ).rows;
+  expect(retainedQuantities).toHaveLength(203);
+  expect(retainedQuantities[0].tool_output).toMatchObject({
+    clockStatus: "ahead_of_server",
+    officeReviewRequired: true,
+    quantitySourceVerified: false,
+  });
   await expect(
     f.repository.withScope(
       { ...f.actor, readOnly: true },

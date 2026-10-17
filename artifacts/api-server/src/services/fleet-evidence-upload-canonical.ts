@@ -1,7 +1,5 @@
-import {
-  createFleetWorkCanonicalService,
-  resolveFleetWorkReference,
-} from "./fleet-work-canonical";
+import { authorizeFleetOriginalDriverActivity } from "./fleet-work-references";
+import { createFleetWorkCanonicalService } from "./fleet-work-canonical";
 import {
   FleetRunSchema,
   FleetEvidenceSchema,
@@ -13,7 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { z } from "zod/v4";
 import { validateFleetEvidenceObject } from "./fleet-evidence";
-import { isDeepStrictEqual } from "node:util";
+
 import { createHash } from "node:crypto";
 import type { FleetWorkExecutionContext } from "./fleet-work-repository";
 import type { FleetEvidenceUploadTransaction } from "./fleet-evidence-upload";
@@ -39,57 +37,18 @@ export function createFleetEvidenceCanonicalHandlers(
         ...(options.now ? { now: options.now } : {}),
       },
     });
-  const authorizeWork = async (
+  const authorizeWork = (
     context: FleetWorkExecutionContext,
     scope: FleetWorkScope,
     binding: Extract<FleetEvidenceUploadSession["binding"], { kind: "work" }>,
-  ) => {
-    const { actor, state, client } = context;
-    if (actor.readOnly || !state.enabled)
-      throw new FleetError("fleet.action_forbidden", 403);
-    const activity = await resolveFleetWorkReference(
-        context,
-        scope,
-        binding.activity,
-      ),
-      ticket = await resolveFleetWorkReference(context, scope, binding.ticket);
-    if (activity.kind !== "activity" || ticket.kind !== "ticket")
-      throw new FleetError("fleet.invalid_request", 400);
-    // Capture is bound to an actually saved revision, never the latest assignment
-    // substituted at upload time. A closed parent ticket still retains its facts.
-    const rows = await client.query(
-      "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' AND target_id=$2 AND tool_output->>'version'=$3 ORDER BY id DESC LIMIT 1",
-      [actor.companyId, activity.id, String(activity.version)],
+  ) =>
+    authorizeFleetOriginalDriverActivity(
+      context,
+      scope,
+      binding.activity,
+      binding.ticket,
+      binding.assignment,
     );
-    if (!rows.rows.length)
-      throw new FleetError("fleet.work_assignment_changed");
-    const original = FleetRunSchema.parse(rows.rows[0].tool_output),
-      grant = state.grants.find((g) => g.userId === actor.userId);
-    if (
-      original.companyId !== actor.companyId ||
-      original.driverUserId !== actor.userId ||
-      !grant?.roles.includes("driver") ||
-      !grant.fleetIds.includes(original.fleetId) ||
-      !state.fleets.some((g) => g.id === original.fleetId)
-    )
-      throw new FleetError("fleet.action_forbidden", 403);
-    if (
-      !original.resourceAssignment ||
-      !isDeepStrictEqual(
-        original.resourceAssignment.snapshot,
-        binding.assignment,
-      ) ||
-      original.linkedTicketId !== ticket.id
-    )
-      throw new FleetError("fleet.work_assignment_changed");
-    const parent = await client.query(
-      "SELECT id FROM tickets WHERE id=$1 AND vendor_id=$2",
-      [ticket.id, actor.companyId],
-    );
-    if (!parent.rows.length)
-      throw new FleetError("fleet.work_assignment_changed");
-    return { original, ticket };
-  };
   const authorizeRead = async (
     context: FleetWorkExecutionContext,
     activityId: string,

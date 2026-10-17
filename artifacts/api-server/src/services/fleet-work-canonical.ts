@@ -1,8 +1,12 @@
+import {
+  resolveFleetWorkReference,
+  authorizeFleetOriginalDriverActivity,
+} from "./fleet-work-references";
+export { resolveFleetWorkReference } from "./fleet-work-references";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod/v4";
 import {
-  FleetWorkMappingSchema,
   FleetWorkScopeSchema,
   FleetRunSchema,
   FleetDestinationReceiptSchema,
@@ -10,7 +14,6 @@ import {
   type FleetWorkCommand,
   type FleetWorkReference,
   type FleetWorkReceipt,
-  type FleetWorkScope,
 } from "@workspace/api-zod";
 import { createFleetService, type FleetServiceOptions } from "./fleet-ops";
 import { FleetError, type FleetRepository } from "./fleet-repository";
@@ -24,30 +27,6 @@ import {
 } from "./workday";
 
 type Canonical = Extract<FleetWorkReference, { type: "canonical" }>;
-const mappingSchema = z
-  .object({ scope: FleetWorkScopeSchema, mapping: FleetWorkMappingSchema })
-  .strict();
-export async function resolveFleetWorkReference(
-  { actor, client }: FleetWorkExecutionContext,
-  scope: FleetWorkScope,
-  ref: FleetWorkReference,
-): Promise<Canonical> {
-  if (ref.type === "canonical") return ref;
-  const rows = await client.query(
-    "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-mapping' AND target_id=$2 ORDER BY id DESC LIMIT 1",
-    [actor.companyId, `${scope.provisioningId}:${ref.kind}:${ref.id}`],
-  );
-  const row = rows.rows[0],
-    parsed = mappingSchema.safeParse(row?.tool_output);
-  if (
-    row?.user_id !== actor.userId ||
-    !parsed.success ||
-    !isDeepStrictEqual(parsed.data.scope, scope) ||
-    !isDeepStrictEqual(parsed.data.mapping.local, ref)
-  )
-    throw new FleetError("fleet.work_dependency_unresolved", 409);
-  return parsed.data.mapping.canonical;
-}
 /** These are existing business operations under the enclosing real transaction,
  * not a second permissive implementation. New handler kinds stay unavailable
  * until their authoritative path is implemented; no v2 UI is activated yet. */
@@ -114,6 +93,60 @@ export async function executeFleetWorkCommand(
     };
   };
   switch (command.kind) {
+    case "quantity.record": {
+      const {
+        original,
+        ticket,
+        activity: reference,
+      } = await authorizeFleetOriginalDriverActivity(
+        context,
+        command.scope,
+        command.payload.activity,
+        command.payload.ticket,
+      );
+      const evidence = command.payload.evidence,
+        fingerprint = fleetWorkFingerprint(command);
+      const prior = await client.query(
+        "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-quantity' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+        [actor.companyId, evidence.id],
+      );
+      if (prior.rows.length) {
+        if (
+          prior.rows[0].user_id !== actor.userId ||
+          prior.rows[0].tool_output.fingerprint !== fingerprint
+        )
+          throw new FleetError("fleet.operation_conflict");
+        return result([reference]);
+      }
+      const receivedAt = new Date().toISOString();
+      const fact = {
+        version: 2,
+        scope: command.scope,
+        operationId: command.operationId,
+        fingerprint,
+        activityId: original.id,
+        activityVersion: original.version,
+        ticketId: ticket.id,
+        assignment: original.resourceAssignment!.snapshot,
+        evidence,
+        capturedAt: command.capturedAt,
+        timeZone: command.timeZone,
+        receivedAt,
+        clockStatus:
+          Date.parse(command.capturedAt) > Date.parse(receivedAt) + 300000
+            ? "ahead_of_server"
+            : "reported_capture_time",
+        officeReviewRequired: true,
+        quantitySourceVerified: false,
+      };
+      await client.query(
+        "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','fleet_work','quantity-reported','fleet-work-quantity',$3,$4::jsonb,'completed')",
+        [actor.userId, actor.companyId, evidence.id, JSON.stringify(fact)],
+      );
+      // Capturing a reported billable/accepted/conversion value is not its
+      // office endorsement, a charge, a physical event or ticket reopening.
+      return result([reference]);
+    }
     case "evidence.stage":
     case "compliance.document.stage": {
       const pointerRows = await client.query(
