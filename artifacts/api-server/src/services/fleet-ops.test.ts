@@ -1108,6 +1108,22 @@ it("keeps complete v2 rate authority private to a current finance grant without 
   expect((await f.service.detail(manager,created.id)).allowedActions).not.toContain("link_ticket");
 });
 
+it("does not let the legacy review action complete v2 work without canonical charge review", async () => {
+  const f = fixture(), created = await f.service.create(manager, createInput), saved = f.state().runs[0];
+  f.state().runs[0] = FleetRunSchema.parse({
+    ...saved, status: "submitted_for_review", billing: undefined, commercial: undefined,
+    billingV2: { version: 2, revision: 1, ticketId: created.linkedTicketId, ticketRevisionAtBinding: 1,
+      context: { vendorId: 7, partnerId: 8, billingSiteId: 9, afeNumber: "SYNTHETIC", workDate: "2026-10-16", currency: "USD" },
+      serviceId: 3, pricing: { mode: "unpriced", reason: "approval_required", serviceId: 3, approvalRef: null },
+      review: { status: "pending", reason: null },
+    },
+  });
+  await expect(f.service.action(manager, created.id, { operationId: crypto.randomUUID(), expectedVersion: created.version,
+    action: "review", decision: "accept", reason: "Office cannot bypass the v2 financial workflow" })).rejects.toMatchObject({ code: "fleet.office_charge_review_required", status: 409 });
+  expect(f.state().runs[0].status).toBe("submitted_for_review");
+  expect(f.state().runs[0].billingV2?.review.status).toBe("pending");
+});
+
 it("prevents Fleet start at the lower service boundary when the driver's training is required", async () => {
   const f = fixture();
   let run = await f.service.create(manager, createInput);

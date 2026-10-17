@@ -1104,6 +1104,11 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             throw new FleetError("fleet.action_forbidden", 403);
           if (run.version !== body.expectedVersion)
             throw new FleetError("fleet.version_conflict");
+          // The legacy review writer has no v2 quantity/charge authority. Keep
+          // acceptance on the original-scope financial path; return-for-
+          // correction and the driver's factual work remain available.
+          if (run.billingV2 && body.action === "review" && body.decision === "accept")
+            throw new FleetError("fleet.office_charge_review_required", 409);
           if (!["cancel", "pause"].includes(body.action))
             await requireFleetRunCommercialAuthority(client, run);
           if (run.events.length >= 200 || state.operations.length >= 2000)
