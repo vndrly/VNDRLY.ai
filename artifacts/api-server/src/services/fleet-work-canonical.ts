@@ -10,6 +10,7 @@ import {
   type FleetWorkCommand,
   type FleetWorkReference,
   type FleetWorkReceipt,
+  type FleetWorkScope,
 } from "@workspace/api-zod";
 import { createFleetService, type FleetServiceOptions } from "./fleet-ops";
 import { FleetError, type FleetRepository } from "./fleet-repository";
@@ -26,6 +27,27 @@ type Canonical = Extract<FleetWorkReference, { type: "canonical" }>;
 const mappingSchema = z
   .object({ scope: FleetWorkScopeSchema, mapping: FleetWorkMappingSchema })
   .strict();
+export async function resolveFleetWorkReference(
+  { actor, client }: FleetWorkExecutionContext,
+  scope: FleetWorkScope,
+  ref: FleetWorkReference,
+): Promise<Canonical> {
+  if (ref.type === "canonical") return ref;
+  const rows = await client.query(
+    "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-mapping' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+    [actor.companyId, `${scope.provisioningId}:${ref.kind}:${ref.id}`],
+  );
+  const row = rows.rows[0],
+    parsed = mappingSchema.safeParse(row?.tool_output);
+  if (
+    row?.user_id !== actor.userId ||
+    !parsed.success ||
+    !isDeepStrictEqual(parsed.data.scope, scope) ||
+    !isDeepStrictEqual(parsed.data.mapping.local, ref)
+  )
+    throw new FleetError("fleet.work_dependency_unresolved", 409);
+  return parsed.data.mapping.canonical;
+}
 /** These are existing business operations under the enclosing real transaction,
  * not a second permissive implementation. New handler kinds stay unavailable
  * until their authoritative path is implemented; no v2 UI is activated yet. */
@@ -72,26 +94,8 @@ export async function executeFleetWorkCommand(
     canonicalReferences: Canonical[] = [],
     mappings: Extract<FleetWorkReceipt, { status: "applied" }>["mappings"] = [],
   ): FleetWorkExecution => ({ canonicalReferences, mappings, afterCommit });
-  const mapped = async (ref: FleetWorkReference): Promise<Canonical> => {
-    if (ref.type === "canonical") return ref;
-    const rows = await client.query(
-      "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-mapping' AND target_id=$2 ORDER BY id DESC LIMIT 1",
-      [
-        actor.companyId,
-        `${command.scope.provisioningId}:${ref.kind}:${ref.id}`,
-      ],
-    );
-    const row = rows.rows[0],
-      parsed = mappingSchema.safeParse(row?.tool_output);
-    if (
-      row?.user_id !== actor.userId ||
-      !parsed.success ||
-      !isDeepStrictEqual(parsed.data.scope, command.scope) ||
-      !isDeepStrictEqual(parsed.data.mapping.local, ref)
-    )
-      throw new FleetError("fleet.work_dependency_unresolved", 409);
-    return parsed.data.mapping.canonical;
-  };
+  const mapped = (ref: FleetWorkReference) =>
+    resolveFleetWorkReference(context, command.scope, ref);
   const activity = async (ref: FleetWorkReference) => {
     const target = await mapped(ref);
     if (target.kind !== "activity" || typeof target.id !== "string")

@@ -22,6 +22,8 @@ import { createHash } from "node:crypto";
 import type { FleetActor } from "./fleet-ops";
 import {
   FleetWorkCommandSchema,
+  FleetRunSchema,
+  FleetDetailSnapshotSchema,
   type FleetWorkScope,
 } from "@workspace/api-zod";
 async function fixture(canonical = false) {
@@ -163,6 +165,362 @@ it("atomically stores one canonical effect and receipt across concurrent lost-re
   expect(
     await f.service.read(f.actor, f.scope, original.operationId),
   ).toMatchObject({ status: "applied" });
+});
+it("retains late work photos on their original ticket and Detail without replaying inspection or changing a replacement", async () => {
+  const f = await fixture(),
+    tag = randomUUID(),
+    group = randomUUID();
+  const partner = (
+    await pool.query(
+      "INSERT INTO partners(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",
+      [tag, `${tag}@example.invalid`],
+    )
+  ).rows[0].id;
+  const site = (
+    await pool.query(
+      "INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code) VALUES($1,'Synthetic','Synthetic',35,-97,$2) RETURNING id",
+      [partner, tag],
+    )
+  ).rows[0].id;
+  const workType = (
+    await pool.query(
+      "INSERT INTO work_types(name,category) VALUES($1,'Synthetic') RETURNING id",
+      [tag],
+    )
+  ).rows[0].id;
+  const ticket = (
+    await pool.query(
+      "INSERT INTO tickets(vendor_id,site_location_id,work_type_id,status) VALUES($1,$2,$3,'submitted') RETURNING id",
+      [f.actor.companyId, site, workType],
+    )
+  ).rows[0].id;
+  const capturedAt = new Date(Date.now() - 3600000).toISOString();
+  const assignment = FleetDetailSnapshotSchema.parse({
+    detail: {
+      id: randomUUID(),
+      companyId: f.actor.companyId,
+      version: 1,
+      name: "Original Detail",
+      vehicleAssetId: randomUUID(),
+      rigPackageId: null,
+      rigPackageVersion: null,
+      driverUserId: f.actor.userId,
+      accessGroupIds: [group],
+      effectiveFrom: capturedAt,
+      effectiveUntil: null,
+      archivedAt: null,
+    },
+    rigPackage: null,
+    labels: {
+      truck: "Synthetic truck",
+      driver: "Synthetic worker",
+      rigPackage: null,
+      components: [],
+    },
+    carrierOfRecordId: f.actor.companyId,
+    snapshottedAt: capturedAt,
+  });
+  const id = randomUUID(),
+    reservation = {
+      version: 1,
+      id: randomUUID(),
+      runId: id,
+      detailId: assignment.detail.id,
+      detailVersion: 1,
+      driverUserId: f.actor.userId,
+      assetIds: [assignment.detail.vehicleAssetId],
+      startAt: capturedAt,
+      plannedEndAt: null,
+      timeZone: "America/Chicago",
+      state: "released",
+      actualReleasedAt: new Date().toISOString(),
+      releaseReason: "Closed",
+    };
+  const original = FleetRunSchema.parse({
+    id,
+    companyId: f.actor.companyId,
+    fleetId: group,
+    title: "Original activity",
+    driverUserId: f.actor.userId,
+    vehicleAssetId: assignment.detail.vehicleAssetId,
+    trailerAssetId: null,
+    siteIds: [site],
+    status: "in_progress",
+    phase: "travelling",
+    version: 1,
+    stops: [{ id: randomUUID(), siteId: site, kind: "pickup", sequence: 0 }],
+    loads: [],
+    inspections: [],
+    currentStopId: null,
+    visitedStopIds: [],
+    events: [],
+    linkedTicketId: ticket,
+    allowedActions: [],
+    resourceAssignment: {
+      version: 2,
+      snapshot: assignment,
+      reservation,
+      returnPolicy: "delivery_only",
+    },
+  });
+  const replacementSnapshot = FleetDetailSnapshotSchema.parse({
+    ...assignment,
+    detail: { ...assignment.detail, version: 2, vehicleAssetId: randomUUID() },
+  });
+  const current = FleetRunSchema.parse({
+    ...original,
+    version: 2,
+    status: "completed",
+    vehicleAssetId: replacementSnapshot.detail.vehicleAssetId,
+    resourceAssignment: {
+      ...original.resourceAssignment,
+      snapshot: replacementSnapshot,
+      reservation: {
+        ...reservation,
+        detailVersion: 2,
+        assetIds: [replacementSnapshot.detail.vehicleAssetId],
+      },
+    },
+  });
+  for (const run of [original, current])
+    await pool.query(
+      "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','synthetic_run','snapshot','fleet-run',$3,$4::jsonb,'completed')",
+      [f.actor.userId, f.actor.companyId, id, JSON.stringify(run)],
+    );
+  await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1", [
+    f.actor.companyId,
+    JSON.stringify({
+      ...emptyFleetState(),
+      enabled: true,
+      fleets: [
+        {
+          id: group,
+          name: "Access",
+          siteIds: [],
+          equipmentAssetIds: [],
+          requiredCertifications: [],
+        },
+      ],
+      grants: [
+        {
+          userId: f.actor.userId,
+          roles: ["driver"],
+          fleetIds: [group],
+          siteIds: [],
+          safetyRelease: false,
+          financeRead: false,
+        },
+      ],
+    }),
+  ]);
+  const objects = new Map<string, StoredObject>(),
+    bytes = Buffer.from([255, 216, 255, 1]),
+    hash = createHash("sha256").update(bytes).digest("hex");
+  const store = {
+    getObject: async (path: string) => objects.get(path) ?? null,
+    putObject: async (
+      path: string,
+      contentType: string,
+      body: Buffer,
+      acl: StoredObject["acl"],
+    ) => {
+      objects.set(path, {
+        contentType,
+        body: Buffer.from(body),
+        size: body.length,
+        acl,
+      });
+    },
+  } as unknown as ObjectStore;
+  const handlers = createFleetEvidenceCanonicalHandlers({ store: () => store });
+  const upload = createFleetEvidenceUploadService(
+    createDatabaseFleetEvidenceUploadRepository(f.repository, handlers),
+    () => store,
+  );
+  const command = FleetWorkCommandSchema.parse({
+    ...f.command(),
+    capturedAt,
+    kind: "evidence.stage",
+    payload: {
+      activity: { type: "canonical", kind: "activity", id, version: 1 },
+      ticket: { type: "canonical", kind: "ticket", id: ticket, version: 1 },
+      assignment,
+      evidence: { type: "local", kind: "evidence", id: randomUUID() },
+      kind: "photo",
+      notes: "Original truck damage",
+      byteSize: bytes.length,
+      sha256: hash,
+      contentType: "image/jpeg",
+    },
+  });
+  const session = await upload.begin(f.actor, command);
+  await upload.put(f.actor, {
+    scope: f.scope,
+    sessionId: session.id,
+    partNumber: 0,
+    sha256: hash,
+    bytes,
+  });
+  const receipt = await upload.complete(f.actor, {
+    scope: f.scope,
+    sessionId: session.id,
+    operationId: command.operationId,
+  });
+  expect(
+    await upload.complete(f.actor, {
+      scope: f.scope,
+      sessionId: session.id,
+      operationId: command.operationId,
+    }),
+  ).toEqual(receipt);
+  const saved = (
+    await pool.query(
+      "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-evidence'",
+      [f.actor.companyId],
+    )
+  ).rows;
+  expect(saved).toHaveLength(1);
+  expect(saved[0].tool_output).toMatchObject({
+    record: {
+      runId: id,
+      runVersion: 1,
+      capturedAt,
+      physicalProofVerified: false,
+      signatureIdentityVerified: false,
+    },
+    capture: {
+      scope: f.scope,
+      ticketId: ticket,
+      assignment,
+      capturedAt,
+      timeZone: "America/Chicago",
+    },
+  });
+  expect(
+    (
+      await pool.query(
+        "SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' ORDER BY id DESC LIMIT 1",
+        [f.actor.companyId],
+      )
+    ).rows[0].tool_output,
+  ).toEqual(current);
+  expect(
+    (await pool.query("SELECT status FROM tickets WHERE id=$1", [ticket]))
+      .rows[0].status,
+  ).toBe("submitted");
+  const altered = JSON.parse(JSON.stringify(command));
+  altered.operationId = randomUUID();
+  altered.payload.assignment.detail.vehicleAssetId = randomUUID();
+  await expect(upload.begin(f.actor, altered)).rejects.toMatchObject({
+    code: "fleet.work_assignment_changed",
+  });
+  const wrongVersion = JSON.parse(JSON.stringify(command));
+  wrongVersion.operationId = randomUUID();
+  wrongVersion.payload.activity.version = 2;
+  await expect(upload.begin(f.actor, wrongVersion)).rejects.toMatchObject({
+    code: "fleet.work_assignment_changed",
+  });
+  // Retained itemized originals are not the legacy 100-photo view. New transfer
+  // and paging must still work after that bounded view has been exceeded.
+  await pool.query(
+    "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) SELECT $1,$2,'fleet','typed','canonical','synthetic_photo','association','fleet-evidence',synthetic_id::text,jsonb_set($3::jsonb,'{record,evidenceId}',to_jsonb(synthetic_id::text)),'completed' FROM (SELECT gen_random_uuid() AS synthetic_id FROM generate_series(1,101)) synthetic",
+    [f.actor.userId, f.actor.companyId, JSON.stringify(saved[0].tool_output)],
+  );
+  const late = JSON.parse(JSON.stringify(command));
+  late.operationId = randomUUID();
+  late.payload.evidence.id = randomUUID();
+  const laterSession = await upload.begin(f.actor, late);
+  await upload.put(f.actor, {
+    scope: f.scope,
+    sessionId: laterSession.id,
+    partNumber: 0,
+    sha256: hash,
+    bytes,
+  });
+  await upload.complete(f.actor, {
+    scope: f.scope,
+    sessionId: laterSession.id,
+    operationId: late.operationId,
+  });
+  const readPage = (cursor: string | null = null) =>
+    f.repository.readScope({ ...f.actor, readOnly: true }, f.scope, (context) =>
+      handlers.readWorkEvidence(context, {
+        scope: f.scope,
+        activityId: id,
+        cursor,
+        limit: 40,
+      }),
+    );
+  let page = await readPage(),
+    seen = page.evidence.length,
+    pages = 1;
+  expect(page.evidence[0]).toMatchObject({
+    capture: { assignment, ticketId: ticket },
+  });
+  while (page.nextCursor) {
+    page = await readPage(page.nextCursor);
+    seen += page.evidence.length;
+    pages++;
+  }
+  expect(seen).toBe(103);
+  expect(pages).toBe(3);
+  await expect(
+    f.repository.readScope(f.actor, f.scope, (context) =>
+      handlers.readWorkEvidence(context, {
+        scope: { ...f.scope, userId: f.actor.userId + 1 },
+        activityId: id,
+        cursor: null,
+        limit: 40,
+      }),
+    ),
+  ).rejects.toMatchObject({ code: "fleet.work_scope_changed" });
+  await expect(readPage("not-a-real-cursor")).rejects.toMatchObject({
+    code: "fleet.invalid_cursor",
+  });
+  const file = await f.repository.withScope(f.actor, f.scope, (context) =>
+    handlers.readWorkEvidenceFile(
+      context,
+      f.scope,
+      session.canonicalEvidenceId,
+    ),
+  );
+  expect(file.object.body).toEqual(bytes);
+  await expect(
+    f.repository.withScope(
+      { ...f.actor, readOnly: true },
+      f.scope,
+      async () => null,
+    ),
+  ).rejects.toMatchObject({ code: "fleet.read_only" });
+  objects.set(receipt.objectPath, {
+    ...objects.get(receipt.objectPath)!,
+    acl: {
+      owner: "different",
+      visibility: "private",
+      purpose: "fleet-evidence",
+    },
+  });
+  await expect(
+    f.repository.withScope(f.actor, f.scope, (context) =>
+      handlers.readWorkEvidenceFile(
+        context,
+        f.scope,
+        session.canonicalEvidenceId,
+      ),
+    ),
+  ).rejects.toMatchObject({ code: "fleet.not_found" });
+  await pool.query(
+    "UPDATE vendors SET fleet_ops_state=jsonb_set(fleet_ops_state,'{grants}','[]'::jsonb) WHERE id=$1",
+    [f.actor.companyId],
+  );
+  const revoked = JSON.parse(JSON.stringify(command));
+  revoked.operationId = randomUUID();
+  await expect(upload.begin(f.actor, revoked)).rejects.toMatchObject({
+    code: "fleet.action_forbidden",
+  });
+  await expect(readPage()).rejects.toMatchObject({
+    code: "fleet.action_forbidden",
+  });
 });
 it("applies an existing location service inside the same original-scope receipt transaction and maps its local identity once", async () => {
   const f = await fixture(true),

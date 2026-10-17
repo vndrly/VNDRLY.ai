@@ -5,6 +5,7 @@ import {
   FleetTimeZoneSchema,
 } from "./fleet-details";
 import { FleetComplianceSubjectSchema } from "./fleet-compliance";
+import { FleetEvidenceSchema } from "./fleet-evidence";
 
 export const FLEET_EVIDENCE_PART_BYTES = 256 * 1024;
 export const FLEET_EVIDENCE_FILE_BYTES = 10 * 1024 * 1024;
@@ -17,6 +18,30 @@ const contentType = z.enum([
   "image/webp",
   "application/pdf",
 ]);
+/** Safe work-photo history; original device/session authority stays internal.
+ * The assignment describes capture, never the current truck's inspection. */
+export const FleetWorkEvidenceCaptureSchema = z
+  .object({
+    ticketId: z.number().int().positive(),
+    assignment: FleetDetailSnapshotSchema,
+    capturedAt: timestamp,
+    timeZone: FleetTimeZoneSchema,
+    receivedAt: timestamp,
+    clockStatus: z.enum(["ahead_of_server", "reported_capture_time"]),
+  })
+  .strict();
+export const FleetWorkEvidenceRecordSchema = z
+  .object({
+    record: FleetEvidenceSchema,
+    capture: FleetWorkEvidenceCaptureSchema.nullable(),
+  })
+  .strict();
+export const FleetWorkEvidencePageSchema = z
+  .object({
+    evidence: z.array(FleetWorkEvidenceRecordSchema).max(100),
+    nextCursor: z.string().max(2000).nullable(),
+  })
+  .strict();
 export const FleetEvidencePartReceiptSchema = z
   .object({
     partNumber: z.number().int().min(0).max(39),

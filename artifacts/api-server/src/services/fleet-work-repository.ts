@@ -289,5 +289,16 @@ export function createDatabaseFleetWorkRepository(options: {
       await tx.requireProvisioning(FleetWorkScopeSchema.parse(scope), true);
       return work(context);
     });
-  return { ...repository, provision, withScope };
+  const readScope = <T>(
+    actor: FleetActor,
+    scope: FleetWorkScope,
+    work: (context: FleetWorkExecutionContext) => Promise<T>,
+  ) =>
+    scopedTransaction(actor, async (tx, context) => {
+      // Read-only/expired provisioning may recover retained facts. The actual
+      // session, membership, original scope and nonrevoked device still apply.
+      await tx.requireProvisioning(FleetWorkScopeSchema.parse(scope), false);
+      return work(context);
+    });
+  return { ...repository, provision, withScope, readScope };
 }
