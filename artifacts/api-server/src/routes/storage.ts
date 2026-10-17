@@ -445,6 +445,9 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
 
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
+    // Feature-owned bytes stay private even if a process stopped before its
+    // ACL sidecar was persisted. Only scoped Fleet evidence routes read them.
+    if (wildcardPath?.startsWith("fleet/")) { res.status(403).json({ error: "Fleet evidence requires current Fleet access" }); return; }
     if (wildcardPath?.startsWith("fleet-compliance-private/")) { res.status(403).json({ error: "Private compliance records require designated reviewer access" }); return; }
     const objectPath = `/objects/${wildcardPath}`;
     const obj = await objectStorageService.getStoredObject(objectPath);

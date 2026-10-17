@@ -14,6 +14,10 @@ import { createDatabaseFleetWorkRepository } from "./fleet-work-repository";
 import { createFleetWorkService } from "./fleet-work";
 import { executeFleetWorkCommand } from "./fleet-work-canonical";
 import { workdayService } from "./workday";
+import { createDatabaseFleetEvidenceUploadRepository } from "./fleet-evidence-upload-repository";
+import { createFleetEvidenceUploadService } from "./fleet-evidence-upload";
+import type { ObjectStore, StoredObject } from "../lib/objectStore";
+import { createHash } from "node:crypto";
 import type { FleetActor } from "./fleet-ops";
 import {
   FleetWorkCommandSchema,
@@ -342,4 +346,131 @@ it("does not leave a workday start committed when the enclosing work command fai
       )
     ).rowCount,
   ).toBe(0);
+});
+it("provides the same verified original transaction to byte metadata handlers without skipping provisioning checks", async () => {
+  const f = await fixture(),
+    callback = vi.fn(
+      async ({ client }: { client: import("pg").PoolClient }) => {
+        return (await client.query("SELECT 17::int AS value")).rows[0].value;
+      },
+    );
+  expect(await f.repository.withScope(f.actor, f.scope, callback)).toBe(17);
+  expect(callback).toHaveBeenCalledOnce();
+  await expect(
+    f.repository.withScope(
+      f.actor,
+      { ...f.scope, provisioningId: randomUUID() },
+      callback,
+    ),
+  ).rejects.toMatchObject({ status: 403 });
+  expect(callback).toHaveBeenCalledOnce();
+});
+it("persists resumable byte metadata and canonical association in the original database scope across service restart", async () => {
+  const f = await fixture(),
+    objects = new Map<string, StoredObject>(),
+    body = Buffer.from([255, 216, 255, 1, 2]),
+    hash = createHash("sha256").update(body).digest("hex"),
+    seed = f.command();
+  const store = {
+    kind: "filesystem",
+    getObject: async (path: string) => objects.get(path) ?? null,
+    putObject: async (
+      path: string,
+      type: string,
+      bytes: Buffer,
+      acl: StoredObject["acl"],
+    ) => {
+      objects.set(path, {
+        contentType: type,
+        size: bytes.length,
+        body: Buffer.from(bytes),
+        acl,
+      });
+    },
+  } as unknown as ObjectStore;
+  const associate = vi.fn(
+    async (
+      { client }: { client: import("pg").PoolClient },
+      saved: import("@workspace/api-zod").FleetEvidenceUploadSession,
+      bytes: Buffer,
+    ) => {
+      if (saved.binding.kind !== "compliance")
+        throw Error("Expected source document");
+      const path = `/objects/fleet-compliance-private/${f.actor.companyId}/${saved.binding.recordId}/documents/${saved.sha256}`;
+      await store.putObject(path, saved.contentType, bytes, {
+        owner: `fleet-compliance:${f.actor.companyId}`,
+        visibility: "private",
+        purpose: "fleet-compliance-private",
+      });
+      await client.query(
+        "INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','synthetic_evidence','association','synthetic-evidence-association',$3,'{}'::jsonb,'completed')",
+        [f.actor.userId, f.actor.companyId, saved.id],
+      );
+      return {
+        evidenceId: saved.canonicalEvidenceId,
+        objectPath: path,
+        fileUrl: null,
+      };
+    },
+  );
+  const repo = createDatabaseFleetEvidenceUploadRepository(f.repository, {
+      authorize: async () => {},
+      associate,
+    }),
+    service = createFleetEvidenceUploadService(repo, () => store);
+  const command = FleetWorkCommandSchema.parse({
+      ...seed,
+      kind: "compliance.document.stage",
+      payload: {
+        recordId: randomUUID(),
+        subject: { kind: "driver", id: f.actor.userId },
+        expectedRecordVersion: 0,
+        evidence: { type: "local", kind: "evidence", id: randomUUID() },
+        byteSize: body.length,
+        sha256: hash,
+        contentType: "image/jpeg",
+      },
+    }),
+    saved = await service.begin(f.actor, command);
+  await service.put(f.actor, {
+    scope: f.scope,
+    sessionId: saved.id,
+    partNumber: 0,
+    sha256: hash,
+    bytes: body,
+  });
+  const restarted = createFleetEvidenceUploadService(
+    createDatabaseFleetEvidenceUploadRepository(f.repository, {
+      authorize: async () => {},
+      associate,
+    }),
+    () => store,
+  );
+  expect((await restarted.read(f.actor, f.scope, saved.id)).parts).toHaveLength(
+    1,
+  );
+  const results = await Promise.all([
+    service.complete(f.actor, {
+      scope: f.scope,
+      sessionId: saved.id,
+      operationId: command.operationId,
+    }),
+    restarted.complete(f.actor, {
+      scope: f.scope,
+      sessionId: saved.id,
+      operationId: command.operationId,
+    }),
+  ]);
+  expect(results[0]).toEqual(results[1]);
+  expect(associate).toHaveBeenCalledOnce();
+  const rows = await pool.query(
+    "SELECT target_type,tool_output FROM assistant_action_audit WHERE vendor_id=$1",
+    [f.actor.companyId],
+  );
+  expect(
+    rows.rows.filter(
+      (row) => row.target_type === "synthetic-evidence-association",
+    ),
+  ).toHaveLength(1);
+  expect(JSON.stringify(rows.rows)).not.toContain(body.toString("base64"));
 });

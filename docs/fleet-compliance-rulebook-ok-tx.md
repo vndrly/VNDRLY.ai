@@ -2,6 +2,8 @@
 
 Research checked **2026-10-16**. Product policy starts **warn-only**. These are sourced implementation references, not a declaration that a carrier is legally compliant. A designated company reviewer must determine applicability, record evidence and adopt a requirement revision. Research does not impersonate that reviewer. Missing facts, unavailable external lookups, ambiguous cargo classifications and unreviewed documents remain **unverified/red**.
 
+Selected insurance references were rechecked **2026-10-17** against the [FMCSA filing chart](https://www.fmcsa.dot.gov/registration/insurance-filing-requirements), [TxDMV registration and insurance tables](https://www.txdmv.gov/motor-carriers/txdmv-number), and [OCC Chapter 30, sections 165:30-3-11 and 165:30-15-6](https://oklahoma.gov/content/dam/ok/en/occ/documents/ajls/jls-courts/rules/2026/chapter%2030%20MCC%20and%20Transportation%20Network%20Companies%20_eff%2008-01-2026.pdf). This check does not change a carrier's adopted requirements or activate enforcement; other reference checks retain the earlier research date.
+
 ## Identity and applicability
 
 Keep carrier of record, legal insured entity, authority/registration identifiers, leased equipment, subcontract relationships, actual truck and every towed component distinct. An Inventory asset ID remains canonical. A Detail groups resources for dispatch; it does not create a new legal carrier or transfer custody. Billing partner/site/AFE are separate from the physical origin, destination and return base.

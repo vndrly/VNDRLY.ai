@@ -5,6 +5,7 @@ const boundary = vi.hoisted(() => ({
   aclCheck: vi.fn(),
   setAcl: vi.fn(),
   deleteObject: vi.fn(),
+  read: vi.fn(),
 }));
 vi.mock("../lib/session", () => ({
   getSessionFromRequest: () => ({ userId: 2, role: "field_employee" }),
@@ -13,6 +14,7 @@ vi.mock("../lib/objectStorage", () => ({
   ObjectNotFoundError: class extends Error {},
   ObjectStorageService: class {
     async getStoredObject() {
+      boundary.read();
       return {
         contentType: "image/jpeg",
         size: 3,
@@ -33,6 +35,11 @@ const app = express();
 app.use(express.json());
 app.use(storage);
 describe("Fleet evidence owning feature storage boundary", () => {
+  it("blocks the reserved Fleet byte namespace before lookup, including interrupted writes without ACL metadata",async()=>{
+    boundary.read.mockClear();
+    expect((await request(app).get("/storage/objects/fleet/7/work-uploads/session/parts/0")).status).toBe(403);
+    expect(boundary.read).not.toHaveBeenCalled();
+  });
   it("refuses generic reads even for the original upload owner", async () => {
     expect(
       (await request(app).get("/storage/objects/fleet/7/run/evidence")).status,

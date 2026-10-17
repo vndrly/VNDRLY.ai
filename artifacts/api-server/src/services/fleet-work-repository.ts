@@ -142,139 +142,152 @@ export function createDatabaseFleetWorkRepository(options: {
       },
       actor,
     );
+  function scopedTransaction<T>(
+    actor: FleetActor,
+    operation: (
+      tx: FleetWorkTransaction,
+      context: FleetWorkExecutionContext,
+    ) => Promise<T>,
+  ): Promise<T> {
+    return base.transaction(
+      actor.companyId,
+      actor.userId,
+      async (state, client) => {
+        const tx: FleetWorkTransaction = {
+          async requireProvisioning(scope, write) {
+            if (
+              scope.owner.type !== "vendor" ||
+              scope.owner.id !== actor.companyId ||
+              scope.userId !== actor.userId ||
+              scope.membershipId !== actor.activeMembershipId ||
+              scope.sessionVersion !== actor.sv
+            )
+              throw new FleetError("fleet.work_scope_changed", 403);
+            await requireDevice(client, actor, z.uuid().parse(scope.deviceId));
+            const rows = await client.query(
+              "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-provision' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+              [actor.companyId, scope.provisioningId],
+            );
+            const row = rows.rows[0],
+              value = provisionSchema.safeParse(row?.tool_output);
+            if (
+              row?.user_id !== actor.userId ||
+              !value.success ||
+              !isDeepStrictEqual(value.data.scope, scope) ||
+              value.data.revokedAt
+            )
+              throw new FleetError("fleet.work_scope_changed", 403);
+            if (
+              write &&
+              (actor.readOnly ||
+                Date.parse(value.data.expiresAt) <= now().getTime())
+            )
+              throw new FleetError(
+                actor.readOnly
+                  ? "fleet.read_only"
+                  : "fleet.work_provisioning_expired",
+                403,
+              );
+          },
+          async readReceipt(scope, operationId) {
+            z.uuid().parse(operationId);
+            const rows = await client.query(
+              "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+              [actor.companyId, operationId],
+            );
+            if (!rows.rows.length) return null;
+            const row = rows.rows[0],
+              receipt = FleetWorkReceiptSchema.parse(row.tool_output);
+            if (
+              row.user_id !== actor.userId ||
+              !isDeepStrictEqual(receipt.scope, scope)
+            )
+              throw new FleetError("fleet.work_scope_changed", 403);
+            return receipt;
+          },
+          async saveReceipt(receipt) {
+            for (const mapping of "mappings" in receipt
+              ? receipt.mappings
+              : []) {
+              const key = mappingKey(receipt.scope, mapping.local),
+                rows = await client.query(
+                  "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-mapping' AND target_id=$2 ORDER BY id DESC LIMIT 1",
+                  [actor.companyId, key],
+                );
+              if (rows.rows.length) {
+                const prior = z
+                  .object({
+                    scope: FleetWorkScopeSchema,
+                    mapping: FleetWorkMappingSchema,
+                  })
+                  .strict()
+                  .parse(rows.rows[0].tool_output);
+                if (
+                  rows.rows[0].user_id !== actor.userId ||
+                  !isDeepStrictEqual(prior.scope, receipt.scope) ||
+                  !isDeepStrictEqual(prior.mapping, mapping)
+                )
+                  throw new FleetError("fleet.work_mapping_conflict");
+              } else
+                await append(client, actor, "fleet-work-mapping", key, {
+                  scope: receipt.scope,
+                  mapping,
+                });
+            }
+            if (await tx.readReceipt(receipt.scope, receipt.operationId))
+              throw new FleetError("fleet.operation_conflict");
+            await append(
+              client,
+              actor,
+              "fleet-work-operation",
+              receipt.operationId,
+              FleetWorkReceiptSchema.parse(receipt),
+            );
+          },
+          async saveCase(value) {
+            await append(
+              client,
+              actor,
+              "fleet-work-case",
+              value.id,
+              FleetReconciliationCaseSchema.parse(value),
+            );
+          },
+          async execute(command) {
+            const original = structuredClone(state);
+            await client.query("SAVEPOINT fleet_work_business");
+            try {
+              const result = await options.execute(
+                { actor, state, client },
+                command,
+              );
+              await client.query("RELEASE SAVEPOINT fleet_work_business");
+              return result;
+            } catch (error) {
+              await client.query("ROLLBACK TO SAVEPOINT fleet_work_business");
+              await client.query("RELEASE SAVEPOINT fleet_work_business");
+              Object.assign(state, original);
+              throw error;
+            }
+          },
+        };
+        return operation(tx, { actor, state, client });
+      },
+      actor,
+    );
+  }
   const repository: FleetWorkRepository = {
-    transaction(actor, operation) {
-      return base.transaction(
-        actor.companyId,
-        actor.userId,
-        async (state, client) => {
-          const tx: FleetWorkTransaction = {
-            async requireProvisioning(scope, write) {
-              if (
-                scope.owner.type !== "vendor" ||
-                scope.owner.id !== actor.companyId ||
-                scope.userId !== actor.userId ||
-                scope.membershipId !== actor.activeMembershipId ||
-                scope.sessionVersion !== actor.sv
-              )
-                throw new FleetError("fleet.work_scope_changed", 403);
-              await requireDevice(
-                client,
-                actor,
-                z.uuid().parse(scope.deviceId),
-              );
-              const rows = await client.query(
-                "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-provision' AND target_id=$2 ORDER BY id DESC LIMIT 1",
-                [actor.companyId, scope.provisioningId],
-              );
-              const row = rows.rows[0],
-                value = provisionSchema.safeParse(row?.tool_output);
-              if (
-                row?.user_id !== actor.userId ||
-                !value.success ||
-                !isDeepStrictEqual(value.data.scope, scope) ||
-                value.data.revokedAt
-              )
-                throw new FleetError("fleet.work_scope_changed", 403);
-              if (
-                write &&
-                (actor.readOnly ||
-                  Date.parse(value.data.expiresAt) <= now().getTime())
-              )
-                throw new FleetError(
-                  actor.readOnly
-                    ? "fleet.read_only"
-                    : "fleet.work_provisioning_expired",
-                  403,
-                );
-            },
-            async readReceipt(scope, operationId) {
-              z.uuid().parse(operationId);
-              const rows = await client.query(
-                "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1",
-                [actor.companyId, operationId],
-              );
-              if (!rows.rows.length) return null;
-              const row = rows.rows[0],
-                receipt = FleetWorkReceiptSchema.parse(row.tool_output);
-              if (
-                row.user_id !== actor.userId ||
-                !isDeepStrictEqual(receipt.scope, scope)
-              )
-                throw new FleetError("fleet.work_scope_changed", 403);
-              return receipt;
-            },
-            async saveReceipt(receipt) {
-              for (const mapping of "mappings" in receipt
-                ? receipt.mappings
-                : []) {
-                const key = mappingKey(receipt.scope, mapping.local),
-                  rows = await client.query(
-                    "SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-mapping' AND target_id=$2 ORDER BY id DESC LIMIT 1",
-                    [actor.companyId, key],
-                  );
-                if (rows.rows.length) {
-                  const prior = z
-                    .object({
-                      scope: FleetWorkScopeSchema,
-                      mapping: FleetWorkMappingSchema,
-                    })
-                    .strict()
-                    .parse(rows.rows[0].tool_output);
-                  if (
-                    rows.rows[0].user_id !== actor.userId ||
-                    !isDeepStrictEqual(prior.scope, receipt.scope) ||
-                    !isDeepStrictEqual(prior.mapping, mapping)
-                  )
-                    throw new FleetError("fleet.work_mapping_conflict");
-                } else
-                  await append(client, actor, "fleet-work-mapping", key, {
-                    scope: receipt.scope,
-                    mapping,
-                  });
-              }
-              if (await tx.readReceipt(receipt.scope, receipt.operationId))
-                throw new FleetError("fleet.operation_conflict");
-              await append(
-                client,
-                actor,
-                "fleet-work-operation",
-                receipt.operationId,
-                FleetWorkReceiptSchema.parse(receipt),
-              );
-            },
-            async saveCase(value) {
-              await append(
-                client,
-                actor,
-                "fleet-work-case",
-                value.id,
-                FleetReconciliationCaseSchema.parse(value),
-              );
-            },
-            async execute(command) {
-              const original = structuredClone(state);
-              await client.query("SAVEPOINT fleet_work_business");
-              try {
-                const result = await options.execute(
-                  { actor, state, client },
-                  command,
-                );
-                await client.query("RELEASE SAVEPOINT fleet_work_business");
-                return result;
-              } catch (error) {
-                await client.query("ROLLBACK TO SAVEPOINT fleet_work_business");
-                await client.query("RELEASE SAVEPOINT fleet_work_business");
-                Object.assign(state, original);
-                throw error;
-              }
-            },
-          };
-          return operation(tx);
-        },
-        actor,
-      );
-    },
+    transaction: (actor, operation) =>
+      scopedTransaction(actor, (tx) => operation(tx)),
   };
-  return { ...repository, provision };
+  const withScope = <T>(
+    actor: FleetActor,
+    scope: FleetWorkScope,
+    work: (context: FleetWorkExecutionContext) => Promise<T>,
+  ) =>
+    scopedTransaction(actor, async (tx, context) => {
+      await tx.requireProvisioning(FleetWorkScopeSchema.parse(scope), true);
+      return work(context);
+    });
+  return { ...repository, provision, withScope };
 }
