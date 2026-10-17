@@ -1,4 +1,5 @@
 import { readFleetPrivateComplianceSource } from "./fleet-compliance-source";
+import { loadFleetComplianceTrip, listFleetComplianceTrips } from "./fleet-compliance-trip-context";
 import { fleetComplianceRunScopeFingerprint } from "./fleet-compliance-work";
 import { createHmac } from "node:crypto";
 import { z } from "zod/v4";
@@ -202,7 +203,7 @@ export function createFleetComplianceOperations(
       )
         throw new FleetError("fleet.not_found", 404);
     } else {
-      const run = state.runs.find((row) => row.id === subject.id);
+      const run = await loadFleetComplianceTrip(state, client, actor.companyId, subject.id);
       if (!run || !grant?.fleetIds.includes(run.fleetId))
         throw new FleetError("fleet.not_found", 404);
     }
@@ -358,7 +359,7 @@ export function createFleetComplianceOperations(
           const assets=await client.query("SELECT id,name FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND id=ANY($2::uuid[]) AND retired_at IS NULL AND merged_into_id IS NULL AND ($3::uuid IS NULL OR id>$3::uuid) AND name ILIKE $4 AND ((category=ANY($5::text[]))=$6::boolean) ORDER BY id LIMIT $7",[actor.companyId,ids,query.after??null,`%${query.search}%`,["truck","vehicle","service_vehicle","support_vehicle"],query.kind==="vehicle",query.limit+1]);
           rows=assets.rows.map(row=>({subject:{kind:query.kind as "vehicle"|"component",id:row.id},label:row.name}));
         } else {
-          rows=manager?state.runs.filter(run=>grant?.fleetIds.includes(run.fleetId)&&(!query.after||run.id>query.after)&&run.title.toLocaleLowerCase().includes(query.search.toLocaleLowerCase())).sort((a,b)=>a.id.localeCompare(b.id)).slice(0,query.limit+1).map(run=>({subject:{kind:"trip",id:run.id},label:run.title})):[];
+          rows=manager?await listFleetComplianceTrips(state,client,actor.companyId,grant?.fleetIds??[],query):[];
         }
         const entries=[];
         for(const row of rows.slice(0,query.limit)){

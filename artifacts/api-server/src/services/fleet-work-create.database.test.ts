@@ -333,6 +333,61 @@ it("requires an original-scope receipt transaction for v2 actions while retainin
   );
 });
 
+it("reads retained trip facts and scoped subject choices without relying on the legacy active view", async () => {
+  const f = await fixture(),
+    created = await f.work.apply(f.actor, f.command);
+  if (created.status !== "applied") throw Error("Expected actual creation");
+  const id = String(
+    created.canonicalReferences.find((ref) => ref.kind === "activity")!.id,
+  );
+  const service = createFleetService(databaseFleetRepository);
+  const outcomes = await Promise.allSettled([
+    service.readFleetComplianceFacts({ ...f.actor }, { kind: "trip", id }),
+    service.readFleetComplianceSubjects(
+      { ...f.actor },
+      { kind: "trip", limit: 1, search: "Synthetic crude" },
+    ),
+  ]);
+  expect(outcomes[0]).toMatchObject({ status: "fulfilled", value: null });
+  expect(outcomes[1]).toMatchObject({
+    status: "fulfilled",
+    value: {
+      entries: [
+        {
+          subject: { kind: "trip", id },
+          label: "Synthetic crude transport",
+          canSubmit: true,
+        },
+      ],
+      nextCursor: null,
+    },
+  });
+  expect(
+    await service.readFleetComplianceSubjects(
+      { ...f.actor, readOnly: true },
+      { kind: "trip", limit: 1 },
+    ),
+  ).toMatchObject({ entries: [{ subject: { id }, canSubmit: false }] });
+  await expect(
+    service.readFleetComplianceFacts(
+      { ...f.actor },
+      { kind: "trip", id: randomUUID() },
+    ),
+  ).rejects.toMatchObject({ status: 404 });
+  const driver = {
+    ...f.actor,
+    userId: f.driver.id,
+    role: "field_employee",
+    membershipRole: "field_employee",
+    activeMembershipId: f.driverMembership.id,
+    sv: f.driver.sessionVersion,
+    vendorPeopleId: f.driverPerson.id,
+  };
+  await expect(
+    service.readFleetComplianceFacts(driver, { kind: "trip", id }),
+  ).rejects.toMatchObject({ status: 403 });
+});
+
 it("creates and pages 501 actual active v2 activities without filling the legacy company aggregate", async () => {
   const f = await fixture();
   if (f.command.kind !== "activity.create") throw Error("Expected creation");
@@ -409,6 +464,30 @@ it("creates and pages 501 actual active v2 activities without filling the legacy
     cursor = page.page?.nextCursor ?? null;
   } while (cursor);
   expect(read).toEqual(ids);
+  const subjects = new Set<string>();
+  let after: string | null = null;
+  do {
+    const page = await service.readFleetComplianceSubjects(
+      { ...f.actor },
+      {
+        kind: "trip",
+        limit: 100,
+        ...(after ? { after } : {}),
+      },
+    );
+    expect(page.entries.length).toBeLessThanOrEqual(100);
+    for (const entry of page.entries) subjects.add(String(entry.subject.id));
+    after = page.nextCursor;
+  } while (after);
+  expect(subjects).toEqual(ids);
+  expect(
+    (
+      await pool.query(
+        "SELECT COUNT(*)::int AS count FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run'",
+        [f.vendor],
+      )
+    ).rows[0].count,
+  ).toBe(501);
 }, 120000);
 
 it("checks each mixed-service activity's own approval rather than the shared ticket's first service", async () => {
