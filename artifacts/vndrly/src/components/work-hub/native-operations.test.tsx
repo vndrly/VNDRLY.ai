@@ -19,6 +19,8 @@ describe("web native work requests", () => {
     expect(await screen.findByText("Delivery proof")).toBeTruthy();
     expect(screen.getByText("Uploading — not saved yet")).toBeTruthy();
     expect(screen.getByLabelText("Allow location requests during active duty")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Start duty" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Start duty" })).toBeNull();
+    expect(screen.getByText("Off duty")).toBeTruthy();
+    expect(screen.getByText("Agreed on-call time")).toBeTruthy();
   });
 });

@@ -28,9 +28,9 @@ export async function applyFleetAssistantIntent(actor:FleetActor,raw:unknown){
   const canonical=createFleetWorkCanonicalService(context),now=new Date(),base={version:2,scope:provision.scope,operationId,capturedAt:now.toISOString(),timeZone:"UTC",dependencies:[]};
   let value:unknown;
   if(kind==="activity.create"){
-   const create=CreateFleetRunSchema.parse({...input,operationId});if(!create.detailSelection)throw new FleetError("fleet.detail_required",400);
+   const {dispatch,...fields}=input;const create=CreateFleetRunSchema.parse({...fields,operationId});if(!create.detailSelection)throw new FleetError("fleet.detail_required",400);
    const preparation=await prepareFleetWorkCreation(context,{detailId:create.detailSelection.detailId,billingSiteId:create.stops[0].siteId,ticketId:create.billing.mode==="existing_ticket"?create.billing.ticketId:null});
-   value=buildFleetCreateIntent({scope:provision.scope,input:create,preparation,now:()=>now,uuid:randomUUID});
+   const created=buildFleetCreateIntent({scope:provision.scope,input:create,preparation,now:()=>now,uuid:randomUUID});created.payload.dispatchAfterCreate=dispatch===true;value=created;
   }else if(kind==="activity.action"||kind==="activity.edit"||kind==="quantity.record"||["quantity.review","price.resolve","charge.review","charge.adjust"].includes(kind)){
    const run=await canonical.detail({...actor},z.uuid().parse(input.runId));if(!run.ticketReference||!run.resourceAssignment)throw new FleetError("fleet.ticketed_detail_required",409);
    const expectedVersion=kind==="activity.action"||kind==="activity.edit"?input.input.expectedVersion:input.expectedVersion;
@@ -40,7 +40,7 @@ export async function applyFleetAssistantIntent(actor:FleetActor,raw:unknown){
    else if(kind==="quantity.record")value={...base,kind,timeZone:run.schedule?.timezone??"UTC",payload:{activity:{type:"canonical",kind:"activity",id:run.id,version:run.version},ticket:{type:"canonical",kind:"ticket",...run.ticketReference},evidence:{...input.evidence,id:randomUUID(),capturedAt:base.capturedAt,recordedByUserId:actor.userId}}};
    else {const page=await readFleetCommercialReview(context,{activityId:run.id});if(!page.canReview||page.ticket.version!==input.ticketVersion)throw new FleetError("fleet.version_conflict",409);const {runId:_run,ticketVersion:_ticket,...fields}=input;const schema=FleetWorkCommandSchema.options.find(row=>row.shape.kind.value===kind)!.shape.payload as z.ZodObject;if(!("expectedVersion" in schema.shape))delete fields.expectedVersion;value={...base,kind,payload:{...fields,activity:{type:"canonical",kind:"activity",id:run.id,version:run.version},ticket:{type:"canonical",kind:"ticket",id:page.ticket.id,version:page.ticket.version}}};}
   }else if(kind==="ticket.finalize"){const {ticketId,...fields}=input;value={...base,kind,payload:{...fields,ticket:{type:"canonical",kind:"ticket",id:ticketId,version:input.expectedVersion}}};}
-  else {value={...base,kind,payload:{...input,...(["detail.save","rig_package.save","run_order.save","monitoring.save"].includes(kind)?{operationId}:{})}};}
+  else {value={...base,kind,payload:{...input,...(["detail.save","rig_package.save","run_order.save","monitoring.save","compliance.review","compliance.facts","requirements.adopt"].includes(kind)?{operationId}:{})}};}
   const original=FleetWorkCommandSchema.parse(value);await retainFleetWorkOriginal(context.client,original,undefined,requestFingerprint);return original;
  });
  const applied=await service.apply(actor,command);

@@ -22,6 +22,7 @@ export const FleetRunBillingInputSchema = z.discriminatedUnion("mode", [
   z
     .object({
       mode: z.literal("existing_ticket"),
+      workTypeId:z.number().int().positive().optional(),
       ticketId: z.number().int().positive(),
       ...billingContext,
     })

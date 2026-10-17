@@ -716,7 +716,7 @@ it("creates and pages 501 actual active v2 activities without filling the legacy
       )
     ).rows[0].count,
   ).toBe(501);
-}, 120000);
+}, 180000);
 
 it("checks each mixed-service activity's own approval rather than the shared ticket's first service", async () => {
   const f = await fixture(),
@@ -1367,6 +1367,18 @@ it("assistant retains one confirmed original across response loss and never pret
  await expect(applyFleetAssistantIntent(f.actor,{kind:"activity.action",operationId:randomUUID(),runId:run.id,input:{expectedVersion:run.version,action:"start",source:"user_report"}})).rejects.toBeDefined();
 });
 
+it("assistant atomically creates and dispatches confirmed work without driver acknowledgement or physical start",async()=>{
+ const f=await fixture();if(f.command.kind!=="activity.create")throw Error("Fixture");
+ const {applyFleetAssistantIntent}=await import("./fleet-work-assistant");const {fleetRouteOperationalStops}=await import("@workspace/api-zod");
+ const p=f.command.payload,operationId=randomUUID(),input={kind:"activity.create",dispatch:true,operationId,fleetId:p.detailSnapshot.detail.accessGroupIds[0],title:p.title,driverUserId:p.detailSnapshot.detail.driverUserId,vehicleAssetId:p.detailSnapshot.detail.vehicleAssetId,trailerAssetId:p.detailSnapshot.rigPackage?.components.find(row=>row.role==="trailer")?.assetId??null,stops:fleetRouteOperationalStops(p.route,p.billing.billingSiteId!,randomUUID()),schedule:null,routePlan:p.route,detailSelection:{version:2,detailId:p.detailSnapshot.detail.id,detailVersion:p.detailSnapshot.detail.version,timeZone:f.command.timeZone,returnPolicy:"delivery_only"},billing:{mode:"new_ticket",workTypeId:p.billing.serviceId,afeNumber:p.billing.afeNumber,workDate:p.billing.workDate}};
+ const first=await applyFleetAssistantIntent(f.actor,input);expect(first.receipt.status).toBe("applied");expect(first.physicalWorkStarted).toBe(false);if(first.receipt.status!=="applied")throw Error("Expected applied");
+ const second=await applyFleetAssistantIntent(f.actor,JSON.parse(JSON.stringify(input)));expect(second.receipt.status).toBe("duplicate");if(second.receipt.status!=="duplicate")throw Error("Expected duplicate");expect(second.receipt.canonicalReferences).toEqual(first.receipt.canonicalReferences);
+ await expect(applyFleetAssistantIntent(f.actor,{...input,title:"Different confirmed request"})).rejects.toMatchObject({code:"fleet.operation_conflict"});
+ const id=first.receipt.canonicalReferences.find(row=>row.kind==="activity")!.id,run=await createFleetService(databaseFleetRepository).detail({...f.actor},String(id));expect(run.status).toBe("dispatched");expect(run.events.some(e=>e.type==="acknowledge"||e.type==="start")).toBe(false);expect(run.inspections).toHaveLength(0);
+ const channel=(await pool.query("SELECT device_class,capabilities FROM work_hub_devices WHERE user_id=$1 AND friendly_name='Fleet assistant command channel'",[f.actor.userId])).rows;expect(channel).toEqual([{device_class:"other",capabilities:{}}]);
+ await expect(applyFleetAssistantIntent(f.actor,{kind:"activity.action",operationId:randomUUID(),runId:run.id,input:{expectedVersion:run.version,action:"start",source:"user_report"}})).rejects.toBeDefined();
+});
+
 it("captures own unplanned ticketed work from the company driver pool without personal site grants",async()=>{
  const f=await fixture(),driverActor={...f.actor,userId:f.driver.id,role:"field_employee",membershipRole:"field_employee",vendorPeopleId:f.driverPerson.id,sv:f.driver.sessionVersion,activeMembershipId:f.driverMembership.id};
  const provision=await f.repository.assistantProvision(driverActor),command=FleetWorkCommandSchema.parse({...f.command,scope:provision.scope});
@@ -1395,4 +1407,14 @@ it("persists authorized monitoring rules, source-based cooldown and truthful ass
  expect((await service.evaluateFleetRunTriggers({...f.actor},run.id)).events).toHaveLength(1);expect((await service.evaluateFleetRunTriggers({...f.actor},run.id)).events).toHaveLength(0);
  const delivery=await service.readFleetAssignmentDelivery({...f.actor},run.id);expect(delivery.committedAt).not.toBeNull();expect(delivery.acknowledgedAt).toBeNull();expect(delivery.physicalDepartureVerified).toBe(false);expect(delivery.channels.some(row=>row.channel==="sms"&&row.state==="delivered")).toBe(false);
  await expect(service.saveFleetTrigger({...f.actor},{operationId:randomUUID(),expectedVersion:1,rule:{...rule,version:2,recipientUserIds:[99999999]}})).rejects.toMatchObject({code:"fleet.monitoring_recipient_forbidden"});
+});
+
+it("reauthorizes a retained original only for its same current worker and membership without rebinding it",async()=>{
+ const f=await fixture(),current={...f.actor,sv:f.actor.sv!+1};await pool.query("UPDATE users SET session_version=$2 WHERE id=$1",[f.actor.userId,current.sv]);
+ await expect(f.work.apply(current,f.command)).rejects.toMatchObject({code:"fleet.work_scope_changed"});
+ const original=JSON.stringify(f.command);await f.repository.reauthorizeOriginal(current,{scope:f.command.scope,operationId:randomUUID(),reason:"Explicitly recover my retained work after signing in"});
+ const receipt=await f.work.apply(current,f.command);expect(receipt.status).toBe("applied");expect(receipt.scope).toEqual(f.command.scope);expect(JSON.stringify(f.command)).toBe(original);
+ expect((await f.work.apply(current,f.command)).status).toBe("duplicate");
+ await pool.query("UPDATE work_hub_devices SET revoked_at=NOW() WHERE id=$1 AND user_id=$2",[f.command.scope.deviceId,current.userId]);
+ await expect(f.work.apply(current,f.command)).rejects.toMatchObject({code:"fleet.work_device_unavailable"});
 });

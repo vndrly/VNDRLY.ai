@@ -16,6 +16,7 @@ import {
   userOrgMembershipsTable,
   partnerVendorRelationshipsTable,
 } from "@workspace/db";
+import { saveFleetAgreement } from "../services/fleet-agreement";
 import { getSessionFromRequest } from "../lib/session";
 
 const router: IRouter = Router();
@@ -143,12 +144,21 @@ router.get(
         approved: !!a,
         approvedAt: a?.approvedAt ?? null,
         approvedUnitPrice: a?.approvedUnitPrice ?? null,
+        fleetAgreement: a?.fleetRateCard ?? null,
+        preciseUnitPrice: a?.preciseUnitPrice ?? null,
       };
     });
 
     res.json({ partnerId, workTypeId, items });
   },
 );
+
+router.post("/partners/:partnerId/work-types/:workTypeId/vendor-approvals/:vendorId/fleet-agreement",requireSession,async(req,res,next)=>{
+ try{const partnerId=Number(req.params.partnerId),serviceId=Number(req.params.workTypeId),vendorId=Number(req.params.vendorId);
+ if(![partnerId,serviceId,vendorId].every(v=>Number.isSafeInteger(v)&&v>0)){res.status(400).json({error:"Invalid id"});return;}
+ const card=await saveFleetAgreement(getSessionFromRequest(req)!,{partnerId,serviceId,vendorId},req.body);res.json(card);
+ }catch(error){if(error&&typeof error==="object"&&"status" in error){res.status(Number(error.status)).json({code:(error as any).code});return;}next(error);}
+});
 
 // Toggle an approval. Body: { approved: boolean }. When approved, we
 // snapshot the vendor's currently-quoted unit price so the partner

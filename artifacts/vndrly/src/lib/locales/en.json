@@ -5319,7 +5319,12 @@
     "selectGateLocation": "Select gate location",
     "gpsEntry": "Check-in GPS",
     "gpsExit": "Check-out GPS",
-    "gpsEvidence": {"verified":"Verified at gate","mismatch":"GPS discrepancy","unavailable":"GPS unavailable","gate_unconfigured":"Gate coordinates not configured"},
+    "gpsEvidence": {
+      "verified": "Verified at gate",
+      "mismatch": "GPS discrepancy",
+      "unavailable": "GPS unavailable",
+      "gate_unconfigured": "Gate coordinates not configured"
+    },
     "voiceListening": "Listening — say the plate, driver name, company, purpose, and duration, then press the microphone again.",
     "voiceTranscribing": "Processing voice entry…",
     "askvDurationCaptured": "Yes. The expected on-site time is {{duration}}.",
@@ -5974,5 +5979,8 @@
     "kind_ticket": "Ticket",
     "kind_run": "Driver run",
     "kind_shift": "Gate shift"
+  },
+  "fleet": {
+    "agreementEditor": "Transport agreement"
   }
 }

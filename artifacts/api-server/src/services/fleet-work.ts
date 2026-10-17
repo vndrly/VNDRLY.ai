@@ -41,6 +41,7 @@ export type FleetWorkTransaction = {
   execute(command: FleetWorkCommand): Promise<FleetWorkExecution>;
 };
 export type FleetWorkRepository = {
+  authorizeOriginalScope?:(actor:FleetActor,scope:FleetWorkScope)=>Promise<boolean>;
   transaction<T>(
     actor: FleetActor,
     work: (tx: FleetWorkTransaction) => Promise<T>,
@@ -52,13 +53,14 @@ function requireOriginalActor(
   actor: FleetActor,
   scope: FleetWorkScope,
   write = false,
+  reauthorized=false,
 ) {
   if (
     scope.owner.type !== "vendor" ||
     actor.companyId !== scope.owner.id ||
     actor.userId !== scope.userId ||
     actor.activeMembershipId !== scope.membershipId ||
-    actor.sv !== scope.sessionVersion ||
+    (actor.sv !== scope.sessionVersion&&!reauthorized) ||
     !["vendor", "field_employee"].includes(actor.role ?? "")
   )
     throw new FleetError("fleet.work_scope_changed", 403);
@@ -151,7 +153,7 @@ export function createFleetWorkService(
     operationId: string,
   ) => {
     const scope = FleetWorkScopeSchema.parse(rawScope);
-    requireOriginalActor(actor, scope);
+    requireOriginalActor(actor, scope,false,actor.sv!==scope.sessionVersion&&!!await repository.authorizeOriginalScope?.(actor,scope));
     return repository.transaction(actor, async (tx) => {
       await tx.requireProvisioning(scope, false);
       const found = await tx.readReceipt(scope, operationId);
@@ -165,7 +167,7 @@ export function createFleetWorkService(
     raw: unknown,
   ): Promise<FleetWorkReceipt> => {
     const command = FleetWorkCommandSchema.parse(raw);
-    requireOriginalActor(actor, command.scope, true);
+    requireOriginalActor(actor, command.scope, true,actor.sv!==command.scope.sessionVersion&&!!await repository.authorizeOriginalScope?.(actor,command.scope));
     const fingerprint = fleetWorkFingerprint(command),
       effects: Array<() => Promise<unknown>> = [];
     const transactionalActor = { ...actor };

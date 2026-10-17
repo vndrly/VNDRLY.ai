@@ -21,7 +21,7 @@ const evidence=createFleetEvidenceUploadService(createDatabaseFleetEvidenceUploa
 const scopeInput=z.object({scope:FleetWorkScopeSchema}).strict();
 /** Only activate after all commercial readers and native/browser reconciliation
  * acceptance gates pass. Provisioning does not grant additional company roles. */
-export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;enabled?:()=>boolean;repository?:Pick<typeof repository,"provision"|"readScope">&Partial<Pick<typeof repository,"renewProvision">>;service?:Pick<typeof service,"read"|"apply">;evidence?:typeof evidence}){
+export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;enabled?:()=>boolean;repository?:Pick<typeof repository,"provision"|"readScope">&Partial<Pick<typeof repository,"renewProvision"|"reauthorizeOriginal">>;service?:Pick<typeof service,"read"|"apply">;evidence?:typeof evidence}){
  const router=Router(),repo=options.repository??repository,work=options.service??service,uploads=options.evidence??evidence,enabled=options.enabled??(()=>process.env.FLEET_COMMERCIAL_WORK_V2==="1");
  const endpoint=(operation:(req:Request)=>Promise<unknown>)=>async(req:Request,res:import("express").Response)=>{
   res.setHeader("Cache-Control","no-store");try{if(!enabled())throw new FleetError("fleet.commercial_work_not_activated",409);res.json(await operation(req));}catch(error){if(error instanceof FleetError){res.status(error.status).json({code:error.code});return;}if(error instanceof z.ZodError){res.status(400).json({code:"fleet.invalid_request"});return;}req.log?.error({err:error},"Fleet work request failed");res.status(500).json({code:"fleet.internal_error"});}
@@ -31,6 +31,7 @@ export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;e
  router.post("/fleet/work/assistant/review",endpoint(req=>readFleetAssistantReview(options.actor(req),req.body)));
  router.post("/fleet/work/assistant/recovery",endpoint(req=>readFleetAssistantRecovery(options.actor(req),req.body)));
  router.post("/fleet/work/provision",endpoint(req=>repo.provision(options.actor(req),req.body)));
+ router.post("/fleet/work/provision/reauthorize",endpoint(req=>{if(!repo.reauthorizeOriginal)throw new FleetError("fleet.recovery_unavailable",503);return repo.reauthorizeOriginal(options.actor(req),req.body);}));
  router.post("/fleet/work/provision/renew",endpoint(req=>{if(!repo.renewProvision)throw new FleetError("fleet.provision_renewal_unavailable",503);return repo.renewProvision(options.actor(req),req.body);}));
  router.post("/fleet/work/prepare-create",endpoint(req=>{const body=scopeInput.extend({detailId:z.uuid(),billingSiteId:z.number().int().positive(),ticketId:z.number().int().positive().nullable()}).parse(req.body);const {scope,...input}=body;return repo.readScope(options.actor(req),scope,context=>prepareFleetWorkCreation(context,input));}));
  router.post("/fleet/work/commands",endpoint(req=>work.apply(options.actor(req),req.body)));

@@ -18,10 +18,14 @@ export async function synchronizeFleetWork(scope:FleetWorkScope,options:{journal
    catch{current();await journal.recordLookupFailure(entry.command.operationId,now().toISOString());unknown++;}
   }
   state=await journal.readState();
-  const batch=(await journal.nextBatch(now().toISOString())).filter(command=>!["evidence.stage","compliance.document.stage"].includes(command.kind)).slice(0,options.limit??20);
-  for(const command of batch){current();await journal.markSending(command.operationId,now().toISOString());
-   try{const receipt=FleetWorkReceiptSchema.parse(await transport.apply(command));current();await journal.applyReceipt(scope,receipt);if(["applied","duplicate"].includes(receipt.status))applied++;else held++;}
-   catch{current();await journal.markUnknown(command.operationId);unknown++;}
+  const attempted=new Set<string>(),limit=options.limit??20;
+  while(attempted.size<limit){
+   const batch=(await journal.nextBatch(now().toISOString())).filter(command=>!attempted.has(command.operationId)&&!["evidence.stage","compliance.document.stage"].includes(command.kind)).slice(0,limit-attempted.size);
+   if(!batch.length)break;
+   for(const command of batch){attempted.add(command.operationId);current();await journal.markSending(command.operationId,now().toISOString());
+    try{const receipt=FleetWorkReceiptSchema.parse(await transport.apply(command));current();await journal.applyReceipt(scope,receipt);if(["applied","duplicate"].includes(receipt.status))applied++;else held++;}
+    catch{current();await journal.markUnknown(command.operationId);unknown++;}
+   }
   }
   return {applied,held,unknown,...await journal.readStatus(scope)};
  })();active.set(key,run);try{return await run;}finally{if(active.get(key)===run)active.delete(key);}

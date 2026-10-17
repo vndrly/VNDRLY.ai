@@ -27,12 +27,17 @@ export const FleetRateCardRevisionSchema = z.object({
   }
 });
 export type FleetRateCardRevision = z.infer<typeof FleetRateCardRevisionSchema>;
+/** Partner-owned agreement terms; identity, approver and revision are server facts. */
+export const FleetAgreementTermsSchema = FleetRateCardRevisionSchema.pick({ basis:true,unitRate:true,effectiveFrom:true,effectiveUntil:true,minimum:true,detention:true,extras:true,notes:true });
+export const SaveFleetAgreementSchema = z.object({ operationId:z.uuid(), expectedApprovalRevision:z.string().min(1).max(200), terms:FleetAgreementTermsSchema }).strict();
+export type SaveFleetAgreement = z.infer<typeof SaveFleetAgreementSchema>;
+
 export const FleetPricingIntentSchema = z.discriminatedUnion("mode", [
   z.object({ mode: z.literal("priced"), rateCard: FleetRateCardRevisionSchema }).strict(),
   z.object({ mode: z.literal("unpriced"), reason: z.enum(["offline_reference_missing", "agreement_unresolved", "service_unresolved", "approval_required"]), serviceId: positiveId.nullable(), approvalRef: FleetApprovalReferenceSchema.nullable() }).strict(),
 ]);
 export type FleetPricingIntent = z.infer<typeof FleetPricingIntentSchema>;
-export const FleetQuantityEvidenceSchema = z.object({ id: z.uuid(), cycleId: z.uuid().nullable(), kind: z.enum(["planned", "picked_up", "delivered", "accepted", "billable"]), quantity: nonnegativeDecimal, unit: FleetQuantityUnitSchema, source: z.enum(["meter", "scale", "manifest", "recipient", "manual", "reviewed_conversion"]), evidenceReferences: z.array(z.string().trim().min(1).max(1000)), capturedAt: timestamp, recordedByUserId: positiveId, conversion: z.object({ originalQuantity: nonnegativeDecimal, originalUnit: FleetQuantityUnitSchema, factor: positiveDecimal, reviewedByUserId: positiveId, reviewedAt: timestamp }).strict().optional() }).strict().superRefine((value, ctx) => {
+export const FleetQuantityEvidenceSchema = z.object({ id: z.uuid(), cycleId: z.uuid().nullable(), kind: z.enum(["planned", "picked_up", "delivered", "accepted", "billable"]), quantity: nonnegativeDecimal, unit: FleetQuantityUnitSchema, source: z.enum(["meter", "scale", "manifest", "recipient", "manual", "reviewed_conversion"]), evidenceReferences: z.array(z.string().trim().min(1).max(1000)), capturedAt: timestamp, recordedByUserId: positiveId, conversion: z.object({ originalQuantity: nonnegativeDecimal, originalUnit: FleetQuantityUnitSchema, factor: positiveDecimal, divisor:positiveDecimal.optional(), rounding:z.enum(["half_away_from_zero","toward_zero","away_from_zero"]).optional(), reviewedByUserId: positiveId, reviewedAt: timestamp }).strict().optional() }).strict().superRefine((value, ctx) => {
   if ((value.source === "reviewed_conversion") !== Boolean(value.conversion)) ctx.addIssue({ code: "custom", path: ["conversion"], message: "Conversion source and reviewed factor must be recorded together" });
 });
 export type FleetQuantityEvidence = z.infer<typeof FleetQuantityEvidenceSchema>;
@@ -42,6 +47,7 @@ export const FleetQuantityReviewSelectionSchema = z.object({
   evidenceId: z.uuid(), expectedReviewRevision: z.number().int().nonnegative(),
   decision: z.enum(["accept_as_billable", "reject"]),
   reason: z.string().trim().min(1).max(2000),
+  conversion:z.object({unit:FleetQuantityUnitSchema,factor:positiveDecimal,divisor:positiveDecimal,rounding:z.enum(["half_away_from_zero","toward_zero","away_from_zero"])}).strict().optional(),
 }).strict();
 export const FleetQuantityReviewSchema = z.object({
   version: z.literal(2), revision: positiveId, operationId: z.uuid(), vendorId: positiveId,

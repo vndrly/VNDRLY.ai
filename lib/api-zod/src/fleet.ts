@@ -18,7 +18,7 @@ import {
   FleetDetailSelectionSchema,
   FleetResourceAssignmentSchema,
 } from "./fleet-run-assignment";
-import { FleetCanonicalIdSchema } from "./fleet-details";
+import { FleetDetailSnapshotSchema, FleetCanonicalIdSchema } from "./fleet-details";
 import {
   FleetRoutePlanSchema,
   fleetPhysicalStopsMatch,
@@ -141,6 +141,7 @@ export const FleetRunEventHistorySchema = z.object({
 }).strict();
 export const FleetRunSchema = z
   .object({
+    localWork:z.object({createOperationId:z.uuid(),originStopId:z.uuid(),snapshot:FleetDetailSnapshotSchema,ticket:z.discriminatedUnion("type",[z.object({type:z.literal("local"),kind:z.literal("ticket"),id:z.uuid()}).strict(),z.object({type:z.literal("canonical"),kind:z.literal("ticket"),id:z.number().int().positive(),version:z.number().int().positive()}).strict()]),state:z.literal("pending_server_acceptance")}).strict().optional(),
     runOrder: FleetRunOrderSchema.optional(),
     routePlan: FleetRoutePlanSchema.optional(),
     resourceAssignment: FleetResourceAssignmentSchema.optional(),
@@ -686,3 +687,5 @@ export type FleetGateLink = {
   observation: FleetGateObservation;
   automaticAdmissionCreated: false;
 };
+
+export type FleetDefinition = z.infer<typeof FleetDefinitionSchema>;

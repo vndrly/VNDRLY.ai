@@ -149,3 +149,7 @@ export function workdayTimeInRange(
 /** Assistants may report only the consenting current worker, at actual server
  * execution time. Original-scope offline commands remain a separate capture. */
 export const WorkdayAssistantInputSchema=z.object({operationId:z.uuid(),action:WorkdayCommandSchema.shape.action,expectedShiftId:z.uuid().nullable(),timezone:WorkdayCommandSchema.shape.timezone}).strict();
+
+export const WorkdayAdjustmentInputSchema=z.object({operationId:z.uuid(),expectedVersion:z.number().int().positive(),adjustmentMinutes:z.string().regex(/^-?(?:0|[1-9]\d{0,4})(?:\.\d{1,3})?$/),reason:z.string().trim().min(1).max(2000)}).strict();
+export const WorkdayAdjustmentSchema=WorkdayAdjustmentInputSchema.extend({shiftId:z.uuid(),owner:WorkdayOwnerSchema,workerUserId:z.number().int().positive(),recordedByUserId:z.number().int().positive(),recordedAt:z.iso.datetime({offset:true}),source:z.literal("office_adjustment"),payrollApproved:z.literal(false)}).strict();
+export const WorkdayHistoryPageSchema=z.object({items:z.array(z.object({...WorkdaySnapshotSchema.shape,reportedWorkMillisecondsInRange:z.number().nonnegative().nullable(),officeAdjustments:z.array(WorkdayAdjustmentSchema).default([])})),range:z.object({start:z.iso.datetime({offset:true}),end:z.iso.datetime({offset:true})}),nextCursor:z.string().nullable()});

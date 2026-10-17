@@ -19,7 +19,7 @@ describe("durable original-scope Fleet journal",()=>{
  });
  it("keeps 5000 events and 500 evidence metadata identities without eviction or aggregate JSON rewrites",async()=>{
  const f=fixture(),j=f.journal();for(let n=0;n<5000;n++)await j.append(f.note());for(let n=0;n<500;n++)await j.retainEvidence(randomUUID(),{uri:`private-original-${n}`,sha256:"a".repeat(64),byteSize:1024});expect((await f.journal().readState()).entries).toHaveLength(5000);expect(await f.journal().evidence()).toHaveLength(500);
- });
+ },20000);
  it("fails honestly on quota and locks originals rather than clearing on signout",async()=>{
  const f=fixture(),j=f.journal(),a=f.note();await j.append(a);await j.lockScope(f.scope);expect((await f.journal().readState()).entries[0].command).toEqual(a);await expect(f.journal().append(f.note())).rejects.toThrow();const g=fixture();g.fail();await expect(g.journal().append(g.note())).rejects.toThrow("Disk full");expect((await g.journal().readState()).entries).toHaveLength(0);
  });

@@ -1,4 +1,4 @@
-import {fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
+import {fleetAuxiliaryToolRequest,fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
 import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
 import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
@@ -225,6 +225,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     try { return fleetInventoryRequest(name, input); } catch { return { error: "Supply exact reviewed Fleet Inventory fields, current version and authorized asset ID." }; }
   }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
+    const auxiliary=fleetAuxiliaryToolRequest(name,input);if(auxiliary)return auxiliary;
+    if(name==="query_fleet_worker_day"){const parsed=z.object({workerUserId:z.number().int().positive(),start:z.iso.datetime({offset:true}),end:z.iso.datetime({offset:true}),after:z.number().int().positive().optional()}).strict().safeParse(input);if(!parsed.success)return {error:"Select an exact worker and day range."};const {workerUserId,...range}=parsed.data;return request("GET",`/work-hub/workday/workers/${workerUserId}?${new URLSearchParams(Object.entries(range).map(([k,v])=>[k,String(v)]))}`);}
     const commercial=fleetCommercialToolRequest(name,input);if(commercial)return commercial;
     if(name==="query_fleet_monitoring_rules")return z.object({}).strict().safeParse(input).success?request("GET","/fleet/monitoring"):{error:"This read accepts no scope override."};
     if(name==="query_fleet_assignment_delivery"){const body=z.object({runId:z.uuid()}).strict().safeParse(input);return body.success?request("GET",`/fleet/runs/${body.data.runId}/assignment-delivery`):{error:"Select an exact authorized run."};}

@@ -191,7 +191,7 @@ export function FleetRunBillingFields({
             (item.afeNumber === undefined ||
               item.afeNumber === value.afeNumber.trim()),
         )
-      : data.tickets.some(
+      : (!workSession||data.workTypes.some(item=>item.id===Number(value.workTypeId)&&(item.afeNumber===undefined||item.afeNumber===value.afeNumber.trim())))&&data.tickets.some(
           (item) =>
             item.id === Number(value.ticketId) &&
             item.siteId === siteId &&
@@ -247,7 +247,7 @@ export function FleetRunBillingFields({
             }
           />
         </label>
-        {data && value.mode === "new_ticket" && (
+        {data && (value.mode === "new_ticket"||!!workSession) && (
           <label>
             {c.service}
             <select

@@ -43,22 +43,29 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
  }
  const scope=provision.scope;
  if(scope.owner.type!=="vendor"||scope.owner.id!==account.companyId||scope.userId!==account.userId||scope.membershipId!==account.membershipId||scope.sessionVersion!==account.sessionVersion)throw Error("Original Fleet work scope changed");
- current();await options.index.transaction(tx=>tx.set("work-session",key,JSON.stringify(provision)));
+ current();await options.index.transaction(async tx=>{await tx.set("work-session",key,JSON.stringify(provision));await tx.set("fleet-provisions",scope.provisioningId,JSON.stringify(provision));});
  const journal=await options.openJournal(scope),transport={
   lookup:async(command:FleetWorkCommand)=>z.object({receipt:FleetWorkReceiptSchema.nullable(),checkedAt:z.iso.datetime()}).parse(await options.http(`/api/fleet/work/operations/${command.operationId}`,{scope})),
   apply:async(command:FleetWorkCommand)=>FleetWorkReceiptSchema.parse(await options.http("/api/fleet/work/commands",command)),
+ };
+ const priorRecords=async()=>{current();return (await options.index.transaction(tx=>tx.values("fleet-provisions"))).map(raw=>provisionSchema.parse(JSON.parse(raw))).filter(record=>record.scope.provisioningId!==scope.provisioningId&&record.scope.owner.type==="vendor"&&record.scope.owner.id===account.companyId&&record.scope.userId===account.userId&&record.scope.membershipId===account.membershipId);};
+ const drainPrior=async(record:ReturnType<typeof provisionSchema.parse>)=>{current();const original=record.scope,retained=await options.openJournal(original),bound={lookup:async(command:FleetWorkCommand)=>z.object({receipt:FleetWorkReceiptSchema.nullable(),checkedAt:z.iso.datetime()}).parse(await options.http(`/api/fleet/work/operations/${command.operationId}`,{scope:original})),apply:async(command:FleetWorkCommand)=>FleetWorkReceiptSchema.parse(await options.http("/api/fleet/work/commands",command))};
+  for(const entry of (await retained.readState()).entries.filter(row=>["needs_reconciliation","denied"].includes(row.delivery.state)).slice(0,25)){try{const value=await bound.lookup(entry.command);if(value.receipt&&["applied","duplicate","retained"].includes(value.receipt.status))await retained.applyReceipt(original,value.receipt);}catch{current();}}
+  await synchronizeFleetWork(original,{journal:retained,transport:bound,isCurrent:options.isCurrent});if(retained.readEvidencePart&&options.putEvidencePart&&options.hashBytes)await synchronizeFleetEvidence({scope:original,journal:retained,isCurrent:options.isCurrent,http:options.http,put:(path,bytes,hash)=>options.putEvidencePart!(path,bytes,hash,original),read:(...args)=>retained.readEvidencePart!(...args),hash:options.hashBytes});return retained.readStatus(original);
  };
  let synchronizing:Promise<unknown>|null=null;
  const synchronize=()=>{if(synchronizing)return synchronizing;const task=(options.withSynchronizationLock??(work=>work()))(async()=>{
   current();if(Date.parse(provision!.expiresAt)<=Date.now()){const renewed=provisionSchema.parse(await options.http("/api/fleet/work/provision/renew",{scope}));current();if(JSON.stringify(renewed.scope)!==JSON.stringify(scope))throw Error("Renewal cannot rebind original work");provision=renewed;await options.index.transaction(tx=>tx.set("work-session",key,JSON.stringify(renewed)));}
   current();const entries=(await journal.readState()).entries.filter(row=>["needs_reconciliation","denied"].includes(row.delivery.state)),cursor=Number(await journal.readCache("resolution-cursor")??0),ordered=[...entries.filter(row=>row.sequence>cursor),...entries.filter(row=>row.sequence<=cursor)];
   for(const entry of ordered.slice(0,25)){current();try{const saved=await transport.lookup(entry.command);current();if(saved.receipt&&["applied","duplicate","retained"].includes(saved.receipt.status))await journal.applyReceipt(scope,saved.receipt);}catch{current();}await journal.putCache("resolution-cursor",entry.sequence);}
-  const result=await synchronizeFleetWork(scope,{journal,transport,isCurrent:options.isCurrent});if(journal.readEvidencePart&&options.putEvidencePart&&options.hashBytes)await synchronizeFleetEvidence({scope,journal,isCurrent:options.isCurrent,http:options.http,put:(path,bytes,hash)=>options.putEvidencePart!(path,bytes,hash,scope),read:(...args)=>journal.readEvidencePart!(...args),hash:options.hashBytes});return result;
+  const result=await synchronizeFleetWork(scope,{journal,transport,isCurrent:options.isCurrent});if(journal.readEvidencePart&&options.putEvidencePart&&options.hashBytes)await synchronizeFleetEvidence({scope,journal,isCurrent:options.isCurrent,http:options.http,put:(path,bytes,hash)=>options.putEvidencePart!(path,bytes,hash,scope),read:(...args)=>journal.readEvidencePart!(...args),hash:options.hashBytes});for(const prior of await priorRecords()){const authorized=await options.index.transaction(tx=>tx.get("fleet-reauthorized",prior.scope.provisioningId));if(authorized===String(account.sessionVersion))try{await drainPrior(prior);}catch{current();}}return result;
  });synchronizing=task;void task.finally(()=>{if(synchronizing===task)synchronizing=null;}).catch(()=>undefined);return task;};
  const execute=async(command:FleetWorkCommand)=>{current();await journal.append(command);let timer:ReturnType<typeof setTimeout>|undefined;try{await Promise.race([synchronize(),new Promise<void>(resolve=>{timer=setTimeout(resolve,1500);})]);}catch{current();}finally{if(timer!==undefined)clearTimeout(timer);}
    const entry=(await journal.readState()).entries.find(row=>row.command.operationId===command.operationId)!;
    return {state:entry.delivery.state,canonicalApplied:entry.delivery.state==="applied",receipt:entry.delivery.receipt,operationId:command.operationId};
  };
+ const dependenciesFor=async(run:FleetRun)=>{const entries=(await journal.readState()).entries.filter(e=>("activity" in e.command.payload&&e.command.payload.activity.id===run.id)||(e.command.kind==="activity.create"&&e.command.payload.activityId===run.id)).sort((a,b)=>a.sequence-b.sequence);return entries.length?[entries.at(-1)!.command.operationId]:[];};
+ const referencesFor=(run:FleetRun)=>({activity:run.localWork?{type:"local" as const,kind:"activity" as const,id:run.id}:{type:"canonical" as const,kind:"activity" as const,id:run.id,version:run.version},ticket:run.localWork?.ticket??{type:"canonical" as const,kind:"ticket" as const,...run.ticketReference!}});
  const prepareSelection=async(detailId:string,billingSiteId:number,ticketId:number|null)=>{
   const body={scope,detailId:z.uuid().parse(detailId),billingSiteId:z.number().int().positive().parse(billingSiteId),ticketId:ticketId===null?null:z.number().int().positive().parse(ticketId)},key=`prepare:${JSON.stringify(body)}`;
   try{current();const prepared=FleetWorkPreparationSchema.parse(await options.http("/api/fleet/work/prepare-create",body));current();await journal.putCache(key,prepared);return prepared;}
@@ -66,7 +73,10 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
  };
  const prepareCreate=async(raw:unknown)=>{const input=CreateFleetRunSchema.parse(raw);if(!input.detailSelection)throw Error("Choose a saved Detail for durable Fleet work");return prepareSelection(input.detailSelection.detailId,input.stops[0].siteId,input.billing.mode==="existing_ticket"?input.billing.ticketId:null);};
 
- return {scope,journal,get expiresAt(){return provision!.expiresAt;},enabled,synchronize,execute,prepareCreate,prepareSelection,
+ return {scope,journal,
+  async priorWork(){const records=await priorRecords(),items=[];for(const record of records){try{const retained=await options.openJournal(record.scope),status=await retained.readStatus(record.scope);if(status.pending||status.pendingEvidence||status.needsReconciliation)items.push({provisioningId:record.scope.provisioningId,sessionVersion:record.scope.sessionVersion,...status});}catch{items.push({provisioningId:record.scope.provisioningId,sessionVersion:record.scope.sessionVersion,pending:0,pendingEvidence:0,needsReconciliation:1,locked:true});}}return items;},
+  async reauthorizePriorWork(provisioningId:string,reason:string){current();const record=(await priorRecords()).find(row=>row.scope.provisioningId===provisioningId);if(!record)throw Error("Original retained account context is unavailable");const renewed=provisionSchema.parse(await options.http("/api/fleet/work/provision/reauthorize",{scope:record.scope,operationId:options.uuid(),reason}));current();if(JSON.stringify(renewed.scope)!==JSON.stringify(record.scope))throw Error("Recovery cannot rebind originals");await options.index.transaction(async tx=>{await tx.set("fleet-provisions",provisioningId,JSON.stringify(renewed));await tx.set("fleet-reauthorized",provisioningId,String(account.sessionVersion));});return drainPrior(renewed);},
+  get expiresAt(){return provision!.expiresAt;},enabled,synchronize,execute,prepareCreate,prepareSelection,
   async captureAncillary(run:FleetRun,intent:FleetAncillaryIntent){
    current();if(run.companyId!==account.companyId||!run.ticketReference||!run.resourceAssignment)throw Error("An original ticketed Detail is required");
    const source={kind:intent.kind,input:intent.input,recordId:"recordId" in intent?intent.recordId:null,targetId:"target" in intent?intent.target.id:null},key=`ancillary-source:${intent.input.operationId}`,prior=await journal.readCache(key),original=(await journal.readState()).entries.find(row=>row.command.operationId===intent.input.operationId);
@@ -102,24 +112,25 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
    return execute(FleetWorkCommandSchema.parse({version:2,scope,operationId:options.uuid(),capturedAt:new Date().toISOString(),timeZone,dependencies:[],kind:input.kind,payload}));
   },
   async captureQuantity(run:FleetRun,raw:FleetReportedQuantityInput){
-   current();if(!run.ticketReference||run.companyId!==account.companyId||run.driverUserId!==account.userId||run.resourceAssignment?.snapshot?.detail.driverUserId!==account.userId)throw Error("Original own-driver quantity context is required");
+   current();if((!run.ticketReference&&!run.localWork)||run.companyId!==account.companyId||run.driverUserId!==account.userId||(run.resourceAssignment?.snapshot??run.localWork?.snapshot)?.detail.driverUserId!==account.userId)throw Error("Original own-driver quantity context is required");
    const input=FleetReportedQuantityInputSchema.parse(raw),capturedAt=new Date().toISOString();
-   return execute(FleetWorkCommandSchema.parse({version:2,scope,operationId:options.uuid(),capturedAt,timeZone:run.schedule?.timezone??"UTC",dependencies:[],kind:"quantity.record",payload:{activity:{type:"canonical",kind:"activity",id:run.id,version:run.version},ticket:{type:"canonical",kind:"ticket",...run.ticketReference},evidence:{...input,id:options.uuid(),capturedAt,recordedByUserId:account.userId}}}));
+   return execute(FleetWorkCommandSchema.parse({version:2,scope,operationId:options.uuid(),capturedAt,timeZone:run.schedule?.timezone??"UTC",dependencies:await dependenciesFor(run),kind:"quantity.record",payload:{...referencesFor(run),evidence:{...input,id:options.uuid(),capturedAt,recordedByUserId:account.userId}}}));
   },
   async captureEvidence(run:FleetRun,source:unknown,contentType:string,kind:"photo"|"scale"|"receipt"|"signature",notes:string){
-   current();if(!journal.stageEvidence||!run.resourceAssignment?.snapshot||!run.ticketReference||run.companyId!==account.companyId||run.driverUserId!==account.userId)throw Error("Original own-driver evidence context is required");
+   current();if(!journal.stageEvidence||!(run.resourceAssignment?.snapshot??run.localWork?.snapshot)||(!run.ticketReference&&!run.localWork)||run.companyId!==account.companyId||run.driverUserId!==account.userId)throw Error("Original own-driver evidence context is required");
    const operationId=options.uuid(),id=options.uuid(),capturedAt=new Date().toISOString();
-   await journal.stageEvidence(id,source,contentType,media=>({version:2,scope,operationId,capturedAt,timeZone:run.schedule?.timezone??"UTC",dependencies:[],kind:"evidence.stage",payload:{evidence:{type:"local",kind:"evidence",id},activity:{type:"canonical",kind:"activity",id:run.id,version:run.version},ticket:{type:"canonical",kind:"ticket",...run.ticketReference!},kind,byteSize:media.byteSize,sha256:media.sha256,contentType:contentType as "image/jpeg",notes,assignment:run.resourceAssignment!.snapshot}}));
+   const dependencies=await dependenciesFor(run);
+   await journal.stageEvidence(id,source,contentType,media=>({version:2,scope,operationId,capturedAt,timeZone:run.schedule?.timezone??"UTC",dependencies,kind:"evidence.stage",payload:{evidence:{type:"local",kind:"evidence",id},...referencesFor(run),kind,byteSize:media.byteSize,sha256:media.sha256,contentType:contentType as "image/jpeg",notes,assignment:(run.resourceAssignment?.snapshot??run.localWork!.snapshot)}}));
    return {operationId,localEvidenceId:id,canonicalApplied:false as const,durability:"durable" as const};
   },
   async captureCreate(raw:unknown){const input=CreateFleetRunSchema.parse(raw),sourceKey=`create-source:${input.operationId}`,priorSource=await journal.readCache(sourceKey),original=(await journal.readState()).entries.find(row=>row.command.operationId===input.operationId);
    if(priorSource&&JSON.stringify(priorSource)!==JSON.stringify(input))throw Error("Cannot change an original Fleet request; use a new operation");
-   if(original){if(original.command.kind!=="activity.create"||!priorSource)throw Error("Retained original Fleet request needs recovery");return execute(original.command);}
-   const preparation=await prepareCreate(input),command=buildFleetCreateIntent({scope,input,preparation,uuid:options.uuid,now:()=>new Date()});await journal.putCache(sourceKey,input);return execute(command);
+   if(original){if(original.command.kind!=="activity.create"||!priorSource)throw Error("Retained original Fleet request needs recovery");return {...await execute(original.command),localActivityId:original.command.payload.activityId};}
+   const preparation=await prepareCreate(input),command=buildFleetCreateIntent({scope,input,preparation,uuid:options.uuid,now:()=>new Date()});await journal.putCache(sourceKey,input);return {...await execute(command),localActivityId:command.payload.activityId};
   },
   async captureAction(run:FleetRun,raw:FleetActionInput,timeZone:string){const action=FleetActionInputSchema.parse(raw),original=(await journal.readState()).entries.find(row=>row.command.operationId===action.operationId);
    if(original){if(original.command.kind!=="activity.action"||JSON.stringify(original.command.payload.action)!==JSON.stringify(action))throw Error("Cannot change an original Fleet action");return execute(original.command);}
-   return execute(buildFleetActionIntent(scope,run,action,()=>new Date(),timeZone));
+   const command=buildFleetActionIntent(scope,run,action,()=>new Date(),timeZone);command.dependencies=await dependenciesFor(run);return execute(command);
   },
  };
 }

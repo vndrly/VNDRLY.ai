@@ -5,6 +5,7 @@ import {
   type FleetRateCardRevision,
 } from "@workspace/api-zod";
 import {
+  calculateFleetActivityCharges,
   calculateFleetCharges,
   selectFleetRateAuthority,
   type FleetChargeCalculation,
@@ -516,4 +517,19 @@ it("refuses circular charges, missing billable quantities, ambiguous facts and i
   expect(() =>
     calculateFleetCharges({ ...priced, existingCharges: saved }),
   ).toThrow("fleet.pricing_existing_charge_changed");
+});
+
+it("uses an explicitly office-reviewed rational conversion and refuses altered converted amounts",()=>{
+ const i=input(card(),"1");i.quantityEvidence[0]={...i.quantityEvidence[0],source:"reviewed_conversion",conversion:{originalQuantity:"42",originalUnit:"us_gallon",factor:"1",divisor:"42",rounding:"half_away_from_zero",reviewedByUserId:4,reviewedAt:at}};
+ expect(calculateFleetCharges(i)[0].quantity).toBe("1");
+ i.quantityEvidence[0].quantity="1.01";expect(()=>calculateFleetCharges(i)).toThrow();
+});
+
+it("reviews primary cycles before applying one activity minimum, detention and flat extras",()=>{
+ const c=card({minimum:{amount:"100",scope:"run"},detention:{ratePerHour:"60",freeMinutes:"0",incrementMinutes:"1",rounding:"half_away_from_zero",allowHourlyOverlap:false},extras:[{code:"mobilize",kind:"mobilization",basis:"flat",rate:"25",unit:null,eligibleChargeCodes:[],requiresApproval:true,agreementReference:"agreed"}]});
+ const a=input(c,"1"),b=input(c,"1");a.scope.cycleId=id(10);a.quantityEvidence[0].cycleId=id(10);b.scope.cycleId=id(11);b.quantityEvidence[0]={...b.quantityEvidence[0],id:id(12),cycleId:id(11)};
+ for(const x of [a,b]){x.reviewedIntervals=[{id:id(20),kind:"waiting",startAt:"2026-10-16T10:00:00Z",endAt:"2026-10-16T11:00:00Z",reviewedByUserId:4,reviewedAt:at}];x.additionalCharges=[{code:"mobilize",quantity:"1",evidenceIds:[id(20)],approvedByUserId:4,approvedAt:at}];}
+ const result=calculateFleetActivityCharges([a,b]);expect(result.charges.filter(c=>c.kind==="primary")).toHaveLength(2);expect(result.charges.filter(c=>c.kind==="minimum_top_up").map(c=>c.currencyAmount)).toEqual(["80"]);expect(result.charges.filter(c=>c.kind==="detention")).toHaveLength(1);expect(result.charges.filter(c=>c.code==="mobilize")).toHaveLength(1);
+ const percentage=structuredClone([a,b]);for(const step of percentage){step.rateCard.extras.push({code:"fuel",kind:"fuel_surcharge",basis:"percent",rate:"10",unit:null,eligibleChargeCodes:["primary"],requiresApproval:true,agreementReference:"agreed fuel"});step.additionalCharges.push({code:"fuel",quantity:"1",evidenceIds:[id(20)],approvedByUserId:4,approvedAt:at});}expect(calculateFleetActivityCharges(percentage).charges.filter(c=>c.code==="fuel").map(c=>c.currencyAmount)).toEqual(["2"]);
+ let existing=result.charges;for(const step of result.inputs){const again=calculateFleetCharges({...step,scope:{...step.scope,stage:"ticket_finalize"},existingCharges:existing});expect(again.every(c=>existing.some(s=>s.id===c.id))).toBe(true);}
 });

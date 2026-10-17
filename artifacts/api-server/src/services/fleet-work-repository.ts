@@ -144,6 +144,12 @@ export function createDatabaseFleetWorkRepository(options: {
       },
       actor,
     );
+  async function hasOriginalAuthorization(client:PoolClient,actor:FleetActor,scope:FleetWorkScope){
+    if(scope.sessionVersion===actor.sv)return true;
+    if(scope.sessionVersion>Number(actor.sv)||scope.owner.type!=="vendor"||scope.owner.id!==actor.companyId||scope.userId!==actor.userId||scope.membershipId!==actor.activeMembershipId)return false;
+    const row=(await client.query("SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-reauthorization' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,scope.provisioningId])).rows[0];
+    return !!row&&row.user_id===actor.userId&&row.tool_output.currentSessionVersion===actor.sv&&isDeepStrictEqual(row.tool_output.scope,scope);
+  }
   function scopedTransaction<T>(
     actor: FleetActor,
     operation: (
@@ -162,7 +168,7 @@ export function createDatabaseFleetWorkRepository(options: {
               scope.owner.id !== actor.companyId ||
               scope.userId !== actor.userId ||
               scope.membershipId !== actor.activeMembershipId ||
-              scope.sessionVersion !== actor.sv
+              !await hasOriginalAuthorization(client,actor,scope)
             )
               throw new FleetError("fleet.work_scope_changed", 403);
             await requireDevice(client, actor, z.uuid().parse(scope.deviceId));
@@ -324,5 +330,16 @@ export function createDatabaseFleetWorkRepository(options: {
     const value=provisionSchema.parse(saved?{...saved,renewedAt:issuedAt,expiresAt:new Date(now().getTime()+7*86400000).toISOString()}:{version:2,scope,appVersion:"fleet-assistant-v2",issuedAt,expiresAt:new Date(now().getTime()+7*86400000).toISOString(),revokedAt:null});
     await append(client,actor,"fleet-work-provision",provisioningId,value);return value;
   },actor);
-  return { ...repository, provision, renewProvision, assistantProvision, withScope, readScope };
+  const authorizeOriginalScope=(actor:FleetActor,scope:FleetWorkScope)=>base.transaction(actor.companyId,actor.userId,async(_state,client)=>hasOriginalAuthorization(client,actor,scope),actor);
+  const reauthorizeOriginal=(actor:FleetActor,raw:unknown)=>base.transaction(actor.companyId,actor.userId,async(state,client)=>{
+    const {scope,operationId,reason}=z.object({scope:FleetWorkScopeSchema,operationId:z.uuid(),reason:z.string().trim().min(1).max(2000)}).strict().parse(raw);
+    if(actor.readOnly||scope.owner.type!=="vendor"||scope.owner.id!==actor.companyId||scope.userId!==actor.userId||scope.membershipId!==actor.activeMembershipId||scope.sessionVersion>Number(actor.sv)||!state.enabled||!state.grants.some(grant=>grant.userId===actor.userId&&grant.roles.length&&grant.fleetIds.some(id=>state.fleets.some(group=>group.id===id))))throw new FleetError("fleet.work_scope_changed",403);
+    await requireDevice(client,actor,scope.deviceId);
+    const row=(await client.query("SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-provision' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,scope.provisioningId])).rows[0],original=provisionSchema.safeParse(row?.tool_output);
+    if(!original.success||row.user_id!==actor.userId||original.data.revokedAt||!isDeepStrictEqual(original.data.scope,scope))throw new FleetError("fleet.work_scope_changed",403);
+    const recordedAt=now().toISOString(),value={scope,currentSessionVersion:actor.sv,operationId,reason,recordedAt};
+    await append(client,actor,"fleet-work-reauthorization",scope.provisioningId,value);
+    const saved=provisionSchema.parse({...original.data,renewedAt:recordedAt,expiresAt:new Date(now().getTime()+7*86400000).toISOString()});await append(client,actor,"fleet-work-provision",scope.provisioningId,saved);return {scope:saved.scope,expiresAt:saved.expiresAt,reauthorizedAt:recordedAt,originalRebound:false};
+  },actor);
+  return { ...repository, authorizeOriginalScope, reauthorizeOriginal, provision, renewProvision, assistantProvision, withScope, readScope };
 }

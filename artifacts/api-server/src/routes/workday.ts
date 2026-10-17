@@ -27,11 +27,13 @@ router.get(
   "/work-hub/workday",
   endpoint((session) => workdayService.current(session)),
 );
+router.post("/work-hub/workday/reauthorize",endpoint((session,req)=>workdayService.reauthorize(session,req.body)));
 router.post("/work-hub/workday/assistant-events",endpoint((session,req)=>workdayService.recordAssistant(session,req.body)));
 router.post(
   "/work-hub/workday/events",
   endpoint((session, req) => workdayService.record(session, req.body)),
 );
+router.post("/work-hub/workday/shifts/:id/adjustments",endpoint((session,req)=>workdayService.adjust(session,z.uuid().parse(req.params.id),req.body)));
 router.get(
   "/work-hub/workday/operations/:operationId",
   endpoint((session, req) =>

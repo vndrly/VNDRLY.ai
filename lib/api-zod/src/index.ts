@@ -87,3 +87,5 @@ export * from "./fleet-commercial-review";
 export * from "./fleet-reconciliation";
 
 export * from "./fleet-monitoring";
+
+export * from "./fleet-local-work";

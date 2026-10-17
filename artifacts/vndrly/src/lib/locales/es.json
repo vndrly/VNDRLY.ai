@@ -5319,7 +5319,12 @@
     "selectGateLocation": "Seleccione el acceso",
     "gpsEntry": "GPS de entrada",
     "gpsExit": "GPS de salida",
-    "gpsEvidence": {"verified":"Verificado en el acceso","mismatch":"Discrepancia GPS","unavailable":"GPS no disponible","gate_unconfigured":"Coordenadas del acceso no configuradas"},
+    "gpsEvidence": {
+      "verified": "Verificado en el acceso",
+      "mismatch": "Discrepancia GPS",
+      "unavailable": "GPS no disponible",
+      "gate_unconfigured": "Coordenadas del acceso no configuradas"
+    },
     "voiceListening": "Escuchando: diga la matrícula, el nombre del conductor, la empresa, el propósito y la duración; después, vuelva a pulsar el micrófono.",
     "voiceTranscribing": "Procesando la entrada de voz…",
     "askvDurationCaptured": "Sí. El tiempo previsto en el sitio es {{duration}}.",
@@ -5974,5 +5979,8 @@
     "kind_ticket": "Ticket",
     "kind_run": "Recorrido de conductor",
     "kind_shift": "Turno de acceso"
+  },
+  "fleet": {
+    "agreementEditor": "Acuerdo de transporte"
   }
 }

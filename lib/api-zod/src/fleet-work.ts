@@ -45,7 +45,7 @@ const base={version:z.literal(2),operationId:uuid,scope:FleetWorkScopeSchema,cap
 const capturedCompliance=FleetActionPolicySnapshotSchema.omit({mode:true}).extend({mode:FleetCompliancePolicySchema.shape.mode}).strict();
 const media={byteSize:z.number().int().positive().max(10*1024*1024),sha256:z.string().regex(/^[a-f0-9]{64}$/),contentType:z.enum(["image/jpeg","image/png","image/webp","application/pdf"])};
 const activityCreate=z.object({...base,kind:z.literal("activity.create"),payload:z.object({
- activityId:uuid,title:z.string().trim().min(1).max(200),detailReference:reference("detail"),detailSnapshot:FleetDetailSnapshotSchema,
+ activityId:uuid,accessGroupId:uuid.optional(),originStopId:uuid.optional(),dispatchAfterCreate:z.boolean().optional(),title:z.string().trim().min(1).max(200),detailReference:reference("detail"),detailSnapshot:FleetDetailSnapshotSchema,
  route:FleetRoutePlanSchema,runOrderReference:reference("run_order").nullable(),billing:FleetWorkBillingIntentSchema,
  pricingIntent:FleetPricingIntentSchema,capturePolicy:FleetCompliancePolicySchema.nullable(),compliance:capturedCompliance,
 }).strict()}).strict();

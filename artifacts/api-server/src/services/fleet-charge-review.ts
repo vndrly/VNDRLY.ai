@@ -5,7 +5,7 @@ import {parseExactDecimal,formatExact,roundExact} from "@workspace/db/format";
 import type {PoolClient} from "pg";
 import type {FleetWorkExecutionContext} from "./fleet-work-repository";
 import {FleetError} from "./fleet-repository";
-import {calculateFleetCharges,type FleetChargeCalculation,FleetPricingError} from "./fleet-pricing";
+import {calculateFleetActivityCharges,calculateFleetCharges,type FleetChargeCalculation,FleetPricingError} from "./fleet-pricing";
 import {readRetainedFleetRateAuthority,resolveFleetRateAuthority} from "./fleet-rate-authority";
 import {readFleetReviewPacket} from "./fleet-review-packet";
 import {readFleetTicketRuns,canOfficeFinalize,assertFleetTicketFinalizable} from "./fleet-billing";
@@ -73,11 +73,11 @@ export async function reviewFleetActivityCharges(context:FleetWorkExecutionConte
  const existing=await readFleetReviewedCharges(context.client,context.actor.companyId),inputs:FleetChargeCalculation[]=[];
  for(const quantity of quantities){
   const input:FleetChargeCalculation={rateCard:pricing.rateCard,scope:{vendorId:billing.context.vendorId,partnerId:billing.context.partnerId,billingSiteId:billing.context.billingSiteId,afeNumber:billing.context.afeNumber,workDate:billing.context.workDate,ticketId:billing.ticketId,runId:run.id,cycleId:quantity.cycleId,serviceId:billing.serviceId,workAt:run.events[0].capturedAt??run.events[0].recordedAt,stage:"run_review",minimumGroupKey:JSON.stringify([billing.context.partnerId,billing.context.billingSiteId,billing.context.afeNumber,billing.context.workDate,billing.serviceId,pricing.rateCard.id])},description:run.title,taxTreatment:p.taxTreatment,quantityEvidence:[quantity],reviewedIntervals:p.intervals.map(i=>({...i,reviewedByUserId:context.actor.userId,reviewedAt})),additionalCharges:p.additionalCharges.map(c=>({...c,approvedByUserId:context.actor.userId,approvedAt:reviewedAt})),existingCharges:existing};
-  let calculated:FleetCharge[];try{calculated=calculateFleetCharges(input);}catch(error){if(error instanceof FleetPricingError)throw new FleetError(error.code);throw error;}
-  for(const candidate of calculated){const charge=FleetChargeSchema.parse({...candidate,reviewedByUserId:context.actor.userId,reviewedAt});await saveCharge(context,charge);if(!existing.some(c=>c.id===charge.id))existing.push(charge);}
-  inputs.push({...input,existingCharges:[]});
+  inputs.push(input);
  }
- await append(context,"fleet-charge-review-input",run.id,{version:2,runId:run.id,operationId:command.operationId,quantityReviews:p.quantityReviews,inputs});
+ let calculation:ReturnType<typeof calculateFleetActivityCharges>;try{calculation=calculateFleetActivityCharges(inputs);}catch(error){if(error instanceof FleetPricingError)throw new FleetError(error.code);throw error;}
+ for(const candidate of calculation.charges){const charge=FleetChargeSchema.parse({...candidate,reviewedByUserId:context.actor.userId,reviewedAt});await saveCharge(context,charge);if(!existing.some(c=>c.id===charge.id))existing.push(charge);}
+ await append(context,"fleet-charge-review-input",run.id,{version:2,runId:run.id,operationId:command.operationId,quantityReviews:p.quantityReviews,inputs:calculation.inputs});
  const fleetCompliance=await assessFleetActionPolicy(context.client,context.actor,{run,action:"review",policyAt:reviewedAt,requiredCertifications:context.state.fleets.find(f=>f.id===run.fleetId)?.requiredCertifications??[]});
  run.status="completed";run.phase=null;run.version++;run.billingV2=FleetRunBillingV2Schema.parse({...billing,revision:billing.revision+1,review:{status:"reviewed",operationId:command.operationId,reviewedByUserId:context.actor.userId,reviewedAt,chargeRevision:1}});
  appendFleetRunEvent(run,{id:randomUUID(),operationId:command.operationId,type:"review",actorUserId:context.actor.userId,recordedAt:reviewedAt,capturedAt:new Date(command.capturedAt).toISOString(),source:"user_report",details:{decision:"accept",fleetCompliance,originalCapture:{capturedAt:command.capturedAt,timeZone:command.timeZone}}});

@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from "node:util";
 import { z } from "zod/v4";
 import { pool } from "@workspace/db";
 import {
+  WorkdayAdjustmentInputSchema, WorkdayAdjustmentSchema,
   WorkdayScopeSchema,
   WorkdayCommandSchema,
   WorkdayAssistantInputSchema,
@@ -256,6 +257,12 @@ async function openWorkday(client: PoolClient, scope: WorkdayScope) {
 /** A single organization/worker workday for every portal and client. Domain
  * assignment, duty/contact policy, GPS and billable work remain separate facts. */
 export function createWorkdayService(run: typeof transaction = transaction) { return {
+ reauthorize:(session:SessionPayload,raw:unknown)=>run(session,async(client,scope)=>{
+  const input=z.object({scope:WorkdayScopeSchema,reason:z.string().trim().min(1).max(2000)}).strict().parse(raw),old=input.scope;
+  if(session.realm==="demo"||session.publicDemo||old.userId!==scope.userId||old.membershipId!==scope.membershipId||!sameWorkdayOwner(old.owner,scope.owner)||old.sessionVersion>=scope.sessionVersion)throw new WorkdayError("workday.original_scope_required",403);
+  const key=createHash("sha256").update(JSON.stringify({old,currentSessionVersion:scope.sessionVersion})).digest("hex");
+  await append(client,session,scope,"workday-reauthorization",key,{scope:old,currentSessionVersion:scope.sessionVersion,reason:input.reason,recordedAt:new Date().toISOString()});return {originalScope:old,reauthorized:true,originalRebound:false};
+ }),
   recordAssistant:(session:SessionPayload,raw:unknown)=>run(session,async(client,scope)=>{
     const input=WorkdayAssistantInputSchema.parse(raw);
     if(session.realm==="demo"||session.publicDemo)throw new WorkdayError("workday.read_only",403);
@@ -278,8 +285,11 @@ export function createWorkdayService(run: typeof transaction = transaction) { re
   record: (session: SessionPayload, raw: unknown) =>
     run(session, async (client, scope) => {
       const command = WorkdayCommandSchema.parse(raw);
-      if (!isDeepStrictEqual(command.scope, scope))
-        throw new WorkdayError("workday.original_scope_required", 403);
+      if (!isDeepStrictEqual(command.scope, scope)){
+        const old=command.scope,key=createHash("sha256").update(JSON.stringify({old,currentSessionVersion:scope.sessionVersion})).digest("hex");
+        const proof=await readRecord(client,scope,"workday-reauthorization",key);
+        if(old.userId!==scope.userId||old.membershipId!==scope.membershipId||!sameWorkdayOwner(old.owner,scope.owner)||old.sessionVersion>=scope.sessionVersion||!proof||!isDeepStrictEqual(proof.scope,old)||proof.currentSessionVersion!==scope.sessionVersion)throw new WorkdayError("workday.original_scope_required",403);
+      }
       if (session.realm === "demo" || session.publicDemo)
         throw new WorkdayError("workday.read_only", 403);
       await lock(client, scope);
@@ -368,6 +378,22 @@ export function createWorkdayService(run: typeof transaction = transaction) { re
       }
       return receipt;
     }),
+  adjust:(session:SessionPayload,rawId:string,raw:unknown)=>run(session,async(client,scope)=>{
+    if(session.realm==="demo"||session.publicDemo)throw new WorkdayError("workday.read_only",403);
+    const id=z.uuid().parse(rawId),input=WorkdayAdjustmentInputSchema.parse(raw),saved=await snapshot(client,scope,id);
+    await authorizeRead(client,session,scope,saved.workerUserId);
+    if(session.membershipRole!=="admin"){
+      if(scope.owner.type!=="vendor")throw new WorkdayError("workday.office_required",403);
+      const config=FleetStateSchema.safeParse((await client.query("SELECT fleet_ops_state FROM vendors WHERE id=$1 FOR SHARE",[scope.owner.id])).rows[0]?.fleet_ops_state);
+      if(!config.success||!config.data.enabled||!config.data.grants.find(g=>g.userId===scope.userId)?.roles.some(r=>r==="fleet_manager"||r==="dispatcher"))throw new WorkdayError("workday.office_required",403);
+    }
+    await lock(client,scope,saved.workerUserId);
+    const fingerprint=createHash("sha256").update(JSON.stringify({id,input,actor:scope.userId})).digest("hex"),prior=await readRecord(client,scope,"workday-adjustment",input.operationId);
+    if(prior){if(prior.fingerprint!==fingerprint)throw new WorkdayError("workday.operation_conflict");return WorkdayAdjustmentSchema.parse(prior.adjustment);}
+    if((await snapshot(client,scope,id)).version!==input.expectedVersion)throw new WorkdayError("workday.version_conflict");
+    const adjustment=WorkdayAdjustmentSchema.parse({...input,shiftId:id,owner:scope.owner,workerUserId:saved.workerUserId,recordedByUserId:scope.userId,recordedAt:new Date().toISOString(),source:"office_adjustment",payrollApproved:false});
+    await append(client,session,scope,"workday-adjustment",input.operationId,{fingerprint,adjustment});return adjustment;
+  }),
   current: (session: SessionPayload) =>
     run(session, async (client, scope) => {
       await lock(client, scope);
@@ -424,6 +450,7 @@ export function createWorkdayService(run: typeof transaction = transaction) { re
           ...(byShift.get(event.shiftId) ?? []),
           event,
         ]);
+      const corrections=await client.query(`SELECT tool_output->'adjustment' AS adjustment FROM assistant_action_audit WHERE ${own}=$1 AND ${other} IS NULL AND target_type='workday-adjustment' AND tool_output->'adjustment'->>'shiftId'=ANY($2::text[]) ORDER BY id`,[scope.owner.id,page.map(row=>row.tool_output.id)]);
       return {
         items: page.map((row) => {
           const saved = WorkdaySnapshotSchema.parse(row.tool_output),
@@ -431,6 +458,7 @@ export function createWorkdayService(run: typeof transaction = transaction) { re
           verify(saved, captured);
           return {
             ...saved,
+            officeAdjustments:corrections.rows.map(row=>WorkdayAdjustmentSchema.parse(row.adjustment)).filter(a=>a.shiftId===saved.id),
             reportedWorkMillisecondsInRange: workdayTimeInRange(
               captured,
               input.start,

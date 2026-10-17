@@ -231,7 +231,8 @@ describe("canonical Detail persistence", () => {
     expect((await service.fleetRunOrderReceipt(f.actor,body.operationId)).order).toEqual(saved);
     expect((await service.fleetRunOrderHistory(f.actor,saved.id,{})).records.map(row=>row.order.version)).toEqual([2,1]);
     await expect(service.saveFleetRunOrder(f.actor,{...body,operationId:randomUUID()})).rejects.toMatchObject({code:"fleet.version_conflict"});
-    await expect(service.readFleetRunOrders({...f.actor,userId:f.staff[1].id},{})).rejects.toMatchObject({code:"fleet.dispatch_required"});
+    expect((await service.readFleetRunOrders({...f.actor,userId:f.staff[1].id},{})).orders).toEqual([updated]);
+    await expect(service.saveFleetRunOrder({...f.actor,userId:f.staff[1].id},{...body,operationId:randomUUID()})).rejects.toMatchObject({code:"fleet.dispatch_required"});
     await f.pool.query("UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1",[f.vendor.id,JSON.stringify(FleetCommercialSettingsSchema.parse({destinations:places.map(place=>({...place,active:false}))}))]);
     const archived=await service.saveFleetRunOrder(f.actor,{...body,operationId:randomUUID(),expectedVersion:2,order:{...updated,version:3,archivedAt:new Date().toISOString()}});
     expect((await service.readFleetRunOrders(f.actor,{})).orders).toEqual([]);

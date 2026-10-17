@@ -47,8 +47,10 @@ export function fleetConsentChallenge(issuer: string, scopes: readonly string[],
 
 /** Choices must come from the trusted site service under the current Partner membership. */
 export function partnerFleetConsentUpgradeTools(session: SessionPayload, scopes: readonly string[], choices: {sites: {siteId: number}[]} | null) {
-  if(session.role!=="partner" || !session.partnerId || !choices?.sites.length || scopes.includes("fleet:read")) return [];
-  return chatGptReadableTools(session,[...scopes,"fleet:read"]).filter(tool=>tool.name==="query_fleet_site_activity").map(tool=>({tool,scope:"fleet:read"}));
+  if(session.role!=="partner" || !session.partnerId || !choices?.sites.length) return [];
+  const reads=scopes.includes("fleet:read")?[]:chatGptReadableTools(session,[...scopes,"fleet:read"]).filter(tool=>tool.name==="query_fleet_site_activity").map(tool=>({tool,scope:"fleet:read"}));
+  const writes=session.membershipRole==="admin"&&!scopes.includes("fleet:billing")?chatGptActionTools(session,[...scopes,"fleet:billing"]).filter(tool=>tool.name==="approve_fleet_rate_agreement").map(tool=>({tool,scope:"fleet:billing"})):[];
+  return [...reads,...writes];
 }
 
 /** Platform title alone never grants company access; choices require an active support grant. */

@@ -521,6 +521,7 @@ export default function ProfileScreen() {
         </LayeredPillButton>
       ) : null}
 
+      {user?.partnerId&&canManageCompany?<LayeredPillButton onPress={()=>router.push("/fleet-agreements")} height={40} style={styles.actionBtn}><Text style={styles.actionText}>{t("fleet.agreementEditor")}</Text></LayeredPillButton>:null}
       {/* Task #838: brief language-change confirmation toast.
           Mirrors the manual-refresh toast styling used on the
           history/open-tickets screens so the visual language stays

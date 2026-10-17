@@ -1,3 +1,4 @@
+import {parseExactDecimal,multiplyExact,divideExact,formatExact} from "@workspace/db/format";
 import { z } from "zod/v4";
 import {
   FleetWorkScopeSchema,
@@ -159,6 +160,11 @@ export async function reviewFleetQuantityEvidence(
           ? FleetQuantityEvidenceSchema.parse({
               ...original.evidence,
               kind: "billable",
+              ...(selected.conversion ? {
+                quantity:formatExact(divideExact(multiplyExact(parseExactDecimal(original.evidence.quantity),parseExactDecimal(selected.conversion.factor)),parseExactDecimal(selected.conversion.divisor),{scale:9,rounding:selected.conversion.rounding})),
+                unit:selected.conversion.unit,source:"reviewed_conversion",
+                conversion:{originalQuantity:original.evidence.quantity,originalUnit:original.evidence.unit,factor:selected.conversion.factor,divisor:selected.conversion.divisor,rounding:selected.conversion.rounding,reviewedByUserId:actor.userId,reviewedAt},
+              }:{}),
             })
           : null,
       independentInstrumentVerification: false,

@@ -183,7 +183,7 @@ export async function executeFleetWorkCommand(
       const grant = state.grants.find(g => g.userId === actor.userId);
       const ownUnplanned=snapshot.detail.driverUserId===actor.userId&&!!grant?.roles.includes("driver");
       const groups = state.fleets.filter(group =>
-        grant?.fleetIds.includes(group.id) &&
+        (!p.accessGroupId||group.id===p.accessGroupId)&&grant?.fleetIds.includes(group.id) &&
         snapshot.detail.accessGroupIds.includes(group.id) &&
         (!orderGroups || orderGroups.includes(group.id)) &&
         group.siteIds.includes(p.billing.billingSiteId ?? 0) &&
@@ -214,7 +214,7 @@ export async function executeFleetWorkCommand(
       if (prior.rows.length || state.operations.some(op => op.id === command.operationId))
         throw new FleetError("fleet.operation_conflict");
       const digest = createHash("sha256").update(`${command.operationId}:origin`).digest("hex");
-      const originId = `${digest.slice(0,8)}-${digest.slice(8,12)}-4${digest.slice(13,16)}-8${digest.slice(17,20)}-${digest.slice(20,32)}`;
+      const originId = p.originStopId??`${digest.slice(0,8)}-${digest.slice(8,12)}-4${digest.slice(13,16)}-8${digest.slice(17,20)}-${digest.slice(20,32)}`;
       const creator = createFleetWorkCanonicalService(context, {
         ...options,
         originalWorkOperationId: command.operationId,
@@ -222,7 +222,7 @@ export async function executeFleetWorkCommand(
         billingV2Create: { ownUnplanned, operationId: command.operationId, timeZone: command.timeZone, intent: billing,
           capture: { workAt: command.capturedAt, pricingIntent: p.pricingIntent } },
       });
-      const run = await creator.create({ ...actor }, {
+      let run = await creator.create({ ...actor }, {
         operationId: command.operationId, fleetId: groups[0].id, title: p.title,
         driverUserId: snapshot.detail.driverUserId, vehicleAssetId: snapshot.detail.vehicleAssetId,
         trailerAssetId: snapshot.rigPackage?.components.find(c => c.role === "trailer")?.assetId ?? null,
@@ -234,8 +234,12 @@ export async function executeFleetWorkCommand(
         stops: fleetRouteOperationalStops(route, p.billing.billingSiteId, originId),
         billing: billing.choice === "new_ticket"
           ? { mode: "new_ticket", workTypeId: p.billing.serviceId, afeNumber: billing.afeNumber, workDate: billing.workDate }
-          : { mode: "existing_ticket", ticketId: billing.ticket.id, afeNumber: billing.afeNumber, workDate: billing.workDate },
+          : { mode: "existing_ticket", workTypeId:p.billing.serviceId,ticketId: billing.ticket.id, afeNumber: billing.afeNumber, workDate: billing.workDate },
       });
+      if(p.dispatchAfterCreate){
+        const h=createHash("sha256").update(`${command.operationId}:confirmed-dispatch`).digest("hex"),dispatchId=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`;
+        run=await createFleetWorkCanonicalService(context,{...options,originalWorkOperationId:dispatchId,afterCommit:effect=>{afterCommit.push(effect);}}).action({...actor},run.id,{operationId:dispatchId,expectedVersion:run.version,action:"dispatch",source:"user_report",capturedAt:command.capturedAt});
+      }
       const canonical: Canonical = { type: "canonical", kind: "activity", id: run.id, version: run.version };
       // Operational projection can omit private pricing; the trusted durable
       // result supplies the actual parent revision for the mapping receipt.
@@ -585,7 +589,9 @@ export async function executeFleetWorkCommand(
         run.linkedTicketId !== payload.ticket.id
       )
         throw new FleetError("fleet.assignment_changed");
-      if (run.version !== payload.base.version)
+      const original=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' AND target_id=$2 AND tool_output->>'version'=$3 ORDER BY id DESC LIMIT 1",[actor.companyId,run.id,String(payload.base.version)])).rows[0]?.tool_output;
+      const originalRun=original?FleetRunSchema.parse(original):run.version===payload.base.version?run:null;
+      if(!originalRun||originalRun.driverUserId!==payload.base.driverUserId||originalRun.vehicleAssetId!==payload.base.vehicleAssetId||originalRun.trailerAssetId!==payload.base.trailerAssetId||originalRun.linkedTicketId!==payload.ticket.id||run.version!==payload.action.expectedVersion)
         throw new FleetError("fleet.version_conflict");
       const saved = await service.action({ ...actor }, run.id, payload.action);
       return result([

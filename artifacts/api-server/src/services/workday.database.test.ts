@@ -239,3 +239,17 @@ it("explicit workday controls synchronize shift tracking without changing separa
  expect(value.duty.active).toBe(true);expect(value.consent.locationSharing).toBe(true);expect(value.onCallActive).toBe(true);
  await f.service.record(f.worker,command(f.worker,id,"end_shift","2026-10-15T22:30:00Z"));value=(await f.pool.query("SELECT native_operations FROM work_hub_device_preferences WHERE user_id=$1 AND owner_org_id=$2",[f.worker.userId,f.worker.vendorId])).rows[0].native_operations;expect(value.duty.active).toBe(false);expect(value.onCallActive).toBe(true);expect(value.consent.locationSharing).toBe(true);
 });
+
+it("retains an explicit office adjustment without rewriting the worker day or ending its clock",async()=>{
+ const f=await fixture(),id=randomUUID();await f.service.record(f.worker,command(f.worker,id));
+ const before=await f.service.read(f.office,id),input={operationId:randomUUID(),expectedVersion:before.version,adjustmentMinutes:"60",reason:"Verified yard preparation omitted from report"};
+ const saved=await f.service.adjust(f.office,id,input);expect(saved.adjustmentMinutes).toBe("60");expect(saved.source).toBe("office_adjustment");
+ expect(await f.service.adjust(f.office,id,input)).toEqual(saved);expect(await f.service.read(f.office,id)).toMatchObject({version:before.version,summary:before.summary});
+ await expect(f.service.adjust(f.worker,id,{...input,operationId:randomUUID()})).rejects.toMatchObject({status:403});
+ expect((await f.service.list(f.office,f.worker.userId!,{start:"2026-10-15T00:00:00Z",end:"2026-10-16T00:00:00Z"})).items[0].officeAdjustments).toEqual([saved]);
+});
+
+it("reauthorizes the same worker original shift scope without changing original times or allowing another membership",async()=>{
+ const f=await fixture(),id=randomUUID(),original=command(f.worker,id);await f.service.record(f.worker,original);await f.pool.query("UPDATE users SET session_version=session_version+1 WHERE id=$1",[f.worker.userId]);const next={...f.worker,sv:f.worker.sv!+1},end={...original,operationId:randomUUID(),action:"end_shift",capturedAt:"2026-10-15T22:00:00Z"};
+ await expect(f.service.record(next,end)).rejects.toMatchObject({status:403});await f.service.reauthorize(next,{scope:original.scope,reason:"Recover my original End of Day"});const receipt=await f.service.record(next,end);expect(receipt.event.capturedAt).toBe(end.capturedAt);expect(await f.service.record(next,end)).toEqual(receipt);await expect(f.service.reauthorize(f.office,{scope:original.scope,reason:"Cannot become other worker"})).rejects.toMatchObject({status:403});
+});

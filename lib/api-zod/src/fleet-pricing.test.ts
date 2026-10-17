@@ -1,4 +1,5 @@
-import { expect, it } from "vitest";
+import {expect, it } from "vitest";
+import {FleetQuantityReviewSelectionSchema} from "./fleet-pricing";
 import * as contracts from "./index";
 import type { ZodType } from "zod/v4";
 
@@ -59,4 +60,9 @@ it("requires an explicit billing protocol marker because legacy plan version is 
   const ticket=schema("FleetTicketBillingV2Schema");
   expect(ticket.safeParse(value).success).toBe(false);
   expect(ticket.safeParse({...value,billingVersion:2}).success).toBe(true);
+});
+
+it("requires an explicit positive reviewed conversion factor, divisor and rounding",()=>{
+ expect(FleetQuantityReviewSelectionSchema.safeParse({evidenceId:"11111111-1111-4111-8111-111111111111",expectedReviewRevision:0,decision:"accept_as_billable",reason:"42 US gallons per barrel",conversion:{unit:"barrel",factor:"1",divisor:"42",rounding:"half_away_from_zero"}}).success).toBe(true);
+ expect(FleetQuantityReviewSelectionSchema.safeParse({evidenceId:"11111111-1111-4111-8111-111111111111",expectedReviewRevision:0,decision:"accept_as_billable",reason:"bad",conversion:{unit:"barrel",factor:"1",divisor:"0",rounding:"half_away_from_zero"}}).success).toBe(false);
 });

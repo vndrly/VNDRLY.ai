@@ -1,7 +1,6 @@
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import * as FileSystem from "expo-file-system/legacy";
-import { File } from "expo-file-system";
 import { z } from "zod/v4";
 import { Platform } from "react-native";
 import { createDurableFleetWorkJournal,appendFleetJournalCommand,serializeFleetWorkCommand,type FleetWorkCommand, openFleetBrowserStorage, type FleetWorkScope, type FleetJournalStore } from "@workspace/api-zod";
@@ -43,7 +42,7 @@ export async function openNativeFleetWorkJournal(scope:FleetWorkScope,isCurrent:
    if(typeof uri!=="string")throw Error("A captured device file is required");
    z.uuid().parse(id);if(!["image/jpeg","image/png","image/webp","application/pdf"].includes(contentType))throw Error("Unsupported evidence type");
    if(!isCurrent())throw Error("Original work account changed");
-   const bytes=await new File(uri).bytes();if(!bytes.length||bytes.length>10*1024*1024)throw Error("Evidence must be between 1 byte and 10 MB");
+   const {File}=await import("expo-file-system");const bytes=await new File(uri).bytes();if(!bytes.length||bytes.length>10*1024*1024)throw Error("Evidence must be between 1 byte and 10 MB");
    const hash=Array.from(new Uint8Array(await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256,bytes)),b=>b.toString(16).padStart(2,"0")).join("");
    const command=makeCommand?.({sha256:hash,byteSize:bytes.length,contentType}),fingerprint=command?await sha(serializeFleetWorkCommand(command)):null;
    await db.withExclusiveTransactionAsync(async tx=>{

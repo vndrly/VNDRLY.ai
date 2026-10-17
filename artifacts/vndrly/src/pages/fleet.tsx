@@ -1,3 +1,5 @@
+import {DriverDayHistory} from "@/components/driver-day-history";
+import {FleetPriorWork} from "@/components/fleet-prior-work";
 import {FleetMonitoring} from "@/components/fleet-monitoring";
 import {saveWebFleetWorkspace,readWebFleetWorkspace,activateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
 import {provisionFleetOfflineShell} from "@/lib/fleet-offline-shell";
@@ -195,7 +197,7 @@ function FleetWorkspace({
     ],
     observations: overview.data!.pages.flatMap((page) => page.observations),
   };
-  const work = useFleetWork(overviewData?.accountScope, overviewData?.runs ?? []);
+  const work = useFleetWork(overviewData?.accountScope, overviewData?.runs ?? [],overviewData?.fleets??[]);
   const resources = useQuery({
     queryKey: ["fleet-resources", identity],
     queryFn: ()=>cachedRead(fleetClient.resources,saved=>saved.resources,"resources"),
@@ -364,7 +366,7 @@ function FleetWorkspace({
     location.includes("my-day") ||
     (!data.capabilities.canManage && !data.capabilities.canDispatch);
   const filteredRuns = fleetVisibleRuns(
-    data,
+    {...data,runs:[...(work.localRuns??[]),...data.runs]},
     userId,
     mine,
     fleetId,
@@ -391,7 +393,7 @@ function FleetWorkspace({
   );
   const run = runs.find((item) => item.id === selected);
   let devicePreview:ReturnType<typeof previewFleetWorkEntries>=null,devicePreviewError="";
-  if(run?.ticketReference){try{devicePreview=previewFleetWorkEntries(run,work.entries??[],userId);}catch(error){devicePreviewError=error instanceof Error?error.message:"Original work needs verification";}}
+  if(run&&(run.ticketReference||run.localWork)){try{devicePreview=previewFleetWorkEntries(run,work.entries??[],userId);}catch(error){devicePreviewError=error instanceof Error?error.message:"Original work needs verification";}}
   const actionRun=run&&devicePreview?{...run,version:devicePreview.expectedVersion,currentStopId:devicePreview.currentStopId,allowedActions:devicePreview.allowedActions}:run;
   const formRun=actionRun&&devicePreview?{...actionRun,loads:devicePreview.loads}:actionRun;
 
@@ -439,7 +441,7 @@ function FleetWorkspace({
     setBusy(true);
     setNotice("");
     try {
-      if (run.ticketReference) {
+      if (run.ticketReference||run.localWork) {
         if (!work.session) throw new Error("Verify the original Fleet device before recording this activity");
         const result = await work.session.captureAction(run, pending.input, run.schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
         await work.refresh(false);
@@ -521,6 +523,7 @@ function FleetWorkspace({
                 }
               : {
                   mode: "existing_ticket",
+                  ...(work.session?{workTypeId:Number(billing.workTypeId)}:{}),
                   ticketId: Number(billing.ticketId),
                   afeNumber: billing.afeNumber.trim(),
                   workDate: billing.workDate,
@@ -610,7 +613,7 @@ function FleetWorkspace({
         const result = await work.session.captureCreate(input);
         await work.refresh(false);
         if (!result.canonicalApplied) {
-          createRetry.current = null; setCreateUnverified(false); setCreate(false);
+          createRetry.current = null; setCreateUnverified(false); setCreate(false); setSelected(result.localActivityId);
           setNotice(result.state === "needs_reconciliation" || result.state === "denied" ? "Saved on this device — office reconciliation required" : "Saved on this device — pending sync");
           return;
         }
@@ -673,7 +676,7 @@ function FleetWorkspace({
         <PngPillButton disabled={busy} onClick={()=>void work.refresh()}>Verify and synchronize retained work</PngPillButton>
         <PngPillButton disabled={busy||!!offlineAt} onClick={()=>void provisionOffline()}>Prepare this browser for offline Fleet work</PngPillButton>
         {!!offlineProvision&&<p role="status">{offlineProvision}</p>}
-        <FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();void queryClient.invalidateQueries({queryKey:["fleet",identity]});}}/>
+        <FleetPriorWork key={`prior:${identity}`} session={work.session}/><FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();void queryClient.invalidateQueries({queryKey:["fleet",identity]});}}/>
       </section>}
       <nav
         className="fleet-nav flex flex-wrap text-sm"
@@ -1294,7 +1297,7 @@ function FleetWorkspace({
             ) : (
               <>
                 <h3 className="text-lg">{run.title}</h3>
-                {run.linkedTicketId && !run.ticketReference &&
+                {run.linkedTicketId && !run.ticketReference&&!run.localWork &&
                   (data.capabilities.canManage ||
                     data.capabilities.canDispatch) && (
                     <FleetBillingTicketPanel
@@ -1493,10 +1496,11 @@ function FleetWorkspace({
                     driverUserId={run.driverUserId}
                     runId={run.id}
                   />
+                  <DriverDayHistory workerUserId={run.driverUserId} canAdjust={data.capabilities.canDispatch}/>
                   <FleetMonitoring key={`monitoring:${identity}:${run.id}`} run={run} userId={userId} canDispatch={data.capabilities.canDispatch} session={work.session}/>
                   <FleetReviewPacketPanel run={run} identity={identity} />
-                  {work.session&&run.ticketReference&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();void queryClient.invalidateQueries({queryKey:["fleet",identity]});}}/>}
-                  {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidencePanel
+                  {work.session&&(run.ticketReference||run.localWork)&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();void queryClient.invalidateQueries({queryKey:["fleet",identity]});}}/>}
+                  {work.session&&(run.ticketReference||run.localWork)?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidencePanel
                     key={run.id}
                     run={run}
                     identity={identity}

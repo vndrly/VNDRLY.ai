@@ -81,6 +81,7 @@ const additionalSchema = z
   );
 const calculationSchema = z
   .object({
+    phase:z.enum(["primary","supplemental"]).optional(),
     rateCard: FleetRateCardRevisionSchema,
     scope: scopeSchema,
     description: z.string().trim().min(1).max(1800),
@@ -248,7 +249,7 @@ export function calculateFleetCharges(
     { rateCard: card, scope } = input;
   if (!cardMatches(card, scope)) fail("scope_mismatch");
   const quantities = input.quantityEvidence.filter(
-    (q) => q.kind === "billable" && q.cycleId === scope.cycleId,
+    (q) => q.kind === "billable" && (input.phase==="supplemental"||q.cycleId === scope.cycleId),
   );
   if (quantities.length !== 1 || quantities[0].unit !== basisUnit[card.basis])
     fail("quantity_unresolved");
@@ -263,10 +264,7 @@ export function calculateFleetCharges(
   if (
     q.conversion &&
     subtractExact(
-      multiplyExact(
-        decimal(q.conversion.originalQuantity),
-        decimal(q.conversion.factor),
-      ),
+      (q.conversion.divisor ? divideExact(multiplyExact(decimal(q.conversion.originalQuantity),decimal(q.conversion.factor)),decimal(q.conversion.divisor),{scale:9,rounding:q.conversion.rounding??"half_away_from_zero"}) : multiplyExact(decimal(q.conversion.originalQuantity),decimal(q.conversion.factor))),
       decimal(q.quantity),
     ).coefficient !== 0n
   )
@@ -363,7 +361,7 @@ export function calculateFleetCharges(
     result.push(prior ?? candidate);
     return candidate;
   };
-  make(
+  if(input.phase!=="supplemental")make(
     "primary",
     "primary",
     q.quantity,
@@ -371,7 +369,7 @@ export function calculateFleetCharges(
     card.unitRate,
     multiplyExact(decimal(q.quantity), decimal(card.unitRate)),
   );
-  if (card.detention) {
+  if (card.detention && input.phase!=="primary") {
     const minutes = detentionMinutes(input);
     if (minutes.coefficient > 0n) {
       const numerator = multiplyExact(
@@ -413,7 +411,7 @@ export function calculateFleetCharges(
       );
     }
   }
-  if (card.minimum) {
+  if (card.minimum && (input.phase!=="primary"||card.minimum.scope==="load") && (input.phase!=="supplemental"||card.minimum.scope!=="load")) {
     const minimum = card.minimum,
       finalize =
         minimum.scope === "run" ||
@@ -485,7 +483,7 @@ export function calculateFleetCharges(
         );
     }
   }
-  const requested = new Map(input.additionalCharges.map((c) => [c.code, c])),
+  const requested = new Map((input.phase==="primary"?[]:input.additionalCharges).map((c) => [c.code, c])),
     visiting = new Set<string>(),
     done = new Set<string>();
   const extra = (code: string) => {
@@ -504,7 +502,7 @@ export function calculateFleetCharges(
       fail("approval_required");
     for (const dependency of terms.eligibleChargeCodes)
       if (requested.has(dependency)) extra(dependency);
-    const base = result
+    const base = [...new Map([...(input.phase==="supplemental"?[...existing.values()].filter(c=>c.ticketId===scope.ticketId&&c.runId===scope.runId&&c.rateCardId===card.id&&c.serviceId===card.serviceId&&isDeepStrictEqual(c.billingContext,billingContext)):[]),...result].map(c=>[c.id,c])).values()]
       .filter((c) => terms.eligibleChargeCodes.includes(c.code))
       .sort((a, b) => a.id.localeCompare(b.id));
     if (
@@ -544,4 +542,16 @@ export function calculateFleetCharges(
   };
   for (const code of [...requested.keys()].sort()) extra(code);
   return result;
+}
+
+/** Primary cycles are all known before activity-level minimums/intervals/extras.
+ * Persist these phases for deterministic ticket/day finalization replay. */
+export function calculateFleetActivityCharges(raw:FleetChargeCalculation[]){
+ if(!raw.length)fail("quantity_unresolved");const parsed=raw.map(r=>calculationSchema.parse(r)),first=parsed[0];
+ if(new Set(parsed.map(x=>x.scope.cycleId)).size!==parsed.length)fail("quantity_ambiguous");
+ if(parsed.some(x=>!isDeepStrictEqual({...x.scope,cycleId:null},{...first.scope,cycleId:null})||!isDeepStrictEqual(x.rateCard,first.rateCard)||!isDeepStrictEqual(x.reviewedIntervals,first.reviewedIntervals)||!isDeepStrictEqual(x.additionalCharges,first.additionalCharges)))fail("scope_mismatch");
+ const inputs:FleetChargeCalculation[]=[...parsed.map(x=>({...x,phase:"primary" as const,reviewedIntervals:[],additionalCharges:[],existingCharges:[]})),{...first,phase:"supplemental",scope:{...first.scope,cycleId:null},existingCharges:[]}];
+ const existing=[...first.existingCharges],charges:FleetCharge[]=[];
+ for(const step of inputs){const generated=calculateFleetCharges({...step,existingCharges:existing});for(const c of generated){if(!charges.some(x=>x.id===c.id))charges.push(c);if(!existing.some(x=>x.id===c.id))existing.push(c);}}
+ return {inputs,charges};
 }

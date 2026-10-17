@@ -15,6 +15,7 @@ export type FleetBillingChoice =
     }
   | {
       mode: "existing_ticket";
+      workTypeId?:number;
       ticketId: number;
       afeNumber: string;
       workDate: string;
@@ -117,9 +118,9 @@ export default function FleetRunBilling({
       });
     else if (
       mode === "existing_ticket" &&
-      options.tickets.some((t) => t.id === ticketId)
+      options.tickets.some((t) => t.id === ticketId)&&(!workSession||options.workTypes.some(w=>w.id===workType&&w.afeNumber===afe.trim()))
     )
-      onChange({ mode, ticketId: ticketId!, afeNumber: afe.trim(), workDate });
+      onChange({ mode, ticketId: ticketId!, ...(workSession?{workTypeId:workType!}:{}),afeNumber: afe.trim(), workDate });
     else onChange(null);
   }, [mode, workType, ticketId, options, afe, workDate]);
   const style = {
@@ -166,7 +167,7 @@ export default function FleetRunBilling({
           )}
         </TogglePillButton>
       ))}
-      {mode === "new_ticket" &&
+      {(mode === "new_ticket"||!!workSession&&mode==="existing_ticket") &&
         options?.workTypes.map((item) => (
           <TogglePillButton
             key={item.id}

@@ -1,4 +1,5 @@
 import {it,expect} from "vitest";import {randomUUID} from "node:crypto";
+import {summarizeWorkday} from "./workday";
 import {createWorkdayController} from "./workday-client";
 import type {FleetJournalStore} from "./fleet-work-journal";
 it("keeps an explicit end-of-day intent through restart and never treats logout as a clock event",async()=>{
@@ -7,4 +8,11 @@ it("keeps an explicit end-of-day intent through restart and never treats logout 
  const tomorrow=await c.record("start_shift",new Date("2026-10-18T12:00:00Z"),"America/Denver");expect(tomorrow.timezone).toBe("America/Denver");expect(tomorrow.shiftId).not.toBe(state.commands[0].command.shiftId);
  const sent:string[]=[];const transport={read:async()=>{throw Object.assign(Error("Not found"),{status:404})},send:async(command:{operationId:string})=>{sent.push(command.operationId);throw Error("Response lost")}};
  await c.sync(transport);await c.sync(transport);expect(sent).toEqual([state.commands[0].command.operationId,state.commands[0].command.operationId]);expect((await c.read()).held).toBe(false);
+});
+
+it("refreshes another portal's canonical day while keeping older original shift commands recoverable",async()=>{
+ const rows=new Map<string,string>(),storage:FleetJournalStore={transaction:async work=>work({get:async(k,id)=>rows.get(k+id)??null,set:async(k,id,v)=>{rows.set(k+id,v);},values:async k=>[...rows].filter(([key])=>key.startsWith(k)).map(([,v])=>v)})};const scope={owner:{type:"vendor" as const,id:7},userId:2,membershipId:3,sessionVersion:1},old=createWorkdayController({scope,storage,isCurrent:()=>true,uuid:randomUUID});await old.cacheCurrent({scope,workday:null});const start=await old.record("start_shift",new Date("2026-10-17T12:00:00Z"),"UTC");const end=await old.record("end_shift",new Date("2026-10-17T22:00:00Z"),"UTC");
+ const nextScope={...scope,sessionVersion:2},next=createWorkdayController({scope:nextScope,storage,isCurrent:()=>true,uuid:randomUUID});await next.cacheCurrent({scope:nextScope,workday:null});expect((await next.read()).priorPending).toBe(2);const sent:any[]=[],events:any[]=[];let authorized=false;
+ await next.recoverPrior({authorize:async original=>{expect(original).toEqual(scope);authorized=true;},read:async()=>null,send:async command=>{expect(authorized).toBe(true);sent.push(command);const event={id:command.operationId,shiftId:command.shiftId,owner:scope.owner,workerUserId:2,kind:command.action,capturedAt:command.capturedAt,receivedAt:command.capturedAt,source:"worker_report"};events.push(event);return {operationId:command.operationId,shiftId:command.shiftId,version:events.length,event,summary:summarizeWorkday(events)};}},"Recover original day");expect(sent).toEqual([start,end]);expect((await next.read()).priorPending).toBe(0);
+ const external={id:randomUUID(),shiftId:randomUUID(),owner:scope.owner,workerUserId:2,kind:"start_shift",capturedAt:"2026-10-18T12:00:00Z",receivedAt:"2026-10-18T12:00:00Z",source:"worker_report"};await next.sync({read:async()=>null,send:async()=>null,current:async()=>({scope:nextScope,workday:{id:external.shiftId,version:1,owner:scope.owner,workerUserId:2,timezone:"UTC",summary:summarizeWorkday([external] as any)}})});expect((await next.read()).onShift).toBe(true);
 });

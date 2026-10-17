@@ -16,6 +16,7 @@ import type {
 } from "./fleet-evidence-upload";
 
 type ScopedRepository = {
+ authorizeOriginalScope?:(actor:FleetActor,scope:FleetWorkScope)=>Promise<boolean>;
   withScope<T>(
     actor: FleetActor,
     scope: FleetWorkScope,
@@ -56,7 +57,7 @@ export function createDatabaseFleetEvidenceUploadRepository(
   },
 ): FleetEvidenceUploadRepository {
   return {
-    transaction: (actor, scope, operation) =>
+    authorizeOriginalScope:repository.authorizeOriginalScope?.bind(repository),    transaction: (actor, scope, operation) =>
       repository.withScope(actor, scope, async (context) => {
         const { client } = context;
         const row = async (target: string, id: string) => {

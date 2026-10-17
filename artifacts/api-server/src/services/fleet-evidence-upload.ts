@@ -51,6 +51,7 @@ export type FleetEvidenceUploadTransaction = {
  * membership, then serialize metadata and canonical association in one actual
  * transaction. Neither an object path nor a hash is authorization. */
 export type FleetEvidenceUploadRepository = {
+  authorizeOriginalScope?:(actor:FleetActor,scope:FleetWorkScope)=>Promise<boolean>;
   transaction<T>(
     actor: FleetActor,
     scope: FleetWorkScope,
@@ -64,14 +65,14 @@ const partPath = (session: FleetEvidenceUploadSession, part: number) =>
   `/objects/fleet/${session.scope.owner.id}/work-uploads/${session.scope.provisioningId}/${session.id}/parts/${part}`;
 const partOwner = (session: FleetEvidenceUploadSession) =>
   `fleet-work:${session.scope.owner.id}:${session.scope.userId}:${session.scope.provisioningId}`;
-function requireActor(actor: FleetActor, scope: FleetWorkScope) {
+function requireActor(actor: FleetActor, scope: FleetWorkScope,reauthorized=false) {
   if (
     actor.readOnly ||
     scope.owner.type !== "vendor" ||
     scope.owner.id !== actor.companyId ||
     scope.userId !== actor.userId ||
     scope.membershipId !== actor.activeMembershipId ||
-    scope.sessionVersion !== actor.sv
+    (scope.sessionVersion !== actor.sv&&!reauthorized)
   )
     throw new FleetError("fleet.work_scope_changed", 403);
 }
@@ -122,7 +123,7 @@ export function createFleetEvidenceUploadService(
       command.kind !== "compliance.document.stage"
     )
       throw new FleetError("fleet.invalid_request", 400);
-    requireActor(actor, command.scope);
+    requireActor(actor, command.scope,actor.sv!==command.scope.sessionVersion&&!!await repository.authorizeOriginalScope?.(actor,command.scope));
     if (command.payload.evidence.type !== "local")
       throw new FleetError("fleet.local_evidence_identity_required", 400);
     return repository.transaction(actor, command.scope, async (tx) => {
@@ -180,7 +181,7 @@ export function createFleetEvidenceUploadService(
   };
   const read = async (actor: FleetActor, rawScope: unknown, id: string) => {
     const scope = FleetWorkScopeSchema.parse(rawScope);
-    requireActor(actor, scope);
+    requireActor(actor, scope,actor.sv!==scope.sessionVersion&&!!await repository.authorizeOriginalScope?.(actor,scope));
     return repository.transaction(actor, scope, async (tx) => {
       const saved = await session(tx, scope, id),
         parts = (
@@ -206,7 +207,7 @@ export function createFleetEvidenceUploadService(
     },
   ) => {
     const scope = FleetWorkScopeSchema.parse(input.scope);
-    requireActor(actor, scope);
+    requireActor(actor, scope,actor.sv!==scope.sessionVersion&&!!await repository.authorizeOriginalScope?.(actor,scope));
     uuid.parse(input.sessionId);
     sha.parse(input.sha256);
     if (
@@ -266,7 +267,7 @@ export function createFleetEvidenceUploadService(
     input: { scope: FleetWorkScope; sessionId: string; operationId: string },
   ) => {
     const scope = FleetWorkScopeSchema.parse(input.scope);
-    requireActor(actor, scope);
+    requireActor(actor, scope,actor.sv!==scope.sessionVersion&&!!await repository.authorizeOriginalScope?.(actor,scope));
     uuid.parse(input.operationId);
     return repository.transaction(actor, scope, async (tx) => {
       const saved = await session(tx, scope, input.sessionId);

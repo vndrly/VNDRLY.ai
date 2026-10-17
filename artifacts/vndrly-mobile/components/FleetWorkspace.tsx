@@ -1,3 +1,5 @@
+import DriverDayHistory from "@/components/DriverDayHistory";
+import FleetPriorWork from "@/components/FleetPriorWork";
 import FleetMonitoring from "@/components/FleetMonitoring";
 import FleetRetainedEvidence from "@/components/FleetRetainedEvidence";
 import FleetCommercialWork from "@/components/FleetCommercialWork";
@@ -102,7 +104,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     const [queued, setQueued] = useState<FleetQueuedAction[]>([]);
     const companyId = activeMembership ? (activeMembership.orgType === "vendor" ? activeMembership.orgId : null) : user?.vendorId;
     const verifiedAccount = data?.identity === identity ? data.overview.accountScope : undefined;
-    const work = useFleetWork(verifiedAccount, data?.identity === identity ? data.overview.runs : []);
+    const work = useFleetWork(verifiedAccount, data?.identity === identity ? data.overview.runs : [],data?.identity===identity?data.overview.fleets:[]);
     useEffect(()=>{let alive=true;const value=data?.identity===identity?data:null,account=value?.overview.accountScope;if(work.session&&value&&account)void saveFleetWorkspaceCache({userId:account.userId,companyId:account.companyId,membershipId:account.membershipId},{overview:value.overview,resources:value.resources},()=>alive&&identityRef.current===identity).catch(e=>{if(alive&&identityRef.current===identity)setError(e instanceof Error?e.message:"Fleet device cache unavailable");});return()=>{alive=false;};},[work.session,data,identity]);
     const scope: FleetOfflineScope | null = user?.id && companyId ? { userId: user.id, companyId, membershipId: activeMembershipId, ...(verifiedAccount?.userId === user.id && verifiedAccount.companyId === companyId && verifiedAccount.membershipId === activeMembershipId ? {sessionVersion:verifiedAccount.sessionVersion}: {}) } : null;
     useEffect(()=>{if(work.session)setUseSavedPlan(true);},[work.session]);
@@ -201,7 +203,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       return () => { clearInterval(timer); subscription.remove(); };
     }, [identity]);
     const current = data?.identity === identity ? data : null;
-    const overview = current?.overview;
+    const overview = current?.overview?{...current.overview,runs:[...(work.localRuns??[]),...current.overview.runs]}:undefined;
     const run = overview?.runs.find(r => r.id === selected);
     const pendingRun = queued.filter(item => item.runId === run?.id);
     let proposed: ReturnType<typeof previewFleetRunActions> | null = null;
@@ -213,7 +215,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
             proposed = previewFleetRunActions(run, pendingRun.map(item => item.input));
         } catch (e) { previewError = e instanceof Error ? e.message : "Offline sequence cannot continue."; }
     }
-    if(run?.ticketReference){try{proposed=previewFleetWorkEntries(run,work.entries??[],user?.id??0);}catch(e){previewError=e instanceof Error?e.message:"Retained sequence needs verification";}}
+    if(run&&(run.ticketReference||run.localWork)){try{proposed=previewFleetWorkEntries(run,work.entries??[],user?.id??0);}catch(e){previewError=e instanceof Error?e.message:"Retained sequence needs verification";}}
     const actionRun = run && proposed ? { ...run, version: proposed.expectedVersion, currentStopId: proposed.currentStopId, allowedActions: proposed.allowedActions } : run;
     const formRun = actionRun && proposed ? { ...actionRun, loads: proposed.loads } : actionRun;
     const visibleRuns = overview?.runs.filter(item => (!fleetFilter || item.fleetId === fleetFilter) && (mode !== "my-day" || item.driverUserId === user?.id) && (mode !== "review" || item.status === "submitted_for_review")) ?? [];
@@ -228,7 +230,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         setError("");
         try {
             const target = overview?.runs.find(item=>path === `/api/fleet/runs/${item.id}/actions`);
-            if ((path === "/api/fleet/runs" && work.session) || target?.ticketReference) {
+            if ((path === "/api/fleet/runs" && work.session) || (target?.ticketReference||target?.localWork)) {
                 durableAttempt = true;
                 if (!work.session) throw new Error("Verify the original Fleet device before recording this activity");
                 const result = path === "/api/fleet/runs" ? await work.session.captureCreate(body) : await work.session.captureAction(target!,body as FleetActionInput,target!.schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -236,6 +238,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
                 if (identityRef.current !== requestIdentity) return;
                 setUnresolved(null);
                 if (!result.canonicalApplied) {
+                    if("localActivityId" in result&&typeof result.localActivityId==="string"){setSelected(result.localActivityId);setMode(overview?.capabilities.canDrive&&!overview.capabilities.canDispatch?"my-day":"desk");}
                     setError(result.state === "needs_reconciliation" || result.state === "denied" ? "Saved on this device — office reconciliation required" : "Saved on this device — pending sync");
                     return;
                 }
@@ -312,7 +315,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         try {
             const body = fleetActionInput(target, name, Crypto.randomUUID(), name === "reassign" ? { driverUserId: driver ?? undefined, vehicleAssetId: vehicle || undefined, trailerAssetId: trailer, reason: reason || undefined } : fields);
             Object.assign(body, { capturedAt: new Date().toISOString(), source: "user_report" });
-            if (target.ticketReference) {void write(`/api/fleet/runs/${target.id}/actions`, body);}
+            if (target.ticketReference||target.localWork) {void write(`/api/fleet/runs/${target.id}/actions`, body);}
             else if (scope && (cachedAt || queued.some(item => item.runId === target.id))) {
                 const original = overview?.runs.find(item => item.id === target.id);
                 if (!original || original.driverUserId !== scope.userId) throw new Error("Only assigned driver facts can be stored offline.");
@@ -426,7 +429,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       <Text style={textStyle}>{copy("Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.")}</Text>
       {!!work.error && <Text accessibilityRole="alert" style={textStyle}>{work.error}</Text>}
       <TogglePillButton compactOnTablet disabled={busy} onPress={()=>void work.refresh()}>{copy("Verify and synchronize retained work")}</TogglePillButton>
-      <FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>
+      <FleetPriorWork key={`prior:${identity}`} session={work.session}/><FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>
     </View>}
     {overview && <>
     <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:12}}>
@@ -451,7 +454,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     </>}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Inventory and Details")}</TogglePillButton>}
-    {run?.ticketReference && proposed && <Text style={textStyle}>{copy("Device-only sequence — pending server acceptance. The map and run status show canonical records.")}</Text>}
+    {(run?.ticketReference||run?.localWork) && proposed && <Text style={textStyle}>{copy("Device-only sequence — pending server acceptance. The map and run status show canonical records.")}</Text>}
     {cachedAt && <Text style={textStyle}>{copy("Offline assigned-work cache from ")}{cachedAt}{copy(". Permissions and readiness are unverified. Entries remain unsynced until the server accepts them; no location is collected.")}</Text>}
     {queued.length > 0 && <Text style={textStyle}>{copy("Queued entries")}: {queued.length}/{FLEET_OFFLINE_MAX_ACTIONS} · {copy("Device storage is bounded; longer reports may need synchronization before another capture.")}</Text>}
     {queued.map(item => <View key={item.input.operationId} style={{ gap: 8 }}><Text style={textStyle}>{copy(item.input.action === "submit_closeout" ? "Close Run" : item.input.action.replaceAll("_", " "))}{copy(": ")}{copy(item.state)}{copy(" \u00B7 captured ")}{item.capturedAt}{copy(" \u00B7 run ")}{item.runId}{copy(" \u00B7 ")}{item.message ? copy(item.message) : copy("Not accepted by the server")}</Text>{["commodity", "quantity", "unit", "manifestReference", "deliveryReference", "notes", "reason", "reading", "inspectionOutcome"].map(field => (item.input as Record<string, unknown>)[field] !== undefined && <Text key={field} style={textStyle}>{copy(field)}: {String((item.input as Record<string, unknown>)[field])}</Text>)}{item.input.inspectionResponses?.map(response=><Text key={response.id} style={textStyle}>{overview?.runs.find(run=>run.id===item.runId)?.operationalProfile?.inspectionItems.find(rule=>rule.id===response.id)?.label??response.id}: {copy(response.outcome)}{response.notes?` · ${response.notes}`:""}</Text>)}{Object.entries(item.input.manifestValues??{}).map(([id,value])=><Text key={id} style={textStyle}>{overview?.runs.find(run=>run.id===item.runId)?.operationalProfile?.manifestFields.find(rule=>rule.id===id)?.label??id}: {value}</Text>)}{item.state === "unsynced" ? <TogglePillButton disabled={busy || !!cachedAt} onPress={() => void synchronize(item)}>{copy("Verify and synchronize queued operation")}</TogglePillButton> : <TogglePillButton disabled={busy} onPress={() => { if (scope)
@@ -504,15 +507,16 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         {run.driverUserId === user?.id && overview.capabilities.canDrive && verifiedAccount && !cachedAt && <FleetLiveActivity key={`live:${identity}:${run.id}`} runId={run.id} active={run.status === "in_progress" && run.phase !== "paused"} disabled={busy || !!unresolved || pendingRun.length > 0} />}
         <FleetReplacement workSession={work.session} key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetCargo workSession={work.session} key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        <DriverDayHistory workerUserId={run.driverUserId} canAdjust={overview.capabilities.canDispatch}/>
         <FleetMonitoring key={`monitoring:${identity}:${run.id}`} run={run} userId={user?.id??0} canDispatch={overview.capabilities.canDispatch} session={work.session}/>
         <FleetReviewPacket key={`${identity}:${run.id}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0}/>
-        {work.session&&run.ticketReference&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>}
-        {work.session&&run.ticketReference?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>}
+        {work.session&&(run.ticketReference||run.localWork)&&<FleetCommercialWork key={`commercial:${identity}:${run.id}`} session={work.session} run={run} pending={work.commands.some(command=>("activity" in command.payload&&command.payload.activity.id===run.id)||(command.kind==="ticket.finalize"&&command.payload.ticket.id===run.linkedTicketId))} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>}
+        {work.session&&(run.ticketReference||run.localWork)?<FleetRetainedEvidence session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>}
         <FleetEta key={`${identity}:${run.id}:${run.version}`} runId={run.id} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0}/>
         <FleetGate key={`${identity}:${run.id}:${run.version}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0} onChanged={() => setRevision(n => n + 1)}/>
         {run.linkedTicketId && <Text style={textStyle}>{copy("Open the linked ticket for its authorized camera attachments and consented ticket location workflow. These remain ticket records; opening the screen does not save Fleet proof or start Fleet tracking.")}</Text>}
         {run.billing && <Text style={textStyle}>{copy("Ticket #")}{run.linkedTicketId} · {copy("AFE")}: {run.billing.afeNumber} · {copy("Work date")}: {run.billing.workDate}</Text>}
-        {run.linkedTicketId && !run.ticketReference && (overview.capabilities.canManage || overview.capabilities.canSetup) && !cachedAt && <FleetTicketFinalization key={`finalize:${identity}:${run.linkedTicketId}:${run.version}`} ticketId={run.linkedTicketId} onChanged={()=>setRevision(n=>n+1)}/>}
+        {run.linkedTicketId && !run.ticketReference&&!run.localWork && (overview.capabilities.canManage || overview.capabilities.canSetup) && !cachedAt && <FleetTicketFinalization key={`finalize:${identity}:${run.linkedTicketId}:${run.version}`} ticketId={run.linkedTicketId} onChanged={()=>setRevision(n=>n+1)}/>}
         {run.linkedTicketId && <TogglePillButton onPress={() => router.push(`/ticket/${run.linkedTicketId}` as never)}>{copy("Open linked ticket")}</TogglePillButton>}
         {run.commercial && (run.commercial.rateCents !== undefined || overview.capabilities.canSetup) && !cachedAt && <FleetTicketPlan key={`plan:${identity}:${run.commercial.ticketId}`} ticketId={run.commercial.ticketId} onChanged={()=>setRevision(n=>n+1)}/>}
         <TextInput accessibilityLabel={copy("Fleet action reason")} placeholder={copy("Reason")} value={reason} onChangeText={setReason} style={fieldStyle}/>
