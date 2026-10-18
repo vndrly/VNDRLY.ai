@@ -260,9 +260,15 @@ function AuthenticatedRouter() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
+        <Route path="/es/legal/privacy/" component={LegalPrivacyPage} />
+        <Route path="/es/legal/terms/" component={LegalTermsPage} />
+        <Route path="/es/legal/messaging/" component={LegalMessagingConsentPage} />
+        <Route path="/es/sms/" component={LegalMessagingConsentPage} />
         <Route path="/legal/privacy" component={LegalPrivacyPage} />
         <Route path="/legal/terms" component={LegalTermsPage} />
         <Route path="/legal/messaging" component={LegalMessagingConsentPage} />
+        <Route path="/sms" component={LegalMessagingConsentPage} />
+        <Route path="/sms/" component={LegalMessagingConsentPage} />
         <Route path="/legal/eula" component={PlatformEulaPage} />
         <Route path="/signup" component={Signup} />
         <Route path="/signup/vendor" component={OnboardingVendor} />
@@ -443,7 +449,7 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
     matches("/login") ||
     matches("/switch-account") ||
     matches("/signup") ||
-    matches("/legal");
+    matches("/legal") || matches("/sms") || matches("/es/legal") || matches("/es/sms");
   if (hidden) return null;
   // Main admin/partner/vendor chrome mounts Ask V in the layout AskV pane.
   // Field ops portals (/field, /foreman) use the same AskV pane in
