@@ -8,6 +8,10 @@ const words=z.array(z.string().trim().min(1).max(120)).max(50);
  * offering, a negotiated rate, regulatory classification nor an access grant. */
 export const FleetServiceTemplateSchema=z.object({serviceId:z.number().int().positive(),revision:z.number().int().nonnegative(),family:FleetWorkFamilySchema,name:z.string().trim().min(1).max(100),enabled:z.boolean(),commodities:words,capabilities:words,preferredBasis:FleetPricingBasisSchema.nullable(),profile:FleetOperationalProfileSchema}).strict();
 export type FleetServiceTemplate=z.infer<typeof FleetServiceTemplateSchema>;
+export function fleetServiceTemplateBasisLabel(basis:z.infer<typeof FleetPricingBasisSchema>,language="en"){
+ const es:Record<z.infer<typeof FleetPricingBasisSchema>,string>={per_job:"Por trabajo",per_hour:"Por hora",per_day:"Por día",lump_sum:"Suma global",per_load:"Por carga",per_mile:"Por milla",per_barrel:"Por barril",per_us_gallon:"Por galón estadounidense",per_short_ton:"Por tonelada corta"};
+ return language.startsWith("es")?es[basis]:basis.replaceAll("_"," ");
+}
 export const FleetServiceTemplateSaveSchema=z.object({operationId:z.uuid(),expectedRevision:z.number().int().nonnegative(),template:FleetServiceTemplateSchema}).strict();
 export const FleetServiceTemplatePageSchema=z.object({services:z.array(z.object({serviceId:z.number().int().positive(),name:z.string(),template:FleetServiceTemplateSchema.nullable()}).strict()),canManage:z.boolean()}).strict();
 const defaults:Record<typeof FLEET_WORK_FAMILIES[number],{commodities:string[];capabilities:string[];preferredBasis:z.infer<typeof FleetPricingBasisSchema>|null}>={

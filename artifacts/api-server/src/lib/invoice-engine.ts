@@ -1,4 +1,5 @@
 import {resolveEffectiveFinancialLine} from "./effective-financial-line";
+import {parseExactDecimal,multiplyExact,roundExact,formatExact} from "@workspace/db/format";
 import type {
   LateFeeRule,
   InvoiceLineType,
@@ -699,6 +700,10 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
     const taxable = isLineTaxable(cls.lineType, ctx, li.taxableOverride);
     const lineTaxUnits = taxable ? combinedTaxRateUnits(ctx) : 0n;
     const taxAmt = taxable ? mulUnits(amountUnits, lineTaxUnits) : 0n;
+    // Retain the reviewed jurisdiction's complete rate for v2. The historical
+    // fixed-four-decimal engine remains unchanged for v1 lines.
+    const exactTaxRate = exact && taxable ? formatExact(parseExactDecimal(ctx.taxJurisdiction?.combinedTaxRate || ctx.taxJurisdiction?.merchandiseTaxRate || ctx.taxRate?.rate || "0")) : null;
+    const exactTax = exactTaxRate !== null ? roundExact(multiplyExact(parseExactDecimal(exact!.currencyAmount),parseExactDecimal(exactTaxRate)),{scale:2,rounding:"half_away_from_zero"}) : null;
     lines.push({
       ticketId: ctx.ticketId,
       sourceType: "ticket_line_item",
@@ -709,12 +714,12 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
       quantity: exact?.quantity ?? unitsToString4(qtyUnits),
       unit: cls.defaultUnit,
       unitPrice: exact?.unitPrice ?? unitsToString4(priceUnits),
-      ...(exact?{preciseQuantity:exact.quantity,preciseUnitPrice:exact.unitPrice,fleetBillingMetadata:exact.fleetBillingMetadata}:{}),
+      ...(exact?{preciseQuantity:exact.quantity,preciseUnitPrice:exact.unitPrice,fleetBillingMetadata:exactTax?{...(exact.fleetBillingMetadata as Record<string,unknown>),invoiceTax:{version:1,rate:exactTaxRate,basis:exact.currencyAmount,amount:formatExact(exactTax),rounding:"per_line_half_away_from_zero"}}:exact.fleetBillingMetadata}:{}),
       amount: unitsToString2(amountUnits),
       taxable,
       taxState: taxable ? taxState : null,
-      taxRate: taxable && taxState ? unitsToString4(lineTaxUnits) : null,
-      taxAmount: unitsToString2(taxAmt),
+      taxRate: taxable && taxState ? exactTaxRate ?? unitsToString4(lineTaxUnits) : null,
+      taxAmount: exactTax ? unitsToString2(toFixedUnits(formatExact(exactTax))) : unitsToString2(taxAmt),
       incomeCategory: resolveIncomeCategory(cls.lineType, incomeOverrides),
       sortOrder: sortIdx++,
     });

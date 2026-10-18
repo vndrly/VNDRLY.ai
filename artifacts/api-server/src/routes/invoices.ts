@@ -1,4 +1,4 @@
-import {resolveEffectiveFinancialLine} from "../lib/effective-financial-line";
+import {projectEffectiveInvoiceLine} from "../lib/effective-financial-line";
 import { Router, type IRouter } from "express";
 import { randomUUID } from "crypto";
 import { and, eq, desc, inArray, isNull, sql, gte, lt } from "drizzle-orm";
@@ -477,7 +477,7 @@ router.get("/invoices/:id", async (req, res): Promise<void> => {
     ...invoice,
     vendor,
     partner,
-    lines:lines.map(line=>line.fleetBillingMetadata?{...line,quantity:resolveEffectiveFinancialLine(line).quantity,unitPrice:resolveEffectiveFinancialLine(line).unitPrice}:line),
+    lines:lines.map(projectEffectiveInvoiceLine),
     ticketLinks,
     payments,
     creditMemos: credits,
@@ -2595,7 +2595,7 @@ async function loadPdfInputs(invoiceId: number) {
     .from(invoiceCreditMemosTable)
     .where(eq(invoiceCreditMemosTable.invoiceId, invoice.id))
     .orderBy(invoiceCreditMemosTable.createdAt);
-  return { invoice, vendor, partner, lines:lines.map(line=>line.fleetBillingMetadata?{...line,quantity:resolveEffectiveFinancialLine(line).quantity,unitPrice:resolveEffectiveFinancialLine(line).unitPrice}:line), payments, credits };
+  return { invoice, vendor, partner, lines:lines.map(projectEffectiveInvoiceLine), payments, credits };
 }
 
 // ──────────────────────────────────────────────────────────────────

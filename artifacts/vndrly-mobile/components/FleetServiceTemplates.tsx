@@ -10,6 +10,7 @@ import {
   FleetServiceTemplatePageSchema,
   FleetWorkCommandSchema,
   fleetServiceTemplateLabels,
+  fleetServiceTemplateBasisLabel,
   type FleetServiceTemplate,
   type FleetWorkCommand,
   type FleetOverview,
@@ -273,7 +274,7 @@ export default function FleetServiceTemplates({
               { id: "", label: c.choose },
               ...FleetPricingBasisSchema.options.map((id) => ({
                 id,
-                label: id.replaceAll("_", " "),
+                label: fleetServiceTemplateBasisLabel(id,i18n?.language),
               })),
             ]}
             onChange={(basis) =>

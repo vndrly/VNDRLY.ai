@@ -180,3 +180,5 @@ Execution progress: A1, A2, C1, C2 and D1 are complete with retained test eviden
 October17 23:18Z verified milestone update: D2 is now complete on the implementation branch (7/17: A1,A2,C1,C2,D1,B1,D2). Evidence and remaining exact gaps are in the execution ledger. D3/A3/C3/B2–B4/M1–M4 are not declared complete. Full ship, production activation, installed-plugin update and TestFlight remain unverified.
 
 October17 23:44Z A3 verified: 8/17 complete (A1,A2,A3,C1,C2,D1,D2,B1). Resource/UI, keyboard, desktop/narrow screenshots, canonical driver-pool regression and EN/ES evidence recorded in the ledger. Remaining tasks are not inferred complete from this count; no TestFlight submission yet.
+
+October18 00:36Z D3 verified: 9/17 complete (A1,A2,A3,C1,C2,D1,D2,D3,B1). Exact financial readers, mixed golden packet, original approved quantities/rates and signed corrections, advanced web/native controls, disabled actual-catalog templates and assistant parity have retained acceptance in the ledger. B2-B4/C3/M1-M4 and all eight release tracks remain outstanding. Feature remains OFF; no TestFlight or installed-plugin completion is claimed.

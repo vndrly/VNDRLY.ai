@@ -7,6 +7,7 @@ import {
   FleetServiceTemplateSchema,
   FleetWorkCommandSchema,
   fleetServiceTemplateLabels,
+  fleetServiceTemplateBasisLabel,
   type FleetServiceTemplate,
   type FleetWorkCommand,
   type FleetOverview,
@@ -264,7 +265,7 @@ export function FleetServiceTemplates({ identity }: { identity: string }) {
                 <option value="">{c.choose}</option>
                 {FleetPricingBasisSchema.options.map((basis) => (
                   <option key={basis} value={basis}>
-                    {basis.replaceAll("_", " ")}
+                    {fleetServiceTemplateBasisLabel(basis,i18n?.language)}
                   </option>
                 ))}
               </select>
