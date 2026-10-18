@@ -43,6 +43,7 @@ import {
 import {
   FleetActionFields,
   fleetActionComplete,
+  prepareFleetInspectionInput,
 } from "@/components/fleet-action-fields";
 import { fleetCopy } from "@/lib/fleet-copy";
 import { FleetSupportPanel } from "@/components/fleet-support";
@@ -442,9 +443,10 @@ function FleetWorkspace({
     setBusy(true);
     setNotice("");
     try {
+      const actionInput=prepareFleetInspectionInput(run,pending.input);
       if (run.ticketReference||run.localWork) {
         if (!work.session) throw new Error("Verify the original Fleet device before recording this activity");
-        const result = await work.session.captureAction(run, pending.input, run.schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+        const result = await work.session.captureAction(run, actionInput, run.schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
         await work.refresh(false);
         setPending(null);
         if (!result.canonicalApplied) {
@@ -453,7 +455,7 @@ function FleetWorkspace({
         }
         const saved = await fleetClient.run(run.id);
         if (saved.version <= pending.input.expectedVersion) throw new Error("Saved action needs canonical readback verification");
-      } else await fleetClient.action(pending.id, pending.input);
+      } else await fleetClient.action(pending.id, actionInput);
       setPending(null);
       setNotice(c.saved);
       await reload();

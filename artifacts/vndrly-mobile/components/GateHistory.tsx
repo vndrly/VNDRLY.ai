@@ -1,3 +1,4 @@
+import {gateDailyBillingCopy} from "@workspace/api-zod";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as Crypto from "expo-crypto";
@@ -30,7 +31,7 @@ type Row = Record<string, unknown> & { id?: string | number };
 
 export default function GateHistory(){const {user,activeMembershipId}=useAuth();return <GateHistoryPanel key={String(user?.id)+":"+String(activeMembershipId)}/>;}
 function GateHistoryPanel() {
-  const colors = useColors(); const { t } = useTranslation();
+  const colors = useColors(); const { t,i18n } = useTranslation();
   const { width, height } = useWindowDimensions();
   const wideLandscape = width >= 768 && width > height;
   const { user,activeMembershipId } = useAuth();
@@ -124,6 +125,8 @@ function GateHistoryPanel() {
     <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 }}>
       {t("gateHistory.subtitle")}
     </Text>
+
+    {user?.role==="vendor"?<TogglePillButton onPress={()=>router.push("/gate-billing" as never)}>{gateDailyBillingCopy("Gate daily billing",i18n.language)}</TogglePillButton>:null}
 
     <View testID="gate-history-filter-card" style={{borderWidth:2,borderColor:colors.primary,borderRadius:14,padding:14,gap:12,backgroundColor:colors.card}}>
           <View testID="gate-history-report-selectors" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>

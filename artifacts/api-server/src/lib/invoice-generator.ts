@@ -44,6 +44,7 @@ import {
   type EngineSnapshot,
 } from "./invoice-engine";
 import { logger } from "./logger";
+import { GateDailyBillingConfigSchema } from "@workspace/api-zod";
 
 // A handle that can run drizzle queries: either the root db OR a transaction
 // handle yielded by db.transaction(). Used so the regenerate route can wrap
@@ -144,6 +145,25 @@ async function generateInvoiceForTicketInner(
     .where(eq(siteLocationsTable.id, ticket.siteLocationId));
   if (!site) return { ok: false, reason: "site_not_found" };
 
+  // Gate post periods retain their original payer and AFE. Moving a site or
+  // editing today's assignment must never re-address an already closed period.
+  const gateProof = (await executor.execute(sql`
+    SELECT tool_output FROM assistant_action_audit
+    WHERE vendor_id=${ticket.vendorId} AND partner_id IS NULL
+      AND target_type='gate-billing-ticket' AND target_id=${String(ticketId)}
+    ORDER BY id DESC LIMIT 1
+  `)).rows[0]?.tool_output as { agreement?: unknown } | undefined;
+  const gateAgreement = gateProof
+    ? GateDailyBillingConfigSchema.safeParse(gateProof.agreement) : null;
+  if (gateAgreement && (!gateAgreement.success ||
+      gateAgreement.data.vendorId !== ticket.vendorId ||
+      gateAgreement.data.siteId !== ticket.siteLocationId ||
+      gateAgreement.data.partnerId !== site.partnerId ||
+      gateAgreement.data.workTypeId !== ticket.workTypeId ||
+      gateAgreement.data.openTicketId !== ticketId))
+    return { ok: false, reason: "gate_billing_context_changed" };
+
+
   const [vendor] = await executor
     .select()
     .from(vendorsTable)
@@ -174,7 +194,7 @@ async function generateInvoiceForTicketInner(
         eq(siteWorkAssignmentsTable.workTypeId, ticket.workTypeId),
       ),
     );
-  const afe = afeAssignment?.afe ?? site.afe ?? null;
+  const afe = gateAgreement?.success ? gateAgreement.data.afe : afeAssignment?.afe ?? site.afe ?? null;
 
   // Order by checkInAt ASC so weekly-OT reverse-walk (which converts the
   // latest hours of the week from regular→OT) operates on the correct

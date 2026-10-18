@@ -8,12 +8,14 @@ export default function FleetChoiceField({
   options,
   onChange,
   disabled = false,
+  placeholder = "Choose",
 }: {
   label: string;
   value: string;
   options: { id: string; label: string }[];
   onChange: (id: string) => void;
   disabled?: boolean;
+  placeholder?:string;
 }) {
   const colors = useColors(),
     [open, setOpen] = useState(false),
@@ -29,7 +31,7 @@ export default function FleetChoiceField({
           setOpen(true);
         }}
       >
-        {options.find((item) => item.id === value)?.label ?? "Choose"} ▾
+        {options.find((item) => item.id === value)?.label ?? placeholder} ▾
       </TogglePillButton>
       <Modal visible={open} transparent onRequestClose={() => setOpen(false)}>
         <View

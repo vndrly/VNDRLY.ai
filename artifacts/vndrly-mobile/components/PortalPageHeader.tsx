@@ -13,6 +13,7 @@ type Props = {
   fallbackHref?: string;
   backBehavior?: "history" | "destination";
   notificationHref?: string;
+  beforeTitle?: React.ReactNode;
 };
 
 /** Approved iOS portal header: company identity, then true Back + page title + Ask V. */
@@ -22,6 +23,7 @@ export default function PortalPageHeader({
   fallbackHref = "/profile",
   backBehavior = "destination",
   notificationHref,
+  beforeTitle,
 }: Props) {
   const colors = useColors();
 
@@ -45,6 +47,7 @@ export default function PortalPageHeader({
         logoTestId={`${testIdPrefix}-company-logo`}
         platformLogoTestId={`${testIdPrefix}-vndrly-logo`}
       />
+      {beforeTitle}
       <View style={styles.pageTitleRow}>
         <View style={styles.pageTitleStart}>
           <SphereBackButton

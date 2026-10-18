@@ -43,6 +43,7 @@ const WEB_PATH_BY_SCREEN: Record<string, string> = {
 
 /** Screens that map to an in-app Expo route (no browser handoff). */
 const MOBILE_ROUTE_BY_SCREEN: Record<string, string> = {
+  "gate-billing": "/gate-billing",
   "gate-map": "/(tabs)/gate-map", "gate-log": "/(tabs)/gate-history",
   fleet: "/(tabs)/fleet", "fleet-log": "/(tabs)/fleet-log", "fleet-map": "/(tabs)/fleet-map",
   "company-operations": "/company-operations",
@@ -63,6 +64,7 @@ const MOBILE_ROUTE_BY_SCREEN: Record<string, string> = {
 };
 
 const MOBILE_ROUTE_BY_WEB_PATH: Record<string, string> = {
+  "/gate/history/billing": "/gate-billing",
   "/gate": "/(tabs)/gate",
   "/gate/shift-notes": "/gate/shift-notes",
   "/field/profile": "/(tabs)/profile",

@@ -37,6 +37,7 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "query_gate_daily_billing", "configure_gate_daily_billing", "invoice_gate_post",
   "query_gate_stations",
   "query_gate_change_over",
   "query_shift_notes",
@@ -129,6 +130,7 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
     "query_flagged_tickets",
   ]),
   finance: new Set([
+    "query_gate_daily_billing",
     "lookup_open_invoices",
     "query_invoice_summary",
     "query_invoices",
@@ -226,6 +228,11 @@ export function toolsForRealtime(args: {
     for(const tool of ASK_V_TOOL_REGISTRY) if([...FLEET_COMMERCIAL_TOOLS,...FLEET_AUXILIARY_TOOLS].some(row=>row.name===tool.name)||tool.name.startsWith("query_fleet_") || ["create_fleet_inventory_asset","enroll_fleet_inventory_asset","edit_fleet_inventory_asset","recommend_fleet_destinations","save_fleet_ticket_plan","save_fleet_destination","finalize_fleet_ticket"].includes(tool.name) || tool.name === "query_gate_coverage_map" || tool.name === "query_company_operations" || tool.name === "set_company_operations") allowed.add(tool.name);
   }
   if(role==="partner"&&args.membershipRole==="admin"&&/partners|fleet-agreements/.test(path))for(const name of ["approve_fleet_rate_agreement","query_fleet_compliance_policy","query_fleet_policy_impact","activate_fleet_compliance_policy"])allowed.add(name);
+  // Financial workflow selection remains read-only; Gate billing writes are
+  // offered on their own reviewed screen and still require trusted approval.
+  if (role === "vendor" && /\/gate(?:\/history\/billing|-billing)(?:\/|$)/i.test(path)) {
+    allowed.add("configure_gate_daily_billing"); allowed.add("invoice_gate_post");
+  }
   const inWorkHub = /\/work-hub(?:\/|$)/i.test(path);
   if (/\/(?:profile|compliance)(?:\/|$)/i.test(path)) {
     for (const name of ["get_work_hub_settings", "set_work_hub_language", "get_work_hub_connections", "prepare_work_hub_profile", "confirm_work_hub_profile", "get_work_hub_gate_locations", "prepare_work_hub_gate_location", "confirm_work_hub_gate_location"]) allowed.add(name);

@@ -1,4 +1,5 @@
 import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   cleanup,
   fireEvent,
@@ -7,6 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+vi.mock("@/components/WorkdayControls", () => ({default: () => <div data-testid="fleet-start-clock">Start Shift</div>}));
 const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   membership: 1,
@@ -45,7 +47,7 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <div>{children}</div>,
 }));
 vi.mock("@/components/WorkHubPageTitle", () => ({
-  default: ({ title }: any) => <h1>{title}</h1>,
+  default: ({ title, beforeTitle }: any) => <><div>{beforeTitle}</div><h1>{title}</h1></>,
 }));
 vi.mock("@/components/MapboxNativeMap", () => ({
   default: () => <div>Fleet location map</div>,
@@ -87,7 +89,7 @@ describe("mobile Fleet authorization", () => {
     mocks.work.storageHealth={state:"low",availableBytes:1024,reserveBytes:67108864,retainedEvidenceBytes:500000,evidenceCount:50};
     const run={id:"20000000-0000-4000-8000-000000000001",title:"Retained crude activity",version:4,driverUserId:1,status:"dispatched",allowedActions:["acknowledge"],currentStopId:null,loads:[],inspections:[],records:[],events:[],stops:[],ticketReference:{id:500,version:1}};
     mocks.api.mockResolvedValue({...overview,runs:[run]});const captureAction=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"});mocks.work.session={captureAction,commercialReview:vi.fn().mockRejectedValue(Error("offline")),scope:{userId:1}};
-    render(<FleetWorkspace initialRunId={run.id}/>);await screen.findByText(run.title);fireEvent.click(screen.getByRole("button",{name:"acknowledge"}));
+    render(<FleetWorkspace initialRunId={run.id}/>);await screen.findByText(run.title);fireEvent.click(screen.getByRole("button",{name:"Acknowledge Run"}));
     await waitFor(()=>expect(captureAction).toHaveBeenCalledOnce());expect(captureAction.mock.calls[0][1]).toMatchObject({expectedVersion:4,action:"acknowledge"});
     expect(mocks.api.mock.calls.some(call=>call[0].endsWith("/actions"))).toBe(false);expect(await screen.findByText(/Saved on this device.*pending sync/)).toBeTruthy();expect(await screen.findByText(/Device storage is low/)).toBeTruthy();
   });
@@ -204,8 +206,8 @@ describe("mobile Fleet authorization", () => {
     });
     render(<FleetWorkspace initialRunId={run.id} />);
     await screen.findByText("Synthetic load");
-    fireEvent.click(screen.getByRole("button", { name: "acknowledge" }));
-    expect(await screen.findByRole("button", { name: "inspect" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Acknowledge Run" }));
+    expect(await screen.findByRole("button", { name: "Save truck/rig check" })).toBeTruthy();
     const request = mocks.api.mock.calls.find((call) =>
       call[0].endsWith("/actions"),
     );
@@ -314,11 +316,11 @@ it("keeps canonical loads separate while proposed queued load enables the next o
   render(<FleetWorkspace initialRunId={id} />);
   expect(
     await screen.findByText(
-      /Pending device sequence, not accepted by the server/,
+      /Saved on this phone; waiting to sync/,
     ),
   ).toBeTruthy();
   expect(
-    (screen.getByRole("button", { name: "depart stop" }) as HTMLButtonElement)
+    (screen.getByRole("button", { name: "Leave stop" }) as HTMLButtonElement)
       .disabled,
   ).toBe(false);
   expect(screen.queryByText(/Synthetic sand:/)).toBeNull();
@@ -560,4 +562,29 @@ it("keeps operational driver details from opening the finance-only ticket plan",
   render(<FleetWorkspace initialRunId={id} />);
   await screen.findByText("Driver commercial routing");
   expect(screen.queryByText("Commercial plan for ticket 88")).toBeNull();
+});
+
+it("keeps the shift clock on the Fleet start page and removes it on the map",async()=>{
+ mocks.api.mockResolvedValue(overview);
+ const cache = new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={cache}><FleetWorkspace/></QueryClientProvider>);
+ expect(screen.getByTestId("fleet-start-clock")).toBeTruthy();
+ await screen.findByRole("button",{name:"Map"});
+ fireEvent.click(screen.getByRole("button",{name:"Map"}));
+ expect(screen.queryByTestId("fleet-start-clock")).toBeNull();
+});
+it("does not repeat the shift clock on an opened run",()=>{
+ mocks.api.mockResolvedValue(overview);
+ render(<FleetWorkspace initialRunId="20000000-0000-4000-8000-000000000001"/>);
+ expect(screen.queryByTestId("fleet-start-clock")).toBeNull();
+});
+it("keeps prior-sign-in recovery under driver More even with no current pending work",async()=>{
+ const priorWork=vi.fn().mockResolvedValue([]);
+ mocks.work.session={scope:{userId:1},priorWork};
+ mocks.api.mockResolvedValue(overview);
+ render(<FleetWorkspace/>);
+ expect(screen.queryByRole("button",{name:"Retained work from earlier sign-ins"})).toBeNull();
+ fireEvent.click(await screen.findByRole("button",{name:"More"}));
+ fireEvent.click(screen.getByRole("button",{name:"Retained work from earlier sign-ins"}));
+ await waitFor(()=>expect(priorWork).toHaveBeenCalledOnce());
 });

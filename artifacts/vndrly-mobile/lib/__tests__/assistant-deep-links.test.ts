@@ -24,6 +24,10 @@ describe("parseTicketIdFromHref", () => {
 });
 
 describe("resolveAssistantLink", () => {
+  it("opens Gate daily billing in the native screen from its web or assistant link", () => {
+    expect(resolveAssistantLink("/gate/history/billing")).toEqual({type:"route",path:"/gate-billing"});
+    expect(resolveAssistantLink("vndrly-deep-link:gate-billing")).toEqual({type:"route",path:"/gate-billing"});
+  });
   it("opens every URL emitted by the server deep-link registry", () => {
     for (const definition of DEEP_LINK_SCREENS) {
       if (definition.screen === "work-hub-item") continue;

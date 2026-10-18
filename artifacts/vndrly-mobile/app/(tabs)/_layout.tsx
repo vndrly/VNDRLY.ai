@@ -1,4 +1,3 @@
-import WorkdayControls from "@/components/WorkdayControls";
 import { router, Slot, usePathname } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { useWindowDimensions } from "react-native";
@@ -271,7 +270,7 @@ export default function TabLayout() {
       userName={user?.displayName ?? undefined}
       width={width}
     >
-      {allowed ? <><WorkdayControls /><Slot /></> : null}
+      {allowed ? <Slot /> : null}
     </AdaptiveNavigationShell>
   );
 }

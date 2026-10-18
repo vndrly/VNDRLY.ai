@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { FleetRunSchema } from "@workspace/api-zod";
 import type { FleetActionInput, FleetRun } from "@workspace/api-zod";
-import { FleetActionFields, fleetActionComplete } from "./fleet-action-fields";
+import { FleetActionFields, fleetActionComplete,prepareFleetInspectionInput } from "./fleet-action-fields";
 const input = { operationId: "op", expectedVersion: 1 };
 const baseRun = FleetRunSchema.parse({
   id: "11111111-1111-4111-8111-111111111111",
@@ -162,14 +162,14 @@ describe("Fleet hauling forms", () => {
       fleetActionComplete({ ...input, action: "link_ticket", ticketId: 5.5 }),
     ).toBe(false);
   });
-  it("requires inspection outcome and notes before saving a driver report", () => {
+  it("requires an inspection choice while keeping typed notes optional", () => {
     expect(
       fleetActionComplete({
         ...input,
         action: "inspect",
         inspectionOutcome: "passed",
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       fleetActionComplete({
         ...input,
@@ -178,6 +178,11 @@ describe("Fleet hauling forms", () => {
         notes: "Walkaround completed",
       }),
     ).toBe(true);
+  });
+  it("binds an explicit report to the saved Detail components without requiring a typed note",()=>{
+    const truck=baseRun.vehicleAssetId,trailer="30000000-0000-4000-8000-000000000002";
+    const run={...baseRun,resourceAssignment:{snapshot:{detail:{vehicleAssetId:truck},rigPackage:{components:[{assetId:trailer}]}}}} as FleetRun;
+    expect(prepareFleetInspectionInput(run,{...input,action:"inspect",inspectionOutcome:"passed"})).toMatchObject({notes:"No defects found",inspectedAssetIds:[truck,trailer],action:"inspect",operationId:input.operationId});
   });
   it("requires finite positive quantities and manifest references", () => {
     const load: FleetActionInput = {

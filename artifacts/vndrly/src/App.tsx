@@ -64,6 +64,7 @@ const VisitPublicPage = lazy(() => import("@/pages/visit-public"));
 const VerifyEmployeePage = lazy(() => import("@/pages/verify-employee"));
 const VisitorEntryPage = lazy(() => import("@/pages/visitor-entry"));
 const GatekeeperPage = lazy(() => import("@/pages/gatekeeper"));
+const GateDailyBillingPage=lazy(()=>import("@/pages/gate-daily-billing"));
 const GateHistoryPage = lazy(() => import("@/pages/gate-history"));
 const GateChangeOverPage = lazy(() => import("@/pages/gate-change-over"));
 const GateMapPage = lazy(() => import("@/pages/gate-map"));
@@ -276,6 +277,7 @@ function AuthenticatedRouter() {
         <Route path="/onboarding/partner" component={OnboardingPartner} />
         <Route path="/onboarding/vendor" component={OnboardingVendor} />
         <Route path="/onboarding/field/:token" component={OnboardingField} />
+        {user && <Route path="/gate/history/billing"><GatePortalLayout returnToAdmin={!gateWorker}><GateDailyBillingPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/history"><GatePortalLayout returnToAdmin={!gateWorker}><GateHistoryPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/map"><GatePortalLayout returnToAdmin={!gateWorker}><GateMapPage /></GatePortalLayout></Route>}
@@ -302,6 +304,7 @@ function AuthenticatedRouter() {
         ) : (user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user) ? (
           <GatePortalLayout>
             <Switch>
+              <Route path="/gate/history/billing" component={GateDailyBillingPage} />
               <Route path="/gate/history" component={GateHistoryPage} />
               <Route path="/gate/change-over"><GateChangeOverPage /></Route>
               <Route path="/gate/map"><GateMapPage /></Route>

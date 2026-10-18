@@ -1,3 +1,4 @@
+import WorkdayControls from "@/components/WorkdayControls";
 import { Feather } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { router, useFocusEffect } from "expo-router";
@@ -717,7 +718,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={{ paddingTop: Math.max(0, topPadding - 20) }}>
-        <PortalPageHeader title={t(homeTabTitleKey(me))} testIdPrefix="field-portal" notificationHref="/notifications" fallbackHref="/work-hub" backBehavior="history" />
+        <PortalPageHeader beforeTitle={<WorkdayControls />} title={t(homeTabTitleKey(me))} testIdPrefix="field-portal" notificationHref="/notifications" fallbackHref="/work-hub" backBehavior="history" />
         {orgName && (!isForemanEmployee || canSwitchOrg) ? (
           <View style={{ paddingHorizontal: 20, marginBottom: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
             {canSwitchOrg ? (

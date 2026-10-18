@@ -778,6 +778,10 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "gate_billing": {
+      "invalid_request": "Revise los datos de facturación de la puerta e inténtelo de nuevo.",
+      "internal_error": "La facturación de la puerta no está disponible temporalmente. Su solicitud guardada se conserva; verifique el resultado antes de reintentar."
+    },
     "workday": {
       "invalid_request": "La solicitud de turno no es válida.",
       "internal_error": "No se pudo guardar el turno. Vuelve a intentarlo con la misma acción."

@@ -778,6 +778,10 @@
     "cameraUnavailablePickSite": "Camera is unavailable in this build. Choose a site by name instead."
   },
   "errors": {
+    "gate_billing": {
+      "invalid_request": "Review the gate billing details and try again.",
+      "internal_error": "Gate billing is temporarily unavailable. Your saved billing request is retained; verify its outcome before retrying."
+    },
     "workday": {
       "invalid_request": "The shift request is invalid.",
       "internal_error": "The shift could not be saved. Retry the same action."

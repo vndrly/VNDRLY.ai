@@ -48,6 +48,7 @@ export const DEEP_LINK_SCREENS = [
   "crew-replay",
   "site-map",
   "gate-log",
+  "gate-billing",
   "visitors",
   "notification-preferences",
   "notifications-inbox",

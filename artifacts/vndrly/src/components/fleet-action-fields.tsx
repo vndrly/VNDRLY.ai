@@ -1,6 +1,7 @@
 import {
   checkFleetInspectionRequirements,
   checkFleetManifestRequirements,
+  fleetRunAssetIds,
 } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
 import { fleetCopy } from "@/lib/fleet-copy";
@@ -10,6 +11,12 @@ import type {
   FleetResources,
 } from "@workspace/api-zod";
 type FleetActionRun=Pick<FleetRun,"stops"|"siteIds"|"events"|"operationalProfile"|"billing"> & {loads:Array<{id:string;commodity:string;quantity:number;unit:string;manifestReference:string;deliveredAt?:string|null;delivered?:boolean;transferOut?:unknown;transferredOut?:boolean}>};
+/** Normalize only after the driver explicitly saves their own report. */
+export function prepareFleetInspectionInput(run:FleetRun,input:FleetActionInput):FleetActionInput{
+  if(input.action!=="inspect"||!input.inspectionOutcome)return input;
+  const snapshot=run.resourceAssignment?.snapshot??run.localWork?.snapshot??run.recoveredWork?.snapshot;
+  return {...input,notes:input.notes?.trim()?input.notes:input.inspectionOutcome==="passed"?"No defects found":"Report a problem",...(snapshot?{inspectedAssetIds:fleetRunAssetIds({vehicleAssetId:run.vehicleAssetId,trailerAssetId:run.trailerAssetId,resourceAssignment:run.resourceAssignment,recoveredWork:{snapshot}})}:{})};
+}
 export function FleetActionFields({
   run,
   input,
@@ -147,8 +154,8 @@ export function FleetActionFields({
               }
             >
               <option value="">Choose outcome</option>
-              <option value="passed">Passed — driver reported</option>
-              <option value="defect_reported">Defect reported</option>
+              <option value="passed">{i18n.language.startsWith("es")?"Sin defectos encontrados":"No defects found"}</option>
+              <option value="defect_reported">{i18n.language.startsWith("es")?"Reportar un problema":"Report a problem"}</option>
             </select>
           </label>
           {run.operationalProfile?.inspectionItems.map((item) => (
@@ -233,7 +240,7 @@ export function FleetActionFields({
               />
             </fieldset>
           ))}
-          {text("notes", "Inspection notes")}
+          {text("notes", i18n.language.startsWith("es")?"Notas (opcionales)":"Notes (optional)")}
         </>
       )}
       {(input.action === "arrive_stop" || input.action === "depart_stop") && (
@@ -377,7 +384,6 @@ export function fleetActionComplete(
     case "inspect":
       return Boolean(
         input.inspectionOutcome &&
-        present(input.notes) &&
         checkFleetInspectionRequirements(
           run?.operationalProfile,
           input.inspectionResponses,

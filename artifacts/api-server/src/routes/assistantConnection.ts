@@ -1,3 +1,4 @@
+import { isGateBillingAction, recoverGateBillingAction } from "../assistant/gate-billing-action-recovery";
 import {recoverFleetCommercialAction} from "../assistant/fleet-commercial-action-recovery";
 import { recoverFleetBillingAction, recoverFleetRunCreation } from "../assistant/fleet-billing-action-recovery";
 import { ACTION_LOCATION_CLIENT, requiresActionLocation, isOperatorGateAction } from "../assistant/chatgpt-action-location";
@@ -785,6 +786,10 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
   }
   if (result === null && action.toolName === "manage_fleet_run" && action.arguments.action === "create") {
     const receipt = await recoverFleetRunCreation(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && isGateBillingAction(action.toolName)) {
+    const receipt = await recoverGateBillingAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);
   }
   if (result === null && action.toolName === "finalize_fleet_ticket") {

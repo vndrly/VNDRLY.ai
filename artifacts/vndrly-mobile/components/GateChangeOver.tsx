@@ -28,6 +28,7 @@ import TogglePillButton from "@/components/TogglePillButton";
 import GateDutyCard from "@/components/GateDutyCard";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
+import WorkdayControls from "@/components/WorkdayControls";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
@@ -371,6 +372,7 @@ export default function GateChangeOver({
         keyboardShouldPersistTaps="handled"
       >
         <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
+        {!history && <WorkdayControls />}
         <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
           <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
             <SphereBackButton

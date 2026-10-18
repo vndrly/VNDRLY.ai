@@ -97,3 +97,8 @@ export * from "./fleet-storage-health";
 export * from "./fleet-compliance-policy";
 export * from "./fleet-policy-copy";
 export * from "./fleet-recovery-sources";
+
+export * from "./gate-billing-period";
+export * from "./gate-daily-billing";
+export * from "./gate-daily-billing-client";
+export * from "./gate-daily-billing-copy";

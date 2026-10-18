@@ -1,3 +1,4 @@
+import gateDailyBillingRouter from "./gateDailyBilling";
 import workHubLibraryRouter from "./workHubLibrary";
 import workdayRouter from "./workday";
 import workHubFormCampaignsRouter from "./workHubFormCampaigns";
@@ -152,6 +153,7 @@ router.use(commentsRouter);
 router.use(locationsRouter);
 router.use(visitsRouter);
 router.use(gateReportRouter);
+router.use(gateDailyBillingRouter);
 router.use(gateChangeOverRouter);
 router.use(gateLocationsRouter);
 router.use(visitEntryCategoryRouter);

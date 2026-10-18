@@ -1,3 +1,4 @@
+import {GATE_DAILY_BILLING_ARGUMENTS} from "./gate-daily-billing-tools";
 import {FLEET_AUXILIARY_DEFINITIONS,FLEET_COMMERCIAL_DEFINITIONS} from "./fleet-commercial-tools";
 import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
 import { fleetInventoryAction, fleetInventoryArguments } from "./fleet-inventory-tools";
@@ -31,7 +32,7 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "fleet:billing": { label: "Prepare office finalization and submission of fully reviewed Fleet billing tickets; no approval or payment", tools: [...FLEET_AUXILIARY_DEFINITIONS.filter(row=>row.scope==="fleet:billing").map(row=>row.name),...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:billing").map(row=>row.name),"finalize_fleet_ticket"] },
   "fleet:policy": {label:"Prepare explicit future partner compliance enforcement changes with impact review; current partner administrator only",tools:["activate_fleet_compliance_policy"]},
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
-  "finance:write": { label: "Prepare authorized canonical invoice drafts or ticket payment records; never transfer money", tools: ["prepare_ticket_invoices", "record_ticket_payment", "reverse_ticket_payment_record"] },
+  "finance:write": { label: "Prepare authorized canonical invoice drafts or ticket payment records; never transfer money", tools: ["configure_gate_daily_billing","invoice_gate_post","prepare_ticket_invoices", "record_ticket_payment", "reverse_ticket_payment_record"] },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
   "trips:write": { label: "Prepare authorized trip start, pause, driver resume, completion, or one approval-device location update; never start a device collector", tools: ["confirm_field_trips_action"] },
   "safety:write": { label: "Prepare authorized incident response, acknowledgement, evidence, escalation, and closure", tools: ["confirm_incident_response_action"] },
@@ -46,6 +47,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+ if(name==="configure_gate_daily_billing"||name==="invoice_gate_post"){const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
  if([...FLEET_COMMERCIAL_DEFINITIONS,...FLEET_AUXILIARY_DEFINITIONS].some(row=>row.name===name)){const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
  if (name === "finalize_fleet_ticket") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
  if (fleetInventoryAction(name)) { const { operationId: _op, confirmed: _confirmed, ...fields } = input; return fields; }
@@ -78,6 +80,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+ if(name==="configure_gate_daily_billing"||name==="invoice_gate_post"){const {operationId:_operationId,confirmed:_confirmed,...fields}=input;GATE_DAILY_BILLING_ARGUMENTS[name].parse(fields);return;}
  const commercial=[...FLEET_COMMERCIAL_DEFINITIONS,...FLEET_AUXILIARY_DEFINITIONS].find(row=>row.name===name);if(commercial){const {operationId:_op,confirmed:_c,...fields}=input;commercial.schema.parse(fields);return;}
   if(name==="manage_my_workday"){const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);WorkdayAssistantInputSchema.omit({operationId:true}).parse(fields);}
   if (fleetInventoryAction(name)) { const { operationId, ...fields } = input; if (operationId !== undefined) z.uuid().parse(operationId); fleetInventoryArguments(name).parse(fields); }

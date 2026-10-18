@@ -1,3 +1,4 @@
+import {GATE_DAILY_BILLING_NAMES,gateDailyBillingToolRequest} from "./gate-daily-billing-tools";
 import {fleetAuxiliaryToolRequest,fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
 import {WorkdayAssistantInputSchema,FleetPolicyChangeSchema} from "@workspace/api-zod";
 import {randomUUID} from "node:crypto";
@@ -167,6 +168,7 @@ const direct = (input: Input, extra: Input = {}): Input => ({
 });
 
 function resolveImplementationACapabilityRequest(name: string, input: Input): WorkHubToolRequest | null {
+  if((GATE_DAILY_BILLING_NAMES as readonly string[]).includes(name)){try{return gateDailyBillingToolRequest(name,input);}catch{return {error:"Read the exact Gate billing post and current quote before confirming this change."};}}
   if (name === "manage_gate_shift") {
     const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     if (!uuid(input.stationId)) return { error: "Read the exact authorized Gate station first." };
@@ -1203,7 +1205,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  ["manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  [...GATE_DAILY_BILLING_NAMES,"manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,
@@ -1211,6 +1213,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
+  if((GATE_DAILY_BILLING_NAMES as readonly string[]).includes(toolName??""))return input;
   if (FLEET_COMMERCIAL_TOOLS.some(row=>row.name===toolName)||FLEET_COMMERCIAL_READ_TOOLS.some(row=>row.name===toolName))return input;
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination", "finalize_fleet_ticket", "query_fleet_billing_options"].includes(toolName ?? "")) return input;

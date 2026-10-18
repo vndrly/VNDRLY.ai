@@ -1,3 +1,5 @@
+import WorkdayControls from "@/components/WorkdayControls";
+import FleetDriverRun,{nextDriverRunAction} from "@/components/FleetDriverRun";
 import DriverDayHistory from "@/components/DriverDayHistory";
 import FleetPriorWork from "@/components/FleetPriorWork";
 import FleetMonitoring from "@/components/FleetMonitoring";
@@ -204,6 +206,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     }, [identity]);
     const current = data?.identity === identity ? data : null;
     const overview = current?.overview?{...current.overview,runs:[...(work.localRuns??[]),...current.overview.runs]}:undefined;
+    const driverView=!!overview?.capabilities.canDrive&&!overview.capabilities.canDispatch&&!overview.capabilities.canManage&&!overview.capabilities.canSetup;
     const run = overview?.runs.find(r => r.id === selected);
     const pendingRun = queued.filter(item => item.runId === run?.id);
     let proposed: ReturnType<typeof previewFleetRunActions> | null = null;
@@ -216,8 +219,9 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         } catch (e) { previewError = e instanceof Error ? e.message : "Offline sequence cannot continue."; }
     }
     if(run&&(run.ticketReference||run.localWork)){try{proposed=previewFleetWorkEntries(run,work.entries??[],user?.id??0);}catch(e){previewError=e instanceof Error?e.message:"Retained sequence needs verification";}}
-    const actionRun = run && proposed ? { ...run, version: proposed.expectedVersion, currentStopId: proposed.currentStopId, allowedActions: proposed.allowedActions } : run;
+    const actionRun = run && proposed ? { ...run, version: proposed.expectedVersion, status:proposed.status, phase:proposed.phase as FleetRun["phase"], visitedStopIds:proposed.visitedStopIds, currentStopId: proposed.currentStopId, allowedActions: proposed.allowedActions } : run;
     const formRun = actionRun && proposed ? { ...actionRun, loads: proposed.loads } : actionRun;
+    const driverPendingActions=[...pendingRun.map(item=>item.input),...(work.entries??[]).flatMap(entry=>entry.command.kind==="activity.action"&&entry.command.payload.activity.id===run?.id&&(run?.localWork?entry.delivery.state!=="retained":!["applied","retained"].includes(entry.delivery.state))?[entry.command.payload.action]:[])];
     const visibleRuns = overview?.runs.filter(item => (!fleetFilter || item.fleetId === fleetFilter) && (mode !== "my-day" || item.driverUserId === user?.id) && (mode !== "review" || item.status === "submitted_for_review")) ?? [];
     const fleet = overview?.fleets.find(f => f.id === fleetId);
     const textStyle = { color: colors.text, fontSize: 16 };
@@ -423,26 +427,29 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       <FleetInventory key={`${identity}:${initialAssetId ?? ""}`} identity={identity} initialAssetId={initialAssetId} onSaved={() => setRevision(n => n + 1)} />
     </ScrollView></ScreenSafeArea>;
     return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-    <WorkHubPageTitle onBack={mode !== initialMode ? () => { setMode(initialMode); setSettingsOpen(false); } : undefined} title={copy(mode === "setup" ? "Fleet access settings" : mode === "my-day" || (overview?.roles.includes("driver") && !overview.capabilities.canDispatch) ? "My Fleet Day" : mode === "log" ? "Fleet Log" : mode === "map" ? "Fleet Map" : "Fleet Dispatch")}/>
-    {work.session && <View accessibilityLabel="Retained Fleet work" style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:2,borderRadius:12,padding:16,gap:10}}>
-      <Text style={textStyle}>{work.status.pending} {copy("pending sync")} · {work.status.needsReconciliation} {copy("needing office reconciliation")} · {work.status.pendingEvidence} {copy("pending evidence")}</Text>
-      <Text style={textStyle}>{copy("Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.")}</Text>
-      {!!work.error && <Text accessibilityRole="alert" style={textStyle}>{work.error}</Text>}
+    <WorkHubPageTitle beforeTitle={!initialRunId && ["desk", "my-day"].includes(initialMode) && ["desk", "my-day"].includes(mode) ? <WorkdayControls /> : undefined} onBack={mode !== initialMode ? () => { setMode(initialMode); setSettingsOpen(false); } : undefined} title={copy(mode === "setup" ? "Fleet access settings" : mode === "my-day" || (overview?.roles.includes("driver") && !overview.capabilities.canDispatch) ? "My Fleet Day" : mode === "log" ? "Fleet Log" : mode === "map" ? "Fleet Map" : "Fleet Dispatch")}/>
+    {work.session && overview && (!driverView||!!work.status.pending||!!work.status.needsReconciliation||!!work.status.pendingEvidence||!!work.error||!!work.storageHealth&&work.storageHealth.state!=="ready") && <View accessibilityLabel="Retained Fleet work" style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:2,borderRadius:12,padding:16,gap:10}}>
+      {!driverView&&<Text style={textStyle}>{work.status.pending} {copy("pending sync")} · {work.status.needsReconciliation} {copy("needing office reconciliation")} · {work.status.pendingEvidence} {copy("pending evidence")}</Text>}
+      <Text style={textStyle}>{copy(driverView?"Your work is saved on this phone. It will send when connected.":"Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.")}</Text>
+      {!!work.error && <Text accessibilityRole="alert" style={textStyle}>{driverView?copy("Some saved work needs attention. Open More for recovery."):work.error}</Text>}
       {!!work.storageHealth && work.storageHealth.state !== "ready" && <Text accessibilityRole="alert" style={textStyle}>{fleetStorageHealthMessage(work.storageHealth,i18n?.language)}</Text>}
       <TogglePillButton compactOnTablet disabled={busy} onPress={()=>void work.refresh()}>{copy("Verify and synchronize retained work")}</TogglePillButton>
-      <FleetPriorWork key={`prior:${identity}`} session={work.session}/><FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>
+      {!driverView&&<><FleetPriorWork key={`prior:${identity}`} session={work.session}/><FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/></>}
     </View>}
     {overview && <>
     <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:12}}>
-      <View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}>{([
+      <View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}>{(driverView?[["My Run","my-day","truck"],["Map","map","map"]] as const:[
         [overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"My Run":"Fleet Dispatch",overview.capabilities.canDrive&&!overview.capabilities.canDispatch?"my-day":"desk","truck"],
         ...(overview.capabilities.canDrive&&overview.capabilities.canDispatch?[["My Run","my-day","user"]]:[]),
         ["Inventory and Details","inventory","truck"], ["Origins and Destinations","locations","map-pin"], ...((overview.capabilities.canDispatch||overview.capabilities.canManageResources)?[["Runs","orders","repeat"],["Drivers","directory","users"]]:[]),["Reports","reports","bar-chart-2"],
         ["Map","map","map"],["Compliance","compliance","shield"]
       ] as const).map(([label,value,icon])=><Pressable key={value} accessibilityRole="button" accessibilityState={{selected:mode===value}} onPress={()=>setMode(value as typeof mode)} style={{paddingHorizontal:16,paddingVertical:12,borderRadius:12,borderWidth:2,borderColor:colors.primary,backgroundColor:mode===value?colors.primary:colors.card,flexDirection:"row",gap:8,alignItems:"center"}}><Feather name={icon as any} size={18} color={mode===value?"#ffffff":colors.primary}/><Text style={{color:mode===value?"#ffffff":colors.foreground,fontWeight:"600"}}>{copy(label)}</Text></Pressable>)}</View>
-      <Pressable accessibilityRole="button" accessibilityLabel={copy("Fleet settings")} onPress={()=>setSettingsOpen(!settingsOpen)} style={{padding:12}}><Feather name="settings" size={23} color={colors.primary}/></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={copy(driverView?"More":"Fleet settings")} onPress={()=>setSettingsOpen(!settingsOpen)} style={{padding:12}}>{driverView?<Text style={textStyle}>{copy("More")}</Text>:<Feather name="settings" size={23} color={colors.primary}/>}</Pressable>
     </View>
     {settingsOpen&&<View style={{gap:10,padding:16,backgroundColor:colors.card,borderColor:colors.primary,borderWidth:1,borderRadius:14}}>
+      {driverView&&!!work.error&&<Text style={textStyle}>{work.error}</Text>}
+      {driverView&&work.session&&<><FleetPriorWork key={`driver-prior:${identity}`} session={work.session}/><FleetReconciliation key={`driver-recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/></>}
+      {driverView&&([ ["Inventory and Details","inventory"],["Origins and Destinations","locations"],["Reports","reports"],["Compliance","compliance"] ] as const).map(([label,nextMode])=><TogglePillButton key={nextMode} onPress={()=>{setMode(nextMode);setSettingsOpen(false);}}>{copy(label)}</TogglePillButton>)}
       <Text style={[textStyle,{fontWeight:"700"}]}>{copy("Fleet settings")}</Text>
       {!cachedAt && (overview.capabilities.canDispatch || overview.capabilities.canSetup) && <FleetDestinationDirectory key={`directory:${identity}`} onChanged={()=>setRevision(n=>n+1)}/>}
       {overview.capabilities.canSetup&&<TogglePillButton compactOnTablet onPress={()=>{setMode("setup");setSettingsOpen(false);}}>{copy("Fleet access settings")}</TogglePillButton>}
@@ -451,7 +458,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     </View>}
     {overview.fleets.length>1&&<View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><TogglePillButton compactOnTablet solid={!fleetFilter} onPress={()=>setFleetFilter(null)}>{copy("All resource pools")}</TogglePillButton>{overview.fleets.map(fleet=><TogglePillButton compactOnTablet key={fleet.id} solid={fleetFilter===fleet.id} onPress={()=>setFleetFilter(fleet.id)}>{fleet.name}</TogglePillButton>)}</View>}
     {overview.enabled&&!overview.fleets.length&&overview.capabilities.canSetup&&mode!=="setup"&&mode!=="map"&&mode!=="log"&&<View style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:2,borderRadius:16,padding:20,gap:12}}><Feather name="truck" size={32} color={colors.primary}/><Text style={[textStyle,{fontSize:20,fontWeight:"700"}]}>{copy("Your Fleet workspace is ready")}</Text><Text style={textStyle}>{copy("Set up your vehicles and Fleet staff to begin.")}</Text><TogglePillButton compactOnTablet solid onPress={()=>setMode("setup")}>{copy("Set up Fleet")}</TogglePillButton></View>}
-    {(overview.capabilities.canDispatch||work.session&&overview.capabilities.canDrive)&&["desk","my-day"].includes(mode)&&overview.fleets.length>0&&<TogglePillButton compactOnTablet solid onPress={()=>setMode("dispatch")}>{copy("New run")}</TogglePillButton>}
+    {(overview.capabilities.canDispatch||work.session&&overview.capabilities.canDrive)&&(!driverView||settingsOpen)&&["desk","my-day"].includes(mode)&&overview.fleets.length>0&&<TogglePillButton compactOnTablet solid onPress={()=>setMode("dispatch")}>{copy("New run")}</TogglePillButton>}
     </>}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Inventory and Details")}</TogglePillButton>}
@@ -486,6 +493,21 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       </>}
       {run && (mode === "desk" || mode === "my-day" || mode === "review" || mode === "dispatch") && <View style={{ flex: 1, minWidth: 0, gap: 12, padding: 14, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.card, borderRadius: 12 }}>
         <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}><Text style={[textStyle,{fontSize:20,fontWeight:"700",flex:1}]}>{run.title}</Text>{!initialRunId&&<Pressable accessibilityRole="button" accessibilityLabel={copy("Close run details")} onPress={()=>setSelected(null)} style={{padding:10}}><Feather name="x" color={colors.primary} size={22}/></Pressable>}</View>
+        {driverView&&formRun&&actionRun?<>
+          <Text style={textStyle}>{run.labels?.vehicleName??copy("Assigned vehicle")}{run.labels?.trailerName?` · ${run.labels.trailerName}`:""}</Text>
+          {run.stops.filter(stop=>stop.kind==="pickup"||stop.kind==="delivery").map(stop=><Text key={stop.id} style={textStyle}>{copy(stop.kind==="pickup"?"Origin":"Destination")}: {stop.destination?.name??run.labels?.sites.find(site=>site.siteId===stop.siteId)?.name??copy("Site")+` ${stop.siteId}`}</Text>)}
+          {run.linkedTicketId&&<Text style={textStyle}>{copy("Ticket #")}{run.linkedTicketId}</Text>}
+          {!!pendingRun.length&&<Text style={textStyle}>{copy("Saved on this phone; waiting to sync.")}</Text>}
+          <FleetDriverRun run={formRun} pendingActions={driverPendingActions} disabled={busy||!!unresolved||!!previewError} onSubmit={(name,fields)=>action(actionRun,name,fields)} photo={run.driverUserId===user?.id&&["acknowledged","in_progress"].includes(actionRun.status)?work.session&&(run.ticketReference||run.localWork)?<FleetRetainedEvidence simple session={work.session} run={run} onChanged={()=>void work.refresh()}/>:<FleetEvidence simple run={run} account={verifiedAccount??undefined} disabled={busy||!!unresolved||pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>:undefined}/>
+          <TogglePillButton compactOnTablet onPress={()=>setDetailsOpen(value=>!value)}>{copy(detailsOpen?"Hide run options":"More run options")}</TogglePillButton>
+          {detailsOpen&&<View style={{gap:12}}>
+            {actionRun.allowedActions.filter(name=>["pause","record_fuel","inspect","record_meter"].includes(name)&&name!==nextDriverRunAction(formRun,driverPendingActions)).map(name=><FleetRunAction key={`${run.id}:${actionRun.version}:${name}`} run={formRun} action={name} guided disabled={busy||!!unresolved||!!previewError} onSubmit={fields=>action(actionRun,name,fields)}/>)}
+            {work.session&&(run.ticketReference||run.localWork)&&<FleetCommercialWork session={work.session} run={run} pending={!!work.status.pending} onChanged={()=>void work.refresh()}/>}
+            <FleetReplacement workSession={work.session} run={run} canDispatch={false} equipment={[]} disabled={busy||!!cachedAt||!!unresolved||pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+            <FleetCargo workSession={work.session} run={run} canDispatch={false} disabled={busy||!!cachedAt||!!unresolved||pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+          </View>}
+          {run.status==="in_progress"&&verifiedAccount&&!cachedAt&&<FleetPhoneLocation run={run} account={verifiedAccount} disabled={busy||!!unresolved||pendingRun.length>0}/>}
+        </>:<>
         <View style={{flexDirection:"row",flexWrap:"wrap",gap:6}}>{[
           ["Assigned",run.status!=="draft"], ["Inspection",run.inspections.length>0], ["Pickup",run.loads.length>0], ["Delivery",run.loads.some(load=>!!load.deliveryReference)], ["Close Run",["submitted_for_review","completed"].includes(run.status)]
         ].map(([label,complete])=><View key={String(label)} style={{paddingHorizontal:10,paddingVertical:8,borderRadius:10,borderColor:complete?colors.primary:colors.border,borderWidth:1,flexDirection:"row",gap:5}}><Feather name={complete?"check-circle":"circle"} size={15} color={complete?colors.primary:colors.mutedForeground}/><Text style={{color:complete?colors.foreground:colors.mutedForeground}}>{copy(String(label))}</Text></View>)}</View>
@@ -527,6 +549,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
 
 
         </View>}
+        </>}
       </View>}
       </View>
       {(overview.capabilities.canDispatch||work.session&&overview.capabilities.canDrive) && mode === "dispatch" && <View style={{ gap: 12 }}>

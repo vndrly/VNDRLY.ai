@@ -6,7 +6,7 @@ vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:"en"}})}));
 vi.mock("./png-pill-rollover",()=>({PngPillButton:({children,...props}:any)=><button {...props}>{children}</button>}));
 it("retains exact driver quantity and never calls an office billing action",async()=>{
  const captureQuantity=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"}),office=vi.fn(),session={scope:{userId:7},captureQuantity,captureOfficeReview:office,commercialReview:vi.fn().mockRejectedValue(Error("offline"))} as any;
- render(<FleetCommercialWork session={session} run={{id:"run",driverUserId:7} as any} pending={false} onChanged={()=>{}}/>);
+ render(<FleetCommercialWork session={session} run={{id:"run",driverUserId:7,stops:[]} as any} pending={false} onChanged={()=>{}}/>);
  fireEvent.change(screen.getByLabelText("Reported quantity"),{target:{value:"123.456789"}});
  fireEvent.click(screen.getByRole("button",{name:"Save reported quantity"}));
  await waitFor(()=>expect(captureQuantity).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({quantity:"123.456789",kind:"delivered",source:"manual"})));

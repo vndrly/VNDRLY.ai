@@ -1,3 +1,4 @@
+import { isGateBillingAction, readGateBillingAction } from "../assistant/gate-billing-action-recovery";
 import { z } from "zod/v4";
 import { readFleetBillingAction, readFleetRunCreation } from "../assistant/fleet-billing-action-recovery";
 import { readFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
@@ -862,6 +863,11 @@ export async function runTool(
       const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
       if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);
       return JSON.stringify(await readFleetRunCreation(input as Record<string,unknown>,fleetInventoryOperationId(input as Record<string,unknown>),z.uuid().parse((saved as Record<string,unknown>).id),session));
+    }
+    if (isGateBillingAction(name)) {
+      const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
+      if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);
+      return JSON.stringify(await readGateBillingAction(name,input as Record<string,unknown>,fleetInventoryOperationId(input as Record<string,unknown>),session));
     }
     if (name === "finalize_fleet_ticket") {
       const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);

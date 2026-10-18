@@ -1,3 +1,4 @@
+import {GATE_DAILY_BILLING_TOOLS} from "./gate-daily-billing-tools";
 import { FLEET_TOOLS } from "./fleet-tools";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import type { AuthorityCapability } from "../../../../lib/api-zod/src/implementation-a/authority";
@@ -234,6 +235,7 @@ export const IMPLEMENTATION_A_CAPABILITY_TOOLS = [
 ];
 
 export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
+  ...GATE_DAILY_BILLING_TOOLS,
   ...FLEET_TOOLS,
   ...TICKET_WORKFLOW_TOOLS,
   ...GATE_WORKFLOW_TOOLS,
