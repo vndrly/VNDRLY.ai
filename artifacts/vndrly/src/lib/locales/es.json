@@ -4328,6 +4328,8 @@
       "idempotency_required": "AskV no pudo identificar esta acción de forma segura. Revisa el registro antes de volver a intentarlo."
     },
     "auth": {
+      "session_invalidated": "Esta sesión ha finalizado. Inicia sesión de nuevo.",
+      "access_unavailable": "No se puede verificar el acceso en este momento. Inténtalo de nuevo.",
       "admin_login_required": "Inicia sesión como administrador para continuar.",
       "admin_only": "Solo los administradores pueden hacer eso.",
       "admin_or_partner_login_required": "Inicia sesión como administrador o socio para continuar.",

@@ -959,6 +959,8 @@
       "employee_inactive": "La oficina acaba de desactivar a ese miembro de la cuadrilla. Actualiza y elige a otra persona."
     },
     "auth": {
+      "session_invalidated": "Esta sesión ha finalizado. Inicia sesión de nuevo.",
+      "access_unavailable": "No se puede verificar el acceso en este momento. Inténtalo de nuevo.",
       "missing_credentials": "Ingresa tu usuario y contraseña.",
       "invalid_credentials": "Usuario o contraseña incorrectos.",
       "not_authenticated": "Inicia sesión para continuar.",
