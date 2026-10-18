@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { FleetError } from "./fleet-repository";
 import type { FleetWorkExecutionContext } from "./fleet-work-repository";
+import {FleetPerformedSourceBindingSchema,fleetPerformedSourceBindingKey} from "./fleet-performed-sources";
 type Canonical = Extract<FleetWorkReference, { type: "canonical" }>;
 const mappingSchema = z
   .object({ scope: FleetWorkScopeSchema, mapping: FleetWorkMappingSchema })
@@ -49,8 +50,13 @@ export async function authorizeFleetOriginalDriverActivity(
   const { actor, state, client } = context;
   if (actor.readOnly || !state.enabled)
     throw new FleetError("fleet.action_forbidden", 403);
-  const activity = await resolveFleetWorkReference(context, scope, activityRef),
-    ticket = await resolveFleetWorkReference(context, scope, ticketRef);
+  let recovered=false,activity:Canonical,ticket:Canonical;
+  const bindingRow=activityRef.type==="local"?(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-performed-source-binding' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,fleetPerformedSourceBindingKey(scope,String(activityRef.id))])).rows[0]:undefined;
+  if(bindingRow){
+    const binding=FleetPerformedSourceBindingSchema.parse(bindingRow.tool_output);
+    if(!isDeepStrictEqual(binding.scope,scope)||!isDeepStrictEqual(binding.originalActivity,activityRef)||!isDeepStrictEqual(binding.originalTicket,ticketRef)||(assignment&&!fleetDetailSnapshotIdentityMatches(binding.snapshot,assignment)))throw new FleetError("fleet.work_assignment_changed",409);
+    activity={type:"canonical",kind:"activity",id:binding.activityId,version:binding.activityVersion};ticket={type:"canonical",kind:"ticket",id:binding.ticketId,version:1};recovered=true;
+  }else{activity=await resolveFleetWorkReference(context,scope,activityRef);ticket=await resolveFleetWorkReference(context,scope,ticketRef);}
   if (activity.kind !== "activity" || ticket.kind !== "ticket")
     throw new FleetError("fleet.invalid_request", 400);
   const rows = await client.query(
@@ -68,10 +74,11 @@ export async function authorizeFleetOriginalDriverActivity(
     !state.fleets.some((g) => g.id === original.fleetId)
   )
     throw new FleetError("fleet.action_forbidden", 403);
+  const originalSnapshot=original.resourceAssignment?.snapshot??(recovered?original.recoveredWork?.snapshot:undefined);
   if (
-    !original.resourceAssignment ||
+    !originalSnapshot ||
     (assignment &&
-      !fleetDetailSnapshotIdentityMatches(original.resourceAssignment.snapshot, assignment)) ||
+      !fleetDetailSnapshotIdentityMatches(originalSnapshot, assignment)) ||
     original.linkedTicketId !== ticket.id
   )
     throw new FleetError("fleet.work_assignment_changed");
@@ -81,5 +88,5 @@ export async function authorizeFleetOriginalDriverActivity(
   );
   if (!parent.rows.length)
     throw new FleetError("fleet.work_assignment_changed");
-  return { original, ticket, activity };
+  return { original, ticket, activity,assignment:originalSnapshot };
 }

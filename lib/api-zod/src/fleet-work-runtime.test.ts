@@ -3,6 +3,15 @@ import {createDurableFleetWorkJournal,type FleetJournalStore} from "./fleet-work
 import {synchronizeFleetWork} from "./fleet-work-runtime";
 import {randomUUID,createHash} from "node:crypto";
 import {FleetWorkCommandSchema} from "./fleet-work";
+it("reads office dispositions for dependency-held originals without replaying physical commands",async()=>{
+ const scope={owner:{type:"vendor" as const,id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()},rows=new Map<string,string>();
+ const storage:FleetJournalStore={async transaction(work){return work({get:async(k,id)=>rows.get(`${k}:${id}`)??null,set:async(k,id,v)=>{rows.set(`${k}:${id}`,v)},values:async k=>[...rows].filter(([id])=>id.startsWith(`${k}:`)).map(([,v])=>v)});}};
+ const journal=createDurableFleetWorkJournal({scope,storage,isCurrent:()=>true,digest:async v=>createHash("sha256").update(v).digest("hex")});
+ const parent=FleetWorkCommandSchema.parse({version:2,scope,operationId:randomUUID(),kind:"activity.note",capturedAt:"2026-10-16T18:00:00Z",timeZone:"UTC",dependencies:[],payload:{activity:{type:"local",kind:"activity",id:randomUUID()},ticket:{type:"local",kind:"ticket",id:randomUUID()},notes:"Original closed report"}}),child={...parent,operationId:randomUUID(),dependencies:[parent.operationId]};await journal.append(parent);await journal.append(child);
+ const state=await journal.readState(),caseId=randomUUID(),officeOperationId=randomUUID(),receipt=(operationId:string)=>({version:2 as const,scope,operationId,fingerprint:state.entries.find(e=>e.command.operationId===operationId)!.fingerprint,recordedAt:"2026-10-16T18:02:00Z",status:"retained" as const,reason:"changed_assignment" as const,caseId,resolution:{caseId,officeOperationId,reviewedByUserId:99,reason:"Original reports adopted separately for office billing review"}});
+ await journal.applyReceipt(scope,receipt(parent.operationId));const apply=vi.fn(),lookup=vi.fn(async(command:typeof parent)=>({receipt:receipt(command.operationId),checkedAt:"2026-10-16T18:03:00Z"}));
+ await synchronizeFleetWork(scope,{journal,isCurrent:()=>true,transport:{apply,lookup}});expect((await journal.readState()).entries.map(e=>e.delivery.state)).toEqual(["retained","retained"]);expect(apply).not.toHaveBeenCalled();expect(lookup).toHaveBeenCalledWith(child);
+});
 it("recovers a lost committed response before replay and lets independent work continue",async()=>{
  const scope={owner:{type:"vendor" as const,id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()},rows=new Map<string,string>();
  const storage:FleetJournalStore={async transaction(work){const copy=new Map(rows);const result=await work({get:async(k,id)=>copy.get(`${k}:${id}`)??null,set:async(k,id,v)=>{copy.set(`${k}:${id}`,v)},values:async k=>[...copy].filter(([id])=>id.startsWith(`${k}:`)).map(([,v])=>v)});rows.clear();for(const [k,v]of copy)rows.set(k,v);return result;}};

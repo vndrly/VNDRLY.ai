@@ -142,6 +142,7 @@ export const FleetRunEventHistorySchema = z.object({
 }).strict();
 export const FleetRunSchema = z
   .object({
+    recoveredWork:z.object({version:z.literal(2),billingOnly:z.literal(true),physicalProofVerified:z.literal(false),caseId:z.uuid(),sourceFingerprint:z.string().regex(/^[a-f0-9]{64}$/),sourceCount:z.number().int().positive(),snapshot:FleetDetailSnapshotSchema,reportedClosedAt:z.iso.datetime(),adoptedAt:z.iso.datetime(),adoptedByUserId:z.number().int().positive()}).strict().optional(),
     localWork:z.object({createOperationId:z.uuid(),originStopId:z.uuid(),snapshot:FleetDetailSnapshotSchema,ticket:z.discriminatedUnion("type",[z.object({type:z.literal("local"),kind:z.literal("ticket"),id:z.uuid()}).strict(),z.object({type:z.literal("canonical"),kind:z.literal("ticket"),id:z.number().int().positive(),version:z.number().int().positive()}).strict()]),state:z.literal("pending_server_acceptance")}).strict().optional(),
     runOrder: FleetRunOrderSchema.optional(),
     serviceTemplate:FleetServiceTemplateSchema.optional(),
@@ -224,6 +225,7 @@ export const FleetRunSchema = z
           "Operational stops must preserve the exact physical route and separate billing site",
       });
     const assignment = run.resourceAssignment;
+    if(run.recoveredWork&&(assignment||run.localWork||!["submitted_for_review","completed"].includes(run.status)||run.recoveredWork.snapshot.detail.driverUserId!==run.driverUserId||run.recoveredWork.snapshot.detail.vehicleAssetId!==run.vehicleAssetId||run.recoveredWork.snapshot.detail.companyId!==run.companyId))ctx.addIssue({code:"custom",path:["recoveredWork"],message:"Recovered work is an unreserved historical billing source, never a current physical assignment"});
     if(run.routePlan&&!fleetRouteMatchesSchedule(run.routePlan,run.schedule))ctx.addIssue({code:"custom",path:["routePlan","plannedWindow"],message:"Physical route and run schedule must use the same planned window and time zone"});
     if(run.routePlan&&assignment&&run.routePlan.returnPolicy!==assignment.returnPolicy)ctx.addIssue({code:"custom",path:["resourceAssignment","returnPolicy"],message:"Physical route and run assignment must use the same return policy"});
     if (!assignment) return;

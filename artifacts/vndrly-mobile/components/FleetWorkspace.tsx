@@ -22,7 +22,7 @@ import { ActivityIndicator, AppState, Pressable, useWindowDimensions, ScrollView
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import type { FleetOverview, FleetRun, FleetResources, FleetActionInput } from "@workspace/api-zod";
-import { CreateFleetRunSchema, previewFleetRunActions, previewFleetWorkEntries, fleetStorageHealthMessage,fleetWorkReferenceLabel } from "@workspace/api-zod";
+import { CreateFleetRunSchema, previewFleetRunActions, previewFleetWorkEntries, fleetStorageHealthMessage,fleetWorkReferenceLabel,fleetPerformedRecoveryCopy } from "@workspace/api-zod";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import TogglePillButton from "@/components/TogglePillButton";
@@ -455,6 +455,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     </>}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Inventory and Details")}</TogglePillButton>}
+    {run?.recoveredWork&&<View style={{padding:12,borderWidth:2,borderColor:colors.primary,borderRadius:10,gap:8}}><Text style={textStyle}>{fleetPerformedRecoveryCopy(i18n.language).history}</Text><Text style={textStyle}>{run.recoveredWork.snapshot.detail.name} · v{run.recoveredWork.snapshot.detail.version}</Text></View>}
     {run?.localWork&&<Text style={textStyle}>{fleetWorkReferenceLabel(run.localWork.ticket,i18n.language)}</Text>}
     {(run?.ticketReference||run?.localWork) && proposed && <Text style={textStyle}>{copy("Device-only sequence — pending server acceptance. The map and run status show canonical records.")}</Text>}
     {cachedAt && <Text style={textStyle}>{copy("Offline assigned-work cache from ")}{cachedAt}{copy(". Permissions and readiness are unverified. Entries remain unsynced until the server accepts them; no location is collected.")}</Text>}

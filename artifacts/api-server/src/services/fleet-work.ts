@@ -268,7 +268,7 @@ export function createFleetWorkService(
               operationId: command.operationId,
               reason: failure.reason,
               originalReferences: originalReferences(command),
-              allowedResolutions: resolutions(failure.reason),
+              allowedResolutions: [...resolutions(failure.reason),...(command.kind==="activity.create"?["adopt_performed" as const]:[])],
               createdAt: recordedAt,
             });
           await tx.saveCase(value,command);

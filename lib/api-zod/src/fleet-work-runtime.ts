@@ -18,6 +18,18 @@ export async function synchronizeFleetWork(scope:FleetWorkScope,options:{journal
    catch{current();await journal.recordLookupFailure(entry.command.operationId,now().toISOString());unknown++;}
   }
   state=await journal.readState();
+  // Office source adoption can dispose original facts that never became
+  // dependency-ready. Read their real dispositions; never replay them just to
+  // discover that office already retained/adopted their original reports.
+  const descendants=new Map<string,typeof state.entries>(),retained=state.entries.filter(row=>row.delivery.state==="retained").map(row=>row.command.operationId),heldByRetention=new Set(retained);
+  for(const entry of state.entries)for(const dependency of entry.command.dependencies)descendants.set(dependency,[...(descendants.get(dependency)??[]),entry]);
+  for(let i=0;i<retained.length;i++)for(const entry of descendants.get(retained[i])??[])if(!heldByRetention.has(entry.command.operationId)){heldByRetention.add(entry.command.operationId);retained.push(entry.command.operationId);}
+  const dispositionCursor=Number(await journal.readCache("source-disposition-cursor")??0),pendingDispositions=state.entries.filter(row=>row.delivery.state==="pending"&&heldByRetention.has(row.command.operationId)&&!["evidence.stage","compliance.document.stage"].includes(row.command.kind)),orderedDispositions=[...pendingDispositions.filter(row=>row.sequence>dispositionCursor),...pendingDispositions.filter(row=>row.sequence<=dispositionCursor)];
+  for(const entry of orderedDispositions.slice(0,options.limit??20)){
+   try{current();const saved=await transport.lookup(entry.command);current();if(saved.receipt)await journal.applyReceipt(scope,FleetWorkReceiptSchema.parse(saved.receipt));}catch{current();unknown++;}
+   current();await journal.putCache("source-disposition-cursor",entry.sequence);
+  }
+  state=await journal.readState();
   const attempted=new Set<string>(),limit=options.limit??20;
   while(attempted.size<limit){
    const batch=(await journal.nextBatch(now().toISOString())).filter(command=>!attempted.has(command.operationId)&&!["evidence.stage","compliance.document.stage"].includes(command.kind)).slice(0,limit-attempted.size);

@@ -348,7 +348,7 @@ export function createFleetEvidenceCanonicalHandlers(
         const capture = {
           scope: session.scope,
           ticketId: ticket.id,
-          assignment: original.resourceAssignment!.snapshot,
+          assignment: original.resourceAssignment?.snapshot??original.recoveredWork!.snapshot,
           capturedAt: session.capturedAt,
           timeZone: session.timeZone,
           receivedAt,

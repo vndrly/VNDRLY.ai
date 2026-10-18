@@ -53,17 +53,19 @@ type RunResources = {
   trailerAssetId: string | null;
   driverUserId: number;
   resourceAssignment?: FleetResourceAssignment;
+  recoveredWork?:{snapshot:z.infer<typeof FleetDetailSnapshotSchema>};
 };
 export function fleetRunAssetIds(
   run: Pick<
     RunResources,
-    "vehicleAssetId" | "trailerAssetId" | "resourceAssignment"
+    "vehicleAssetId" | "trailerAssetId" | "resourceAssignment" | "recoveredWork"
   >,
 ): string[] {
-  return run.resourceAssignment
+  const snapshot=run.resourceAssignment?.snapshot??run.recoveredWork?.snapshot;
+  return snapshot
     ? [
-        run.resourceAssignment.snapshot.detail.vehicleAssetId,
-        ...(run.resourceAssignment.snapshot.rigPackage?.components.map(
+        snapshot.detail.vehicleAssetId,
+        ...(snapshot.rigPackage?.components.map(
           (item) => item.assetId,
         ) ?? []),
       ]
@@ -87,7 +89,7 @@ export function fleetRunInspectionMatches(
     inspection.trailerAssetId !== run.trailerAssetId
   )
     return false;
-  if (!run.resourceAssignment) return true;
+  if (!run.resourceAssignment&&!run.recoveredWork) return true;
   const ids = fleetRunAssetIds(run);
   return (
     inspection.inspectedAssetIds?.length === ids.length &&

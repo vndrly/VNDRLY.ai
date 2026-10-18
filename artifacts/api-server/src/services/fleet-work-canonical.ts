@@ -289,7 +289,7 @@ export async function executeFleetWorkCommand(
         activityId: original.id,
         activityVersion: original.version,
         ticketId: ticket.id,
-        assignment: original.resourceAssignment!.snapshot,
+        assignment: original.resourceAssignment?.snapshot??original.recoveredWork!.snapshot,
         evidence,
         capturedAt: command.capturedAt,
         timeZone: command.timeZone,

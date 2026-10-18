@@ -97,12 +97,13 @@ export async function reviewFleetQuantityEvidence(
       )
     ).rows[0];
     const performed = saved && FleetRunSchema.parse(saved.tool_output);
+    const performedSnapshot=performed?.resourceAssignment?.snapshot??performed?.recoveredWork?.snapshot;
     if (
-      !performed?.resourceAssignment ||
+      !performed || !performedSnapshot ||
       performed.linkedTicketId !== ticket.id ||
       performed.driverUserId !== row.user_id ||
       !fleetDetailSnapshotIdentityMatches(
-        performed.resourceAssignment.snapshot,
+        performedSnapshot,
         original.assignment,
       )
     )

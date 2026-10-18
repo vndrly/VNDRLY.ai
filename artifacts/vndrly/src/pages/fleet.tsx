@@ -4,7 +4,7 @@ import {FleetMonitoring} from "@/components/fleet-monitoring";
 import {saveWebFleetWorkspace,readWebFleetWorkspace,activateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
 import {provisionFleetOfflineShell} from "@/lib/fleet-offline-shell";
 import {FleetRetainedEvidence} from "@/components/fleet-retained-evidence";
-import {fleetWorkReferenceLabel} from "@workspace/api-zod";
+import {fleetWorkReferenceLabel,fleetPerformedRecoveryCopy} from "@workspace/api-zod";
 import {FleetCommercialWork} from "@/components/fleet-commercial-work";
 import {FleetReconciliation} from "@/components/fleet-reconciliation";
 import { FleetRouteReplay } from "@/components/fleet-route-replay";
@@ -1298,6 +1298,7 @@ function FleetWorkspace({
             ) : (
               <>
                 <h3 className="text-lg">{run.title}</h3>
+                {run.recoveredWork&&<div className="fleet-detail-group"><p role="status">{fleetPerformedRecoveryCopy(i18n.language).history}</p><p>{run.recoveredWork.snapshot.detail.name} · v{run.recoveredWork.snapshot.detail.version}</p></div>}
                 {run.localWork&&<p role="status">{fleetWorkReferenceLabel(run.localWork.ticket,i18n.language)}</p>}
                 {run.linkedTicketId && !run.ticketReference&&!run.localWork &&
                   (data.capabilities.canManage ||

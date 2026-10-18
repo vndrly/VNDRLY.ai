@@ -172,6 +172,7 @@ function allowed(
   )
     return [];
   const result: FleetRun["allowedActions"] = [];
+  if(run.recoveredWork)return result;
   if(run.workOrigin==="driver_unplanned"&&run.driverUserId===actor.userId&&companyGrantFor(state,actor)?.roles.includes("driver")&&["draft","dispatched","acknowledged"].includes(run.status)){result.push("cancel");if(run.status==="draft")result.push("dispatch");}
   if (
     actor.currentRunsById &&

@@ -8,6 +8,7 @@ import {FleetError} from "./fleet-repository";
 import {createFleetWorkCanonicalService} from "./fleet-work-canonical";
 import {resolveFleetWorkReference} from "./fleet-work-references";
 import {readFleetWorkBillingChoices} from "./fleet-work-preparation";
+import {adoptFleetPerformedSources} from "./fleet-performed-sources";
 
 export async function authorizeFleetRecovery(context:FleetWorkExecutionContext,value:FleetReconciliationCase,original:FleetWorkCommand){
  const {actor,state}=context,grant=state.grants.find(row=>row.userId===actor.userId);
@@ -47,7 +48,7 @@ export async function readFleetReconciliation(context:FleetWorkExecutionContext,
   const value=FleetReconciliationCaseSchema.parse(row.tool_output);
   if(value.scope.userId!==actor.userId&&!value.originalReferences.some(ref=>ref.kind==="activity"))continue;
   const original=await readFleetWorkOriginal(client,actor.companyId,value.operationId);
-  try{const permission=await authorizeFleetRecovery(context,value,original.command),{scope:_,...safe}=value,command=original.command;cases.push({case:safe,original:{kind:command.kind,capturedAt:command.capturedAt,timeZone:command.timeZone,title:command.kind==="activity.create"?command.payload.title:null,driverUserId:command.kind==="activity.create"?command.payload.detailSnapshot.detail.driverUserId:null,activity:command.kind==="activity.create"?{type:"local",kind:"activity",id:command.payload.activityId}:"activity" in command.payload?command.payload.activity:null,ticket:command.kind==="activity.create"?command.payload.billing.ticket:"ticket" in command.payload&&command.kind!=="activity.legacy_action"?command.payload.ticket:null,billing:command.kind==="activity.create"?command.payload.billing:null},canResolve:permission.canResolve&&!value.resolution,canReviewSources:permission.office});}
+  try{const permission=await authorizeFleetRecovery(context,value,original.command),{scope:_,...safe}=value,command=original.command;cases.push({case:command.kind==="activity.create"&&!value.resolution?{...safe,allowedResolutions:[...new Set([...safe.allowedResolutions,"adopt_performed" as const])]}:safe,original:{kind:command.kind,capturedAt:command.capturedAt,timeZone:command.timeZone,title:command.kind==="activity.create"?command.payload.title:null,driverUserId:command.kind==="activity.create"?command.payload.detailSnapshot.detail.driverUserId:null,activity:command.kind==="activity.create"?{type:"local",kind:"activity",id:command.payload.activityId}:"activity" in command.payload?command.payload.activity:null,ticket:command.kind==="activity.create"?command.payload.billing.ticket:"ticket" in command.payload&&command.kind!=="activity.legacy_action"?command.payload.ticket:null,billing:command.kind==="activity.create"?command.payload.billing:null},canResolve:permission.canResolve&&!value.resolution,canReviewSources:permission.office});}
   catch(error){if(error instanceof FleetError&&error.status===403)continue;throw error;}
  }
  return FleetReconciliationPageSchema.parse({cases,nextCursor:rows.length>input.limit?String(included.at(-1)!.id):null});
@@ -67,11 +68,13 @@ export async function resolveFleetReconciliation(context:FleetWorkExecutionConte
  const value=FleetReconciliationCaseSchema.parse(row.tool_output),original=await readFleetWorkOriginal(client,actor.companyId,value.operationId),permission=await authorizeFleetRecovery(context,value,original.command);
  if(!permission.canResolve)throw new FleetError("fleet.recovery_forbidden",403);
  if(value.resolution||value.version!==p.expectedVersion)throw new FleetError("fleet.case_version_conflict",409);
- if(!value.allowedResolutions.includes(p.resolution.kind))throw new FleetError("fleet.case_resolution_forbidden",409);
+ if(!value.allowedResolutions.includes(p.resolution.kind)&&!(p.resolution.kind==="adopt_performed"&&original.command.kind==="activity.create"))throw new FleetError("fleet.case_resolution_forbidden",409);
  const record=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,value.operationId])).rows[0];
  if(!record||record.tool_output.fingerprint!==original.fingerprint||!isDeepStrictEqual(record.tool_output.scope,value.scope))throw new FleetError("fleet.original_storage_unavailable",503);
  let result:FleetWorkExecution={canonicalReferences:[],mappings:[]};
- if(p.resolution.kind==="retain_record_only"){
+ if(p.resolution.kind==="adopt_performed"){
+  result=await adoptFleetPerformedSources(context,command);
+ }else if(p.resolution.kind==="retain_record_only"){
   const receipt=FleetWorkReceiptSchema.parse({version:2,operationId:value.operationId,scope:value.scope,fingerprint:original.fingerprint,recordedAt:new Date().toISOString(),status:"retained",reason:value.reason,caseId:value.id,resolution:{caseId:value.id,officeOperationId:command.operationId,reviewedByUserId:actor.userId,reason:p.reason}});
   await append(context,"fleet-work-resolution-receipt",value.operationId,receipt,value.scope.userId);
  }else if(p.resolution.kind==="resolve_price"&&original.command.kind==="price.resolve"){
