@@ -141,13 +141,15 @@ export function createServiceMarketplaceRouter(
     if (!(await (dependencies.isEnabled ?? isSemanticMarketplaceEnabled)(scope)))
       throw new MarketplaceError(403, "marketplace.disabled");
   };
-  const offerHandler = (run: (req: Request, res: Response, service: JobOfferService, session: SessionPayload) => Promise<void>) => async (req: Request, res: Response) => {
+  const offerHandler = (scopeKind: "create" | "list" | "saved", run: (req: Request, res: Response, service: JobOfferService, session: SessionPayload) => Promise<void>) => async (req: Request, res: Response) => {
     try {
       const session = getSessionFromRequest(req);
       if (!session?.userId) { res.status(401).json({ code: "auth.required", error: "Authentication required" }); return; }
       const service = dependencies.jobOffers ?? await getJobOfferService();
-      // Resolve saved offer/site scope, never trust action-body eligibility or org identities.
-      const saved = req.params.offerId
+      // Organization-wide lists never inherit body/query site identities. Only
+      // validated creation input or an authorized saved offer selects a site.
+      const creation = scopeKind === "create" ? createJobOfferInput.parse(req.body) : null;
+      const saved = scopeKind === "saved"
         ? await service.getJobOffer(id.parse(req.params.offerId), session)
         : null;
       const vendorAction = req.path.includes("/vendors/") ||
@@ -157,10 +159,10 @@ export function createServiceMarketplaceRouter(
       if (session.role === "admin") {
         orgId = side === "vendor"
           ? saved?.vendorId ?? Number(req.params.orgId)
-          : saved?.partnerId ?? Number(req.params.orgId ?? req.body?.partnerId);
+          : saved?.partnerId ?? creation?.partnerId ?? Number(req.params.orgId);
       }
       await requireFeature(side === "partner" || side === "vendor"
-        ? { ownerOrgType: side, ownerOrgId: Number(orgId), siteId: saved?.siteLocationId ?? req.body?.siteLocationId }
+        ? { ownerOrgType: side, ownerOrgId: Number(orgId), siteId: saved?.siteLocationId ?? creation?.siteLocationId ?? null }
         : null);
       await run(req, res, service, session);
     } catch (error) {
@@ -176,18 +178,18 @@ export function createServiceMarketplaceRouter(
     return { ...offer, commercialSnapshot: commercial };
   };
   const offerBase = "/service-marketplace/job-offers";
-  router.post(offerBase, offerHandler(async (req, res, service, session) => {
+  router.post(offerBase, offerHandler("create", async (req, res, service, session) => {
     const body = createJobOfferInput.parse(req.body);
     const key = z.string().trim().min(1).max(200).parse(req.get("Idempotency-Key"));
     res.status(201).json(publicOffer(await service.createJobOffer(body, session, key)));
   }));
-  router.get(`${offerBase}/:offerId`, offerHandler(async (req, res, service, session) => {
+  router.get(`${offerBase}/:offerId`, offerHandler("saved", async (req, res, service, session) => {
     res.json(publicOffer(await service.getJobOffer(id.parse(req.params.offerId), session)));
   }));
-  for (const side of ["partner", "vendor"] as const) router.get(`/service-marketplace/${side}s/:orgId/job-offers`, offerHandler(async (req, res, service, session) => {
+  for (const side of ["partner", "vendor"] as const) router.get(`/service-marketplace/${side}s/:orgId/job-offers`, offerHandler("list", async (req, res, service, session) => {
     res.json({ items: (await service.listJobOffers(side, id.parse(req.params.orgId), session)).map(publicOffer) });
   }));
-  for (const action of ["send", "review", "withdraw", "decline", "accept"] as const) router.post(`${offerBase}/:offerId/${action}`, offerHandler(async (req, res, service, session) => {
+  for (const action of ["send", "review", "withdraw", "decline", "accept"] as const) router.post(`${offerBase}/:offerId/${action}`, offerHandler("saved", async (req, res, service, session) => {
     const { version } = z.object({ version: z.number().int().positive() }).strict().parse(req.body);
     const input = { offerId: id.parse(req.params.offerId), version, session };
     if (action === "accept") {

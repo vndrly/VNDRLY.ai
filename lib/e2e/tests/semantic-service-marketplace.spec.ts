@@ -628,6 +628,28 @@ test("organization flags default disabled and site denial overrides an enabled o
     expect((await search(f, f.partnerPage.request, f.far.id)).status()).toBe(
       200,
     );
+    await pool.query(
+      "UPDATE capability_flags SET enabled=false WHERE owner_org_type='partner' AND owner_org_id=$1 AND flag_name='semantic_service_marketplace' AND site_id IS NULL",
+      [f.flywheel.id],
+    );
+    for (const [side, orgId, page] of [
+      ["partner", f.flywheel.id, f.partnerPage],
+      ["vendor", f.midcon.id, f.vendorPage],
+    ] as const) {
+      await pool.query(
+        "INSERT INTO capability_flags (owner_org_type,owner_org_id,site_id,flag_name,enabled) VALUES ($1,$2,$3,'semantic_service_marketplace',true)",
+        [side, orgId, f.far.id],
+      );
+      const forgedList = await page.request.get(
+        `${root}/${side}s/${orgId}/job-offers`,
+        {
+          params: { siteId: f.far.id, siteLocationId: f.far.id },
+          data: { siteLocationId: f.far.id },
+        },
+      );
+      expect(forgedList.status()).toBe(403);
+      expect((await forgedList.json()).code).toBe("marketplace.disabled");
+    }
     const newVendor = await createVendor(pool, {
       name: `Unflagged ${f.stamp}`,
       contactName: "Synthetic",

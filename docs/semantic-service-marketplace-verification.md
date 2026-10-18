@@ -180,3 +180,25 @@ fresh-local PostgreSQL/E2E evidence, actual migration/reconciliation output and
 semantic calibration before activation. Keep organization/site flags disabled
 until those conditions pass. The deployment and all eight full-ship tracks are
 outside Task 12's local implementation authorization.
+
+## Task 12 review fix, round 1
+
+The review found that an offer-list GET body could select a site flag while
+returning an organization-wide list. Scope resolution now explicitly distinguishes
+creation, organization lists, and saved offers. List requests ignore site IDs in
+both body and query and check only the signed organization (or administrator's
+endpoint target). Creation takes its site from schema-validated creation input;
+detail/actions take it from the authorized saved offer. Existing domain
+authorization still applies.
+
+The regression first reproduced 16 body/both-site bypass cases returning 200
+instead of 403. After the fix, the feature suite contains 50 passing cases,
+including missing/disabled organization flags plus an enabled site for partner
+and vendor lists, owner and administrator sessions, forged body/query/both,
+enabled organization lists ignoring a disabled forged site, and legitimate
+site-scoped creation/detail. The five affected feature/vendor/partner/offer/AskV
+suites pass **93 tests**. The new E2E scenario also exercises forged partner and
+vendor list bodies/queries against persisted flags when fresh-local CI runs;
+it remains authored, not locally executed. API typecheck, focused E2E typecheck,
+and `git diff --check` pass. Full repository/database/browser gates remain
+reserved for the controller as above.
