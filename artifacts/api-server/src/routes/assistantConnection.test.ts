@@ -6,6 +6,7 @@ import { createHmac } from "node:crypto";
 import { ASSISTANT_RESOURCE, CHATGPT_CLIENT_ID, assistantPkceChallenge, type AssistantOAuthGrant } from "../assistant/chatgpt-oauth";
 
 const mocks = vi.hoisted(() => ({ validate: vi.fn(), store: vi.fn(), run: vi.fn(), taskRead: vi.fn(), audit: vi.fn(), bound: vi.fn(), pending: vi.fn(), durableResult: vi.fn() }));
+vi.mock("../lib/staff-session-revocation", () => ({ isStaffTokenRevoked: async () => false }));
 vi.mock("../assistant/natural-voice-write-tools", async importOriginal => ({ ...await importOriginal<typeof import('../assistant/natural-voice-write-tools')>(), callNaturalVoiceDomainApi: (...args: unknown[]) => mocks.taskRead(...args) }));
 vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: mocks.validate, withAssistantGrants: mocks.store }));
 vi.mock("./assistant", () => ({ runTool: mocks.run }));

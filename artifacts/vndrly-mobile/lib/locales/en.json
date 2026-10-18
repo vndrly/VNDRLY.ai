@@ -1096,6 +1096,8 @@
       "employee_inactive": "That crew member was just deactivated by the office. Refresh and pick someone else."
     },
     "auth": {
+      "session_invalidated": "This session has ended. Please sign in again.",
+      "access_unavailable": "Unable to verify access right now. Please try again.",
       "missing_credentials": "Please enter your username and password.",
       "invalid_credentials": "Invalid username or password.",
       "not_authenticated": "Please sign in to continue.",

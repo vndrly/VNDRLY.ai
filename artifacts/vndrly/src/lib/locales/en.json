@@ -4484,6 +4484,8 @@
       "idempotency_required": "AskV couldn't safely identify this action. Check the record before trying again."
     },
     "auth": {
+      "session_invalidated": "This session has ended. Please sign in again.",
+      "access_unavailable": "Unable to verify access right now. Please try again.",
       "admin_login_required": "Sign in as an administrator to continue.",
       "admin_only": "Only administrators can do that.",
       "admin_or_partner_login_required": "Sign in as an administrator or partner to continue.",

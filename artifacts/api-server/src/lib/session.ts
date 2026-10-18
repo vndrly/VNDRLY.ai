@@ -61,6 +61,8 @@ export interface SessionPayload {
   exp?: number;
   /** Session version — must match users.session_version in the DB. */
   sv?: number;
+  /** Unique issuance identity; legacy signed tokens remain supported. */
+  sid?: string;
 }
 
 export function decodeSession(token: string | undefined | null): SessionPayload | null {

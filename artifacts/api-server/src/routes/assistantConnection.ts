@@ -25,6 +25,7 @@ import { Router, type Request, type Response } from "express";
 import { exposedOperationTools, resolveOperationTool, planOperationTools, canonicalOperationToolName, operationToolAnnotations } from "../assistant/chatgpt-operation-tools";
 import { createHmac, createHash, randomUUID, randomBytes, timingSafeEqual } from "node:crypto";
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
+import { isStaffTokenRevoked } from "../lib/staff-session-revocation";
 import { createRateLimiter } from "../lib/rate-limit-factory";
 import { validateAssistantSession, withAssistantGrants } from "../assistant/chatgpt-grant-store";
 import { ASSISTANT_ISSUER, ASSISTANT_RESOURCE, ASSISTANT_SCOPES, CHATGPT_CLIENT_ID, AssistantOAuthError, validateAssistantAuthorization, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens, assistantAccessMatches, assistantAccessHashMatches, assistantTokenHash, assistantTokenUserId } from "../assistant/chatgpt-oauth";
@@ -76,6 +77,16 @@ import { TICKET_INVOICE_PREPARATION_TOOL } from "../assistant/ticket-invoice-pre
 import { WORKDAY_OPPORTUNITY_TOOLS, availableWorkdayOpportunityTools, handleWorkdayOpportunityTool } from "../assistant/workday-opportunity-chatgpt";
 
 const router = Router();
+
+// Browser consent/action panels use device sessions. OAuth bearer grants remain
+// independently consented and are checked against the account security version.
+async function readAssistantBrowserSession(req: Request): Promise<SessionPayload | null> {
+  const session = getSessionFromRequest(req);
+  if (session?.userId && await isStaffTokenRevoked(req.cookies?.vndrly_session, session.userId)) {
+    throw new AssistantOAuthError("access_denied");
+  }
+  return session;
+}
 const origin = new URL(ASSISTANT_ISSUER).origin;
 const limiter = createRateLimiter({ resourcePrefix: "assistant_connection", errorCode: "assistant_connection.rate_limited", logKind: "assistant_connection.rate_limit", defaultMax: 60, defaultWindowMs: 60_000, message: "Please wait before trying V again." });
 const SERVER_ACTION_FIELDS = new Set(["confirmed", "operationId", "idempotencyKey", "voiceSessionId", "latitude", "longitude", "accuracyMeters", "startLatitude", "startLongitude", "locationSharingActive", "currentLocation"]);
@@ -130,7 +141,7 @@ router.get("/.well-known/oauth-protected-resource", (_req, res) => res.json({ re
 router.get("/device/files/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as FileDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     requireMatchingFileDevice(handoff, current);
@@ -151,7 +162,7 @@ router.get("/device/files/:handoff", async (req, res) => {
 router.get("/device/meetings/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as MeetingDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingMeetingDevice(handoff, current);
@@ -171,7 +182,7 @@ router.get("/device/meetings/:handoff", async (req, res) => {
 router.get("/device/tickets/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as TicketDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingTicketDevice(handoff, current);
@@ -191,7 +202,7 @@ router.get("/device/tickets/:handoff", async (req, res) => {
 router.get("/device/gate/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as GateDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingGateDevice(handoff, current);
@@ -213,7 +224,7 @@ router.get("/device/gate/:handoff", async (req, res) => {
 router.get("/device/fleet/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as FleetDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingFleetDevice(handoff, current);
@@ -237,7 +248,7 @@ router.get("/authorize", async (req, res) => {
   try {
     const authorizationRequest = await validateAssistantAuthorization(req.query, await clientRedirects());
     if (typeof req.query.state !== "string" || req.query.state.length > 4096) throw new AssistantOAuthError("invalid_request");
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into VNDRLY in another tab, then return here and refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const nonce = randomBytes(32).toString("base64url");
@@ -253,7 +264,7 @@ router.post("/authorize", async (req, res) => {
   try {
     if (req.headers.origin !== origin) throw new AssistantOAuthError("access_denied");
     const consent = readEnvelope(req.body.consent);
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session || session.userId !== consent.userId || req.cookies?.vndrly_assistant_consent !== consent.nonce) throw new AssistantOAuthError("access_denied");
     const current = await validateAssistantSession(session);
     if (current.sv !== consent.sv || (current.activeMembershipId ?? null) !== consent.activeMembershipId) throw new AssistantOAuthError("access_denied");
@@ -848,7 +859,7 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
 async function authorizedAction(req: Request) {
   const token = String(req.params.actionToken ?? "");
   const userId = assistantTokenUserId(token);
-  const session = getSessionFromRequest(req);
+  const session = await readAssistantBrowserSession(req);
   if (!userId || !session || session.userId !== userId) throw new AssistantOAuthError("access_denied");
   const current = await validateAssistantSession(session);
   const found = await withAssistantGrants(userId, async (grants, database) => {
