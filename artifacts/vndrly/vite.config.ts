@@ -31,6 +31,7 @@ export default defineConfig({
       this.emitFile({ type: 'asset', fileName: 'es/legal/privacy/index.html', source: renderPublicPrivacyHtml('es') });
       this.emitFile({ type: 'asset', fileName: 'es/legal/terms/index.html', source: renderPublicTermsHtml('es') });
       this.emitFile({ type: 'asset', fileName: 'es/legal/messaging/index.html', source: renderPublicMessagingHtml('es') });
+      this.emitFile({ type: 'asset', fileName: 'legal-assets/pill-amber.png', source: fs.readFileSync(path.resolve(import.meta.dirname, '../../attached_assets/pills/pill_amber.png')) });
       for (const [fileName, sourceName] of [['back-sphere.png', 'VNDRLYai-Button-blank_1777361718577.png'], ['back-gloss.png', 'download_1777663665476.png'], ['back-arrow.png', 'Symbol_Arrow_Left_1777371273492.png']]) {
         this.emitFile({ type: 'asset', fileName: `legal-assets/${fileName}`, source: fs.readFileSync(path.resolve(import.meta.dirname, '../../attached_assets', sourceName)) });
       }
