@@ -449,27 +449,18 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
               <span className="italic">"{t("login.newToVndrlyQuote")}"</span>{" "}
               <span className={"text-gray-300"}>{t("login.newToVndrlyAttribution")}</span>
             </p>
-            <p className={cn("mt-3 text-sm", "text-gray-300")}>
-              <a
-                href="/legal/eula"
-                className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/legal/eula");
-                }}
-                data-testid="link-platform-eula"
-              >
-                {t("login.eulaLink")}
-              </a>
-              <br />
+            <div className="mt-3 text-sm text-gray-300">
               <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/sms/`} className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors" data-testid="link-sms-enrollment">
                 {t("login.smsEnrollmentLink")}
               </a>
-              <br />
-              <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`} className="hover:underline" data-testid="link-privacy-policy">{t("login.privacyPolicyLink")}</a>
-              {" · "}
-              <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`} className="hover:underline" data-testid="link-terms-conditions">{t("login.termsConditionsLink")}</a>
-            </p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                <a href="/legal/eula" className="hover:underline" onClick={(e) => { e.preventDefault(); navigate("/legal/eula"); }} data-testid="link-platform-eula" aria-label={t("login.eulaLink")}>EULA</a>
+                <span aria-hidden="true">·</span>
+                <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`} className="hover:underline" data-testid="link-privacy-policy">{t("login.privacyPolicyLink")}</a>
+                <span aria-hidden="true">·</span>
+                <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`} className="hover:underline" data-testid="link-terms-conditions">{t("login.termsConditionsLink")}</a>
+              </div>
+            </div>
           </div>
 
           {/* Match the inner width of the bordered Sign In card above

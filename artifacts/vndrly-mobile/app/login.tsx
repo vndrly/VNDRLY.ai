@@ -303,17 +303,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => void Linking.openURL("https://vndrly.ai/legal/eula")}
-              disabled={busy}
-              style={styles.linkButton}
-              testID="link-platform-eula"
-            >
-              <Text style={[styles.linkText, { color: colors.mutedForeground }]}>
-                {t("login.eulaLink")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/sms/`)}
               disabled={busy}
               style={styles.linkButton}
@@ -323,13 +312,19 @@ export default function LoginScreen() {
                 {t("login.smsEnrollmentLink")}
               </Text>
             </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`)} disabled={busy} style={styles.linkButton} testID="link-privacy-policy">
-              <Text style={[styles.linkText, { color: colors.mutedForeground }]}>{t("login.privacyPolicyLink")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`)} disabled={busy} style={styles.linkButton} testID="link-terms-conditions">
-              <Text style={[styles.linkText, { color: colors.mutedForeground }]}>{t("login.termsConditionsLink")}</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", columnGap: 8 }}>
+              <TouchableOpacity onPress={() => void Linking.openURL("https://vndrly.ai/legal/eula")} disabled={busy} style={styles.linkButton} testID="link-platform-eula" accessibilityLabel={t("login.eulaLink")}>
+                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>EULA</Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.mutedForeground }}>·</Text>
+              <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`)} disabled={busy} style={styles.linkButton} testID="link-privacy-policy">
+                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>{t("login.privacyPolicyLink")}</Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.mutedForeground }}>·</Text>
+              <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`)} disabled={busy} style={styles.linkButton} testID="link-terms-conditions">
+                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>{t("login.termsConditionsLink")}</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Demo password reset button intentionally removed — passwords
                 are managed via the DEMO_PASSWORD_OVERRIDE secret on the API
