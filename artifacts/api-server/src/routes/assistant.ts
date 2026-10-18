@@ -4,6 +4,8 @@ import { readFleetBillingAction, readFleetRunCreation } from "../assistant/fleet
 import { readFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
 import { fleetInventoryAction, fleetInventoryOperationId } from "../assistant/fleet-inventory-tools";
 import { runBoundTypedAskVTool, synchronizeTypedAskVContext, organizationKeyFromSession } from "../assistant/askv-pending-confirmation";
+import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
+import { runMarketplaceTool } from "../assistant/marketplace-tools";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq, desc, ne, inArray, lte, sql } from "drizzle-orm";
 import {
@@ -844,6 +846,7 @@ export async function runTool(
       error: `Tool '${name}' is not available in field-employee invite mode.`,
     });
   }
+  if (isMarketplaceTool(name)) return JSON.stringify(await runMarketplaceTool(name, input, session, workHubMutationAuthorizedByServer));
   const workHubRequest = resolveExecutableWorkHubToolRequest(
     name,
     bindWorkHubToolScope(input, session, name),
@@ -1628,7 +1631,7 @@ async function handleConversationMessage(
           name: tu.name, input: tu.input, session, conversationId: conv.id, turnId: savedUserMsg.id,
           contextKey: typedConfirmationContext, phrase: userMessage,
           execute: (input) =>
-            isTypedWorkHubTool(tu.name)
+            (isTypedWorkHubTool(tu.name) || isMarketplaceTool(tu.name))
               ? runTool(
                   tu.name,
                   input,

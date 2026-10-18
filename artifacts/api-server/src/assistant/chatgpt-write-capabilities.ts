@@ -1,3 +1,4 @@
+import { MARKETPLACE_WRITE_TOOL_NAMES, isMarketplaceTool, sanitizeMarketplaceInput } from "./marketplace-tool-catalog";
 import {GATE_DAILY_BILLING_ARGUMENTS} from "./gate-daily-billing-tools";
 import {FLEET_AUXILIARY_DEFINITIONS,FLEET_COMMERCIAL_DEFINITIONS} from "./fleet-commercial-tools";
 import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
@@ -33,6 +34,7 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "fleet:policy": {label:"Prepare explicit future partner compliance enforcement changes with impact review; current partner administrator only",tools:["activate_fleet_compliance_policy"]},
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
   "finance:write": { label: "Prepare authorized canonical invoice drafts or ticket payment records; never transfer money", tools: ["configure_gate_daily_billing","invoice_gate_post","prepare_ticket_invoices", "record_ticket_payment", "reverse_ticket_payment_record"] },
+  "marketplace:write": { label: "Prepare exact capabilities, service radii, partner rates and job offers for authenticated approval", tools: MARKETPLACE_WRITE_TOOL_NAMES },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
   "trips:write": { label: "Prepare authorized trip start, pause, driver resume, completion, or one approval-device location update; never start a device collector", tools: ["confirm_field_trips_action"] },
   "safety:write": { label: "Prepare authorized incident response, acknowledgement, evidence, escalation, and closure", tools: ["confirm_incident_response_action"] },
@@ -70,6 +72,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
     const serverFields = new Set(["latitude", "longitude", "checkInLatitude", "checkInLongitude", "accuracyMeters", "recordedAt", "operationId", "confirmed", "idempotencyKey", "locationSharingActive"]);
     return { ...input, payload: { ...Object.fromEntries(Object.entries(payload).filter(([key]) => !serverFields.has(key))), ...(input.action === "create" ? { initialState: "pending_arrival" } : {}) } };
   }
+  if (isMarketplaceTool(name)) return sanitizeMarketplaceInput(name, input);
   if (!/^confirm_(field_trips|workforce_coverage|worker_subscriptions|incident_response|account_invitations)_action$/.test(name)) return input;
   const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
   const fields = new Set(["operationId", "confirmed", ...(name === "confirm_incident_response_action" ? ["latitude", "longitude", "attachmentPaths"] : []), ...(name === "confirm_field_trips_action" ? ["latitude", "longitude", "accuracyMeters", "recordedAt", "speedMps"] : [])]);

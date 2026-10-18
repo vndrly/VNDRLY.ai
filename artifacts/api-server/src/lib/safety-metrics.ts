@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 import { db, safetyEventsTable, siteLocationsTable } from "@workspace/db";
+import { calculateSafetyEventScore } from "./safety-score";
 
 const OPEN_STATUSES = ["submitted", "under_review", "resolved"] as const;
 
@@ -12,10 +13,6 @@ export type SafetyMetricsResult = {
   openRecordableCount: number;
   formulaExplanation: string;
 };
-
-function clampScore(score: number): number {
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
 
 export async function computeSafetyMetrics(opts: {
   partnerId?: number;
@@ -82,11 +79,12 @@ export async function computeSafetyMetrics(opts: {
           ),
     );
 
-  let score = 100;
-  score -= openRecordables.length * 15;
-  score -= openHipoOld.length * 5;
-  score -= Math.min(10, staleOpen.length * 2);
-  score += Math.min(10, nearMissRows.length * 2);
+  const score = calculateSafetyEventScore({
+    openRecordables: openRecordables.length,
+    oldOpenHipo: openHipoOld.length,
+    staleOpen: staleOpen.length,
+    recentNearMisses: nearMissRows.length,
+  });
 
   const [lastRecordable] = await db
     .select({ closedAt: safetyEventsTable.closedAt, createdAt: safetyEventsTable.createdAt })
@@ -119,7 +117,7 @@ export async function computeSafetyMetrics(opts: {
   }
 
   return {
-    safetyScore: clampScore(score),
+    safetyScore: score,
     daysWithoutRecordable,
     noRecordableMessage,
     openEventCount: openRows.length,

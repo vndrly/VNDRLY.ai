@@ -11,6 +11,7 @@ import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
 import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
 import { TICKET_WORKFLOW_TOOLS } from "./ticket-workflow-tools";
 import { GATE_WORKFLOW_TOOLS } from "./gate-workflow-tools";
+import { MARKETPLACE_TOOL_METADATA } from "./marketplace-tool-catalog";
 import {
   WORK_HUB_TOOL_METADATA,
   type WorkHubToolFamily,
@@ -96,6 +97,11 @@ const DEFAULT_METADATA: ToolMetadata = {
 };
 
 const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
+  ...Object.fromEntries(Object.entries(MARKETPLACE_TOOL_METADATA).map(([name, metadata]) => [name, {
+    roles: metadata.roles, mutating: metadata.mutating,
+    confirmation: metadata.mutating ? "required" : "none",
+    risk: metadata.mutating ? "high" : "read", execution: "server", pack: "screen", auditTarget: "hotlist",
+  }])),
   query_gate_stations: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   query_gate_change_over: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   query_shift_notes: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },

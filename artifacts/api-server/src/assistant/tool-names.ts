@@ -1,4 +1,5 @@
 // Pure catalog shared by execution modules and contract tests. No service initialization.
+import { MARKETPLACE_READ_TOOL_NAMES, MARKETPLACE_WRITE_TOOL_NAMES } from "./marketplace-tool-catalog";
 export const EXT_DATA_TOOL_NAMES = [
   "query_ticket_detail",
   "query_ticket_proof_packet",
@@ -16,6 +17,7 @@ export const EXT_DATA_TOOL_NAMES = [
 ] as const;
 
 export const OPS_DATA_TOOL_NAMES = [
+  ...MARKETPLACE_READ_TOOL_NAMES,
   "query_gate_stations",
   "query_gate_change_over",
   "query_shift_notes",
@@ -65,6 +67,7 @@ export const DATA_TOOL_NAMES = [
 ] as const;
 
 export const WRITE_TOOL_NAMES = [
+  ...MARKETPLACE_WRITE_TOOL_NAMES,
   "mark_notifications_read",
   "schedule_ticket_crew",
   "set_ticket_flag",

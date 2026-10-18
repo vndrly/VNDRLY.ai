@@ -1,0 +1,385 @@
+import { and, desc, eq, inArray, isNull, lt, gt, lte, sql } from "drizzle-orm";
+import { db } from "@workspace/db";
+import {
+  vendorsTable,
+  vendorPartnerBillingSettingsTable,
+} from "@workspace/db/schema";
+import { commercialBillingMode } from "../../lib/ticket-commercial-rate";
+import {
+  jobOffersTable as offers,
+  jobOfferAcceptanceSnapshotsTable as snapshots,
+  vendorCapabilitiesTable as capabilities,
+  vendorPartnerServiceOffersTable as rates,
+  partnerVendorRelationshipsTable as relationships,
+  usersTable as users,
+  userOrgMembershipsTable as memberships,
+  ticketsTable as tickets,
+} from "@workspace/db/schema";
+import {
+  createPostgresPartnerMarketplaceStore,
+  discoverPartnerMarketplaceVendors,
+} from "./partner-store";
+import { MarketplaceError } from "./vendor-store";
+import { createTicketWithHistory } from "../../lib/create-ticket";
+import { logger } from "../../lib/logger";
+import type { JobOfferPersistence, JobOfferTransaction } from "./job-offers";
+import { peakReservedCrews } from "./crew-capacity";
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+function adapter(tx: Transaction): JobOfferTransaction {
+  return {
+    async authorize(session, side, orgId) {
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, session.userId!));
+      if (!user || user.suspendedAt || user.sessionVersion !== session.sv)
+        return false;
+      if (session.role === "admin") return user.role === "admin";
+      const [member] = await tx
+        .select()
+        .from(memberships)
+        .where(
+          and(
+            eq(memberships.id, session.activeMembershipId!),
+            eq(memberships.userId, user.id),
+            eq(memberships.orgType, side),
+            side === "partner"
+              ? eq(memberships.partnerId, orgId)
+              : eq(memberships.vendorId, orgId),
+            side === "partner"
+              ? isNull(memberships.vendorId)
+              : isNull(memberships.partnerId),
+            inArray(
+              memberships.role,
+              side === "partner" ? ["admin", "member"] : ["admin"],
+            ),
+          ),
+        );
+      return !!member && user.activeMembershipId === member.id;
+    },
+    async findByKey(partnerId, key) {
+      // Serializes concurrent first writes; the unique index is the final backstop.
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`job-offer-create:${partnerId}:${key}`}, 0))`,
+      );
+      return (
+        (
+          await tx
+            .select()
+            .from(offers)
+            .where(
+              and(
+                eq(offers.partnerId, partnerId),
+                eq(offers.idempotencyKey, key),
+              ),
+            )
+            .for("update")
+        )[0] ?? null
+      );
+    },
+    async get(id) {
+      return (
+        (
+          await tx.select().from(offers).where(eq(offers.id, id)).for("update")
+        )[0] ?? null
+      );
+    },
+    async list(side, id) {
+      return tx
+        .select()
+        .from(offers)
+        .where(eq(side === "partner" ? offers.partnerId : offers.vendorId, id))
+        .orderBy(desc(offers.id))
+        .limit(100);
+    },
+    async validate(input, now) {
+      // Shared capability lock also serializes overlapping acceptances across distinct offers.
+      const [capability] = await tx
+        .select()
+        .from(capabilities)
+        .where(eq(capabilities.id, input.vendorCapabilityId))
+        .for("update");
+      if (!capability?.active || capability.vendorId !== input.vendorId)
+        throw new MarketplaceError(409, "marketplace.capability_inactive");
+      const store = createPostgresPartnerMarketplaceStore(tx);
+      const context = await store.loadContext(
+        input.partnerId,
+        input.workTypeId,
+        input.siteLocationId,
+      );
+      if (!context)
+        throw new MarketplaceError(
+          404,
+          "marketplace.work_type_or_site_not_found",
+        );
+      if (!context.demandMapping || !context.canonicalServiceActive)
+        throw new MarketplaceError(409, "marketplace.active_match_required");
+      const candidateRows = await store.listCandidates(context, now);
+      const candidates = await discoverPartnerMarketplaceVendors(
+        { ...store, listCandidates: async () => candidateRows },
+        context,
+        { requestedCapacity: input.crewCount },
+        now,
+      );
+      const candidate = candidates.find(
+        (row) =>
+          row.vendorId === input.vendorId &&
+          row.capabilityId === input.vendorCapabilityId &&
+          row.offer.id === input.vendorPartnerServiceOfferId,
+      );
+      if (!candidate)
+        throw new MarketplaceError(409, "marketplace.active_match_required");
+      if (!candidate.eligibility.eligible)
+        throw new MarketplaceError(
+          409,
+          `marketplace.${candidate.eligibility.reasonCodes[0].toLowerCase()}`,
+        );
+      const [rate] = await tx
+        .select()
+        .from(rates)
+        .where(eq(rates.id, input.vendorPartnerServiceOfferId));
+      const raw = candidateRows.find(
+        (row) =>
+          row.offer.id === input.vendorPartnerServiceOfferId &&
+          row.vendorId === input.vendorId,
+      );
+      if (!rate || !raw)
+        throw new MarketplaceError(409, "marketplace.ineligible");
+      const [vendor] = await tx
+        .select()
+        .from(vendorsTable)
+        .where(eq(vendorsTable.id, input.vendorId));
+      const [billing] = await tx
+        .select()
+        .from(vendorPartnerBillingSettingsTable)
+        .where(
+          and(
+            eq(vendorPartnerBillingSettingsTable.vendorId, input.vendorId),
+            eq(vendorPartnerBillingSettingsTable.partnerId, input.partnerId),
+          ),
+        );
+      const billingRules = {
+        dailyOtHours: vendor?.dailyOtHours ?? "8",
+        weeklyOtHours: vendor?.weeklyOtHours ?? "40",
+        overtimeMultiplier: billing?.overtimeMultiplier ?? "1.5",
+      };
+      // A scheduled accepted offer reserves crew capacity until its canonical ticket terminates.
+      const reservations = await tx
+        .select({
+          crews: offers.crewCount,
+          start: offers.scheduledStartAt,
+          end: offers.scheduledEndAt,
+        })
+        .from(offers)
+        .innerJoin(tickets, eq(tickets.id, offers.createdTicketId))
+        .where(
+          and(
+            eq(offers.vendorCapabilityId, input.vendorCapabilityId),
+            eq(offers.status, "accepted"),
+            lt(offers.scheduledStartAt, new Date(input.requestedEndAt)),
+            gt(offers.scheduledEndAt, new Date(input.requestedStartAt)),
+            inArray(tickets.status, [
+              "awaiting_acceptance",
+              "initiated",
+              "in_progress",
+              "pending_review",
+              "submitted",
+              "kicked_back",
+            ]),
+          ),
+        );
+      if (
+        peakReservedCrews(
+          new Date(input.requestedStartAt),
+          new Date(input.requestedEndAt),
+          reservations,
+        ) +
+          input.crewCount >
+        candidate.eligibility.facts.availableCapacity
+      )
+        throw new MarketplaceError(409, "marketplace.capacity_changed");
+      return {
+        canonicalServiceId: candidate.canonicalServiceId,
+        commercial: {
+          rateId: rate.id,
+          rateVersion: rate.version,
+          unitPrice: rate.unitPrice,
+          unit: rate.unit,
+          currency: rate.currency,
+          rateComponents: rate.rateComponents,
+          billingRules,
+          automaticBilling: commercialBillingMode(rate),
+          commercialConditions: rate.commercialConditions,
+          notes: rate.notes,
+          demandMappingId: context.demandMapping!.id,
+          capabilityMappingId: raw.capabilityMapping.id,
+        },
+        coverage: {
+          site: context.site,
+          serviceAreas: JSON.parse(JSON.stringify(raw.serviceAreas)),
+          ...candidate.eligibility.facts,
+        },
+        eligibility: {
+          eligible: true,
+          reasonCodes: [],
+          facts: candidate.eligibility.facts,
+          checkedAt: now.toISOString(),
+        },
+      };
+    },
+    async insert(data) {
+      return (await tx.insert(offers).values(data).returning())[0];
+    },
+    async update(id, data) {
+      return (
+        await tx.update(offers).set(data).where(eq(offers.id, id)).returning()
+      )[0];
+    },
+    async snapshot(data) {
+      await tx.insert(snapshots).values(data);
+    },
+    async acceptedVersion(id) {
+      return (
+        (
+          await tx
+            .select({ version: snapshots.offerVersion })
+            .from(snapshots)
+            .where(eq(snapshots.jobOfferId, id))
+        )[0]?.version ?? null
+      );
+    },
+    async engage(offer, now) {
+      // Marketplace engagement does not fabricate blanket catalog/EULA approval.
+      await tx
+        .insert(relationships)
+        .values({
+          partnerId: offer.partnerId,
+          vendorId: offer.vendorId,
+          status: "pending_review",
+          lastStatusReason: "marketplace_engagement",
+          lastStatusChangeAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [relationships.partnerId, relationships.vendorId],
+          set: {
+            updatedAt: now,
+            lastStatusReason: "marketplace_engagement",
+            lastStatusChangeAt: now,
+          },
+        });
+    },
+    async createTicket(offer, session) {
+      const ticket = await createTicketWithHistory(
+        tx,
+        {
+          siteLocationId: offer.siteLocationId,
+          vendorId: offer.vendorId,
+          workTypeId: offer.workTypeId,
+          canonicalServiceId: offer.canonicalServiceId,
+          vendorCapabilityId: offer.vendorCapabilityId,
+          vendorPartnerServiceOfferId: offer.vendorPartnerServiceOfferId,
+          jobOfferId: offer.id,
+          status: "initiated",
+          intakeChannel: "partner_self_service",
+          description: offer.scope,
+          createdById: offer.createdById,
+          scheduledStartAt: offer.scheduledStartAt,
+          scheduledDurationMinutes: Math.ceil(
+            (offer.scheduledEndAt!.getTime() -
+              offer.scheduledStartAt!.getTime()) /
+              60000,
+          ),
+        },
+        {
+          userId: session.userId!,
+          role: session.role ?? null,
+          reason: `marketplace_offer_accepted:${offer.id}`,
+        },
+      );
+      return ticket.id;
+    },
+    async expire(now) {
+      const rows = await tx
+        .update(offers)
+        .set({
+          status: "expired",
+          expiredAt: now,
+          updatedAt: now,
+          version: sql`${offers.version} + 1`,
+        })
+        .where(
+          and(
+            inArray(offers.status, ["offered", "vendor_reviewing"]),
+            lte(offers.expiresAt, now),
+          ),
+        )
+        .returning({ id: offers.id });
+      return rows.length;
+    },
+  };
+}
+
+export function createPostgresJobOfferPersistence(
+  connection = db,
+): JobOfferPersistence {
+  return {
+    async transaction(run) {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          return await connection.transaction((tx) => run(adapter(tx)), {
+            isolationLevel: "serializable",
+          });
+        } catch (error) {
+          const pgError = error as { code?: string; cause?: { code?: string } };
+          const code = pgError.code ?? pgError.cause?.code;
+          if (attempt < 3 && ["40001", "40P01", "23505"].includes(code ?? ""))
+            continue;
+          if (code === "23505")
+            throw new MarketplaceError(409, "marketplace.idempotency_conflict");
+          if (code === "40001" || code === "40P01")
+            throw new MarketplaceError(409, "marketplace.retry_required");
+          throw error;
+        }
+      }
+    },
+    async afterCommit(offer) {
+      logger.info(
+        {
+          offerId: offer.id,
+          status: offer.status,
+          ticketId: offer.createdTicketId,
+          actorUserId: offer.acceptedById ?? offer.sentById,
+        },
+        "Marketplace job offer committed",
+      );
+      try {
+        const { findVendorUserIds, findPartnerUserIds, notifyUsers } =
+          await import("../../routes/notifications");
+        const ids =
+          offer.status === "accepted"
+            ? await findPartnerUserIds(offer.partnerId)
+            : await findVendorUserIds(offer.vendorId);
+        await notifyUsers(ids, {
+          type: "marketplace_job_offer",
+          title:
+            offer.status === "accepted"
+              ? "Job offer accepted"
+              : "New job offer",
+          body:
+            offer.status === "accepted"
+              ? `Job offer #${offer.id} created tracking #${offer.createdTicketId}.`
+              : `Review job offer #${offer.id} before it expires.`,
+          link: offer.createdTicketId
+            ? `/tickets/${offer.createdTicketId}`
+            : "/vendor-catalog",
+        });
+      } catch (error) {
+        logger.warn(
+          { err: error, offerId: offer.id },
+          "Committed job offer notification failed",
+        );
+      }
+    },
+  };
+}

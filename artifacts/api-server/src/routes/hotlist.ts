@@ -165,7 +165,13 @@ router.patch("/hotlist/vendors/:id/operating-area", async (req, res) => {
       geocodeWarning = "Vendor has no physical address. Add one before setting an operating radius.";
     }
   }
-  const [updated] = await db.update(vendorsTable).set(updates).where(eq(vendorsTable.id, id)).returning();
+  // Bind the lookup result to the exact saved address that was geocoded.
+  // Address edits can complete while the external lookup is in flight.
+  const [updated] = await db.update(vendorsTable).set(updates).where(and(
+    eq(vendorsTable.id, id),
+    sql`${vendorsTable.physicalAddress} IS NOT DISTINCT FROM ${vendor.physicalAddress}`,
+  )).returning();
+  if (!updated) return sendApiError(res, 409, "hotlist.address_changed", "Vendor address changed; refresh the operating area and retry geocoding.");
   return res.json({ ...updated, geocodeWarning, geocodeUsedQuery });
 });
 

@@ -11,6 +11,8 @@ import {drizzle} from "drizzle-orm/node-postgres";
 import * as nativeDatabaseSchema from "@workspace/db/schema";
 import {requireMeasuredArrival} from "../services/native-arrival-policy";
 import {validateAssistantSession} from "../assistant/chatgpt-grant-store";
+import { hasAcceptedMarketplaceAccess } from "../lib/accepted-marketplace-access";
+import { ticketCrewTable } from "@workspace/db/schema";
 
 import { createTicketPhotoService, ownedTicketPhoto, TicketPhotoError, TicketPhotoInputSchema } from "../services/ticket-photo-association";
 import { SESSION_SECRET } from "../lib/session";
@@ -285,6 +287,7 @@ async function ensureFieldAssignmentForFieldEmployee(
   if (!session || session.role !== "field_employee") return true;
   const [ticket] = await db
     .select({
+      jobOfferId: ticketsTable.jobOfferId,
       vendorId: ticketsTable.vendorId,
       siteLocationId: ticketsTable.siteLocationId,
       workTypeId: ticketsTable.workTypeId,
@@ -315,6 +318,9 @@ async function ensureFieldAssignmentForFieldEmployee(
       eq(siteWorkAssignmentsTable.workTypeId, ticket.workTypeId),
     ));
   if (assignment) return true;
+  // Ownership/crew membership was checked first. This grant is for this one
+  // accepted engagement; it does not permit opening unrelated site tickets.
+  if (ticket.jobOfferId && await hasAcceptedMarketplaceAccess(ticket.vendorId, { ticketId, siteId: ticket.siteLocationId, workTypeId: ticket.workTypeId })) return true;
   // Narrow the diagnosis with one extra read so the mobile banner can
   // tell the operator whether the site itself was pulled or just this
   // particular work type for the site. Mirrors the create-ticket
@@ -402,7 +408,7 @@ async function verifySiteAccess(
           eq(siteWorkAssignmentsTable.vendorId, session.vendorId),
         ),
       );
-    if (!assignment) {
+    if (!assignment && !(await hasAcceptedMarketplaceAccess(session.vendorId, { siteId }))) {
       res.status(403).json({ message: "Access denied", code: "site.no_access" });
       return false;
     }
@@ -424,7 +430,7 @@ async function verifySiteAccess(
           eq(siteWorkAssignmentsTable.vendorId, fe.vendorId),
         ),
       );
-    if (!assignment) {
+    if (!assignment && !(await hasAcceptedMarketplaceAccess(fe.vendorId, { siteId, employeeId: fe.id }))) {
       res.status(403).json({ message: "Access denied", code: "site.no_access" });
       return false;
     }
@@ -504,9 +510,11 @@ import { siteWorkAssignmentsTable, partnerVendorRelationshipsTable, vendorWorkTy
 import { sendResponse, sendResponseStatus } from "../lib/typed-response";
 import { sendValidationFailed } from "../lib/validation-error";
 import { notifyUsers, findVendorUserIds, findPartnerUserIds, notifyFieldEmployee } from "./notifications";
+import { createTicketWithHistory } from "../lib/create-ticket";
 import { enqueueInvoiceGenerationForTicket } from "../lib/invoice-generator";
 import { loadTicketTaxTreatmentContext } from "../lib/ticket-tax-treatment";
 import { regenerateAutoLaborLines } from "../lib/auto-labor-lines";
+import { loadTicketCommercialRate } from "../lib/ticket-commercial-rate";
 import {
   recordTicketTransition,
   aggregateVendorTransitions,
@@ -548,6 +556,7 @@ const paymentDispersedByUsersAlias = aliasedTable(usersTable, "payment_dispersed
 
 const ticketSelect = {
   id: ticketsTable.id,
+  jobOfferId: ticketsTable.jobOfferId,
   siteLocationId: ticketsTable.siteLocationId,
   vendorId: ticketsTable.vendorId,
   fieldEmployeeId: ticketsTable.fieldEmployeeId,
@@ -859,6 +868,8 @@ router.get("/portal/:siteCode", async (req, res): Promise<void> => {
   }
   if (!(await verifySiteAccess(req, res, site.partnerId, site.id))) return;
 
+  const portalVendorId = session.role === "vendor" ? session.vendorId : session.role === "field_employee" ? (await getFieldEmployeeForSession(req))?.vendorId ?? -1 : null;
+
   // Use innerJoin so the row types stay non-nullable: workTypeId and
   // vendorId are NOT NULL foreign keys on site_work_assignments, so the
   // joined rows always exist. Using leftJoin here would widen Drizzle's
@@ -879,7 +890,7 @@ router.get("/portal/:siteCode", async (req, res): Promise<void> => {
     .from(siteWorkAssignmentsTable)
     .innerJoin(workTypesTable, eq(siteWorkAssignmentsTable.workTypeId, workTypesTable.id))
     .innerJoin(vendorsTable, eq(siteWorkAssignmentsTable.vendorId, vendorsTable.id))
-    .where(eq(siteWorkAssignmentsTable.siteLocationId, site.id));
+    .where(and(eq(siteWorkAssignmentsTable.siteLocationId, site.id), portalVendorId == null ? undefined : eq(siteWorkAssignmentsTable.vendorId, portalVendorId)));
 
   // Pull the partner brand fields off `site` so the SiteLocation payload
   // stays narrow (matches the shared SiteLocation schema). The brand block
@@ -941,6 +952,16 @@ router.get("/portal/:siteCode/open-tickets", async (req, res): Promise<void> => 
     eq(ticketsTable.siteLocationId, site.id),
     sql`${ticketsTable.status} IN ('initiated', 'draft', 'in_progress', 'kicked_back')`,
   ];
+  const portalEmployee = session.role === "field_employee" ? await getFieldEmployeeForSession(req) : null;
+  const scopedVendorId = session.role === "vendor" ? session.vendorId : session.role === "field_employee" ? portalEmployee?.vendorId ?? -1 : null;
+  if (scopedVendorId != null) conditions.push(eq(ticketsTable.vendorId, scopedVendorId));
+  if (session.role === "field_employee") conditions.push(sql`(
+    ${ticketsTable.fieldEmployeeId} = ${portalEmployee?.id ?? -1}
+    OR ${ticketsTable.foremanUserId} = ${session.userId}
+    OR ${ticketsTable.actingForemanUserId} = ${session.userId}
+    OR EXISTS (SELECT 1 FROM ${ticketCrewTable} WHERE ${ticketCrewTable.ticketId} = ${ticketsTable.id}
+      AND ${ticketCrewTable.employeeId} = ${portalEmployee?.id ?? -1} AND ${ticketCrewTable.removedAt} IS NULL)
+  )`);
 
   if (query.success && query.data.vendorId) {
     conditions.push(eq(ticketsTable.vendorId, query.data.vendorId));
@@ -1446,9 +1467,7 @@ router.post("/tickets", async (req, res): Promise<void> => {
 
   const ticket = await db.transaction(async (tx) => {
     if (shouldCheckIn && creatorSession?.userId && parsed.data.vendorId) await assertRequiredWorkClear(tx, creatorSession.userId, { type: "vendor", id: parsed.data.vendorId });
-    const [t] = await tx
-      .insert(ticketsTable)
-      .values({
+    return createTicketWithHistory(tx, {
         siteLocationId: parsed.data.siteLocationId,
         vendorId: parsed.data.vendorId,
         fieldEmployeeId: parsed.data.fieldEmployeeId ?? null,
@@ -1468,18 +1487,11 @@ router.post("/tickets", async (req, res): Promise<void> => {
           : undefined,
         scheduledDurationMinutes:
           parsed.data.scheduledDurationMinutes ?? undefined,
-      })
-      .returning();
-    await recordTicketTransition({
-      tx,
-      ticketId: t.id,
-      fromStatus: null,
-      toStatus: initialStatus,
-      actorUserId: creatorSession?.userId ?? null,
-      actorRole: creatorSession?.role ?? null,
+      }, {
+      userId: creatorSession?.userId ?? null,
+      role: creatorSession?.role ?? null,
       reason: transitionReason,
     });
-    return t;
   });
 
   if (shouldCheckIn && lat != null && lng != null) {
@@ -1607,6 +1619,7 @@ router.get("/tickets/:id", async (req, res): Promise<void> => {
   sendResponse(res, GetTicketResponse.extend({ viewerCanFinalizeLabor: z.boolean() }), {
     ...ticket,
     viewerCanFinalizeLabor: await createTicketLaborFinalizationService().canFinalize(getSessionFromRequest(req), params.data.id),
+    marketplaceCommercialTerms: await loadTicketCommercialRate(ticket),
     viewerCanDisperseFunds,
     viewerCanReverseDispersal,
     phoneIntakeCallerName,
@@ -3686,6 +3699,7 @@ router.post("/tickets/:id/reinvite", async (req, res): Promise<void> => {
   const [existing] = await db
     .select({
       id: ticketsTable.id,
+      jobOfferId: ticketsTable.jobOfferId,
       status: ticketsTable.status,
       vendorId: ticketsTable.vendorId,
       siteLocationId: ticketsTable.siteLocationId,
@@ -3711,6 +3725,16 @@ router.post("/tickets/:id/reinvite", async (req, res): Promise<void> => {
       code: "ticket.forbidden_not_owning_partner",
       error: "forbidden_not_owning_partner",
       message: "Only the owning partner may reinvite a vendor",
+    });
+    return;
+  }
+  // Accepted marketplace terms and capacity belong to the original vendor.
+  // Reassignment must create a new offer, not mutate that accepted engagement.
+  if (existing.jobOfferId != null) {
+    res.status(409).json({
+      code: "marketplace.ticket_reinvite_not_allowed",
+      error: "marketplace_ticket_reinvite_not_allowed",
+      message: "Cancel this marketplace ticket and create a new job offer to engage another vendor.",
     });
     return;
   }

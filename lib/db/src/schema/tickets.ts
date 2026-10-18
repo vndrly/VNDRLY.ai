@@ -1,4 +1,4 @@
-import { pgTable, jsonb, text, serial, timestamp, integer, doublePrecision, numeric } from "drizzle-orm/pg-core";
+import { pgTable, jsonb, text, serial, timestamp, integer, doublePrecision, numeric, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { siteLocationsTable } from "./siteLocations";
@@ -6,6 +6,9 @@ import { vendorsTable } from "./vendors";
 import { partnersTable } from "./partners";
 import { fieldEmployeesTable } from "./vendorPeople";
 import { workTypesTable } from "./workTypes";
+import { canonicalServicesTable } from "./canonicalServices";
+import { vendorCapabilitiesTable, vendorPartnerServiceOffersTable } from "./vendorCapabilities";
+import { jobOffersTable } from "./jobOffers";
 
 export const ticketsTable = pgTable("tickets", {
   fleetPlan: jsonb("fleet_plan"),
@@ -14,6 +17,10 @@ export const ticketsTable = pgTable("tickets", {
   vendorId: integer("vendor_id").notNull().references(() => vendorsTable.id),
   fieldEmployeeId: integer("field_employee_id").references(() => fieldEmployeesTable.id),
   workTypeId: integer("work_type_id").notNull().references(() => workTypesTable.id),
+  canonicalServiceId: integer("canonical_service_id").references(() => canonicalServicesTable.id),
+  vendorCapabilityId: integer("vendor_capability_id").references(() => vendorCapabilitiesTable.id),
+  vendorPartnerServiceOfferId: integer("vendor_partner_service_offer_id").references(() => vendorPartnerServiceOffersTable.id),
+  jobOfferId: integer("job_offer_id").references((): AnyPgColumn => jobOffersTable.id),
   // Lifecycle status. Legal values:
   //   initiated | in_progress | pending_review | submitted | approved
   //   kicked_back | awaiting_acceptance | denied | funds_dispersed
@@ -100,7 +107,7 @@ export const ticketsTable = pgTable("tickets", {
   paymentReceiptUrl: text("payment_receipt_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => [uniqueIndex("tickets_job_offer_unique").on(t.jobOfferId)]);
 
 // Holds production tracking numbers that have been deliberately assigned
 // before a site or service date is known. Reservations stay outside `tickets`

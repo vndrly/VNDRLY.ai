@@ -8,6 +8,15 @@ servers:
   - url: /api
     description: Base API path
 tags:
+  - name: ServiceMarketplace
+    description: |
+      Shared canonical marketplace services for web, mobile, AskV and the existing
+      VNDRLY ChatGPT connection. ChatGPT marketplace:read grants approved demand
+      projections and authorized comparisons; marketplace:write separately grants
+      action preparation, followed by authenticated exact-action confirmation.
+      Assistant mutations use server-owned fingerprints and replay keys, then read
+      the canonical resource. Model coordinates, confidence and compliance never
+      replace saved facts. Accepting a job offer returns the created ticket ID.
   - name: health
     description: Health operations
   - name: partners
@@ -63,6 +72,690 @@ tags:
       object is readable through `GET /storage/objects/*`.
 
 paths:
+  /service-marketplace/job-offers:
+    post:
+      operationId: createMarketplaceJobOffer
+      tags: [ServiceMarketplace]
+      summary: Prepare a draft with authoritative saved rates
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceJobOfferDraft'
+      responses:
+        '201':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOffer'
+  /service-marketplace/job-offers/{offerId}:
+    get:
+      operationId: getMarketplaceJobOffer
+      tags: [ServiceMarketplace]
+      summary: Read an offer in the active organization
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOffer'
+  /service-marketplace/partners/{orgId}/job-offers:
+    get:
+      operationId: listPartnerMarketplaceJobOffers
+      tags: [ServiceMarketplace]
+      summary: Read the latest 100 organization offers
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOfferList'
+  /service-marketplace/vendors/{orgId}/job-offers:
+    get:
+      operationId: listVendorMarketplaceJobOffers
+      tags: [ServiceMarketplace]
+      summary: Read the latest 100 organization offers
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOfferList'
+  /service-marketplace/job-offers/{offerId}/send:
+    post:
+      operationId: sendMarketplaceJobOffer
+      tags: [ServiceMarketplace]
+      summary: send the current saved offer version
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceJobOfferVersion'
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOffer'
+  /service-marketplace/job-offers/{offerId}/review:
+    post:
+      operationId: reviewMarketplaceJobOffer
+      tags: [ServiceMarketplace]
+      summary: review the current saved offer version
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceJobOfferVersion'
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOffer'
+  /service-marketplace/job-offers/{offerId}/withdraw:
+    post:
+      operationId: withdrawMarketplaceJobOffer
+      tags: [ServiceMarketplace]
+      summary: withdraw the current saved offer version
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceJobOfferVersion'
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOffer'
+  /service-marketplace/job-offers/{offerId}/decline:
+    post:
+      operationId: declineMarketplaceJobOffer
+      tags: [ServiceMarketplace]
+      summary: decline the current saved offer version
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceJobOfferVersion'
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOffer'
+  /service-marketplace/job-offers/{offerId}/accept:
+    post:
+      operationId: acceptMarketplaceJobOffer
+      tags: [ServiceMarketplace]
+      summary: accept the current saved offer version
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceJobOfferVersion'
+      responses:
+        '200':
+          description: Saved job offer result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobOfferAcceptance'
+  /service-marketplace/partners/{partnerId}/work-types/{workTypeId}/vendors:
+    parameters:
+      - $ref: '#/components/parameters/MarketplacePartnerId'
+      - $ref: '#/components/parameters/MarketplaceWorkTypeId'
+      - $ref: '#/components/parameters/MarketplaceSiteId'
+      - $ref: '#/components/parameters/MarketplaceRequestedCapacity'
+      - $ref: '#/components/parameters/MarketplaceSort'
+      - $ref: '#/components/parameters/MarketplacePriceWeight'
+      - $ref: '#/components/parameters/MarketplaceRatingWeight'
+      - $ref: '#/components/parameters/MarketplaceSafetyWeight'
+      - $ref: '#/components/parameters/MarketplaceHistoryWeight'
+      - $ref: '#/components/parameters/MarketplaceOnTimeWeight'
+      - $ref: '#/components/parameters/MarketplaceDistanceWeight'
+      - $ref: '#/components/parameters/MarketplaceAvailabilityWeight'
+      - $ref: '#/components/parameters/MarketplacePriorExperienceWeight'
+    get:
+      operationId: searchPartnerMarketplaceVendors
+      tags: [partners]
+      summary: Compare current matching vendor offers for an owned work type and saved site
+      description: Active partner membership or identified system admin required. Eligibility is evaluated before ranking and pagination. Missing evidence stays null. Private terms, internal notes, and other partner assessments are excluded. Price factors are unavailable when currencies or units differ.
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Ranked comparison facts, including ineligible out-of-area matches
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total, limit, offset]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/MarketplaceRankedVendor' } }
+                  total: { type: integer, minimum: 0 }
+                  limit: { type: integer, minimum: 1 }
+                  offset: { type: integer, minimum: 0 }
+        '400': { description: Invalid query or untrusted eligibility facts }
+        '403': { description: Active partner scope required }
+        '404': { description: Work type or site not owned by this partner }
+        '503': { description: Marketplace unavailable }
+  /service-marketplace/partners/{partnerId}/work-types/{workTypeId}/vendors/{vendorId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplacePartnerId'
+      - $ref: '#/components/parameters/MarketplaceWorkTypeId'
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+    get:
+      operationId: getPartnerMarketplaceVendor
+      tags: [partners]
+      summary: Read an exact vendor capability and saved partner offer with fresh site-scoped eligibility
+      # Operation-level query declarations are required by Orval's fetch serializer.
+      parameters:
+        - $ref: '#/components/parameters/MarketplaceDetailCapabilityId'
+        - $ref: '#/components/parameters/MarketplaceDetailPartnerOfferId'
+        - $ref: '#/components/parameters/MarketplaceSiteId'
+        - $ref: '#/components/parameters/MarketplaceRequestedCapacity'
+        - $ref: '#/components/parameters/MarketplaceSort'
+        - $ref: '#/components/parameters/MarketplacePriceWeight'
+        - $ref: '#/components/parameters/MarketplaceRatingWeight'
+        - $ref: '#/components/parameters/MarketplaceSafetyWeight'
+        - $ref: '#/components/parameters/MarketplaceHistoryWeight'
+        - $ref: '#/components/parameters/MarketplaceOnTimeWeight'
+        - $ref: '#/components/parameters/MarketplaceDistanceWeight'
+        - $ref: '#/components/parameters/MarketplaceAvailabilityWeight'
+        - $ref: '#/components/parameters/MarketplacePriorExperienceWeight'
+      responses:
+        '200':
+          description: Vendor comparison facts with fresh eligibility and transparent factors
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceRankedVendor' }
+        '400': { description: Invalid query }
+        '403': { description: Active partner scope required }
+        '404': { description: 'Owned work type, site, or current matching vendor not found' }
+        '503': { description: Marketplace unavailable }
+  /service-marketplace/vendors/{vendorId}/capabilities:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+    get:
+      operationId: listVendorMarketplaceCapabilities
+      tags: [vendors]
+      summary: List own capabilities and stored mapping status (active vendor admin or system admin)
+      responses:
+        '200':
+          description: Own capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/MarketplaceCapability' } }
+        '403': { description: Active vendor admin required }
+    post:
+      operationId: createVendorMarketplaceCapability
+      tags: [vendors]
+      summary: Save a capability and classify its saved wording
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCapabilityInput' }
+      responses:
+        '201':
+          description: Saved capability with active or pending stored mapping
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCapability' }
+        '400': { description: Invalid input }
+        '403': { description: Active vendor admin required }
+  /service-marketplace/vendors/{vendorId}/capabilities/preview:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+    post:
+      operationId: previewVendorMarketplaceCapability
+      tags: [vendors]
+      summary: Preview unsaved capability wording and matching public catalog count without creating any records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                description: { type: [string, 'null'], minLength: 1, maxLength: 2000 }
+      responses:
+        '200':
+          description: Provisional preview only; actual save reclassifies its persisted wording
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [provisional, status, canonicalServiceId, canonicalServiceName, explanation, confidence, matchingPartnerCount]
+                properties:
+                  provisional: { type: boolean, const: true }
+                  status: { type: string, enum: [matched, review_required, rejected, pending] }
+                  canonicalServiceId: { type: [integer, 'null'] }
+                  canonicalServiceName: { type: [string, 'null'] }
+                  explanation: { type: string }
+                  confidence: { type: number, minimum: 0, maximum: 1 }
+                  matchingPartnerCount: { type: [integer, 'null'], minimum: 0 }
+        '400': { description: Invalid preview input }
+        '403': { description: Active vendor admin required }
+  /service-marketplace/vendors/{vendorId}/capabilities/{capabilityId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+      - in: path
+        name: capabilityId
+        required: true
+        schema: { type: integer, minimum: 1 }
+    patch:
+      operationId: updateVendorMarketplaceCapability
+      tags: [vendors]
+      summary: Update own capability; changed wording invalidates its previous mapping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCapabilityPatch' }
+      responses:
+        '200':
+          description: Saved capability
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCapability' }
+        '403': { description: Active vendor admin required }
+        '404': { description: Own capability not found }
+  /service-marketplace/vendors/{vendorId}/service-areas:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+    get:
+      operationId: listVendorMarketplaceServiceAreas
+      tags: [vendors]
+      summary: List own company default and capability coverage history
+      responses:
+        '200':
+          description: Own service areas
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/MarketplaceServiceArea' } }
+        '403': { description: Active vendor admin required }
+    put:
+      operationId: saveVendorMarketplaceServiceArea
+      tags: [vendors]
+      summary: Save a radius using the company's saved geocoded base; null capability sets the default
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [radiusMiles]
+              properties:
+                vendorCapabilityId: { type: [integer, 'null'], minimum: 1, default: null }
+                radiusMiles: { type: number, exclusiveMinimum: 0, maximum: 20000, multipleOf: 0.001 }
+      responses:
+        '200':
+          description: Saved verified coverage
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceServiceArea' }
+        '403': { description: Active vendor admin required }
+        '409': { description: Saved geocoded service base required }
+  /service-marketplace/vendors/{vendorId}/service-areas/capabilities/{capabilityId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+      - name: capabilityId
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+    delete:
+      operationId: clearVendorMarketplaceServiceAreaOverride
+      tags: [vendors]
+      summary: End the own capability override and resume live company-default inheritance; history is retained
+      responses:
+        '204': { description: 'Override ended, including when already inheriting' }
+        '403': { description: Active vendor admin required }
+        '404': { description: Own capability not found }
+  /service-marketplace/vendors/{vendorId}/partner-rates:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+    get:
+      operationId: listVendorMarketplacePartnerRates
+      tags: [vendors]
+      summary: List only the calling vendor's partner-specific terms
+      responses:
+        '200':
+          description: Own partner rates
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/MarketplacePartnerRate' } }
+        '403': { description: Active vendor admin required }
+    put:
+      operationId: saveVendorMarketplacePartnerRate
+      tags: [vendors]
+      summary: Save own partner rate after rechecking active semantic match; partner identity is server-derived
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplacePartnerRateInput' }
+      responses:
+        '200':
+          description: Canonical saved terms
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplacePartnerRate' }
+        '403': { description: Active vendor admin required }
+        '409': { description: Current active canonical match required }
+  /service-marketplace/vendors/{vendorId}/matching-demand:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceVendorId'
+    get:
+      operationId: listVendorMarketplaceMatchingDemand
+      tags: [vendors]
+      summary: Discover all matching partner catalogs without a prior relationship using the approved coarse projection
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - $ref: '#/components/parameters/MarketplaceOffset'
+      responses:
+        '200':
+          description: Matching demand; no competitor identities, rates, budgets, private notes, or exact sites
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, limit, offset]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/MarketplaceDemand' } }
+                  limit: { type: integer }
+                  offset: { type: integer }
+        '403': { description: Active vendor admin required }
+  /admin/canonical-services:
+    get:
+      operationId: listAdminCanonicalServices
+      tags: [platform]
+      summary: List canonical services and aliases (identified admin only)
+      parameters:
+        - $ref: '#/components/parameters/MarketplaceLimit'
+        - $ref: '#/components/parameters/MarketplaceOffset'
+      responses:
+        '200':
+          description: Canonical services, including archived concepts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total, limit, offset]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/AdminCanonicalService' } }
+                  total: { type: integer }
+                  limit: { type: integer }
+                  offset: { type: integer }
+        '403': { description: Identified admin required }
+    post:
+      operationId: createAdminCanonicalService
+      tags: [platform]
+      summary: Create a canonical service (identified admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminCanonicalServiceInput' }
+      responses:
+        '201':
+          description: Saved canonical service
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminCanonicalService' }
+        '400': { description: Invalid service }
+        '403': { description: Identified admin required }
+        '409': { description: Duplicate stable service code }
+  /admin/canonical-services/{id}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceId'
+    patch:
+      operationId: updateAdminCanonicalService
+      tags: [platform]
+      summary: Update canonical wording while preserving its stable code (identified admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminCanonicalServicePatch' }
+      responses:
+        '200':
+          description: Saved canonical service
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminCanonicalService' }
+        '400': { description: Invalid service }
+        '403': { description: Identified admin required }
+        '404': { description: Service not found }
+    delete:
+      operationId: archiveAdminCanonicalService
+      tags: [platform]
+      summary: Archive a canonical service without deleting historical references (identified admin only)
+      responses:
+        '200':
+          description: Archived canonical service
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminCanonicalService' }
+        '403': { description: Identified admin required }
+        '404': { description: Service not found }
+  /admin/canonical-services/{id}/aliases:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceId'
+    post:
+      operationId: addAdminCanonicalServiceAlias
+      tags: [platform]
+      summary: Add reviewed retrieval vocabulary (identified admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminCanonicalAliasInput' }
+      responses:
+        '201':
+          description: Saved alias
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminCanonicalAlias' }
+        '400': { description: Invalid alias }
+        '403': { description: Identified admin required }
+        '404': { description: Service not found }
+        '409': { description: Archived service }
+  /admin/canonical-services/{id}/aliases/{aliasId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceId'
+      - name: aliasId
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+    patch:
+      operationId: updateAdminCanonicalServiceAlias
+      tags: [platform]
+      summary: Update or deactivate an alias (identified admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminCanonicalAliasPatch' }
+      responses:
+        '200':
+          description: Saved alias
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminCanonicalAlias' }
+        '400': { description: Invalid alias }
+        '403': { description: Identified admin required }
+        '404': { description: Alias or service not found }
+        '409': { description: Archived service }
+  /admin/service-mappings:
+    get:
+      operationId: listAdminServiceMappings
+      tags: [platform]
+      summary: List the latest pending or conflicting mapping per subject (identified admin only)
+      parameters:
+        - $ref: '#/components/parameters/MarketplaceLimit'
+        - $ref: '#/components/parameters/MarketplaceOffset'
+      responses:
+        '200':
+          description: Pending review queue
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminServiceMappingPage' }
+        '400': { description: Invalid pagination }
+        '403': { description: Identified admin required }
+  /admin/service-mappings/{id}/review:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceId'
+    post:
+      operationId: reviewAdminServiceMapping
+      tags: [platform]
+      summary: Append an audited approval, rejection or remap (identified admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [action, reason]
+              properties:
+                action: { type: string, enum: [approve, reject, remap] }
+                reason: { type: string, minLength: 1, maxLength: 2000 }
+                canonicalServiceId: { type: integer, minimum: 1, description: Required only for remap }
+      responses:
+        '200':
+          description: Decision and current active mapping readback; identical retries reuse the decision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminServiceMappingResult' }
+        '400': { description: Invalid review }
+        '403': { description: Identified admin required }
+        '404': { description: Mapping not found }
+        '409': { description: 'Stale review, inactive subject, or archived concept' }
+  /admin/service-subjects/{subjectType}/{subjectId}/mappings:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceSubjectType'
+      - $ref: '#/components/parameters/MarketplaceSubjectId'
+    get:
+      operationId: listAdminServiceMappingHistory
+      tags: [platform]
+      summary: Read immutable mapping history and the current active mapping (identified admin only)
+      parameters:
+        - $ref: '#/components/parameters/MarketplaceLimit'
+        - $ref: '#/components/parameters/MarketplaceOffset'
+      responses:
+        '200':
+          description: Mapping history, newest version first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminServiceMappingPage' }
+        '403': { description: Identified admin required }
+  /admin/service-subjects/{subjectType}/{subjectId}/reclassify:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceSubjectType'
+      - $ref: '#/components/parameters/MarketplaceSubjectId'
+    post:
+      operationId: reclassifyAdminServiceSubject
+      tags: [platform]
+      summary: Classify saved subject text using the shared versioned matching engine (identified admin only)
+      responses:
+        '200':
+          description: Idempotent recorded classification or retryable pending state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminServiceMappingResult' }
+        '403': { description: Identified admin required }
+        '404': { description: Subject not found }
+        '409': { description: Inactive subject }
+        '503': { description: Matching configuration unavailable }
   /healthz:
     get:
       operationId: healthCheck
@@ -1365,15 +2058,31 @@ paths:
           description: When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).
           schema:
             type: boolean
+        - name: limit
+          in: query
+          schema: { type: number }
+        - name: offset
+          in: query
+          schema: { type: number }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: lifecycleState
+          in: query
+          schema: { type: string }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [ticket, site, vendor, fieldEmployee, status, created, daysWaiting] }
+        - name: sortDir
+          in: query
+          schema: { type: string, enum: [asc, desc] }
       responses:
         "200":
-          description: List of tickets
+          description: Paginated tickets with the total matching count
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Ticket"
+                $ref: "#/components/schemas/ListTicketsResponse"
     post:
       operationId: createTicket
       tags: [tickets]
@@ -3795,7 +4504,550 @@ paths:
           description: Email already exists
 
 components:
+  parameters:
+    MarketplacePartnerId:
+      name: partnerId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceWorkTypeId:
+      name: workTypeId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceSiteId:
+      name: siteId
+      in: query
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceDetailCapabilityId:
+      name: vendorCapabilityId
+      in: query
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceDetailPartnerOfferId:
+      name: vendorPartnerServiceOfferId
+      in: query
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceRequestedCapacity:
+      name: requestedCapacity
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100000, default: 1 }
+    MarketplaceSort:
+      name: sort
+      in: query
+      schema: { type: string, enum: [recommended, price, rating, safety, history, onTime, distance, availability, priorExperience], default: recommended }
+    MarketplacePriceWeight:
+      name: priceWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplaceRatingWeight:
+      name: ratingWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplaceSafetyWeight:
+      name: safetyWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplaceHistoryWeight:
+      name: historyWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplaceOnTimeWeight:
+      name: onTimeWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplaceDistanceWeight:
+      name: distanceWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplaceAvailabilityWeight:
+      name: availabilityWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplacePriorExperienceWeight:
+      name: priorExperienceWeight
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    MarketplaceVendorId:
+      name: vendorId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceSubjectType:
+      name: subjectType
+      in: path
+      required: true
+      schema: { type: string, enum: [partner_work_type, vendor_capability] }
+    MarketplaceSubjectId:
+      name: subjectId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    MarketplaceLimit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    MarketplaceOffset:
+      name: offset
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
   schemas:
+    MarketplaceJobOfferDraft:
+      type: object
+      additionalProperties: false
+      required: [partnerId, workTypeId, vendorId, vendorCapabilityId, vendorPartnerServiceOfferId, siteLocationId, scope, requestedStartAt, requestedEndAt, crewCount, attachmentUrls, expiresAt]
+      properties:
+        partnerId: { type: integer, minimum: 1 }
+        workTypeId: { type: integer, minimum: 1 }
+        vendorId: { type: integer, minimum: 1 }
+        vendorCapabilityId: { type: integer, minimum: 1 }
+        vendorPartnerServiceOfferId: { type: integer, minimum: 1 }
+        siteLocationId: { type: integer, minimum: 1 }
+        scope: { type: string, minLength: 1, maxLength: 10000 }
+        requestedStartAt: { type: string, format: date-time }
+        requestedEndAt: { type: string, format: date-time }
+        crewCount: { type: integer, minimum: 1, maximum: 100000 }
+        afeCode: { type: string, maxLength: 200 }
+        poNumber: { type: string, maxLength: 200 }
+        attachmentUrls:
+          type: array
+          maxItems: 20
+          items: { type: string, format: uri, pattern: '^https://' }
+        expiresAt: { type: string, format: date-time }
+    MarketplaceJobOfferVersion:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: { type: integer, minimum: 1 }
+    MarketplaceJobOfferAcceptance:
+      type: object
+      required: [offerId, ticketId, replayed]
+      properties:
+        offerId: { type: integer }
+        ticketId: { type: integer }
+        replayed: { type: boolean }
+        automaticBilling:
+          type: string
+          enum: [hourly_usd, manual_billing_required]
+    MarketplaceJobOfferList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplaceJobOffer'
+    MarketplaceJobOffer:
+      type: object
+      required: [id, partnerId, vendorId, workTypeId, vendorCapabilityId, vendorPartnerServiceOfferId, siteLocationId, canonicalServiceId, scope, crewCount, commercialSnapshot, status, version]
+      properties:
+        id: { type: integer }
+        partnerId: { type: integer }
+        vendorId: { type: integer }
+        workTypeId: { type: integer }
+        vendorCapabilityId: { type: integer }
+        vendorPartnerServiceOfferId: { type: integer }
+        siteLocationId: { type: integer }
+        canonicalServiceId: { type: integer }
+        scope: { type: string }
+        crewCount: { type: integer }
+        status:
+          type: string
+          enum: [draft, offered, vendor_reviewing, accepted, declined, expired, withdrawn]
+        version: { type: integer }
+        commercialSnapshot:
+          type: object
+          additionalProperties: true
+        scheduledStartAt: { type: string, format: date-time, nullable: true }
+        scheduledEndAt: { type: string, format: date-time, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        afeReference: { type: string, nullable: true }
+        poReference: { type: string, nullable: true }
+        attachments:
+          type: array
+          nullable: true
+          items: { type: string }
+        createdTicketId: { type: integer, nullable: true }
+    MarketplaceRankingFactor:
+      type: object
+      additionalProperties: false
+      required: [name, normalized, weight, status, explanation]
+      properties:
+        name: { type: string, enum: [price, rating, safety, history, onTime, distance, availability, priorExperience] }
+        normalized: { type: ['number', 'null'], minimum: 0, maximum: 1 }
+        weight: { type: number, minimum: 0, maximum: 100 }
+        status: { type: string, enum: [available, not_yet_rated, not_comparable] }
+        explanation: { type: string }
+    MarketplaceRankedVendor:
+      type: object
+      additionalProperties: false
+      required: [vendorId, vendorName, capabilityId, capabilityName, canonicalServiceId, matchExplanation, offer, rating, reviewCount, safety, completedJobs, onTimeRate, priorPartnerJobs, complianceCurrent, relationshipStatus, eligibility, offerable, ratingStatus, safetyStatus, weightedScore, factors]
+      properties:
+        vendorId: { type: integer, minimum: 1 }
+        vendorName: { type: string }
+        capabilityId: { type: integer, minimum: 1 }
+        capabilityName: { type: string }
+        canonicalServiceId: { type: integer, minimum: 1 }
+        matchExplanation: { type: string }
+        offer:
+          type: object
+          additionalProperties: false
+          required: [id, unitPrice, unit, currency, capacity, available, commercialConditions]
+          properties:
+            id: { type: integer, minimum: 1 }
+            unitPrice: { type: number, minimum: 0 }
+            unit: { type: string }
+            currency: { type: string }
+            capacity: { type: integer, minimum: 0 }
+            available: { type: boolean }
+            commercialConditions: { type: ['string', 'null'] }
+        rating: { type: ['number', 'null'], minimum: 1, maximum: 5 }
+        reviewCount: { type: integer, minimum: 0 }
+        safety:
+          type: ['object', 'null']
+          additionalProperties: false
+          required: [score, source, refreshedAt]
+          properties:
+            score: { type: number, minimum: 0, maximum: 100 }
+            source: { type: string }
+            refreshedAt: { type: string, format: date-time }
+        completedJobs: { type: integer, minimum: 0 }
+        onTimeRate: { type: ['number', 'null'], minimum: 0, maximum: 1 }
+        priorPartnerJobs: { type: integer, minimum: 0 }
+        complianceCurrent: { type: boolean }
+        relationshipStatus: { type: ['string', 'null'] }
+        eligibility:
+          type: object
+          additionalProperties: false
+          required: [eligible, reasonCodes, facts]
+          properties:
+            eligible: { type: boolean }
+            reasonCodes: { type: array, items: { type: string } }
+            facts:
+              type: object
+              additionalProperties: false
+              required: [distanceMiles, radiusMiles, availableCapacity, requiredCapacity, missingCredentials]
+              properties:
+                distanceMiles: { type: ['number', 'null'], minimum: 0 }
+                radiusMiles: { type: ['number', 'null'], minimum: 0 }
+                availableCapacity: { type: integer, minimum: 0 }
+                requiredCapacity: { type: integer, minimum: 1 }
+                missingCredentials: { type: array, items: { type: string } }
+        offerable: { type: boolean }
+        ratingStatus: { type: string, enum: [rated, not_yet_rated] }
+        safetyStatus: { type: string, enum: [rated, not_yet_rated] }
+        weightedScore: { type: number, minimum: 0, maximum: 1 }
+        factors: { type: array, items: { $ref: '#/components/schemas/MarketplaceRankingFactor' } }
+    MarketplaceCapabilityPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, nullable: true, maxLength: 2000 }
+        defaultUnit: { type: string, nullable: true, maxLength: 50 }
+        defaultRateCard:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [unitPrice, unit]
+          properties:
+            unitPrice: { type: number, minimum: 0, maximum: 9999999999.99, multipleOf: 0.01 }
+            unit: { type: string, minLength: 1, maxLength: 50 }
+            currency: { type: string, pattern: '^[A-Z]{3}$', default: USD }
+        capacity: { type: integer, minimum: 1, maximum: 100000 }
+        qualifications: { type: object, nullable: true, additionalProperties: true }
+        evidence: { type: object, nullable: true, additionalProperties: true }
+        active: { type: boolean }
+    MarketplaceCapabilityInput:
+      allOf:
+        - $ref: '#/components/schemas/MarketplaceCapabilityPatch'
+        - type: object
+          required: [name]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 200 }
+            capacity: { type: integer, minimum: 1, maximum: 100000, default: 1 }
+            active: { type: boolean, default: true }
+    MarketplaceCapability:
+      allOf:
+        - $ref: '#/components/schemas/MarketplaceCapabilityPatch'
+        - type: object
+          required: [id, vendorId, name, capacity, active, createdAt, updatedAt]
+          properties:
+            id: { type: integer }
+            vendorId: { type: integer }
+            name: { type: string, minLength: 1, maxLength: 200 }
+            capacity: { type: integer, minimum: 1 }
+            active: { type: boolean }
+            createdById: { type: integer, nullable: true }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            mapping:
+              type: object
+              nullable: true
+              required: [canonicalServiceId, canonicalServiceName, status, explanation, confidence]
+              properties:
+                canonicalServiceId: { type: integer, nullable: true }
+                canonicalServiceName: { type: string, nullable: true }
+                status: { type: string, enum: [active, review_required, rejected, superseded] }
+                explanation: { type: string }
+                confidence: { type: number }
+    MarketplaceServiceArea:
+      type: object
+      required: [id, vendorId, vendorCapabilityId, address, latitude, longitude, radiusMiles, coordinateProvenance, verifiedAt, active, effectiveFrom, effectiveUntil, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        vendorId: { type: integer }
+        vendorCapabilityId: { type: integer, nullable: true }
+        address: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        radiusMiles: { type: string, description: Decimal miles as persisted by Postgres }
+        coordinateProvenance: { type: string }
+        verifiedAt: { type: string, format: date-time }
+        active: { type: boolean }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveUntil: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    MarketplacePartnerRateInput:
+      type: object
+      additionalProperties: false
+      required: [vendorCapabilityId, workTypeId, unitPrice, unit]
+      properties:
+        vendorCapabilityId: { type: integer, minimum: 1 }
+        workTypeId: { type: integer, minimum: 1 }
+        unitPrice: { type: number, minimum: 0, maximum: 9999999999.99, multipleOf: 0.01 }
+        unit: { type: string, minLength: 1, maxLength: 50 }
+        currency: { type: string, pattern: '^[A-Z]{3}$', default: USD }
+        rateComponents: { type: object, nullable: true, additionalProperties: true }
+        notes: { type: string, nullable: true, maxLength: 2000 }
+        commercialConditions: { type: string, nullable: true, maxLength: 2000 }
+        availability:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [available]
+          properties:
+            available: { type: boolean }
+        capacity: { type: integer, minimum: 1, maximum: 100000, default: 1 }
+        active: { type: boolean, default: true }
+    MarketplacePartnerRate:
+      type: object
+      required: [id, vendorCapabilityId, partnerId, workTypeId, unitPrice, unit, currency, capacity, active, version, effectiveFrom, effectiveUntil, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        vendorCapabilityId: { type: integer }
+        partnerId: { type: integer }
+        workTypeId: { type: integer }
+        sourceVendorWorkTypeId: { type: integer, nullable: true }
+        unitPrice: { type: string, description: Decimal currency value as persisted by Postgres }
+        unit: { type: string }
+        currency: { type: string }
+        rateComponents: { type: object, nullable: true, additionalProperties: true }
+        notes: { type: string, nullable: true }
+        commercialConditions: { type: string, nullable: true }
+        availability: { type: object, nullable: true, additionalProperties: true }
+        capacity: { type: integer }
+        active: { type: boolean }
+        version: { type: integer }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveUntil: { type: string, format: date-time, nullable: true }
+        createdById: { type: integer, nullable: true }
+        updatedById: { type: integer, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    MarketplaceEligibility:
+      type: object
+      additionalProperties: false
+      required: [eligible, reasonCodes, facts]
+      properties:
+        eligible: { type: boolean }
+        reasonCodes:
+          type: array
+          items:
+            type: string
+            enum: [UNAUTHORIZED, COMPANY_INACTIVE, CAPABILITY_INACTIVE, SERVICE_MATCH_INACTIVE, OFFER_INACTIVE, SERVICE_AREA_MISSING, SERVICE_AREA_AMBIGUOUS, SERVICE_AREA_INVALID, SITE_COORDINATES_INVALID, OUT_OF_SERVICE_AREA, COMPLIANCE_STALE, CREDENTIAL_MISSING, INSUFFICIENT_CAPACITY, UNAVAILABLE, RELATIONSHIP_REQUIRED]
+        facts:
+          type: object
+          required: [distanceMiles, radiusMiles, availableCapacity, requiredCapacity, missingCredentials]
+          properties:
+            distanceMiles: { type: number, nullable: true, description: Vendor discovery rounds upward to a 10-mile bucket; partner evaluation retains exact measured miles }
+            radiusMiles: { type: number, nullable: true }
+            availableCapacity: { type: integer }
+            requiredCapacity: { type: integer }
+            missingCredentials: { type: array, items: { type: string } }
+    MarketplaceDemand:
+      type: object
+      additionalProperties: false
+      required: [partnerId, partnerName, workTypeId, name, category, description, requiredCertifications, locationPrecision, locations, approximateDemand, capabilityId, ownOffer, eligibility]
+      properties:
+        partnerId: { type: integer }
+        partnerName: { type: string }
+        workTypeId: { type: integer }
+        name: { type: string }
+        category: { type: string }
+        description: { type: string, nullable: true }
+        requiredCertifications: { type: array, items: { type: string } }
+        locationPrecision: { type: string, enum: [state] }
+        locations:
+          type: array
+          items:
+            type: object
+            required: [state, approximateSiteCount]
+            properties:
+              state: { type: string, nullable: true }
+              approximateSiteCount: { type: integer, description: Site count rounded upward to a multiple of ten }
+        approximateDemand: { type: integer, description: Matching active site count rounded upward to a multiple of ten, not a job commitment }
+        capabilityId: { type: integer }
+        ownOffer:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/MarketplacePartnerRate'
+        eligibility: { $ref: '#/components/schemas/MarketplaceEligibility' }
+    ListTicketsResponse:
+      type: object
+      required: [items, total]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Ticket' } }
+        total: { type: number, description: Total rows matching filters before pagination. }
+    AdminCanonicalServicePatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        category: { type: string, minLength: 1, maxLength: 200 }
+        definition: { type: string, minLength: 1, maxLength: 2000 }
+        inclusionGuidance: { type: string, nullable: true, minLength: 1, maxLength: 2000 }
+        exclusionGuidance: { type: string, nullable: true, minLength: 1, maxLength: 2000 }
+    AdminCanonicalServiceInput:
+      type: object
+      additionalProperties: false
+      required: [code, name, category, definition]
+      properties:
+        code: { type: string, pattern: '^[a-z][a-z0-9_]{1,99}$' }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        category: { type: string, minLength: 1, maxLength: 200 }
+        definition: { type: string, minLength: 1, maxLength: 2000 }
+        inclusionGuidance: { type: string, nullable: true, minLength: 1, maxLength: 2000 }
+        exclusionGuidance: { type: string, nullable: true, minLength: 1, maxLength: 2000 }
+    AdminCanonicalService:
+      type: object
+      required: [id, code, name, category, definition, active]
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        category: { type: string }
+        definition: { type: string }
+        inclusionGuidance: { type: string, nullable: true }
+        exclusionGuidance: { type: string, nullable: true }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        aliases: { type: array, items: { $ref: '#/components/schemas/AdminCanonicalAlias' } }
+    AdminCanonicalAliasPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        alias: { type: string, minLength: 1, maxLength: 200 }
+        industry: { type: string, nullable: true, minLength: 1, maxLength: 200 }
+        region: { type: string, nullable: true, minLength: 1, maxLength: 200 }
+        provenance: { type: string, enum: [platform, partner_usage, vendor_usage, reviewed_ai] }
+        active: { type: boolean }
+    AdminCanonicalAliasInput:
+      type: object
+      additionalProperties: false
+      required: [alias]
+      properties:
+        alias: { type: string, minLength: 1, maxLength: 200 }
+        industry: { type: string, nullable: true, minLength: 1, maxLength: 200 }
+        region: { type: string, nullable: true, minLength: 1, maxLength: 200 }
+        provenance: { type: string, enum: [platform, partner_usage, vendor_usage, reviewed_ai], default: platform }
+        active: { type: boolean, default: true }
+    AdminCanonicalAlias:
+      type: object
+      required: [id, canonicalServiceId, alias, active, provenance]
+      properties:
+        id: { type: integer }
+        canonicalServiceId: { type: integer }
+        alias: { type: string }
+        industry: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        provenance: { type: string, enum: [platform, partner_usage, vendor_usage, reviewed_ai] }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    AdminServiceMappingRow:
+      type: object
+      required: [id, subjectType, subjectId, canonicalServiceId, status, confidence, evidenceSummary, explanation, evidence, modelVersion, mappingVersion]
+      properties:
+        id: { type: integer }
+        subjectType: { type: string, enum: [partner_work_type, vendor_capability] }
+        subjectId: { type: integer }
+        workTypeId: { type: integer, nullable: true }
+        vendorCapabilityId: { type: integer, nullable: true }
+        canonicalServiceId: { type: integer, nullable: true }
+        status: { type: string, enum: [active, review_required, rejected, superseded] }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        evidenceSummary: { type: string }
+        explanation: { type: string }
+        evidence: { type: object, additionalProperties: true }
+        modelVersion: { type: string }
+        mappingVersion: { type: integer }
+        actorUserId: { type: integer, nullable: true }
+        actorProcess: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+        supersededAt: { type: string, format: date-time, nullable: true }
+        subject:
+          type: object
+          nullable: true
+          required: [name]
+          properties:
+            name: { type: string }
+            description: { type: string, nullable: true }
+            category: { type: string, nullable: true }
+        canonicalService:
+          allOf:
+            - $ref: '#/components/schemas/AdminCanonicalService'
+          nullable: true
+    AdminServiceMappingPage:
+      type: object
+      required: [items, total, limit, offset]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminServiceMappingRow' } }
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        currentMapping:
+          allOf:
+            - $ref: '#/components/schemas/AdminServiceMappingRow'
+          nullable: true
+    AdminServiceMappingResult:
+      type: object
+      required: [mapping, currentMapping]
+      properties:
+        mapping:
+          allOf:
+            - $ref: '#/components/schemas/AdminServiceMappingRow'
+          nullable: true
+        currentMapping:
+          allOf:
+            - $ref: '#/components/schemas/AdminServiceMappingRow'
+          nullable: true
+        status: { type: string, enum: [recorded, pending] }
+        retryable: { type: boolean }
     HealthStatus:
       type: object
       properties:
@@ -5824,6 +7076,12 @@ components:
     Ticket:
       type: object
       properties:
+        jobOfferId:
+          type: [integer, "null"]
+        marketplaceCommercialTerms:
+          type: [object, "null"]
+          additionalProperties: true
+          description: Immutable accepted terms and automaticBilling mode; populated on single-ticket GET only.
         id:
           type: integer
         siteLocationId:

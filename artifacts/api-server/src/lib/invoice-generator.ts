@@ -11,6 +11,7 @@
 // that period) and the lines land there.
 
 import { and, eq, sql, desc } from "drizzle-orm";
+import { loadTicketCommercialRate } from "./ticket-commercial-rate";
 import {
   db,
   ticketsTable,
@@ -120,6 +121,7 @@ async function generateInvoiceForTicketInner(
   const [ticket] = await executor
     .select({
       id: ticketsTable.id,
+      jobOfferId: ticketsTable.jobOfferId,
       vendorId: ticketsTable.vendorId,
       siteLocationId: ticketsTable.siteLocationId,
       workTypeId: ticketsTable.workTypeId,
@@ -133,6 +135,8 @@ async function generateInvoiceForTicketInner(
   if (ticket.status !== "approved") {
     return { ok: false, reason: `ticket_status_not_approved:${ticket.status}` };
   }
+  const commercial = await loadTicketCommercialRate(ticket, executor);
+  if (commercial?.automaticBilling === "manual_billing_required") return { ok: false, reason: "manual_billing_required" };
   // Period resolution must use the IMMUTABLE approval timestamp so that
   // subsequent edits to the ticket (which bump updatedAt) cannot silently
   // shift charges to a different invoice. Tickets approved before this
@@ -345,8 +349,8 @@ async function generateInvoiceForTicketInner(
     vendor: {
       id: vendor.id,
       name: vendor.name,
-      dailyOtHours: vendor.dailyOtHours ?? null,
-      weeklyOtHours: vendor.weeklyOtHours ?? null,
+      dailyOtHours: commercial?.dailyOtHours ?? vendor.dailyOtHours ?? null,
+      weeklyOtHours: commercial?.weeklyOtHours ?? vendor.weeklyOtHours ?? null,
     },
     site: { id: site.id, name: site.name, state: site.state ?? null },
     partner: { id: partner.id, name: partner.name },
@@ -359,7 +363,7 @@ async function generateInvoiceForTicketInner(
       remitToName: billingRow?.remitToName ?? null,
       mileageAutoSuggest: billingRow?.mileageAutoSuggest ?? false,
       mileageRate: billingRow?.mileageRate ?? null,
-      overtimeMultiplier: otMultiplier,
+      overtimeMultiplier: commercial?.overtimeMultiplier ?? otMultiplier,
       lateFeeRule: billingRow?.lateFeeRule ?? null,
       incomeCategoryOverrides: billingRow?.defaultIncomeCategoryOverrides ?? null,
     },
@@ -373,7 +377,7 @@ async function generateInvoiceForTicketInner(
           : null,
       checkInAt: r.checkInAt,
       checkOutAt: r.checkOutAt,
-      hourlyRateAtTime: r.hourlyRateAtTime ?? null,
+      hourlyRateAtTime: commercial?.unitPrice ?? r.hourlyRateAtTime ?? null,
     })),
     assignmentRates: assignmentRows.map((r) => ({
       ticketId: r.ticketId,

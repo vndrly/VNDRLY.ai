@@ -1,3 +1,4 @@
+import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
 import {
   Router,
   text,
@@ -1033,7 +1034,7 @@ router.post(
         ...(confirmed ? { confirmed: true } : {}),
       };
       const execute = () =>
-        isTypedWorkHubTool(name)
+        (isTypedWorkHubTool(name) || isMarketplaceTool(name))
           ? runTool(
               name,
               executableInput,

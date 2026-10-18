@@ -49,6 +49,8 @@ import { approvedPartnersForVendor, vendorCanReadPartner, employeeCanReadSite } 
 import { GateReportError, getGateReport } from "../lib/gate-report";
 
 import { OPS_DATA_TOOL_NAMES } from "./tool-names";
+import { isMarketplaceReadTool } from "./marketplace-tool-catalog";
+import { runMarketplaceTool } from "./marketplace-tools";
 export { OPS_DATA_TOOL_NAMES } from "./tool-names";
 
 export type OpsDataToolName = (typeof OPS_DATA_TOOL_NAMES)[number];
@@ -1437,6 +1439,7 @@ export async function runOpsDataTool(
   args: Record<string, unknown>,
   session: SessionPayload,
 ): Promise<string> {
+  if (isMarketplaceReadTool(name)) return JSON.stringify(await runMarketplaceTool(name, args, session));
   switch (name) {
     case "query_gate_stations":
     case "query_gate_change_over":

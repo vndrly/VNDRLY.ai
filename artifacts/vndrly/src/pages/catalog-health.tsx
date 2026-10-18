@@ -74,6 +74,10 @@ export default function CatalogHealthPage() {
         </div>
       </div>
 
+      <Link href="/admin/service-mappings" className="inline-block text-sm underline">
+        {t("serviceMappings.title")}
+      </Link>
+
       {isLoading ? (
         <Skeleton className="h-48 w-full" />
       ) : isError ? (

@@ -35,6 +35,8 @@ import GreyButton from "@/components/grey-button";
 import AfePill from "@/components/afe-pill";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import VendorCapabilityEditor from "@/components/service-marketplace/VendorCapabilityEditor";
+import VendorJobOfferInbox from "@/components/service-marketplace/VendorJobOfferInbox";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -423,6 +425,10 @@ export default function VendorCatalog() {
           {vendorRecord?.name ? `${vendorRecord.name} Catalog` : t("vendorCatalog.title")}
         </h1>
       </div>
+      {import.meta.env.VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true" &&
+        (user?.role === "admin" || user?.availableMemberships?.some(membership =>
+          membership.id === user.activeMembershipId && membership.orgType === "vendor" && membership.orgId === vendorId && membership.role === "admin")) &&
+        <div key={vendorId} className="space-y-4"><VendorJobOfferInbox vendorId={vendorId} /><VendorCapabilityEditor vendorId={vendorId} /></div>}
       {missingPriceCount > 0 ? (
         <p
           className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3"

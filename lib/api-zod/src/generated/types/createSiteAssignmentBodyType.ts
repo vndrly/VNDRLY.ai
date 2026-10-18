@@ -7,6 +7,7 @@
  */
 
 export interface CreateSiteAssignmentBodyType {
+  /** Explicit site-owner designation of this vendor as a Gate contractor. */
   isGateContractor?: boolean;
   workTypeId: number;
   vendorId: number;

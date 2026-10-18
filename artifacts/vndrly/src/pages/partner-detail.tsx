@@ -69,6 +69,7 @@ import PartnerVendorApprovalsCard from "@/components/partner-vendor-approvals-ca
 import { PlatformEulaModal } from "@/components/platform-eula-modal";
 import { getContrastWarningKind, getColorPairWarningKind, getSidebarContrastWarningKind } from "@/lib/brand-color";
 import { PosterPreview } from "@/components/poster-preview";
+import PartnerVendorResults from "@/components/service-marketplace/PartnerVendorResults";
 
 const COMPANY_ROLES = [
   "Operations Manager",
@@ -339,6 +340,7 @@ export function PartnerProductServiceCatalogCard({
   partnerId,
   canManage,
   canAddToCatalog,
+  showMarketplace = false,
 }: {
   partnerId: number;
   canManage: boolean;
@@ -351,6 +353,7 @@ export function PartnerProductServiceCatalogCard({
    * one place — the parent PartnerDetail render at the call site.
    */
   canAddToCatalog: boolean;
+  showMarketplace?: boolean;
 }) {
   const catalogBrand = useBrand();
   const { t } = useTranslation();
@@ -709,6 +712,9 @@ export function PartnerProductServiceCatalogCard({
                               workTypeId={it.workTypeId}
                               canManage={canManage}
                             />
+                            {showMarketplace && (
+                              <PartnerVendorResults partnerId={partnerId} workTypeId={it.workTypeId} />
+                            )}
                           </TableCell>
                         </TableRow>
                       )}

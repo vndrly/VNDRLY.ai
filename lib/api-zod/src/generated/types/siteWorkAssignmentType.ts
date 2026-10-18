@@ -7,6 +7,7 @@
  */
 
 export interface SiteWorkAssignmentType {
+  /** Explicit site-owner designation of this vendor as a Gate contractor. */
   isGateContractor?: boolean;
   id: number;
   siteLocationId: number;
