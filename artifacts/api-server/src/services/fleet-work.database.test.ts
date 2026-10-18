@@ -26,7 +26,7 @@ import {
   FleetDetailSnapshotSchema,
   type FleetWorkScope,
 } from "@workspace/api-zod";
-async function fixture(canonical = false) {
+async function fixture(canonical = false, originalStore?:ObjectStore) {
   assertFreshLocalTestDatabaseEnvironment(process.env);
   const tag = randomUUID();
   const [vendor] = await db
@@ -82,6 +82,7 @@ async function fixture(canonical = false) {
   let rejectAfterWrite = false,
     failReceipt = false;
   const repository = createDatabaseFleetWorkRepository({
+    originalStore,
     execute: async (context, command) => {
       if (canonical) {
         const result = await executeFleetWorkCommand(context, command);
@@ -143,6 +144,24 @@ async function fixture(canonical = false) {
     },
   };
 }
+
+it("retains private held originals under actual provisioning without executing or issuing canonical receipts",async()=>{
+ const objects=new Map<string,StoredObject>(),store={getObject:async(path:string)=>objects.get(path)??null,putObject:async(path:string,contentType:string,body:Buffer,acl:StoredObject["acl"])=>{objects.set(path,{contentType,body:Buffer.from(body),size:body.length,acl});}} as unknown as ObjectStore;
+ const f=await fixture(false,store),original=f.command();original.dependencies=[randomUUID()];
+ const [first,retry]=await Promise.all([f.repository.retainOriginal(f.actor,original),f.repository.retainOriginal(f.actor,original)]);
+ expect(first).toMatchObject({status:"retained_for_review",canonicalApplied:false,operationId:original.operationId,scope:f.scope});expect(retry.fingerprint).toBe(first.fingerprint);
+ expect(objects.size).toBe(1);expect([...objects.values()][0].acl).toMatchObject({visibility:"private",purpose:"fleet-work-private"});
+ const audit=(await pool.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-original' AND target_id=$2",[f.actor.companyId,original.operationId])).rows;
+ expect(audit).toHaveLength(1);expect(JSON.stringify(audit)).not.toContain("Synthetic original field note");expect(JSON.stringify(first)).not.toContain("/objects/");
+ const {readFleetWorkOriginal}=await import("./fleet-work-originals");
+ await f.repository.readScope(f.actor,f.scope,async({client})=>expect((await readFleetWorkOriginal(client,f.actor.companyId,original.operationId,store)).command).toEqual(original));
+ expect(await f.service.read(f.actor,f.scope,original.operationId)).toBeNull();expect(f.delivered).not.toHaveBeenCalled();
+ await expect(f.repository.retainOriginal(f.actor,{...original,payload:{...original.payload,notes:"Changed source"}})).rejects.toMatchObject({code:"fleet.original_identity_conflict"});
+ await expect(f.repository.retainOriginal({...f.actor,readOnly:true},original)).rejects.toMatchObject({code:"fleet.read_only"});
+ await expect(f.repository.retainOriginal(f.actor,{...original,scope:{...f.scope,userId:f.actor.userId+999}})).rejects.toMatchObject({code:"fleet.work_scope_changed"});
+ await pool.query("UPDATE work_hub_devices SET revoked_at=now() WHERE id=$1",[f.device.id]);
+ await expect(f.repository.retainOriginal(f.actor,original)).rejects.toMatchObject({code:"fleet.work_device_unavailable"});
+});
 it("atomically stores one canonical effect and receipt across concurrent lost-response retry", async () => {
   const f = await fixture(),
     original = f.command();

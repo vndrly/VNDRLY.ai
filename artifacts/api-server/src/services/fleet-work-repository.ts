@@ -1,9 +1,12 @@
 import { randomUUID,createHash } from "node:crypto";
 import {retainFleetWorkOriginal} from "./fleet-work-originals";
+import type {ObjectStore} from "../lib/objectStore";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod/v4";
 import {
   FleetWorkScopeSchema,
+  FleetWorkCommandSchema,
+  FleetWorkOriginalRetentionSchema,
   FleetWorkReceiptSchema,
   FleetWorkMappingSchema,
   FleetReconciliationCaseSchema,
@@ -78,6 +81,7 @@ export function createDatabaseFleetWorkRepository(options: {
   execute: Execute;
   base?: FleetRepository;
   now?: () => Date;
+  originalStore?:ObjectStore;
 }) {
   const base = options.base ?? databaseFleetRepository,
     now = options.now ?? (() => new Date());
@@ -253,7 +257,7 @@ export function createDatabaseFleetWorkRepository(options: {
             );
           },
           async saveCase(value,original) {
-            if(original)await retainFleetWorkOriginal(client,original);
+            if(original)await retainFleetWorkOriginal(client,original,options.originalStore);
             await append(
               client,
               actor,
@@ -309,6 +313,13 @@ export function createDatabaseFleetWorkRepository(options: {
       await tx.requireProvisioning(FleetWorkScopeSchema.parse(scope), false);
       return work(context);
     });
+  const retainOriginal=(actor:FleetActor,raw:unknown)=>{
+    const command=FleetWorkCommandSchema.parse(raw);
+    return withScope(actor,command.scope,async({client})=>{
+      const saved=await retainFleetWorkOriginal(client,command,options.originalStore);
+      return FleetWorkOriginalRetentionSchema.parse({version:2,scope:command.scope,operationId:command.operationId,fingerprint:saved.fingerprint,status:"retained_for_review",retainedAt:saved.retainedAt??now().toISOString(),canonicalApplied:false});
+    });
+  };
   const renewProvision=(actor:FleetActor,raw:unknown)=>scopedTransaction(actor,async(tx,context)=>{
     const {scope}=z.object({scope:FleetWorkScopeSchema}).strict().parse(raw);await tx.requireProvisioning(scope,false);
     if(actor.readOnly||!context.state.enabled||!(actor.membershipRole==="admin"||context.state.grants.some(grant=>grant.userId===actor.userId&&grant.roles.length&&grant.fleetIds.some(id=>context.state.fleets.some(group=>group.id===id)))))throw new FleetError("fleet.grant_required",403);
@@ -341,5 +352,5 @@ export function createDatabaseFleetWorkRepository(options: {
     await append(client,actor,"fleet-work-reauthorization",scope.provisioningId,value);
     const saved=provisionSchema.parse({...original.data,renewedAt:recordedAt,expiresAt:new Date(now().getTime()+7*86400000).toISOString()});await append(client,actor,"fleet-work-provision",scope.provisioningId,saved);return {scope:saved.scope,expiresAt:saved.expiresAt,reauthorizedAt:recordedAt,originalRebound:false};
   },actor);
-  return { ...repository, authorizeOriginalScope, reauthorizeOriginal, provision, renewProvision, assistantProvision, withScope, readScope };
+  return { ...repository, authorizeOriginalScope, reauthorizeOriginal, provision, renewProvision, assistantProvision, withScope, readScope,retainOriginal };
 }

@@ -4,7 +4,7 @@ import {FleetRunOrderPageSchema,FleetRunOrderSchema} from "./fleet-run-order";
 import {FleetWorkEvidencePageSchema} from "./fleet-evidence-upload";
 import {synchronizeFleetEvidence} from "./fleet-work-evidence-client";
 import {z} from "zod/v4";
-import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetWorkCommandSchema,type FleetWorkScope,type FleetWorkCommand} from "./fleet-work";
+import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetWorkOriginalRetentionSchema,FleetWorkCommandSchema,type FleetWorkScope,type FleetWorkCommand} from "./fleet-work";
 import {FleetQuantityEvidenceSchema} from "./fleet-pricing";
 import {FleetCommercialReviewSchema,type FleetCommercialReview,type FleetOfficeReviewAction} from "./fleet-commercial-review";
 import {FleetReconciliationPageSchema,FleetRecoveryOptionsSchema,type FleetReconciliationPage} from "./fleet-reconciliation";
@@ -48,9 +48,10 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
  const journal=await options.openJournal(scope),transport={
   lookup:async(command:FleetWorkCommand)=>z.object({receipt:FleetWorkReceiptSchema.nullable(),checkedAt:z.iso.datetime()}).parse(await options.http(`/api/fleet/work/operations/${command.operationId}`,{scope})),
   apply:async(command:FleetWorkCommand)=>FleetWorkReceiptSchema.parse(await options.http("/api/fleet/work/commands",command)),
+  retain:async(command:FleetWorkCommand)=>FleetWorkOriginalRetentionSchema.parse(await options.http("/api/fleet/work/originals",command)),
  };
  const priorRecords=async()=>{current();return (await options.index.transaction(tx=>tx.values("fleet-provisions"))).map(raw=>provisionSchema.parse(JSON.parse(raw))).filter(record=>record.scope.provisioningId!==scope.provisioningId&&record.scope.owner.type==="vendor"&&record.scope.owner.id===account.companyId&&record.scope.userId===account.userId&&record.scope.membershipId===account.membershipId);};
- const drainPrior=async(record:ReturnType<typeof provisionSchema.parse>)=>{current();const original=record.scope,retained=await options.openJournal(original),bound={lookup:async(command:FleetWorkCommand)=>z.object({receipt:FleetWorkReceiptSchema.nullable(),checkedAt:z.iso.datetime()}).parse(await options.http(`/api/fleet/work/operations/${command.operationId}`,{scope:original})),apply:async(command:FleetWorkCommand)=>FleetWorkReceiptSchema.parse(await options.http("/api/fleet/work/commands",command))};
+ const drainPrior=async(record:ReturnType<typeof provisionSchema.parse>)=>{current();const original=record.scope,retained=await options.openJournal(original),bound={lookup:async(command:FleetWorkCommand)=>z.object({receipt:FleetWorkReceiptSchema.nullable(),checkedAt:z.iso.datetime()}).parse(await options.http(`/api/fleet/work/operations/${command.operationId}`,{scope:original})),apply:async(command:FleetWorkCommand)=>FleetWorkReceiptSchema.parse(await options.http("/api/fleet/work/commands",command)),retain:async(command:FleetWorkCommand)=>FleetWorkOriginalRetentionSchema.parse(await options.http("/api/fleet/work/originals",command))};
   for(const entry of (await retained.readState()).entries.filter(row=>["needs_reconciliation","denied"].includes(row.delivery.state)).slice(0,25)){try{const value=await bound.lookup(entry.command);if(value.receipt&&["applied","duplicate","retained"].includes(value.receipt.status))await retained.applyReceipt(original,value.receipt);}catch{current();}}
   await synchronizeFleetWork(original,{journal:retained,transport:bound,isCurrent:options.isCurrent});if(retained.readEvidencePart&&options.putEvidencePart&&options.hashBytes)await synchronizeFleetEvidence({scope:original,journal:retained,isCurrent:options.isCurrent,http:options.http,put:(path,bytes,hash)=>options.putEvidencePart!(path,bytes,hash,original),read:(...args)=>retained.readEvidencePart!(...args),hash:options.hashBytes});return retained.readStatus(original);
  };

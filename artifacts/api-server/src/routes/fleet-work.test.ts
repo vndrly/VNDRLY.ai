@@ -1,5 +1,11 @@
 import express from "express";import request from "supertest";import {it,expect,vi} from "vitest";import {randomUUID} from "node:crypto";
 const scope={owner:{type:"vendor",id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()};
+it("keeps private source deposition separate from canonical commands and disables shared response caching",async()=>{
+ const {createFleetWorkRouter}=await import("./fleet-work"),actor={userId:2,companyId:7},raw={operationId:randomUUID()},retained={status:"retained_for_review",canonicalApplied:false},retainOriginal=vi.fn(async()=>retained),apply=vi.fn();
+ const app=express().use(express.json()).use(createFleetWorkRouter({actor:()=>actor as never,enabled:()=>true,repository:{retainOriginal} as never,service:{apply} as never}));
+ const result=await request(app).post("/fleet/work/originals").send(raw);
+ expect(result.status).toBe(200);expect(result.headers["cache-control"]).toContain("no-store");expect(result.body).toEqual(retained);expect(retainOriginal).toHaveBeenCalledWith(actor,raw);expect(apply).not.toHaveBeenCalled();
+});
 it("returns evidence acceptance only from a persisted complete original upload, with no private source or invented physical proof",async()=>{
  const {createFleetWorkRouter}=await import("./fleet-work"),id=randomUUID(),operationId=randomUUID(),evidenceId=randomUUID(),at=new Date().toISOString();
  const session={version:2,id,operationId,scope,fingerprint:"a".repeat(64),localEvidenceId:randomUUID(),canonicalEvidenceId:evidenceId,capturedAt:at,timeZone:"UTC",createdAt:at,byteSize:4,sha256:"b".repeat(64),contentType:"image/jpeg",partCount:1,partSize:262144,binding:{kind:"compliance",recordId:randomUUID(),subject:{kind:"driver",id:2},expectedRecordVersion:0},completion:null as any};

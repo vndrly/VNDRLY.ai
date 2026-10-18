@@ -20,6 +20,10 @@ const uuid=FleetCanonicalIdSchema,id=z.number().int().positive(),revision=z.numb
  * No role, permission, or model-generated authorization is accepted here. */
 export const FleetWorkScopeSchema=WorkdayScopeSchema.extend({deviceId:z.string().trim().min(1).max(200),provisioningId:uuid}).strict();
 export type FleetWorkScope=z.infer<typeof FleetWorkScopeSchema>;
+/** A private source deposit is never a canonical operation receipt or proof
+ * that the reported physical action was authorized or performed. */
+export const FleetWorkOriginalRetentionSchema=z.object({version:z.literal(2),scope:FleetWorkScopeSchema,operationId:uuid,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),status:z.literal("retained_for_review"),retainedAt:timestamp,canonicalApplied:z.literal(false)}).strict();
+export type FleetWorkOriginalRetention=z.infer<typeof FleetWorkOriginalRetentionSchema>;
 const uuidKinds=["activity","run_order","detail","rig_package","location","evidence","shift"] as const;
 export const FleetWorkReferenceSchema=z.union([
  z.object({type:z.literal("local"),kind:z.enum(["ticket",...uuidKinds]),id:uuid}).strict(),

@@ -1,7 +1,7 @@
 import {fleetWorkReceiptLookups,type FleetWorkState} from "./fleet-work-state";
-import {FleetWorkReceiptSchema,type FleetWorkScope,type FleetWorkCommand,type FleetWorkReceipt} from "./fleet-work";
+import {FleetWorkReceiptSchema,FleetWorkOriginalRetentionSchema,type FleetWorkOriginalRetention,type FleetWorkScope,type FleetWorkCommand,type FleetWorkReceipt} from "./fleet-work";
 import type {DurableFleetWorkJournal} from "./fleet-work-journal";
-export type FleetWorkTransport={lookup(command:FleetWorkCommand):Promise<{receipt:FleetWorkReceipt|null;checkedAt:string}>;apply(command:FleetWorkCommand):Promise<FleetWorkReceipt>};
+export type FleetWorkTransport={lookup(command:FleetWorkCommand):Promise<{receipt:FleetWorkReceipt|null;checkedAt:string}>;apply(command:FleetWorkCommand):Promise<FleetWorkReceipt>;retain?:(command:FleetWorkCommand)=>Promise<FleetWorkOriginalRetention>};
 const active=new Map<string,Promise<unknown>>();
 /** Sending is durable BEFORE transport. A lost response or process death forces
  * exact original-scope receipt lookup before another attempt. */
@@ -27,6 +27,24 @@ export async function synchronizeFleetWork(scope:FleetWorkScope,options:{journal
     catch{current();await journal.markUnknown(command.operationId);unknown++;}
    }
   }
-  return {applied,held,unknown,...await journal.readStatus(scope)};
+  // Held dependencies cannot enter the canonical execution queue. Deposit their
+  // immutable source separately so authorized office recovery can inspect it.
+  // A rotating bound prevents a failed oldest source from starving descendants.
+  let retainedOriginals=0,retentionUnavailable=0;
+  if(transport.retain){
+   current();state=await journal.readState();
+   const cursor=Number(await journal.readCache("original-retention-cursor")??0),ordered=[...state.entries.filter(row=>row.sequence>cursor),...state.entries.filter(row=>row.sequence<=cursor)];
+   for(const entry of ordered.slice(0,limit)){
+    current();const cacheKey=`original-retention:${entry.command.operationId}`,prior=FleetWorkOriginalRetentionSchema.safeParse(await journal.readCache(cacheKey));
+    if(!(prior.success&&prior.data.fingerprint===entry.fingerprint&&prior.data.operationId===entry.command.operationId&&JSON.stringify(prior.data.scope)===key)){
+     try{current();const saved=FleetWorkOriginalRetentionSchema.parse(await transport.retain(entry.command));current();
+      if(saved.operationId!==entry.command.operationId||saved.fingerprint!==entry.fingerprint||JSON.stringify(saved.scope)!==key)throw Error("Original retention identity changed");
+      await journal.putCache(cacheKey,saved);retainedOriginals++;
+     }catch{current();retentionUnavailable++;}
+    }
+    current();await journal.putCache("original-retention-cursor",entry.sequence);
+   }
+  }
+  return {applied,held,unknown,retainedOriginals,retentionUnavailable,...await journal.readStatus(scope)};
  })();active.set(key,run);try{return await run;}finally{if(active.get(key)===run)active.delete(key);}
 }
