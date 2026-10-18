@@ -39,3 +39,25 @@ The user approved the October 6 Fleet design for implementation on October 7, 20
 ## Integration boundaries
 
 Vehicle hardware, camera media, commercial truck routing and regulated logging require supported configured integrations and actual device/provider verification. Until then, show their unavailable/setup states; never substitute synthetic observations for live proof. These boundaries do not remove the shared record workflows above from scope.
+
+
+## October 18 commercial candidate
+
+Implementation milestones A1-A3, B1-B4, C1-C3, D1-D3 and M1-M3 have software acceptance. M4 release/device/provider acceptance remains open. This is not a claim of a live release or TestFlight submission.
+
+| Workflow | Retained acceptance |
+| --- | --- |
+| Company driver pool, multi-component Inventory Details, saved Origin/Destination Runs | Historical identity, current grants/holds, double-book refusal, reusable definitions and true Back behavior |
+| New/shared parent ticket and office billing | Actual original-driver offline creation through closeout, exact quantity endorsement, mixed primary/supplemental charges, separate explicit finalization; financial golden packet JSON/PDF/CSV/IIF agrees |
+| Retained local/canonical performed work | Original private bytes and revisions, independently proved applied prefix, cancelled/released/unbilled canonical original, one historical billing source, no redispatch or replacement reservation; original photo and office charge/finalization proof |
+| Initial compliance and future partner policy | Documentary red remains warn-only; operational holds/current commercial authority remain binding; authorized future activation, exact receipt/history and current late-source enforcement verified |
+| Durable web/native original storage | Native SQLite-port capacity/atomic rollback and real production-browser cold offline boot, restart/photo/lost-response reconciliation; physical iPhone SQLCipher/OS behavior remains unverified |
+| Unified employee workday and calendar | One organization clock, yard/between-run time, explicit End of Day, logout distinction, current-state refresh, original-session recovery, actual assignment/calendar and office correction checks |
+| Monitoring | Current source/freshness and compliance separated, one current vehicle marker, real dispatch versus acknowledgement, durable missing-recipient retry inside cooldown and one actual in-app notice |
+| Ask V/ChatGPT | Trusted confirmed atomic create/dispatch, own-driver creation/action, safe original-source plan/options, office source/charge review, exact uncertain-result readback and known-refusal disposition; no driver impersonation or finance leakage |
+
+The complete validation chain was run once; demonstrated failures received focused fixes and reruns. The final Fleet delta passed independent review after the two result-recovery corrections. The merged candidate additionally passed the locale linter, web production build and iOS export; current root typecheck results are recorded in the execution ledger. Existing remote-main Work Hub/consent changes were merged without conflicts or removal. Their immutable browser continuation is [run 39095154141](https://github.com/vndrly/VNDRLY.ai/actions/runs/39095154141); its evidence is not a substitute for the separate Fleet production-browser test.
+
+Production commercial activation remains gated. Actual handset airplane-mode/termination/lock, push opening the exact run, consent-bound background location and approved opted-in SMS provider delivery need supported device/provider evidence. Phone observations, Mapbox driving estimates and successful enqueue do not establish truck telemetry, truck-safe routing, ELD compliance or handset receipt.
+
+Full ship still requires the exact candidate's commit/push, web, API/additive migrations/private storage, compatible OTA, successful native TestFlight submission and existing installed plugin update with a real scoped read and harmless action/readback. Package 1.18.0 preserves the existing plugin/app identity and existing grants. Installed, submitted, approved and publicly available remain distinct states.
