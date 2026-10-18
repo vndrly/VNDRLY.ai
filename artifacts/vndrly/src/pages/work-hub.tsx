@@ -12,6 +12,7 @@ import { SafetyResponse } from "@/components/implementation-a/safety-response";
 import { Subscriptions } from "@/components/implementation-a/subscriptions";
 import { OperationsHealth } from "@/components/implementation-a/operations-health";
 import { ImportExportTools } from "@/components/work-hub/import-export";
+import { TeamsConnectionPanel } from "@/components/work-hub/teams-connection";
 import { FilesAndNotes } from "@/components/work-hub/files-and-notes";
 import { WorkHubExactItem } from "@/components/work-hub/exact-item";
 import { WorkPlanDetail, isWorkPlanDescription } from "@/components/work-hub/plan-detail";
@@ -2187,6 +2188,7 @@ function SettingsModule() {
   });
   return (
     <Shell module="settings">{user?.userId && ownerForUser(user) && <WorkHubAwaySettings key={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} identity={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} actorId={user.userId} owner={ownerForUser(user)!} />}<ImportExportTools />
+      <TeamsConnectionPanel />
       <Card>
         <CardHeader>
           <CardTitle><WorkHubCardTitle icon={Link2}>Microsoft 365 import</WorkHubCardTitle></CardTitle>
@@ -2208,9 +2210,8 @@ function SettingsModule() {
             events.
           </p>
           <p className="text-sm font-medium">
-            After activation, VNDRLY is authoritative. Work Hub never sends
-            edits, acknowledgements, approvals, assignments, or new records back
-            to Microsoft.
+            This separate migration tool copies records into VNDRLY only.
+            It does not control the two-way Teams calendar and chat connection above.
           </p>
           <BrandPillButton
             tone="brand"
