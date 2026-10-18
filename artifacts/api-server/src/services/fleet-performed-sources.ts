@@ -22,16 +22,24 @@ export async function adoptFleetPerformedSources(context:FleetWorkExecutionConte
  if(resolution.kind!=="adopt_performed")throw new FleetError("fleet.case_resolution_forbidden",409);
  const prepared=await prepareFleetRecoverySourcePlan(context,p.caseId),{plan,qualification,snapshot,original,value,sources}=prepared,root=original.command;
  if(actor.readOnly||!state.enabled||value.resolution||value.version!==p.expectedVersion)throw new FleetError("fleet.case_version_conflict",409);
- if(root.kind!=="activity.create"||p.activity.type!=="local"||p.activity.id!==root.payload.activityId||!isDeepStrictEqual(p.originalTicket,root.payload.billing.ticket))throw new FleetError("fleet.original_identity_conflict",409);
+ if(!isDeepStrictEqual(p.activity,prepared.reference)||!isDeepStrictEqual(p.originalTicket,prepared.ticket))throw new FleetError("fleet.original_identity_conflict",409);
  if(plan.fingerprint!==resolution.sourceFingerprint)throw new FleetError("fleet.source_plan_changed",409);
  if(plan.status!=="closed_reports_ready_for_review"||!qualification.projection||!qualification.reportedClosedAt)throw new FleetError("fleet.recovery_requires_source_review",409);
  const grant=state.grants.find(g=>g.userId===actor.userId),group=state.fleets.find(g=>g.id===prepared.base.fleetId),billing=resolution.billing;
  if(!grant?.financeRead||!grant.roles.some(r=>r==="fleet_manager"||r==="dispatcher")||!group||!grant.fleetIds.includes(group.id)||!grant.siteIds.includes(billing.billingSiteId??0)||!group.siteIds.includes(billing.billingSiteId??0))throw new FleetError("fleet.finance_required",403);
  // Recovery changes only the explicitly selected parent ticket. It cannot
  // silently rebill another customer, site, AFE, service or work date.
- for(const key of ["partnerId","billingSiteId","afeNumber","workDate","currency"] as const)if(billing[key]!==root.payload.billing[key])throw new FleetError("fleet.billing_ticket_mismatch",409);
- if(root.payload.billing.serviceId!==null&&billing.serviceId!==root.payload.billing.serviceId)throw new FleetError("fleet.billing_ticket_mismatch",409);
- const originalActivity={type:"local" as const,kind:"activity" as const,id:root.payload.activityId},key=fleetPerformedSourceBindingKey(value.scope,originalActivity.id);
+ for(const key of ["partnerId","billingSiteId","afeNumber","workDate","currency"] as const)if(billing[key]!==prepared.billingIntent[key])throw new FleetError("fleet.billing_ticket_mismatch",409);
+ if(prepared.billingIntent.serviceId!==null&&billing.serviceId!==prepared.billingIntent.serviceId)throw new FleetError("fleet.billing_ticket_mismatch",409);
+ const originalActivity=prepared.reference,key=fleetPerformedSourceBindingKey(value.scope,String(originalActivity.id));
+ if(originalActivity.type==="canonical"){
+  const row=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,originalActivity.id])).rows[0],current=row&&FleetRunSchema.parse(row.tool_output);
+  if(!current||current.status!=="cancelled"||current.recoveredWork||!current.resourceAssignment||!["cancelled","released"].includes(current.resourceAssignment.reservation.state))throw new FleetError("fleet.original_assignment_still_active",409);
+  if(!current.billingV2||current.billingV2.review.status!=="pending"||current.linkedTicketId!==prepared.base.linkedTicketId||current.billingV2.serviceId!==prepared.base.billingV2?.serviceId||!isDeepStrictEqual(current.billingV2.context,prepared.base.billingV2?.context))throw new FleetError("fleet.source_billing_unresolved",409);
+  const billed=(await client.query("SELECT id FROM assistant_action_audit WHERE vendor_id=$1 AND ((target_type='fleet-performed-source-origin' AND target_id=$2) OR (target_type='fleet-reviewed-charge' AND tool_output->>'runId'=$2)) LIMIT 1",[actor.companyId,originalActivity.id])).rows;
+  const lines=(await client.query("SELECT id FROM ticket_line_items WHERE ticket_id=$1 AND (fleet_billing_metadata IS NULL OR fleet_billing_metadata->'charge'->>'runId'=$2) LIMIT 1",[current.linkedTicketId,originalActivity.id])).rows;
+  if(billed.length||lines.length)throw new FleetError("fleet.source_already_adopted",409);
+ }
  const existing=(await client.query("SELECT id FROM assistant_action_audit WHERE vendor_id=$1 AND ((target_type='fleet-performed-source-binding' AND target_id=$2) OR (target_type='fleet-work-mapping' AND target_id=$3)) LIMIT 1",[actor.companyId,key,`${value.scope.provisioningId}:activity:${originalActivity.id}`])).rows;
  if(existing.length)throw new FleetError("fleet.source_already_adopted",409);
  for(const source of sources){
@@ -42,15 +50,16 @@ export async function adoptFleetPerformedSources(context:FleetWorkExecutionConte
  }
  const adoptedAt=new Date().toISOString(),id=randomUUID(),{localWork:_local,resourceAssignment:_reservation,billing:_oldBilling,billingV2:_oldV2,commercial:_commercial,eventHistory:_archive,assignmentRecordedAt:_assignment,...historical}=prepared.base;
  const run=FleetRunSchema.parse({...historical,id,version:1,status:"submitted_for_review",phase:null,currentStopId:null,visitedStopIds:qualification.projection.visitedStopIds,...qualification.reports,events:[],linkedTicketId:null,allowedActions:[],recoveredWork:{version:2,billingOnly:true,physicalProofVerified:false,caseId:value.id,sourceFingerprint:plan.fingerprint,sourceCount:plan.sourceCount,snapshot,reportedClosedAt:qualification.reportedClosedAt,adoptedAt,adoptedByUserId:actor.userId}});
- const parent=await attachFleetBillingV2(context,run,billing,{workAt:root.capturedAt,pricingIntent:root.payload.pricingIntent});
+ const parent=await attachFleetBillingV2(context,run,billing,{workAt:prepared.workAt,pricingIntent:prepared.pricingIntent});
  await requireFleetRunCommercialAuthority(client,run,"office_submit");
  // Current server policy governs adoption. Client capture dates cannot grant a
  // historical exemption or pretend a current reservation existed earlier.
  const policy=await assessFleetActionPolicy(client,actor,{run,action:"office_submit",policyAt:adoptedAt,requiredCertifications:group.requiredCertifications});
- appendFleetRunEvent(run,{id:randomUUID(),operationId:command.operationId,type:"historical_billing_source_adopted",actorUserId:actor.userId,recordedAt:adoptedAt,capturedAt:new Date(root.capturedAt).toISOString(),source:"user_report",details:{reason:p.reason,caseId:value.id,sourceFingerprint:plan.fingerprint,sourceCount:plan.sourceCount,reportedClosedAt:qualification.reportedClosedAt,physicalProofVerified:false,fleetCompliance:policy}});
+ appendFleetRunEvent(run,{id:randomUUID(),operationId:command.operationId,type:"historical_billing_source_adopted",actorUserId:actor.userId,recordedAt:adoptedAt,capturedAt:new Date(prepared.workAt).toISOString(),source:"user_report",details:{originalCapture:{capturedAt:root.capturedAt,timeZone:root.timeZone},reason:p.reason,caseId:value.id,sourceFingerprint:plan.fingerprint,sourceCount:plan.sourceCount,reportedClosedAt:qualification.reportedClosedAt,physicalProofVerified:false,fleetCompliance:policy}});
  appendFleetRunEvent(run,{id:randomUUID(),operationId:command.operationId,type:"historical_compliance_unverified",actorUserId:actor.userId,recordedAt:adoptedAt,capturedAt:new Date(root.capturedAt).toISOString(),source:"user_report",details:{caseId:value.id,fleetCompliance:{mode:"warn_only",status:"red",evaluatedAt:adoptedAt,warnings:[{category:"regulatory_review",reason:"unverified"}]}}});
- const binding=FleetPerformedSourceBindingSchema.parse({version:2,scope:value.scope,originalActivity,originalTicket:root.payload.billing.ticket,rootOperationId:root.operationId,activityId:id,activityVersion:1,ticketId:parent.ticketId,snapshot,sourceFingerprint:plan.fingerprint,caseId:value.id,adoptedByUserId:actor.userId,adoptedAt});
+ const binding=FleetPerformedSourceBindingSchema.parse({version:2,scope:value.scope,originalActivity,originalTicket:prepared.ticket,rootOperationId:root.operationId,activityId:id,activityVersion:1,ticketId:parent.ticketId,snapshot,sourceFingerprint:plan.fingerprint,caseId:value.id,adoptedByUserId:actor.userId,adoptedAt});
  await append(context,"fleet-performed-source-binding",key,binding);
+ if(originalActivity.type==="canonical")await append(context,"fleet-performed-source-origin",String(originalActivity.id),{version:2,originalActivityId:originalActivity.id,activityId:id,bindingKey:key,sourceFingerprint:plan.fingerprint,adoptedByUserId:actor.userId,adoptedAt});
  for(const source of sources){
   const c=source.command;
   await append(context,"fleet-performed-source-operation",c.operationId,{version:2,activityId:id,bindingKey:key,operationId:c.operationId,fingerprint:source.fingerprint,kind:c.kind,capturedAt:c.capturedAt,receivedAt:source.receivedAt,timeZone:c.timeZone,reportedByUserId:c.scope.userId});

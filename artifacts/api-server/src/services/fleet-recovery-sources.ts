@@ -9,6 +9,9 @@ import {readFleetResourceRecord} from "./fleet-resource-store";
 import {FleetError} from "./fleet-repository";
 import {FleetRecoverySourcePlanSchema,qualifyFleetOriginalReports,createFleetWorkState,appendFleetWorkIntent,projectFleetLocalActivities,type FleetRun,type FleetOriginalReport} from "@workspace/api-zod";
 import {readFleetServiceTemplate} from "./fleet-service-template";
+import {FleetWorkReceiptSchema} from "@workspace/api-zod";
+import {readCompleteFleetRunEvents} from "./fleet-run-events";
+import {fleetOriginalBillingIntent} from "./fleet-recovery-billing";
 const querySchema=z.object({cursor:z.string().regex(/^\d{1,18}:\d{1,18}$/).optional(),limit:z.number().int().min(1).max(100).default(50)}).strict();
 function activity(command:FleetWorkCommand):FleetWorkReference|null{return command.kind==="activity.create"?{type:"local",kind:"activity",id:command.payload.activityId}:"activity" in command.payload?command.payload.activity:null;}
 const sameIdentity=(a:FleetWorkReference|null,b:FleetWorkReference|null)=>!!a&&!!b&&a.type===b.type&&a.kind===b.kind&&a.id===b.id;
@@ -76,9 +79,21 @@ export async function prepareFleetRecoverySourcePlan(context:FleetWorkExecutionC
   for(const row of rows){const retained=await readFleetWorkOriginal(client,actor.companyId,row.target_id);if(!isDeepStrictEqual(retained.command.scope,value.scope))throw new FleetError("fleet.original_identity_conflict",409);if(sameIdentity(activity(retained.command),reference))sources.push({command:retained.command,fingerprint:retained.fingerprint,receivedAt:new Date(row.created_at).toISOString()});}
   if(rows.length<100)break;const next=String(rows.at(-1)!.id);if(BigInt(next)<=BigInt(after))throw new FleetError("fleet.original_storage_unavailable",503);after=next;
  }
- const qualification=qualifyFleetOriginalReports({run:base,snapshot,scope:value.scope,activity:reference,ticket,sources});
+ const canonicalSources:FleetOriginalReport[]=[],pendingSources:FleetOriginalReport[]=[],baseEvents=baseRun?await readCompleteFleetRunEvents(client,baseRun):[];
+ for(const source of sources){
+  const c=source.command;
+  if(baseRun&&c.kind==="activity.action"&&c.payload.action.expectedVersion<baseRun.version){
+   const row=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type IN ('fleet-work-operation','fleet-work-resolution-receipt') AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,c.operationId])).rows[0];
+   const receipt=row?FleetWorkReceiptSchema.parse(row.tool_output):undefined,event=baseEvents.find(e=>e.operationId===c.operationId&&e.type===c.payload.action.action&&e.actorUserId===c.scope.userId);
+   if(!receipt||!["applied","duplicate"].includes(receipt.status)||receipt.fingerprint!==source.fingerprint||!isDeepStrictEqual(receipt.scope,c.scope)||!("canonicalReferences" in receipt)||!receipt.canonicalReferences.some(r=>r.kind==="activity"&&r.id===baseRun.id&&r.version>c.payload.action.expectedVersion&&r.version<=baseRun.version)||!event||(event.capturedAt&&Date.parse(event.capturedAt)!==Date.parse(c.capturedAt)))throw new FleetError("fleet.original_prefix_unverified",409);
+   canonicalSources.push(source);
+  }else pendingSources.push(source);
+ }
+ const qualification=qualifyFleetOriginalReports({run:base,snapshot,scope:value.scope,activity:reference,ticket,sources:pendingSources});
  const fingerprint=createHash("sha256").update(JSON.stringify({caseId:value.id,caseVersion:value.version,original:original.fingerprint,baseVersion:base.version,snapshot,sources:sources.map(s=>({operationId:s.command.operationId,fingerprint:s.fingerprint,receivedAt:s.receivedAt})).sort((a,b)=>a.operationId.localeCompare(b.operationId))})).digest("hex");
- const plan=FleetRecoverySourcePlanSchema.parse({caseId:value.id,caseVersion:value.version,source:"retained_original_reports",canonicalApplied:false,physicalProofVerified:false,fingerprint,sourceCount:sources.length,status:qualification.status,reasons:qualification.reasons,originalDriverUserId:qualification.originalDriverUserId,reportedClosedAt:qualification.reportedClosedAt});
- return {plan,qualification,base,snapshot,original,sources,value};
+ const plan=FleetRecoverySourcePlanSchema.parse({caseId:value.id,caseVersion:value.version,source:"retained_original_reports",canonicalApplied:false,physicalProofVerified:false,fingerprint,sourceCount:pendingSources.length,canonicalSourceCount:canonicalSources.length,status:qualification.status,reasons:qualification.reasons,originalDriverUserId:qualification.originalDriverUserId,reportedClosedAt:qualification.reportedClosedAt});
+ const billingIntent=fleetOriginalBillingIntent(root,base),pricingIntent=root.kind==="activity.create"?root.payload.pricingIntent:base.billingV2!.pricing,workAt=root.kind==="activity.create"?root.capturedAt:baseEvents[0]?.capturedAt??baseEvents[0]?.recordedAt;
+ if(!workAt)throw new FleetError("fleet.original_assignment_unverified",409);
+ return {plan,qualification,base,snapshot,original,sources:pendingSources,canonicalSources,value,billingIntent,pricingIntent,workAt,reference,ticket};
 }
 export async function readFleetRecoverySourcePlan(context:FleetWorkExecutionContext,caseId:string){return (await prepareFleetRecoverySourcePlan(context,caseId)).plan;}

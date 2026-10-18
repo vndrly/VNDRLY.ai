@@ -9,6 +9,7 @@ import {createFleetWorkCanonicalService} from "./fleet-work-canonical";
 import {resolveFleetWorkReference} from "./fleet-work-references";
 import {readFleetWorkBillingChoices} from "./fleet-work-preparation";
 import {adoptFleetPerformedSources} from "./fleet-performed-sources";
+import {readFleetOriginalBilling} from "./fleet-recovery-billing";
 
 export async function authorizeFleetRecovery(context:FleetWorkExecutionContext,value:FleetReconciliationCase,original:FleetWorkCommand){
  const {actor,state}=context,grant=state.grants.find(row=>row.userId===actor.userId);
@@ -32,10 +33,11 @@ const querySchema=z.object({after:z.string().regex(/^[1-9]\d{0,17}$/).optional()
 export async function readFleetRecoveryOptions(context:FleetWorkExecutionContext,id:string,after?:string){
  const row=(await context.client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-case' AND target_id=$2 ORDER BY id DESC LIMIT 1",[context.actor.companyId,z.uuid().parse(id)])).rows[0];if(!row)throw new FleetError("fleet.recovery_forbidden",403);
  const value=FleetReconciliationCaseSchema.parse(row.tool_output),original=await readFleetWorkOriginal(context.client,context.actor.companyId,value.operationId),permission=await authorizeFleetRecovery(context,value,original.command);
- if(!permission.canResolve||value.resolution||original.command.kind!=="activity.create")throw new FleetError("fleet.recovery_forbidden",403);
- const payload=original.command.payload,grant=context.state.grants.find(row=>row.userId===context.actor.userId)!,fleetId=payload.detailSnapshot.detail.accessGroupIds.find(id=>grant.fleetIds.includes(id));
- if(!fleetId||!payload.billing.billingSiteId)throw new FleetError("fleet.recovery_forbidden",403);
- const service=createFleetWorkCanonicalService(context),billing=await readFleetWorkBillingChoices(context,{fleetId,siteId:payload.billing.billingSiteId,afeNumber:payload.billing.afeNumber,workDate:payload.billing.workDate}),details=await service.readFleetDetails({...context.actor},{limit:50,...(after?{after:z.uuid().parse(after)}:{})});
+ if(!permission.canResolve||value.resolution)throw new FleetError("fleet.recovery_forbidden",403);
+ const source=await readFleetOriginalBilling(context,original.command);if(!source)throw new FleetError("fleet.recovery_requires_source_review",409);
+ const grant=context.state.grants.find(row=>row.userId===context.actor.userId)!,fleetId=source.fleetId??(original.command.kind==="activity.create"?original.command.payload.detailSnapshot.detail.accessGroupIds.find(id=>grant.fleetIds.includes(id)):undefined);
+ if(!fleetId||!grant.fleetIds.includes(fleetId)||!source.billing.billingSiteId||!grant.siteIds.includes(source.billing.billingSiteId))throw new FleetError("fleet.recovery_forbidden",403);
+ const service=createFleetWorkCanonicalService(context),billing=await readFleetWorkBillingChoices(context,{fleetId,siteId:source.billing.billingSiteId,afeNumber:source.billing.afeNumber,workDate:source.billing.workDate}),details=original.command.kind==="activity.create"?await service.readFleetDetails({...context.actor},{limit:50,...(after?{after:z.uuid().parse(after)}:{})}):{details:[],nextCursor:null};
  return FleetRecoveryOptionsSchema.parse({tickets:billing.tickets.map(ticket=>({id:ticket.id,ticketNumber:String(ticket.ticketNumber),version:ticket.planVersion})),services:billing.workTypes.map(work=>({id:work.id,name:work.name})),details:details.details.map(detail=>({id:detail.id,version:detail.version,name:detail.name,driverUserId:detail.driverUserId})),nextDetailCursor:details.nextCursor});
 }
 export async function readFleetReconciliation(context:FleetWorkExecutionContext,raw:unknown){
@@ -48,7 +50,7 @@ export async function readFleetReconciliation(context:FleetWorkExecutionContext,
   const value=FleetReconciliationCaseSchema.parse(row.tool_output);
   if(value.scope.userId!==actor.userId&&!value.originalReferences.some(ref=>ref.kind==="activity"))continue;
   const original=await readFleetWorkOriginal(client,actor.companyId,value.operationId);
-  try{const permission=await authorizeFleetRecovery(context,value,original.command),{scope:_,...safe}=value,command=original.command;cases.push({case:command.kind==="activity.create"&&!value.resolution?{...safe,allowedResolutions:[...new Set([...safe.allowedResolutions,"adopt_performed" as const])]}:safe,original:{kind:command.kind,capturedAt:command.capturedAt,timeZone:command.timeZone,title:command.kind==="activity.create"?command.payload.title:null,driverUserId:command.kind==="activity.create"?command.payload.detailSnapshot.detail.driverUserId:null,activity:command.kind==="activity.create"?{type:"local",kind:"activity",id:command.payload.activityId}:"activity" in command.payload?command.payload.activity:null,ticket:command.kind==="activity.create"?command.payload.billing.ticket:"ticket" in command.payload&&command.kind!=="activity.legacy_action"?command.payload.ticket:null,billing:command.kind==="activity.create"?command.payload.billing:null},canResolve:permission.canResolve&&!value.resolution,canReviewSources:permission.office});}
+  try{const permission=await authorizeFleetRecovery(context,value,original.command),{scope:_,...safe}=value,command=original.command,source=permission.office?await readFleetOriginalBilling(context,command):null;cases.push({case:(command.kind==="activity.create"||command.kind==="activity.action"&&command.payload.activity.type==="canonical")&&!value.resolution?{...safe,allowedResolutions:[...new Set([...safe.allowedResolutions,"adopt_performed" as const])]}:safe,original:{kind:command.kind,capturedAt:command.capturedAt,timeZone:command.timeZone,title:source?.title??(command.kind==="activity.create"?command.payload.title:null),driverUserId:source?.driverUserId??(command.kind==="activity.create"?command.payload.detailSnapshot.detail.driverUserId:null),activity:command.kind==="activity.create"?{type:"local",kind:"activity",id:command.payload.activityId}:"activity" in command.payload?command.payload.activity:null,ticket:command.kind==="activity.create"?command.payload.billing.ticket:"ticket" in command.payload&&command.kind!=="activity.legacy_action"?command.payload.ticket:null,billing:source?.billing??(command.kind==="activity.create"?command.payload.billing:null)},canResolve:permission.canResolve&&!value.resolution,canReviewSources:permission.office});}
   catch(error){if(error instanceof FleetError&&error.status===403)continue;throw error;}
  }
  return FleetReconciliationPageSchema.parse({cases,nextCursor:rows.length>input.limit?String(included.at(-1)!.id):null});
@@ -68,7 +70,7 @@ export async function resolveFleetReconciliation(context:FleetWorkExecutionConte
  const value=FleetReconciliationCaseSchema.parse(row.tool_output),original=await readFleetWorkOriginal(client,actor.companyId,value.operationId),permission=await authorizeFleetRecovery(context,value,original.command);
  if(!permission.canResolve)throw new FleetError("fleet.recovery_forbidden",403);
  if(value.resolution||value.version!==p.expectedVersion)throw new FleetError("fleet.case_version_conflict",409);
- if(!value.allowedResolutions.includes(p.resolution.kind)&&!(p.resolution.kind==="adopt_performed"&&original.command.kind==="activity.create"))throw new FleetError("fleet.case_resolution_forbidden",409);
+ if(!value.allowedResolutions.includes(p.resolution.kind)&&!(p.resolution.kind==="adopt_performed"&&(original.command.kind==="activity.create"||original.command.kind==="activity.action"&&original.command.payload.activity.type==="canonical")))throw new FleetError("fleet.case_resolution_forbidden",409);
  const record=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-work-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,value.operationId])).rows[0];
  if(!record||record.tool_output.fingerprint!==original.fingerprint||!isDeepStrictEqual(record.tool_output.scope,value.scope))throw new FleetError("fleet.original_storage_unavailable",503);
  let result:FleetWorkExecution={canonicalReferences:[],mappings:[]};

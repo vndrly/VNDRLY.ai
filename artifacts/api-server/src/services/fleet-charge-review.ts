@@ -58,6 +58,7 @@ export async function resolveFleetActivityPrice(context:FleetWorkExecutionContex
 }
 export async function reviewFleetActivityCharges(context:FleetWorkExecutionContext,command:Extract<FleetWorkCommand,{kind:"charge.review"}>,run:FleetRun){
  await office(context,run);const p=command.payload,billing=run.billingV2;
+ if((await context.client.query("SELECT id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-performed-source-origin' AND target_id=$2 LIMIT 1",[context.actor.companyId,run.id])).rows.length)throw new FleetError("fleet.source_already_adopted",409);
  if(!billing||run.version!==p.expectedVersion)throw new FleetError("fleet.version_conflict");
  if(run.status!=="submitted_for_review"||billing.review.status!=="pending")throw new FleetError("fleet.operational_review_required");
  const {plan}=await parent(context,billing.ticketId),pricing=await rate(context,run),reviewedAt=new Date().toISOString();

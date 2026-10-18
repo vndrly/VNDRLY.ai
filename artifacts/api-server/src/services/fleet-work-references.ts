@@ -51,7 +51,7 @@ export async function authorizeFleetOriginalDriverActivity(
   if (actor.readOnly || !state.enabled)
     throw new FleetError("fleet.action_forbidden", 403);
   let recovered=false,activity:Canonical,ticket:Canonical;
-  const bindingRow=activityRef.type==="local"?(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-performed-source-binding' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,fleetPerformedSourceBindingKey(scope,String(activityRef.id))])).rows[0]:undefined;
+  const bindingRow=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-performed-source-binding' AND target_id=$2 ORDER BY id DESC LIMIT 1",[actor.companyId,fleetPerformedSourceBindingKey(scope,String(activityRef.id))])).rows[0];
   if(bindingRow){
     const binding=FleetPerformedSourceBindingSchema.parse(bindingRow.tool_output);
     if(!isDeepStrictEqual(binding.scope,scope)||!isDeepStrictEqual(binding.originalActivity,activityRef)||!isDeepStrictEqual(binding.originalTicket,ticketRef)||(assignment&&!fleetDetailSnapshotIdentityMatches(binding.snapshot,assignment)))throw new FleetError("fleet.work_assignment_changed",409);
