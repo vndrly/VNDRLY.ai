@@ -20,12 +20,12 @@ export default function LegalMessagingConsentPage(): React.ReactElement {
   }
   return <LegalDocumentPage kind="messaging" title="SMS Enrollment" description="Choose optional VNDRLY operational text updates. Creating and using your account does not require SMS consent."
     sections={[...PRIVACY_POLICY_SECTIONS.filter(s => s.title === "Text Messaging and Mobile Information"), ...TERMS_SECTIONS.filter(s => s.title === "Messaging Terms")]}>
-    <section className="mb-8 rounded-lg border border-slate-200 bg-white p-5" aria-label="SMS enrollment">
+    <section className="mb-8 rounded-lg border-2 border-amber-500 bg-white/5 p-6 text-gray-100" aria-label="SMS enrollment">
       <h2>Choose optional VNDRLY text updates</h2>
       <p><a href="/login">Sign in to VNDRLY</a> before saving, then return here.</p>
       <form action="/api/notifications/sms-consent" method="post" onSubmit={submit}>
         <input type="hidden" name="policyVersion" value={LEGAL_POLICY_VERSION} />
-        <p><label htmlFor="sms-phone">Your mobile number (include + country code)</label><br /><input id="sms-phone" name="phone" type="tel" autoComplete="tel" placeholder="+14055551234" maxLength={24} required /></p>
+        <p><label htmlFor="sms-phone">Your mobile number (include + country code)</label><br /><input id="sms-phone" name="phone" type="tel" className="rounded-md border border-white/20 bg-white/5 px-3 py-2 text-gray-100 w-full max-w-xs" autoComplete="tel" placeholder="+14055551234" maxLength={24} required /></p>
         <p><label><input type="checkbox" name="consent" value="yes" required /> {PUBLIC_SMS_CONSENT_DISCLOSURE}</label></p>
         <p><a href="/legal/privacy/">Privacy Policy</a> · <a href="/legal/terms/">Terms & Conditions</a></p>
         <button type="submit" disabled={saving}>{saving ? "Saving…" : "Save my SMS consent"}</button>
