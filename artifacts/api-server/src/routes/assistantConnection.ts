@@ -1,3 +1,4 @@
+import {recoverFleetCommercialAction} from "../assistant/fleet-commercial-action-recovery";
 import { recoverFleetBillingAction, recoverFleetRunCreation } from "../assistant/fleet-billing-action-recovery";
 import { ACTION_LOCATION_CLIENT, requiresActionLocation, isOperatorGateAction } from "../assistant/chatgpt-action-location";
 import { recoverFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
@@ -769,6 +770,7 @@ const unresolved = (action: AssistantPreparedAction) => action.state === "runnin
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">, scopes: string[]) {
   if (!unresolved(action) || !action.executionFingerprint) return;
   let result = await readPersistentAskVMutationResult({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${action.turnId}`, key: `chatgpt:${action.tokenHash}`, fingerprint: action.executionFingerprint }, database);
+  if(result===null){const receipt=await recoverFleetCommercialAction(action,session,scopes);if(receipt!==null)result=JSON.stringify(receipt);}
   if (result === null && action.toolName === "manage_work_hub_shift" && action.arguments.action === "update") {
     const receipt = await recoverWorkHubShiftOpeningAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);

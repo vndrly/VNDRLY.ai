@@ -1,3 +1,4 @@
+import {isDeepStrictEqual} from "node:util";
 import {createHash,randomUUID} from "node:crypto";
 import {pool} from "@workspace/db";
 import {FleetPolicyChangeSchema,FleetPolicyConfigurationSchema,FleetPolicyImpactSchema,FleetPolicyActivationSchema,FleetCompliancePolicySchema,resolveFleetCompliancePolicy,type FleetRun,type FleetActionPolicySnapshot} from "@workspace/api-zod";
@@ -68,3 +69,12 @@ export async function applyFleetPartnerPolicy(client:PoolClient,run:FleetRun,act
  if(applies&&policy.mode==="enforced"&&snapshot.status==="red")throw new FleetError("fleet.partner_compliance_required",409);
  return {...snapshot,mode:applies?policy.mode:"warn_only" as const,policies:[policy]};
 }
+
+/** Exact confirmed-operation receipt plus independent immutable policy revision.
+ * No future-date validation or activation is repeated on an uncertain read. */
+export function readFleetPolicyActivation(actor:Actor,binding:Binding,raw:unknown){const input=FleetPolicyChangeSchema.parse(raw);return transaction(async client=>{
+ const {configuration}=await authorize(client,actor,binding),fingerprint=createHash("sha256").update(JSON.stringify({binding,input})).digest("hex"),row=(await client.query("SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND partner_id=$2 AND target_type='fleet-compliance-policy' AND target_id=$3 ORDER BY id DESC LIMIT 1",[binding.vendorId,binding.partnerId,`policy-operation:${input.operationId}`])).rows[0];
+ if(!row)throw new FleetError("fleet.outcome_unknown",404);if(row.user_id!==actor.userId||row.tool_output.fingerprint!==fingerprint)throw new FleetError("fleet.operation_conflict",409);
+ const receipt=FleetPolicyActivationSchema.parse(row.tool_output.receipt),saved=configuration.policies.find(policy=>policy.id===receipt.policy.id&&policy.version===receipt.policy.version);if(!saved||!isDeepStrictEqual(saved,receipt.policy))throw new FleetError("fleet.policy_version_conflict",409);
+ return {verified:true,receipt,configurationVersion:configuration.version};
+});}

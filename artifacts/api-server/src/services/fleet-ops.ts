@@ -434,6 +434,7 @@ async function setupSites(client: PoolClient, companyId: number) {
 }
 export type FleetServiceOptions={
   monitoringNow?:()=>Date;
+  monitoringNotify?:Parameters<typeof createFleetMonitoringOperations>[3];
   /** Set only by the verified original-scope receipt transaction adapter. */
   originalWorkOperationId?: string;
   /** Exact capture from the verified receipt command, never a legacy body flag. */
@@ -545,7 +546,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
       const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id));
       return fleetIds.length?{roles:grant.roles,fleetIds}:null;
     },options.compliance),
-    ...createFleetMonitoringOperations(transaction,permitted,options.monitoringNow),
+    ...createFleetMonitoringOperations(transaction,permitted,options.monitoringNow,options.monitoringNotify),
     recordLocation: locations.record,
     locationObservations: locations.observations,
     locationObservationPage: locations.observationPage,

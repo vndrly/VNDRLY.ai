@@ -12,7 +12,7 @@ type Transaction=<T>(actor:FleetActor,work:(state:FleetState,client:PoolClient)=
 type Permitted=(state:FleetState,actor:FleetActor,run:FleetRun,action:"view"|"dispatch")=>boolean;
 const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
 async function append(client:PoolClient,actor:FleetActor,target:string,id:string,value:unknown){await client.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','fleet_monitoring','record',$3,$4,$5::jsonb,'completed')",[actor.userId,actor.companyId,target,id,JSON.stringify(value)]);}
-export function createFleetMonitoringOperations(transaction:Transaction,permitted:Permitted,clock:()=>Date=()=>new Date()){
+export function createFleetMonitoringOperations(transaction:Transaction,permitted:Permitted,clock:()=>Date=()=>new Date(),send:typeof notifyUsers=notifyUsers){
  const manager=(state:FleetState,actor:FleetActor,fleetId:string)=>state.enabled&&!actor.readOnly&&state.grants.some(row=>row.userId===actor.userId&&row.roles.some(role=>["fleet_manager","dispatcher"].includes(role))&&row.fleetIds.includes(fleetId));
  const currentRun=(state:FleetState,actor:FleetActor,id:string)=>{const run=state.runs.find(row=>row.id===id);if(!run||!permitted(state,actor,run,"view"))throw new FleetError("fleet.not_found",404);return run;};
  const rules=async(client:PoolClient,actor:FleetActor)=>{const rows=(await client.query("SELECT user_id,tool_output FROM (SELECT DISTINCT ON(target_id) user_id,tool_output,id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-monitoring-rule' ORDER BY target_id,id DESC) latest ORDER BY id DESC LIMIT 101",[actor.companyId])).rows;if(rows.length>100)throw new FleetError("fleet.monitoring_rule_limit",409);return rows.map(row=>({author:row.user_id,rule:FleetTriggerRuleSchema.parse(row.tool_output)}));};
@@ -48,10 +48,24 @@ export function createFleetMonitoringOperations(transaction:Transaction,permitte
    const context={id,fleetId:run.fleetId,siteIds:run.siteIds,status:run.status,currentStopId:run.currentStopId,dispatchedAt:last("dispatch"),acknowledgedAt:last("acknowledge"),stopArrivedAt:run.currentStopId?last("arrive_stop"):null,positionAt:source?.recordedAt??null,etaAt:null,plannedArrivalAt:run.schedule?.plannedEndAt??null,credentialDueAt:dates[0]??null},now=clock().toISOString();
    const active=(await client.query("SELECT DISTINCT m.user_id FROM user_org_memberships m JOIN users u ON u.id=m.user_id WHERE m.vendor_id=$1 AND m.org_type='vendor' AND u.suspended_at IS NULL AND (m.role IN ('admin','member') OR (m.role='field_employee' AND EXISTS(SELECT 1 FROM vendor_people p WHERE p.user_id=m.user_id AND p.vendor_id=m.vendor_id AND p.is_active=true AND p.deleted_at IS NULL)))",[actor.companyId])).rows.map(row=>row.user_id);
    const liveRules=eligible.filter(row=>active.includes(row.author)).map(row=>({...row.rule,recipientUserIds:row.rule.recipientUserIds.filter(id=>active.includes(id)&&state.grants.some(grant=>grant.userId===id&&grant.fleetIds.includes(run.fleetId)&&grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role))&&run.siteIds.every(site=>grant.siteIds.includes(site))))}));
-   const triggered=evaluateFleetTriggers({runs:[context],previous},liveRules.filter(row=>row.recipientUserIds.length),now);for(const event of triggered)await append(client,actor,"fleet-monitoring-event",`${event.ruleId}:${id}`,event);return triggered;
+   const permittedRules=liveRules.filter(row=>row.recipientUserIds.length),triggered=evaluateFleetTriggers({runs:[context],previous},permittedRules,now);
+   for(const event of triggered)await append(client,actor,"fleet-monitoring-event",`${event.ruleId}:${id}`,event);
+   // A committed threshold and a queued notification are different facts.
+   // Retry a still-relevant occurrence inside cooldown, using the same dedupe
+   // key and actual notification rows as durable per-recipient acknowledgement.
+   const activeConditions=evaluateFleetTriggers({runs:[context],previous:[]},permittedRules,now),latest=new Map<string,FleetTriggerEvent>();
+   for(const event of [...previous,...triggered])latest.set(event.ruleId,event);
+   const notices:FleetTriggerEvent[]=[];
+   for(const event of latest.values()){
+    const condition=activeConditions.find(candidate=>candidate.ruleId===event.ruleId&&candidate.ruleVersion===event.ruleVersion&&candidate.sourceAt===event.sourceAt);if(!condition)continue;
+    const recipients=event.recipientUserIds.filter(userId=>condition.recipientUserIds.includes(userId)),key=`fleet-trigger:${actor.companyId}:${event.ruleId}:${event.runId}:${event.at}`;
+    const recorded=(await client.query("SELECT user_id FROM notifications WHERE dedupe_key=$1 AND user_id=ANY($2::int[])",[key,recipients])).rows.map(row=>row.user_id);
+    const missing=recipients.filter(userId=>!recorded.includes(userId));if(missing.length)notices.push({...event,recipientUserIds:missing});
+   }
+   return {triggered,notices};
   });
-  for(const event of pending)await notifyUsers(event.recipientUserIds,{type:"fleet_monitoring",category:"crew",title:`Fleet attention: ${event.kind.replaceAll("_"," ")}`,body:"A saved monitoring threshold was reached. Open the run to review actual source times and current status.",link:`/fleet/runs/${event.runId}`,dedupeKey:`fleet-trigger:${actor.companyId}:${event.ruleId}:${event.runId}:${event.at}`});
-  return {events:pending,checkedAt:new Date().toISOString()};
+  for(const event of pending.notices)try{await send(event.recipientUserIds,{type:"fleet_monitoring",category:"crew",title:`Fleet attention: ${event.kind.replaceAll("_"," ")}`,body:"A saved monitoring threshold was reached. Open the run to review actual source times and current status.",link:`/fleet/runs/${event.runId}`,dedupeKey:`fleet-trigger:${actor.companyId}:${event.ruleId}:${event.runId}:${event.at}`});}catch{/* Original event remains durable; a later scan retries the same dedupe key. */}
+  return {events:pending.triggered,checkedAt:new Date().toISOString()};
  }
  };
 }

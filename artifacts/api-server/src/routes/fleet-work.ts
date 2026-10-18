@@ -1,4 +1,4 @@
-import {applyFleetAssistantIntent,readFleetAssistantReview,readFleetAssistantRecovery} from "../services/fleet-work-assistant";
+import {applyFleetAssistantIntent,readFleetAssistantReview,readFleetAssistantRecovery,readFleetAssistantSources,readFleetAssistantResult} from "../services/fleet-work-assistant";
 import {Router,raw,type Request} from "express";
 import {z} from "zod/v4";
 import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetEvidenceUploadStatusSchema} from "@workspace/api-zod";
@@ -30,6 +30,8 @@ export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;e
  router.get("/fleet/work/capabilities",(req,res)=>{res.setHeader("Cache-Control","no-store");try{options.actor(req);res.json({version:2,enabled:enabled(),complianceMode:"warn_only",offlineRetentionDays:7});}catch(error){res.status(error instanceof FleetError?error.status:500).json({code:"fleet.login_required"});}});
  router.post("/fleet/work/assistant",endpoint(req=>applyFleetAssistantIntent(options.actor(req),req.body)));
  router.post("/fleet/work/assistant/review",endpoint(req=>readFleetAssistantReview(options.actor(req),req.body)));
+ router.post("/fleet/work/assistant/result",endpoint(req=>readFleetAssistantResult(options.actor(req),req.body)));
+ router.post("/fleet/work/assistant/sources",endpoint(req=>readFleetAssistantSources(options.actor(req),req.body)));
  router.post("/fleet/work/assistant/recovery",endpoint(req=>readFleetAssistantRecovery(options.actor(req),req.body)));
  router.post("/fleet/work/provision",endpoint(req=>repo.provision(options.actor(req),req.body)));
  router.post("/fleet/work/provision/reauthorize",endpoint(req=>{if(!repo.reauthorizeOriginal)throw new FleetError("fleet.recovery_unavailable",503);return repo.reauthorizeOriginal(options.actor(req),req.body);}));

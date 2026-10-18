@@ -31,3 +31,9 @@ it("keeps partner policy impact read-only and activation confirmation-bound with
  expect(chatGptActionTools(partner as never,["fleet:billing"]).some(t=>t.name==="activate_fleet_compliance_policy")).toBe(false);
  expect(chatGptActionTools(partner as never,["fleet:policy"]).some(t=>t.name==="activate_fleet_compliance_policy")).toBe(true);
 });
+
+it("reads a retained source plan and choices without accepting model actor or private scope",()=>{
+ const context={userId:3,role:"vendor",vendorId:7,membershipRole:"admin"} as const,caseId="11111111-1111-4111-8111-111111111111";
+ expect(resolveExecutableWorkHubToolRequest("query_fleet_retained_sources",{caseId,view:"plan"},false,context as never)).toMatchObject({method:"POST",path:"/fleet/work/assistant/sources",body:{caseId,view:"plan"}});
+ expect(resolveExecutableWorkHubToolRequest("query_fleet_retained_sources",{caseId,view:"choices",scope:{userId:999}},false,context as never)).toHaveProperty("error");
+});

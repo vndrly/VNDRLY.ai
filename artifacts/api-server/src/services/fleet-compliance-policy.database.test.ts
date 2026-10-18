@@ -39,6 +39,7 @@ it("previews and explicitly activates future partner policy with current authori
   await client.query("UPDATE assistant_action_audit SET tool_output=jsonb_set(tool_output,'{events}',$3::jsonb) WHERE vendor_id=$1 AND target_type='fleet-run' AND target_id=$2",[f.vendor,run.id,JSON.stringify([checkpoint,{...checkpoint,id:randomUUID(),details:{fleetCompliance:{...snapshot,status:"green",warnings:[]}}}])]);
   expect(await service!.previewFleetPolicy(actor,binding,{...input,expectedVersion:1})).toMatchObject({existingActivities:1,currentlyRed:0});
  }finally{client.release();}
+ expect(service).toHaveProperty("readFleetPolicyActivation");expect(await (service as any).readFleetPolicyActivation(actor,binding,input)).toMatchObject({verified:true,receipt:first});
  expect(await service!.activateFleetPolicy(actor,binding,input)).toEqual(first);
  await expect(service!.activateFleetPolicy(actor,binding,{...input,proposal:{...proposal,notice:"Changed facts"}})).rejects.toMatchObject({status:409});
  await expect(service!.activateFleetPolicy(actor,binding,{...input,operationId:randomUUID()})).rejects.toMatchObject({status:409});
