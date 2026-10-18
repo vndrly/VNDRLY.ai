@@ -1,5 +1,6 @@
 import {applyFleetAssistantIntent,readFleetAssistantReview,readFleetAssistantRecovery,readFleetAssistantSources,readFleetAssistantResult} from "../services/fleet-work-assistant";
 import {Router,raw,type Request} from "express";
+import {isFleetCommercialWorkEnabled} from "../services/fleet-commercial-activation";
 import {z} from "zod/v4";
 import {FleetWorkScopeSchema,FleetWorkReceiptSchema,FleetEvidenceUploadStatusSchema} from "@workspace/api-zod";
 import {FleetError} from "../services/fleet-repository";
@@ -22,12 +23,12 @@ const evidence=createFleetEvidenceUploadService(createDatabaseFleetEvidenceUploa
 const scopeInput=z.object({scope:FleetWorkScopeSchema}).strict();
 /** Only activate after all commercial readers and native/browser reconciliation
  * acceptance gates pass. Provisioning does not grant additional company roles. */
-export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;enabled?:()=>boolean;repository?:Pick<typeof repository,"provision"|"readScope">&Partial<Pick<typeof repository,"renewProvision"|"reauthorizeOriginal"|"retainOriginal">>;service?:Pick<typeof service,"read"|"apply">;evidence?:typeof evidence}){
- const router=Router(),repo=options.repository??repository,work=options.service??service,uploads=options.evidence??evidence,enabled=options.enabled??(()=>process.env.FLEET_COMMERCIAL_WORK_V2==="1");
+export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;enabled?:(actor:FleetActor)=>boolean;repository?:Pick<typeof repository,"provision"|"readScope">&Partial<Pick<typeof repository,"renewProvision"|"reauthorizeOriginal"|"retainOriginal">>;service?:Pick<typeof service,"read"|"apply">;evidence?:typeof evidence}){
+ const router=Router(),repo=options.repository??repository,work=options.service??service,uploads=options.evidence??evidence,enabled=options.enabled??(actor=>isFleetCommercialWorkEnabled(actor.companyId));
  const endpoint=(operation:(req:Request)=>Promise<unknown>)=>async(req:Request,res:import("express").Response)=>{
-  res.setHeader("Cache-Control","no-store");try{if(!enabled())throw new FleetError("fleet.commercial_work_not_activated",409);res.json(await operation(req));}catch(error){if(error instanceof FleetError){res.status(error.status).json({code:error.code});return;}if(error instanceof z.ZodError){res.status(400).json({code:"fleet.invalid_request"});return;}req.log?.error({err:error},"Fleet work request failed");res.status(500).json({code:"fleet.internal_error"});}
+  res.setHeader("Cache-Control","no-store");try{if(!enabled(options.actor(req)))throw new FleetError("fleet.commercial_work_not_activated",409);res.json(await operation(req));}catch(error){if(error instanceof FleetError){res.status(error.status).json({code:error.code});return;}if(error instanceof z.ZodError){res.status(400).json({code:"fleet.invalid_request"});return;}req.log?.error({err:error},"Fleet work request failed");res.status(500).json({code:"fleet.internal_error"});}
  };
- router.get("/fleet/work/capabilities",(req,res)=>{res.setHeader("Cache-Control","no-store");try{options.actor(req);res.json({version:2,enabled:enabled(),complianceMode:"warn_only",offlineRetentionDays:7});}catch(error){res.status(error instanceof FleetError?error.status:500).json({code:"fleet.login_required"});}});
+ router.get("/fleet/work/capabilities",(req,res)=>{res.setHeader("Cache-Control","no-store");try{const actor=options.actor(req);res.json({version:2,enabled:enabled(actor),complianceMode:"warn_only",offlineRetentionDays:7});}catch(error){res.status(error instanceof FleetError?error.status:500).json({code:"fleet.login_required"});}});
  router.post("/fleet/work/assistant",endpoint(req=>applyFleetAssistantIntent(options.actor(req),req.body)));
  router.post("/fleet/work/assistant/review",endpoint(req=>readFleetAssistantReview(options.actor(req),req.body)));
  router.post("/fleet/work/assistant/result",endpoint(req=>readFleetAssistantResult(options.actor(req),req.body)));

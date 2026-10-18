@@ -15,9 +15,19 @@ vi.mock("expo-sqlite",async()=>{
  const {createRequire}=await import("node:module"),{DatabaseSync}=createRequire(import.meta.url)("node:sqlite") as typeof import("node:sqlite"),{tmpdir}=await import("node:os"),{join}=await import("node:path");
  return {defaultDatabaseDirectory:tmpdir(),openDatabaseAsync:async(name:string)=>{
   const db=new DatabaseSync(join(tmpdir(),`fleet-port-test-${name}`));
-  const tx={getFirstAsync:async(sql:string,...args:any[])=>sql==="PRAGMA cipher_version"?{cipher_version:"test-port-not-encryption-proof"}:db.prepare(sql).get(...args),getAllAsync:async(sql:string,...args:any[])=>db.prepare(sql).all(...args),runAsync:async(sql:string,...args:any[])=>{if(disk.failEntry&&args[0]==="entry"){disk.failEntry=false;throw Error("Synthetic interrupted original write");}return db.prepare(sql).run(...args);}};
-  return {...tx,execAsync:async(sql:string)=>{if(!sql.startsWith("PRAGMA key"))db.exec(sql);},closeAsync:async()=>db.close(),withExclusiveTransactionAsync:async(work:any)=>{db.exec("BEGIN IMMEDIATE");try{await work(tx);db.exec("COMMIT");}catch(error){db.exec("ROLLBACK");throw error;}}};
+  let keyed=false;const requireKey=()=>{if(!keyed)throw Error("Error code 26: file is not a database (unkeyed connection)");};
+  const tx={getFirstAsync:async(sql:string,...args:any[])=>{requireKey();return sql==="PRAGMA cipher_version"?{cipher_version:"test-port-not-encryption-proof"}:db.prepare(sql).get(...args);},getAllAsync:async(sql:string,...args:any[])=>{requireKey();return db.prepare(sql).all(...args);},runAsync:async(sql:string,...args:any[])=>{requireKey();if(disk.failEntry&&args[0]==="entry"){disk.failEntry=false;throw Error("Synthetic interrupted original write");}return db.prepare(sql).run(...args);}};
+  return {...tx,execAsync:async(sql:string)=>{if(sql.startsWith("PRAGMA key")){keyed=true;return;}requireKey();db.exec(sql);},closeAsync:async()=>db.close(),withExclusiveTransactionAsync:async()=>{throw Error("Error code 26: file is not a database (Expo exclusive transactions open a separate unkeyed connection)");}};
  }};
+});
+it("serializes keyed workday writers, hides uncommitted data from readers and preserves rollback without losing the next shift event",async()=>{
+ const {openNativeFleetWorkStorage}=await import("./fleet-work-journal-native"),{storage,db}=await openNativeFleetWorkStorage(`synthetic-workday-${randomUUID()}`,()=>true);
+ let entered!:()=>void,release!:()=>void;const started=new Promise<void>(resolve=>{entered=resolve;}),continueWrite=new Promise<void>(resolve=>{release=resolve;});
+ const first=storage.transaction(async tx=>{await tx.set("shift","first","start");entered();await continueWrite;});await started;
+ expect(await db!.getFirstAsync("SELECT value FROM fleet_work_rows WHERE kind='shift' AND id='first'")).toBeUndefined();
+ const next=storage.transaction(async tx=>{expect(await tx.get("shift","first")).toBe("start");await tx.set("shift","second","end");});release();await Promise.all([first,next]);
+ await expect(storage.transaction(async tx=>{await tx.set("shift","rollback","invalid");throw Error("Synthetic interrupted shift");})).rejects.toThrow("interrupted shift");
+ await storage.transaction(async tx=>{expect(await tx.get("shift","rollback")).toBeNull();expect(await tx.values("shift")).toEqual(["start","end"]);await tx.set("shift","after","retained");});
 });
 it("persists multiple encrypted-storage photo BLOB identities and original commands through reopen without replacement",async()=>{
  const {openNativeFleetWorkJournal}=await import("./fleet-work-journal-native"),scope={owner:{type:"vendor" as const,id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()};let current=true;

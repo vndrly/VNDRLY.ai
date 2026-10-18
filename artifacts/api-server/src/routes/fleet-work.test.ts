@@ -1,5 +1,16 @@
 import express from "express";import request from "supertest";import {it,expect,vi} from "vitest";import {randomUUID} from "node:crypto";
 const scope={owner:{type:"vendor",id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()};
+it("keeps the private acceptance allowlist bound to the authenticated company on reads and writes",async()=>{
+ const old=process.env.FLEET_COMMERCIAL_WORK_V2,oldIds=process.env.FLEET_COMMERCIAL_WORK_V2_VENDOR_IDS;
+ process.env.FLEET_COMMERCIAL_WORK_V2="0";process.env.FLEET_COMMERCIAL_WORK_V2_VENDOR_IDS="7";
+ try{const {createFleetWorkRouter}=await import("./fleet-work");let companyId=7;const provision=vi.fn(async()=>({scope}));
+ const app=express().use(express.json()).use(createFleetWorkRouter({actor:()=>({userId:2,companyId}) as never,repository:{provision} as never}));
+ expect((await request(app).get("/fleet/work/capabilities")).body.enabled).toBe(true);
+ expect((await request(app).post("/fleet/work/provision").send({})).status).toBe(200);
+ companyId=8;expect((await request(app).get("/fleet/work/capabilities")).body.enabled).toBe(false);
+ expect((await request(app).post("/fleet/work/provision").send({scope})).status).toBe(409);expect(provision).toHaveBeenCalledTimes(1);
+ }finally{if(old===undefined)delete process.env.FLEET_COMMERCIAL_WORK_V2;else process.env.FLEET_COMMERCIAL_WORK_V2=old;if(oldIds===undefined)delete process.env.FLEET_COMMERCIAL_WORK_V2_VENDOR_IDS;else process.env.FLEET_COMMERCIAL_WORK_V2_VENDOR_IDS=oldIds;}
+});
 it("keeps private source deposition separate from canonical commands and disables shared response caching",async()=>{
  const {createFleetWorkRouter}=await import("./fleet-work"),actor={userId:2,companyId:7},raw={operationId:randomUUID()},retained={status:"retained_for_review",canonicalApplied:false},retainOriginal=vi.fn(async()=>retained),apply=vi.fn();
  const app=express().use(express.json()).use(createFleetWorkRouter({actor:()=>actor as never,enabled:()=>true,repository:{retainOriginal} as never,service:{apply} as never}));
