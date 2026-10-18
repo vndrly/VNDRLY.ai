@@ -119,3 +119,22 @@ The same credential-stripped loopback-port-9 unit runner described above was use
 | `git -c core.autocrlf=false -c core.whitespace=cr-at-eol diff --check` | Passed; original OpenAPI CRLF preserved |
 
 New persisted regressions are in `semantic-service-marketplace-backfill.database.test.ts` (actual backfill-to-discovery) and `job-offers.database.test.ts` (revocation/re-engagement and address-change acceptance). They still require the repository's fresh-local PostgreSQL wrapper in final validation. Provider-backed classification, worker performance on a production-sized catalog, actual database locking/concurrency, and deployed UI/plugin behavior are not established by these focused local checks.
+
+## Independent review follow-up: integration fix round 2
+
+Starting tree: `d3d7bbee742afb072a26581470d3fb027493569a`. Closed the remaining canonical vendor-address writer gap without changing onboarding validation, authorization, legal consent, catalog selection, optional compliance/branding preservation, first-employee resume safety, or AskV's canonical endpoint delegation.
+
+- Extracted the shared address/coverage operation's transaction body so callers with an existing transaction can reuse it. Onboarding completion now uses that body inside its existing canonical-write transaction, with no nested transaction or separately committed invalidation. A later employee/catalog failure rolls back the address, geocoding reset and retired areas together.
+- `onboarding-step-sync.ts` routes vendor tax/address Save & Quit persistence through the transactional helper. Address-omitting tax patches and unchanged-address reruns preserve verified coordinates and coverage; changed addresses clear coordinates/geocoding and retire all active default/override areas for that vendor only.
+- Audited canonical `physicalAddress` references and vendor update sites in API runtime and scripts. Besides the already-fixed vendor PATCH and the two onboarding paths, `seed-permian-basin.ts` can enrich a blank address on an existing vendor; that write now also uses the shared helper. The seed script was edited only, never run. New-vendor inserts have no existing coverage to invalidate; partner-address writers and geocode-only writes were not changed.
+- Added `onboarding-marketplace-coverage.test.ts`, exercising real onboarding routes and the actual AskV `finalize_onboarding` delegation. Only external persistence and loopback transport are replaced. Assertions cover changed-address Save & Quit, completion of an already-completed onboarding record through wizard and AskV, loss of marketplace eligibility after default/override retirement, unaffected other-vendor coverage, unchanged-address repeat completion, optional-field preservation, first-employee reuse, and outer-transaction rollback. Added an address-omitting tax-patch regression to the shared helper suite.
+
+Verification used the existing credential-stripped loopback-port-9 runner; no live/shared database, seed, migration, provider, push or deployment was used. The test-driven-development skill prompted failing tests before implementation: after correcting a missing `pool` export in the test persistence fixture, all three new changed-address onboarding/AskV cases failed on retained coordinates, and the omitted-address helper test failed on unnecessary retirement. The fixes then passed.
+
+| Command / scope | Result |
+| --- | --- |
+| `node .local/transplant-unit.mjs run src/routes/onboarding-marketplace-coverage.test.ts src/services/marketplace/vendor-address.test.ts src/lib/onboarding-step-sync.test.ts src/routes/onboarding-optional-compliance.test.ts src/assistant/onboarding-parity.test.ts src/lib/onboarding-catalog.test.ts src/routes/service-marketplace-vendor-store.test.ts src/routes/service-marketplace-partner-store.test.ts src/services/marketplace/job-offer-restrictions.test.ts src/services/marketplace/eligibility.test.ts src/services/marketplace/job-offers.test.ts` | 11 files / 86 tests passed |
+| `pnpm --filter @workspace/api-server exec tsc --noEmit -p tsconfig.json` | Passed |
+| `git diff --check` and staged diff check | Passed; no OpenAPI/generated contract changes in this round |
+
+Final full repository and actual isolated PostgreSQL gates remain the coordinating task's responsibility. The untracked review package files were not changed or committed.

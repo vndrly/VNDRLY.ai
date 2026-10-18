@@ -53,6 +53,12 @@ describe("vendor base coverage invalidation", () => {
     expect(x.state.vendor.latitude).toBe(35);
     expect(x.state.calls.some(row => row.table === "vendor_service_areas")).toBe(false);
   });
+  it("does not invalidate coverage when a tax-only patch omits the address", async () => {
+    const x = setup();
+    await updateVendorAddressAndCoverage(x.database, 3, { federalTaxId: "Updated tax id" });
+    expect(x.state.areas.every(row => row.active)).toBe(true);
+    expect(x.state.vendor).toMatchObject({ physicalAddress: "Old base", latitude: 35, longitude: -97, federalTaxId: "Updated tax id" });
+  });
   it("rolls back coverage retirement when the vendor update fails", async () => {
     const x = setup(true);
     await expect(updateVendorAddressAndCoverage(x.database, 3, { physicalAddress: "New base" })).rejects.toThrow("vendor update failed");
