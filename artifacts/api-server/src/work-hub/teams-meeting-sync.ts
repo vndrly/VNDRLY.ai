@@ -1,3 +1,5 @@
+import type { SessionPayload } from "../lib/session";
+import { createWorkHubAccess } from "./context-access";
 import { createHash } from "node:crypto";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db, workHubCalendarConnectionsTable as connections, workHubSyncCursorsTable as cursors, workHubMeetingsTable as meetings, workHubMeetingOccurrencesTable as occurrences, workHubMeetingParticipantsTable as participants, notificationsTable } from "@workspace/db";
@@ -5,7 +7,7 @@ import { getParticipantBusyIntervals, requestedMeetingAvailability, type Partici
 import { appendWorkHubAudit } from "./audit";
 import { createTeamsCalendarEvent, getTeamsCalendarEvent, updateTeamsCalendarEvent, TeamsProviderError } from "./teams-graph";
 
-type Session = { userId: number; activeMembershipId?: number | null; vendorId?: number | null; partnerId?: number | null; role?: string };
+type Session = SessionPayload & { userId: number };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Projection = { title: string; startsAt: string; endsAt: string };
 type Mapping = { eventId?: string; transactionId: string; localHash?: string; remoteHash?: string; changeKey?: string; etag?: string; joinUrl?: string; state: string };
@@ -108,6 +110,11 @@ async function reconcile(tx: Tx, session: Session, connectionId: string, token: 
     const decision = teamsMeetingDecision(localHash, remoteHash, link);
     if (decision === "conflict") return persist("conflict_both_changed");
     if (decision === "import") {
+      // Import is a native Work Hub edit, not merely a private Microsoft calendar copy.
+      // Match the native PATCH route's current capability and creator/admin checks.
+      let canHost = false;
+      try { const scope = owner(session); canHost = createWorkHubAccess({ session, owner: scope, context: { kind: "organization", id: scope.id }, participant: true }).capabilities.has("meeting.host"); } catch { /* Access derivation denies safely. */ }
+      if (!canHost || (row.meeting.createdById !== session.userId && session.role !== "admin" && session.membershipRole !== "admin")) return persist("conflict_permission_denied");
       const attendees = await tx.select({ userId: participants.userId, rsvp: participants.rsvp }).from(participants).where(and(eq(participants.occurrenceId, occurrenceId), isNull(participants.removedAt)));
       const userIds = [...new Set(attendees.filter(item => item.rsvp !== "declined").map(item => item.userId))].sort((a, b) => a - b);
       for (const userId of userIds) await tx.execute(sql`select pg_advisory_xact_lock(73009, ${userId})`);

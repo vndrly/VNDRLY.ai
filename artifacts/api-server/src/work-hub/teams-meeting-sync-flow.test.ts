@@ -6,10 +6,10 @@ vi.mock("./meeting-availability", () => ({ getParticipantBusyIntervals: f.busy, 
 vi.mock("./teams-graph", async () => { const actual = await vi.importActual<typeof import("./teams-graph")>("./teams-graph"); return { ...actual, createTeamsCalendarEvent: f.create, getTeamsCalendarEvent: f.get, updateTeamsCalendarEvent: f.patch }; });
 import { publishMeeting, syncMeetings, teamsMeetingHash, teamsMeetingTransactionId } from "./teams-meeting-sync";
 import { TeamsProviderError } from "./teams-graph";
-const session = { userId: 7, vendorId: 11, activeMembershipId: 22 };
+const session = { userId: 7, vendorId: 11, activeMembershipId: 22, role: "vendor" as const, membershipRole: "admin" };
 const occurrenceId = "75d6e4d1-32be-4fc4-adba-123456789abc", operationId = "85d6e4d1-32be-4fc4-adba-123456789abc";
 const start = "2026-10-18T13:00:00.000Z", end = "2026-10-18T14:00:00.000Z";
-let allowed: boolean, host: boolean, meeting: Record<string, any>, occurrence: Record<string, any>, saved: Map<string, any>, remote: Record<string, any>;
+let allowed: boolean, host: boolean, participantRole: string, meeting: Record<string, any>, occurrence: Record<string, any>, saved: Map<string, any>, remote: Record<string, any>;
 function event(title = "Dispatch") { return { id: "graph-event", subject: title, start: { dateTime: start.replace(/Z$/, ""), timeZone: "UTC" }, end: { dateTime: end.replace(/Z$/, ""), timeZone: "UTC" }, changeKey: "change-1", "@odata.etag": 'W/"one"', onlineMeeting: { joinUrl: "https://teams.microsoft.com/l/meetup-join/example" } }; }
 function select(projection?: Record<string, unknown>) {
   let table: unknown;
@@ -17,7 +17,7 @@ function select(projection?: Record<string, unknown>) {
     if (table === f.connections) return allowed ? [{ id: "conn" }] : [];
     if (table === f.occurrences) return projection?.meeting ? [{ meeting: { ...meeting }, occurrence: { ...occurrence } }] : [{ ...occurrence }];
     if (table === f.meetings) return [{ ...meeting }];
-    if (table === f.participants) return host ? [{ userId: 7, occurrenceId, role: "host", rsvp: "accepted" }] : [];
+    if (table === f.participants) return host ? [{ userId: 7, occurrenceId, role: participantRole, rsvp: "accepted" }] : [];
     if (table === f.cursors) return [...saved.entries()].map(([resourceType, value]) => projection?.resourceType ? { resourceType } : { cursor: JSON.stringify(value) });
     return [];
   }).then(resolve, reject) };
@@ -25,7 +25,7 @@ function select(projection?: Record<string, unknown>) {
 }
 const tx: any = { select, execute: vi.fn(), insert: (table: unknown) => ({ values: (value: any) => ({ onConflictDoUpdate: () => { if (table === f.cursors) saved.set(value.resourceType, JSON.parse(value.cursor)); return Promise.resolve(); }, onConflictDoNothing: () => Promise.resolve() }) }), update: (table: unknown) => ({ set: (value: any) => ({ where: () => { const target = table === f.meetings ? meeting : occurrence; Object.assign(target, value); return { returning: () => Promise.resolve([{ id: target.id }]) }; } }) }) };
 beforeEach(() => {
-  vi.clearAllMocks(); allowed = true; host = true; saved = new Map();
+  vi.clearAllMocks(); allowed = true; host = true; participantRole = "host"; saved = new Map();
   meeting = { id: "local-meeting", ownerOrgType: "vendor", ownerOrgId: 11, createdById: 8, title: "Dispatch", recurrence: null };
   occurrence = { id: occurrenceId, meetingId: meeting.id, startsAt: new Date(start), endsAt: new Date(end), status: "scheduled", runtime: { retained: true }, providerRoomId: "native-room" };
   remote = event(); f.db.transaction.mockImplementation((action: (value: any) => unknown) => action(tx)); f.busy.mockResolvedValue([]); f.create.mockImplementation(async () => ({ ...remote })); f.get.mockImplementation(async () => ({ ...remote })); f.patch.mockImplementation(async (_token, _id, body) => { remote = { ...remote, subject: body.subject, start: body.start, end: body.end }; return { ...remote }; });
@@ -65,6 +65,20 @@ describe("Teams meeting transaction flows", () => {
     expect(f.create).toHaveBeenCalledTimes(1);
     const state = saved.get(`teams_meeting:${occurrenceId}`);
     expect(state.localHash).toBe(teamsMeetingHash({ title: meeting.title, startsAt: start, endsAt: end }));
+  });
+  it("does not import edits for a downgraded creator or an ordinary cohost", async () => {
+    await publishMeeting(session, "conn", "token", occurrenceId, operationId);
+    remote = event("Must not overwrite Work Hub");
+    const member = { ...session, membershipRole: "member" };
+    meeting.createdById = member.userId;
+    await syncMeetings(member, "conn", "token");
+    expect(meeting.title).toBe("Dispatch");
+    expect(saved.get(`teams_meeting:${occurrenceId}`).state).toBe("conflict_permission_denied");
+    meeting.createdById = 8;
+    participantRole = "cohost";
+    await syncMeetings(member, "conn", "token");
+    expect(meeting.title).toBe("Dispatch");
+    expect(f.patch).not.toHaveBeenCalled();
   });
   it("rejects recurrence and incoming scheduling conflicts", async () => {
     meeting.recurrence = { frequency: "weekly" };
