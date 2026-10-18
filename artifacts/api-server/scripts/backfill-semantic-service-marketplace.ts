@@ -15,7 +15,7 @@ type WorkTypeRow = { id: number; partnerId: number | null; sourceWorkTypeId: num
 type VendorWorkTypeRow = { id: number; vendorId: number; workTypeId: number; unitPrice: string | null; unit: string | null; currency: string; notes: string | null };
 type CanonicalRow = { id: number; code: string; name: string; category: string; definition: string; active: boolean };
 type AliasRow = { canonicalServiceId: number; alias: string; active: boolean };
-type ExistingMapping = { id: number; workTypeId: number | null; canonicalServiceId: number | null; status: string; actorProcess: string | null };
+type ExistingMapping = { id: number; workTypeId: number | null; canonicalServiceId: number | null; status: string; actorProcess: string | null; mappingVersion?: number; subjectFingerprint?: string | null; reviewedAt?: Date | null; supersededAt?: Date | null; actorUserId?: number | null };
 type ExistingCapability = { id: number; vendorId: number; canonicalServiceId: number; sourceVendorWorkTypeId: number };
 type ExistingOffer = { id: number; vendorCapabilityId: number; partnerId: number; workTypeId: number; sourceVendorWorkTypeId: number | null };
 
@@ -69,9 +69,16 @@ export function buildSemanticMarketplaceBackfillPlan(snapshot: BackfillSnapshot,
   const resolution = new Map<number, { id: number | null; code: string | null; active: boolean }>();
 
   for (const workType of snapshot.workTypes) {
-    const prior = snapshot.mappings.find((row) => row.workTypeId === workType.id && row.status === "active" && row.canonicalServiceId !== null);
-    if (prior) { resolution.set(workType.id, { id: prior.canonicalServiceId, code: null, active: true }); continue; }
-    if (snapshot.mappings.some((row) => row.workTypeId === workType.id && row.actorProcess === PROCESS)) continue;
+    const prior = snapshot.mappings.filter(row => row.workTypeId === workType.id)
+      .sort((a, b) => (b.mappingVersion ?? b.id) - (a.mappingVersion ?? a.id))[0];
+    if (prior) {
+      // Existing decisions belong to their reviewer/classifier. Backfill must
+      // neither reconsider a rejection nor bypass unresolved review work.
+      if (prior.status === "active" && !prior.supersededAt && prior.canonicalServiceId !== null &&
+          prior.subjectFingerprint === subjectFingerprint({ ...workType, subjectType: "partner_work_type", subjectId: workType.id }))
+        resolution.set(workType.id, { id: prior.canonicalServiceId, code: null, active: true });
+      continue;
+    }
     const candidates = [...(vocabulary.get(normalize(workType.name)) ?? [])].sort((a, b) => a - b);
     if (candidates.length > 1) {
       plan.mappings.push({ workTypeId: workType.id, canonicalServiceId: null, canonicalServiceCode: null, status: "review_required", confidence: 0, candidateCanonicalServiceIds: candidates });
@@ -138,6 +145,8 @@ export function assertSemanticMarketplaceBackfillApplyGuard(dryRun: boolean, env
 
 type Queryable = { query<T extends Record<string, unknown> = Record<string, unknown>>(text: string, values?: unknown[]): Promise<{ rows: T[]; rowCount: number | null }> };
 const num = (value: unknown) => Number(value);
+const mappingColumns = `id, work_type_id as "workTypeId", canonical_service_id as "canonicalServiceId", status, actor_process as "actorProcess", mapping_version as "mappingVersion", evidence->'serviceMatching'->>'subjectFingerprint' as "subjectFingerprint", reviewed_at as "reviewedAt", superseded_at as "supersededAt", actor_user_id as "actorUserId"`;
+const decisionFingerprint = (rows: ExistingMapping[]) => JSON.stringify(rows.slice().sort((a, b) => a.id - b.id));
 
 async function loadSnapshot(client: Queryable): Promise<BackfillSnapshot> {
   const [workTypes, vendorWorkTypes, canonical, aliases, mappings, capabilities, offers] = await Promise.all([
@@ -145,7 +154,7 @@ async function loadSnapshot(client: Queryable): Promise<BackfillSnapshot> {
     client.query(`select id, vendor_id as "vendorId", work_type_id as "workTypeId", unit_price::text as "unitPrice", unit, currency, notes from vendor_work_types order by id`),
     client.query(`select id, code, name, category, definition, active from canonical_services order by id`),
     client.query(`select canonical_service_id as "canonicalServiceId", alias, active from canonical_service_aliases order by id`),
-    client.query(`select id, work_type_id as "workTypeId", canonical_service_id as "canonicalServiceId", status, actor_process as "actorProcess" from service_mappings where subject_type = 'partner_work_type' order by id`),
+    client.query(`select ${mappingColumns} from service_mappings where subject_type = 'partner_work_type' order by id`),
     client.query(`select id, vendor_id as "vendorId", (evidence->'semanticMarketplaceBackfill'->>'canonicalServiceId')::int as "canonicalServiceId", (evidence->'semanticMarketplaceBackfill'->>'sourceVendorWorkTypeId')::int as "sourceVendorWorkTypeId" from vendor_capabilities where evidence ? 'semanticMarketplaceBackfill' order by id`),
     client.query(`select id, vendor_capability_id as "vendorCapabilityId", partner_id as "partnerId", work_type_id as "workTypeId", source_vendor_work_type_id as "sourceVendorWorkTypeId" from vendor_partner_service_offers where source_vendor_work_type_id is not null order by id`),
   ]);
@@ -177,6 +186,29 @@ export async function runSemanticServiceMarketplaceBackfill(client: Queryable, o
     if (conflictRate > options.maxConflictRate) throw new Error(`Conflict rate ${conflictRate.toFixed(5)} exceeds threshold ${options.maxConflictRate}`);
     if (options.dryRun) return { dryRun: true, conflictRate, plan, before };
 
+    const expectedDecisions = new Map(beforeSnapshot.workTypes.map(work => [work.id,
+      decisionFingerprint(beforeSnapshot.mappings.filter(row => row.workTypeId === work.id))]));
+    const readDecisions = async (workTypeId: number) => (await client.query<ExistingMapping>(
+      `select ${mappingColumns} from service_mappings where subject_type='partner_work_type' and subject_id=$1 order by id`, [workTypeId])).rows;
+    const lockPlannedSubject = async (workTypeId: number) => {
+      await client.query(`select pg_advisory_xact_lock(hashtextextended($1, 0))`, [`service-mapping:partner_work_type:${workTypeId}`]);
+      const saved = (await client.query<WorkTypeRow>(`select id, partner_id as "partnerId", source_work_type_id as "sourceWorkTypeId", name, description, category from work_types where id=$1 for update`, [workTypeId])).rows[0];
+      const planned = beforeSnapshot.workTypes.find(subject => subject.id === workTypeId)!;
+      const subject = { subjectType: "partner_work_type" as const, subjectId: workTypeId, ...saved };
+      if (!saved || saved.partnerId !== planned.partnerId || saved.sourceWorkTypeId !== planned.sourceWorkTypeId || subjectFingerprint(subject) !== subjectFingerprint({ ...planned, subjectType: "partner_work_type", subjectId: workTypeId }))
+        throw new Error(`Work type ${workTypeId} changed since backfill planning; rerun dry run`);
+      if (decisionFingerprint(await readDecisions(workTypeId)) !== expectedDecisions.get(workTypeId))
+        throw new Error(`Work type ${workTypeId} decision changed since backfill planning; rerun dry run`);
+      return subject;
+    };
+    const lockPlannedSelection = async (selectionId: number) => {
+      const planned = beforeSnapshot.vendorWorkTypes.find(selection => selection.id === selectionId)!;
+      const saved = (await client.query<VendorWorkTypeRow>(`select id, vendor_id as "vendorId", work_type_id as "workTypeId", unit_price::text as "unitPrice", unit, currency, notes from vendor_work_types where id=$1 for share`, [selectionId])).rows[0];
+      if (!saved || (Object.keys(planned) as Array<keyof VendorWorkTypeRow>).some(key => saved[key] !== planned[key]))
+        throw new Error(`Vendor catalog ${selectionId} selection changed since backfill planning; rerun dry run`);
+      return saved;
+    };
+
     let insertedMappings = 0, insertedCapabilities = 0, insertedOffers = 0;
     for (let offset = 0; offset < plan.canonicalServices.length; offset += options.batchSize) {
       await client.query("begin");
@@ -192,16 +224,13 @@ export async function runSemanticServiceMarketplaceBackfill(client: Queryable, o
       await client.query("begin");
       try {
         for (const row of plan.mappings.slice(offset, offset + options.batchSize)) {
-          await client.query(`select pg_advisory_xact_lock(hashtextextended($1, 0))`, [`service-mapping:partner_work_type:${row.workTypeId}`]);
-          const saved = (await client.query<WorkTypeRow>(`select id, name, description, category from work_types where id=$1 for update`, [row.workTypeId])).rows[0];
-          const planned = beforeSnapshot.workTypes.find(subject => subject.id === row.workTypeId)!;
-          const subject = { subjectType: "partner_work_type" as const, subjectId: row.workTypeId, ...saved };
-          if (!saved || subjectFingerprint(subject) !== subjectFingerprint({ ...planned, subjectType: "partner_work_type", subjectId: row.workTypeId })) throw new Error(`Work type ${row.workTypeId} changed since backfill planning; rerun dry run`);
+          const subject = await lockPlannedSubject(row.workTypeId);
           const canonicalId = row.status === "active" ? await resolveCanonicalId(client, row.canonicalServiceId, row.canonicalServiceCode) : null;
           const inserted = await client.query(`insert into service_mappings (subject_type,subject_id,work_type_id,canonical_service_id,status,confidence,explanation,evidence,model_version,mapping_version,actor_process)
             select 'partner_work_type',$1,$1,$2,$3,$4,$5,$6::jsonb,'deterministic-exact-v1',coalesce((select max(mapping_version)+1 from service_mappings where subject_type='partner_work_type' and subject_id=$1),1),$7
             where not exists (select 1 from service_mappings where subject_type='partner_work_type' and subject_id=$1 and actor_process=$7)`, [row.workTypeId, canonicalId, row.status, String(row.confidence), row.status === "active" ? "Deterministic exact normalized catalog match" : "Ambiguous exact alias requires review", JSON.stringify(backfillMappingEvidence(subject, { workTypeId: row.workTypeId, candidateCanonicalServiceIds: row.candidateCanonicalServiceIds, activationThreshold: options.activationThreshold })), PROCESS]);
           insertedMappings += inserted.rowCount ?? 0;
+          expectedDecisions.set(row.workTypeId, decisionFingerprint(await readDecisions(row.workTypeId)));
         }
         await client.query("commit");
       } catch (error) { await client.query("rollback"); throw error; }
@@ -209,6 +238,8 @@ export async function runSemanticServiceMarketplaceBackfill(client: Queryable, o
     for (const row of plan.capabilities) {
       await client.query("begin");
       try {
+        await lockPlannedSubject(row.workTypeId);
+        await lockPlannedSelection(row.sourceVendorWorkTypeId);
         const canonicalId = await resolveCanonicalId(client, row.canonicalServiceId, row.canonicalServiceCode);
         const capability = await client.query<{ id: number }>(`insert into vendor_capabilities (vendor_id,name,description,default_unit,default_rate_card,capacity,evidence,active)
           select $1,$2,$3,$4,$5::jsonb,1,$6::jsonb,true where not exists (select 1 from vendor_capabilities where evidence->'semanticMarketplaceBackfill'->>'sourceVendorWorkTypeId'=$7) returning id`, [row.vendorId, row.name, row.description, row.defaultUnit, JSON.stringify({ unitPrice: row.unitPrice, currency: row.currency }), JSON.stringify({ semanticMarketplaceBackfill: { sourceVendorWorkTypeId: row.sourceVendorWorkTypeId, workTypeId: row.workTypeId, canonicalServiceId: canonicalId } }), String(row.sourceVendorWorkTypeId)]);
@@ -220,7 +251,7 @@ export async function runSemanticServiceMarketplaceBackfill(client: Queryable, o
         if (!saved?.active || saved.name !== row.name || saved.description !== row.description) throw new Error(`Capability ${capabilityId} changed since backfill planning; review required`);
         const inserted = await client.query(`insert into service_mappings (subject_type,subject_id,vendor_capability_id,canonical_service_id,status,confidence,explanation,evidence,model_version,mapping_version,actor_process)
           select 'vendor_capability',$1,$1,$2,'active','1','Projected from an active legacy vendor catalog selection',$3::jsonb,'deterministic-lineage-v1',coalesce((select max(mapping_version)+1 from service_mappings where subject_type='vendor_capability' and subject_id=$1),1),$4
-          where not exists (select 1 from service_mappings where subject_type='vendor_capability' and subject_id=$1 and actor_process=$4)`, [capabilityId, canonicalId, JSON.stringify(backfillMappingEvidence({ ...saved, subjectType: "vendor_capability", subjectId: capabilityId }, { sourceVendorWorkTypeId: row.sourceVendorWorkTypeId, canonicalServiceId: canonicalId })), PROCESS]);
+          where not exists (select 1 from service_mappings where subject_type='vendor_capability' and subject_id=$1)`, [capabilityId, canonicalId, JSON.stringify(backfillMappingEvidence({ ...saved, subjectType: "vendor_capability", subjectId: capabilityId }, { sourceVendorWorkTypeId: row.sourceVendorWorkTypeId, canonicalServiceId: canonicalId })), PROCESS]);
         insertedMappings += inserted.rowCount ?? 0;
         await client.query("commit");
       } catch (error) { await client.query("rollback"); throw error; }
@@ -228,6 +259,9 @@ export async function runSemanticServiceMarketplaceBackfill(client: Queryable, o
     for (const row of plan.offers) {
       await client.query("begin");
       try {
+        const source = beforeSnapshot.vendorWorkTypes.find(selection => selection.id === row.sourceVendorWorkTypeId)!;
+        for (const workTypeId of [...new Set([source.workTypeId, row.workTypeId])].sort((a, b) => a - b)) await lockPlannedSubject(workTypeId);
+        await lockPlannedSelection(row.sourceVendorWorkTypeId);
         const capability = await client.query<{ id: number }>(`select id from vendor_capabilities where vendor_id=$1 and evidence->'semanticMarketplaceBackfill'->>'sourceVendorWorkTypeId'=$2`, [row.vendorId, String(row.sourceVendorWorkTypeId)]);
         if (!capability.rows[0]) throw new Error(`Missing capability lineage for vendor_work_types ${row.sourceVendorWorkTypeId}`);
         const inserted = await client.query(`insert into vendor_partner_service_offers (vendor_capability_id,partner_id,work_type_id,source_vendor_work_type_id,unit_price,unit,currency,notes,capacity,active,version)

@@ -25,6 +25,11 @@ const foreignKeys = (key: string) => config(key).foreignKeys.map((fk) => {
 });
 
 describe("semantic service marketplace schema contract", () => {
+  it("keeps durable legacy selection lineage without preventing catalog removal or replacement", () => {
+    const offer = config("vendorPartnerServiceOffersTable");
+    expect(offer.columns.find(column => column.name === "source_vendor_work_type_id")?.getSQLType()).toBe("integer");
+    expect(offer.foreignKeys.some(key => key.reference().columns.some(column => column.name === "source_vendor_work_type_id"))).toBe(false);
+  });
   it.each(tables)("exports %s as %s", (key, name) => {
     expect(table(key), `Missing ${key}`).toBeDefined();
     expect(getTableName(table(key))).toBe(name);

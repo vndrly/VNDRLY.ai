@@ -1,6 +1,7 @@
 import type { db as database } from "@workspace/db";
 
 export type TicketCommercialRate = {
+  afe: string | null;
   unitPrice: string;
   unit: string;
   currency: string;
@@ -30,6 +31,7 @@ export function commercialBillingMode(
 export function resolveTicketCommercialRate(
   ticket: { jobOfferId?: number | null },
   snapshot: Record<string, unknown> | null,
+  scopeSnapshot?: Record<string, unknown> | null,
 ): TicketCommercialRate | null {
   if (!ticket.jobOfferId) return null;
   if (!snapshot) throw new Error("marketplace.acceptance_snapshot_required");
@@ -51,6 +53,7 @@ export function resolveTicketCommercialRate(
     throw new Error("marketplace.invalid_commercial_snapshot");
   return {
     ...snapshot,
+    afe: typeof scopeSnapshot?.afeCode === "string" ? scopeSnapshot.afeCode : null,
     unitPrice: amount(snapshot.unitPrice),
     unit: snapshot.unit,
     currency: snapshot.currency,
@@ -79,7 +82,7 @@ export async function loadTicketCommercialRate(
   } = await import("@workspace/db");
   const { and, eq } = await import("drizzle-orm");
   const [row] = await (connection ?? db)
-    .select({ terms: snapshots.commercialSnapshot })
+    .select({ terms: snapshots.commercialSnapshot, scope: snapshots.scopeSnapshot })
     .from(snapshots)
     .innerJoin(offers, eq(offers.id, snapshots.jobOfferId))
     .where(
@@ -90,5 +93,5 @@ export async function loadTicketCommercialRate(
         eq(offers.status, "accepted"),
       ),
     );
-  return resolveTicketCommercialRate(ticket, row?.terms ?? null);
+  return resolveTicketCommercialRate(ticket, row?.terms ?? null, row?.scope);
 }

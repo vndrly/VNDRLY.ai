@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
+import { subjectFingerprint } from "../services/service-matching/candidates";
 import { createPostgresPartnerMarketplaceStore, discoverPartnerMarketplaceVendors } from "../services/marketplace/partner-store";
 import {
   buildSemanticMarketplaceBackfillPlan,
@@ -69,7 +70,8 @@ describe.runIf(process.env.VNDRLY_ISOLATED_TEST_DB === "1")("semantic marketplac
     const selection = (await client.query<{ id: number }>(`insert into vendor_work_types (vendor_id,work_type_id,unit_price,unit,currency) values ($1,$2,'32.00','per_hour','USD') returning id`, [vendor, workType])).rows[0]!.id;
     // Simulate a prior batch that committed classification but stopped before
     // capability/offer projection.
-    await client.query(`insert into service_mappings (subject_type,subject_id,work_type_id,canonical_service_id,status,confidence,explanation,evidence,model_version,mapping_version,actor_process) values ('partner_work_type',$1,$1,$2,'active','1','prior verified batch','{}','deterministic-exact-v1',1,'semantic-service-marketplace-backfill:v1')`, [workType, canonical]);
+    const evidence = { serviceMatching: { subjectFingerprint: subjectFingerprint({ subjectType: "partner_work_type", subjectId: workType, name: "Gatekeeping", category: "Security", description: "Controls site entry" }) } };
+    await client.query(`insert into service_mappings (subject_type,subject_id,work_type_id,canonical_service_id,status,confidence,explanation,evidence,model_version,mapping_version,actor_process) values ('partner_work_type',$1,$1,$2,'active','1','prior verified batch',$3::jsonb,'deterministic-exact-v1',1,'semantic-service-marketplace-backfill:v1')`, [workType, canonical, JSON.stringify(evidence)]);
     const legacyBefore = (await client.query(`select w.id, v.id vendor_work_type_id from work_types w join vendor_work_types v on v.work_type_id=w.id where w.id=$1`, [workType])).rows;
 
     const first = await runSemanticServiceMarketplaceBackfill(client, { dryRun: false, activationThreshold: 0.98, maxConflictRate: 1, batchSize: 1 });
@@ -83,10 +85,131 @@ describe.runIf(process.env.VNDRLY_ISOLATED_TEST_DB === "1")("semantic marketplac
     expect(second.dryRun).toBe(false);
     expect(second.report).toMatchObject({ insertedMappings: 0, insertedCapabilities: 0, insertedOffers: 0 });
     expect((await client.query(`select w.id, v.id vendor_work_type_id from work_types w join vendor_work_types v on v.work_type_id=w.id where w.id=$1`, [workType])).rows).toEqual(legacyBefore);
+
+    // Canonical legacy self-service/admin/import/onboarding paths remove or
+    // replace vendor_work_types. Marketplace history must survive both actions.
+    expect((await client.query(`select c.conname from pg_constraint c join pg_attribute a on a.attrelid=c.conrelid and a.attnum=any(c.conkey) where c.conrelid='vendor_partner_service_offers'::regclass and c.contype='f' and a.attname='source_vendor_work_type_id'`)).rows).toEqual([]);
+    await client.query(`delete from vendor_work_types where id=$1`, [selection]);
+    expect((await client.query(`select source_vendor_work_type_id from vendor_partner_service_offers where vendor_capability_id=$1`, [persisted.rows[0].capability_id])).rows).toEqual([{ source_vendor_work_type_id: selection }]);
+    const replacement = (await client.query<{ id: number }>(`insert into vendor_work_types (vendor_id,work_type_id,unit_price,unit,currency) values ($1,$2,'99.00','per_hour','USD') returning id`, [vendor, workType])).rows[0]!.id;
+    expect(replacement).not.toBe(selection);
+    const afterReplacement = (await client.query(`select c.evidence, o.source_vendor_work_type_id, o.unit_price from vendor_capabilities c join vendor_partner_service_offers o on o.vendor_capability_id=c.id where c.id=$1`, [persisted.rows[0].capability_id])).rows[0];
+    expect(afterReplacement).toMatchObject({ source_vendor_work_type_id: selection, unit_price: "32.00" });
+    expect(afterReplacement.evidence.semanticMarketplaceBackfill.sourceVendorWorkTypeId).toBe(selection);
+  });
+
+  it("honors a committed reviewer rejection between planning and the subject lock", async () => {
+    const workType = (await client.query<{ id: number }>(`insert into work_types (name,category) values ('Backfill fingerprint scope','Testing') returning id`)).rows[0]!.id;
+    const reviewer = new pg.Client({ connectionString: process.env.DATABASE_URL });
+    await reviewer.connect();
+    let reviewed = false;
+    const intercepted = { query: async (text: string, values?: unknown[]) => {
+      if (!reviewed && text.includes("pg_advisory_xact_lock(hashtextextended") && values?.[0] === `service-mapping:partner_work_type:${workType}`) {
+        reviewed = true;
+        await reviewer.query("begin");
+        await reviewer.query(`select pg_advisory_xact_lock(hashtextextended($1,0))`, values);
+        await reviewer.query(`insert into service_mappings (subject_type,subject_id,work_type_id,status,confidence,explanation,evidence,model_version,mapping_version,actor_process,reviewed_at) values ('partner_work_type',$1,$1,'rejected','0','Human rejected','{}','human',1,'admin-service-review',now())`, [workType]);
+        await reviewer.query("commit");
+      }
+      return client.query(text, values);
+    } };
+    try {
+      await expect(runSemanticServiceMarketplaceBackfill(intercepted as never, { dryRun: false, activationThreshold: .98, maxConflictRate: 1, batchSize: 1 })).rejects.toThrow("decision changed");
+      expect(reviewed).toBe(true);
+      expect((await client.query(`select status,actor_process from service_mappings where work_type_id=$1`, [workType])).rows).toEqual([{ status: "rejected", actor_process: "admin-service-review" }]);
+      const rerun = await runSemanticServiceMarketplaceBackfill(client, { dryRun: true, activationThreshold: .98, maxConflictRate: 1, batchSize: 1 });
+      expect(rerun.plan.mappings.some(row => row.workTypeId === workType)).toBe(false);
+    } finally { await reviewer.end(); }
   });
 });
 
 describe("semantic marketplace legacy backfill", () => {
+  it.each(["mappingVersion", "subjectFingerprint", "status"])("rechecks %s before projecting an already mapped capability", async field => {
+    const input = snapshot();
+    const work = input.workTypes[0]!;
+    input.workTypes = [work];
+    const prior = { id: 40, workTypeId: 10, canonicalServiceId: 30, status: "active", actorProcess: "admin-service-review", mappingVersion: 1,
+      subjectFingerprint: subjectFingerprint({ ...work, subjectType: "partner_work_type" as const, subjectId: work.id }) };
+    input.mappings = [prior];
+    expect(buildSemanticMarketplaceBackfillPlan(input, { activationThreshold: .98 }).capabilities).toHaveLength(1);
+    let writes = 0;
+    const client = { query: async (text: string) => {
+      let rows: unknown[] = [];
+      if (text.includes("pg_try_advisory_lock")) rows = [{ locked: true }];
+      else if (text.includes("count(*)")) rows = [{ work_types: "1", vendor_work_types: "1", tickets: "0" }];
+      else if (text.includes("from work_types")) rows = input.workTypes;
+      else if (text.includes("from vendor_work_types")) rows = input.vendorWorkTypes;
+      else if (text.includes("from canonical_services")) rows = input.canonicalServices;
+      else if (text.includes("from canonical_service_aliases")) rows = input.aliases;
+      else if (text.includes("from service_mappings")) rows = text.includes("subject_id=$1") ? [{ ...prior, [field]: field === "mappingVersion" ? 2 : field === "status" ? "rejected" : "changed" }] : input.mappings;
+      if (text.startsWith("insert")) writes++;
+      return { rows, rowCount: rows.length };
+    } };
+    await expect(runSemanticServiceMarketplaceBackfill(client as never, { dryRun: false, activationThreshold: .98, maxConflictRate: 1, batchSize: 1 })).rejects.toThrow("decision changed");
+    expect(writes).toBe(0);
+  });
+  it("does not project a legacy selection removed after planning", async () => {
+    const input = snapshot();
+    const work = input.workTypes[0]!;
+    input.workTypes = [work];
+    input.mappings = [{ id: 40, workTypeId: 10, canonicalServiceId: 30, status: "active", actorProcess: "admin-service-review", mappingVersion: 1,
+      subjectFingerprint: subjectFingerprint({ ...work, subjectType: "partner_work_type", subjectId: work.id }) }];
+    let insertedCapabilities = 0;
+    const client = { query: async (text: string) => {
+      let rows: unknown[] = [];
+      if (text.includes("pg_try_advisory_lock")) rows = [{ locked: true }];
+      else if (text.includes("count(*)")) rows = [{ work_types: "1", vendor_work_types: "1", tickets: "0" }];
+      else if (text.includes("from work_types")) rows = input.workTypes;
+      else if (text.startsWith("select") && text.includes("from vendor_work_types")) rows = text.includes("where id=") ? [] : input.vendorWorkTypes;
+      else if (text.includes("from canonical_services")) rows = input.canonicalServices;
+      else if (text.includes("from canonical_service_aliases")) rows = input.aliases;
+      else if (text.startsWith("select") && text.includes("from service_mappings")) rows = input.mappings;
+      else if (text.startsWith("insert into vendor_capabilities")) { insertedCapabilities++; rows = [{ id: 50 }]; }
+      else if (text.startsWith("select") && text.includes("from vendor_capabilities") && text.includes("where id=")) rows = [{ name: work.name, description: work.description, active: true }];
+      else if (text.startsWith("select") && text.includes("from vendor_capabilities") && text.includes("vendor_id=$1")) rows = [{ id: 50 }];
+      return { rows, rowCount: text.startsWith("insert") ? 1 : rows.length };
+    } };
+    await expect(runSemanticServiceMarketplaceBackfill(client as never, { dryRun: false, activationThreshold: .98, maxConflictRate: 1, batchSize: 1 })).rejects.toThrow("selection changed");
+    expect(insertedCapabilities).toBe(0);
+  });
+  it("does not project an active mapping for stale or missing subject evidence", () => {
+    for (const fingerprint of [null, "outdated"]) {
+      const input = snapshot();
+      input.mappings = [{ id: 40, workTypeId: 10, canonicalServiceId: 30, status: "active", actorProcess: "admin-service-review", subjectFingerprint: fingerprint }];
+      const plan = buildSemanticMarketplaceBackfillPlan(input, { activationThreshold: .98 });
+      expect(plan.capabilities).toEqual([]);
+      expect(plan.offers).toEqual([]);
+    }
+  });
+  it.each(["rejected", "review_required"])("preserves a human %s decision despite an exact alias", (status) => {
+    const input = snapshot();
+    input.mappings = [{ id: 40, workTypeId: 10, canonicalServiceId: 30, status, actorProcess: "admin-service-review" }];
+    const plan = buildSemanticMarketplaceBackfillPlan(input, { activationThreshold: .98 });
+    expect(plan.mappings.filter(row => row.workTypeId === 10)).toEqual([]);
+    expect(plan.capabilities).toEqual([]);
+    expect(plan.offers).toEqual([]);
+  });
+
+  it("aborts when human review changes the decision after planning and before the apply lock", async () => {
+    const input = snapshot();
+    input.workTypes = [input.workTypes[0]!];
+    input.vendorWorkTypes = [];
+    let inserted = 0;
+    const client = { query: async (text: string) => {
+      let rows: unknown[] = [];
+      if (text.includes("pg_try_advisory_lock")) rows = [{ locked: true }];
+      else if (text.includes("count(*)")) rows = [{ work_types: "1", vendor_work_types: "0", tickets: "0" }];
+      else if (text.includes("from work_types")) rows = input.workTypes;
+      else if (text.includes("from canonical_services")) rows = input.canonicalServices;
+      else if (text.includes("from canonical_service_aliases")) rows = input.aliases;
+      else if (text.includes("from service_mappings") && !text.startsWith("insert") && text.includes("subject_id"))
+        rows = [{ id: 41, workTypeId: 10, canonicalServiceId: 30, status: "rejected", actorProcess: "admin-service-review", mappingVersion: 2 }];
+      if (text.startsWith("insert into service_mappings")) inserted++;
+      return { rows, rowCount: text.startsWith("insert") ? 1 : rows.length };
+    } };
+    await expect(runSemanticServiceMarketplaceBackfill(client as never, { dryRun: false, activationThreshold: .98, maxConflictRate: 1, batchSize: 1 })).rejects.toThrow("decision changed");
+    expect(inserted).toBe(0);
+  });
   it("requires an explicit apply token for writes but not dry runs", () => {
     expect(() => assertSemanticMarketplaceBackfillApplyGuard(false, {})).toThrow("APPLY_SEMANTIC_SERVICE_MARKETPLACE_BACKFILL=1");
     expect(() => assertSemanticMarketplaceBackfillApplyGuard(false, { APPLY_SEMANTIC_SERVICE_MARKETPLACE_BACKFILL: "0" })).toThrow();
@@ -141,7 +264,7 @@ describe("semantic marketplace legacy backfill", () => {
 
   it("is a no-op after a partial prior run and never recreates removed historical selections", () => {
     const prior = snapshot();
-    prior.mappings.push({ id: 40, workTypeId: 10, canonicalServiceId: 30, status: "active", actorProcess: "semantic-service-marketplace-backfill:v1" });
+    prior.mappings.push({ id: 40, workTypeId: 10, canonicalServiceId: 30, status: "active", actorProcess: "semantic-service-marketplace-backfill:v1", subjectFingerprint: subjectFingerprint({ ...prior.workTypes[0]!, subjectType: "partner_work_type", subjectId: 10 }) });
     prior.capabilities.push({ id: 50, vendorId: 7, canonicalServiceId: 30, sourceVendorWorkTypeId: 20 });
     prior.offers.push({ id: 60, vendorCapabilityId: 50, partnerId: 1, workTypeId: 10, sourceVendorWorkTypeId: 20 });
     // This old snapshot entry is intentionally absent from current vendorWorkTypes.

@@ -4,7 +4,6 @@ import { vendorsTable } from "./vendors";
 import { partnersTable } from "./partners";
 import { workTypesTable } from "./workTypes";
 import { usersTable } from "./users";
-import { vendorWorkTypesTable } from "./vendorWorkTypes";
 
 export const vendorCapabilitiesTable = pgTable("vendor_capabilities", {
   id: serial("id").primaryKey(),
@@ -49,7 +48,9 @@ export const vendorPartnerServiceOffersTable = pgTable("vendor_partner_service_o
   vendorCapabilityId: integer("vendor_capability_id").notNull().references(() => vendorCapabilitiesTable.id),
   partnerId: integer("partner_id").notNull().references(() => partnersTable.id),
   workTypeId: integer("work_type_id").notNull().references(() => workTypesTable.id),
-  sourceVendorWorkTypeId: integer("source_vendor_work_type_id").references(() => vendorWorkTypesTable.id),
+  // Historical identity, not a live reference: legacy selections are replaced
+  // by catalog edits. Keep the original ID even after that selection is removed.
+  sourceVendorWorkTypeId: integer("source_vendor_work_type_id"),
   unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
   unit: text("unit").notNull(),
   currency: text("currency").notNull().default("USD"),

@@ -27,7 +27,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     persistence = (await import("./job-offers-postgres"))
       .createPostgresJobOfferPersistence;
   });
-  async function fixture() {
+  async function fixture(afeCode?: string) {
     const suffix = randomUUID();
     const [partner] = await db
       .insert(s.partnersTable)
@@ -172,6 +172,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       })
       .returning();
     const input = {
+      ...(afeCode === undefined ? {} : { afeCode }),
       partnerId: partner.id,
       vendorId: vendor.id,
       workTypeId: work.id,
@@ -215,6 +216,26 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       mapping,
     };
   }
+  it.each(["ACCEPTED-AFE", undefined])("retains accepted AFE %s in canonical ticket reads and invoice regeneration", async afeCode => {
+    const f = await fixture(afeCode);
+    await db.update(s.siteLocationsTable).set({ afe: "SITE-BEFORE" }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
+    const [assignment] = await db.insert(s.siteWorkAssignmentsTable).values({ siteLocationId: f.input.siteLocationId, vendorId: f.vendor.id, workTypeId: f.work.id, afe: "ASSIGNMENT-BEFORE" }).returning();
+    const accepted = await f.api.acceptJobOffer(f.accept);
+    const { ticketAfeSql } = await import("../../lib/ticket-afe");
+    const readAfe = async () => (await db.select({ afe: ticketAfeSql }).from(s.ticketsTable).leftJoin(s.siteWorkAssignmentsTable, eq(s.siteWorkAssignmentsTable.id, assignment.id)).where(eq(s.ticketsTable.id, accepted.ticketId)))[0]?.afe;
+    expect(await readAfe()).toBe(afeCode ?? null);
+    await db.update(s.ticketsTable).set({ status: "approved", approvedAt: now }).where(eq(s.ticketsTable.id, accepted.ticketId));
+    await db.insert(s.ticketLineItemsTable).values({ ticketId: accepted.ticketId, type: "equipment", description: "Synthetic equipment", quantity: "1", unitPrice: "25" });
+    const { generateInvoiceForTicket } = await import("../../lib/invoice-generator");
+    expect(await generateInvoiceForTicket(accepted.ticketId)).toMatchObject({ ok: true });
+    await db.update(s.siteLocationsTable).set({ afe: "SITE-AFTER" }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
+    await db.update(s.siteWorkAssignmentsTable).set({ afe: "ASSIGNMENT-AFTER" }).where(eq(s.siteWorkAssignmentsTable.id, assignment.id));
+    expect(await readAfe()).toBe(afeCode ?? null);
+    expect(await generateInvoiceForTicket(accepted.ticketId)).toMatchObject({ ok: true });
+    const lines = await db.select().from(s.invoiceLinesTable).where(eq(s.invoiceLinesTable.ticketId, accepted.ticketId));
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines.every(line => line.afe === (afeCode ?? null))).toBe(true);
+  });
   it("blocks an outstanding offer after revocation until the partner deliberately reopens the relationship", async () => {
     const f = await fixture();
     const [relationship] = await db.insert(s.partnerVendorRelationshipsTable).values({ partnerId: f.input.partnerId, vendorId: f.vendor.id, status: "revoked" }).returning();

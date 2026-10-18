@@ -56,6 +56,20 @@ mapping; the affected commercial offer is blocked until an administrator
 reconciles that lineage. Repeat the dry run until the evaluation is acceptable.
 Do not lower a threshold merely to make an unsafe run pass.
 
+Backfill preserves existing rejected and review-required decisions. An existing
+active mapping is usable only when its saved subject fingerprint is current;
+older mappings without that evidence require deliberate review/reclassification.
+Apply rechecks subject content and the decision/version/fingerprint under the
+same subject lock used by reviewers, including before capability/rate projection.
+A changed decision or legacy selection aborts the affected transaction and
+requires another dry run; already committed batches remain resumable.
+
+`source_vendor_work_type_id` is durable historical lineage, deliberately a plain
+nullable integer rather than a foreign key to the mutable legacy selection.
+Legacy catalog removal/replacement retains that original ID and the capability's
+lineage evidence. This is the initial, not-yet-deployed schema definition; there
+is no constraint-removal or data-cleanup migration.
+
 ## 3. Guarded apply
 
 Only after the dry-run JSON is approved, set

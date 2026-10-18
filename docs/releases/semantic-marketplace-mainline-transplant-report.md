@@ -138,3 +138,29 @@ Verification used the existing credential-stripped loopback-port-9 runner; no li
 | `git diff --check` and staged diff check | Passed; no OpenAPI/generated contract changes in this round |
 
 Final full repository and actual isolated PostgreSQL gates remain the coordinating task's responsibility. The untracked review package files were not changed or committed.
+
+## Consolidated final review fix wave
+
+Starting tree: `143fd5bbfd8907566ddedf93e44d963e92863f1a`. Addressed the final three Important findings in one local fix wave. No live/shared database, migration, seed, push, deployment, provider, or plugin publication was used.
+
+1. **Preserve review decisions during backfill.** The planner now honors the latest existing decision, including rejected and review-required states. Only an active decision with a current saved-subject fingerprint can supply projection. Under the same subject advisory lock used by reviewers, apply reloads subject ownership/content and the decision history (identity, version, state, canonical service, reviewer metadata, and fingerprint). It rechecks before mapping insertion and before capability/partner-rate projection; any intervening review aborts the affected transaction. Capability projection cannot append a new activation over existing mapping history. Legacy source selections are share-locked and compared with planning inputs so an intervening catalog deletion/replacement/edit cannot produce stale new supply. Existing committed batches remain resumable; missing/obsolete fingerprint evidence requires deliberate review, never silent blessing.
+2. **Keep durable lineage without blocking mutable catalog selections.** Since this marketplace schema has never been deployed, corrected its initial Drizzle definition: `source_vendor_work_type_id` remains a nullable historical integer and no longer declares a foreign key. The existing metadata-driven additive migration therefore creates it correctly on first apply; no data cleanup, constraint removal/alteration, or migration UPDATE was added. The persisted regression inspects PostgreSQL constraint metadata, removes/replaces the legacy selection, and verifies that the old offer ID, rate and capability lineage survive unchanged. Current legacy writers themselves remain unchanged.
+3. **Project accepted AFE into tickets and accounting.** Canonical ticket list/detail AFE now reads the immutable acceptance `scopeSnapshot.afeCode` for marketplace tickets. The acceptance loader also exposes that value in `marketplaceCommercialTerms.afe`; invoice generation uses it, including accepted absence, instead of assignment/site defaults. Non-marketplace assignment/site and Gate precedence remain unchanged, and the ticket read's existing Fleet AFE handling remains. The existing nullable ticket AFE and extensible commercial-terms API contracts suffice; regeneration produced no generated changes.
+
+The test-driven-development skill drove initial failing regressions: four failures reproduced both existing review states, review between planning/apply, and the deletion-blocking schema FK; two invoice failures reproduced wrong AFE and mutable fallback for an accepted absence; a further failing regression reproduced projection after a legacy selection disappeared. All were made green without deleting or skipping those cases.
+
+### Final wave focused verification
+
+The existing credential-stripped loopback-port-9 unit runner was used. PostgreSQL integration tests were authored and typechecked, not run locally; the coordinating task owns the full isolated CI batch.
+
+| Command / scope | Result |
+| --- | --- |
+| `node .local/transplant-unit.mjs run src/services/service-matching src/services/marketplace src/lib/semantic-service-marketplace-schema.test.ts src/lib/ticket-commercial-rate.test.ts src/lib/auto-labor-marketplace.test.ts src/lib/invoice-marketplace-afe.test.ts src/lib/invoice-engine.test.ts src/routes/tickets-detail-shape.test.ts src/routes/tickets-list-shape.test.ts src/routes/tickets-portal.test.ts src/routes/service-marketplace-admin.test.ts src/routes/service-marketplace-offers.test.ts src/services/ticket-labor-finalization.test.ts --exclude '**/*.database.test.ts'` | 21 files / 242 tests passed |
+| `node .local/transplant-unit.mjs run src/lib/semantic-service-marketplace-backfill.database.test.ts -t 'semantic marketplace legacy backfill'` | 15 pure tests passed; 3 persisted tests intentionally not selected |
+| `pnpm exec tsc --build lib/db` | Passed |
+| `pnpm --filter @workspace/api-server exec tsc --noEmit -p tsconfig.json` | Passed, including new persisted regressions |
+| `pnpm --filter @workspace/api-spec codegen` | Passed; generated contracts unchanged |
+| `pnpm --filter @workspace/api-spec test` | 3 tests passed |
+| `git diff --check` | Passed |
+
+Remaining evidence: final full repository gates and actual fresh-local PostgreSQL runs must establish real locking, legacy catalog removal/replacement, and accepted AFE canonical reads/invoice regeneration. No claim of production activation or deployed behavior is made. The initial-schema correction intentionally does not repair any independently applied older experimental schema; no destructive repair is authorized or included. The untracked final-review diff package was left untouched.

@@ -1,4 +1,5 @@
 import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
+import { ticketAfeSql } from "../lib/ticket-afe";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
 import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
@@ -601,7 +602,7 @@ const ticketSelect = {
   siteLatitude: siteLocationsTable.latitude,
   siteLongitude: siteLocationsTable.longitude,
   siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-  afe: sql<string | null>`CASE WHEN ${ticketsTable.fleetPlan}->>'billingWorkflow'='true' THEN ${ticketsTable.fleetPlan}->>'afeNumber' ELSE ${siteWorkAssignmentsTable.afe} END`,
+  afe: ticketAfeSql,
   scheduledStartAt: ticketsTable.scheduledStartAt,
   scheduledDurationMinutes: ticketsTable.scheduledDurationMinutes,
   foremanUserId: ticketsTable.foremanUserId,

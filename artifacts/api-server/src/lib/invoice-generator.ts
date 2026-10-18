@@ -198,7 +198,9 @@ async function generateInvoiceForTicketInner(
         eq(siteWorkAssignmentsTable.workTypeId, ticket.workTypeId),
       ),
     );
-  const afe = gateAgreement?.success ? gateAgreement.data.afe : afeAssignment?.afe ?? site.afe ?? null;
+  // Marketplace scope is the accepted agreement, including an omitted AFE.
+  // Existing Gate and ordinary assignment/site precedence remain unchanged.
+  const afe = commercial ? commercial.afe : gateAgreement?.success ? gateAgreement.data.afe : afeAssignment?.afe ?? site.afe ?? null;
 
   // Order by checkInAt ASC so weekly-OT reverse-walk (which converts the
   // latest hours of the week from regular→OT) operates on the correct
