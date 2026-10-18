@@ -129,7 +129,7 @@ beforeEach(() => {
     .use(express.json())
     .use(
       "/api",
-      createServiceMarketplaceRouter({ partnerStore, now: () => now }),
+      createServiceMarketplaceRouter({ partnerStore, now: () => now, isEnabled: async () => true }),
     );
 });
 const path = "/api/service-marketplace/partners/9/work-types/21/vendors";

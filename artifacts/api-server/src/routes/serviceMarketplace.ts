@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
+import { isSemanticMarketplaceEnabled, type SemanticMarketplaceScope } from "../services/marketplace/feature";
 import { createJobOfferInput, getJobOfferService, type JobOfferService } from "../services/marketplace/job-offers";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendValidationFailed } from "../lib/validation-error";
@@ -128,6 +129,7 @@ export function createServiceMarketplaceRouter(
     classifyCapability?: typeof classifyCapability;
     partnerStore?: PartnerMarketplaceStore;
     jobOffers?: JobOfferService;
+    isEnabled?: typeof isSemanticMarketplaceEnabled;
     now?: () => Date;
     previewCapability?: (
       input: CapabilityPreviewInput,
@@ -135,11 +137,32 @@ export function createServiceMarketplaceRouter(
   } = { store: createPostgresVendorMarketplaceStore(), classifyCapability },
 ): IRouter {
   const router = Router();
+  const requireFeature = async (scope: SemanticMarketplaceScope | null) => {
+    if (!(await (dependencies.isEnabled ?? isSemanticMarketplaceEnabled)(scope)))
+      throw new MarketplaceError(403, "marketplace.disabled");
+  };
   const offerHandler = (run: (req: Request, res: Response, service: JobOfferService, session: SessionPayload) => Promise<void>) => async (req: Request, res: Response) => {
     try {
       const session = getSessionFromRequest(req);
       if (!session?.userId) { res.status(401).json({ code: "auth.required", error: "Authentication required" }); return; }
-      await run(req, res, dependencies.jobOffers ?? await getJobOfferService(), session);
+      const service = dependencies.jobOffers ?? await getJobOfferService();
+      // Resolve saved offer/site scope, never trust action-body eligibility or org identities.
+      const saved = req.params.offerId
+        ? await service.getJobOffer(id.parse(req.params.offerId), session)
+        : null;
+      const vendorAction = req.path.includes("/vendors/") ||
+        ["/accept", "/decline", "/review"].some((action) => req.path.endsWith(action));
+      const side = session.role === "admin" ? (vendorAction ? "vendor" : "partner") : session.role;
+      let orgId = side === "vendor" ? session.vendorId : session.partnerId;
+      if (session.role === "admin") {
+        orgId = side === "vendor"
+          ? saved?.vendorId ?? Number(req.params.orgId)
+          : saved?.partnerId ?? Number(req.params.orgId ?? req.body?.partnerId);
+      }
+      await requireFeature(side === "partner" || side === "vendor"
+        ? { ownerOrgType: side, ownerOrgId: Number(orgId), siteId: saved?.siteLocationId ?? req.body?.siteLocationId }
+        : null);
+      await run(req, res, service, session);
     } catch (error) {
       if (error instanceof z.ZodError) { sendValidationFailed(res, error); return; }
       if (error instanceof MarketplaceError) { res.status(error.status).json({ error: error.message, code: error.code }); return; }
@@ -183,6 +206,7 @@ export function createServiceMarketplaceRouter(
       const partnerId = id.parse(req.params.partnerId);
       const workTypeId = id.parse(req.params.workTypeId);
       const session = getSessionFromRequest(req);
+      await requireFeature({ ownerOrgType: "partner", ownerOrgId: partnerId, siteId: req.query.siteId === undefined ? null : Number(req.query.siteId) });
       const allowed =
         session?.role === "admin" ||
         (session?.role === "partner" &&
@@ -306,6 +330,7 @@ export function createServiceMarketplaceRouter(
   ): Promise<{ vendorId: number; actor: number; session: SessionPayload }> => {
     const vendorId = id.parse(req.params.vendorId);
     const session = getSessionFromRequest(req);
+    await requireFeature({ ownerOrgType: "vendor", ownerOrgId: vendorId });
     const identified =
       Number.isSafeInteger(session?.userId) && (session?.userId ?? 0) > 0;
     const allowed =

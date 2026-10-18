@@ -129,6 +129,7 @@ function fixture() {
     .use(
       "/api",
       createServiceMarketplaceRouter({
+        isEnabled: async () => true,
         store,
         jobOffers: offers,
         classifyCapability: async () => undefined,

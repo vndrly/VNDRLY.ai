@@ -114,6 +114,8 @@ export default defineConfig({
         // Production defaults stay disabled and are covered by release-features tests.
         VITE_ENABLE_TAX_REPORTING: "true",
         VITE_ENABLE_ACCOUNTING: "true",
+        // Backend still requires explicit per-fixture organization/site flags.
+        VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED: "true",
       },
       stdout: "ignore",
       stderr: "pipe",

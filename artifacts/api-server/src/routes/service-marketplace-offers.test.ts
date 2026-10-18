@@ -28,6 +28,7 @@ const draft = {
   expiresAt: "2026-10-31T10:00:00Z",
 };
 const service = {
+  getJobOffer: async () => ({ id: 8, partnerId: 1, vendorId: 2, siteLocationId: 6 }),
   createJobOffer: async (input: unknown) => ({
     ...(input as object),
     id: 8,
@@ -45,7 +46,7 @@ const service = {
 const app = express()
   .use(express.json())
   .use(cookieParser())
-  .use("/api", createServiceMarketplaceRouter({ jobOffers: service }));
+  .use("/api", createServiceMarketplaceRouter({ jobOffers: service, isEnabled: async () => true }));
 describe("job offer HTTP contract", () => {
   it("requires authentication and the idempotency header", async () => {
     expect(

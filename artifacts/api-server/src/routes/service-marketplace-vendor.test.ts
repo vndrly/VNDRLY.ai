@@ -143,6 +143,7 @@ beforeEach(() => {
     .use(
       "/api",
       createServiceMarketplaceRouter({
+        isEnabled: async () => true,
         store,
         previewCapability: async (input) => {
           previews.push(input);
