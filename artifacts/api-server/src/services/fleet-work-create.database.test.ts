@@ -278,6 +278,12 @@ async function fixture(options: { rig?: boolean } = {}) {
   };
 }
 
+it("loads dispatch candidates from canonical Fleet Inventory using the actual PostgreSQL resource query",async()=>{
+ const f=await fixture(),resources=await createFleetService(databaseFleetRepository).resources({...f.actor});
+ expect(resources.drivers.some(row=>row.userId===f.driver.id)).toBe(true);
+ expect(resources.equipment.some(row=>row.id===f.truck.id&&row.dispatchable)).toBe(true);
+});
+
 async function cancelWork(
   f: Awaited<ReturnType<typeof fixture>>,
   run: FleetRun,
