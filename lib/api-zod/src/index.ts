@@ -91,3 +91,4 @@ export * from "./fleet-monitoring";
 export * from "./fleet-local-work";
 
 export * from "./fleet-resource-copy";
+export * from "./fleet-service-template";

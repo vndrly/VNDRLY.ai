@@ -1,3 +1,4 @@
+import {FleetServiceTemplatePageSchema,FleetServiceTemplateSchema} from "@workspace/api-zod";
 import type {
   FleetSupportChoices,
   FleetSupportRead,
@@ -149,6 +150,8 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
+  serviceTemplates:()=>request<unknown>("/service-templates").then(value=>FleetServiceTemplatePageSchema.parse(value)),
+  serviceTemplate:(id:number,revision:number)=>request<unknown>(`/service-templates/${id}?revision=${revision}`).then(value=>FleetServiceTemplateSchema.parse(value)),
   runOrders:(after?:number)=>request<unknown>(`/run-orders${after?`?after=${after}`:""}`).then(value=>FleetRunOrderPageSchema.parse(value)),
   runOrder:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}`).then(value=>FleetRunOrderSchema.parse(value)),
   runOrderLocations:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/locations`).then(value=>FleetRunOrderLocationsSchema.parse(value)),

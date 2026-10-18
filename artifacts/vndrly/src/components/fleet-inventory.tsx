@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Truck, Container, Plus, Search } from "lucide-react";
-import { FleetAssetCreateSchema, FleetAssetEditSchema, type FleetInventoryDetail } from "@workspace/api-zod";
+import { fleetServiceTemplateLabels, FleetAssetCreateSchema, FleetAssetEditSchema, type FleetInventoryDetail } from "@workspace/api-zod";
 import { fleetClient, FleetRequestError } from "@/lib/fleet-client";
 import { PngPillButton } from "./png-pill-rollover";
 import PageBackButton from "./page-back-button";
@@ -23,10 +23,11 @@ function useAlive() { const alive = useRef(true); useEffect(() => { alive.curren
 function failure(error: unknown, c: typeof es) {
   return error instanceof FleetRequestError && error.code === "fleet.version_conflict" ? c.versionError : error instanceof FleetRequestError && error.code === "fleet.identifier_in_use" ? c.identifierError : c.saveError;
 }
+const FleetServiceTemplates=lazy(()=>import("./fleet-service-templates").then(module=>({default:module.FleetServiceTemplates})));
 const inputClass = "w-full px-3 py-2";
 export function FleetInventoryPage({ identity, assetId }: { identity: string; assetId?: string }) {
-  const { c } = useCopy(), [, navigate] = useLocation(), queryClient = useQueryClient();
-  const [fleet, setFleet] = useState(""), [search, setSearch] = useState(""), [adding, setAdding] = useState(false),[showDetails,setShowDetails]=useState(false);
+  const { c,language } = useCopy(), [, navigate] = useLocation(), queryClient = useQueryClient();
+  const [fleet, setFleet] = useState(""), [search, setSearch] = useState(""), [adding, setAdding] = useState(false),[showDetails,setShowDetails]=useState(false),[showTemplates,setShowTemplates]=useState(false);
   const list = useInfiniteQuery({ queryKey: ["fleet-inventory", identity, fleet], initialPageParam: undefined as string | undefined, queryFn: ({ pageParam }) => fleetClient.inventory(pageParam, fleet || undefined), getNextPageParam: p => p.nextCursor ?? undefined, retry: false, enabled: !assetId });
   const detail = useQuery({ queryKey: ["fleet-inventory-detail", identity, assetId], queryFn: () => fleetClient.inventoryAsset(assetId!), enabled: Boolean(assetId), retry: false });
   const refresh = async () => { await Promise.all([queryClient.invalidateQueries({ queryKey: ["fleet-inventory", identity] }), queryClient.invalidateQueries({ queryKey: ["fleet-inventory-detail", identity] }), queryClient.invalidateQueries({ queryKey: ["fleet", identity] }), queryClient.invalidateQueries({ queryKey: ["fleet-resources", identity] }), queryClient.invalidateQueries({ queryKey: ["implementation-a", "assets"] })]); };
@@ -34,8 +35,8 @@ export function FleetInventoryPage({ identity, assetId }: { identity: string; as
   const assets = [...new Map(list.data?.pages.flatMap(p => p.assets).map(a => [a.id, a]) ?? []).values()].filter(a => [a.name, a.manufacturer, a.model, ...a.aliases.map(x => x.value)].join(" ").toLowerCase().includes(search.toLowerCase()));
   return <main className="fleet-workspace fleet-inventory space-y-5 p-4 md:p-6">
     <header className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-3"><PageBackButton fallbackHref={assetId ? "/fleet/equipment" : "/fleet"} ariaLabel={c.back} /><div><h1 className="text-2xl font-semibold">{assetId && detail.data ? detail.data.asset.name : c.title}</h1><p className="text-sm text-muted-foreground">{c.subtitle}</p></div></div><PngPillButton onClick={() => void refresh()}>{c.refresh}</PngPillButton></header>
-    {!assetId&&<div role="group" aria-label="Inventory and Details"><PngPillButton onClick={()=>setShowDetails(false)}>Inventory</PngPillButton><PngPillButton onClick={()=>setShowDetails(true)}>Details</PngPillButton></div>}
-    {!assetId&&showDetails?<FleetDetailsLibrary identity={identity}/>:assetId ? <>
+    {!assetId&&<div role="group" aria-label="Inventory and Details"><PngPillButton onClick={()=>{setShowDetails(false);setShowTemplates(false);}}>Inventory</PngPillButton><PngPillButton onClick={()=>{setShowDetails(true);setShowTemplates(false);}}>Details</PngPillButton><PngPillButton onClick={()=>{setShowDetails(false);setShowTemplates(true);}}>{fleetServiceTemplateLabels(language).title}</PngPillButton></div>}
+    {!assetId&&showTemplates?<Suspense fallback={<p>{c.loading}</p>}><FleetServiceTemplates key={identity} identity={identity}/></Suspense>:!assetId&&showDetails?<FleetDetailsLibrary identity={identity}/>:assetId ? <>
       {detail.isPending && <p>{c.loading}</p>}
       {detail.isError && <p role="alert">{c.unavailable}</p>}
       {detail.data && !detail.isError && <FleetAssetDetail key={`${assetId}:${detail.data.asset.version}`} data={detail.data} identity={identity} onSaved={refresh} />}

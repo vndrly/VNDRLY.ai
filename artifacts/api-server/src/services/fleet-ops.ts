@@ -1,3 +1,5 @@
+import {mergeFleetTemplateProfile,type FleetServiceTemplate} from "@workspace/api-zod";
+import {createFleetServiceTemplateOperations} from "./fleet-service-template";
 import {createFleetMonitoringOperations} from "./fleet-monitoring";
 import { appendFleetRunEvent, readFleetRunEventPage } from "./fleet-run-events";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
@@ -439,6 +441,7 @@ export type FleetServiceOptions={
   compliance?:Parameters<typeof createFleetComplianceOperations>[2];
   /** Internal original-scope command adapter, never an HTTP create field. */
   billingV2Create?: {
+    serviceTemplate?:FleetServiceTemplate;
     ownUnplanned?:boolean;
     operationId: string;
     timeZone: string;
@@ -534,6 +537,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
     // Qualification onboarding belongs to current company Fleet roles. It
     // cannot depend on already having a commercially authorized partner site.
     // Operational run dispatch continues to use the narrower grantFor above.
+    ...createFleetServiceTemplateOperations(transaction,companyGrantFor),
     ...createFleetComplianceOperations(transaction, (state, actor) => {
       const grant=state.grants.find(row=>row.userId===actor.userId);
       if(!state.enabled||!grant?.roles.length)return null;
@@ -1014,7 +1018,10 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             id: randomUUID(),
             companyId: actor.companyId,
             ...(ownUnplanned?{workOrigin:"driver_unplanned" as const}:{}),
-            operationalProfile: fleet.operationalProfile
+            ...(options.billingV2Create?.serviceTemplate ? {serviceTemplate:structuredClone(options.billingV2Create.serviceTemplate)} : {}),
+            operationalProfile: options.billingV2Create?.serviceTemplate
+              ? mergeFleetTemplateProfile(fleet.operationalProfile,options.billingV2Create.serviceTemplate.profile)
+              : fleet.operationalProfile
               ? structuredClone(fleet.operationalProfile)
               : undefined,
             siteIds,

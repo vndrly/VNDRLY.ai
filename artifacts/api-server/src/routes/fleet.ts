@@ -455,4 +455,6 @@ router.post(
     service.action(actor(req), z.uuid().parse(req.params.id), req.body),
   ),
 );
+router.get("/fleet/service-templates",endpoint(req=>service.serviceTemplates(actor(req))));
+router.get("/fleet/service-templates/:id",endpoint(req=>service.serviceTemplate(actor(req),z.coerce.number().int().positive().parse(req.params.id),req.query.revision===undefined?undefined:z.coerce.number().int().positive().parse(req.query.revision))));
 export default router;

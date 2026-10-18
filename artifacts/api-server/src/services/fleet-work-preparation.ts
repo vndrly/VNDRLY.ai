@@ -1,3 +1,4 @@
+import {readFleetOfferedTemplates} from "./fleet-service-template";
 import {z} from "zod/v4";
 import {FleetWorkPreparationSchema,FleetTicketBillingV2Schema,FleetTicketPlanSchema,FleetWorkBillingOptionsSchema,FleetPricingBasisSchema} from "@workspace/api-zod";
 import type {FleetWorkExecutionContext} from "./fleet-work-repository";
@@ -34,5 +35,5 @@ export async function prepareFleetWorkCreation(context:FleetWorkExecutionContext
   if(row.fleet_plan?.billingVersion===2){const plan=FleetTicketBillingV2Schema.parse(row.fleet_plan);if(!plan.batchingAllowed||plan.finalizedAt||plan.finalizationOperationId)throw new FleetError("fleet.ticket_closed");ticket={id:row.id,version:plan.revision,serviceId:row.work_type_id};}
   else {const plan=FleetTicketPlanSchema.parse(row.fleet_plan);if(plan.mode!=="batch"||plan.closedAt||plan.finalizationOperationId)throw new FleetError("fleet.ticket_closed");ticket={id:row.id,version:plan.version,serviceId:row.work_type_id};}
  }
- return FleetWorkPreparationSchema.parse({snapshot,billingSiteId:site.id,partnerId:site.partner_id,ticket});
+ return FleetWorkPreparationSchema.parse({snapshot,billingSiteId:site.id,partnerId:site.partner_id,ticket,serviceTemplates:(await readFleetOfferedTemplates(client,actor.companyId)).flatMap(row=>row.template?.enabled?[row.template]:[])});
 }

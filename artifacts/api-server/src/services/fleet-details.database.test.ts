@@ -1011,3 +1011,13 @@ describe("canonical Detail persistence", () => {
     ).rejects.toMatchObject({ code: "fleet.driver_unavailable" });
   });
 });
+
+it("binds disabled-by-default service templates to existing offered catalog identities with exact audited retries",async()=>{
+ const f=await fixture(),{db,workTypesTable,vendorWorkTypesTable}=await import("@workspace/db"),{createFleetServiceTemplateOperations,readFleetServiceTemplate}=await import("./fleet-service-template"),{buildFleetServiceTemplate}=await import("@workspace/api-zod");
+ const [offered]=await db.insert(workTypesTable).values({name:`Synthetic template ${randomUUID()}`,category:"hauling"}).returning();await db.insert(vendorWorkTypesTable).values({vendorId:f.vendor.id,workTypeId:offered.id,unit:"per_job",unitPrice:"12.34",currency:"USD"});
+ const service=createFleetServiceTemplateOperations(f.transaction,(state,actor)=>state.grants.find(row=>row.userId===actor.userId)??null),template={...buildFleetServiceTemplate({family:"crude_condensate",serviceId:offered.id,serviceName:offered.name}),revision:1},input={operationId:randomUUID(),expectedRevision:0,template};
+ expect(await service.saveServiceTemplate(f.actor,input)).toEqual(template);expect(await service.saveServiceTemplate(f.actor,input)).toEqual(template);expect(await service.serviceTemplates(f.actor)).toMatchObject({canManage:true,services:[{serviceId:offered.id,template:{enabled:false,revision:1}}]});
+ await expect(service.saveServiceTemplate({...f.actor,userId:f.staff[1].id},{...input,operationId:randomUUID()})).rejects.toMatchObject({status:403});await expect(service.saveServiceTemplate(f.actor,{...input,operationId:randomUUID(),template:{...template,serviceId:offered.id+999999}})).rejects.toMatchObject({code:"fleet.service_not_offered"});await expect(service.saveServiceTemplate(f.actor,{...input,template:{...template,name:"Changed retry"}})).rejects.toMatchObject({code:"fleet.operation_conflict"});
+ const next={...template,revision:2,enabled:true,commodities:["Explicit reported material"],capabilities:["Reviewed capability"]};await service.saveServiceTemplate(f.actor,{operationId:randomUUID(),expectedRevision:1,template:next});
+ const client=await f.pool.connect();try{expect(await readFleetServiceTemplate(client,f.vendor.id,offered.id,1)).toEqual(template);expect((await client.query("SELECT unit_price::text FROM vendor_work_types WHERE vendor_id=$1 AND work_type_id=$2",[f.vendor.id,offered.id])).rows[0].unit_price).toBe("12.34");expect((await client.query("SELECT count(*)::int AS n FROM tickets WHERE vendor_id=$1",[f.vendor.id])).rows[0].n).toBe(0);}finally{client.release();}
+});

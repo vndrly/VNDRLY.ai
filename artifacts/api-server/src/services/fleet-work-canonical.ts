@@ -1,3 +1,4 @@
+import {readFleetServiceTemplate} from "./fleet-service-template";
 import { reviewFleetActivityCharges, finalizeFleetTicketV2, adjustFleetReviewedCharge,resolveFleetActivityPrice } from "./fleet-charge-review";
 import {resolveFleetReconciliation} from "./fleet-reconciliation";
 import {
@@ -102,6 +103,7 @@ export async function executeFleetWorkCommand(
   };
   switch (command.kind) {
     case "monitoring.save":await service.saveFleetTrigger({...actor},command.payload);return result();
+    case "service_template.save":await service.saveServiceTemplate({...actor},command.payload);return result();
     case "replacement.propose":case "replacement.action":case "cargo.propose":case "cargo.action": {
       const p=command.payload,target=await activity(p.activity),ticket=await mapped(p.ticket),run=state.runs.find(row=>row.id===target.run.id)!;
       if(target.reference.version!==run.version||run.linkedTicketId!==ticket.id||!run.resourceAssignment||!fleetDetailSnapshotIdentityMatches(run.resourceAssignment.snapshot,p.baseAssignment))throw new FleetError("fleet.work_assignment_changed",409);
@@ -215,11 +217,12 @@ export async function executeFleetWorkCommand(
         throw new FleetError("fleet.operation_conflict");
       const digest = createHash("sha256").update(`${command.operationId}:origin`).digest("hex");
       const originId = p.originStopId??`${digest.slice(0,8)}-${digest.slice(8,12)}-4${digest.slice(13,16)}-8${digest.slice(17,20)}-${digest.slice(20,32)}`;
+      if(p.serviceTemplate){const saved=await readFleetServiceTemplate(client,actor.companyId,p.billing.serviceId!,p.serviceTemplate.revision);if(!saved||!saved.enabled||saved.serviceId!==p.billing.serviceId||!isDeepStrictEqual(saved,p.serviceTemplate))throw new FleetError("fleet.template_revision_conflict",409);}
       const creator = createFleetWorkCanonicalService(context, {
         ...options,
         originalWorkOperationId: command.operationId,
         afterCommit: effect => { afterCommit.push(effect); },
-        billingV2Create: { ownUnplanned, operationId: command.operationId, timeZone: command.timeZone, intent: billing,
+        billingV2Create: { ...(p.serviceTemplate?{serviceTemplate:p.serviceTemplate}:{}),ownUnplanned, operationId: command.operationId, timeZone: command.timeZone, intent: billing,
           capture: { workAt: command.capturedAt, pricingIntent: p.pricingIntent } },
       });
       let run = await creator.create({ ...actor }, {

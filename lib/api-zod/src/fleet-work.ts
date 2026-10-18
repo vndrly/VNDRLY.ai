@@ -1,3 +1,4 @@
+import {FleetServiceTemplateSchema,FleetServiceTemplateSaveSchema} from "./fleet-service-template";
 import {FleetTriggerSaveSchema} from "./fleet-monitoring";
 import {z} from "zod/v4";
 import {WorkdayScopeSchema,WorkdayCommandSchema} from "./workday";
@@ -45,7 +46,7 @@ const base={version:z.literal(2),operationId:uuid,scope:FleetWorkScopeSchema,cap
 const capturedCompliance=FleetActionPolicySnapshotSchema.omit({mode:true}).extend({mode:FleetCompliancePolicySchema.shape.mode}).strict();
 const media={byteSize:z.number().int().positive().max(10*1024*1024),sha256:z.string().regex(/^[a-f0-9]{64}$/),contentType:z.enum(["image/jpeg","image/png","image/webp","application/pdf"])};
 const activityCreate=z.object({...base,kind:z.literal("activity.create"),payload:z.object({
- activityId:uuid,accessGroupId:uuid.optional(),originStopId:uuid.optional(),dispatchAfterCreate:z.boolean().optional(),title:z.string().trim().min(1).max(200),detailReference:reference("detail"),detailSnapshot:FleetDetailSnapshotSchema,
+ activityId:uuid,serviceTemplate:FleetServiceTemplateSchema.optional(),accessGroupId:uuid.optional(),originStopId:uuid.optional(),dispatchAfterCreate:z.boolean().optional(),title:z.string().trim().min(1).max(200),detailReference:reference("detail"),detailSnapshot:FleetDetailSnapshotSchema,
  route:FleetRoutePlanSchema,runOrderReference:reference("run_order").nullable(),billing:FleetWorkBillingIntentSchema,
  pricingIntent:FleetPricingIntentSchema,capturePolicy:FleetCompliancePolicySchema.nullable(),compliance:capturedCompliance,
 }).strict()}).strict();
@@ -66,7 +67,7 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  activityCreate,note,action,edit,
  command("activity.legacy_action",z.object({activity:activityRef.refine(ref=>ref.type==="canonical"),base:FleetLegacyAssignmentSchema,ticket:z.object({id,version:z.null(),source:z.literal("legacy_cached_run_link")}).strict(),action:FleetActionInputSchema,source:z.literal("retained_v1"),legacyState:z.enum(["unsynced","conflict","revoked"]),legacySessionVersion:z.number().int().nonnegative(),legacyCaptureZoneSource:z.literal("stored_utc_timestamp"),legacyCompliance:z.literal("not_recorded")}).strict()),
  command("activity.reconcile",z.object({caseId:uuid,expectedVersion:revision,activity:activityRef,originalTicket:FleetWorkTicketReferenceSchema,recoveryDriverUserId:id.optional(),reason:z.string().trim().min(1).max(2000),resolution:FleetWorkResolutionSchema}).strict()),
- command("monitoring.save",FleetTriggerSaveSchema),
+ command("monitoring.save",FleetTriggerSaveSchema),command("service_template.save",FleetServiceTemplateSaveSchema),
  command("detail.save",FleetDetailSaveSchema),command("rig_package.save",FleetRigPackageSaveSchema),
  command("run_order.save",FleetRunOrderSaveSchema),command("location.save",FleetDestinationSaveSchema.extend({localReference:reference("location").refine(ref=>ref.type==="local","A new location needs its local identity").nullable()})),
  command("compliance.receive",z.object({source:FleetComplianceSaveSchema,documentReference:reference("evidence").nullable()}).strict()),command("compliance.review",FleetComplianceVerifySchema),
@@ -90,6 +91,7 @@ export const FleetWorkCommandSchema=z.discriminatedUnion("kind",[
  if(value.kind!=="workday.event"&&value.scope.owner.type!=="vendor")issue("Fleet work requires the original vendor company context");
  if(value.kind==="activity.create"){
    const p=value.payload;
+   if(p.serviceTemplate&&(!p.serviceTemplate.enabled||p.serviceTemplate.revision<1||p.serviceTemplate.serviceId!==p.billing.serviceId))issue("A saved enabled template must belong to the actual offered activity service");
    if(p.detailSnapshot.detail.companyId!==value.scope.owner.id||p.detailSnapshot.carrierOfRecordId!==value.scope.owner.id||p.detailReference.id!==p.detailSnapshot.detail.id)issue("The exact Detail identity and original company must agree");
    if(p.detailReference.type==="canonical"&&p.detailReference.version!==p.detailSnapshot.detail.version)issue("The exact Detail revision must agree");
    if(Date.parse(p.compliance.evaluatedAt)>Date.parse(value.capturedAt))issue("Capture cannot use a future compliance assessment");

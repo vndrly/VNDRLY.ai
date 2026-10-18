@@ -1,8 +1,9 @@
+import {useTranslation} from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
-import { FleetAssetCreateSchema, FleetAssetEditSchema, FleetAssetEnrollmentSchema, FleetInventorySchema, FleetInventoryDetailSchema, FleetInventoryReceiptSchema, type FleetInventory as Inventory, type FleetInventoryDetail } from "@workspace/api-zod";
+import { fleetServiceTemplateLabels, FleetAssetCreateSchema, FleetAssetEditSchema, FleetAssetEnrollmentSchema, FleetInventorySchema, FleetInventoryDetailSchema, FleetInventoryReceiptSchema, type FleetInventory as Inventory, type FleetInventoryDetail } from "@workspace/api-zod";
 import TogglePillButton from "@/components/TogglePillButton";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
@@ -71,14 +72,16 @@ function Field({ label, value, onChange, disabled, maxLength = 200 }: { label: s
 }
 const openFullInventory = () => router.push("/work-hub/inventory" as never);
 type Props = { identity: string; initialAssetId?: string; onSaved?: () => void };
+const FleetServiceTemplates=React.lazy(()=>import("./FleetServiceTemplates"));
 export default function FleetInventory(props: Props) {
   const generation = useAuthGeneration();
   return <InventoryContent key={`${props.identity}:${generation}`} {...props} />;
 }
-function InventoryContent({ initialAssetId, onSaved }: Props) {
+function InventoryContent({ identity, initialAssetId, onSaved }: Props) {
   const c = useFleetInventoryCopy(), colors = useColors(), access = useRequestScope();
   const [list, setList] = useState<Inventory | null>(null), [detail, setDetail] = useState<FleetInventoryDetail | null>(null), [assetId, setAssetId] = useState(initialAssetId ?? "");
-  const [search, setSearch] = useState(""), [fleet, setFleet] = useState(""), [adding, setAdding] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState(""), [freshRevision, setFreshRevision] = useState(0),[showDetails,setShowDetails]=useState(false);
+  const {i18n}=useTranslation();
+  const [search, setSearch] = useState(""), [fleet, setFleet] = useState(""), [adding, setAdding] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState(""), [freshRevision, setFreshRevision] = useState(0),[showDetails,setShowDetails]=useState(false),[showTemplates,setShowTemplates]=useState(false);
   const readGeneration = useRef(0), loadingRef = useRef(false);
   async function load(after?: string) {
     const generation = ++readGeneration.current;
@@ -109,8 +112,8 @@ function InventoryContent({ initialAssetId, onSaved }: Props) {
     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>{!!assetId && <SphereBackButton accessibilityLabel={c.back} onPress={() => { setAssetId(""); setDetail(null); }} />}<Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: "700", flex: 1 }}>{detail?.asset.name ?? c.title}</Text><TogglePillButton compactOnTablet disabled={loading} onPress={() => void load()}>{c.refresh}</TogglePillButton></View>
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
     {loading && <ActivityIndicator accessibilityLabel={c.loading} color={colors.primary} />}
-    {!assetId&&<View style={{flexDirection:"row",gap:10}}><TogglePillButton onPress={()=>setShowDetails(false)}>Inventory</TogglePillButton><TogglePillButton onPress={()=>setShowDetails(true)}>Details</TogglePillButton></View>}
-    {!assetId&&showDetails?<FleetDetailsLibrary/>:assetId ? detail && <AssetDetail key={assetId} data={detail} freshRevision={freshRevision} onSaved={saved} onDenied={denied} /> : <>
+    {!assetId&&<View style={{flexDirection:"row",gap:10}}><TogglePillButton onPress={()=>{setShowDetails(false);setShowTemplates(false);}}>Inventory</TogglePillButton><TogglePillButton onPress={()=>{setShowDetails(true);setShowTemplates(false);}}>Details</TogglePillButton><TogglePillButton onPress={()=>{setShowDetails(false);setShowTemplates(true);}}>{fleetServiceTemplateLabels(i18n?.language??"en").title}</TogglePillButton></View>}
+    {!assetId&&showTemplates?<React.Suspense fallback={<ActivityIndicator color={colors.primary}/>}><FleetServiceTemplates key={identity} identity={identity}/></React.Suspense>:!assetId&&showDetails?<FleetDetailsLibrary/>:assetId ? detail && <AssetDetail key={assetId} data={detail} freshRevision={freshRevision} onSaved={saved} onDenied={denied} /> : <>
       <Field label={c.search} value={search} onChange={setSearch} disabled={false} />
       {(list?.fleets.length ?? 0) > 0 && <View style={{ gap: 8 }}><TogglePillButton compactOnTablet solid={!fleet} onPress={() => setFleet("")}>{c.all}</TogglePillButton>{list?.fleets.map(f => <TogglePillButton compactOnTablet key={f.id} solid={fleet === f.id} onPress={() => setFleet(f.id)}>{f.name}</TogglePillButton>)}</View>}
       {list?.canManage && !adding && !error && <TogglePillButton compactOnTablet onPress={() => setAdding(true)}>{c.add}</TogglePillButton>}

@@ -1,3 +1,4 @@
+import {FleetServiceTemplateSchema} from "./fleet-service-template";
 import {
   FleetDestinationSchema,
   FleetRunCommercialSchema,
@@ -143,6 +144,7 @@ export const FleetRunSchema = z
   .object({
     localWork:z.object({createOperationId:z.uuid(),originStopId:z.uuid(),snapshot:FleetDetailSnapshotSchema,ticket:z.discriminatedUnion("type",[z.object({type:z.literal("local"),kind:z.literal("ticket"),id:z.uuid()}).strict(),z.object({type:z.literal("canonical"),kind:z.literal("ticket"),id:z.number().int().positive(),version:z.number().int().positive()}).strict()]),state:z.literal("pending_server_acceptance")}).strict().optional(),
     runOrder: FleetRunOrderSchema.optional(),
+    serviceTemplate:FleetServiceTemplateSchema.optional(),
     routePlan: FleetRoutePlanSchema.optional(),
     resourceAssignment: FleetResourceAssignmentSchema.optional(),
     billing: FleetRunBillingSnapshotSchema.optional(),
