@@ -1,3 +1,4 @@
+import { applyStaffBearerSession } from "./lib/staff-bearer-session";
 import { RequiredWorkError } from "./work-hub/required-work-guard";
 import express, {
   type Express,
@@ -109,22 +110,7 @@ app.get("/.well-known/oauth-protected-resource/api/assistant-connection/mcp", (_
 // `Authorization: Bearer <token>`. Route the token to the appropriate
 // cookie based on the embedded role so cookie-based session helpers
 // continue to work unchanged for both staff and guests.
-app.use((req, _res, next) => {
-  const auth = req.headers.authorization;
-  if (auth && auth.toLowerCase().startsWith("bearer ")) {
-    const token = auth.slice(7).trim();
-    const cookies: Record<string, string> = req.cookies ?? (req.cookies = {});
-    if (token) {
-      const role = decodeRole(token);
-      if (role === "guest") {
-        if (!cookies["vndrly_guest"]) cookies["vndrly_guest"] = token;
-      } else {
-        if (!cookies["vndrly_session"]) cookies["vndrly_session"] = token;
-      }
-    }
-  }
-  next();
-});
+app.use(applyStaffBearerSession);
 
 // Deny-by-default for guest-role sessions: a request that carries a
 // guest token (and no valid staff session) may only hit the explicit
