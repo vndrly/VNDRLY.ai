@@ -215,6 +215,26 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       mapping,
     };
   }
+  it("blocks an outstanding offer after revocation until the partner deliberately reopens the relationship", async () => {
+    const f = await fixture();
+    const [relationship] = await db.insert(s.partnerVendorRelationshipsTable).values({ partnerId: f.input.partnerId, vendorId: f.vendor.id, status: "revoked" }).returning();
+    await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.relationship_restricted" });
+    expect(await db.select().from(s.ticketsTable).where(eq(s.ticketsTable.jobOfferId, f.sent.id))).toHaveLength(0);
+    expect(await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, f.sent.id))).toHaveLength(0);
+    expect((await db.select().from(s.partnerVendorRelationshipsTable).where(eq(s.partnerVendorRelationshipsTable.id, relationship.id)))[0].status).toBe("revoked");
+    // Same deliberate status transition as the existing partner re-evaluation action.
+    await db.update(s.partnerVendorRelationshipsTable).set({ status: "pending_review" }).where(eq(s.partnerVendorRelationshipsTable.id, relationship.id));
+    expect((await f.api.acceptJobOffer(f.accept)).ticketId).toBeGreaterThan(0);
+  });
+  it("rechecks retired coverage after an address change before creating an acceptance snapshot or ticket", async () => {
+    const f = await fixture();
+    const { updateVendorAddressAndCoverage } = await import("./vendor-address");
+    await updateVendorAddressAndCoverage(db, f.vendor.id, { physicalAddress: "A new unverified service base" });
+    expect((await db.select().from(s.vendorServiceAreasTable).where(eq(s.vendorServiceAreasTable.id, f.area.id)))[0].active).toBe(false);
+    await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.service_area_missing" });
+    expect(await db.select().from(s.ticketsTable).where(eq(s.ticketsTable.jobOfferId, f.sent.id))).toHaveLength(0);
+    expect(await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, f.sent.id))).toHaveLength(0);
+  });
   it("serializes simultaneous accepts and writes exactly one coherent ticket and frozen snapshot", async () => {
     const f = await fixture();
     const { vendorCanReadSite } =

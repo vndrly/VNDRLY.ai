@@ -1659,6 +1659,7 @@ export const ListVendorMarketplaceMatchingDemandResponse = zod.object({
             "INSUFFICIENT_CAPACITY",
             "UNAVAILABLE",
             "RELATIONSHIP_REQUIRED",
+            "RELATIONSHIP_RESTRICTED",
           ]),
         ),
         facts: zod.object({

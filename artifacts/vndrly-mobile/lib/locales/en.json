@@ -134,7 +134,8 @@
       "CREDENTIAL_MISSING": "Required credentials missing",
       "INSUFFICIENT_CAPACITY": "Insufficient crew capacity",
       "UNAVAILABLE": "Unavailable for new work",
-      "RELATIONSHIP_REQUIRED": "Operating relationship required"
+      "RELATIONSHIP_REQUIRED": "Operating relationship required",
+      "RELATIONSHIP_RESTRICTED": "The partner must deliberately reopen this restricted relationship before accepting new work"
     }
   },
   "workHubExports": { "noAccess": "No exports available for this role." },

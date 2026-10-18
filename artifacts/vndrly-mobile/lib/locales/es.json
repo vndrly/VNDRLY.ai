@@ -134,7 +134,8 @@
       "CREDENTIAL_MISSING": "Faltan credenciales requeridas",
       "INSUFFICIENT_CAPACITY": "Capacidad de cuadrillas insuficiente",
       "UNAVAILABLE": "No disponible para nuevos trabajos",
-      "RELATIONSHIP_REQUIRED": "Se requiere relación operativa"
+      "RELATIONSHIP_REQUIRED": "Se requiere relación operativa",
+      "RELATIONSHIP_RESTRICTED": "El socio debe reabrir expresamente esta relación restringida antes de aceptar trabajo nuevo"
     }
   },
   "workHubExports": { "noAccess": "No hay exportaciones disponibles para este rol." },

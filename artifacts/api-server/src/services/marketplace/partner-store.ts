@@ -158,6 +158,7 @@ export async function discoverPartnerMarketplaceVendors(
       currentCredentials: row.currentCredentials,
       requestedCapacity: options.requestedCapacity,
       available: offer.availability?.available !== false,
+      relationshipStatus: row.relationshipStatus,
       now,
     });
     candidates.push({

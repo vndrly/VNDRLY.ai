@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTableName } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { subjectFingerprint } from "../services/service-matching/candidates";
+import { backfillMappingEvidence } from "../../scripts/backfill-semantic-service-marketplace";
 import {
   createPostgresPartnerMarketplaceStore,
   discoverPartnerMarketplaceVendors,
@@ -254,6 +255,32 @@ beforeEach(() => {
   };
 });
 describe("partner marketplace persistence boundary", () => {
+  it("discovers backfill-projected demand and capability using their runtime fingerprints", async () => {
+    const demand = { ...demandMapping, evidence: backfillMappingEvidence({ ...workType, subjectType: "partner_work_type", subjectId: workType.id }, { workTypeId: workType.id }) };
+    state.data.vendor_partner_service_offers[0].capabilityMapping = {
+      ...capabilityMapping,
+      evidence: backfillMappingEvidence({ ...capability, subjectType: "vendor_capability", subjectId: capability.id }, { sourceVendorWorkTypeId: 10 }),
+    };
+    const discover = () => discoverPartnerMarketplaceVendors(createPostgresPartnerMarketplaceStore(), { ...context, demandMapping: demand }, { requestedCapacity: 1 }, now);
+    expect((await discover())[0]?.offerable).toBe(true);
+    state.data.vendor_partner_service_offers[0].capability = { ...capability, name: "Gate actuator repairs" };
+    expect(await discover()).toEqual([]);
+  });
+  it.each(["revoked", "rejected", "suspended"])("blocks explicit %s relationships without requiring a prior relationship", async (status) => {
+    const discover = () => discoverPartnerMarketplaceVendors(createPostgresPartnerMarketplaceStore(), context, { requestedCapacity: 1 }, now);
+    expect((await discover())[0].offerable).toBe(true);
+    state.data.partner_vendor_relationships = [{ vendorId: 3, partnerId: 9, status }];
+    expect((await discover())[0]).toMatchObject({ offerable: false, eligibility: { reasonCodes: ["RELATIONSHIP_RESTRICTED"] } });
+    // Existing partner status action deliberately reopens the relationship.
+    state.data.partner_vendor_relationships[0].status = "pending_review";
+    expect((await discover())[0].offerable).toBe(true);
+  });
+  it("fails closed after source-address retirement of both default and override coverage", async () => {
+    state.data.vendor_service_areas.push({ ...state.data.vendor_service_areas[0], vendorCapabilityId: 7 });
+    for (const area of state.data.vendor_service_areas) { area.active = false; area.effectiveUntil = now; }
+    const rows = await discoverPartnerMarketplaceVendors(createPostgresPartnerMarketplaceStore(), context, { requestedCapacity: 1 }, now);
+    expect(rows[0]).toMatchObject({ offerable: false, eligibility: { reasonCodes: ["SERVICE_AREA_MISSING"] } });
+  });
   it("rechecks live membership and owns both context records", async () => {
     const store = createPostgresPartnerMarketplaceStore();
     const session = {

@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { SESSION_SECRET } from "../lib/session";
 import { findVendorMatches, normalizeVendorName } from "../lib/vendor-match";
+import { updateVendorAddressAndCoverage } from "../services/marketplace/vendor-address";
 import {
   assertCanManageVendorPeople,
   isForemanActor,
@@ -409,17 +410,7 @@ router.patch("/vendors/:id", async (req, res): Promise<void> => {
   let vendor;
   try {
     if (parsed.data.physicalAddress !== undefined) {
-      [vendor] = await db.transaction(async (tx) => {
-        // Lock the address and its derived coordinates together. A move must
-        // be geocoded again before those coordinates can verify new coverage.
-        const [current] = await tx.select({ physicalAddress: vendorsTable.physicalAddress })
-          .from(vendorsTable).where(eq(vendorsTable.id, params.data.id)).for("update");
-        if (!current) return [];
-        const changedAddress = current.physicalAddress !== parsed.data.physicalAddress;
-        return tx.update(vendorsTable).set({ ...parsed.data,
-          ...(changedAddress ? { latitude: null, longitude: null, geocodedAt: null } : {}),
-        }).where(eq(vendorsTable.id, params.data.id)).returning();
-      });
+      [vendor] = await updateVendorAddressAndCoverage(db, params.data.id, parsed.data);
     } else {
       [vendor] = await db
         .update(vendorsTable)

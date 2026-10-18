@@ -1,5 +1,12 @@
 import { pathToFileURL } from "node:url";
 import pg from "pg";
+import { subjectFingerprint } from "../src/services/service-matching/candidates";
+import type { ServiceSubjectInput } from "../src/services/service-matching/types";
+
+/** Bind runtime eligibility to the exact saved wording, not its retrieval normalization. */
+export function backfillMappingEvidence(subject: ServiceSubjectInput, lineage: Record<string, unknown>) {
+  return { semanticMarketplaceBackfill: lineage, serviceMatching: { subjectFingerprint: subjectFingerprint(subject) } };
+}
 
 const PROCESS = "semantic-service-marketplace-backfill:v1";
 const LOCK_KEY = 2026101802;
@@ -185,10 +192,15 @@ export async function runSemanticServiceMarketplaceBackfill(client: Queryable, o
       await client.query("begin");
       try {
         for (const row of plan.mappings.slice(offset, offset + options.batchSize)) {
+          await client.query(`select pg_advisory_xact_lock(hashtextextended($1, 0))`, [`service-mapping:partner_work_type:${row.workTypeId}`]);
+          const saved = (await client.query<WorkTypeRow>(`select id, name, description, category from work_types where id=$1 for update`, [row.workTypeId])).rows[0];
+          const planned = beforeSnapshot.workTypes.find(subject => subject.id === row.workTypeId)!;
+          const subject = { subjectType: "partner_work_type" as const, subjectId: row.workTypeId, ...saved };
+          if (!saved || subjectFingerprint(subject) !== subjectFingerprint({ ...planned, subjectType: "partner_work_type", subjectId: row.workTypeId })) throw new Error(`Work type ${row.workTypeId} changed since backfill planning; rerun dry run`);
           const canonicalId = row.status === "active" ? await resolveCanonicalId(client, row.canonicalServiceId, row.canonicalServiceCode) : null;
           const inserted = await client.query(`insert into service_mappings (subject_type,subject_id,work_type_id,canonical_service_id,status,confidence,explanation,evidence,model_version,mapping_version,actor_process)
             select 'partner_work_type',$1,$1,$2,$3,$4,$5,$6::jsonb,'deterministic-exact-v1',coalesce((select max(mapping_version)+1 from service_mappings where subject_type='partner_work_type' and subject_id=$1),1),$7
-            where not exists (select 1 from service_mappings where subject_type='partner_work_type' and subject_id=$1 and actor_process=$7)`, [row.workTypeId, canonicalId, row.status, String(row.confidence), row.status === "active" ? "Deterministic exact normalized catalog match" : "Ambiguous exact alias requires review", JSON.stringify({ semanticMarketplaceBackfill: { workTypeId: row.workTypeId, candidateCanonicalServiceIds: row.candidateCanonicalServiceIds, activationThreshold: options.activationThreshold } }), PROCESS]);
+            where not exists (select 1 from service_mappings where subject_type='partner_work_type' and subject_id=$1 and actor_process=$7)`, [row.workTypeId, canonicalId, row.status, String(row.confidence), row.status === "active" ? "Deterministic exact normalized catalog match" : "Ambiguous exact alias requires review", JSON.stringify(backfillMappingEvidence(subject, { workTypeId: row.workTypeId, candidateCanonicalServiceIds: row.candidateCanonicalServiceIds, activationThreshold: options.activationThreshold })), PROCESS]);
           insertedMappings += inserted.rowCount ?? 0;
         }
         await client.query("commit");
@@ -203,9 +215,12 @@ export async function runSemanticServiceMarketplaceBackfill(client: Queryable, o
         let capabilityId = capability.rows[0]?.id;
         if (capabilityId) insertedCapabilities += 1;
         else capabilityId = (await client.query<{ id: number }>(`select id from vendor_capabilities where evidence->'semanticMarketplaceBackfill'->>'sourceVendorWorkTypeId'=$1`, [String(row.sourceVendorWorkTypeId)])).rows[0]!.id;
+        await client.query(`select pg_advisory_xact_lock(hashtextextended($1, 0))`, [`service-mapping:vendor_capability:${capabilityId}`]);
+        const saved = (await client.query<{ name: string; description: string | null; active: boolean }>(`select name, description, active from vendor_capabilities where id=$1 for update`, [capabilityId])).rows[0];
+        if (!saved?.active || saved.name !== row.name || saved.description !== row.description) throw new Error(`Capability ${capabilityId} changed since backfill planning; review required`);
         const inserted = await client.query(`insert into service_mappings (subject_type,subject_id,vendor_capability_id,canonical_service_id,status,confidence,explanation,evidence,model_version,mapping_version,actor_process)
           select 'vendor_capability',$1,$1,$2,'active','1','Projected from an active legacy vendor catalog selection',$3::jsonb,'deterministic-lineage-v1',coalesce((select max(mapping_version)+1 from service_mappings where subject_type='vendor_capability' and subject_id=$1),1),$4
-          where not exists (select 1 from service_mappings where subject_type='vendor_capability' and subject_id=$1 and actor_process=$4)`, [capabilityId, canonicalId, JSON.stringify({ semanticMarketplaceBackfill: { sourceVendorWorkTypeId: row.sourceVendorWorkTypeId, canonicalServiceId: canonicalId } }), PROCESS]);
+          where not exists (select 1 from service_mappings where subject_type='vendor_capability' and subject_id=$1 and actor_process=$4)`, [capabilityId, canonicalId, JSON.stringify(backfillMappingEvidence({ ...saved, subjectType: "vendor_capability", subjectId: capabilityId }, { sourceVendorWorkTypeId: row.sourceVendorWorkTypeId, canonicalServiceId: canonicalId })), PROCESS]);
         insertedMappings += inserted.rowCount ?? 0;
         await client.query("commit");
       } catch (error) { await client.query("rollback"); throw error; }

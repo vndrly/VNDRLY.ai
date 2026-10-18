@@ -209,6 +209,7 @@ describe("admin service mapping review", () => {
       actorUserId: 7,
       modelVersion: "model:v1",
       confidence: 0.74,
+      evidence: { serviceMatching: { subjectFingerprint: subjectFingerprint(subject) } },
     });
     expect(rows[0]).toMatchObject({
       status: "review_required",

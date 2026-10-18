@@ -24,6 +24,7 @@ import { createTicketWithHistory } from "../../lib/create-ticket";
 import { logger } from "../../lib/logger";
 import type { JobOfferPersistence, JobOfferTransaction } from "./job-offers";
 import { peakReservedCrews } from "./crew-capacity";
+import { isMarketplaceRelationshipRestricted } from "./eligibility";
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 function adapter(tx: Transaction): JobOfferTransaction {
@@ -94,6 +95,14 @@ function adapter(tx: Transaction): JobOfferTransaction {
         .limit(100);
     },
     async validate(input, now) {
+      // Share locks make address invalidation and explicit relationship
+      // revocation linearize before or after the entire acceptance transaction.
+      await tx.select({ id: vendorsTable.id }).from(vendorsTable)
+        .where(eq(vendorsTable.id, input.vendorId)).for("share");
+      const [relationship] = await tx.select({ status: relationships.status }).from(relationships)
+        .where(and(eq(relationships.partnerId, input.partnerId), eq(relationships.vendorId, input.vendorId))).for("share");
+      if (isMarketplaceRelationshipRestricted(relationship?.status))
+        throw new MarketplaceError(409, "marketplace.relationship_restricted");
       // Shared capability lock also serializes overlapping acceptances across distinct offers.
       const [capability] = await tx
         .select()

@@ -66,6 +66,7 @@ export interface EligibilityInput {
   now: Date;
   relationshipRequired?: boolean;
   relationshipApproved?: boolean;
+  relationshipStatus?: string | null;
   internalEvidence?: Record<string, unknown>;
 }
 export type EligibilityReason =
@@ -83,7 +84,8 @@ export type EligibilityReason =
   | "CREDENTIAL_MISSING"
   | "INSUFFICIENT_CAPACITY"
   | "UNAVAILABLE"
-  | "RELATIONSHIP_REQUIRED";
+  | "RELATIONSHIP_REQUIRED"
+  | "RELATIONSHIP_RESTRICTED";
 export interface EligibilityResult {
   eligible: boolean;
   reasonCodes: EligibilityReason[];
@@ -201,6 +203,7 @@ export async function evaluateMarketplaceEligibility(
     "INSUFFICIENT_CAPACITY",
   );
   add(!input.available, "UNAVAILABLE");
+  add(isMarketplaceRelationshipRestricted(input.relationshipStatus), "RELATIONSHIP_RESTRICTED");
   add(
     input.relationshipRequired === true && input.relationshipApproved !== true,
     "RELATIONSHIP_REQUIRED",
@@ -217,4 +220,9 @@ export async function evaluateMarketplaceEligibility(
     },
     internalEvidence: input.internalEvidence ?? {},
   };
+}
+
+/** Absence is not a restriction; revocation requires deliberate partner re-engagement. */
+export function isMarketplaceRelationshipRestricted(status: string | null | undefined): boolean {
+  return ["revoked", "rejected", "suspended"].includes(status ?? "");
 }

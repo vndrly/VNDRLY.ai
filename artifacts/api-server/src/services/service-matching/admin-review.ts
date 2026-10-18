@@ -98,6 +98,12 @@ export async function reviewServiceMapping(
         modelVersion: source.modelVersion,
         evidence: {
           ...source.evidence,
+          // Older backfills lacked this runtime contract. A deliberate review
+          // binds the decision to the saved subject locked above.
+          serviceMatching: {
+            ...(source.evidence.serviceMatching as Record<string, unknown> | undefined),
+            subjectFingerprint: subjectFingerprint(savedSubject),
+          },
           adminReview: {
             sourceMappingId: source.id,
             action: review.action,

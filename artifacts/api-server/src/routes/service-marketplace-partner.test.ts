@@ -369,7 +369,7 @@ describe("partner marketplace discovery", () => {
     expect(next.body.items.map((x: any) => x.vendorId)).toEqual([3]);
   });
   it("does not require prior relationship approval and still blocks direct compliance failures", async () => {
-    for (const relationshipStatus of [null, "pending_review", "revoked"]) {
+    for (const relationshipStatus of [null, "pending_review", "approved"]) {
       rows[0].relationshipStatus = relationshipStatus;
       const result = await request(app)
         .get(path + "?siteId=8")
@@ -379,6 +379,15 @@ describe("partner marketplace discovery", () => {
         relationshipStatus,
       });
     }
+    for (const relationshipStatus of ["revoked", "rejected", "suspended"]) {
+      rows[0].relationshipStatus = relationshipStatus;
+      const result = await request(app).get(path + "?siteId=8").set("Cookie", cookie);
+      expect(result.body.items[0]).toMatchObject({
+        offerable: false, relationshipStatus,
+        eligibility: { reasonCodes: ["RELATIONSHIP_RESTRICTED"] },
+      });
+    }
+    rows[0].relationshipStatus = null;
     rows[0].complianceCurrent = false;
     const blocked = await request(app)
       .get(path + "?siteId=8")

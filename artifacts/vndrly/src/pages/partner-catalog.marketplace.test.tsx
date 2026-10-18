@@ -374,6 +374,15 @@ describe("partner marketplace", () => {
     await discover();
     expect(screen.getByText("Insufficient crew capacity")).toBeTruthy();
   });
+  it("explains a restricted relationship and prevents preparing new work", async () => {
+    vendors[0].offerable = false;
+    vendors[0].relationshipStatus = "revoked";
+    vendors[0].eligibility = { ...vendors[0].eligibility, eligible: false, reasonCodes: ["RELATIONSHIP_RESTRICTED"] };
+    mount();
+    await discover();
+    expect(screen.getByText("The partner must deliberately reopen this restricted relationship before new work can be accepted")).toBeTruthy();
+    expect((within(screen.getByRole("region", { name: "MidCon" })).getByRole("button", { name: "Prepare job offer" }) as HTMLButtonElement).disabled).toBe(true);
+  });
   it("compares each offered capability independently for a vendor with multiple offers", async () => {
     vendors.push({
       ...structuredClone(midcon),

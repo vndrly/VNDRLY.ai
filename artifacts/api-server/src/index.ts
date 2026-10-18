@@ -94,6 +94,7 @@ import { startReliableNotificationWorker, stopReliableNotificationWorker } from 
 import { startImplementationARetentionWorker, stopImplementationARetentionWorker } from "./services/operations-health";
 import { startNativeOperationsWorker, stopNativeOperationsWorker } from "./services/native-operations";
 import { startJobOfferExpiryWorker, stopJobOfferExpiryWorker } from "./services/marketplace/job-offer-expiry-worker";
+import { startCatalogClassificationWorker, stopCatalogClassificationWorker } from "./services/service-matching/catalog-classification";
 import { startGateCoverageMonitor, stopGateCoverageMonitor } from "./services/gate-coverage-monitor";
 
 const rawPort = process.env["PORT"];
@@ -176,7 +177,10 @@ function onListening(): void {
   startNotificationEventBus();
   startMajikEventBus();
   startScheduledNotificationWorker();
-  if (process.env.SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true") startJobOfferExpiryWorker();
+  if (process.env.SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true") {
+    startJobOfferExpiryWorker();
+    startCatalogClassificationWorker();
+  }
   startReliableNotificationWorker();
   startImplementationARetentionWorker();
   startNativeOperationsWorker();
@@ -259,6 +263,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopGateEvidenceCleanupWorker();
   stopScheduledNotificationWorker();
   stopJobOfferExpiryWorker();
+  stopCatalogClassificationWorker();
   stopReliableNotificationWorker();
   stopImplementationARetentionWorker();
   stopNativeOperationsWorker();

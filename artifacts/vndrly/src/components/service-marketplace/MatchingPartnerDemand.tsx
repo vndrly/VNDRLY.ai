@@ -33,6 +33,7 @@ const reasonKeys = {
   INSUFFICIENT_CAPACITY: "marketplace.reasons.capacity",
   UNAVAILABLE: "marketplace.reasons.unavailable",
   RELATIONSHIP_REQUIRED: "marketplace.reasons.relationship",
+  RELATIONSHIP_RESTRICTED: "marketplace.reasons.relationshipRestricted",
 } as const;
 
 export type PartnerRateDraft = {

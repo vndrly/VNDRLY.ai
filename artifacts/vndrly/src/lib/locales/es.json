@@ -5815,7 +5815,8 @@
       "credentials": "Faltan credenciales requeridas",
       "capacity": "Capacidad de cuadrillas insuficiente",
       "unavailable": "No disponible para trabajo nuevo",
-      "relationship": "Se requiere una relación operativa aprobada"
+      "relationship": "Se requiere una relación operativa aprobada",
+      "relationshipRestricted": "El socio debe reabrir expresamente esta relación restringida antes de aceptar trabajo nuevo"
     }
   },
   "cameraCenter": {

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
+import { createPostgresPartnerMarketplaceStore, discoverPartnerMarketplaceVendors } from "../services/marketplace/partner-store";
 import {
   buildSemanticMarketplaceBackfillPlan,
   assertSemanticMarketplaceBackfillApplyGuard,
@@ -44,6 +45,21 @@ describe.runIf(process.env.VNDRLY_ISOLATED_TEST_DB === "1")("semantic marketplac
   });
   afterAll(async () => { await client?.end(); });
 
+  it("makes newly backfilled saved demand discoverable with its persisted capability mapping", async () => {
+    const partner = (await client.query<{ id: number }>(`insert into partners (name,contact_name,contact_email) values ('Fingerprint Partner','Test','fingerprint-partner@example.invalid') returning id`)).rows[0].id;
+    const vendor = (await client.query<{ id: number }>(`insert into vendors (name,contact_name,contact_email,federal_tax_id,coi_document_url,insurance_expiration_date,w9_document_url,wc_document_url,wc_expiration_date,gl_document_url,gl_expiration_date,auto_liability_document_url,auto_liability_expiration_date) values ('Fingerprint Vendor','Test','fingerprint-vendor@example.invalid','00-0000000','test','2099-01-01','test','test','2099-01-01','test','2099-01-01','test','2099-01-01') returning id`)).rows[0].id;
+    await client.query(`insert into canonical_services (code,name,category,definition) values ('backfill-fingerprint','Backfill fingerprint scope','Testing','Fingerprint scope')`);
+    const work = (await client.query<{ id: number }>(`insert into work_types (partner_id,name,category,description) values ($1,'Backfill fingerprint scope','Testing','Exact persisted punctuation: A/B') returning id`, [partner])).rows[0].id;
+    await client.query(`insert into vendor_work_types (vendor_id,work_type_id,unit_price,unit,currency) values ($1,$2,'32.00','per_hour','USD')`, [vendor, work]);
+    const site = (await client.query<{ id: number }>(`insert into site_locations (partner_id,name,address,latitude,longitude,site_code) values ($1,'Fingerprint site','Test site',35,-97,'BACKFILL-FINGERPRINT') returning id`, [partner])).rows[0].id;
+    await client.query(`insert into vendor_service_areas (vendor_id,address,latitude,longitude,radius_miles,coordinate_provenance,verified_at,effective_from) values ($1,'Test base',35,-97,50,'test','2026-01-01','2026-01-01')`, [vendor]);
+    await runSemanticServiceMarketplaceBackfill(client, { dryRun: false, activationThreshold: .98, maxConflictRate: 1, batchSize: 1 });
+    const store = createPostgresPartnerMarketplaceStore();
+    const context = await store.loadContext(partner, work, site);
+    expect(context).not.toBeNull();
+    const results = await discoverPartnerMarketplaceVendors(store, context!, { requestedCapacity: 1 }, new Date("2026-12-01"));
+    expect(results).toEqual([expect.objectContaining({ vendorId: vendor, offerable: true })]);
+  });
   it("resumes a partial persisted run, preserves legacy rows, and makes the second apply a no-op", async () => {
     const partner = (await client.query<{ id: number }>(`insert into partners (name,contact_name,contact_email) values ('Backfill Test Partner','Test','backfill-partner@example.invalid') returning id`)).rows[0]!.id;
     const vendor = (await client.query<{ id: number }>(`insert into vendors (name,contact_name,contact_email) values ('Backfill Test Vendor','Test','backfill-vendor@example.invalid') returning id`)).rows[0]!.id;

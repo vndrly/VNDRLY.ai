@@ -5815,7 +5815,8 @@
       "credentials": "Required credentials are missing",
       "capacity": "Insufficient crew capacity",
       "unavailable": "Unavailable for new work",
-      "relationship": "An approved operating relationship is required"
+      "relationship": "An approved operating relationship is required",
+      "relationshipRestricted": "The partner must deliberately reopen this restricted relationship before new work can be accepted"
     }
   },
   "cameraCenter": {

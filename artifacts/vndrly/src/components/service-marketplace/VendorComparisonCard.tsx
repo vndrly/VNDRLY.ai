@@ -19,6 +19,7 @@ const reasonKeys: Record<string, string> = {
   INSUFFICIENT_CAPACITY: "marketplace.reasons.capacity",
   UNAVAILABLE: "marketplace.reasons.unavailable",
   RELATIONSHIP_REQUIRED: "marketplace.reasons.relationship",
+  RELATIONSHIP_RESTRICTED: "marketplace.reasons.relationshipRestricted",
 };
 
 export default function VendorComparisonCard({
