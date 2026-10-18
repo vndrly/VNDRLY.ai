@@ -348,7 +348,8 @@
     "biometricEnableBody": "Use {{label}} to sign in faster next time.",
     "signInWith": "Sign in with {{label}}",
     "forget": "Forget {{label}}",
-    "eulaLink": "End User License Agreement"
+    "eulaLink": "End User License Agreement",
+    "smsEnrollmentLink": "SMS Enrollment"
   },
   "contextPicker": {
     "title": "Choose your organization",

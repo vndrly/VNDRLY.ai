@@ -426,6 +426,7 @@
     "newToVndrlyAttribution": "~ Djon Tsu",
     "resetPassword": "Reset my Password",
     "eulaLink": "End User License Agreement",
+    "smsEnrollmentLink": "SMS Enrollment",
     "loginFailed": "Login failed",
     "resetDemoInSync": "Demo logins are already in sync",
     "resetDemoRestored": "Restored: {{users}}",

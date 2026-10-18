@@ -461,6 +461,10 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
               >
                 {t("login.eulaLink")}
               </a>
+              <br />
+              <a href="/sms/" className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors" data-testid="link-sms-enrollment">
+                {t("login.smsEnrollmentLink")}
+              </a>
             </p>
           </div>
 

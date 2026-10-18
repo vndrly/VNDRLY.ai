@@ -348,7 +348,8 @@
     "biometricEnableBody": "Usa {{label}} para iniciar sesión más rápido la próxima vez.",
     "signInWith": "Iniciar sesión con {{label}}",
     "forget": "Olvidar {{label}}",
-    "eulaLink": "Acuerdo de licencia de usuario final"
+    "eulaLink": "Acuerdo de licencia de usuario final",
+    "smsEnrollmentLink": "Inscripción por SMS"
   },
   "contextPicker": {
     "title": "Elija su organización",
