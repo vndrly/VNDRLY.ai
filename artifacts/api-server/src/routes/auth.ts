@@ -24,7 +24,8 @@ import crypto from "crypto";
 import { DEMO_USERS } from "../lib/demo-users";
 import { syncDemoUsersInDatabase } from "../lib/demo-user-seed-db";
 import { logger } from "../lib/logger";
-import { SESSION_SECRET } from "../lib/session";
+import { SESSION_SECRET, decodeSession } from "../lib/session";
+import { revokeStaffSession } from "../lib/staff-session-revocation";
 import { loginBrandQueryFromContext } from "../lib/loginBrandQuery";
 import { requireIsolatedFixtureContext } from "../lib/isolated-fixture-guard";
 
@@ -363,6 +364,7 @@ export function buildSessionCookie(
       iat: nowSecs,
       exp: nowSecs + (publicDemo ? 2*60*60 : SESSION_TTL_SECS),
       sv: user.sessionVersion ?? 1,
+      sid: crypto.randomUUID(),
     }),
   ).toString("base64");
   return signPayload(payload);
@@ -587,16 +589,27 @@ router.post("/auth/logout", async (req, res) => {
         const ctx = await resolveContext(user);
         loginBrandQuery = loginBrandQueryFromContext(ctx);
       }
-      await db
-        .update(usersTable)
-        .set({ sessionVersion: sql`${usersTable.sessionVersion} + 1` })
-        .where(eq(usersTable.id, session.userId as number));
-    } catch {
-      // Non-fatal: the cookie is still cleared and the client session ends.
+      const token = req.cookies?.[COOKIE_NAME] || req.headers.authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+      const signedSession = decodeSession(token);
+      if (!token || !signedSession) return res.status(401).json({ code: "auth.session_invalidated" });
+      await revokeStaffSession(token, signedSession);
+    } catch (error) {
+      logger.warn({ err: error }, "Unable to persist device logout");
+      return res.status(503).json({ message: "Unable to sign out securely. Please retry.", code: "auth.access_unavailable" });
     }
   }
   res.clearCookie(COOKIE_NAME, { path: "/" });
   return res.json({ message: "Logged out", loginBrandQuery });
+});
+
+// Explicit account-wide revocation also invalidates independently consented OAuth grants.
+router.post("/auth/logout-all", async (req, res) => {
+  const session = readSession(req);
+  if (!session?.userId || typeof session.sv !== "number") return res.status(401).json({ code: "auth.unauthenticated" });
+  await db.update(usersTable).set({ sessionVersion: sql`${usersTable.sessionVersion} + 1` })
+    .where(and(eq(usersTable.id, session.userId), eq(usersTable.sessionVersion, session.sv)));
+  res.clearCookie(COOKIE_NAME, { path: "/" });
+  return res.json({ message: "Signed out everywhere" });
 });
 
 function readSession(

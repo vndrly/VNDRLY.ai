@@ -9,7 +9,8 @@ import express, {
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { isStaffSessionRevoked } from "./lib/staff-session-revocation";
 import { db, usersTable } from "@workspace/db";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -152,9 +153,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Staff session version guard: on every authenticated staff request,
 // validate that the token's embedded session version (sv) matches the
-// current value stored in the database. This makes explicit logout and
-// any access-revocation (membership removal, user disable) immediately
-// effective even for long-lived Bearer tokens that have not yet expired.
+// current value stored in the database, plus this device's durable revocation.
+// Device logout and global revocation (membership removal, user disable) take
+// effect even for long-lived Bearer tokens that have not yet expired.
 app.use(async (req: Request, res: Response, next: NextFunction) => {
   if (!req.path.startsWith("/api/")) return next();
 
@@ -175,7 +176,7 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
 
   try {
     const [row] = await db
-      .select({ sv: usersTable.sessionVersion })
+      .select({ sv: usersTable.sessionVersion, revocations: sql`revoked_staff_sessions` })
       .from(usersTable)
       .where(eq(usersTable.id, session.userId))
       .limit(1);
@@ -190,7 +191,7 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    if (row.sv !== session.sv) {
+    if (row.sv !== session.sv || isStaffSessionRevoked(row.revocations, token)) {
       res.clearCookie("vndrly_session", { path: "/" });
       return res.status(401).json({
         message: "Session has been invalidated",
@@ -215,10 +216,9 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       });
     }
   } catch (err) {
-    // On a transient DB error let the request through; route-level
-    // auth still validates the token signature and expiry.
-    if (session.managedSubcontractor) return res.status(503).json({ message: "Unable to verify access", code: "auth.access_unavailable" });
-    logger.warn({ err }, "Session version check failed — allowing request");
+    // A database outage cannot make a durably revoked token valid again.
+    logger.warn({ err }, "Unable to verify staff session revocation");
+    return res.status(503).json({ message: "Unable to verify access", code: "auth.access_unavailable" });
   }
 
   next();

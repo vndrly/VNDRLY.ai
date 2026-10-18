@@ -49,3 +49,20 @@ Action claims commit before domain execution. Completed results are stored befor
 Before main promotion, run the five repository verification gates on the exact tree. The isolated concurrency test only runs with the fresh loopback test-database provenance marker and uses its own one-connection pool. Check live health, discovery JSON, unauthenticated MCP challenge, ChatGPT account linking, a permission-scoped read and an explicitly authorized harmless write/result readback. Keep implemented, validated, deployed and live-account-verified status distinct.
 
 No public marketplace submission or App Store release is included in account-connection setup. Native tracking/offline/wake-word/Twilio capabilities remain separate implementation work.
+## Device sign-out and ChatGPT authorization
+
+Ordinary Sign Out revokes only the signed-out device's exact login token. Each
+new login has a unique signed identity. A private, additive database column
+retains only token fingerprints until expiry, so revocation survives API restarts
+without exposing tokens through user records. Browser consent and approval
+pages reject signed-out device tokens as well.
+
+ChatGPT's separately consented OAuth grant survives ordinary device sign-out.
+Password changes, account suspension, authority changes, explicit disconnection
+and `POST /api/auth/logout-all` continue to revoke the affected authorization.
+The staff guard fails closed if durable revocation cannot be checked. None of
+these sign-out actions end a staff shift.
+
+An authorization already invalidated by the former account-wide logout behavior
+needs one fresh connection to the same VNDRLY account and chosen scopes. Existing
+revoked grants are never restored or silently upgraded.
