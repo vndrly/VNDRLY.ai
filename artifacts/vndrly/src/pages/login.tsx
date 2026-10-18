@@ -465,6 +465,10 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
               <a href="/sms/" className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors" data-testid="link-sms-enrollment">
                 {t("login.smsEnrollmentLink")}
               </a>
+              <br />
+              <a href="/legal/privacy/" className="hover:underline" data-testid="link-privacy-policy">{t("login.privacyPolicyLink")}</a>
+              {" · "}
+              <a href="/legal/terms/" className="hover:underline" data-testid="link-terms-conditions">{t("login.termsConditionsLink")}</a>
             </p>
           </div>
 

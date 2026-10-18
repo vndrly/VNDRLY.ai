@@ -427,6 +427,8 @@
     "resetPassword": "Restablecer mi Contraseña",
     "eulaLink": "Acuerdo de licencia de usuario final",
     "smsEnrollmentLink": "Inscripción por SMS",
+    "privacyPolicyLink": "Política de privacidad",
+    "termsConditionsLink": "Términos y condiciones",
     "loginFailed": "Error al iniciar sesión",
     "resetDemoInSync": "Los accesos de demo ya están sincronizados",
     "resetDemoRestored": "Restaurados: {{users}}",

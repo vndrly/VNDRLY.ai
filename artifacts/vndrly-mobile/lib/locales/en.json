@@ -349,7 +349,9 @@
     "signInWith": "Sign in with {{label}}",
     "forget": "Forget {{label}}",
     "eulaLink": "End User License Agreement",
-    "smsEnrollmentLink": "SMS Enrollment"
+    "smsEnrollmentLink": "SMS Enrollment",
+    "privacyPolicyLink": "Privacy Policy",
+    "termsConditionsLink": "Terms & Conditions"
   },
   "contextPicker": {
     "title": "Choose your organization",

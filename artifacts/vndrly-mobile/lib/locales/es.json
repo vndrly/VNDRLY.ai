@@ -349,7 +349,9 @@
     "signInWith": "Iniciar sesión con {{label}}",
     "forget": "Olvidar {{label}}",
     "eulaLink": "Acuerdo de licencia de usuario final",
-    "smsEnrollmentLink": "Inscripción por SMS"
+    "smsEnrollmentLink": "Inscripción por SMS",
+    "privacyPolicyLink": "Política de privacidad",
+    "termsConditionsLink": "Términos y condiciones"
   },
   "contextPicker": {
     "title": "Elija su organización",

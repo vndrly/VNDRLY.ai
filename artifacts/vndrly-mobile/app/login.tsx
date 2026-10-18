@@ -324,6 +324,13 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
+            <TouchableOpacity onPress={() => void Linking.openURL("https://vndrly.ai/legal/privacy/")} disabled={busy} style={styles.linkButton} testID="link-privacy-policy">
+              <Text style={[styles.linkText, { color: colors.mutedForeground }]}>{t("login.privacyPolicyLink")}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => void Linking.openURL("https://vndrly.ai/legal/terms/")} disabled={busy} style={styles.linkButton} testID="link-terms-conditions">
+              <Text style={[styles.linkText, { color: colors.mutedForeground }]}>{t("login.termsConditionsLink")}</Text>
+            </TouchableOpacity>
+
             {/* Demo password reset button intentionally removed — passwords
                 are managed via the DEMO_PASSWORD_OVERRIDE secret on the API
                 server so the dev/prod databases stay in sync and never
