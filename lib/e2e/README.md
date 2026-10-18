@@ -78,6 +78,32 @@ It resets a schema and must not be used for the no-wipe validation workflow.
 
 ## Run
 
+For the Fleet production offline acceptance case, use the same fresh-local
+environment above, then run:
+
+```powershell
+$env:FLEET_COMMERCIAL_WORK_V2 = '1'
+$env:E2E_PRODUCTION_PREVIEW = '1'
+pnpm run test:e2e fleet-production-offline.spec.ts
+```
+
+This builds an isolated production preview and uses the real application,
+encrypted browser storage, Fleet service worker and test-owned API. The test
+grants Chromium's actual durable-storage permission in a new synthetic browser
+profile; it does not replace storage APIs or pretend a persistence denial is a
+grant. It closes/reopens that profile offline, creates a ticketed run and photo
+through the forms, loses a response after the real server commit, then checks
+independent database results and excludes API/private objects from shared
+caches. This browser case does not establish physical iPhone acceptance.
+
+Leave `E2E_PRODUCTION_PREVIEW` unset for the ordinary development-server suite;
+its source-module fixture tests deliberately require the Vite development
+server. The dedicated ports and fresh-local database guards remain unchanged.
+For a backend/test-only correction with the exact same frontend and shared
+runtime sources, `E2E_PRODUCTION_PREVIEW=reuse` reuses that already built
+preview. Rebuild with `1` after changing any frontend/shared runtime or build
+input; reuse is not evidence of a fresh build or a release build.
+
 ```powershell
 pnpm run test:e2e
 ```

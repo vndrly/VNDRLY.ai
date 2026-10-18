@@ -34,8 +34,9 @@ export type FleetWorkReference=z.infer<typeof FleetWorkReferenceSchema>;
 const reference=(kind:FleetWorkReference["kind"])=>FleetWorkReferenceSchema.refine(value=>value.kind===kind,`An exact ${kind} reference is required`);
 export const FleetWorkTicketReferenceSchema=reference("ticket");
 const activityRef=reference("activity");
-export function fleetWorkReferenceLabel(input:unknown):string{
+export function fleetWorkReferenceLabel(input:unknown,language="en"):string{
  const value=FleetWorkReferenceSchema.parse(input);
+ if(value.type==="local"&&language.startsWith("es"))return value.kind==="ticket"?"Ticket local — sincronización pendiente":`Referencia local — sincronización pendiente`;
  if(value.type==="local")return value.kind==="ticket"?"Local ticket — pending sync":`Local ${value.kind.replaceAll("_"," ")} — pending sync`;
  return value.kind==="ticket"?`Ticket #${value.id}`:`${value.kind.replaceAll("_"," ")} ${value.id}`;
 }

@@ -22,7 +22,7 @@ import { ActivityIndicator, AppState, Pressable, useWindowDimensions, ScrollView
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import type { FleetOverview, FleetRun, FleetResources, FleetActionInput } from "@workspace/api-zod";
-import { CreateFleetRunSchema, previewFleetRunActions, previewFleetWorkEntries, fleetStorageHealthMessage } from "@workspace/api-zod";
+import { CreateFleetRunSchema, previewFleetRunActions, previewFleetWorkEntries, fleetStorageHealthMessage,fleetWorkReferenceLabel } from "@workspace/api-zod";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import TogglePillButton from "@/components/TogglePillButton";
@@ -455,6 +455,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     </>}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     {!current && !!error && <TogglePillButton compactOnTablet onPress={() => setMode("inventory")}>{copy("Inventory and Details")}</TogglePillButton>}
+    {run?.localWork&&<Text style={textStyle}>{fleetWorkReferenceLabel(run.localWork.ticket,i18n.language)}</Text>}
     {(run?.ticketReference||run?.localWork) && proposed && <Text style={textStyle}>{copy("Device-only sequence — pending server acceptance. The map and run status show canonical records.")}</Text>}
     {cachedAt && <Text style={textStyle}>{copy("Offline assigned-work cache from ")}{cachedAt}{copy(". Permissions and readiness are unverified. Entries remain unsynced until the server accepts them; no location is collected.")}</Text>}
     {queued.length > 0 && <Text style={textStyle}>{copy("Queued entries")}: {queued.length}/{FLEET_OFFLINE_MAX_ACTIONS} · {copy("Device storage is bounded; longer reports may need synchronization before another capture.")}</Text>}
