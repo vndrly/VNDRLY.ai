@@ -1,5 +1,5 @@
 import {FleetDestinationDirectorySchema} from "./fleet-commercial";
-import {FleetRecoverySourcePageSchema} from "./fleet-recovery-sources";
+import {FleetRecoverySourcePageSchema,FleetRecoverySourcePlanSchema} from "./fleet-recovery-sources";
 import type {FleetStorageHealth} from "./fleet-storage-health";
 import {FleetRunOrderPageSchema,FleetRunOrderSchema} from "./fleet-run-order";
 import {FleetWorkEvidencePageSchema} from "./fleet-evidence-upload";
@@ -98,6 +98,7 @@ export async function openFleetWorkSession(options:{account:FleetWorkAccount;ind
   async reconciliation(after?:string){current();const result=FleetReconciliationPageSchema.parse(await options.http("/api/fleet/work/reconciliation",{scope,after}));current();return result;},
   async recoveryOptions(caseId:string,after?:string){current();const result=FleetRecoveryOptionsSchema.parse(await options.http(`/api/fleet/work/reconciliation/${z.uuid().parse(caseId)}/options`,{scope,after}));current();return result;},
   async recoverySources(caseId:string,cursor?:string){current();const result=FleetRecoverySourcePageSchema.parse(await options.http(`/api/fleet/work/reconciliation/${z.uuid().parse(caseId)}/sources`,{scope,cursor}));current();if(result.caseId!==caseId)throw Error("Original recovery case changed");return result;},
+  async recoverySourcePlan(caseId:string){current();const result=FleetRecoverySourcePlanSchema.parse(await options.http(`/api/fleet/work/reconciliation/${z.uuid().parse(caseId)}/source-plan`,{scope}));current();if(result.caseId!==caseId)throw Error("Original recovery case changed");return result;},
   async recoveryDetail(id:string){current();const key=`detail-snapshot:${z.uuid().parse(id)}`;try{const result=FleetDetailSnapshotSchema.parse(await options.http(`/api/fleet/details/${id}`));current();if(result.detail.companyId!==account.companyId)throw Error("Original Detail company changed");await journal.putCache(key,result);return result;}catch(error){current();if(error&&typeof error==="object"&&"status" in error&&Number(error.status)<500)throw error;const cached=await journal.readCache(key);if(!cached)throw error;return FleetDetailSnapshotSchema.parse(cached);}},
   async captureReconciliation(item:FleetReconciliationPage["cases"][number],resolution:Extract<FleetWorkCommand,{kind:"activity.reconcile"}>["payload"]["resolution"],reason:string){
    current();if(!item.canResolve||item.case.resolution||!item.original.activity||!item.original.ticket)throw Error("Current office recovery context is required");

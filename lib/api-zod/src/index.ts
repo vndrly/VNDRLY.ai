@@ -7,6 +7,7 @@ export * from "./implementation-a";
 export * from "./fleet";
 export * from "./fleet-inventory";
 export * from "./fleet-run-preview";
+export * from "./fleet-original-sequence";
 export * from "./fleet-location";
 export * from "./fleet-site-activity";
 export * from "./fleet-eta";

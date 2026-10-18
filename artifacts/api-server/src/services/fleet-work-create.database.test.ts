@@ -1356,6 +1356,28 @@ it("reads independently verified historical originals for office source review w
  const state=(await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[f.vendor])).rows[0].fleet_ops_state;state.grants=state.grants.map((g:any)=>g.userId===f.actor.userId?{...g,roles:["driver"]}:g);await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[f.vendor,JSON.stringify(state)]);
  await expect(f.repository.readScope(f.actor,f.command.scope,context=>module!.readFleetRecoverySources(context,held.caseId,{}))).rejects.toMatchObject({status:403});
 });
+it("qualifies retained original closed-driver reports against historical Detail without reserving current resources or billing",async()=>{
+ const f=await fixture({rig:true});if(f.command.kind!=="activity.create")throw Error("Expected create fixture");
+ const actor={...f.actor,userId:f.driver.id,role:"field_employee",membershipRole:"field_employee",vendorPeopleId:f.driverPerson.id,sv:f.driver.sessionVersion,activeMembershipId:f.driverMembership.id};
+ const [device]=await db.insert(workHubDevicesTable).values({userId:f.driver.id,ownerOrgType:"vendor",ownerOrgId:f.vendor,friendlyName:"Synthetic original reports",deviceClass:"other",capabilities:{}}).returning();
+ const provision=await f.repository.provision(actor,{deviceId:device.id,appVersion:"synthetic-original-recovery"}),capturedAt=new Date(Date.now()-3600000).toISOString(),originStopId=randomUUID();
+ const root=FleetWorkCommandSchema.parse({...f.command,scope:provision.scope,capturedAt,payload:{...f.command.payload,originStopId,compliance:{...f.command.payload.compliance,evaluatedAt:capturedAt}}});if(root.kind!=="activity.create")throw Error("Expected root");
+ f.rollback();const held=await f.work.apply(actor,root);if(held.status!=="needs_reconciliation")throw Error("Expected actual held case");
+ const activity={type:"local",kind:"activity",id:root.payload.activityId},ticket=root.payload.billing.ticket,loadId=randomUUID(),destinationStopId=root.payload.route.stops[0].id;
+ const actions=[{action:"dispatch"},{action:"acknowledge"},{action:"inspect",inspectionOutcome:"passed",notes:"Actual retained driver report",inspectedAssetIds:[f.truck.id,...f.rigAssets.map(a=>a.id)]},{action:"record_meter",reading:100,unit:"miles",notes:"Starting reported meter"},{action:"start"},{action:"arrive_stop",stopId:originStopId},{action:"record_load",loadId,commodity:"Crude",quantity:100,unit:"barrel",manifestReference:"Synthetic manifest"},{action:"depart_stop",stopId:originStopId},{action:"arrive_stop",stopId:destinationStopId},{action:"record_delivery",loadId,deliveryReference:"Synthetic delivery report"},{action:"depart_stop",stopId:destinationStopId},{action:"record_meter",reading:110,unit:"miles",notes:"Ending reported meter"},{action:"submit_closeout"}];
+ let dependency=root.operationId;
+ for(const [index,action] of actions.entries()){const operationId=randomUUID(),capture=new Date(Date.parse(capturedAt)+(index+1)*60000).toISOString();const command=FleetWorkCommandSchema.parse({...root,kind:"activity.action",operationId,capturedAt:capture,dependencies:[dependency],payload:{activity,ticket,baseAssignment:root.payload.detailSnapshot,action:{...action,operationId,expectedVersion:index+1,capturedAt:capture}}});await f.repository.retainOriginal(actor,command);dependency=operationId;}
+ const module=await import("./fleet-recovery-sources"),read=()=>f.repository.readScope(f.actor,f.command.scope,context=>module.readFleetRecoverySourcePlan(context,held.caseId));
+ const plan=await read();expect(plan).toMatchObject({status:"closed_reports_ready_for_review",sourceCount:14,canonicalApplied:false,physicalProofVerified:false,originalDriverUserId:f.driver.id});expect((await read()).fingerprint).toBe(plan.fingerprint);
+ const detail=root.payload.detailSnapshot.detail;
+ await createFleetService(databaseFleetRepository).saveFleetDetail({...f.actor},{operationId:randomUUID(),expectedVersion:detail.version,detail:{...detail,name:"Changed current Detail",version:detail.version+1}});
+ expect((await read()).fingerprint).toBe(plan.fingerprint);
+ const full=await f.repository.readScope(f.actor,f.command.scope,context=>module.prepareFleetRecoverySourcePlan(context,held.caseId));expect(full.qualification.reports.inspections[0].inspectedAssetIds).toHaveLength(3);expect(full.qualification.reports.loads[0].deliveredAt).toBeTruthy();
+ expect((await pool.query("SELECT count(*)::int n FROM tickets WHERE vendor_id=$1",[f.vendor])).rows[0].n).toBe(0);
+ expect((await pool.query("SELECT count(*)::int n FROM assistant_action_audit WHERE vendor_id=$1 AND target_type IN ('fleet-run','fleet-reviewed-charge')",[f.vendor])).rows[0].n).toBe(0);
+ const wire=JSON.stringify(plan);for(const hidden of ["objectPath","sessionVersion","detailSnapshot","passwordHash"])expect(wire).not.toContain(hidden);
+ await expect(f.repository.readScope(actor,provision.scope,context=>module.readFleetRecoverySourcePlan(context,held.caseId))).rejects.toMatchObject({status:403});
+});
 it("resolves unpriced captured work from saved approval without auto approving charges",async()=>{
  const f=await fixture();await pool.query("UPDATE partner_vendor_work_type_approvals SET approved_by_user_id=NULL WHERE vendor_id=$1 AND partner_id=$2 AND work_type_id=$3",[f.vendor,f.partner,f.service]);
  const created=await f.work.apply(f.actor,f.command);expect(created.status).toBe("applied");if(created.status!=="applied")return;const activity=created.canonicalReferences.find(ref=>ref.kind==="activity")!,ticket=created.canonicalReferences.find(ref=>ref.kind==="ticket")!;

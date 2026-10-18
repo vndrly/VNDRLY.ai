@@ -14,3 +14,10 @@ it("pages original reports without executing work and refuses to combine changed
  fireEvent.click(screen.getByRole("button",{name:"Review retained original reports"}));await screen.findByText("Original retained report");expect(captureReconciliation).not.toHaveBeenCalled();
  fireEvent.click(screen.getByRole("button",{name:"Read more originals"}));await screen.findByRole("alert");expect(screen.queryByText("Different case revision")).toBeNull();expect(screen.getByText("Original retained report")).toBeTruthy();expect(recoverySources).toHaveBeenNthCalledWith(2,"case","1:2");
 });
+it("shows the independently prepared original sequence without adopting reports or approving billing",async()=>{
+ const recoverySources=vi.fn().mockResolvedValue({caseId:"case",caseVersion:1,detail:{name:"Historical Detail",version:1},sources:[],nextCursor:null}),recoverySourcePlan=vi.fn().mockResolvedValue({caseId:"case",caseVersion:1,status:"closed_reports_ready_for_review",canonicalApplied:false,physicalProofVerified:false}),captureReconciliation=vi.fn();
+ render(<FleetRecoverySources caseId="case" session={{recoverySources,recoverySourcePlan,captureReconciliation} as unknown as FleetWorkSession}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Review retained original reports"}));await screen.findByText("Historical Detail · v1");
+ fireEvent.click(screen.getByRole("button",{name:"Check original report sequence"}));await screen.findByText("Original reports include a coherent driver closeout. Office review is still required.");
+ expect(screen.getByText("This check does not adopt work into billing or approve charges.")).toBeTruthy();expect(recoverySourcePlan).toHaveBeenCalledWith("case");expect(captureReconciliation).not.toHaveBeenCalled();
+});
