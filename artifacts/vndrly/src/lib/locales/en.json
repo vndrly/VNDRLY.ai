@@ -1,4 +1,9 @@
 {
+  "smsEnrollment": {
+    "link": "Enroll in SMS updates",
+    "signupHint": "Open the SMS enrollment page in a new tab. Finish creating your account and sign in before saving your optional SMS consent.",
+    "preferencesHint": "Open the SMS enrollment page in a new tab to choose optional text updates. Read the disclosure, enter your mobile number and save your consent."
+  },
   "managedSubcontractors": {
     "noRole": "No active role",
     "invitation_pending": "Pending activation",

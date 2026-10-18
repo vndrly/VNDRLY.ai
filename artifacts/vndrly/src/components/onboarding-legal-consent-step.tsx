@@ -1,4 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "react-i18next";
 import {
   LEGAL_POLICY_VERSION,
   MESSAGING_DISCLOSURE,
@@ -23,6 +24,7 @@ export function OnboardingLegalConsentStep({
   onChange,
   disabled,
 }: OnboardingLegalConsentStepProps): React.ReactElement {
+  const { t } = useTranslation();
   const currentAcceptance = value.accepted && value.version === LEGAL_POLICY_VERSION;
   return (
     <div className="space-y-4" data-testid="step-legal-consent-body">
@@ -93,6 +95,10 @@ export function OnboardingLegalConsentStep({
           account or use VNDRLY.
         </span>
       </label>
+      <p className="text-sm text-gray-700">
+        <a href="/sms/" target="_blank" rel="noopener noreferrer" className="underline">{t("smsEnrollment.link")}</a>
+        {" — "}{t("smsEnrollment.signupHint")}
+      </p>
     </div>
   );
 }
