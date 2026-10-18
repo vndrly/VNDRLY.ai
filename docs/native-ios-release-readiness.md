@@ -26,7 +26,7 @@ Focused checks establish server authority, retry identities, permission redactio
 
 ## Fleet commercial candidate, October 18
 
-The candidate retains app/runtime 1.0.3 and uses existing native dependencies/configuration. Native source/export and the Expo production-runtime impact guard are separate from a signed build and Apple submission. The exact merged source exports a 15.6 MB iOS Hermes bundle. Native journal software tests cover original account/device context, 5,000 events, 500 original BLOBs, capacity/atomic rollback, photos and reconciliation; they do not prove physical storage encryption, suspended behavior or device lock.
+The Fleet candidate uses app/runtime **1.0.4**, isolating its new native document-picker methods from already installed 1.0.3 binaries. It uses existing dependencies. The release verifier requires the exact source SHA, app version and runtime before submission. Native source/export and the Expo production-runtime impact guard are separate from a signed build and Apple submission. The exact merged source exports a 15.6 MB iOS Hermes bundle. Native journal software tests cover original account/device context, 5,000 events, 500 original BLOBs, capacity/atomic rollback, photos and reconciliation; they do not prove physical storage encryption, suspended behavior or device lock.
 
 Start Shift / End of Day share the canonical organization workday in every portal. Run closure and logout never end that day. Driver physical actions remain theirs; dispatch cannot manufacture acknowledgement, inspection or start. Original retained source adoption is a distinct office billing record without a current resource reservation. Private medical/testing originals remain excluded from ordinary assistant/partner output.
 

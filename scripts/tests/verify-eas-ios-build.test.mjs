@@ -47,7 +47,7 @@ test('CLI emits only a validated build ID and fails closed on a stale result', a
   const file = path.join(dir, 'build.json');
   const script = fileURLToPath(new URL('../verify-eas-ios-build.mjs', import.meta.url));
   const app = JSON.parse(await (await import('node:fs/promises')).readFile(new URL('../../artifacts/vndrly-mobile/app.json', import.meta.url), 'utf8'));
-  await writeFile(file, JSON.stringify([{ ...build(), project: { id: app.expo.extra.eas.projectId } }]));
+  await writeFile(file, JSON.stringify([{ ...build(), project: { id: app.expo.extra.eas.projectId },appVersion:app.expo.version,runtimeVersion:app.expo.version }]));
   const result = spawnSync(process.execPath, [script, file, sha, id], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.trim(), id);
@@ -55,4 +55,12 @@ test('CLI emits only a validated build ID and fails closed on a stale result', a
   assert.equal(stale.status, 2);
   assert.equal(stale.stdout, '');
   assert.match(stale.stderr, /release commit/);
+});
+
+
+test('rejects a native runtime or app version that differs from the candidate',()=>{
+ const candidate={...build(),appVersion:'1.0.4',runtimeVersion:'1.0.4'},options={sha,projectId,appVersion:'1.0.4',runtimeVersion:'1.0.4'};
+ assert.equal(verifyIosBuild(candidate,options),id);
+ assert.throws(()=>verifyIosBuild({...candidate,appVersion:'1.0.3'},options),/app version/);
+ assert.throws(()=>verifyIosBuild({...candidate,runtimeVersion:'1.0.3'},options),/runtime/);
 });
