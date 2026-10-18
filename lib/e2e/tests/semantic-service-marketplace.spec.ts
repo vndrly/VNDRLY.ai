@@ -298,7 +298,7 @@ async function openComparison(f: Fixture) {
     `marketplace-work-type-${f.gatekeeping.id}`,
   );
   await comparison
-    .getByLabel("Job site", { exact: true })
+    .getByRole("combobox", { name: "Job site", exact: true })
     .selectOption(String(f.near.id));
   return comparison;
 }
@@ -362,7 +362,7 @@ test("Gatekeeping and Perimeter Security match Gate Services; compare, send and 
       fullPage: true,
     });
     await comparison
-      .getByLabel("Job site", { exact: true })
+      .getByRole("combobox", { name: "Job site", exact: true })
       .selectOption(String(f.far.id));
     await expect(
       midcon.getByText("Out of Service Area", { exact: true }),
@@ -377,7 +377,7 @@ test("Gatekeeping and Perimeter Security match Gate Services; compare, send and 
     expect(bypass.status()).toBe(409);
     expect((await bypass.json()).code).toBe("marketplace.out_of_service_area");
     await comparison
-      .getByLabel("Job site", { exact: true })
+      .getByRole("combobox", { name: "Job site", exact: true })
       .selectOption(String(f.near.id));
     await midcon
       .getByRole("button", { name: "Prepare job offer", exact: true })
