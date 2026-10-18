@@ -1,4 +1,5 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
+import {recordGateWorkday} from "./gate-workday";
 import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
@@ -133,8 +134,17 @@ async function shiftForWorker(
   return shift;
 }
 
+async function attachExistingDutyClock(client:PoolClient,session:SessionPayload,duty:Record<string,any>){
+ if(duty.post_coverage?.vendorId&&duty.post_coverage.vendorId!==session.vendorId)fail(409,"employer_context_changed","Switch back to the company where this Gate shift began.");
+ if(duty.ended_at)return;
+ const legacy=(await client.query("SELECT id FROM gate_shifts WHERE station_id=$1 AND operator_id=$2 AND ended_at IS NULL",[duty.station_id,duty.user_id])).rows[0];
+ // A fresh explicit Assume can begin today's clock for an older coverage row;
+ // do not backfill weeks of unreported employee hours from legacy coverage.
+ await recordGateWorkday(client,session,"start_shift",duty.id,new Date(),"America/Chicago",legacy?[legacy.id]:[]);
+}
+
 async function insertDuty(
-  client: Queryable,
+  client: PoolClient,
   session: SessionPayload,
   input: AssumeGateDutyInput,
 ) {
@@ -148,6 +158,7 @@ async function insertDuty(
   if (retry) {
     if (retry.user_id !== userId)
       fail(409, "idempotency_conflict", "That operation key is already used");
+    await attachExistingDutyClock(client,session,retry);
     return dutyRow(retry);
   }
   await client.query("SELECT id FROM gate_stations WHERE id=$1 FOR UPDATE", [
@@ -183,19 +194,19 @@ async function insertDuty(
       [input.stationId, userId],
     )
   ).rows[0];
-  if (active) return dutyRow(active);
+  if (active) {await attachExistingDutyClock(client,session,active);return dutyRow(active);}
   if (session.vendorId || session.partnerId) await assertRequiredWorkClear(client, userId, session.partnerId ? { type: "partner", id: session.partnerId } : { type: "vendor", id: session.vendorId! });
-  const legacyShift = (
+  let legacyShift = (
     await client.query(
-      "SELECT id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL FOR UPDATE",
+      "SELECT id,operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL FOR UPDATE",
       [input.stationId],
     )
   ).rows[0];
   if (!legacyShift) {
-    await client.query(
-      "INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3)",
+    legacyShift=(await client.query(
+      "INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING id,operator_id",
       [input.stationId, userId, input.at ?? new Date()],
-    );
+    )).rows[0];
   }
   const result = (
     await client.query(
@@ -214,6 +225,7 @@ async function insertDuty(
       ],
     )
   ).rows[0];
+  await recordGateWorkday(client,session,"start_shift",result.id,new Date(result.started_at),shift?.timezone??"America/Chicago",legacyShift?.operator_id===userId?[legacyShift.id]:[]);
   return dutyRow(result);
 }
 
@@ -379,6 +391,8 @@ export async function endGateDuty(
         [duty.id, input.at ?? new Date(), userId, input.reason.trim()],
       )
     ).rows[0];
+    // Roster sign-off (or a client handoff boolean) is not an acknowledged
+    // delivery of Shift Notes. Only canonical transferGateShift ends the clock.
     if (replacement) {
       await client.query(
         `UPDATE gate_shifts SET operator_id=$2
