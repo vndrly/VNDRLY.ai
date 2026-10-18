@@ -1,5 +1,6 @@
 import {fleetAuxiliaryToolRequest,fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
-import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
+import {WorkdayAssistantInputSchema,FleetPolicyChangeSchema} from "@workspace/api-zod";
+import {randomUUID} from "node:crypto";
 import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
 import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
@@ -226,6 +227,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
     const auxiliary=fleetAuxiliaryToolRequest(name,input);if(auxiliary)return auxiliary;
+    if(name==="query_fleet_compliance_policy"){const value=z.object({vendorId:z.number().int().positive()}).strict().safeParse(input);return value.success?request("GET",`/fleet/compliance-policies/${value.data.vendorId}`):{error:"Select an actual vendor relationship; no actor override is accepted."};}
+    if(name==="query_fleet_policy_impact"){const value=FleetPolicyChangeSchema.omit({operationId:true}).extend({vendorId:z.number().int().positive()}).strict().safeParse(input);if(!value.success)return {error:"Supply the exact proposed future policy and configuration version."};const {vendorId,...body}=value.data;return request("POST",`/fleet/compliance-policies/${vendorId}/preview`,{...body,operationId:randomUUID()});}
     if(name==="query_fleet_worker_day"){const parsed=z.object({workerUserId:z.number().int().positive(),start:z.iso.datetime({offset:true}),end:z.iso.datetime({offset:true}),after:z.number().int().positive().optional()}).strict().safeParse(input);if(!parsed.success)return {error:"Select an exact worker and day range."};const {workerUserId,...range}=parsed.data;return request("GET",`/work-hub/workday/workers/${workerUserId}?${new URLSearchParams(Object.entries(range).map(([k,v])=>[k,String(v)]))}`);}
     const commercial=fleetCommercialToolRequest(name,input);if(commercial)return commercial;
     if(name==="query_fleet_service_templates")return z.object({}).strict().safeParse(input).success?request("GET","/fleet/service-templates"):{error:"This read accepts no scope override."};

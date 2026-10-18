@@ -50,7 +50,8 @@ export function partnerFleetConsentUpgradeTools(session: SessionPayload, scopes:
   if(session.role!=="partner" || !session.partnerId || !choices?.sites.length) return [];
   const reads=scopes.includes("fleet:read")?[]:chatGptReadableTools(session,[...scopes,"fleet:read"]).filter(tool=>tool.name==="query_fleet_site_activity").map(tool=>({tool,scope:"fleet:read"}));
   const writes=session.membershipRole==="admin"&&!scopes.includes("fleet:billing")?chatGptActionTools(session,[...scopes,"fleet:billing"]).filter(tool=>tool.name==="approve_fleet_rate_agreement").map(tool=>({tool,scope:"fleet:billing"})):[];
-  return [...reads,...writes];
+  const policy=session.membershipRole==="admin"&&!scopes.includes("fleet:policy")?chatGptActionTools(session,[...scopes,"fleet:policy"]).filter(tool=>tool.name==="activate_fleet_compliance_policy").map(tool=>({tool,scope:"fleet:policy"})):[];
+  return [...reads,...writes,...policy];
 }
 
 /** Platform title alone never grants company access; choices require an active support grant. */

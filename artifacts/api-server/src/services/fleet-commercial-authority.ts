@@ -1,4 +1,5 @@
 import { readFleetRunComplianceCheckpoint } from "./fleet-compliance-work";
+import { applyFleetPartnerPolicy } from "./fleet-compliance-policy";
 import { z } from "zod/v4";
 import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
@@ -473,12 +474,12 @@ export async function assessFleetActionPolicy(
           input.action === "office_submit" ? "office_submit" : "execute",
         )
       : undefined;
-  return FleetActionPolicySnapshotSchema.parse({
+  return FleetActionPolicySnapshotSchema.parse(await applyFleetPartnerPolicy(client,input.run,input.action,{
     mode: "warn_only",
     status: warnings.length?"red":"green",
     subjects,
     evaluatedAt: input.policyAt,
     ...(authority ? { authoritySnapshotId: authority.approvalSnapshotId } : {}),
     warnings,
-  });
+  }));
 }

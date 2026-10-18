@@ -10,7 +10,7 @@ import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
 import { rescheduleFleetRunDetail } from "./fleet-run-details";
 import { isFleetBillingV2TicketOpen } from "./fleet-billing-v2";
-import { requireFleetRunCommercialAuthority } from "./fleet-commercial-authority";
+import { requireFleetRunCommercialAuthority,assessFleetActionPolicy } from "./fleet-commercial-authority";
 type Transaction = <T>(
   actor: FleetActor,
   operation: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -115,6 +115,7 @@ export function createFleetPlanningOperations(
         await eligible(state, client, next);
         if (next.resourceAssignment && body.schedule !== undefined)
           await rescheduleFleetRunDetail({ state, client }, bound, next);
+        const policyAt=new Date().toISOString(),fleetCompliance=run.billingV2&&(body.routePlan||body.stops||body.schedule!==undefined)?await assessFleetActionPolicy(client,bound,{run:next,action:"edit",requiredCertifications:fleet.requiredCertifications,policyAt}):undefined;
         Object.assign(run, next);
         run.version++;
         appendFleetRunEvent(run, {
@@ -122,11 +123,12 @@ export function createFleetPlanningOperations(
           operationId: body.operationId,
           type: "draft_edited",
           actorUserId: bound.userId,
-          recordedAt: new Date().toISOString(),
+          recordedAt: policyAt,
           ...(run.billingV2 && options.originalWorkCapture ? {
             capturedAt: new Date(options.originalWorkCapture.capturedAt).toISOString(), source: "user_report" as const,
           } : {}),
           details: {
+            ...(fleetCompliance?{fleetCompliance}:{}),
             ...(run.billingV2 && options.originalWorkCapture ? { originalCapture: {
               ...options.originalWorkCapture,
               clockStatus: Date.parse(options.originalWorkCapture.capturedAt) > Date.now() + 300000 ? "ahead_of_server" : "reported_capture_time",

@@ -1,4 +1,5 @@
 import { BrandedCheckbox } from "./branded-checkbox";
+import FleetPolicyEditor from "./fleet-policy-editor";
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -443,6 +444,7 @@ export function FleetAgreementEditor({
         {es ? "Aprobar acuerdo" : "Approve agreement"}
       </PngPillButton>
       <p role="status">{message}</p>
+      <FleetPolicyEditor partnerId={partnerId} vendorId={vendorId} serviceId={serviceId}/>
     </section>
   );
 }

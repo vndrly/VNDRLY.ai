@@ -1,4 +1,5 @@
 import FleetChoiceField from "./FleetChoiceField";
+import FleetPolicyEditor from "./FleetPolicyEditor";
 import FleetCheckbox from "./FleetCheckbox";
 import React, { useState, useRef } from "react";
 import { Text, TextInput, View } from "react-native";
@@ -436,6 +437,7 @@ export default function FleetAgreementEditor({
         {es ? "Aprobar acuerdo" : "Approve agreement"}
       </TogglePillButton>
       <Text style={{ color: colors.text }}>{message}</Text>
+      <FleetPolicyEditor partnerId={partnerId} vendorId={vendorId} serviceId={serviceId}/>
     </View>
   );
 }

@@ -93,3 +93,5 @@ export * from "./fleet-local-work";
 export * from "./fleet-resource-copy";
 export * from "./fleet-service-template";
 export * from "./fleet-storage-health";
+export * from "./fleet-compliance-policy";
+export * from "./fleet-policy-copy";
