@@ -2,7 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-export const BASELINE_SHA="cbcf43f67e4ed5e2169c550474eb93642b95e9de";
+export const BASELINE_SHA="d041f6f6f98a6f1099f6f48e7812daaae763b281";
 export const REPO="vndrly/VNDRLY.ai";
 export const ALLOWED=[".github/workflows/verify-browser-remainder.yml","scripts/verify-browser-remainder.mjs","scripts/tests/verify-browser-remainder.test.mjs",".github/workflows/verify-release.yml"];
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),"..");
@@ -26,14 +26,14 @@ export function validateBaseline(run,jobs,log,branch){
   if(required.some(name=>!job.steps.some(s=>s.name===name&&s.status==="completed"&&s.conclusion==="success")))throw new Error("A required baseline gate did not pass");
   if(!job.steps.some(s=>s.name==="Full required test chain"&&s.conclusion==="cancelled"))throw new Error("Full chain was not interrupted");
   const clean=cleanLog(log);
-  if(!/^>\s+workspace@\S+\s+test:e2e\s/m.test(clean)||!clean.includes("Running 44 tests using 1 worker"))throw new Error("Baseline did not reach the final browser chain");
-  const passed=parsePassed(log);if(passed.length!==43||new Set(passed).size!==43)throw new Error("Expected exactly 43 unique baseline browser successes");
+  if(!/^>\s+workspace@\S+\s+test:e2e\s/m.test(clean)||!clean.includes("Running 50 tests using 1 worker"))throw new Error("Baseline did not reach the final browser chain");
+  const passed=parsePassed(log);if(passed.length!==48||new Set(passed).size!==48)throw new Error("Expected exactly 48 unique baseline browser successes");
   return {jobId:job.id,passed,requiredGates:required};
 }
 export function remainingTests(passed,listed){
-  if(listed.length!==44||new Set(listed).size!==44||passed.length!==43||new Set(passed).size!==43||passed.some(p=>!listed.includes(p)))throw new Error("Browser coverage does not match the immutable baseline");
+  if(listed.length!==50||new Set(listed).size!==50||passed.length!==48||new Set(passed).size!==48||passed.some(p=>!listed.includes(p)))throw new Error("Browser coverage does not match the immutable baseline");
   const remaining=listed.filter(t=>!passed.includes(t));
-  if(remaining.length!==1||!/^\[chromium\] › tests\/work-hub-workspace\.spec\.ts:51:\d+ › /.test(remaining[0]))throw new Error("Remainder is not the one interrupted workspace case");
+  if(remaining.length!==2||!/^\[chromium\] › tests\/work-hub-audio\.spec\.ts:25:\d+ › /.test(remaining[0])||!/^\[chromium\] › tests\/work-hub-workspace\.spec\.ts:51:\d+ › /.test(remaining[1]))throw new Error("Remainder is not the two interrupted Work Hub cases");
   return remaining;
 }
 function immutableTree(){
@@ -55,7 +55,7 @@ async function prepare(runId,folder){
   const log=await api(`/actions/jobs/${job.id}/logs`,true);writeFileSync(resolve(folder,"baseline.log"),log);
   const proof=validateBaseline(run,jobs,log,process.env.GITHUB_REF_NAME||git("branch","--show-current").trim());
   writeFileSync(resolve(folder,"proof.json"),JSON.stringify({baselineRunId:runId,baselineSha:BASELINE_SHA,repository:REPO,...tree,...proof},null,2));
-  console.log("Validated immutable application tree and 43 prior browser passes; one browser case remains.");
+  console.log("Validated immutable application tree and 48 prior browser passes; two browser cases remain.");
 }
 function playwright(args){
   const result=spawnSync("corepack",["pnpm","--dir",ROOT,"--filter","@workspace/e2e","exec","playwright","test",...args],{cwd:ROOT,env:process.env,encoding:"utf8",maxBuffer:32*1024*1024});
@@ -66,11 +66,11 @@ function runRemainder(folder){
   if(process.env.VNDRLY_TEST_DB_MODE!=="fresh-local"||process.env.VNDRLY_ISOLATED_TEST_DB!=="1")throw new Error("Fresh isolated database wrapper required");
   const list=playwright(["--list"]);writeFileSync(resolve(folder,"listed.log"),list.output);if(list.status!==0||list.error)throw new Error("Browser test inventory failed");
   const remaining=remainingTests(proof.passed,parseListed(list.output));
-  const result=playwright(["tests/work-hub-workspace.spec.ts"]);writeFileSync(resolve(folder,"remainder.log"),result.output);console.log(result.output);
-  if(result.status!==0||result.error)throw new Error("Interrupted browser case failed");
-  const passed=parsePassed(result.output);if(passed.length!==1||passed[0]!==remaining[0])throw new Error("Remainder success did not cover the exact missing identity");
-  writeFileSync(resolve(folder,"proof.json"),JSON.stringify({...proof,remaining,completed:passed,coverage:{baseline:43,continuation:1,total:44},verifiedAt:new Date().toISOString()},null,2));
-  console.log("All 44 browser identities now have successful evidence against the unchanged application tree.");
+  const result=playwright(["tests/work-hub-audio.spec.ts","tests/work-hub-workspace.spec.ts"]);writeFileSync(resolve(folder,"remainder.log"),result.output);console.log(result.output);
+  if(result.status!==0||result.error)throw new Error("Interrupted browser cases failed");
+  const passed=parsePassed(result.output);if(passed.length!==2||passed.some((identity,index)=>identity!==remaining[index]))throw new Error("Remainder success did not cover the exact missing identities");
+  writeFileSync(resolve(folder,"proof.json"),JSON.stringify({...proof,remaining,completed:passed,coverage:{baseline:48,continuation:2,total:50},verifiedAt:new Date().toISOString()},null,2));
+  console.log("All 50 browser identities now have successful evidence against the unchanged application tree.");
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const [mode,a,b]=process.argv.slice(2);
