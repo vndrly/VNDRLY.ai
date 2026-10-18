@@ -31,7 +31,7 @@ describe("public SMS enrollment save", () => {
     expect((await request(app).post("/notifications/sms-consent").set("Cookie", cookie()).set("Origin", "https://other.example").send(form)).status).toBe(403);
     expect(state.writes).toHaveLength(0);
   });
-  it.each([{ consent: undefined }, { policyVersion: "old" }, { phone: "not-a-number" }, { phone: "+14055559999" }])("does not save invalid or mismatched consent: %j", async delta => {
+  it.each([{ language: "fr" }, { consent: undefined }, { policyVersion: "old" }, { phone: "not-a-number" }, { phone: "+14055559999" }])("does not save invalid or mismatched consent: %j", async delta => {
     const response = await request(app).post("/notifications/sms-consent").set("Origin", "https://vndrly.ai").set("Cookie", cookie()).send({ ...form, ...delta });
     expect(response.status).toBe(400); expect(state.writes).toHaveLength(0);
   });
@@ -44,6 +44,15 @@ describe("public SMS enrollment save", () => {
     expect(state.audit[0]).toMatchObject({ actorUserId: 7, action: "sms_consent_granted" });
     expect(JSON.stringify(state.audit)).not.toContain(form.phone);
     expect(response.body).toMatchObject({ saved: true, gateAlertsEnabled: true, messageSent: false });
+  });
+  it("retains the exact Spanish consent and source without sending SMS", async () => {
+    const response = await request(app).post("/notifications/sms-consent").set("Origin", "https://vndrly.ai").set("Cookie", cookie()).send({ ...form, language: "es" });
+    expect(response.status).toBe(200);
+    expect(state.writes[0].smsConsentRecord).toMatchObject({ language: "es", source: "https://vndrly.ai/es/sms/" });
+    const { PUBLIC_SMS_CONSENT_DISCLOSURE_ES } = await import("@workspace/api-zod/legal-policy");
+    expect(state.writes[0].smsConsentRecord.disclosure).toBe(PUBLIC_SMS_CONSENT_DISCLOSURE_ES);
+    expect(state.audit[0].metadata.disclosure).toBe(PUBLIC_SMS_CONSENT_DISCLOSURE_ES);
+    expect(response.body.messageSent).toBe(false);
   });
   it("saves an office user's consent without inventing Gate privileges or sending a message", async () => {
     state.recipient.gate = false;

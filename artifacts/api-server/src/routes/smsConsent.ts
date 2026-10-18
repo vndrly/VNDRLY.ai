@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, notificationPreferencesTable, usersTable, workHubAuditLogTable } from "@workspace/db";
-import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE } from "@workspace/api-zod/legal-policy";
+import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
 import { getSessionFromRequest } from "../lib/session";
 import { isE164Phone } from "../lib/twilio";
 import { loadGateAlertRecipient } from "../services/gate-alert-repository";
@@ -23,6 +23,8 @@ router.post("/notifications/sms-consent", async (req, res) => {
     return res.status(403).json({ message: "Open the SMS consent form on vndrly.ai to save your choice." });
   }
   const body = req.body ?? {};
+  const language = body.language ?? "en";
+  if (language !== "en" && language !== "es") return res.status(400).json({ message: "Choose English or Spanish / Elija inglés o español." });
   const phone = typeof body.phone === "string" ? body.phone.trim().replace(/[ ()-]/g, "") : "";
   if (body.consent !== "yes" || body.policyVersion !== LEGAL_POLICY_VERSION || !isE164Phone(phone)) {
     return res.status(400).json({ message: "Enter your mobile number with country code and select the optional SMS consent checkbox to enroll." });
@@ -39,7 +41,7 @@ router.post("/notifications/sms-consent", async (req, res) => {
     const [user] = await tx.select().from(usersTable).where(eq(usersTable.id, session.userId!)).for("update");
     if (!user || user.suspendedAt || user.sessionVersion !== session.sv || (user.activeMembershipId ?? null) !== (session.activeMembershipId ?? null)) return { status: 409, message: "Your account changed. Sign in again before enrolling." };
     const consentedAt = new Date();
-    const record = { phone, policyVersion: LEGAL_POLICY_VERSION, disclosure: PUBLIC_SMS_CONSENT_DISCLOSURE, consentedAt: consentedAt.toISOString(), source, membershipId: recipient.membershipId };
+    const record = { phone, policyVersion: LEGAL_POLICY_VERSION, language, disclosure: language === "es" ? PUBLIC_SMS_CONSENT_DISCLOSURE_ES : PUBLIC_SMS_CONSENT_DISCLOSURE, consentedAt: consentedAt.toISOString(), source: language === "es" ? "https://vndrly.ai/es/sms/" : source, membershipId: recipient.membershipId };
     const gatePatch = recipient.gate ? buildGateAlertConsentPatch(true, recipient, consentedAt) : {};
     const patch = { smsConsentRecord: record, ...gatePatch };
     await tx.insert(notificationPreferencesTable).values({ userId: session.userId!, ...patch }).onConflictDoUpdate({ target: notificationPreferencesTable.userId, set: patch });

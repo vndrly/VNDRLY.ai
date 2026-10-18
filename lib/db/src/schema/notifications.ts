@@ -139,7 +139,7 @@ export const notificationPreferencesTable = pgTable("notification_preferences", 
   alertsSmsOptedInAt: timestamp("alerts_sms_opted_in_at", { withTimezone: true }),
   alertsSmsConsentFingerprint: text("alerts_sms_consent_fingerprint"),
   // Self-service enrollment evidence. Does not grant role access or bypass provider STOP suppression.
-  smsConsentRecord: jsonb("sms_consent_record").$type<{ phone: string; policyVersion: string; disclosure: string; consentedAt: string; source: string; membershipId: number | null }>(),
+  smsConsentRecord: jsonb("sms_consent_record").$type<{ language?: "en" | "es"; phone: string; policyVersion: string; disclosure: string; consentedAt: string; source: string; membershipId: number | null }>(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

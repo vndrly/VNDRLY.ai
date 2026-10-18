@@ -36,7 +36,7 @@ import {
 
 export default function LoginScreen() {
   const colors = useColors();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -314,7 +314,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => void Linking.openURL("https://vndrly.ai/sms/")}
+              onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/sms/`)}
               disabled={busy}
               style={styles.linkButton}
               testID="link-sms-enrollment"
@@ -324,10 +324,10 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => void Linking.openURL("https://vndrly.ai/legal/privacy/")} disabled={busy} style={styles.linkButton} testID="link-privacy-policy">
+            <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`)} disabled={busy} style={styles.linkButton} testID="link-privacy-policy">
               <Text style={[styles.linkText, { color: colors.mutedForeground }]}>{t("login.privacyPolicyLink")}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => void Linking.openURL("https://vndrly.ai/legal/terms/")} disabled={busy} style={styles.linkButton} testID="link-terms-conditions">
+            <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`)} disabled={busy} style={styles.linkButton} testID="link-terms-conditions">
               <Text style={[styles.linkText, { color: colors.mutedForeground }]}>{t("login.termsConditionsLink")}</Text>
             </TouchableOpacity>
 
