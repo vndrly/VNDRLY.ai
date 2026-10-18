@@ -14,6 +14,7 @@ import {getObjectStore} from "../lib/objectStore";
 import {prepareFleetWorkCreation,readFleetWorkBillingChoices} from "../services/fleet-work-preparation";
 import {readFleetCommercialReview} from "../services/fleet-commercial-review";
 import {readFleetReconciliation,readFleetRecoveryOptions} from "../services/fleet-reconciliation";
+import {readFleetRecoverySources} from "../services/fleet-recovery-sources";
 import {createFleetWorkCanonicalService} from "../services/fleet-work-canonical";
 const repository=createDatabaseFleetWorkRepository({execute:executeFleetWorkCommand});
 const service=createFleetWorkService(repository),handlers=createFleetEvidenceCanonicalHandlers();
@@ -39,6 +40,7 @@ export function createFleetWorkRouter(options:{actor:(req:Request)=>FleetActor;e
  router.post("/fleet/work/billing-options",endpoint(req=>{const body=scopeInput.extend({fleetId:z.uuid(),siteId:z.number().int().positive(),afeNumber:z.string(),workDate:z.iso.date()}).parse(req.body);const {scope,...input}=body;return repo.readScope(options.actor(req),scope,context=>readFleetWorkBillingChoices(context,input));}));
  router.post("/fleet/work/reconciliation",endpoint(req=>{const body=scopeInput.extend({after:z.string().optional(),limit:z.number().int().min(1).max(100).optional()}).parse(req.body);return repo.readScope(options.actor(req),body.scope,context=>readFleetReconciliation(context,{after:body.after,limit:body.limit}));}));
  router.post("/fleet/work/reconciliation/:id/options",endpoint(req=>{const body=scopeInput.extend({after:z.uuid().optional()}).parse(req.body);return repo.readScope(options.actor(req),body.scope,context=>readFleetRecoveryOptions(context,z.uuid().parse(req.params.id),body.after));}));
+ router.post("/fleet/work/reconciliation/:id/sources",endpoint(req=>{const body=scopeInput.extend({cursor:z.string().optional(),limit:z.number().int().min(1).max(100).optional()}).parse(req.body);const {scope,...query}=body;return repo.readScope(options.actor(req),scope,context=>readFleetRecoverySources(context,z.uuid().parse(req.params.id),query));}));
  router.post("/fleet/work/recovery-detail/:id",endpoint(req=>repo.readScope(options.actor(req),scopeInput.parse(req.body).scope,context=>createFleetWorkCanonicalService(context).fleetDetailSnapshot({...context.actor},z.uuid().parse(req.params.id)))));
  router.post("/fleet/work/activities/:id/commercial-review",endpoint(req=>{const body=scopeInput.extend({after:z.string().optional(),limit:z.number().int().min(1).max(100).optional()}).parse(req.body);return repo.readScope(options.actor(req),body.scope,context=>readFleetCommercialReview(context,{activityId:z.uuid().parse(req.params.id),after:body.after,limit:body.limit}));}));
  router.post("/fleet/work/operations/:operationId",endpoint(async req=>({receipt:await work.read(options.actor(req),scopeInput.parse(req.body).scope,z.uuid().parse(req.params.operationId)),checkedAt:new Date().toISOString()})));

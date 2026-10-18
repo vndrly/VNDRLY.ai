@@ -1,4 +1,5 @@
 import React,{useState} from "react";
+import FleetRecoverySources from "./fleet-recovery-sources";
 import {useTranslation} from "react-i18next";
 import {fleetRecoveryCopy,type FleetWorkSession,type FleetReconciliationPage,type FleetRecoveryOptionsSchema} from "@workspace/api-zod";
 import type {z} from "zod/v4";
@@ -14,6 +15,7 @@ function RecoveryCase({session,item,pending,onChanged,onRead}:{session:FleetWork
  }catch(error){setMessage(error instanceof Error?error.message:c.unknown);}finally{setBusy(false);}}
  return <article className="fleet-detail-group space-y-2"><h4>{item.original.title??item.original.kind}</h4><p>{item.case.reason} · {item.original.capturedAt} · {item.original.timeZone}</p><p>{item.case.createdAt}</p>
   {item.case.resolution&&<p>{item.case.resolution.kind} · {item.case.resolution.reason}</p>}
+  {(item.canReviewSources??item.canResolve)&&<FleetRecoverySources session={session} caseId={item.case.id}/>}
   {item.canResolve&&item.original.activity&&item.original.ticket&&<><label>{c.reason}<textarea aria-label={c.reason} value={reason} maxLength={2000} disabled={locked} onChange={e=>setReason(e.target.value)}/></label>
    {available.includes("retain_record_only")&&<PngPillButton disabled={locked} onClick={()=>setMode("retain_record_only")}>{c.retain}</PngPillButton>}
    {available.includes("resolve_price")&&item.original.kind==="price.resolve"&&<PngPillButton disabled={locked} onClick={()=>setMode("resolve_price")}>{c.price}</PngPillButton>}

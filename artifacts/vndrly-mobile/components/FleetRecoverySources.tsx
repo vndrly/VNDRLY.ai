@@ -1,0 +1,13 @@
+import React,{useState,useEffect,useRef} from "react";
+import {Text,View} from "react-native";
+import {useTranslation} from "react-i18next";
+import {fleetRecoverySourcesCopy,type FleetRecoverySourcePage,type FleetWorkSession} from "@workspace/api-zod";
+import {useColors} from "@/hooks/useColors";
+import TogglePillButton from "./TogglePillButton";
+export default function FleetRecoverySources({session,caseId}:{session:FleetWorkSession;caseId:string}){
+ const {i18n}=useTranslation(),c=fleetRecoverySourcesCopy(i18n.language),colors=useColors(),[page,setPage]=useState<FleetRecoverySourcePage|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(false),alive=useRef(true);
+ useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
+ async function read(cursor?:string){if(busy)return;setBusy(true);setError(false);try{const next=await session.recoverySources(caseId,cursor);if(cursor&&page?.caseVersion!==next.caseVersion)throw Error("Case changed");if(alive.current)setPage(cursor&&page?{...next,sources:[...page.sources,...next.sources]}:next);}catch{if(alive.current)setError(true);}finally{if(alive.current)setBusy(false);}}
+ const text={color:colors.text},card={gap:8,borderWidth:2,borderColor:colors.primary,backgroundColor:colors.card,padding:12,borderRadius:8};
+ return <View style={card}><TogglePillButton disabled={busy} onPress={()=>void read()}>{c.read}</TogglePillButton>{error&&<Text accessibilityRole="alert" style={text}>{c.failed}</Text>}{page&&<><Text style={text}>{c.heading}</Text><Text style={text}>{page.detail.name} · v{page.detail.version}</Text><Text style={text}>{c.notice}</Text>{page.sources.map(source=><View key={source.operationId} style={card}><Text style={text}>{source.kind} {source.action??""} · {source.driverReport?c.driver:c.office}</Text>{!source.assignmentMatches&&<Text style={text}>{c.different}</Text>}<Text style={text}>{c.captured}: {source.capturedAt} · {source.timeZone}</Text><Text style={text}>{c.received}: {source.receivedAt}</Text>{source.notes&&<Text style={text}>{source.notes}</Text>}{source.inspectionOutcome&&<Text style={text}>{source.inspectionOutcome}</Text>}{source.quantity!==null&&<Text style={text}>{source.quantity} {source.unit}</Text>}{source.reading!==null&&<Text style={text}>{source.reading} {source.unit}</Text>}{source.commodity&&<Text style={text}>{source.commodity}</Text>}{source.evidence&&<Text style={text}>{source.evidence.kind} · {source.evidence.contentType} · {source.evidence.byteSize}</Text>}</View>)}<Text style={text}>{page.nextCursor?c.incomplete:c.finished}</Text>{page.nextCursor&&<TogglePillButton disabled={busy} onPress={()=>void read(page.nextCursor!)}>{c.more}</TogglePillButton>}</>}</View>;
+}

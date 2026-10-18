@@ -1,4 +1,5 @@
 import React,{useState} from "react";
+import FleetRecoverySources from "./FleetRecoverySources";
 import {Text,TextInput,View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {fleetRecoveryCopy,type FleetWorkSession,type FleetReconciliationPage,type FleetRecoveryOptionsSchema} from "@workspace/api-zod";
@@ -16,6 +17,7 @@ function RecoveryCase({session,item,pending,onChanged,onRead}:{session:FleetWork
  }catch(error){setMessage(error instanceof Error?error.message:c.unknown);}finally{setBusy(false);}}
  return <View style={{gap:10,padding:14,borderWidth:2,borderColor:colors.primary,borderRadius:12,backgroundColor:colors.card}}><Text style={{...text,fontWeight:"700"}}>{item.original.title??item.original.kind}</Text><Text style={text}>{item.case.reason} · {item.original.capturedAt} · {item.original.timeZone}</Text><Text style={text}>{item.case.createdAt}</Text>
   {item.case.resolution&&<Text style={text}>{item.case.resolution.kind} · {item.case.resolution.reason}</Text>}
+  {(item.canReviewSources??item.canResolve)&&<FleetRecoverySources session={session} caseId={item.case.id}/>}
   {item.canResolve&&item.original.activity&&item.original.ticket&&<><TextInput accessibilityLabel={c.reason} placeholder={c.reason} value={reason} maxLength={2000} editable={!locked} onChangeText={setReason} style={{...text,borderWidth:2,borderColor:colors.primary,borderRadius:10,padding:12}}/>
    {available.includes("retain_record_only")&&<TogglePillButton disabled={locked} onPress={()=>setMode("retain_record_only")}>{c.retain}</TogglePillButton>}
    {available.includes("resolve_price")&&item.original.kind==="price.resolve"&&<TogglePillButton disabled={locked} onPress={()=>setMode("resolve_price")}>{c.price}</TogglePillButton>}

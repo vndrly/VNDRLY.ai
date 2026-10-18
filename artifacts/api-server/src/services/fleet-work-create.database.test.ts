@@ -1338,6 +1338,24 @@ it("retains failed original work privately and exposes only authorized office re
  const state=(await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[f.vendor])).rows[0].fleet_ops_state;state.grants=state.grants.filter((row:any)=>row.userId!==f.actor.userId);await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[f.vendor,JSON.stringify(state)]);
  await expect(f.repository.readScope(f.actor,f.command.scope,context=>readFleetReconciliation(context,{}))).rejects.toThrow();
 });
+it("reads independently verified historical originals for office source review without creating work or exposing private pointers",async()=>{
+ const f=await fixture();f.rollback();const held=await f.work.apply(f.actor,f.command);if(held.status!=="needs_reconciliation")throw Error("Expected held source");
+ if(f.command.kind!=="activity.create")throw Error("Expected original creation");
+ const module=await import("./fleet-recovery-sources").catch(()=>null);expect(module,"actual retained source review").not.toBeNull();
+ const note=FleetWorkCommandSchema.parse({...f.command,kind:"activity.note",operationId:randomUUID(),dependencies:[f.command.operationId],payload:{activity:{type:"local",kind:"activity",id:f.command.payload.activityId},ticket:f.command.payload.billing.ticket,notes:"Synthetic original yard report"}});
+ await f.repository.retainOriginal(f.actor,note);
+ // A different local activity on the same device must not join this case.
+ await f.repository.retainOriginal(f.actor,{...note,operationId:randomUUID(),payload:{...note.payload,activity:{type:"local",kind:"activity",id:randomUUID()}}});
+ const before=(await pool.query("SELECT count(*)::int n FROM tickets WHERE vendor_id=$1",[f.vendor])).rows[0].n;
+ const first=await f.repository.readScope(f.actor,f.command.scope,context=>module!.readFleetRecoverySources(context,held.caseId,{limit:1}));expect(first.sources).toHaveLength(1);expect(first.nextCursor).toBeTruthy();
+ const second=await f.repository.readScope(f.actor,f.command.scope,context=>module!.readFleetRecoverySources(context,held.caseId,{limit:100,cursor:first.nextCursor}));
+ expect(second.sources).toHaveLength(1);expect(second.sources[0]).toMatchObject({operationId:note.operationId,kind:"activity.note",reportedByUserId:f.actor.userId,notes:"Synthetic original yard report"});expect(second.nextCursor).toBeNull();
+ expect(first).toMatchObject({caseId:held.caseId,historicalDetailVerified:true,canonicalApplied:false,source:"retained_original_reports"});
+ const wire=JSON.stringify({first,second});for(const hidden of ["objectPath","SESSION_SECRET","detailSnapshot","sessionVersion","passwordHash"])expect(wire).not.toContain(hidden);
+ expect((await pool.query("SELECT count(*)::int n FROM tickets WHERE vendor_id=$1",[f.vendor])).rows[0].n).toBe(before);
+ const state=(await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[f.vendor])).rows[0].fleet_ops_state;state.grants=state.grants.map((g:any)=>g.userId===f.actor.userId?{...g,roles:["driver"]}:g);await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[f.vendor,JSON.stringify(state)]);
+ await expect(f.repository.readScope(f.actor,f.command.scope,context=>module!.readFleetRecoverySources(context,held.caseId,{}))).rejects.toMatchObject({status:403});
+});
 it("resolves unpriced captured work from saved approval without auto approving charges",async()=>{
  const f=await fixture();await pool.query("UPDATE partner_vendor_work_type_approvals SET approved_by_user_id=NULL WHERE vendor_id=$1 AND partner_id=$2 AND work_type_id=$3",[f.vendor,f.partner,f.service]);
  const created=await f.work.apply(f.actor,f.command);expect(created.status).toBe("applied");if(created.status!=="applied")return;const activity=created.canonicalReferences.find(ref=>ref.kind==="activity")!,ticket=created.canonicalReferences.find(ref=>ref.kind==="ticket")!;
