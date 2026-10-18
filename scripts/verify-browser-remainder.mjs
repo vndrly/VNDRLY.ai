@@ -14,7 +14,7 @@ export function parsePassed(log){
   if (/^\s*[✘×]\s+\d+\s+\[chromium\]/m.test(clean)||/^\s*\d+ failed\s*$/m.test(clean))throw new Error("Baseline contains browser failures");
   return [...clean.matchAll(/^\s*[✓✔]\s+\d+\s+(\[chromium\]\s+›\s+.+)$/gm)].map(m=>identity(m[1]));
 }
-export function parseListed(log){return [...cleanLog(log).matchAll(/^\s*(\[chromium\]\s+›\s+.+)$/gm)].map(m=>identity(m[1]));}
+export function parseListed(log){return [...cleanLog(log).matchAll(/^\s*(\[chromium\]\s+›\s+.+)$/gm)].map(m=>identity(m[1]).replace(/^(\[chromium\] › )(?!tests\/)([^/]+\.spec\.ts:)/, "$1tests/$2"));}
 export function validateDiff(paths,oldWorkflow,newWorkflow){
   if(paths.some(p=>!ALLOWED.includes(p)))throw new Error("Application tree changed; complete verification required");
   if(oldWorkflow.replace(/\r\n/g,"\n").replace("timeout-minutes: 35","timeout-minutes: 45")!==newWorkflow.replace(/\r\n/g,"\n"))throw new Error("Original verification gates changed beyond the demonstrated timeout correction");
