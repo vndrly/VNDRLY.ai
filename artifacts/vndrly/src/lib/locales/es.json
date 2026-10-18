@@ -4121,6 +4121,14 @@
     "mismatch": "Las contraseñas no coinciden."
   },
   "errors": {
+    "marketplace": {
+      "unavailable": "El mercado de servicios no está disponible temporalmente. Inténtalo de nuevo.",
+      "ticket_reinvite_not_allowed": "Cancela este ticket del mercado y crea una nueva oferta de trabajo para contratar a otro proveedor."
+    },
+    "service_mapping": {
+      "duplicate_code": "Ese código de servicio ya está en uso.",
+      "unavailable": "La asignación de servicios no está disponible temporalmente. Inténtalo de nuevo."
+    },
     "gate_billing": {
       "invalid_request": "Revise los datos de facturación de la puerta e inténtelo de nuevo.",
       "internal_error": "La facturación de la puerta no está disponible temporalmente. Su solicitud guardada se conserva; verifique el resultado antes de reintentar."
@@ -4362,6 +4370,7 @@
     "ticket_not_awaiting_acceptance": "Esta invitación ya fue respondida.",
     "ticket_state_changed": "El estado del ticket cambió — actualiza e inténtalo de nuevo.",
     "ticket_not_reinvitable": "Este ticket ya no puede reinvitarse.",
+    "marketplace_ticket_reinvite_not_allowed": "Cancela este ticket del mercado y crea una nueva oferta de trabajo para contratar a otro proveedor.",
     "ticket_not_unlockable": "Solo los tickets enviados o aprobados se pueden desbloquear.",
     "ticket_not_approved": "Solo se pueden dispersar fondos en un ticket aprobado.",
     "ticket_not_cancelled": "El ticket no está cancelado y no se puede reactivar.",

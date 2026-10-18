@@ -4121,6 +4121,14 @@
     "mismatch": "Passwords do not match."
   },
   "errors": {
+    "marketplace": {
+      "unavailable": "The service marketplace is temporarily unavailable. Please try again.",
+      "ticket_reinvite_not_allowed": "Cancel this marketplace ticket and create a new job offer to engage another vendor."
+    },
+    "service_mapping": {
+      "duplicate_code": "That service code is already in use.",
+      "unavailable": "Service matching is temporarily unavailable. Please try again."
+    },
     "gate_billing": {
       "invalid_request": "Review the gate billing details and try again.",
       "internal_error": "Gate billing is temporarily unavailable. Your saved billing request is retained; verify its outcome before retrying."
@@ -4362,6 +4370,7 @@
     "ticket_not_awaiting_acceptance": "This invite has already been responded to.",
     "ticket_state_changed": "Ticket state changed — please refresh and try again.",
     "ticket_not_reinvitable": "This ticket can no longer be reinvited.",
+    "marketplace_ticket_reinvite_not_allowed": "Cancel this marketplace ticket and create a new job offer to engage another vendor.",
     "ticket_not_unlockable": "Only submitted or approved tickets can be unlocked.",
     "ticket_not_approved": "Funds can only be dispersed on an approved ticket.",
     "ticket_not_cancelled": "Ticket is not cancelled and cannot be reactivated.",

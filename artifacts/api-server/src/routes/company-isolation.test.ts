@@ -136,12 +136,13 @@ describe("Company isolation", () => {
     expect(lastFilter().params).toEqual([7, "cancelled", "denied", 11, 11, 2]);
   });
   it.each(["pending_review", "revoked"])("denies field access when the relationship is %s", async () => {
-    // A nonapproved relationship is absent from the approved-only result.
+    // A nonapproved relationship is absent from the approved-only result, and
+    // no accepted marketplace engagement grants access to this exact site.
     state.rows = [[{ id: 1, partnerId: 2 }], [{ id: 11, vendorId: 7 }], []];
     const response = await request(app).get("/api/site-locations/1/assignments").set("Cookie", cookie("field_employee", null, 7));
     expect(response.status).toBe(403);
-    expect(lastFilter().params).toEqual([7, "approved"]);
-    expect(state.selects).toBe(3);
+    expect(lastFilter().params).toEqual([7, "cancelled", "denied", 1, 11, 11]);
+    expect(state.selects).toBe(4);
   });
   it("constrains field site lists by both relationship approval and employee assignment", async () => {
     state.rows = [[{ id: 11, vendorId: 7 }], [], [], []];
