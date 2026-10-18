@@ -74,6 +74,14 @@ export async function resolveFleetReconciliation(context:FleetWorkExecutionConte
  if(p.resolution.kind==="retain_record_only"){
   const receipt=FleetWorkReceiptSchema.parse({version:2,operationId:value.operationId,scope:value.scope,fingerprint:original.fingerprint,recordedAt:new Date().toISOString(),status:"retained",reason:value.reason,caseId:value.id,resolution:{caseId:value.id,officeOperationId:command.operationId,reviewedByUserId:actor.userId,reason:p.reason}});
   await append(context,"fleet-work-resolution-receipt",value.operationId,receipt,value.scope.userId);
+ }else if(p.resolution.kind==="resolve_price"&&original.command.kind==="price.resolve"){
+  if(!isDeepStrictEqual(p.activity,original.command.payload.activity)||!isDeepStrictEqual(p.originalTicket,original.command.payload.ticket))throw new FleetError("fleet.original_identity_conflict",409);
+  // This reauthorizes only the retained OFFICE pricing request. The canonical
+  // resolver reads actual partner-approved terms; no driver action is replayed.
+  result=await execute(FleetWorkCommandSchema.parse({...original.command,operationId:command.operationId,scope:command.scope}));
+  if(p.resolution.pricingIntent){const reference=result.canonicalReferences.find(ref=>ref.kind==="activity"),run=context.state.runs.find(run=>run.id===reference?.id);if(!isDeepStrictEqual(run?.billingV2?.pricing,p.resolution.pricingIntent))throw new FleetError("fleet.price_authority_unresolved",409);}
+  const receipt=FleetWorkReceiptSchema.parse({version:2,operationId:value.operationId,scope:value.scope,fingerprint:original.fingerprint,recordedAt:new Date().toISOString(),status:"applied",mappings:result.mappings,canonicalReferences:result.canonicalReferences,resolution:{caseId:value.id,officeOperationId:command.operationId,reviewedByUserId:actor.userId,reason:p.reason}});
+  await append(context,"fleet-work-resolution-receipt",value.operationId,receipt,value.scope.userId);
  }else{
   if(original.command.kind!=="activity.create")throw new FleetError("fleet.recovery_requires_source_review",409);
   const source=structuredClone(original.command),payload=source.payload;

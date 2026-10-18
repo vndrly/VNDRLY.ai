@@ -59,7 +59,7 @@ export const FleetWorkResolutionSchema=z.discriminatedUnion("kind",[
  z.object({kind:z.literal("create_ticket"),billing:FleetWorkBillingIntentSchema.refine(billing=>billing.choice==="new_ticket","A resolution must explicitly create a new ticket")}).strict(),
  z.object({kind:z.literal("correct_assignment"),detailReference:reference("detail"),snapshot:FleetDetailSnapshotSchema}).strict(),
  z.object({kind:z.literal("resolve_location"),original:reference("location").refine(ref=>ref.type==="local"),canonical:reference("location").refine(ref=>ref.type==="canonical")}).strict(),
- z.object({kind:z.literal("resolve_price"),pricingIntent:FleetPricingIntentSchema.options[0]}).strict(),
+ z.object({kind:z.literal("resolve_price"),pricingIntent:FleetPricingIntentSchema.options[0].optional()}).strict(),
  z.object({kind:z.literal("retain_record_only"),explanation:z.string().trim().min(1).max(2000)}).strict(),
 ]);
 const command=<K extends string,T extends z.ZodType>(kind:K,payload:T)=>z.object({...base,kind:z.literal(kind),payload}).strict();
