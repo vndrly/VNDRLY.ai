@@ -26,6 +26,7 @@ export default defineConfig({
       this.emitFile({ type: 'asset', fileName: 'legal/privacy/index.html', source: renderPublicPrivacyHtml() });
       this.emitFile({ type: 'asset', fileName: 'legal/terms/index.html', source: renderPublicTermsHtml() });
       this.emitFile({ type: 'asset', fileName: 'legal/messaging/index.html', source: renderPublicMessagingHtml() });
+      this.emitFile({ type: 'asset', fileName: 'sms/index.html', source: renderPublicMessagingHtml() });
     },
   }, {
     name: 'local-market-ticker',

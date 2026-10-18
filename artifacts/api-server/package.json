@@ -11,6 +11,7 @@
     "migrate:gate-visit-gps": "tsx scripts/migrate-gate-visit-gps.ts",
     "migrate:gate-locations": "tsx scripts/migrate-gate-locations.ts",
     "migrate:gate-alert-channels": "tsx scripts/migrate-gate-alert-channels.ts",
+    "migrate:public-sms-consent": "tsx scripts/migrate-public-sms-consent.ts",
     "migrate:push-token-retirement": "tsx scripts/migrate-push-token-retirement.ts",
     "dev": "pnpm run dev:local",
     "dev:local": "node ../../scripts/run-api-local.mjs",
