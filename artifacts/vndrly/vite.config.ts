@@ -5,7 +5,7 @@ import path from "path";
 import fs from 'node:fs';
 import { parseEnv } from 'node:util';
 import { fetchEnergyTicker } from '../api-server/src/lib/market-data/energy-ticker';
-import { renderPublicPrivacyHtml } from './src/lib/public-legal-html';
+import { renderPublicPrivacyHtml, renderPublicTermsHtml, renderPublicMessagingHtml } from './src/lib/public-legal-html';
 
 const rawPort = process.env.PORT;
 
@@ -24,6 +24,8 @@ export default defineConfig({
     apply: 'build',
     generateBundle() {
       this.emitFile({ type: 'asset', fileName: 'legal/privacy/index.html', source: renderPublicPrivacyHtml() });
+      this.emitFile({ type: 'asset', fileName: 'legal/terms/index.html', source: renderPublicTermsHtml() });
+      this.emitFile({ type: 'asset', fileName: 'legal/messaging/index.html', source: renderPublicMessagingHtml() });
     },
   }, {
     name: 'local-market-ticker',
