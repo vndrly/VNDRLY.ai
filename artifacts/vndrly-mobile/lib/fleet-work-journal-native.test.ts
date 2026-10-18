@@ -1,6 +1,8 @@
 import {it,expect,vi} from "vitest";
 import {randomUUID,createHash} from "node:crypto";
-import {DatabaseSync} from "node:sqlite";
+import {createRequire} from "node:module";
+// Node 22 exposes SQLite through the native loader even when Vite's builtin list omits it.
+const {DatabaseSync}=createRequire(import.meta.url)("node:sqlite") as typeof import("node:sqlite");
 import {tmpdir} from "node:os";import {join} from "node:path";
 const disk=vi.hoisted(()=>({free:512*1024*1024,failEntry:false}));
 vi.setConfig({testTimeout:20000});
@@ -10,7 +12,7 @@ vi.mock("expo-secure-store",()=>{const rows=new Map<string,string>();return {WHE
 vi.mock("expo-file-system/legacy",()=>({getInfoAsync:async()=>({exists:false}),getFreeDiskStorageAsync:async()=>disk.free}));
 vi.mock("expo-file-system",()=>({File:class{constructor(private uri:string){}async bytes(){return this.uri==="capacity"?new Uint8Array(1024).fill(77):new Uint8Array([255,216,255,12,13,14]);}}}));
 vi.mock("expo-sqlite",async()=>{
- const {DatabaseSync}=await import("node:sqlite"),{tmpdir}=await import("node:os"),{join}=await import("node:path");
+ const {createRequire}=await import("node:module"),{DatabaseSync}=createRequire(import.meta.url)("node:sqlite") as typeof import("node:sqlite"),{tmpdir}=await import("node:os"),{join}=await import("node:path");
  return {defaultDatabaseDirectory:tmpdir(),openDatabaseAsync:async(name:string)=>{
   const db=new DatabaseSync(join(tmpdir(),`fleet-port-test-${name}`));
   const tx={getFirstAsync:async(sql:string,...args:any[])=>sql==="PRAGMA cipher_version"?{cipher_version:"test-port-not-encryption-proof"}:db.prepare(sql).get(...args),getAllAsync:async(sql:string,...args:any[])=>db.prepare(sql).all(...args),runAsync:async(sql:string,...args:any[])=>{if(disk.failEntry&&args[0]==="entry"){disk.failEntry=false;throw Error("Synthetic interrupted original write");}return db.prepare(sql).run(...args);}};

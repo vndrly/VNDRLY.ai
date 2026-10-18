@@ -7,7 +7,7 @@ vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:"en"}})}));
 vi.mock("@/hooks/useColors",()=>({useColors:()=>({text:"#fff",primary:"#f90",card:"#383b3f"})}));
 it("captures an exact original quantity while offline without approving charges or closing the ticket",async()=>{
  const captureQuantity=vi.fn().mockResolvedValue({canonicalApplied:false,state:"outcome_unknown"}),captureOfficeReview=vi.fn(),session={scope:{userId:7},captureQuantity,captureOfficeReview,commercialReview:vi.fn().mockRejectedValue(Error("offline"))} as any;
- render(<FleetCommercialWork session={session} run={{id:"run",driverUserId:7} as any} pending={false} onChanged={()=>{}}/>);
+ render(<FleetCommercialWork session={session} run={{id:"run",driverUserId:7,stops:[]} as any} pending={false} onChanged={()=>{}}/>);
  fireEvent.change(screen.getByLabelText("Reported quantity"),{target:{value:"123.456789"}});fireEvent.click(screen.getByRole("button",{name:"Save reported quantity"}));
  await waitFor(()=>expect(captureQuantity).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({quantity:"123.456789"})));
  expect(await screen.findByText("Saved on this device; server confirmation is pending.")).toBeTruthy();expect(captureOfficeReview).not.toHaveBeenCalled();
