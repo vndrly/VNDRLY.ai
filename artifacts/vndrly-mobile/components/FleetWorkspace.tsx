@@ -22,7 +22,7 @@ import { ActivityIndicator, AppState, Pressable, useWindowDimensions, ScrollView
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import type { FleetOverview, FleetRun, FleetResources, FleetActionInput } from "@workspace/api-zod";
-import { CreateFleetRunSchema, previewFleetRunActions, previewFleetWorkEntries } from "@workspace/api-zod";
+import { CreateFleetRunSchema, previewFleetRunActions, previewFleetWorkEntries, fleetStorageHealthMessage } from "@workspace/api-zod";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import TogglePillButton from "@/components/TogglePillButton";
@@ -59,7 +59,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     const [detailsOpen, setDetailsOpen] = useState(false);
     const preferenceScope = useRef("");
     const copy = useFleetCopy();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const describeFleetError = (error: unknown) => {
         const code = (error as { code?: string })?.code;
         return code === "fleet.driver_availability_unknown" ? t("fleetAvailability.unknown_no_window") : code === "fleet.driver_schedule_conflict" ? t("fleetAvailability.recorded_conflict") : fleetErrorMessage(error);
@@ -428,6 +428,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
       <Text style={textStyle}>{work.status.pending} {copy("pending sync")} · {work.status.needsReconciliation} {copy("needing office reconciliation")} · {work.status.pendingEvidence} {copy("pending evidence")}</Text>
       <Text style={textStyle}>{copy("Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.")}</Text>
       {!!work.error && <Text accessibilityRole="alert" style={textStyle}>{work.error}</Text>}
+      {!!work.storageHealth && work.storageHealth.state !== "ready" && <Text accessibilityRole="alert" style={textStyle}>{fleetStorageHealthMessage(work.storageHealth,i18n?.language)}</Text>}
       <TogglePillButton compactOnTablet disabled={busy} onPress={()=>void work.refresh()}>{copy("Verify and synchronize retained work")}</TogglePillButton>
       <FleetPriorWork key={`prior:${identity}`} session={work.session}/><FleetReconciliation key={`recovery:${identity}`} session={work.session} pendingCaseIds={work.commands.filter(command=>command.kind==="activity.reconcile").map(command=>command.payload.caseId)} onChanged={()=>{void work.refresh();setRevision(n=>n+1);}}/>
     </View>}

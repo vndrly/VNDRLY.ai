@@ -1,4 +1,5 @@
 import {FleetDestinationDirectorySchema} from "./fleet-commercial";
+import type {FleetStorageHealth} from "./fleet-storage-health";
 import {FleetRunOrderPageSchema,FleetRunOrderSchema} from "./fleet-run-order";
 import {FleetWorkEvidencePageSchema} from "./fleet-evidence-upload";
 import {synchronizeFleetEvidence} from "./fleet-work-evidence-client";
@@ -17,7 +18,7 @@ import {buildFleetCreateIntent,buildFleetActionIntent,FleetWorkPreparationSchema
 import {CreateFleetRunSchema,FleetRunSchema,FleetActionInputSchema,type FleetRun,type FleetActionInput} from "./fleet";
 const accountSchema=z.object({userId:z.number().int().positive(),companyId:z.number().int().positive(),membershipId:z.number().int().positive(),sessionVersion:z.number().int().nonnegative()}).strict();
 export type FleetWorkAccount=z.infer<typeof accountSchema>;
-export type FleetEvidenceJournal=DurableFleetWorkJournal & {stageEvidence?:(id:string,source:unknown,contentType:string,makeCommand?:(media:{sha256:string;byteSize:number;contentType:string})=>FleetWorkCommand)=>Promise<{id:string;sha256:string;byteSize:number;contentType:string;durability:"durable"}>;readEvidencePart?:(id:string,offset:number,length:number)=>Promise<Uint8Array>};
+export type FleetEvidenceJournal=DurableFleetWorkJournal & {readStorageHealth?:()=>Promise<FleetStorageHealth>;stageEvidence?:(id:string,source:unknown,contentType:string,makeCommand?:(media:{sha256:string;byteSize:number;contentType:string})=>FleetWorkCommand)=>Promise<{id:string;sha256:string;byteSize:number;contentType:string;durability:"durable"}>;readEvidencePart?:(id:string,offset:number,length:number)=>Promise<Uint8Array>};
 const provisionSchema=z.object({scope:FleetWorkScopeSchema,expiresAt:z.iso.datetime()});
 export const FleetReportedQuantityInputSchema=FleetQuantityEvidenceSchema.pick({cycleId:true,quantity:true,unit:true,evidenceReferences:true}).extend({kind:z.enum(["planned","picked_up","delivered"]),source:z.enum(["meter","scale","manifest","recipient","manual"])}).strict();
 export type FleetReportedQuantityInput=z.infer<typeof FleetReportedQuantityInputSchema>;
