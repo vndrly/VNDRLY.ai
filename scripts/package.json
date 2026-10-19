@@ -9,6 +9,8 @@
     "backfill:object-acls": "tsx ./src/backfill-object-acls.ts",
     "backfill:companygo": "tsx ./src/backfill-companygo.ts",
     "verify:companygo": "tsx ./src/verify-companygo.ts",
+    "smoke:companygo-live": "tsx ./src/smoke-companygo-live.ts",
+    "smoke:companygo-mutations": "tsx ./src/smoke-companygo-mutations.ts",
     "audit:1099-overrides": "tsx ./src/audit-1099-category-overrides.ts",
     "aggregate:language-eval": "tsx ./src/aggregate-language-eval.ts",
     "lint:i18n": "tsx ./src/lint-i18n.ts",
