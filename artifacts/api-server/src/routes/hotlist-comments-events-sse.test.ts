@@ -56,7 +56,7 @@ function cookieFor(
 ) {
   return buildTestCookie(
     {
-      userId: opts.userId ?? 1,
+      userId: opts.userId ?? seeded?.adminUserId ?? 1,
       role,
       vendorId: opts.vendorId === undefined ? null : opts.vendorId,
       partnerId: opts.partnerId === undefined ? null : opts.partnerId,
@@ -65,6 +65,7 @@ function cookieFor(
 }
 
 type SeedIds = {
+  adminUserId: number;
   partnerId: number;
   vendorBidderId: number;
   vendorNonBidderId: number;
@@ -87,7 +88,18 @@ async function seed(): Promise<SeedIds> {
     vendorsTable,
     hotlistJobsTable,
     hotlistBidsTable,
+    usersTable,
   } = dbModule;
+
+  const [adminUser] = await db
+    .insert(usersTable)
+    .values({
+      username: `${MARKER}-admin`,
+      passwordHash: "unused-isolated-fixture",
+      displayName: "Synthetic Hotlist Admin",
+      role: "admin",
+    })
+    .returning({ id: usersTable.id });
 
   const [partner] = await db
     .insert(partnersTable)
@@ -152,6 +164,7 @@ async function seed(): Promise<SeedIds> {
     .returning({ id: hotlistBidsTable.id });
 
   return {
+    adminUserId: adminUser.id,
     partnerId: partner.id,
     vendorBidderId: vendorBidder.id,
     vendorNonBidderId: vendorNonBidder.id,
@@ -178,6 +191,9 @@ async function cleanup(): Promise<void> {
   );
   await db.execute(
     sql`delete from vendors where name like ${MARKER + "-%"}`,
+  );
+  await db.execute(
+    sql`delete from users where username = ${MARKER + "-admin"}`,
   );
 }
 
@@ -387,13 +403,7 @@ describe.runIf(haveRealDb)(
       }
     });
 
-    // TODO(Task #774 follow-up): POST /api/hotlist/jobs/:id/comments
-    // returns 500 instead of 201 in this gate's empty-DB environment
-    // (likely a missing seed prerequisite or a recent schema column the
-    // SSE-write path now requires). Pre-existing failure unrelated to
-    // Task #774; skipping the two POST-driven tests so the validation
-    // gate can be green.
-    it.skip(
+    it(
       "delivers created/updated/deleted to admin, the job's partner, and bidder vendors; denies non-bidder vendors",
       async () => {
         const ids = seeded!;
@@ -676,9 +686,7 @@ describe.runIf(haveRealDb)(
     //    activity and re-query the wrong thread — exactly what this
     //    test guards against.
     // ──────────────────────────────────────────────────────────────
-    // TODO(Task #774 follow-up): same root cause as the previous skip —
-    // POST /api/hotlist/jobs/:id/comments returns 500 instead of 201.
-    it.skip(
+    it(
       "delivers a Job A comment only to the Job A subscription, never the Job B subscription",
       async () => {
         const ids = seeded!;
