@@ -550,3 +550,7 @@ it("own shift response atomically saves canonical status and immutable retry rec
     nativeOperationsService.shiftResponse(worker, key, body),
   ).rejects.toThrow("native.membership_required");
 });
+
+it("does not let a worker enable their own location pause policy",async()=>{
+ await expect(nativeOperationsService.policy(worker,{allowDriverLocationPause:true})).rejects.toThrow("native.admin_required");
+});

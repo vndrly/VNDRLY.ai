@@ -506,7 +506,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
             <FleetReplacement workSession={work.session} run={run} canDispatch={false} equipment={[]} disabled={busy||!!cachedAt||!!unresolved||pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
             <FleetCargo workSession={work.session} run={run} canDispatch={false} disabled={busy||!!cachedAt||!!unresolved||pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
           </View>}
-          {run.status==="in_progress"&&verifiedAccount&&!cachedAt&&<FleetPhoneLocation run={run} account={verifiedAccount} disabled={busy||!!unresolved||pendingRun.length>0}/>}
+          {verifiedAccount&&!cachedAt&&<FleetPhoneLocation run={run} account={verifiedAccount} disabled={busy||!!unresolved||pendingRun.length>0}/>}
         </>:<>
         <View style={{flexDirection:"row",flexWrap:"wrap",gap:6}}>{[
           ["Assigned",run.status!=="draft"], ["Inspection",run.inspections.length>0], ["Pickup",run.loads.length>0], ["Delivery",run.loads.some(load=>!!load.deliveryReference)], ["Close Run",["submitted_for_review","completed"].includes(run.status)]

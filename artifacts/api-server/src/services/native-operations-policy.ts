@@ -6,6 +6,7 @@ export const NativePolicySchema = z
     locationRequests: z.boolean().default(true),
     photoRequests: z.boolean().default(true),
     automaticArrival: z.boolean().default(false),
+    allowDriverLocationPause: z.boolean().default(false),
     usageAlertUsd: z.number().positive().default(25),
     usageAlertTokens: z.number().int().positive().default(1000000),
     dutyModes: z.array(z.enum(dutyModes)).default([...dutyModes]),
