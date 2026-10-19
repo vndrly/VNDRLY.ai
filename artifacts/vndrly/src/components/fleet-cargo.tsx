@@ -7,6 +7,7 @@ import {
   FleetCargoTransferActionSchema,
   type FleetRun,
   type FleetCargoTransfer,
+  type FleetWorkSession,
 } from "@workspace/api-zod";
 import type { z } from "zod/v4";
 import { fleetClient } from "@/lib/fleet-client";
@@ -47,12 +48,14 @@ export function FleetCargoPanel({
   identity,
   canDispatch,
   onSaved,
+  workSession,
 }: {
   run: FleetRun;
   runs: FleetRun[];
   identity: string;
   canDispatch: boolean;
   onSaved: () => Promise<void>;
+  workSession?:FleetWorkSession|null;
 }) {
   const { i18n } = useTranslation(),
     c = fleetCopy(i18n.language);
@@ -111,6 +114,7 @@ export function FleetCargoPanel({
         );
       if (!valid || !load || !stop || !delivery)
         throw Error("Current cargo unavailable");
+      if(workSession){await workSession.cacheRun(source);await workSession.cacheRun(destination);}
       const input = FleetCargoTransferInputSchema.parse({
         operationId: crypto.randomUUID(),
         sourceRunId: source.id,
@@ -190,6 +194,7 @@ export function FleetCargoPanel({
     setBusy(true);
     setMessage("");
     try {
+      if(workSession&&run.ticketReference){const target=intent.kind==="proposal"?await workSession.readRun(intent.input.targetRunId):null;if(intent.kind==="proposal"&&!target)throw Error("Read and download the exact recipient before confirming cargo transfer");const result=await workSession.captureAncillary(run,intent.kind==="proposal"?{kind:"cargo.propose",target:target!,input:intent.input}:{kind:"cargo.action",recordId:intent.id,input:intent.input});if(!alive.current)return;if(!result.canonicalApplied){setMessage(i18n.language.startsWith("es")?"Guardado en el dispositivo; transferencia pendiente de sincronización.":"Saved on this device; cargo outcome is pending sync.");await onSaved();return;}}
       let saved: FleetCargoTransfer | undefined;
       if (intent.kind === "proposal") {
         const list = await fleetClient.cargoTransfers(run.id);
@@ -199,6 +204,7 @@ export function FleetCargoPanel({
             (event) => event.operationId === intent.input.operationId,
           ),
         );
+        if (!saved && workSession && run.ticketReference) throw Error("Receipt readback pending");
         if (!saved) saved = await fleetClient.proposeCargo(intent.input);
       } else {
         saved = await fleetClient.cargoTransfer(intent.id);
@@ -207,8 +213,10 @@ export function FleetCargoPanel({
           !saved.events.some(
             (event) => event.operationId === intent.input.operationId,
           )
-        )
+        ) {
+          if(workSession&&run.ticketReference)throw Error("Receipt readback pending");
           saved = await fleetClient.cargoAction(intent.id, intent.input);
+        }
       }
       if (!alive.current) return;
       if (

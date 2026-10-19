@@ -16,6 +16,7 @@
  *   pnpm --filter @workspace/api-server exec tsx scripts/seed-permian-basin.ts
  */
 import { eq, sql } from "drizzle-orm";
+import { updateVendorAddressAndCoverage } from "../src/services/marketplace/vendor-address";
 import {
   db,
   partnersTable,
@@ -763,7 +764,7 @@ export async function seedVendors(): Promise<SeedCounts> {
 
     const patch = mergeBlanks(existing, seed);
     if (Object.keys(patch).length > 0) {
-      await db.update(vendorsTable).set(patch).where(eq(vendorsTable.id, existing.id));
+      await updateVendorAddressAndCoverage(db, existing.id, patch);
       enriched++;
       console.log(`  ~ enriched vendor #${existing.id}: ${seed.name}  (${Object.keys(patch).join(", ")})`);
     } else {

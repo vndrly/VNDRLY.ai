@@ -18,7 +18,7 @@
 .fleet-inventory .fleet-filters > label { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 0 1 220px; white-space: normal; }
 .fleet-inventory .fleet-filters > label.grow { flex: 1 1 260px; }
 .fleet-inventory .fleet-filters > label :is(input, select) { min-width: 0; width: 100%; }
-.fleet-workspace label:has(> button[role="checkbox"]) { display: inline-flex; align-items: center; gap: 8px; margin-block: 4px; }
+.fleet-workspace label:has(> button[role="checkbox"]) { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; margin-block: 4px; }
 .fleet-workspace section, .fleet-workspace article, .fleet-workspace .rounded-xl.border, .fleet-summary-card, .fleet-workspace .fleet-filters {
   border: 2px solid var(--brand-primary, #b69a51); border-radius: 12px; background: var(--fleet-card); color: var(--fleet-ink);
 }

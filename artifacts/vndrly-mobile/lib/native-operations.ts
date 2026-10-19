@@ -26,8 +26,16 @@ export async function nativeLocationCollectionAllowed() {
   try { const status = await readNativeOperations(scope); return isAuthScopeCurrent(scope) && maySupplyFreshLocation(status, await getDeviceId()); }
   catch { return false; }
 }
-export function readNativeOperations(scope = captureAuthScope()) {
-  return apiFetch<NativeOperationsStatus>(`${base}/status`, {}, scope);
+export async function readNativeOperations(scope = captureAuthScope()) {
+  const status=await apiFetch<NativeOperationsStatus>(`${base}/status`, {}, scope);
+  if(isAuthScopeCurrent(scope)){const key=await suppressionKey();if(key)await stopStore.setItemAsync(`${key}.verified-status`,JSON.stringify(status),{keychainAccessible:SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY});}
+  return status;
+}
+async function verifiedOnCallContinues(){
+ const key=await suppressionKey();if(!key||await stopStore.getItemAsync(`${key}.oncall-stop`)==="true")return false;
+ try{const value=JSON.parse(await stopStore.getItemAsync(`${key}.verified-status`)??"null") as NativeOperationsStatus|null;
+  return !!value&&maySupplyFreshLocation({...value,duty:{active:false}},await getDeviceId());
+ }catch{return false;}
 }
 export async function updateNativeConsent(locationSharing: boolean, automaticArrival?: boolean) {
   const scope = captureAuthScope();
@@ -51,14 +59,15 @@ export async function designateNativeWorkPhone() {
 }
 export async function changeNativeDuty(action: "start" | "end", options: { mode: "manual" | "ticket" | "scheduled"; ticketId?: number; shiftId?: string } = { mode: "manual" }) {
   const scope = captureAuthScope();
-  if (action === "end") suppressed.add(scope.generation);
-  if (action === "end") {
+  const stop=action==="end"&&!await verifiedOnCallContinues();
+  if (stop) suppressed.add(scope.generation);
+  if (stop) {
     void import("./duty-background-location").then(module => module.stopDutyBackgroundLocation()).catch(() => undefined);
     void import("./liveLocationReporter").then(module => module.stopLiveLocationReporter()).catch(() => undefined);
     void import("./fleet-background-location-native").then(module => module.stopFleetBackgroundLocation(false)).catch(() => undefined);
   }
   const key = await suppressionKey();
-  if (action === "end" && key) await stopStore.setItemAsync(key, "true", { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY });
+  if (stop && key) await stopStore.setItemAsync(key, "true", { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY });
   const result = await apiFetch<NativeOperationsStatus>(`${base}/duty`, { method: "POST", body: JSON.stringify({ action, ...options }) }, scope);
   if ((action === "start" || result.onCallActive === true) && isAuthScopeCurrent(scope)) { if (key) await stopStore.deleteItemAsync(key); if (!await locallyStopped()) suppressed.delete(scope.generation); }
   return result;
@@ -115,10 +124,12 @@ async function collectFreshLocation(request: NativeDeviceRequest, scope: AuthSco
 
 export async function changeNativeOnCall(active: boolean, shiftActive = false) {
  const scope = captureAuthScope();
+ const onCallKey=await suppressionKey();if(!active&&onCallKey)await stopStore.setItemAsync(`${onCallKey}.oncall-stop`,"true");
  if (!active && !shiftActive) { suppressed.add(scope.generation); const key = await suppressionKey(); if(key) await stopStore.setItemAsync(key,"true"); await stopNativeBackgroundCollection(); }
  const result = await apiFetch<NativeOperationsStatus>(base + "/on-call", {method:"PUT",body:JSON.stringify({active,consent:true})}, scope);
  if (!isAuthScopeCurrent(scope)) return result;
  const key = await suppressionKey();
+ if(active&&key){await stopStore.deleteItemAsync(`${key}.oncall-stop`);await stopStore.setItemAsync(`${key}.verified-status`,JSON.stringify(result),{keychainAccessible:SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY});}
  if (active || result.duty?.active) { if(key) await stopStore.deleteItemAsync(key); if (!await locallyStopped()) suppressed.delete(scope.generation); }
  else { suppressed.add(scope.generation); if(key) await stopStore.setItemAsync(key,"true"); await stopNativeBackgroundCollection(); }
  return result;

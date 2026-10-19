@@ -1,3 +1,5 @@
+import {FleetAgreementEditor} from "@/components/fleet-agreement-editor";
+import type {FleetRateCardRevision} from "@workspace/api-zod";
 import { Fragment, useState, useRef, useMemo, useEffect } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { TAX_REPORTING_ENABLED } from "@/lib/release-features";
@@ -67,6 +69,7 @@ import PartnerVendorApprovalsCard from "@/components/partner-vendor-approvals-ca
 import { PlatformEulaModal } from "@/components/platform-eula-modal";
 import { getContrastWarningKind, getColorPairWarningKind, getSidebarContrastWarningKind } from "@/lib/brand-color";
 import { PosterPreview } from "@/components/poster-preview";
+import PartnerVendorResults from "@/components/service-marketplace/PartnerVendorResults";
 
 const COMPANY_ROLES = [
   "Operations Manager",
@@ -139,6 +142,7 @@ type VendorOffer = {
   approved: boolean;
   approvedAt: string | null;
   approvedUnitPrice: string | null;
+  fleetAgreement?:FleetRateCardRevision|null;
 };
 
 function formatVendorPrice(
@@ -303,6 +307,7 @@ function CatalogRowVendorOffers({
                 </TableCell>
                 <TableCell className="text-sm tabular-nums">
                   {formatVendorPrice(t, o)}
+                  {canManage&&o.approved&&o.approvedAt&&<details><summary>{t("fleet.agreementEditor")}</summary><FleetAgreementEditor partnerId={partnerId} vendorId={o.vendorId} serviceId={workTypeId} revision={o.approvedAt} agreement={o.fleetAgreement??null} onSaved={()=>void queryClient.invalidateQueries({queryKey})}/></details>}
                 </TableCell>
                 <TableCell className="text-center">
                   <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -335,6 +340,7 @@ export function PartnerProductServiceCatalogCard({
   partnerId,
   canManage,
   canAddToCatalog,
+  showMarketplace = false,
 }: {
   partnerId: number;
   canManage: boolean;
@@ -347,6 +353,7 @@ export function PartnerProductServiceCatalogCard({
    * one place — the parent PartnerDetail render at the call site.
    */
   canAddToCatalog: boolean;
+  showMarketplace?: boolean;
 }) {
   const catalogBrand = useBrand();
   const { t } = useTranslation();
@@ -705,6 +712,9 @@ export function PartnerProductServiceCatalogCard({
                               workTypeId={it.workTypeId}
                               canManage={canManage}
                             />
+                            {showMarketplace && (
+                              <PartnerVendorResults partnerId={partnerId} workTypeId={it.workTypeId} />
+                            )}
                           </TableCell>
                         </TableRow>
                       )}

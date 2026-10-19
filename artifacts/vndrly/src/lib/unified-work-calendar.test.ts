@@ -5,3 +5,16 @@ it("deduplicates records by source identity, preserving different source kinds",
 it("excludes invalid time data and reversed intervals",()=>{expect(normalizeUnifiedCalendar({calendar:{shifts:[{item:{id:"s",startsAt:"unknown"}},{item:{id:"r",startsAt:"2026-10-13T15:00:00Z",endsAt:"2026-10-13T14:00:00Z"}}]}})).toEqual([]);});
 it("counts overnight records on both local calendar days with exclusive ending midnight",()=>{const start=new Date(2026,9,13,23),end=new Date(2026,9,14,2);const items=normalizeUnifiedCalendar({calendar:{shifts:[{item:{id:"overnight",startsAt:start.toISOString(),endsAt:end.toISOString()}}]}});expect(calendarDayItems(items,new Date(2026,9,13))).toHaveLength(1);expect(calendarDayItems(items,new Date(2026,9,14))).toHaveLength(1);expect(calendarDayItems(items,new Date(2026,9,15))).toHaveLength(0);});
 it("builds a local 42-day month range without treating days as fixed UTC hours",()=>{const range=calendarMonthRange(new Date(2026,10,3));expect(new Date(range.start).getDay()).toBe(0);expect(new Date(range.start).getHours()).toBe(0);const end=new Date(range.start);end.setDate(end.getDate()+42);expect(range.end).toBe(end.toISOString());});
+
+it("includes immediate dispatched activities on the recorded dispatch date without inventing scheduled or paid time",()=>{
+ const items=normalizeUnifiedCalendar({fleet:{runs:[{id:"activity-a",title:"Crude haul",status:"dispatched",driverUserId:27,linkedTicketId:601,labels:{driverName:"Bob Villa"},schedule:null,events:[{type:"created",recordedAt:"2026-10-15T12:00:00Z"},{type:"dispatch",recordedAt:"2026-10-16T13:00:00Z"}]}]}});
+ expect(items).toHaveLength(1);expect(items[0]).toMatchObject({recordId:"activity-a",kind:"fleet_run",startsAt:"2026-10-16T13:00:00.000Z",endsAt:null,timeBasis:"dispatch_recorded",driverUserId:27,employeeName:"Bob Villa",linkedTicketId:601});
+});
+it("keeps planned time distinct and preserves repeated activities sharing one billing ticket",()=>{
+ const common={title:"Repeat crude haul",status:"completed",driverUserId:27,linkedTicketId:601,events:[{type:"dispatch",recordedAt:"2026-10-16T12:00:00Z"}]};
+ const items=normalizeUnifiedCalendar({fleet:{runs:[{...common,id:"a",schedule:{plannedStartAt:"2026-10-17T08:00:00Z",plannedEndAt:"2026-10-17T09:00:00Z",timezone:"America/Chicago"}},{...common,id:"b",schedule:null}]}});
+ expect(items).toHaveLength(2);expect(items.find(item=>item.recordId==="a")).toMatchObject({startsAt:"2026-10-17T08:00:00.000Z",timeBasis:"planned",linkedTicketId:601});expect(items.find(item=>item.recordId==="b")?.timeBasis).toBe("dispatch_recorded");
+});
+it("does not turn draft creation or malformed dispatch evidence into worked time",()=>{
+ expect(normalizeUnifiedCalendar({fleet:{runs:[{id:"draft",title:"Draft",status:"draft",events:[{type:"created",recordedAt:"2026-10-16T12:00:00Z"}]},{id:"bad",title:"Bad",status:"dispatched",events:[{type:"dispatch",recordedAt:"bad"}]}]}})).toEqual([]);
+});

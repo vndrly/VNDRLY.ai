@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link,useLocation } from "wouter";
+import {useTranslation} from "react-i18next";
+import {gateDailyBillingCopy} from "@workspace/api-zod";
+import {PngPillButton} from "@/components/png-pill-rollover";
 import { Receipt } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
@@ -25,6 +28,7 @@ export default function GateBillingInvoiceCard({
   role?: string;
   partners: { id: number; name: string | null | undefined }[];
 }) {
+  const [,navigate]=useLocation(),{i18n}=useTranslation();
   const [company, setCompany] = useState("all");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceRows, setInvoiceRows] = useState<InvoiceRow[]>([]);
@@ -61,6 +65,7 @@ export default function GateBillingInvoiceCard({
         <p className="text-sm text-muted-foreground">Review the existing receivable or payable ledger, then open the canonical invoice record to preview, print, download, or send.</p>
       </CardHeader>
       <CardContent className="space-y-3">
+        {role==="vendor"?<PngPillButton onClick={()=>navigate("/gate/history/billing")}>{gateDailyBillingCopy("Gate daily billing",i18n.language)}</PngPillButton>:null}
         <div className="grid gap-3 sm:grid-cols-2">
           <select aria-label="Filter invoices by company" className="h-10 rounded-full border-2 bg-white px-3" style={{ borderColor: "var(--brand-primary)" }} value={company} onChange={(event) => setCompany(event.target.value)}>
             <option value="all">All companies</option>

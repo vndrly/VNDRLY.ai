@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -45,6 +46,8 @@ export const partnerVendorRelationshipsTable = pgTable(
     // here so the approvals-card list query is a single round-trip
     // without joining the full event log.
     lastStatusReason: text("last_status_reason"),
+    fleetCommercialAuthority: jsonb("fleet_commercial_authority"),
+    fleetCompliancePolicies: jsonb("fleet_compliance_policies"),
     lastStatusChangeAt: timestamp("last_status_change_at", {
       withTimezone: true,
     }),

@@ -6,6 +6,9 @@ import { buildTestCookie } from "../test-utils/session";
 import { attachTestErrorMiddleware } from "../test-utils/route-app";
 
 const state = vi.hoisted(() => ({ tables: {} as Record<string, any[]>, notifications: [] as any[], sequence: 10, revoked: new Set<number>(), pg: vi.fn(), transactionOpen: false, handovers: [] as any[], coverage: null as any }));
+// This producer unit owns notification ordering; real shared-clock persistence
+// and acknowledgement/rollback are exercised by gate-duty.test.ts.
+vi.mock("../services/gate-workday",()=>({recordGateWorkday:vi.fn(async()=>{expect(state.transactionOpen).toBe(true);})}));
 vi.mock("@workspace/integrations-anthropic-ai", () => ({ anthropic: {} }));
 vi.mock("drizzle-orm", async importOriginal => {
   const actual = await importOriginal<typeof import("drizzle-orm")>();

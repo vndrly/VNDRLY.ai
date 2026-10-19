@@ -151,7 +151,7 @@ export default function NativeOperations({ requestId, action, systemRequestId, c
   if (!user) return null;
   const onCall = status?.onCallActive === true || status?.onCallWindows?.some(window => Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now()) === true;
   const controls = <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
-    <ShiftPill active={status?.duty?.active === true} disabled={busy || !status} label={t(shiftNotice === "start" && status?.duty?.active ? "nativeOperations.shiftStarted" : shiftNotice === "end" && !status?.duty?.active ? "nativeOperations.shiftEnded" : status?.duty?.active ? "nativeOperations.onShift" : "nativeOperations.start")} onPress={() => status?.duty?.active ? endDuty() : startDuty()} />
+
     <ShiftPill active={onCall} disabled={busy || !status} label={t("nativeOperations.onCallOn")} onPress={() => { void run(() => changeNativeOnCall(!onCall, status?.duty?.active === true)); }} />
   </View>;
   if (compact) return <View style={{ backgroundColor: colors.card, borderColor: brand.primary, borderWidth: 1, borderRadius: 12, padding: 12 }}>{status ? controls : <ActivityIndicator accessibilityLabel={t("nativeOperations.loading")} />}{error ? <Text accessibilityRole="alert" style={textStyle}>{error}</Text> : null}</View>;

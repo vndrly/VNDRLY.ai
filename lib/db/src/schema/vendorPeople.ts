@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean, date, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, date, numeric, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -18,6 +18,7 @@ export const vendorPeopleTable = pgTable("vendor_people", {
   isActive: boolean("is_active").notNull().default(true),
   pecCertification: boolean("pec_certification").notNull().default(false),
   pecExpirationDate: date("pec_expiration_date"),
+  fleetComplianceRecordIds: jsonb("fleet_compliance_record_ids").$type<string[]>(),
   photoUrl: text("photo_url"),
   profilePhotoPath: text("profile_photo_path"),
   hourlyRate: numeric("hourly_rate", { precision: 8, scale: 2 }),

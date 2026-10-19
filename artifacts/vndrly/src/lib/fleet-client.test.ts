@@ -6,14 +6,54 @@ import {
 } from "./fleet-client";
 afterEach(() => vi.unstubAllGlobals());
 describe("Fleet request errors", () => {
+  it("reads the saved Run directory through its own transport-order endpoint",async()=>{
+    const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({orders:[],nextCursor:null,canManage:true}),{status:200}));vi.stubGlobal("fetch",fetcher);
+    await expect((fleetClient as any).runOrders(42)).resolves.toEqual({orders:[],nextCursor:null,canManage:true});
+    expect(fetcher.mock.calls[0][0]).toBe("/api/fleet/run-orders?after=42");
+    expect(fetcher.mock.calls[0][1]).toMatchObject({credentials:"include"});
+  });
+  it("describes driver access through the company pool rather than a site assignment",()=>{
+    const message=fleetErrorMessage(new FleetRequestError("fleet.driver_grant_required",403),"Unavailable");
+    expect(message).toContain("company's available pool");
+    expect(message).not.toContain("run site");
+  });
+  it("reads a saved Detail as the canonical record returned by the Details endpoint", async () => {
+    const detail = {
+      id: "11111111-1111-4111-8111-111111111111",
+      companyId: 7,
+      version: 1,
+      name: "Bob support",
+      vehicleAssetId: "22222222-2222-4222-8222-222222222222",
+      rigPackageId: null,
+      rigPackageVersion: null,
+      driverUserId: 2,
+      accessGroupIds: ["33333333-3333-4333-8333-333333333333"],
+      effectiveFrom: "2026-10-16T12:00:00Z",
+      effectiveUntil: null,
+      archivedAt: null,
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify(detail), { status: 200 }),
+        ),
+    );
+    await expect(
+      fleetClient.saveDetail({
+        operationId: "44444444-4444-4444-8444-444444444444",
+        expectedVersion: 0,
+        detail,
+      }),
+    ).resolves.toEqual(detail);
+  });
   it("uses the separate exact draft PATCH route with cookie authentication", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ id: "run", events: [] }), {
-          status: 200,
-        }),
-      );
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: "run", events: [] }), {
+        status: 200,
+      }),
+    );
     vi.stubGlobal("fetch", fetcher);
     const input = {
       operationId: "11111111-1111-4111-8111-111111111111",

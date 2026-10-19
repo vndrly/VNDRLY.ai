@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { useColors } from "@/hooks/useColors";
 import { useFleetCopy } from "@/lib/fleet-copy";
+import type {FleetWorkSession} from "@workspace/api-zod";
 export type FleetBillingChoice =
   | {
       mode: "new_ticket";
@@ -14,6 +15,7 @@ export type FleetBillingChoice =
     }
   | {
       mode: "existing_ticket";
+      workTypeId?:number;
       ticketId: number;
       afeNumber: string;
       workDate: string;
@@ -23,12 +25,12 @@ type Options = {
     id: number;
     name: string;
     rateCents?: number;
-    unit: "per_job" | "lump_sum" | "per_hour" | "per_day";
+    unit: string|null;
     afeNumber: string;
   }[];
   tickets: {
     id: number;
-    ticketNumber: string;
+    ticketNumber: string|number;
     siteId: number;
     afeNumber: string;
     workDate: string;
@@ -36,17 +38,20 @@ type Options = {
   }[];
   afeRequired: boolean;
   siteAfe: string;
+  referenceFreshness?:"current"|"cached_unverified";
 };
 export default function FleetRunBilling({
   siteId,
   fleetId,
   onChange,
   disabled,
+  workSession,
 }: {
   siteId?: number;
   fleetId?: string;
   onChange: (choice: FleetBillingChoice | null) => void;
   disabled: boolean;
+  workSession?:FleetWorkSession|null;
 }) {
   const colors = useColors(),
     copy = useFleetCopy(),
@@ -72,11 +77,11 @@ export default function FleetRunBilling({
     setError("");
     onChange(null);
     if (siteId && /^\d{4}-\d{2}-\d{2}$/.test(workDate)) {
-      void apiFetch<Options>(
+      void (workSession&&fleetId?workSession.billingOptions({fleetId,siteId,afeNumber:afe.trim(),workDate}):apiFetch<Options>(
         `/api/fleet/billing-options?siteId=${siteId}&afeNumber=${encodeURIComponent(afe.trim())}&workDate=${workDate}${fleetId ? `&fleetId=${encodeURIComponent(fleetId)}` : ""}`,
         {},
         scope.current,
-      )
+      ))
         .then((value) => {
           if (alive && isAuthScopeCurrent(scope.current)) {
             if (!afe && value.siteAfe) {
@@ -93,7 +98,7 @@ export default function FleetRunBilling({
     return () => {
       alive = false;
     };
-  }, [siteId, afe, workDate, fleetId]);
+  }, [siteId, afe, workDate, fleetId,workSession]);
   useEffect(() => {
     if (!options || !mode || (options.afeRequired && !afe.trim())) {
       onChange(null);
@@ -113,9 +118,9 @@ export default function FleetRunBilling({
       });
     else if (
       mode === "existing_ticket" &&
-      options.tickets.some((t) => t.id === ticketId)
+      options.tickets.some((t) => t.id === ticketId)&&(!workSession||options.workTypes.some(w=>w.id===workType&&w.afeNumber===afe.trim()))
     )
-      onChange({ mode, ticketId: ticketId!, afeNumber: afe.trim(), workDate });
+      onChange({ mode, ticketId: ticketId!, ...(workSession?{workTypeId:workType!}:{}),afeNumber: afe.trim(), workDate });
     else onChange(null);
   }, [mode, workType, ticketId, options, afe, workDate]);
   const style = {
@@ -162,7 +167,7 @@ export default function FleetRunBilling({
           )}
         </TogglePillButton>
       ))}
-      {mode === "new_ticket" &&
+      {(mode === "new_ticket"||!!workSession&&mode==="existing_ticket") &&
         options?.workTypes.map((item) => (
           <TogglePillButton
             key={item.id}
@@ -183,12 +188,12 @@ export default function FleetRunBilling({
                 ? "hour"
                 : item.unit === "per_day"
                   ? "day"
-                  : "run",
+                  : workSession?(item.unit?.replaceAll("_"," ")??"Agreement unresolved"):"run",
             )}{" "}
             · AFE: {item.afeNumber || "—"}
           </TogglePillButton>
         ))}
-      {mode === "existing_ticket" &&
+      {options?.referenceFreshness==="cached_unverified"&&<Text style={{color:colors.text}}>{copy("Downloaded choices are unverified; authority is checked again when work synchronizes.")}</Text>}{mode === "existing_ticket" &&
         options?.tickets.map((item) => (
           <TogglePillButton
             key={item.id}
@@ -200,7 +205,7 @@ export default function FleetRunBilling({
             {item.ticketNumber || item.id} · {item.afeNumber} · {item.workDate}
           </TogglePillButton>
         ))}
-      {mode === "existing_ticket" && options?.tickets.length === 0 && (
+      {options?.referenceFreshness==="cached_unverified"&&<Text style={{color:colors.text}}>{copy("Downloaded choices are unverified; authority is checked again when work synchronizes.")}</Text>}{mode === "existing_ticket" && options?.tickets.length === 0 && (
         <Text style={{ color: colors.text }}>
           {copy("No eligible existing tickets are available.")}
         </Text>

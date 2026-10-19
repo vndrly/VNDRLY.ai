@@ -1,3 +1,5 @@
+import {startGateDailyBillingWorker,stopGateDailyBillingWorker} from "./services/gate-daily-billing-worker";
+import {startFleetMonitoringWorker,stopFleetMonitoringWorker} from "./services/fleet-monitoring";
 import {startOnboardingWorker,stopOnboardingWorker} from "./work-hub/onboarding-worker";
 import { startFormCampaignWorker, stopFormCampaignWorker } from "./work-hub/form-campaign-worker";
 import { startInternalVoicemailWorker, stopInternalVoicemailWorker } from "./work-hub/call-voicemail-worker";
@@ -68,6 +70,7 @@ import {
   stopSignupAssistantDigest,
 } from "./lib/signup-assistant-digest";
 import { startNotificationEmailDigest } from "./lib/notification-email-digest";
+import {startFleetComplianceReminderWorker,stopFleetComplianceReminderWorker} from "./services/fleet-compliance-reminders";
 import {
   startCertificationReminderWorker,
   stopCertificationReminderWorker,
@@ -90,6 +93,8 @@ import { recoverAndStartWorkHubRetentionPlannerWorker, stopWorkHubRetentionPlann
 import { startReliableNotificationWorker, stopReliableNotificationWorker } from "./services/notification-delivery";
 import { startImplementationARetentionWorker, stopImplementationARetentionWorker } from "./services/operations-health";
 import { startNativeOperationsWorker, stopNativeOperationsWorker } from "./services/native-operations";
+import { startJobOfferExpiryWorker, stopJobOfferExpiryWorker } from "./services/marketplace/job-offer-expiry-worker";
+import { startCatalogClassificationWorker, stopCatalogClassificationWorker } from "./services/service-matching/catalog-classification";
 import { startGateCoverageMonitor, stopGateCoverageMonitor } from "./services/gate-coverage-monitor";
 
 const rawPort = process.env["PORT"];
@@ -172,6 +177,10 @@ function onListening(): void {
   startNotificationEventBus();
   startMajikEventBus();
   startScheduledNotificationWorker();
+  if (process.env.SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true") {
+    startJobOfferExpiryWorker();
+    startCatalogClassificationWorker();
+  }
   startReliableNotificationWorker();
   startImplementationARetentionWorker();
   startNativeOperationsWorker();
@@ -181,6 +190,7 @@ startOnboardingWorker();
   startGateCoverageMonitor();
   startGatePostMonitor();
   startInvoicePeriodWorker();
+  startGateDailyBillingWorker();
   startInvoiceAgingWorker();
   startApPaymentDigestWorker();
   if (process.env.ENABLE_TAX_REPORTING === "true") startDashboard1099MonthlyEmailWorker();
@@ -194,6 +204,8 @@ startOnboardingWorker();
   startSignupAssistantDigest();
   startNotificationEmailDigest();
   startCertificationReminderWorker();
+  startFleetComplianceReminderWorker();
+  startFleetMonitoringWorker();
   // Task #248 — every-6h sweep that emails + in-app notifies the
   // creator of any OA connection whose credentials have been revoked
   // or whose OAuth refresh appears stale.
@@ -250,6 +262,8 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopStaleVisitSweeper();
   stopGateEvidenceCleanupWorker();
   stopScheduledNotificationWorker();
+  stopJobOfferExpiryWorker();
+  stopCatalogClassificationWorker();
   stopReliableNotificationWorker();
   stopImplementationARetentionWorker();
   stopNativeOperationsWorker();
@@ -267,6 +281,9 @@ stopOnboardingWorker();
   stopBulkActionExpiryWarningWorker();
   stopSignupAssistantDigest();
   stopCertificationReminderWorker();
+  stopFleetComplianceReminderWorker();
+  stopFleetMonitoringWorker();
+  stopGateDailyBillingWorker();
   stopOaConnectionReminderWorker();
   stopWorkHubExportWorker();
   const retentionPlannerStop = stopWorkHubRetentionPlannerWorker();

@@ -140,6 +140,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:vendor-note-ownership
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:visit-entry-category
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PARTNER_OWNED_CATALOGS=1 pnpm --filter @workspace/api-server run migrate:partner-owned-catalogs
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_SEMANTIC_SERVICE_MARKETPLACE=1 pnpm --filter @workspace/api-server run migrate:semantic-service-marketplace
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-flags
@@ -182,12 +183,17 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:camera-registry
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-notification-preferences
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-alert-channels
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:public-sms-consent
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:push-token-retirement
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-connection
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:staff-session-revocation
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-plan-execution
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:fleet-ops
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:company-operations
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:fleet-commercial
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:fleet-resources
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:fleet-compliance
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:fleet-pricing
           demo_database_url="$(sudo sed -n 's/^DEMO_DATABASE_URL=//p' .env.production | head -n 1)"
           if [ -n "$demo_database_url" ]; then
             sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" DEMO_DATABASE_URL="$demo_database_url" pnpm --filter @workspace/db run migrate:ios-parity-demo

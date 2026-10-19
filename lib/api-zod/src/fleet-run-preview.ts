@@ -1,5 +1,22 @@
 import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "./fleet-planning";
 import type { FleetActionInput, FleetRun } from "./fleet";
+import type {FleetWorkState} from "./fleet-work-state";
+
+/** A device-only form projection. It never changes canonical status, map
+ * telemetry or acceptance, and never silently rebases a changed assignment. */
+export function previewFleetWorkEntries(run:FleetRun,entries:FleetWorkState["entries"],userId:number){
+ const pending=entries.filter(entry=>(run.localWork?entry.delivery.state!=="retained":!["applied","retained"].includes(entry.delivery.state))&&entry.command.kind==="activity.action"&&entry.command.payload.activity.id===run.id).sort((a,b)=>a.sequence-b.sequence);
+ if(!pending.length)return null;
+ const actions:FleetActionInput[]=[];
+ for(const entry of pending){
+  const command=entry.command;if(command.kind!=="activity.action")continue;
+  if(userId!==run.driverUserId||command.scope.userId!==userId||command.scope.owner.type!=="vendor"||command.scope.owner.id!==run.companyId)throw Error("Original driver scope changed");
+  if(["needs_reconciliation","denied"].includes(entry.delivery.state))throw Error("Original work needs office reconciliation; no sequence was rebased");
+  if(!(run.resourceAssignment?.snapshot??run.localWork?.snapshot)||JSON.stringify(command.payload.baseAssignment)!==JSON.stringify(run.resourceAssignment?.snapshot??run.localWork?.snapshot))throw Error("Original assignment changed; no sequence was rebased");
+  actions.push(command.payload.action);
+ }
+ return previewFleetRunActions(run,actions);
+}
 
 export type FleetRunPreview = {
   unsynced: true;
@@ -67,6 +84,7 @@ export function previewFleetRunActions(
     )
     .map((r) => ({ unit: r.unit, reading: r.reading! }));
   const available = (): FleetRun["allowedActions"] => {
+    if(next.status==="draft"&&base.localWork&&base.allowedActions.includes("dispatch"))return ["dispatch"];
     if (next.status === "dispatched") return ["acknowledge"];
     if (next.status === "acknowledged")
       return [
@@ -114,7 +132,8 @@ export function previewFleetRunActions(
       !available().includes(action.action)
     )
       fail();
-    if (action.action === "acknowledge") next.status = "acknowledged";
+    if(action.action==="dispatch")next.status="dispatched";
+    else if (action.action === "acknowledge") next.status = "acknowledged";
     else if (action.action === "inspect") {
       if (!action.inspectionOutcome || !action.notes || !checkFleetInspectionRequirements(base.operationalProfile, action.inspectionResponses, action.inspectionOutcome)) fail();
       passed = action.inspectionOutcome === "passed";

@@ -1,3 +1,4 @@
+import {currentFleetPositions,fleetCurrentPhoneSpeed} from "@workspace/api-zod";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FleetOverview, FleetRun } from "@workspace/api-zod";
@@ -24,6 +25,7 @@ export function FleetOperationsMap({ runs, positions, selected, onSelect }: {
     window.addEventListener("keydown", escape);
     return () => window.removeEventListener("keydown", escape);
   }, [expanded]);
+  positions=currentFleetPositions(positions);
   const shown = positions.filter(point => includeOld || point.freshness === "recent");
   const oldCount = positions.filter(point => point.freshness !== "recent").length;
   return <section className={`fleet-map-card ${expanded ? "fleet-map-expanded" : ""}`} aria-label={c.map}>
@@ -55,7 +57,7 @@ export function FleetOperationsMap({ runs, positions, selected, onSelect }: {
         {shown.map((point, index) => {
           const run = runs.find(item => item.id === point.runId);
           return <button key={point.runId} className="fleet-position" aria-pressed={selected === point.runId} onClick={() => { onSelect(point.runId); setExpanded(false); }}>
-            <span className="fleet-marker-number">{index + 1}</span><span><strong>{run?.labels?.vehicleName ?? c.vehicle}</strong><span>{run?.labels?.driverName ?? c.driver} · {run?.title}</span><span>{point.freshness === "recent" ? c.recentPosition : c.oldPosition} · {new Date(point.recordedAt).toLocaleString(i18n.language)}</span></span>
+            <span className="fleet-marker-number">{index + 1}</span><span><strong>{run?.labels?.vehicleName ?? c.vehicle}</strong><span>{run?.labels?.driverName ?? c.driver} · {run?.title}</span><span>{fleetCurrentPhoneSpeed(point)!==null?`${Math.round(fleetCurrentPhoneSpeed(point)!*2.236936)} mph · driver phone`:(i18n.language.startsWith("es")?"Velocidad no disponible":"Speed unavailable")}</span><span>{point.freshness === "recent" ? c.recentPosition : c.oldPosition} · {new Date(point.recordedAt).toLocaleString(i18n.language)}</span></span>
           </button>;
         })}
         <p className="text-xs text-muted-foreground">{c.mapHint}</p>

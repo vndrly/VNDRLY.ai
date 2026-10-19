@@ -11,6 +11,7 @@
 // that period) and the lines land there.
 
 import { and, eq, sql, desc } from "drizzle-orm";
+import { loadTicketCommercialRate } from "./ticket-commercial-rate";
 import {
   db,
   ticketsTable,
@@ -44,6 +45,7 @@ import {
   type EngineSnapshot,
 } from "./invoice-engine";
 import { logger } from "./logger";
+import { GateDailyBillingConfigSchema } from "@workspace/api-zod";
 
 // A handle that can run drizzle queries: either the root db OR a transaction
 // handle yielded by db.transaction(). Used so the regenerate route can wrap
@@ -119,6 +121,7 @@ async function generateInvoiceForTicketInner(
   const [ticket] = await executor
     .select({
       id: ticketsTable.id,
+      jobOfferId: ticketsTable.jobOfferId,
       vendorId: ticketsTable.vendorId,
       siteLocationId: ticketsTable.siteLocationId,
       workTypeId: ticketsTable.workTypeId,
@@ -132,6 +135,8 @@ async function generateInvoiceForTicketInner(
   if (ticket.status !== "approved") {
     return { ok: false, reason: `ticket_status_not_approved:${ticket.status}` };
   }
+  const commercial = await loadTicketCommercialRate(ticket, executor);
+  if (commercial?.automaticBilling === "manual_billing_required") return { ok: false, reason: "manual_billing_required" };
   // Period resolution must use the IMMUTABLE approval timestamp so that
   // subsequent edits to the ticket (which bump updatedAt) cannot silently
   // shift charges to a different invoice. Tickets approved before this
@@ -143,6 +148,25 @@ async function generateInvoiceForTicketInner(
     .from(siteLocationsTable)
     .where(eq(siteLocationsTable.id, ticket.siteLocationId));
   if (!site) return { ok: false, reason: "site_not_found" };
+
+  // Gate post periods retain their original payer and AFE. Moving a site or
+  // editing today's assignment must never re-address an already closed period.
+  const gateProof = (await executor.execute(sql`
+    SELECT tool_output FROM assistant_action_audit
+    WHERE vendor_id=${ticket.vendorId} AND partner_id IS NULL
+      AND target_type='gate-billing-ticket' AND target_id=${String(ticketId)}
+    ORDER BY id DESC LIMIT 1
+  `)).rows[0]?.tool_output as { agreement?: unknown } | undefined;
+  const gateAgreement = gateProof
+    ? GateDailyBillingConfigSchema.safeParse(gateProof.agreement) : null;
+  if (gateAgreement && (!gateAgreement.success ||
+      gateAgreement.data.vendorId !== ticket.vendorId ||
+      gateAgreement.data.siteId !== ticket.siteLocationId ||
+      gateAgreement.data.partnerId !== site.partnerId ||
+      gateAgreement.data.workTypeId !== ticket.workTypeId ||
+      gateAgreement.data.openTicketId !== ticketId))
+    return { ok: false, reason: "gate_billing_context_changed" };
+
 
   const [vendor] = await executor
     .select()
@@ -174,7 +198,9 @@ async function generateInvoiceForTicketInner(
         eq(siteWorkAssignmentsTable.workTypeId, ticket.workTypeId),
       ),
     );
-  const afe = afeAssignment?.afe ?? site.afe ?? null;
+  // Marketplace scope is the accepted agreement, including an omitted AFE.
+  // Existing Gate and ordinary assignment/site precedence remain unchanged.
+  const afe = commercial ? commercial.afe : gateAgreement?.success ? gateAgreement.data.afe : afeAssignment?.afe ?? site.afe ?? null;
 
   // Order by checkInAt ASC so weekly-OT reverse-walk (which converts the
   // latest hours of the week from regular→OT) operates on the correct
@@ -325,8 +351,8 @@ async function generateInvoiceForTicketInner(
     vendor: {
       id: vendor.id,
       name: vendor.name,
-      dailyOtHours: vendor.dailyOtHours ?? null,
-      weeklyOtHours: vendor.weeklyOtHours ?? null,
+      dailyOtHours: commercial?.dailyOtHours ?? vendor.dailyOtHours ?? null,
+      weeklyOtHours: commercial?.weeklyOtHours ?? vendor.weeklyOtHours ?? null,
     },
     site: { id: site.id, name: site.name, state: site.state ?? null },
     partner: { id: partner.id, name: partner.name },
@@ -339,7 +365,7 @@ async function generateInvoiceForTicketInner(
       remitToName: billingRow?.remitToName ?? null,
       mileageAutoSuggest: billingRow?.mileageAutoSuggest ?? false,
       mileageRate: billingRow?.mileageRate ?? null,
-      overtimeMultiplier: otMultiplier,
+      overtimeMultiplier: commercial?.overtimeMultiplier ?? otMultiplier,
       lateFeeRule: billingRow?.lateFeeRule ?? null,
       incomeCategoryOverrides: billingRow?.defaultIncomeCategoryOverrides ?? null,
     },
@@ -353,7 +379,7 @@ async function generateInvoiceForTicketInner(
           : null,
       checkInAt: r.checkInAt,
       checkOutAt: r.checkOutAt,
-      hourlyRateAtTime: r.hourlyRateAtTime ?? null,
+      hourlyRateAtTime: commercial?.unitPrice ?? r.hourlyRateAtTime ?? null,
     })),
     assignmentRates: assignmentRows.map((r) => ({
       ticketId: r.ticketId,
@@ -367,6 +393,7 @@ async function generateInvoiceForTicketInner(
       description: r.description,
       quantity: r.quantity,
       unitPrice: r.unitPrice,
+      preciseQuantity:r.preciseQuantity,preciseUnitPrice:r.preciseUnitPrice,fleetBillingMetadata:r.fleetBillingMetadata,
       taxableOverride: r.taxableOverride,
     })),
     totalGpsMiles: null,
@@ -466,6 +493,7 @@ async function generateInvoiceForTicketInner(
           unit: l.unit,
           unitPrice: l.unitPrice,
           amount: l.amount,
+          preciseQuantity:l.preciseQuantity,preciseUnitPrice:l.preciseUnitPrice,fleetBillingMetadata:l.fleetBillingMetadata,
           taxable: l.taxable,
           taxState: l.taxState,
           taxRate: l.taxRate,

@@ -56,14 +56,18 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet configuration", () => {
-  it("uses Detail terminology and the shared branded checkboxes", async () => {
+  it("separates company access pools from operational Details while retaining branded controls", async () => {
     const view = mount();
-    expect(await screen.findByRole("heading", { name: /^Details$/ })).toBeTruthy();
-    expect(screen.getByText("Details and authorized sites")).toBeTruthy();
-    expect(screen.getByLabelText("New Detail name")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /^Fleet access settings$/ })).toBeTruthy();
+    expect(screen.getByText("Company resource pools")).toBeTruthy();
+    expect(screen.getByLabelText("New resource pool name")).toBeTruthy();
     const checkboxes = screen.getAllByRole("checkbox");
     expect(checkboxes.every(box => box.tagName === "BUTTON" && box.className.includes("var(--brand-primary)"))).toBe(true);
     expect(view.container.querySelector('input[type="checkbox"]:not([aria-hidden="true"])')).toBeNull();
+  });
+  it("keeps pure drivers in the company pool instead of offering or saving personal site assignments",async()=>{
+    mount();await screen.findByRole("heading",{name:"Fleet access settings"});expect(screen.getAllByRole("checkbox",{name:"North site"})).toHaveLength(1);
+    fireEvent.click(screen.getByText("Save reviewed configuration"));await waitFor(()=>expect(api.saveSetup).toHaveBeenCalledOnce());expect(api.saveSetup.mock.calls[0][0].grants[0]).toMatchObject({roles:["driver"],siteIds:[],fleetIds:[fleetId],financeRead:true,safetyRelease:true});
   });
   it("saves explicit checklist configuration only through the reviewed company setup", async () => {
     mount();
@@ -108,7 +112,7 @@ describe("Fleet configuration", () => {
     fireEvent.click(screen.getByText("Save reviewed configuration"));
     await waitFor(() => expect(api.saveSetup).toHaveBeenCalledOnce());
     expect(api.saveSetup.mock.calls[0][0].supportGrants).toEqual(supportGrants);
-    expect(api.saveSetup.mock.calls[0][0].grants).toEqual(initial.grants);
+    expect(api.saveSetup.mock.calls[0][0].grants).toEqual(initial.grants.map(grant => ({ ...grant, siteIds: [] })));
   });
   it("changes safety-release authority explicitly without changing finance authority or driver role", async () => {
     mount();
@@ -134,7 +138,7 @@ describe("Fleet configuration", () => {
       expectedVersion: 4,
       enabled: true,
       fleets: initial.fleets,
-      grants: initial.grants,
+      grants: initial.grants.map(grant => ({ ...grant, siteIds: [] })),
     });
   });
   it("does not offer configuration writes when canonical read denies access", async () => {

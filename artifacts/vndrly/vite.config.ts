@@ -5,7 +5,7 @@ import path from "path";
 import fs from 'node:fs';
 import { parseEnv } from 'node:util';
 import { fetchEnergyTicker } from '../api-server/src/lib/market-data/energy-ticker';
-import { renderPublicPrivacyHtml } from './src/lib/public-legal-html';
+import { renderPublicPrivacyHtml, renderPublicTermsHtml, renderPublicMessagingHtml } from './src/lib/public-legal-html';
 
 const rawPort = process.env.PORT;
 
@@ -24,6 +24,18 @@ export default defineConfig({
     apply: 'build',
     generateBundle() {
       this.emitFile({ type: 'asset', fileName: 'legal/privacy/index.html', source: renderPublicPrivacyHtml() });
+      this.emitFile({ type: 'asset', fileName: 'legal/terms/index.html', source: renderPublicTermsHtml() });
+      this.emitFile({ type: 'asset', fileName: 'legal/messaging/index.html', source: renderPublicMessagingHtml() });
+      this.emitFile({ type: 'asset', fileName: 'sms/index.html', source: renderPublicMessagingHtml() });
+      this.emitFile({ type: 'asset', fileName: 'es/sms/index.html', source: renderPublicMessagingHtml('es') });
+      this.emitFile({ type: 'asset', fileName: 'es/legal/privacy/index.html', source: renderPublicPrivacyHtml('es') });
+      this.emitFile({ type: 'asset', fileName: 'es/legal/terms/index.html', source: renderPublicTermsHtml('es') });
+      this.emitFile({ type: 'asset', fileName: 'es/legal/messaging/index.html', source: renderPublicMessagingHtml('es') });
+      for (const color of ['white', 'vndrly']) this.emitFile({ type: 'asset', fileName: `legal-assets/pill-${color}.png`, source: fs.readFileSync(path.resolve(import.meta.dirname, `../../attached_assets/pills/pill_${color}.png`)) });
+      this.emitFile({ type: 'asset', fileName: 'legal-assets/pill-amber.png', source: fs.readFileSync(path.resolve(import.meta.dirname, '../../attached_assets/pills/pill_amber.png')) });
+      for (const [fileName, sourceName] of [['back-sphere.png', 'VNDRLYai-Button-blank_1777361718577.png'], ['back-gloss.png', 'download_1777663665476.png'], ['back-arrow.png', 'Symbol_Arrow_Left_1777371273492.png']]) {
+        this.emitFile({ type: 'asset', fileName: `legal-assets/${fileName}`, source: fs.readFileSync(path.resolve(import.meta.dirname, '../../attached_assets', sourceName)) });
+      }
     },
   }, {
     name: 'local-market-ticker',

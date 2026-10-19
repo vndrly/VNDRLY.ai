@@ -1,4 +1,8 @@
 import { z } from "zod/v4";
+import {
+  FleetRouteOperationalStopSchema,
+  FleetRoutePlanSchema,
+} from "./fleet-route";
 
 export const FleetScheduleSchema = z
   .object({
@@ -39,14 +43,25 @@ export const FleetOperationalProfileSchema = z
     name: z.string().trim().min(1).max(100),
     inspectionItems: z.array(requirement).max(50),
     manifestFields: z.array(requirement).max(50),
-    evidenceRequirements: z.array(requirement.extend({
-      kind: z.enum(["photo", "scale", "receipt", "signature"]),
-      scope: z.enum(["run", "each_load"]),
-    }).strict()).max(20).optional(),
+    evidenceRequirements: z
+      .array(
+        requirement
+          .extend({
+            kind: z.enum(["photo", "scale", "receipt", "signature"]),
+            scope: z.enum(["run", "each_load"]),
+          })
+          .strict(),
+      )
+      .max(20)
+      .optional(),
   })
   .strict()
   .superRefine((value, context) => {
-    for (const key of ["inspectionItems", "manifestFields", "evidenceRequirements"] as const) {
+    for (const key of [
+      "inspectionItems",
+      "manifestFields",
+      "evidenceRequirements",
+    ] as const) {
       const items = value[key] ?? [];
       if (new Set(items.map((item) => item.id)).size !== items.length)
         context.addIssue({
@@ -77,27 +92,16 @@ export const FleetDraftEditSchema = z
     expectedVersion: z.number().int().positive(),
     title: z.string().trim().min(1).max(200).optional(),
     schedule: FleetScheduleSchema.nullable().optional(),
-    stops: z
-      .array(
-        z
-          .object({
-            id: z.uuid(),
-            siteId: z.number().int().positive(),
-            kind: z.enum(["pickup", "delivery", "return"]),
-            sequence: z.number().int().nonnegative(),
-          })
-          .strict(),
-      )
-      .min(1)
-      .max(50)
-      .optional(),
+    routePlan: FleetRoutePlanSchema.optional(),
+    stops: z.array(FleetRouteOperationalStopSchema).min(1).max(50).optional(),
   })
   .strict()
   .refine(
     (value) =>
       value.title !== undefined ||
       value.schedule !== undefined ||
-      value.stops !== undefined,
+      value.stops !== undefined ||
+      value.routePlan !== undefined,
     "Supply an explicit draft change",
   );
 export type FleetOperationalProfile = z.infer<

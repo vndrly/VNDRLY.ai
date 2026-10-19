@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { FleetRun } from "@workspace/api-zod";
-import { FleetLocationInputSchema, FleetLocationObservationSchema, type FleetLocationObservation } from "@workspace/api-zod";
+import { FleetLocationInputSchema, FleetLocationObservationSchema, FleetLocationPageQuerySchema, FleetLocationObservationPageSchema, type FleetLocationObservation } from "@workspace/api-zod";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
 
+import { readCompleteFleetRunEvents } from "./fleet-run-events";
 type Transaction = <T>(actor: FleetActor, operation: (state: FleetState, client: PoolClient) => Promise<T>) => Promise<T>;
 type Permitted = (state: FleetState, actor: FleetActor, run: FleetRun, action: "view" | "dispatch" | "perform_run") => boolean;
 type SavedLocation = {operationId: string; fingerprint: string; deviceId: string; assignment: string; observation: FleetLocationObservation};
@@ -20,13 +21,14 @@ export function createFleetLocationOperations(transaction: Transaction, permitte
     return run;
   };
   const readObservations = async(state: FleetState, client: PoolClient, actor: FleetActor) => {
-    const runIds=state.runs.filter(run=>permitted(state,actor,run,"view")).map(run=>run.id);
+    const scopedRuns=actor.pageRuns ?? state.runs;
+    const runIds=scopedRuns.filter(run=>permitted(state,actor,run,"view")).map(run=>run.id);
     if(!runIds.length)return [];
     const rows=await client.query("SELECT tool_output FROM (SELECT DISTINCT ON(target_id) target_id,tool_output,id FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-location' AND target_id=ANY($2::text[]) ORDER BY target_id,(tool_output->'observation'->>'recordedAt')::timestamptz DESC,id DESC) latest WHERE EXISTS(SELECT 1 FROM location_consents c WHERE c.user_id=(tool_output->'observation'->>'driverUserId')::int AND c.device_id=tool_output->>'deviceId' AND c.revoked_at IS NULL)",[actor.companyId,runIds]);
     return rows.rows.flatMap(row=>{
       const saved=row.tool_output as SavedLocation, parsed=FleetLocationObservationSchema.safeParse(saved.observation);
       if(!parsed.success) return [];
-      const run=state.runs.find(item=>item.id===parsed.data.runId);
+      const run=scopedRuns.find(item=>item.id===parsed.data.runId);
       if(!run || !permitted(state,actor,run,"view") || saved.assignment!==assignment(run))return [];
       return [currentObservation(parsed.data,run,clock())];
     });
@@ -37,7 +39,7 @@ export function createFleetLocationOperations(transaction: Transaction, permitte
       // Reuse live-map authority and current device consent. Never expose another assignment's route.
       const rows=await client.query("SELECT tool_output FROM assistant_action_audit a WHERE vendor_id=$1 AND target_type='fleet-location' AND target_id=$2 AND tool_output->>'assignment'=$3 AND EXISTS(SELECT 1 FROM location_consents c WHERE c.user_id=(a.tool_output->'observation'->>'driverUserId')::int AND c.device_id=a.tool_output->>'deviceId' AND c.revoked_at IS NULL) ORDER BY (tool_output->'observation'->>'recordedAt')::timestamptz ASC,id ASC LIMIT 5001",[actor.companyId,runId,assignment(run)]);
       const parsed=rows.rows.flatMap(row=>{const saved=row.tool_output as SavedLocation, point=FleetLocationObservationSchema.safeParse(saved.observation);return point.success&&saved.assignment===assignment(run)&&point.data.runId===run.id?[currentObservation(point.data,run,clock())]:[];});
-      return {runId,points:parsed.slice(0,5000),truncated:rows.rows.length>5000,events:run.events.map((event,index)=>({id:event.id??String(index),recordedAt:event.recordedAt,label:event.type.replaceAll("_"," ")}))};
+      return {runId,points:parsed.slice(0,5000),truncated:rows.rows.length>5000,events:(await readCompleteFleetRunEvents(client,run)).map((event,index)=>({id:event.id??String(index),recordedAt:event.recordedAt,label:event.type.replaceAll("_"," ")}))};
     });},
     record: (actor: FleetActor, runId: string, input: unknown) => {
       const command=FleetLocationInputSchema.parse(input);
@@ -53,13 +55,25 @@ export function createFleetLocationOperations(transaction: Transaction, permitte
         if(run.version!==command.expectedVersion) throw new FleetError("fleet.version_conflict",409);
         const now=clock(), age=now.getTime()-Date.parse(command.recordedAt);
         if(age< -30000 || age>24*60*60*1000) throw new FleetError("fleet.location_capture_time_invalid",400);
-        const observation=currentObservation(FleetLocationObservationSchema.parse({runId,vehicleAssetId:run.vehicleAssetId,driverUserId:actor.userId,latitude:command.latitude,longitude:command.longitude,accuracyMeters:command.accuracyMeters,recordedAt:command.recordedAt,receivedAt:now.toISOString(),source:"driver_phone",freshness:"recent",physicalProofVerified:false}),run,now);
+        const observation=currentObservation(FleetLocationObservationSchema.parse({runId,vehicleAssetId:run.vehicleAssetId,driverUserId:actor.userId,latitude:command.latitude,longitude:command.longitude,accuracyMeters:command.accuracyMeters,...(command.speedMetersPerSecond!==undefined?{speedMetersPerSecond:command.speedMetersPerSecond,speedAccuracyMetersPerSecond:command.speedAccuracyMetersPerSecond??null,headingDegrees:command.headingDegrees??null}:{}),recordedAt:command.recordedAt,receivedAt:now.toISOString(),source:"driver_phone",freshness:"recent",physicalProofVerified:false}),run,now);
         const saved: SavedLocation={operationId:command.operationId,fingerprint:hash,deviceId:command.deviceId,assignment:assignment(run),observation};
         for(const [type,id] of [["fleet-location",runId],["fleet-location-operation",command.operationId]]) await client.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'fleet','device','canonical','fleet_phone_location','device-report',$3,$4,$5::jsonb,'completed')",[actor.userId,actor.companyId,type,id,JSON.stringify(saved)]);
         return observation;
       });
     },
-    observations: (actor: FleetActor) => transaction(actor,(state,client)=>readObservations(state,client,actor)),
+    observations: (actor: FleetActor) => transaction(actor,async(state,client)=>{
+      const retained=await client.query("SELECT 1 FROM (SELECT DISTINCT ON(target_id) tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' ORDER BY target_id,id DESC) latest WHERE jsonb_typeof(tool_output->'billingV2')='object' LIMIT 1",[actor.companyId]);
+      if(retained.rows.length)throw new FleetError("fleet.location_paging_required",409);
+      return readObservations(state,client,actor);
+    }),
+    observationPage: async (actor: FleetActor, raw: unknown = {}) => {
+      const query=FleetLocationPageQuerySchema.parse(raw);
+      const boundActor={...actor,runPage:query};
+      return transaction(boundActor,async(state,client)=>FleetLocationObservationPageSchema.parse({
+        observations:await readObservations(state,client,boundActor),
+        page:{limit:query.limit,nextCursor:boundActor.nextRunCursor??null},
+      }));
+    },
     readObservations,
   };
 }

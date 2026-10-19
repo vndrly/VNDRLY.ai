@@ -63,3 +63,8 @@ describe("Work Hub calendar ranges", () => {
     expect(sunday.textContent).toContain("Sun, Sep 13");
   });
 });
+
+it("labels dispatch-only Fleet placements and displays the driver and billing ticket without claiming worked hours",()=>{
+ render(<CalendarTimeGrid selectedDay="2026-10-16" onSelectDay={()=>undefined} items={[{id:"activity",kind:"Fleet Run",title:"Crude haul",startsAt:new Date(2026,9,16,9).toISOString(),endsAt:null,timeBasis:"dispatch_recorded",employeeName:"Bob Villa",linkedTicketId:601,route:"/fleet/runs/activity"}]}/>);
+ expect(screen.getByText("Dispatch recorded · no planned time")).toBeTruthy();expect(screen.getByText("Bob Villa")).toBeTruthy();expect(screen.getByText("Ticket #601")).toBeTruthy();expect(screen.getByRole("link",{name:/Crude haul/}).getAttribute("href")).toBe("/fleet/runs/activity");
+});

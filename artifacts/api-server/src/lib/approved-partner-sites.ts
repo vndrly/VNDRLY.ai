@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull, notInArray, or } from "drizzle-orm";
 import { db, partnerVendorRelationshipsTable, ACTIVE_APPROVAL_STATUSES, ticketsTable, ticketCrewTable } from "@workspace/db";
+import { hasAcceptedMarketplaceAccess } from "./accepted-marketplace-access";
 
 export function approvedPartnersForVendor(vendorId: number) {
   return db.select({ partnerId: partnerVendorRelationshipsTable.partnerId })
@@ -11,6 +12,10 @@ export async function vendorCanReadPartner(vendorId: number, partnerId: number |
   if (partnerId == null) return false;
   const rows = await approvedPartnersForVendor(vendorId);
   return rows.some((row) => row.partnerId === partnerId);
+}
+
+export async function vendorCanReadSite(vendorId: number, partnerId: number | null, siteId: number) {
+  return await vendorCanReadPartner(vendorId, partnerId) || await hasAcceptedMarketplaceAccess(vendorId, { siteId });
 }
 
 // Vendor-wide work assignments have no employee identity. Only an employee's
@@ -27,7 +32,7 @@ export function sitesAssignedToEmployee(employeeId: number, vendorId: number, si
 }
 
 export async function employeeCanReadSite(employeeId: number, vendorId: number, partnerId: number | null, siteId: number) {
-  if (!(await vendorCanReadPartner(vendorId, partnerId))) return false;
+  if (!(await vendorCanReadPartner(vendorId, partnerId))) return hasAcceptedMarketplaceAccess(vendorId, { siteId, employeeId });
   const rows = await sitesAssignedToEmployee(employeeId, vendorId, siteId);
   return rows.length > 0;
 }

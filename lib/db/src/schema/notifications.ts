@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, index, uniqueIndex, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { usersTable } from "./users";
 
@@ -138,6 +138,8 @@ export const notificationPreferencesTable = pgTable("notification_preferences", 
   alertsSmsEnabled: boolean("alerts_sms_enabled").notNull().default(false),
   alertsSmsOptedInAt: timestamp("alerts_sms_opted_in_at", { withTimezone: true }),
   alertsSmsConsentFingerprint: text("alerts_sms_consent_fingerprint"),
+  // Self-service enrollment evidence. Does not grant role access or bypass provider STOP suppression.
+  smsConsentRecord: jsonb("sms_consent_record").$type<{ language?: "en" | "es"; phone: string; policyVersion: string; disclosure: string; consentedAt: string; source: string; membershipId: number | null }>(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

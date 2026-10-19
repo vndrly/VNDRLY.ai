@@ -16,6 +16,23 @@ const command = {
   context: { kind: "organization" as const, id: 42 },
   expectedVersion: null,
 };
+it("reads offered Fleet templates without accepting a company override",()=>{
+ const session={userId:9,role:"vendor",vendorId:42,membershipRole:"admin"};
+ expect(resolveExecutableWorkHubToolRequest("query_fleet_service_templates",bindWorkHubToolScope({},session,"query_fleet_service_templates"),false,session)).toMatchObject({method:"GET",path:"/fleet/service-templates"});
+ expect(resolveExecutableWorkHubToolRequest("query_fleet_service_templates",bindWorkHubToolScope({companyId:999},session,"query_fleet_service_templates"),false,session)).toHaveProperty("error");
+});
+it("exposes the same own-workday mechanism to assistants without accepting another worker or a fabricated capture time",()=>{
+ const session={userId:9,role:"vendor",vendorId:42,membershipRole:"admin"};
+ expect(WORK_HUB_TOOL_NAMES).toContain("query_my_workday");
+ expect(resolveExecutableWorkHubToolRequest("query_my_workday",bindWorkHubToolScope({},session,"query_my_workday"),false,session)).toMatchObject({method:"GET",path:"/work-hub/workday"});
+ const input={operationId:command.operationId,action:"start_shift",expectedShiftId:null,timezone:"America/Chicago"};
+ expect(resolveExecutableWorkHubToolRequest("manage_my_workday",input,false,session)).toMatchObject({requiresConfirmation:true});
+ expect(resolveExecutableWorkHubToolRequest("manage_my_workday",input,true,session)).toMatchObject({method:"POST",path:"/work-hub/workday/assistant-events",body:input});
+ expect(resolveExecutableWorkHubToolRequest("manage_my_workday",{...input,workerUserId:10},true,session)).toHaveProperty("error");
+ expect(resolveExecutableWorkHubToolRequest("manage_my_workday",{...input,capturedAt:"2020-01-01T00:00:00Z"},true,session)).toHaveProperty("error");
+ expect(sanitizeChatGptActionInput("manage_my_workday",input)).not.toHaveProperty("operationId");
+ expect(()=>validateChatGptActionInput("manage_my_workday",{...input,scope:{userId:10}})).toThrow();
+});
 it("keeps authenticated exact read arguments separate from injected envelope authority", () => {
   const session={userId:9,role:"partner",partnerId:609,membershipRole:"admin"};
   const occurrenceId="00000000-0000-4000-8000-000000000002";

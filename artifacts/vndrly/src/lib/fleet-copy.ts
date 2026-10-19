@@ -1,5 +1,8 @@
 /** Fleet-specific copy kept together while the workspace evolves. */
 const en = {
+  compliance:"Compliance",
+  evidenceCurrent:"Current reviewed evidence",
+  evidenceMissing:"missing",evidenceExpired:"expired",evidenceRevoked:"revoked",evidenceFailed:"failed",evidenceUnverified:"unverified",evidenceExcluded:"excluded",
   back: "Back",
 
   fuelRecord: "Fuel reported",
@@ -16,9 +19,10 @@ const en = {
   dispatchHint: "Prepare draft runs and assign the right resources.",
   activeHint: "Dispatched, acknowledged and in-progress runs.",
   reviewHint: "Review saved closeout records and resolve exceptions.",
-  driverHint: "Review drivers, fleet access and recorded availability.",
+  driverHint: "Choose from your company's driver pool to build reusable Details.",
   maintenanceHint: "Review defects, service records and safety holds.",
-  mapSummary: "Latest recorded position per vehicle. Select a vehicle to inspect its work.",
+  mapSummary:
+    "Latest recorded position per vehicle. Select a vehicle to inspect its work.",
   recordedSnapshot: "Recorded snapshot",
   mapTools: "Fleet map controls",
   street: "Street",
@@ -28,9 +32,11 @@ const en = {
   collapseMap: "Collapse map",
   showOld: "Show stale / paused positions",
   noCurrentLocations: "No recent positions in this view",
-  oldLocationsHint: "Older positions are hidden. Show stale / paused positions to inspect their last recorded locations.",
+  oldLocationsHint:
+    "Older positions are hidden. Show stale / paused positions to inspect their last recorded locations.",
   positionRoster: "Vehicles on map",
-  positionLegend: "Numbers match the map markers. Blue: recent. Grey: stale or paused.",
+  positionLegend:
+    "Numbers match the map markers. Blue: recent. Grey: stale or paused.",
   recentPosition: "Recent",
   oldPosition: "Stale / paused",
 
@@ -158,6 +164,8 @@ const en = {
   plannedStart: "Planned start",
   plannedEnd: "Planned end",
   timezone: "Timezone",
+  plannedTimeInvalid:"Choose valid start/end times in the selected time zone, with the end after the start.",
+  plannedTimeTransition:"This local clock time occurs twice or does not exist because of daylight saving. Choose another time or UTC.",
   editDraft: "Edit saved draft",
   reviewDraft: "Review exact draft changes",
   saveDraft: "Save reviewed draft changes",
@@ -218,7 +226,7 @@ const en = {
   dispatchUnavailable: "Unavailable for dispatch",
   noTrailer: "No trailer assigned",
   driverDirectoryScope:
-    "Directory is available to dispatch authority. Drivers see their own assigned runs.",
+    "Company driver pool. Assign a driver to a Detail, then dispatch that Detail to a Run—an Origin and Destination transport order. Drivers do not need a site assignment.",
   readinessTitle: "Recorded readiness",
   readinessReported:
     "Inspection and meter entries are user reports. Certifications, holds and assignment eligibility are rechecked by the server; these entries do not prove regulatory clearance.",
@@ -348,7 +356,7 @@ const en = {
     "Loaded authorized runs (filters and counts apply to loaded records)",
   loadMore: "Load more authorized runs",
   review: "Operational Review",
-  setup: "Details",
+  setup: "Fleet access settings",
   settings: "Workspace settings",
   preferenceUnavailable:
     "Workspace preference is unavailable. Refresh to load its current version.",
@@ -357,8 +365,8 @@ const en = {
     "Choose your default home in this company. This setting does not grant access or change assignments.",
   defaultHome: "Default home",
   standardHome: "Standard company home",
-  preferredFleet: "Preferred fleet",
-  allFleets: "All authorized fleets",
+  preferredFleet: "Preferred resource pool",
+  allFleets: "All authorized resource pools",
   savePreference: "Save reviewed preference",
   preferenceSaved: "Workspace preference saved.",
   preferenceFailed:
@@ -368,14 +376,15 @@ const en = {
     "Fleet setup requires company administrator permission. Refresh to retry.",
   refreshConfiguration: "Refresh configuration",
   setupExplanation:
-    "Prepare asset details for ticketed work. Select the assets, authorized sites and staff permissions, then review before saving.",
+    "Configure company resource pools and office dispatch permissions here. Build truck/rig/driver Details in Inventory and Details. Drivers do not need site assignments.",
   enableFleet: "Enable Fleet Ops",
-  fleetsSites: "Details and authorized sites",
-  assignedEquipment: "Detailed assets",
+  fleetsSites: "Company resource pools",
+  assignedEquipment: "Pool assets",
   certifications: "Required certifications (one per line)",
-  newFleet: "New Detail name",
-  detailName: "Detail name",
-  addFleet: "Add Detail",
+  newFleet: "New resource pool name",
+  detailName: "Resource pool name",
+  addFleet: "Add resource pool",
+  driverPoolAccess:"Company driver pool: drivers join Details and receive Run activities; no personal site assignment is needed.",
   memberGrants: "Explicit member grants",
   member: "Company member",
   chooseMember: "Choose company member",
@@ -396,7 +405,8 @@ const en = {
   myDay: "My Day",
   myRun: "My Run",
   map: "Recorded Map",
-  equipment: "Fleet Inventory",
+  equipment: "Inventory and Details",
+  destinations: "Origins and Destinations",
   workHub: "Work Hub",
   companyPortal: "Company portal",
   subtitle: "Authorized dispatch, assigned runs and recorded locations",
@@ -405,7 +415,7 @@ const en = {
   denied:
     "Fleet access is unavailable for this company. Ask your company administrator to check your Fleet grants.",
   unavailable: "Fleet records could not be loaded. Refresh to try again.",
-  fleet: "Detail",
+  fleet: "Resource pool",
   site: "Site",
   status: "Status",
   all: "All",
@@ -465,6 +475,9 @@ const en = {
     "Readiness and eligibility are checked by the server when dispatch is saved.",
 } as const;
 const es: Record<keyof typeof en, string> = {
+  compliance:"Cumplimiento",
+  evidenceCurrent:"Evidencia revisada vigente",
+  evidenceMissing:"faltante",evidenceExpired:"vencida",evidenceRevoked:"revocada",evidenceFailed:"incumplida",evidenceUnverified:"sin verificar",evidenceExcluded:"excluida",
   back: "Atrás",
 
   fuelRecord: "Combustible reportado",
@@ -478,12 +491,14 @@ const es: Record<keyof typeof en, string> = {
   filters: "Filtrar trabajo de flota",
   fleetTools: "Herramientas de flota",
   awaitingDispatch: "Pendiente de despacho",
-  dispatchHint: "Prepare recorridos en borrador y asigne los recursos adecuados.",
+  dispatchHint:
+    "Prepare recorridos en borrador y asigne los recursos adecuados.",
   activeHint: "Recorridos despachados, confirmados y en curso.",
   reviewHint: "Revise los registros de cierre y resuelva excepciones.",
-  driverHint: "Revise conductores, acceso y disponibilidad registrada.",
+  driverHint: "Elija del grupo de conductores de su empresa para crear destacamentos reutilizables.",
   maintenanceHint: "Revise defectos, servicios y bloqueos de seguridad.",
-  mapSummary: "Última posición registrada por vehículo. Seleccione un vehículo para revisar su trabajo.",
+  mapSummary:
+    "Última posición registrada por vehículo. Seleccione un vehículo para revisar su trabajo.",
   recordedSnapshot: "Registro guardado",
   mapTools: "Controles del mapa de flota",
   street: "Calles",
@@ -493,9 +508,11 @@ const es: Record<keyof typeof en, string> = {
   collapseMap: "Reducir mapa",
   showOld: "Mostrar posiciones antiguas o pausadas",
   noCurrentLocations: "No hay posiciones recientes en esta vista",
-  oldLocationsHint: "Las posiciones antiguas están ocultas. Active la opción para revisar las últimas ubicaciones registradas.",
+  oldLocationsHint:
+    "Las posiciones antiguas están ocultas. Active la opción para revisar las últimas ubicaciones registradas.",
   positionRoster: "Vehículos en el mapa",
-  positionLegend: "Los números coinciden con los marcadores. Azul: reciente. Gris: antigua o pausada.",
+  positionLegend:
+    "Los números coinciden con los marcadores. Azul: reciente. Gris: antigua o pausada.",
   recentPosition: "Reciente",
   oldPosition: "Antigua o pausada",
 
@@ -622,6 +639,8 @@ const es: Record<keyof typeof en, string> = {
   plannedStart: "Inicio previsto",
   plannedEnd: "Fin previsto",
   timezone: "Zona horaria",
+  plannedTimeInvalid:"Elija horas válidas en la zona horaria seleccionada, con el fin después del inicio.",
+  plannedTimeTransition:"Esta hora local se repite o no existe por el cambio de horario. Elija otra hora o UTC.",
   editDraft: "Editar borrador guardado",
   reviewDraft: "Revisar cambios exactos",
   saveDraft: "Guardar cambios revisados",
@@ -683,7 +702,7 @@ const es: Record<keyof typeof en, string> = {
   dispatchUnavailable: "No disponible para despacho",
   noTrailer: "Sin remolque asignado",
   driverDirectoryScope:
-    "El directorio requiere autoridad de despacho. Los conductores ven sus propios recorridos asignados.",
+    "Grupo de conductores de la empresa. Asigne un conductor a un destacamento y despache ese destacamento a un recorrido: una orden de transporte entre origen y destino. Los conductores no necesitan asignación a un sitio.",
   readinessTitle: "Preparación registrada",
   readinessReported:
     "Las inspecciones y lecturas son reportes del usuario. El servidor comprueba certificaciones, retenciones y elegibilidad; estos registros no prueban autorización normativa.",
@@ -813,7 +832,7 @@ const es: Record<keyof typeof en, string> = {
     "Recorridos autorizados cargados (filtros y conteos se aplican a registros cargados)",
   loadMore: "Cargar más recorridos autorizados",
   review: "Revisión operativa",
-  setup: "Destacamentos",
+  setup: "Configuración de acceso a flota",
   settings: "Preferencias del espacio",
   preferenceUnavailable:
     "La preferencia no está disponible. Actualice para cargar su versión actual.",
@@ -822,8 +841,8 @@ const es: Record<keyof typeof en, string> = {
     "Elija su inicio predeterminado en esta empresa. Esta preferencia no concede acceso ni cambia asignaciones.",
   defaultHome: "Inicio predeterminado",
   standardHome: "Inicio habitual de la empresa",
-  preferredFleet: "Flota preferida",
-  allFleets: "Todas las flotas autorizadas",
+  preferredFleet: "Grupo de recursos preferido",
+  allFleets: "Todos los grupos de recursos autorizados",
   savePreference: "Guardar preferencia revisada",
   preferenceSaved: "Preferencia guardada.",
   preferenceFailed:
@@ -833,14 +852,15 @@ const es: Record<keyof typeof en, string> = {
     "La configuración requiere permiso de administrador de la empresa. Actualice para reintentar.",
   refreshConfiguration: "Actualizar configuración",
   setupExplanation:
-    "Prepare destacamentos de activos para trabajos con ticket. Seleccione activos, sitios autorizados y permisos antes de guardar.",
+    "Configure grupos de recursos y permisos de despacho de oficina aquí. Cree destacamentos de camión, equipo y conductor en Inventario y destacamentos. Los conductores no necesitan asignación a sitios.",
   enableFleet: "Habilitar operaciones de flota",
-  fleetsSites: "Destacamentos y sitios autorizados",
-  assignedEquipment: "Activos destacados",
+  fleetsSites: "Grupos de recursos de la empresa",
+  assignedEquipment: "Activos del grupo",
   certifications: "Certificaciones requeridas (una por línea)",
-  newFleet: "Nombre del nuevo destacamento",
-  detailName: "Nombre del destacamento",
-  addFleet: "Agregar destacamento",
+  newFleet: "Nombre del nuevo grupo de recursos",
+  detailName: "Nombre del grupo de recursos",
+  addFleet: "Agregar grupo de recursos",
+  driverPoolAccess:"Grupo de conductores: los conductores integran destacamentos y reciben actividades de recorridos; no necesitan asignación personal a sitios.",
   memberGrants: "Permisos explícitos de miembros",
   member: "Miembro de la empresa",
   chooseMember: "Elegir miembro de la empresa",
@@ -861,7 +881,8 @@ const es: Record<keyof typeof en, string> = {
   myDay: "Mi día",
   myRun: "Mi recorrido",
   map: "Mapa registrado",
-  equipment: "Inventario de flota",
+  equipment: "Inventario y destacamentos",
+  destinations: "Orígenes y destinos",
   workHub: "Centro de trabajo",
   companyPortal: "Portal de la empresa",
   subtitle:
@@ -872,7 +893,7 @@ const es: Record<keyof typeof en, string> = {
     "No tiene acceso a la flota de esta empresa. Pida al administrador que revise sus permisos.",
   unavailable:
     "No se pudieron cargar los registros de flota. Actualice para volver a intentar.",
-  fleet: "Destacamento",
+  fleet: "Grupo de recursos",
   site: "Sitio",
   status: "Estado",
   all: "Todos",

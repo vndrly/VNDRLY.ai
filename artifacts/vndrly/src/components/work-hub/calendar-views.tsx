@@ -143,6 +143,11 @@ export function CalendarTimeGrid({
                         </time>
                         <strong className="mt-1 block">{item.title}</strong>
                         <span>{item.kind}</span>
+                        {item.kind === "Fleet Run" && <>
+                          <span className="block">{item.timeBasis === "dispatch_recorded" ? "Dispatch recorded · no planned time" : "Planned run time"}</span>
+                          {item.employeeName && <span className="block">{item.employeeName}</span>}
+                          {item.linkedTicketId && <span className="block">Ticket #{item.linkedTicketId}</span>}
+                        </>}
                       </a>
                     ))}
                 </div>

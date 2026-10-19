@@ -10,6 +10,9 @@ import {
 const isolation = assertIsolatedTestDatabaseEnvironment(process.env);
 
 const baseURL = assertLocalE2EBaseUrl(process.env.E2E_BASE_URL);
+const productionPreview=["1","reuse"].includes(process.env.E2E_PRODUCTION_PREVIEW??"");
+const reuseProductionPreview=process.env.E2E_PRODUCTION_PREVIEW==="reuse";
+if(reuseProductionPreview&&!existsSync(new URL("../../artifacts/vndrly/.local/fleet-offline-production/index.html",import.meta.url)))throw Error("Build the unchanged production frontend before reusing its isolated preview");
 
 // Resolve a chromium binary so the spec is runnable from the root
 // `pnpm test` chain without the caller having to set PLAYWRIGHT_CHROMIUM
@@ -93,18 +96,26 @@ export default defineConfig({
     },
     {
       command:
-        "pnpm --dir ../../artifacts/vndrly exec vite --config vite.config.ts --host 0.0.0.0 --strictPort",
+        productionPreview
+          ? `${reuseProductionPreview?"":"pnpm --dir ../../artifacts/vndrly exec vite build --config vite.config.ts --outDir .local/fleet-offline-production && "}pnpm --dir ../../artifacts/vndrly exec vite preview --config vite.config.ts --outDir .local/fleet-offline-production --host 0.0.0.0 --strictPort`
+          : "pnpm --dir ../../artifacts/vndrly exec vite --config vite.config.ts --host 0.0.0.0 --strictPort",
       url: "http://localhost:23539/",
       reuseExistingServer: false,
-      timeout: 120_000,
+      timeout: productionPreview?240_000:120_000,
       env: {
         PORT: "23539",
         BASE_PATH: "/",
         VITE_API_PROXY_TARGET: "http://localhost:18080",
+        // The DB wrapper runs the API in test mode. Vite's production build
+        // must independently receive production NODE_ENV so its real PROD
+        // guards (including offline shell provisioning) are exercised.
+        ...(productionPreview?{NODE_ENV:"production"}:{}),
         // Exercise retained accounting workflows in this isolated test server.
         // Production defaults stay disabled and are covered by release-features tests.
         VITE_ENABLE_TAX_REPORTING: "true",
         VITE_ENABLE_ACCOUNTING: "true",
+        // Backend still requires explicit per-fixture organization/site flags.
+        VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED: "true",
       },
       stdout: "ignore",
       stderr: "pipe",

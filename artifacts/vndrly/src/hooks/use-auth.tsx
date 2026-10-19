@@ -1,3 +1,4 @@
+import {readWebFleetOfflineAuth,deactivateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import i18n from "@/lib/i18n";
 import { normalizeManagedSubcontractor } from "@/lib/managed-subcontractor-access";
@@ -40,6 +41,7 @@ export interface MembershipSummary {
 }
 
 interface AuthUser {
+  offlineOnly?: boolean;
   managedSubcontractor?: import("@/lib/managed-subcontractor-access").ManagedSubcontractor;
   userId: number;
   role: "admin" | "vendor" | "partner" | "field_employee";
@@ -186,6 +188,7 @@ function readAuthHmrState(): { user: AuthUser | null; authChecked: boolean } {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const authGeneration=useRef(0);
   const initialAuthRef = useRef(readAuthHmrState());
   const [user, setUser] = useState<AuthUser | null>(() => initialAuthRef.current.user);
   const [isLoading, setIsLoading] = useState(() => !initialAuthRef.current.authChecked);
@@ -200,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (initialAuthRef.current.authChecked) return;
+    const generation=authGeneration.current;
     fetch(`${BASE}/api/auth/me`, { credentials: "include" })
       .then(async (r) => {
         if (r.ok) return r.json();
@@ -207,15 +211,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new AuthApiError(r.status, body, "Not authenticated");
       })
       .then((data) => {
+        if(authGeneration.current!==generation)return;
         const next = fromResponse(data);
         setUser(next);
         applyLanguage(next.preferredLanguage);
       })
-      .catch(() => setUser(null))
-      .finally(() => setIsLoading(false));
+      .catch(async error=>{
+        if(authGeneration.current!==generation)return;
+        if(error instanceof AuthApiError&&error.status<500){deactivateWebFleetOffline();setUser(null);return;}
+        const retained=/^\/fleet(?:\/|$)/.test(window.location.pathname)?await readWebFleetOfflineAuth():null;
+        if(authGeneration.current!==generation)return;
+        setUser(retained?{...fromResponse(retained),offlineOnly:true}:null);
+      })
+      .finally(() => {if(authGeneration.current===generation)setIsLoading(false);});
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
+    authGeneration.current++;deactivateWebFleetOffline();
     const res = await fetch(`${BASE}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -233,6 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    authGeneration.current++;deactivateWebFleetOffline();
     let loginBrandQuery: string | null = null;
     try {
       const res = await fetch(`${BASE}/api/auth/logout`, {
@@ -269,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const switchContext = useCallback(async (membershipId: number) => {
+    authGeneration.current++;deactivateWebFleetOffline();
     const res = await fetch(`${BASE}/api/auth/switch-context`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

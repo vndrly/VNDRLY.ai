@@ -11,6 +11,16 @@ const fleetId = "10000000-0000-4000-8000-000000000001";
 const configuration = { expectedVersion: 5, enabled: true, fleets: [{ id: fleetId, name: "North Fleet", siteIds: [392], requiredCertifications: ["CDL"] }], grants: [{ userId: 1069, fleetIds: [fleetId], siteIds: [392], roles: ["driver"], financeRead: true, safetyRelease: false }], members: [{ userId: 1069, name: "Synthetic Reviewer" }], sites: [{ siteId: 392, name: "Fictional site" }] };
 afterEach(() => { cleanup(); mocks.api.mockReset(); });
 describe("mobile Fleet setup", () => {
+  it("drops obsolete pure-driver sites while preserving mixed office authority",async()=>{
+    mocks.api.mockResolvedValueOnce({...configuration,grants:[...configuration.grants,{...configuration.grants[0],userId:1070,roles:["driver","dispatcher"]}]}).mockResolvedValue({version:6});
+    render(<FleetSetup onSaved={vi.fn()}/>);fireEvent.click(await screen.findByText("Save Fleet access settings"));
+    await waitFor(()=>expect(mocks.api.mock.calls).toHaveLength(2));const body=JSON.parse(mocks.api.mock.calls[1][1].body);
+    expect(body.grants[0]).toMatchObject({roles:["driver"],siteIds:[],financeRead:true});expect(body.grants[1]).toMatchObject({roles:["driver","dispatcher"],siteIds:[392]});
+  });
+  it("adds company resources before customer sites and does not assign a pure driver to sites",async()=>{
+    mocks.api.mockResolvedValueOnce({...configuration,fleets:[],grants:[],sites:[]}).mockResolvedValue({version:6});const saved=vi.fn();render(<FleetSetup onSaved={saved}/>);
+    fireEvent.change(await screen.findByLabelText("New resource pool name"),{target:{value:"Company resources"}});fireEvent.click(screen.getByText("Add resource pool to draft"));fireEvent.click(screen.getByText("Save Fleet access settings"));await waitFor(()=>expect(saved).toHaveBeenCalled());expect(JSON.parse(mocks.api.mock.calls[1][1].body).fleets[0]).toMatchObject({name:"Company resources",siteIds:[]});
+  });
   it("preserves existing qualifications and separate finance flags when adding an operational role", async () => {
     mocks.api.mockResolvedValueOnce(configuration).mockResolvedValue({ version: 6 });
     const saved = vi.fn();
@@ -19,7 +29,7 @@ describe("mobile Fleet setup", () => {
     fireEvent.click(screen.getByText("Synthetic Reviewer"));
     fireEvent.click(screen.getByText("dispatcher"));
     fireEvent.click(screen.getByText("Add grant to draft"));
-    fireEvent.click(screen.getByText("Save Fleet Details"));
+    fireEvent.click(screen.getByText("Save Fleet access settings"));
     await waitFor(() => expect(saved).toHaveBeenCalled());
     const body = JSON.parse(mocks.api.mock.calls[1][1].body);
     expect(body.expectedVersion).toBe(5);
@@ -30,18 +40,18 @@ describe("mobile Fleet setup", () => {
     mocks.api.mockRejectedValue(new Error("Company administrator required"));
     render(<FleetSetup onSaved={vi.fn()} />);
     expect(await screen.findByText("Company administrator required")).toBeTruthy();
-    expect(screen.queryByText("Save Fleet Details")).toBeNull();
+    expect(screen.queryByText("Save Fleet access settings")).toBeNull();
   });
-  it("edits a Detail name and assigns canonical equipment using branded checks while preserving support grants", async () => {
+  it("edits a resource pool name and assigns canonical equipment using branded checks while preserving support grants", async () => {
     const assetId = "20000000-0000-4000-8000-000000000001";
     const supportGrants = [{ userId: 1, fleetIds: [fleetId], siteIds: [392], expiresAt: "2026-12-01T00:00:00Z", reason: "Synthetic support", financeRead: false }];
     mocks.api.mockResolvedValueOnce({ ...configuration, equipment: [{ assetId, name: "Canonical rig", category: "truck" }], supportGrants }).mockResolvedValue({ version: 6 });
     render(<FleetSetup onSaved={vi.fn()} />);
     fireEvent.click(await screen.findByText("North Fleet · sites 392"));
-    fireEvent.change(screen.getByLabelText("Detail name"), { target: { value: "North Detail" } });
+    fireEvent.change(screen.getByLabelText("Resource pool name"), { target: { value: "North Detail" } });
     fireEvent.click(screen.getByRole("checkbox", { name: "Canonical rig" }));
     expect(screen.getByRole("checkbox", { name: "Canonical rig" }).getAttribute("aria-checked")).toBe("true");
-    fireEvent.click(screen.getByText("Save Fleet Details"));
+    fireEvent.click(screen.getByText("Save Fleet access settings"));
     await waitFor(() => expect(mocks.api.mock.calls).toHaveLength(2));
     const body = JSON.parse(mocks.api.mock.calls[1][1].body);
     expect(body.fleets[0]).toMatchObject({ name: "North Detail", equipmentAssetIds: [assetId] });

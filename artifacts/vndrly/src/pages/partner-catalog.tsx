@@ -16,9 +16,7 @@ export default function PartnerCatalogPage() {
     user?.role === "admin" ||
     (user?.availableMemberships ?? []).some(
       (m) =>
-        m.orgType === "partner" &&
-        m.orgId === partnerId &&
-        m.role === "admin",
+        m.orgType === "partner" && m.orgId === partnerId && m.role === "admin",
     );
 
   if (!partnerId) {
@@ -49,6 +47,9 @@ export default function PartnerCatalogPage() {
         partnerId={partnerId}
         canManage={canManage}
         canAddToCatalog={canManage || user?.role === "admin"}
+        showMarketplace={
+          import.meta.env.VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true"
+        }
       />
     </div>
   );

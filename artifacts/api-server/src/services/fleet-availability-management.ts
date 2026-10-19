@@ -8,7 +8,6 @@ function fleetAccess(
   driverUserId: number,
   manage: boolean,
 ) {
-  const currentSites = actor.currentSiteIds ?? [];
   const current = state.grants.find((grant) => grant.userId === actor.userId);
   const driver = state.grants.find((grant) => grant.userId === driverUserId);
   const manager =
@@ -20,16 +19,7 @@ function fleetAccess(
     driver.fleetIds.some(
       (id) =>
         current?.fleetIds.includes(id) &&
-        state.fleets.some(
-          (fleet) =>
-            fleet.id === id &&
-            fleet.siteIds.some(
-              (site) =>
-                currentSites.includes(site) &&
-                current.siteIds.includes(site) &&
-                driver.siteIds.includes(site),
-            ),
-        ),
+        state.fleets.some((fleet) => fleet.id === id),
     );
   if (
     !state.enabled ||

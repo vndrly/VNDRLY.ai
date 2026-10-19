@@ -1,3 +1,4 @@
+import {effectiveFinancialAmountSql} from "./effective-financial-line";
 import { sql, type SQL } from "drizzle-orm";
 import { db, ticketsTable } from "@workspace/db";
 import { agingForPartner, agingForVendor } from "./reports/aging";
@@ -86,7 +87,7 @@ export async function queryRevenuePipeline(scopeWhere: SQL): Promise<RevenuePipe
     })
     .from(ticketsTable)
     .leftJoin(
-      sql`(SELECT ticket_id, SUM(quantity * unit_price) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
+      sql`(SELECT ticket_id, SUM(${sql.raw(effectiveFinancialAmountSql())}) as line_total FROM ticket_line_items GROUP BY ticket_id) sub`,
       sql`sub.ticket_id = ${ticketsTable.id}`,
     )
     .where(scopeWhere);
@@ -131,7 +132,7 @@ export async function querySpendByAfe(partnerSiteIds: number[]): Promise<SpendBy
       SELECT
         COALESCE(NULLIF(TRIM(swa.afe), ''), NULLIF(TRIM(sl.afe), ''), '(Unassigned)') AS afe,
         COUNT(DISTINCT t.id)::int AS ticket_count,
-        COALESCE(SUM(li.quantity * li.unit_price), 0)::numeric(12,2) AS total
+        COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("li"))}), 0)::numeric(12,2) AS total
       FROM tickets t
       INNER JOIN site_locations sl ON sl.id = t.site_location_id
       LEFT JOIN site_work_assignments swa
@@ -170,7 +171,7 @@ export async function querySpendByAfeForVendor(vendorId: number): Promise<SpendB
       SELECT
         COALESCE(NULLIF(TRIM(swa.afe), ''), NULLIF(TRIM(sl.afe), ''), '(Unassigned)') AS afe,
         COUNT(DISTINCT t.id)::int AS ticket_count,
-        COALESCE(SUM(li.quantity * li.unit_price), 0)::numeric(12,2) AS total
+        COALESCE(SUM(${sql.raw(effectiveFinancialAmountSql("li"))}), 0)::numeric(12,2) AS total
       FROM tickets t
       INNER JOIN site_locations sl ON sl.id = t.site_location_id
       LEFT JOIN site_work_assignments swa

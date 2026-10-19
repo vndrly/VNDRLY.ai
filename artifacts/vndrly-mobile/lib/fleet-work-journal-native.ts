@@ -1,0 +1,96 @@
+import * as Crypto from "expo-crypto";
+import * as SecureStore from "expo-secure-store";
+import * as FileSystem from "expo-file-system/legacy";
+import { z } from "zod/v4";
+import { Platform } from "react-native";
+import { createDurableFleetWorkJournal,appendFleetJournalCommand,serializeFleetWorkCommand,type FleetWorkCommand, openFleetBrowserStorage, type FleetWorkScope, type FleetJournalStore } from "@workspace/api-zod";
+import type { SQLiteDatabase } from "expo-sqlite";
+import {assessFleetStorageHealth,FLEET_STORAGE_RESERVE_BYTES} from "@workspace/api-zod";
+type EncryptedConnection={db:SQLiteDatabase;transaction:<T>(work:(tx:SQLiteDatabase)=>Promise<T>)=>Promise<T>};
+const opened=new Map<string,Promise<EncryptedConnection>>();
+const sha=(value:string)=>Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256,value);
+/** Each original account/device/provisioning scope has a separate encrypted DB.
+ * A lost/corrupt key never regenerates over retained originals. */
+export async function openNativeFleetWorkStorage(identity:string,isCurrent:()=>boolean){
+ if(Platform.OS==="web")return {storage:await openFleetBrowserStorage(identity,isCurrent),db:null,transaction:null};
+ if(!isCurrent())throw Error("Original work account changed");
+ const id=await sha(identity),name=`fleet-work-${id}.db`,keyName=`fleet.work.key.${id}`;
+ let ready=opened.get(id);
+ if(!ready){ready=(async()=>{
+  const SQLite=await import("expo-sqlite");
+  let key=await SecureStore.getItemAsync(keyName);
+  if(key&&!/^[a-f0-9]{64}$/.test(key))throw Error("Retained Fleet key is invalid; recovery required");
+  if(!key){const directory=SQLite.defaultDatabaseDirectory;const file=await FileSystem.getInfoAsync(`${directory}/${name}`);if(file.exists)throw Error("Retained Fleet key is unavailable; recovery required");key=Array.from(await Crypto.getRandomBytesAsync(32),b=>b.toString(16).padStart(2,"0")).join("");await SecureStore.setItemAsync(keyName,key,{keychainAccessible:SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY});}
+  const db=await SQLite.openDatabaseAsync(name,{useNewConnection:true});
+  let writer:SQLiteDatabase|undefined;
+  try{
+  await db.execAsync(`PRAGMA key = "x'${key}'";`);
+  const cipher=await db.getFirstAsync<Record<string,string>>("PRAGMA cipher_version");if(!cipher||!Object.values(cipher).some(Boolean)){await db.closeAsync();throw Error("Encrypted Fleet storage is unavailable");}
+  await db.execAsync("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS fleet_work_rows(kind TEXT NOT NULL,id TEXT NOT NULL,value TEXT NOT NULL,PRIMARY KEY(kind,id)); CREATE TABLE IF NOT EXISTS fleet_work_evidence(id TEXT PRIMARY KEY NOT NULL,sha256 TEXT NOT NULL,size INTEGER NOT NULL,content_type TEXT NOT NULL,body BLOB NOT NULL);");
+  // Expo's withExclusiveTransactionAsync opens an unkeyed connection. Keep
+  // reads separate from one explicitly keyed writer so async reads cannot
+  // accidentally join a write transaction, and serialize writers in this runtime.
+  writer=await SQLite.openDatabaseAsync(name,{useNewConnection:true});
+  await writer.execAsync(`PRAGMA key = "x'${key}'";`);
+  await writer.execAsync("PRAGMA busy_timeout=5000;");
+  const writeDb=writer;let tail=Promise.resolve();
+  const transaction=async<T>(work:(tx:SQLiteDatabase)=>Promise<T>):Promise<T>=>{
+   const previous=tail;let release!:()=>void;tail=new Promise<void>(resolve=>{release=resolve;});await previous;
+   let begun=false;
+   try{await writeDb.execAsync("BEGIN IMMEDIATE");begun=true;const result=await work(writeDb);await writeDb.execAsync("COMMIT");begun=false;return result;}
+   catch(error){if(begun)await writeDb.execAsync("ROLLBACK").catch(()=>undefined);throw error;}
+   finally{release();}
+  };
+  return {db,transaction};
+  }catch(error){await writer?.closeAsync().catch(()=>undefined);await db.closeAsync().catch(()=>undefined);throw error;}
+ })();opened.set(id,ready);ready.catch(()=>opened.delete(id));}
+ const {db,transaction}=await ready;
+ const storage:FleetJournalStore={async transaction(work){let result:Awaited<ReturnType<typeof work>>;await transaction(async tx=>{
+  if(!isCurrent())throw Error("Original work account changed");
+  result=await work({get:async(kind,key)=>(await tx.getFirstAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind=? AND id=?",kind,key))?.value??null,set:async(kind,key,value)=>{await tx.runAsync("INSERT INTO fleet_work_rows(kind,id,value) VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET value=excluded.value",kind,key,value);},values:async kind=>(await tx.getAllAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind=? ORDER BY rowid",kind)).map(row=>row.value)});
+  if(!isCurrent())throw Error("Original work account changed");
+ });return result!;}};
+ return {storage,db,transaction};
+}
+export async function openNativeFleetWorkJournal(scope:FleetWorkScope,isCurrent:()=>boolean,options:{reserveBytes?:number}={}){
+ const {storage,db,transaction}=await openNativeFleetWorkStorage(`fleet:${JSON.stringify(scope)}`,isCurrent);
+ if(!db||!transaction)throw Error("Use browser-owned evidence storage for this browser preview");
+ const journal=createDurableFleetWorkJournal({scope,storage,digest:sha,isCurrent});
+ const reserveBytes=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).parse(options.reserveBytes??FLEET_STORAGE_RESERVE_BYTES);
+ const freeBytes=async()=>{try{const value=await FileSystem.getFreeDiskStorageAsync();return Number.isSafeInteger(value)&&value>=0?value:null;}catch{return null;}};
+ return Object.assign(journal,{
+  async readStorageHealth(){
+   if(!isCurrent())throw Error("Original work account changed");
+   if((await db.getFirstAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind='meta' AND id='locked'"))?.value==="true")throw Error("Original work scope is locked");
+   const totals=await db.getFirstAsync<{count:number;size:number}>("SELECT count(*) AS count,coalesce(sum(length(body)),0) AS size FROM fleet_work_evidence"),availableBytes=await freeBytes();
+   if(!isCurrent())throw Error("Original work account changed");
+   return assessFleetStorageHealth({availableBytes,reserveBytes,retainedEvidenceBytes:totals?.size??0,evidenceCount:totals?.count??0});
+  },
+  async stageEvidence(id:string,uri:unknown,contentType:string,makeCommand?:(media:{sha256:string;byteSize:number;contentType:string})=>FleetWorkCommand){
+   if(typeof uri!=="string")throw Error("A captured device file is required");
+   z.uuid().parse(id);if(!["image/jpeg","image/png","image/webp","application/pdf"].includes(contentType))throw Error("Unsupported evidence type");
+   if(!isCurrent())throw Error("Original work account changed");
+   const {File}=await import("expo-file-system");const bytes=await new File(uri).bytes();if(!bytes.length||bytes.length>10*1024*1024)throw Error("Evidence must be between 1 byte and 10 MB");
+   const hash=Array.from(new Uint8Array(await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256,bytes)),b=>b.toString(16).padStart(2,"0")).join("");
+   const command=makeCommand?.({sha256:hash,byteSize:bytes.length,contentType}),fingerprint=command?await sha(serializeFleetWorkCommand(command)):null,availableBytes=await freeBytes();
+   await transaction(async tx=>{
+    if(!isCurrent()||(await tx.getFirstAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind='meta' AND id='locked'"))?.value==="true")throw Error("Original work scope is locked or changed");
+    const prior=await tx.getFirstAsync<{sha256:string;size:number}>("SELECT sha256,size FROM fleet_work_evidence WHERE id=?",id);
+    if(prior&&(prior.sha256!==hash||prior.size!==bytes.length))throw Error("Original evidence identity cannot be replaced");
+    if(!prior&&availableBytes!==null&&bytes.length>availableBytes)throw Error("Not enough device space to save this photo. Original work remains retained.");
+    if(!prior)await tx.runAsync("INSERT INTO fleet_work_evidence(id,sha256,size,content_type,body) VALUES(?,?,?,?,?)",id,hash,bytes.length,contentType,bytes);
+    await tx.runAsync("INSERT INTO fleet_work_rows(kind,id,value) VALUES('evidence',?,?) ON CONFLICT(kind,id) DO NOTHING",id,JSON.stringify({id,metadata:{storage:"encrypted_sqlcipher_blob",sha256:hash,byteSize:bytes.length,contentType}}));
+    if(command&&fingerprint)await appendFleetJournalCommand({get:async(kind,key)=>(await tx.getFirstAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind=? AND id=?",kind,key))?.value??null,set:async(kind,key,value)=>{await tx.runAsync("INSERT INTO fleet_work_rows(kind,id,value) VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET value=excluded.value",kind,key,value);},values:async kind=>(await tx.getAllAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind=? ORDER BY rowid",kind)).map(row=>row.value)},scope,command,fingerprint);
+    if(!isCurrent())throw Error("Original work account changed");
+   });
+   return {id,sha256:hash,byteSize:bytes.length,contentType,durability:"durable" as const};
+  },
+  async readEvidencePart(id:string,offset:number,length:number){
+   z.uuid().parse(id);if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(length)||length<1||length>1024*1024)throw Error("Invalid evidence part");
+   if(!isCurrent())throw Error("Original work account changed");
+   if((await db.getFirstAsync<{value:string}>("SELECT value FROM fleet_work_rows WHERE kind='meta' AND id='locked'"))?.value==="true")throw Error("Original work scope is locked");
+   const row=await db.getFirstAsync<{body:Uint8Array}>("SELECT substr(body,?,?) AS body FROM fleet_work_evidence WHERE id=?",offset+1,length,id);
+   if(!row)throw Error("Retained evidence is unavailable");if(!isCurrent())throw Error("Original work account changed");return row.body;
+  },
+ });
+}

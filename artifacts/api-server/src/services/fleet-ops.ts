@@ -1,17 +1,60 @@
+import {mergeFleetTemplateProfile,type FleetServiceTemplate} from "@workspace/api-zod";
+import {createFleetServiceTemplateOperations} from "./fleet-service-template";
+import {createFleetMonitoringOperations} from "./fleet-monitoring";
+import { appendFleetRunEvent, readFleetRunEventPage } from "./fleet-run-events";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
-import { attachFleetBilling, createFleetBillingOperations, recordFleetBillingCharge } from "./fleet-billing";
+import { attachFleetBillingV2 } from "./fleet-billing-v2";
+import {
+  attachFleetBilling,
+  createFleetBillingOperations,
+  recordFleetBillingCharge,
+} from "./fleet-billing";
 import { createFleetInventoryOperations } from "./fleet-inventory";
-import {createFleetCommercialOperations,bindFleetRunTicket,selectFleetRunDestination,recordFleetRunCharge,validateCommercialStops} from "./fleet-commercial";
+import { readFleetDriverAssignmentSites } from "./fleet-driver-assignment-context";
+import { createFleetDetailsOperations } from "./fleet-details";
+import { createFleetRunOrderOperations } from "./fleet-run-orders";
+import { createFleetComplianceOperations } from "./fleet-compliance";
+import { createFleetWorkdayOperations } from "./fleet-workday";
+import {
+  assignFleetRunDetail,
+  assertFleetDetailResources,
+} from "./fleet-run-details";
+import { fleetRunInspectionMatches, fleetRouteMatchesRunOrder } from "@workspace/api-zod";
+import {
+  activateFleetReservation,
+  releaseFleetReservation,
+} from "./fleet-reservations";
+import {
+  createFleetCommercialOperations,
+  bindFleetRunTicket,
+  selectFleetRunDestination,
+  recordFleetRunCharge,
+  validateCommercialStops,
+  assertFleetPhysicalRoute,
+} from "./fleet-commercial";
 import { createFleetCargoOperations } from "./fleet-cargo";
 import { readFleetReviewPacket } from "./fleet-review-packet";
-import { fleetRunNotificationRecipients, emitFleetRunNotification } from "./fleet-notifications";
-import { createFleetReplacementOperations, assertFleetReplacementCustody } from "./fleet-replacement";
+import {
+  fleetRunNotificationRecipients,
+  emitFleetRunNotification,
+} from "./fleet-notifications";
+import {
+  createFleetReplacementOperations,
+  assertFleetReplacementCustody,
+} from "./fleet-replacement";
 import { fleetReplacementReady } from "@workspace/api-zod";
 import { createFleetEvidenceOperations } from "./fleet-evidence";
 import { createFleetPlanningOperations } from "./fleet-planning";
-import { readFleetAvailability, requireFleetAvailability, type FleetAvailability } from "./fleet-availability";
+import {
+  readFleetAvailability,
+  requireFleetAvailability,
+  type FleetAvailability,
+} from "./fleet-availability";
 import { createFleetAvailabilityManagement } from "./fleet-availability-management";
-import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "@workspace/api-zod";
+import {
+  checkFleetInspectionRequirements,
+  checkFleetManifestRequirements,
+} from "@workspace/api-zod";
 import type { FleetItemizedAuthority } from "./fleet-itemized-repository";
 import {
   createFleetMaintenanceOperations,
@@ -33,10 +76,15 @@ import {
   type FleetRun,
   type FleetOverview,
   type FleetResources,
+  type FleetDetailSnapshot,
 } from "@workspace/api-zod";
 import { z } from "zod/v4";
 import type { PoolClient } from "pg";
-import { ACTIVE_APPROVAL_STATUSES } from "@workspace/db";
+import {
+  readFleetAuthoritySites,
+  assessFleetActionPolicy,
+  requireFleetRunCommercialAuthority,
+} from "./fleet-commercial-authority";
 import { mayPerformFleetAction, type FleetGrant } from "./fleet-permissions";
 import {
   FleetError,
@@ -70,6 +118,14 @@ function grantFor(state: FleetState, actor: FleetActor): FleetGrant | null {
     ? { ...grant, siteIds, fleetIds, companyId: actor.companyId }
     : null;
 }
+/** Company resource access is independent of customer billing authority.
+ * Legacy fleetIds remain explicit access groups, never physical Details. */
+function companyGrantFor(state: FleetState, actor: FleetActor): FleetGrant | null {
+  const grant = state.grants.find(g => g.userId === actor.userId);
+  if (!state.enabled || !grant?.roles.length) return null;
+  const fleetIds = grant.fleetIds.filter(id => state.fleets.some(group => group.id === id));
+  return fleetIds.length ? {...grant,fleetIds,companyId:actor.companyId} : null;
+}
 function target(run: FleetRun) {
   return {
     companyId: run.companyId,
@@ -88,6 +144,14 @@ function permitted(
     ? actor.currentRunsById.get(run.id)
     : run;
   if (!current) return false;
+  // A driver receives only their actual assigned activity, not customer-wide
+  // access. Recheck both historical and current assignments before readback.
+  const driverGrant = companyGrantFor(state, actor);
+  if ((action === "view" || action === "perform_run") &&
+      driverGrant?.roles.includes("driver") &&
+      [run,current].every(record => record.companyId === actor.companyId &&
+        record.driverUserId === actor.userId && driverGrant.fleetIds.includes(record.fleetId)) &&
+      [...current.siteIds,...run.siteIds].every(id => actor.currentSiteIds?.includes(id))) return true;
   return (
     mayPerformFleetAction(actor.userId, grant, target(current), action) &&
     [...current.siteIds, ...run.siteIds].every(
@@ -108,6 +172,8 @@ function allowed(
   )
     return [];
   const result: FleetRun["allowedActions"] = [];
+  if(run.recoveredWork)return result;
+  if(run.workOrigin==="driver_unplanned"&&run.driverUserId===actor.userId&&companyGrantFor(state,actor)?.roles.includes("driver")&&["draft","dispatched","acknowledged"].includes(run.status)){result.push("cancel");if(run.status==="draft")result.push("dispatch");}
   if (
     actor.currentRunsById &&
     actor.currentRunsById.get(run.id)?.version !== run.version
@@ -122,18 +188,24 @@ function allowed(
   ) {
     if (run.status === "draft") result.push("dispatch");
     result.push("reassign", "cancel");
-    if (!run.billing) result.push("link_ticket");
+    if (!run.billing && !run.billingV2) result.push("link_ticket");
   }
   if (!permitted(state, actor, run, "perform_run")) return result;
+  if (
+    run.status === "in_progress" &&
+    run.resourceAssignment?.reservation.state === "released"
+  )
+    return run.events.at(-1)?.type === "review" &&
+      run.events.at(-1)?.details?.decision === "return"
+      ? ["submit_closeout"]
+      : [];
   if (run.status === "dispatched") result.push("acknowledge");
   if (run.status === "acknowledged") {
     result.push("inspect", "record_meter");
     const inspection = run.inspections.at(-1);
     if (
       inspection?.outcome === "passed" &&
-      inspection.driverUserId === run.driverUserId &&
-      inspection.vehicleAssetId === run.vehicleAssetId &&
-      inspection.trailerAssetId === run.trailerAssetId &&
+      fleetRunInspectionMatches(run, inspection) &&
       run.records.some(
         (r) =>
           r.kind === "meter" &&
@@ -144,7 +216,13 @@ function allowed(
       result.push("start");
   }
   if (run.status === "in_progress") {
-    if (run.phase === "paused") return [...result, "record_meter", ...(run.activeReplacement ? ["inspect" as const] : []), ...(fleetReplacementReady(run) ? ["resume" as const] : [])];
+    if (run.phase === "paused")
+      return [
+        ...result,
+        "record_meter",
+        ...(run.activeReplacement ? ["inspect" as const] : []),
+        ...(fleetReplacementReady(run) ? ["resume" as const] : []),
+      ];
     result.push("pause", "record_fuel", "record_meter");
     if (!run.currentStopId && run.visitedStopIds.length < run.stops.length)
       result.push("arrive_stop");
@@ -160,7 +238,12 @@ function allowed(
       run.loads.length &&
       run.loads.every((l) => l.deliveredAt || l.transferOut) &&
       run.records.filter(
-        (r, index) => r.kind === "meter" && r.vehicleAssetId === run.vehicleAssetId && (!run.activeReplacement || index >= run.activeReplacement.recordCount) && ["miles", "kilometers"].includes(r.unit),
+        (r, index) =>
+          r.kind === "meter" &&
+          r.vehicleAssetId === run.vehicleAssetId &&
+          (!run.activeReplacement ||
+            index >= run.activeReplacement.recordCount) &&
+          ["miles", "kilometers"].includes(r.unit),
       ).length >= 2
     )
       result.push("submit_closeout");
@@ -195,24 +278,40 @@ function project(
     const { rateCents: _rate, billedLineId: _line, ...routing } = commercial;
     commercial = routing;
   }
+  const {billingV2,...operationalRun}=run;
   return {
-    ...run,
-    ...(commercial ? {commercial} : {}),
-    ...(billing ? {billing} : {}),
+    ...operationalRun,
+    ...(billingV2?{ticketReference:{id:billingV2.ticketId,version:billingV2.ticketRevisionAtBinding}}:{}),
+    ...(billingV2&&permitted(state,actor,run,"view_finance")?{billingV2}:{}),
+    ...(commercial ? { commercial } : {}),
+    ...(billing ? { billing } : {}),
     labels: actor.labels?.get(labelKey(run)) ?? {
       driverName: null,
       vehicleName: null,
       trailerName: null,
       sites: [],
     },
-    canEditDraft: run.status === "draft" && permitted(state, actor, run, "dispatch") && (!actor.currentRunsById || actor.currentRunsById.get(run.id)?.version === run.version),
+    canEditDraft:
+      run.status === "draft" &&
+      permitted(state, actor, run, "dispatch") &&
+      (!actor.currentRunsById ||
+        actor.currentRunsById.get(run.id)?.version === run.version),
     allowedActions: allowed(state, actor, run),
-    availability: actor.availability?.get(`${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`),
+    availability: actor.availability?.get(
+      `${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`,
+    ),
   };
 }
-async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
+async function eligible(
+  state: FleetState,
+  client: PoolClient,
+  run: FleetRun,
+  resourceSnapshot?: FleetDetailSnapshot,
+) {
+  const snapshot = resourceSnapshot ?? run.resourceAssignment?.snapshot;
   const fleet = state.fleets.find((f) => f.id === run.fleetId);
   if (
+    !snapshot &&
     ![run.vehicleAssetId, run.trailerAssetId]
       .filter(Boolean)
       .every((id) => fleet?.equipmentAssetIds.includes(id!))
@@ -221,8 +320,7 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
   const driver = state.grants.find((g) => g.userId === run.driverUserId);
   if (
     !driver?.roles.includes("driver") ||
-    !driver.fleetIds.includes(run.fleetId) ||
-    !run.siteIds.every((id) => driver.siteIds.includes(id))
+    !driver.fleetIds.includes(run.fleetId)
   )
     throw new FleetError("fleet.driver_grant_required", 403);
   const person = await client.query(
@@ -230,29 +328,36 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
     [run.driverUserId, run.companyId],
   );
   if (!person.rows.length) throw new FleetError("fleet.driver_unavailable");
-  const required =
-    state.fleets.find((f) => f.id === run.fleetId)?.requiredCertifications ??
-    [];
-  if (required.length) {
-    const certifications = await client.query(
-      "SELECT name FROM employee_certifications WHERE employee_id=$1 AND deleted_at IS NULL AND vendor_verified_at IS NOT NULL AND (expiration_date IS NULL OR expiration_date>=CURRENT_DATE)",
-      [person.rows[0].id],
-    );
-    if (
-      !required.every((name) =>
-        certifications.rows.some((c) => c.name === name),
-      )
-    )
-      throw new FleetError("fleet.qualifications_required");
+  if (
+    !resourceSnapshot &&
+    run.resourceAssignment?.reservation.state === "released" &&
+    run.status === "in_progress"
+  ) {
+    await requireFleetRunCommercialAuthority(client, run);
+    return; // Office corrections add recorded facts; they do not reuse released equipment.
   }
   const stopWork = await client.query(
     "SELECT id FROM safety_events WHERE site_location_id=ANY($1::int[]) AND is_stop_work=true AND closed_at IS NULL",
     [run.siteIds],
   );
   if (stopWork.rows.length) throw new FleetError("fleet.site_stop_work");
-  for (const assetId of [run.vehicleAssetId, run.trailerAssetId].filter(
-    Boolean,
-  )) {
+  if (run.routePlan)
+    await assertFleetPhysicalRoute(
+      client,
+      {
+        companyId: run.companyId,
+        userId: run.driverUserId,
+        currentSiteIds: run.siteIds,
+      },
+      state,
+      run,
+    );
+  if (snapshot)
+    await assertFleetDetailResources({ state, client }, snapshot, run);
+  for (const assetId of (snapshot
+    ? []
+    : [run.vehicleAssetId, run.trailerAssetId]
+  ).filter(Boolean)) {
     const asset = await client.query(
       "SELECT id,status,category,current_holder_user_id FROM assets WHERE id=$1 AND responsible_org_type='vendor' AND responsible_org_id=$2 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false FOR UPDATE",
       [assetId, run.companyId],
@@ -281,13 +386,15 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
   }
   if (run.trailerAssetId === run.vehicleAssetId)
     throw new FleetError("fleet.distinct_equipment_required");
-  const sites = await client.query(
-    "SELECT s.id FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id AND r.vendor_id=$1 WHERE s.id=ANY($2::int[]) AND s.is_active=true AND COALESCE(s.hidden,false)=false AND r.status=ANY($3::text[])",
-    [run.companyId, run.siteIds, [...ACTIVE_APPROVAL_STATUSES]],
-  );
-  if (!run.siteIds.every((id) => sites.rows.some((row) => row.id === id)))
+  const sites = await readFleetAuthoritySites(client, run.companyId, {
+    siteIds: run.siteIds,
+    activeOnly: true,
+  });
+  if (!run.siteIds.every((id) => sites.some((row) => row.id === id)))
     throw new FleetError("fleet.site_forbidden", 403);
+  await requireFleetRunCommercialAuthority(client, run);
   if (
+    !snapshot &&
     state.runs.some(
       (other) =>
         other.id !== run.id &&
@@ -304,7 +411,7 @@ async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
 }
 async function setupEquipment(client: PoolClient, companyId: number) {
   const assets = await client.query(
-    "SELECT id,name,category FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer') AND (EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=assets.id AND l.attachment_type='fleet_inventory') OR EXISTS(SELECT 1 FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'fleets','[]'::jsonb)) d WHERE v.id=$1 AND COALESCE(d->'equipmentAssetIds','[]'::jsonb) ? assets.id::text)) ORDER BY name LIMIT 501",
+    "SELECT id,name,category FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer','dolly','tank','pump','accessory') AND (EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=assets.id AND l.attachment_type='fleet_inventory') OR EXISTS(SELECT 1 FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'fleets','[]'::jsonb)) d WHERE v.id=$1 AND COALESCE(d->'equipmentAssetIds','[]'::jsonb) ? assets.id::text)) ORDER BY name LIMIT 501",
     [companyId],
   );
   if (assets.rows.length > 500)
@@ -316,18 +423,35 @@ async function setupEquipment(client: PoolClient, companyId: number) {
   }));
 }
 async function setupSites(client: PoolClient, companyId: number) {
-  const result = await client.query(
-    "SELECT DISTINCT s.id,s.name FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND r.status=ANY($2::text[]) AND s.is_active=true AND COALESCE(s.hidden,false)=false ORDER BY s.name LIMIT 201",
-    [companyId, [...ACTIVE_APPROVAL_STATUSES]],
-  );
-  if (result.rows.length > 200)
-    throw new FleetError("fleet.site_limit_reached");
-  return result.rows.map((row) => ({
+  const result = await readFleetAuthoritySites(client, companyId, {
+    activeOnly: true,
+  });
+  if (result.length > 200) throw new FleetError("fleet.site_limit_reached");
+  return result.map((row) => ({
     siteId: row.id as number,
     name: row.name as string,
   }));
 }
-export function createFleetService(repository: FleetRepository) {
+export type FleetServiceOptions={
+  monitoringNow?:()=>Date;
+  monitoringNotify?:Parameters<typeof createFleetMonitoringOperations>[3];
+  /** Set only by the verified original-scope receipt transaction adapter. */
+  originalWorkOperationId?: string;
+  /** Exact capture from the verified receipt command, never a legacy body flag. */
+  originalWorkCapture?: { capturedAt: string; timeZone: string };
+  afterCommit?:(effect:()=>Promise<unknown>)=>void;
+  compliance?:Parameters<typeof createFleetComplianceOperations>[2];
+  /** Internal original-scope command adapter, never an HTTP create field. */
+  billingV2Create?: {
+    serviceTemplate?:FleetServiceTemplate;
+    ownUnplanned?:boolean;
+    operationId: string;
+    timeZone: string;
+    intent: Parameters<typeof attachFleetBillingV2>[2];
+    capture: Parameters<typeof attachFleetBillingV2>[3];
+  };
+};
+export function createFleetService(repository: FleetRepository,options:FleetServiceOptions={}) {
   const transaction = <T>(
     actor: FleetActor,
     operation: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -336,16 +460,24 @@ export function createFleetService(repository: FleetRepository) {
       actor.companyId,
       actor.userId,
       async (state, client) => {
-        const siteIds =
-          state.grants.find((g) => g.userId === actor.userId)?.siteIds ?? [];
-        const sites = await client.query(
-          "SELECT s.id,s.is_active FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND s.id=ANY($2::int[]) AND r.status=ANY($3::text[]) AND COALESCE(s.hidden,false)=false FOR SHARE OF s,r",
-          [actor.companyId, siteIds, [...ACTIVE_APPROVAL_STATUSES]],
-        );
-        actor.currentSiteIds = sites.rows.map((s) => s.id);
-        actor.activeSiteIds = sites.rows
-          .filter((s) => s.is_active)
-          .map((s) => s.id);
+        const companyGrant = companyGrantFor(state, actor);
+        const assignedSites = companyGrant?.roles.includes("driver")
+          ? [...state.runs,...(actor.pageRuns ?? [])].flatMap(run => {
+              const current = actor.currentRunsById ? actor.currentRunsById.get(run.id) : run;
+              return current && current.driverUserId === actor.userId && run.driverUserId === actor.userId &&
+                current.companyId === actor.companyId && companyGrant.fleetIds.includes(current.fleetId)
+                  ? [...current.siteIds,...run.siteIds] : [];
+            }) : [];
+        const retainedAssignedSites = companyGrant?.roles.includes("driver")
+          ? await readFleetDriverAssignmentSites(client, actor, companyGrant.fleetIds)
+          : [];
+        const ownCaptureSites=options.billingV2Create?.ownUnplanned&&companyGrant?.roles.includes("driver")&&options.billingV2Create.intent.billingSiteId?[options.billingV2Create.intent.billingSiteId]:[];
+        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...assignedSites,...retainedAssignedSites,...ownCaptureSites])];
+        const sites = await readFleetAuthoritySites(client, actor.companyId, {
+          siteIds,
+        });
+        actor.currentSiteIds = sites.map((s) => s.id);
+        actor.activeSiteIds = sites.filter((s) => s.is_active).map((s) => s.id);
         const visible = [...state.runs, ...(actor.pageRuns ?? [])].filter((r) =>
           permitted(state, actor, r, "view"),
         );
@@ -397,33 +529,66 @@ export function createFleetService(repository: FleetRepository) {
       actor,
     );
   const locations = createFleetLocationOperations(transaction, permitted);
+  const runOrders = createFleetRunOrderOperations(transaction, companyGrantFor);
   return {
+    ...runOrders,
     ...createFleetCommercialOperations(transaction),
     ...createFleetBillingOperations(transaction),
-    ...createFleetInventoryOperations(transaction, grantFor, permitted),
+    ...createFleetInventoryOperations(transaction, companyGrantFor, permitted),
+    ...createFleetDetailsOperations(transaction, companyGrantFor),
+    // Qualification onboarding belongs to current company Fleet roles. It
+    // cannot depend on already having a commercially authorized partner site.
+    // Operational run dispatch continues to use the narrower grantFor above.
+    ...createFleetServiceTemplateOperations(transaction,companyGrantFor),
+    ...createFleetComplianceOperations(transaction, (state, actor) => {
+      const grant=state.grants.find(row=>row.userId===actor.userId);
+      if(!state.enabled||!grant?.roles.length)return null;
+      const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id));
+      return fleetIds.length?{roles:grant.roles,fleetIds}:null;
+    },options.compliance),
+    ...createFleetMonitoringOperations(transaction,permitted,options.monitoringNow,options.monitoringNotify),
     recordLocation: locations.record,
     locationObservations: locations.observations,
+    locationObservationPage: locations.observationPage,
     locationHistory: locations.history,
+    eventHistory: (actor: FleetActor, runId: string, query: unknown = {}) => {
+      const bound={...actor,runId};
+      return transaction(bound,async(state,client)=>{
+        const run=state.runs.find(row=>row.id===runId);
+        if(!run||!permitted(state,bound,run,"view"))throw new FleetError("fleet.not_found",404);
+        return readFleetRunEventPage(client,run,query);
+      });
+    },
     ...createFleetEtaOperations(
       transaction,
       permitted,
       locations.readObservations,
     ),
-    ...createFleetCargoOperations(transaction, permitted, eligible),
-    ...createFleetReplacementOperations(transaction, permitted, eligible),
+    ...createFleetCargoOperations(transaction, permitted, eligible,options),
+    ...createFleetReplacementOperations(transaction, permitted, eligible,options),
     ...createFleetEvidenceOperations(transaction, permitted),
     reviewPacket: (actor: FleetActor, runId: string) => {
-      const bound = {...actor,runId};
-      return transaction(bound, async (state,client) => {
-      const run = state.runs.find(item => item.id === runId);
-      if (!run || !permitted(state,bound,run,"view")) throw new FleetError("fleet.not_found",404);
-      return readFleetReviewPacket(client,run);
+      const bound = { ...actor, runId };
+      return transaction(bound, async (state, client) => {
+        const run = state.runs.find((item) => item.id === runId);
+        if (!run || !permitted(state, bound, run, "view"))
+          throw new FleetError("fleet.not_found", 404);
+        return readFleetReviewPacket(client, run);
       });
     },
-    ...createFleetPlanningOperations(transaction, permitted, eligible, project),
+    ...createFleetPlanningOperations(transaction, permitted, eligible, project, options),
     ...createFleetAvailabilityManagement(transaction),
-    ...createFleetMaintenanceOperations(transaction, grantFor),
-    ...createFleetReportingOperations(transaction, grantFor),
+    ...createFleetMaintenanceOperations(transaction, companyGrantFor),
+    ...createFleetWorkdayOperations(),
+    ...createFleetReportingOperations(transaction, (state,actor)=>{
+      const office=grantFor(state,actor);if(office)return office;
+      const pool=companyGrantFor(state,actor);
+      if(!pool?.roles.includes("driver"))return null;
+      // These sites come from the actual current own assignments resolved by
+      // the transaction. They never become personal customer/site grants.
+      const siteIds=actor.currentSiteIds??[];
+      return {...pool,siteIds,fleetIds:pool.fleetIds.filter(id=>state.fleets.some(group=>group.id===id&&group.siteIds.some(site=>siteIds.includes(site)))),financeRead:false};
+    }),
     ...createFleetGateOperations(transaction, permitted),
     overview: (actor: FleetActor): Promise<FleetOverview> =>
       transaction(
@@ -433,7 +598,9 @@ export function createFleetService(repository: FleetRepository) {
             "SELECT id FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND role='admin' AND id=$3",
             [actor.userId, actor.companyId, actor.activeMembershipId],
           );
-          const grant = grantFor(state, actor);
+          const commercialGrant = grantFor(state, actor);
+          const poolGrant = companyGrantFor(state, actor);
+          const grant = commercialGrant ?? (poolGrant?.roles.includes("driver") ? {...poolGrant,roles:["driver" as const],safetyRelease:false,financeRead:false} : null);
           const roles = grant?.roles ?? [];
           return {
             ...(Number.isInteger(actor.activeMembershipId) &&
@@ -459,22 +626,23 @@ export function createFleetService(repository: FleetRepository) {
             enabled: state.enabled,
             roles: [...roles],
             capabilities: {
+              canManageResources: poolGrant?.roles.some(role=>["fleet_manager","dispatcher"].includes(role)) === true,
               canDispatch:
                 roles.includes("fleet_manager") || roles.includes("dispatcher"),
               canManage: roles.includes("fleet_manager"),
               canDrive: roles.includes("driver"),
-              canMaintain: roles.includes("fleet_manager"),
+              canMaintain: poolGrant?.roles.includes("fleet_manager") === true,
               canReportDefect:
-                roles.includes("fleet_manager") || roles.includes("driver"),
+                poolGrant?.roles.some(role=>["fleet_manager","driver"].includes(role)) === true,
               canReleaseHold:
-                roles.includes("fleet_manager") &&
-                grant?.safetyRelease === true,
+                poolGrant?.roles.includes("fleet_manager") === true &&
+                poolGrant.safetyRelease === true,
               canSetup:
                 actor.role === "vendor" &&
                 actor.membershipRole === "admin" &&
                 admin.rows.length > 0,
             },
-            fleets: state.fleets.filter((f) => grant?.fleetIds.includes(f.id)),
+            fleets: state.fleets.filter((f) => poolGrant?.fleetIds.includes(f.id)),
             page: {
               limit: actor.runPage?.limit ?? 50,
               nextCursor: actor.nextRunCursor ?? null,
@@ -507,12 +675,22 @@ export function createFleetService(repository: FleetRepository) {
         const run = state.runs.find((r) => r.id === runId);
         if (!run) throw new FleetError("fleet.not_found", 404);
         project(state, actor, run);
-        actor.availability = new Map([[`${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`, await readFleetAvailability(client, actor.companyId, run.driverUserId, run.schedule)]]);
+        actor.availability = new Map([
+          [
+            `${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`,
+            await readFleetAvailability(
+              client,
+              actor.companyId,
+              run.driverUserId,
+              run.schedule,
+            ),
+          ],
+        ]);
         return project(state, actor, run);
       }),
     resources: (actor: FleetActor): Promise<FleetResources> =>
       transaction(actor, async (state, client) => {
-        const grant = grantFor(state, actor);
+        const grant = companyGrantFor(state, actor);
         if (
           !grant?.roles.some((r) => r === "fleet_manager" || r === "dispatcher")
         )
@@ -529,7 +707,7 @@ export function createFleetService(repository: FleetRepository) {
           [actor.companyId, userIds],
         );
         const assets = await client.query(
-          "SELECT a.id,a.name,a.category,a.status,a.current_holder_user_id,EXISTS(SELECT 1 FROM asset_holds h WHERE h.asset_id=a.id AND h.released_at IS NULL) AS held FROM assets a WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer') ORDER BY name LIMIT 201",
+          "SELECT a.id,a.name,a.category,a.status,a.current_holder_user_id,EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=a.id AND l.attachment_type='fleet_inventory' AND l.attachment_id=$1::text) AS enrolled,EXISTS(SELECT 1 FROM asset_holds h WHERE h.asset_id=a.id AND h.released_at IS NULL) AS held FROM assets a WHERE responsible_org_type='vendor' AND responsible_org_id=$1::int AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer','dolly','tank','pump','accessory') ORDER BY name LIMIT 201",
           [actor.companyId],
         );
         if (assets.rows.length > 200)
@@ -538,7 +716,7 @@ export function createFleetService(repository: FleetRepository) {
           "SELECT t.id,t.site_location_id,t.status FROM tickets t WHERE t.vendor_id=$1 AND t.site_location_id=ANY($2::int[]) AND ($3::boolean OR t.field_employee_id=$4 OR t.foreman_user_id=$5 OR t.acting_foreman_user_id=$5 OR EXISTS(SELECT 1 FROM ticket_crew tc WHERE tc.ticket_id=t.id AND tc.employee_id=$4 AND tc.removed_at IS NULL)) ORDER BY t.id DESC LIMIT 201",
           [
             actor.companyId,
-            actor.currentSiteIds ?? [],
+            grantFor(state, actor)?.siteIds ?? [],
             actor.role === "vendor",
             actor.vendorPeopleId ?? null,
             actor.userId,
@@ -560,12 +738,16 @@ export function createFleetService(repository: FleetRepository) {
               .fleetIds.filter((id) => grant.fleetIds.includes(id)),
           })),
           equipment: assets.rows
-            .filter((row) =>
-              state.fleets.some(
-                (f) =>
-                  grant.fleetIds.includes(f.id) &&
-                  f.equipmentAssetIds.includes(row.id),
-              ),
+            .filter(
+              (row) =>
+                (actor.role === "vendor" &&
+                  actor.membershipRole === "admin" &&
+                  row.enrolled) ||
+                state.fleets.some(
+                  (f) =>
+                    grant.fleetIds.includes(f.id) &&
+                    f.equipmentAssetIds.includes(row.id),
+                ),
             )
             .map((row) => ({
               id: row.id,
@@ -590,7 +772,7 @@ export function createFleetService(repository: FleetRepository) {
         );
         if ((current?.version ?? 1) !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict");
-        const grant = grantFor(state, actor);
+        const grant = companyGrantFor(state, actor);
         if (
           body.defaultWorkspace === "fleet_desk" &&
           !grant?.roles.some((r) => ["fleet_manager", "dispatcher"].includes(r))
@@ -663,6 +845,10 @@ export function createFleetService(repository: FleetRepository) {
     setup: (actor: FleetActor, input: unknown) =>
       transaction(actor, async (state, client) => {
         const body = FleetSetupInputSchema.parse(input);
+        // Driver membership authorizes their Detail/activity, not customer-site
+        // dispatch. Accept legacy driver-site fields without preserving that
+        // misleading scope; mixed office/driver roles retain office authority.
+        body.grants=body.grants.map(grant=>grant.roles.includes("driver")&&!grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role))?{...grant,siteIds:[]}:grant);
         const member = await client.query(
           "SELECT id FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND role='admin'",
           [actor.userId, actor.companyId],
@@ -777,14 +963,19 @@ export function createFleetService(repository: FleetRepository) {
       transaction(
         Object.assign(actor, {
           operationId: CreateFleetRunSchema.parse(input).operationId,
+          schedulingRunId: undefined,
+          schedulingDriverUserIds: [
+            CreateFleetRunSchema.parse(input).driverUserId,
+          ],
         }),
         async (state, client) => {
           const body = CreateFleetRunSchema.parse(input);
           const fleet = state.fleets.find((f) => f.id === body.fleetId);
-          const grant = grantFor(state, actor);
+          const ownUnplanned=!!options.billingV2Create?.ownUnplanned&&options.originalWorkOperationId===body.operationId&&body.driverUserId===actor.userId&&!!body.detailSelection;
+          const grant = ownUnplanned?companyGrantFor(state,actor):grantFor(state, actor);
           if (
             !fleet ||
-            !mayPerformFleetAction(
+            !(ownUnplanned&&grant?.roles.includes("driver")&&grant.fleetIds.includes(body.fleetId))&&!mayPerformFleetAction(
               actor.userId,
               grant,
               { companyId: actor.companyId, fleetId: body.fleetId },
@@ -806,23 +997,35 @@ export function createFleetService(repository: FleetRepository) {
               throw new FleetError("fleet.operation_conflict");
             return project(state, actor, replay.result);
           }
-          if (state.runs.length >= 1000 || state.operations.length >= 2000)
+          if (!options.billingV2Create && (state.runs.length >= 1000 || state.operations.length >= 2000))
             throw new FleetError("fleet.store_capacity_reached");
           const siteIds = [...new Set(body.stops.map((s) => s.siteId))];
           if (
             !siteIds.every(
-              (id) => fleet.siteIds.includes(id) && grant!.siteIds.includes(id),
+              (id) => fleet.siteIds.includes(id) && (ownUnplanned||grant!.siteIds.includes(id)),
             ) ||
             new Set(body.stops.map((s) => s.id)).size !== body.stops.length ||
             body.stops.some((s, i) => s.sequence !== i)
           )
             throw new FleetError("fleet.invalid_stops", 400);
-          const { operationId: _operationId, billing: _billing, ...runFields } = body;
+          const {
+            operationId: _operationId,
+            billing: _billing,
+            detailSelection,
+            runOrderSelection,
+            ...runFields
+          } = body;
           const run: FleetRun = {
             ...runFields,
             id: randomUUID(),
             companyId: actor.companyId,
-            operationalProfile: fleet.operationalProfile ? structuredClone(fleet.operationalProfile) : undefined,
+            ...(ownUnplanned?{workOrigin:"driver_unplanned" as const}:{}),
+            ...(options.billingV2Create?.serviceTemplate ? {serviceTemplate:structuredClone(options.billingV2Create.serviceTemplate)} : {}),
+            operationalProfile: options.billingV2Create?.serviceTemplate
+              ? mergeFleetTemplateProfile(fleet.operationalProfile,options.billingV2Create.serviceTemplate.profile)
+              : fleet.operationalProfile
+              ? structuredClone(fleet.operationalProfile)
+              : undefined,
             siteIds,
             status: "draft",
             phase: null,
@@ -837,17 +1040,69 @@ export function createFleetService(repository: FleetRepository) {
             linkedTicketId: null,
             allowedActions: [],
           };
-          await attachFleetBilling(client,actor,state,run,body.billing);
+          if(runOrderSelection){
+            const orders=createFleetRunOrderOperations(async(_actor,work)=>work(state,client),companyGrantFor);
+            const order=await orders.fleetRunOrder(actor,runOrderSelection.id);
+            if(order.archivedAt||order.version!==runOrderSelection.version)throw new FleetError("fleet.run_order_revision_conflict",409);
+            if(!order.accessGroupIds.includes(run.fleetId)||!run.routePlan||!fleetRouteMatchesRunOrder(run.routePlan,order))throw new FleetError("fleet.run_order_route_mismatch",409);
+            run.runOrder=structuredClone(order);
+          }
+          if (options.billingV2Create) {
+            if (options.billingV2Create.operationId !== body.operationId)
+              throw new FleetError("fleet.operation_conflict");
+            if (options.originalWorkOperationId !== body.operationId)
+              throw new FleetError("fleet.work_command_required", 409);
+            await attachFleetBillingV2(
+              { client, actor, state }, run,
+              options.billingV2Create.intent, options.billingV2Create.capture, ownUnplanned,
+            );
+          } else {
+            await attachFleetBilling(client, actor, state, run, body.billing);
+          }
+          await assertFleetPhysicalRoute(client, actor, state, run, true);
+          if (detailSelection)
+            await assignFleetRunDetail(
+              { state, client },
+              actor,
+              run,
+              detailSelection,
+            );
           await eligible(state, client, run);
-          run.events.push({
+          const fleetCompliance = await assessFleetActionPolicy(client, actor, {
+            run,
+            action: "create",
+            requiredCertifications: fleet.requiredCertifications,
+            policyAt: new Date().toISOString(),
+          });
+          const createdAt = new Date().toISOString();
+          appendFleetRunEvent(run, {
             id: randomUUID(),
             operationId: body.operationId,
             type: "created",
             actorUserId: actor.userId,
-            recordedAt: new Date().toISOString(),
+            recordedAt: createdAt,
+            ...(options.billingV2Create ? {
+              capturedAt: new Date(options.billingV2Create.capture.workAt).toISOString(),
+              source: "user_report" as const,
+            } : {}),
+            details: {
+              fleetCompliance,
+              ...(ownUnplanned?{unplannedOwnWork:true,officeReviewRequired:true}:{}),
+              ...(options.billingV2Create ? { originalCapture: {
+                capturedAt: options.billingV2Create.capture.workAt,
+                timeZone: options.billingV2Create.timeZone,
+                clockStatus: Date.parse(options.billingV2Create.capture.workAt) > Date.parse(createdAt) + 300000
+                  ? "ahead_of_server" : "reported_capture_time",
+              } } : {}),
+              ...(run.resourceAssignment
+                ? {
+                    resourceAssignment: structuredClone(run.resourceAssignment),
+                  }
+                : {}),
+            },
           });
           state.runs.push(run);
-          state.operations.push({
+          if (!run.billingV2) state.operations.push({
             id: body.operationId,
             actorUserId: actor.userId,
             fingerprint,
@@ -864,11 +1119,19 @@ export function createFleetService(repository: FleetRepository) {
         Object.assign(actor, {
           operationId: FleetActionInputSchema.parse(input).operationId,
           runId,
-          ...(["dispatch", "reassign"].includes(requested.action) ? { schedulingRunId: runId, schedulingDriverUserIds: requested.driverUserId ? [requested.driverUserId] : [] } : {}),
+          schedulingRunId: runId,
+          schedulingDriverUserIds: requested.driverUserId
+            ? [requested.driverUserId]
+            : [],
         }),
         async (state, client) => {
           const body = FleetActionInputSchema.parse(input);
-          if(body.destinationId&&body.action!=="start")throw new FleetError("fleet.unexpected_destination",400);
+          if (body.inspectedAssetIds && body.action !== "inspect")
+            throw new FleetError("fleet.inspection_fields_required", 400);
+          if (body.detailSelection && body.action !== "reassign")
+            throw new FleetError("fleet.unexpected_assignment", 400);
+          if (body.destinationId && body.action !== "start")
+            throw new FleetError("fleet.unexpected_destination", 400);
           if (body.capturedAt) {
             const age = Date.now() - Date.parse(body.capturedAt);
             if (age < -300_000 || age > 30 * 86_400_000)
@@ -900,7 +1163,16 @@ export function createFleetService(repository: FleetRepository) {
             throw new FleetError("fleet.action_forbidden", 403);
           if (run.version !== body.expectedVersion)
             throw new FleetError("fleet.version_conflict");
-          if (run.events.length >= 200 || state.operations.length >= 2000)
+          // The legacy review writer has no v2 quantity/charge authority. Keep
+          // acceptance on the original-scope financial path; return-for-
+          // correction and the driver's factual work remain available.
+          if (run.billingV2 && body.action === "review" && body.decision === "accept")
+            throw new FleetError("fleet.office_charge_review_required", 409);
+          if (run.billingV2 && options.originalWorkOperationId !== body.operationId)
+            throw new FleetError("fleet.work_command_required", 409);
+          if (!["cancel", "pause"].includes(body.action))
+            await requireFleetRunCommercialAuthority(client, run);
+          if (!run.billingV2 && (run.events.length >= 200 || state.operations.length >= 2000))
             throw new FleetError("fleet.store_capacity_reached");
           if (
             body.action !== "reassign" &&
@@ -993,9 +1265,11 @@ export function createFleetService(repository: FleetRepository) {
             run.pausedFromPhase = run.phase;
             run.phase = "paused";
           } else if (body.action === "resume") {
-              if (!fleetReplacementReady(run)) throw new FleetError("fleet.inspection_fields_required", 400);
+            if (!fleetReplacementReady(run))
+              throw new FleetError("fleet.inspection_fields_required", 400);
             await eligible(state, client, run);
-              if (run.activeReplacement) await assertFleetReplacementCustody(client, run);
+            if (run.activeReplacement)
+              await assertFleetReplacementCustody(client, run);
             run.phase = run.pausedFromPhase;
             run.pausedFromPhase = null;
           } else if (body.action === "link_ticket") {
@@ -1014,7 +1288,23 @@ export function createFleetService(repository: FleetRepository) {
             );
             if (!ticket.rows.length)
               throw new FleetError("fleet.ticket_not_found", 404);
-            if(run.commercial|| (await client.query("SELECT fleet_plan FROM tickets WHERE id=$1",[body.ticketId])).rows[0]?.fleet_plan){await bindFleetRunTicket(client,actor,state,run,body.ticketId);}else run.linkedTicketId = body.ticketId;
+            if (
+              run.commercial ||
+              (
+                await client.query(
+                  "SELECT fleet_plan FROM tickets WHERE id=$1",
+                  [body.ticketId],
+                )
+              ).rows[0]?.fleet_plan
+            ) {
+              await bindFleetRunTicket(
+                client,
+                actor,
+                state,
+                run,
+                body.ticketId,
+              );
+            } else run.linkedTicketId = body.ticketId;
           } else if (body.action === "cancel") {
             if (!body.reason)
               throw new FleetError("fleet.reason_required", 400);
@@ -1023,7 +1313,24 @@ export function createFleetService(repository: FleetRepository) {
           else if (body.action === "inspect") {
             if (!body.inspectionOutcome || !body.notes)
               throw new FleetError("fleet.inspection_fields_required", 400);
-            if (!checkFleetInspectionRequirements(run.operationalProfile, body.inspectionResponses, body.inspectionOutcome)) throw new FleetError("fleet.inspection_fields_required", 400);
+            if (
+              run.resourceAssignment &&
+              !fleetRunInspectionMatches(run, {
+                driverUserId: run.driverUserId,
+                vehicleAssetId: run.vehicleAssetId,
+                trailerAssetId: run.trailerAssetId,
+                inspectedAssetIds: body.inspectedAssetIds,
+              })
+            )
+              throw new FleetError("fleet.inspection_components_required", 400);
+            if (
+              !checkFleetInspectionRequirements(
+                run.operationalProfile,
+                body.inspectionResponses,
+                body.inspectionOutcome,
+              )
+            )
+              throw new FleetError("fleet.inspection_fields_required", 400);
             if (run.inspections.length >= 100)
               throw new FleetError("fleet.store_capacity_reached");
             if (body.inspectionOutcome === "defect_reported")
@@ -1035,6 +1342,9 @@ export function createFleetService(repository: FleetRepository) {
                 body.notes,
               );
             run.inspections.push({
+              ...(body.inspectedAssetIds
+                ? { inspectedAssetIds: body.inspectedAssetIds }
+                : {}),
               responses: body.inspectionResponses,
               driverUserId: run.driverUserId,
               vehicleAssetId: run.vehicleAssetId,
@@ -1046,9 +1356,25 @@ export function createFleetService(repository: FleetRepository) {
               source: "user_report",
             });
           } else if (body.action === "start") {
-            await assertRequiredWorkClear(client, run.driverUserId, { type: "vendor", id: actor.companyId });
-            await selectFleetRunDestination(client,actor,state,run,body.destinationId);
+            await assertRequiredWorkClear(client, run.driverUserId, {
+              type: "vendor",
+              id: actor.companyId,
+            });
+            await selectFleetRunDestination(
+              client,
+              actor,
+              state,
+              run,
+              body.destinationId,
+            );
             await eligible(state, client, run);
+            const activeReservation = await activateFleetReservation(
+              { state, client },
+              actor,
+              run,
+            );
+            if (activeReservation && run.resourceAssignment)
+              run.resourceAssignment.reservation = activeReservation;
             run.status = "in_progress";
             run.phase = "traveling_to_pickup";
           } else if (body.action === "arrive_stop") {
@@ -1088,7 +1414,13 @@ export function createFleetService(repository: FleetRepository) {
               !body.manifestReference
             )
               throw new FleetError("fleet.load_fields_required", 400);
-            if (!checkFleetManifestRequirements(run.operationalProfile, body.manifestValues)) throw new FleetError("fleet.load_fields_required", 400);
+            if (
+              !checkFleetManifestRequirements(
+                run.operationalProfile,
+                body.manifestValues,
+              )
+            )
+              throw new FleetError("fleet.load_fields_required", 400);
             if (run.loads.some((l) => l.id === body.loadId))
               throw new FleetError("fleet.load_exists");
             if (run.loads.length >= 100)
@@ -1111,14 +1443,22 @@ export function createFleetService(repository: FleetRepository) {
             run.phase = "loading";
           } else if (body.action === "record_delivery") {
             const load = run.loads.find((l) => l.id === body.loadId);
-            if (!load || load.deliveredAt || load.transferOut || (load.plannedDeliveryStopId && load.plannedDeliveryStopId !== run.currentStopId) || !body.deliveryReference)
+            if (
+              !load ||
+              load.deliveredAt ||
+              load.transferOut ||
+              (load.plannedDeliveryStopId &&
+                load.plannedDeliveryStopId !== run.currentStopId) ||
+              !body.deliveryReference
+            )
               throw new FleetError("fleet.delivery_fields_required", 400);
             load.deliveryStopId = run.currentStopId!;
             load.deliveryReference = body.deliveryReference;
             load.deliveredAt = new Date().toISOString();
             run.phase = "unloading";
           } else if (body.action === "submit_closeout") {
-            if ((await readFleetReviewPacket(client,run)).missingRequiredCount) throw new FleetError("fleet.evidence_required",400);
+            if ((await readFleetReviewPacket(client, run)).missingRequiredCount)
+              throw new FleetError("fleet.evidence_required", 400);
             run.status = "submitted_for_review";
             run.phase = null;
           } else if (body.action === "review") {
@@ -1127,26 +1467,98 @@ export function createFleetService(repository: FleetRepository) {
             run.status =
               body.decision === "accept" ? "completed" : "in_progress";
             run.phase = null;
-            if(body.decision==="accept"){
-              await recordFleetBillingCharge(client,actor,run,body.billingQuantity);
-              await recordFleetRunCharge(client,actor,run);
+            if (body.decision === "accept") {
+              await recordFleetBillingCharge(
+                client,
+                actor,
+                run,
+                body.billingQuantity,
+              );
+              await recordFleetRunCharge(client, actor, run);
             }
           } else {
             if (body.action === "reassign") {
+              if (
+                run.resourceAssignment &&
+                !body.detailSelection &&
+                ((body.driverUserId !== undefined &&
+                  body.driverUserId !== run.driverUserId) ||
+                  (body.vehicleAssetId !== undefined &&
+                    body.vehicleAssetId !== run.vehicleAssetId) ||
+                  (body.trailerAssetId !== undefined &&
+                    body.trailerAssetId !== run.trailerAssetId))
+              )
+                throw new FleetError("fleet.detail_selection_required", 400);
+              if (body.detailSelection && run.resourceAssignment) {
+                if (
+                  body.detailSelection.returnPolicy !==
+                  run.resourceAssignment.returnPolicy
+                )
+                  throw new FleetError("fleet.return_policy_locked", 409);
+                await releaseFleetReservation({ state, client }, actor, {
+                  runId: run.id,
+                  kind: "reassignment",
+                  reason:
+                    body.reason ?? "Office changed the Detail before start",
+                  occurredAt: new Date().toISOString(),
+                });
+              }
               run.driverUserId = body.driverUserId ?? run.driverUserId;
               run.vehicleAssetId = body.vehicleAssetId ?? run.vehicleAssetId;
               if (body.trailerAssetId !== undefined)
                 run.trailerAssetId = body.trailerAssetId;
               run.status = "draft";
+              if (body.detailSelection)
+                await assignFleetRunDetail(
+                  { state, client },
+                  actor,
+                  run,
+                  body.detailSelection,
+                );
             }
             await eligible(state, client, run);
             if (["dispatch", "reassign"].includes(body.action))
-              requireFleetAvailability(await readFleetAvailability(client, actor.companyId, run.driverUserId, run.schedule));
+              requireFleetAvailability(
+                await readFleetAvailability(
+                  client,
+                  actor.companyId,
+                  run.driverUserId,
+                  run.schedule,
+                ),
+              );
             if (body.action === "dispatch") run.status = "dispatched";
           }
           validateCommercialStops(run);
+          if (
+            run.resourceAssignment &&
+            ["submit_closeout", "cancel"].includes(body.action)
+          ) {
+            const released = await releaseFleetReservation(
+              { state, client },
+              actor,
+              {
+                runId: run.id,
+                reason:
+                  body.reason ??
+                  (body.action === "submit_closeout"
+                    ? "Driver closed the operational run"
+                    : "Run cancelled"),
+                occurredAt: new Date().toISOString(),
+              },
+            );
+            if (released) run.resourceAssignment.reservation = released;
+          }
+          const fleetCompliance = await assessFleetActionPolicy(client, actor, {
+            run,
+            action: body.action,
+            capturedAt: body.capturedAt,
+            requiredCertifications:
+              state.fleets.find((f) => f.id === run.fleetId)
+                ?.requiredCertifications ?? [],
+            policyAt: new Date().toISOString(),
+          });
           run.version++;
-          run.events.push({
+          appendFleetRunEvent(run, {
             id: randomUUID(),
             operationId: body.operationId,
             type: body.action,
@@ -1155,6 +1567,7 @@ export function createFleetService(repository: FleetRepository) {
             ...(body.capturedAt ? { capturedAt: body.capturedAt } : {}),
             source: "user_report",
             details: {
+              fleetCompliance,
               ...(maintenanceIds.length ? { maintenanceIds } : {}),
               ...(body.reason ? { reason: body.reason } : {}),
               ...(body.notes ? { notes: body.notes } : {}),
@@ -1162,18 +1575,29 @@ export function createFleetService(repository: FleetRepository) {
               ...(body.action === "reassign" ? { priorAssignment } : {}),
             },
           });
-          state.operations.push({
+          if (!run.billingV2) state.operations.push({
             id: body.operationId,
             actorUserId: actor.userId,
             fingerprint,
             runId: run.id,
             result: structuredClone(run),
           });
-          notice = await fleetRunNotificationRecipients(state,client,run,body.action,body.operationId,actor.userId);
+          notice = await fleetRunNotificationRecipients(
+            state,
+            client,
+            run,
+            body.action,
+            body.operationId,
+            actor.userId,
+          );
           return project(state, actor, run);
         },
       );
-      if (notice) await emitFleetRunNotification(notice);
+      if (notice) {
+        const committedNotice=notice;
+        if(options.afterCommit)options.afterCommit(()=>emitFleetRunNotification(committedNotice));
+        else await emitFleetRunNotification(committedNotice);
+      }
       return result;
     },
   };

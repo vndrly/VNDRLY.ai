@@ -1,7 +1,7 @@
 import { FleetLocationInputSchema, FleetLocationObservationSchema, type FleetLocationInput, type FleetLocationObservation, type FleetOverview, type FleetRun } from "@workspace/api-zod";
 export type FleetVerifiedAccount = NonNullable<FleetOverview["accountScope"]>;
 export type FleetPhoneLocationState = { state: "stopped" | "checking" | "sharing" | "consent_required" | "permission_required" | "unavailable"; message: string; lastAccepted: FleetLocationObservation | null };
-type Sample = { latitude: number; longitude: number; accuracy: number | null; timestamp: number };
+type Sample = { latitude: number; longitude: number; accuracy: number | null; timestamp: number;speed?:number|null;speedAccuracy?:number|null;heading?:number|null };
 type Dependencies = {
   readCurrent(): Promise<{account: FleetVerifiedAccount; run: FleetRun}>;
   consent(): Promise<boolean>;
@@ -42,7 +42,7 @@ export function createFleetPhoneLocationCollector(account: FleetVerifiedAccount,
       if(!pending){
         const deviceId=await deps.deviceId();if(!checked())return;
         const sample=await deps.sample();if(!checked())return;
-        pending={assignment:binding,input:FleetLocationInputSchema.parse({operationId:deps.operationId(),expectedVersion:authority.run.version,deviceId,latitude:sample.latitude,longitude:sample.longitude,accuracyMeters:sample.accuracy,recordedAt:new Date(sample.timestamp).toISOString()})};
+        pending={assignment:binding,input:FleetLocationInputSchema.parse({operationId:deps.operationId(),expectedVersion:authority.run.version,deviceId,latitude:sample.latitude,longitude:sample.longitude,accuracyMeters:sample.accuracy,...(sample.speed!=null&&sample.speed>=0?{speedMetersPerSecond:sample.speed,speedAccuracyMetersPerSecond:sample.speedAccuracy??null,headingDegrees:sample.heading!=null&&sample.heading>=0?sample.heading:null}:{}),recordedAt:new Date(sample.timestamp).toISOString()})};
       }
       // Recheck consent after an OS location request that may have taken time.
       if(!await deps.consent()){if(checked()){active=false;pending=null;emit("consent_required","Device consent could not be verified. Phone sharing stopped.");}return;}if(!checked())return;

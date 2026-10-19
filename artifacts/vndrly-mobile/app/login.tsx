@@ -36,7 +36,7 @@ import {
 
 export default function LoginScreen() {
   const colors = useColors();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -303,15 +303,28 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => void Linking.openURL("https://vndrly.ai/legal/eula")}
+              onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/sms/`)}
               disabled={busy}
               style={styles.linkButton}
-              testID="link-platform-eula"
+              testID="link-sms-enrollment"
             >
               <Text style={[styles.linkText, { color: colors.mutedForeground }]}>
-                {t("login.eulaLink")}
+                {t("login.smsEnrollmentLink")}
               </Text>
             </TouchableOpacity>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", columnGap: 8 }}>
+              <TouchableOpacity onPress={() => void Linking.openURL("https://vndrly.ai/legal/eula")} disabled={busy} style={styles.linkButton} testID="link-platform-eula" accessibilityLabel={t("login.eulaLink")}>
+                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>EULA</Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.mutedForeground }}>·</Text>
+              <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`)} disabled={busy} style={styles.linkButton} testID="link-privacy-policy">
+                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>{t("login.privacyPolicyLink")}</Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.mutedForeground }}>·</Text>
+              <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`)} disabled={busy} style={styles.linkButton} testID="link-terms-conditions">
+                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>{t("login.termsConditionsLink")}</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Demo password reset button intentionally removed — passwords
                 are managed via the DEMO_PASSWORD_OVERRIDE secret on the API

@@ -1,0 +1,2 @@
+import {it,expect} from "vitest";import {fleetCalendarTiming} from "./fleet-calendar";
+it("retains immediate calendar placement after the dispatch event leaves the display window",()=>{expect(fleetCalendarTiming({assignmentRecordedAt:"2026-10-17T18:00:00Z",events:[{type:"record_fuel",recordedAt:"2026-10-17T20:00:00Z"}]} as any)).toMatchObject({startsAt:"2026-10-17T18:00:00.000Z",endsAt:null,timeBasis:"dispatch_recorded"});});

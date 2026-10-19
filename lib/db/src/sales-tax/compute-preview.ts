@@ -1,3 +1,4 @@
+import {resolveEffectiveFinancialLine,parseExactDecimal,addExact,multiplyExact,roundExact,formatExact} from "../format";
 import { resolveEffectiveTaxTreatment } from "./rubrics";
 import { resolveLineTaxability } from "./taxability";
 import type { TaxTreatment, TicketLineTaxInput, TicketTaxPreview } from "./types";
@@ -33,6 +34,18 @@ export function computeTicketTaxPreview(args: {
       state: args.state,
     });
 
+  if(args.lineItems.some(item=>item.fleetBillingMetadata)){
+    const totals={subtotal:parseExactDecimal("0"),taxableSubtotal:parseExactDecimal("0"),exemptSubtotal:parseExactDecimal("0"),laborSubtotal:parseExactDecimal("0"),merchandiseSubtotal:parseExactDecimal("0"),laborTax:parseExactDecimal("0"),merchandiseTax:parseExactDecimal("0")};
+    for(const item of args.lineItems){
+      const exact=resolveEffectiveFinancialLine(item),amount=parseExactDecimal(exact.currencyAmount),labor=item.type.toLowerCase()==="labor",merch=["part","parts","equipment","materials","markup","other"].includes(item.type.toLowerCase());
+      const taxable=resolveLineTaxability({lineType:item.type,state:args.state,taxTreatment:resolvedTreatment,taxableOverride:item.taxableOverride});
+      totals.subtotal=addExact(totals.subtotal,amount);
+      const bucket=labor?"laborSubtotal":merch?"merchandiseSubtotal":"exemptSubtotal";totals[bucket]=addExact(totals[bucket],amount);
+      if(taxable){totals.taxableSubtotal=addExact(totals.taxableSubtotal,amount);const tax=roundExact(multiplyExact(amount,parseExactDecimal(String(rate))),{scale:2,rounding:"half_away_from_zero"}),taxBucket=labor?"laborTax":"merchandiseTax";totals[taxBucket]=addExact(totals[taxBucket],tax);}
+    }
+    const tax=addExact(totals.laborTax,totals.merchandiseTax),grand=addExact(totals.subtotal,tax);
+    return {subtotal:Number(formatExact(totals.subtotal)),taxableSubtotal:Number(formatExact(totals.taxableSubtotal)),exemptSubtotal:Number(formatExact(totals.exemptSubtotal)),laborSubtotal:Number(formatExact(totals.laborSubtotal)),merchandiseSubtotal:Number(formatExact(totals.merchandiseSubtotal)),laborTax:Number(formatExact(totals.laborTax)),merchandiseTax:Number(formatExact(totals.merchandiseTax)),taxAmount:Number(formatExact(tax)),grandTotal:Number(formatExact(grand)),combinedTaxRate:rate,jurisdictionLabel:args.jurisdictionLabel??null,preciseTotals:{subtotal:formatExact(totals.subtotal),taxAmount:formatExact(tax),grandTotal:formatExact(grand)}};
+  }
   for (const item of args.lineItems) {
     const amount = parseFloat(item.quantity) * parseFloat(item.unitPrice);
     if (!Number.isFinite(amount)) continue;

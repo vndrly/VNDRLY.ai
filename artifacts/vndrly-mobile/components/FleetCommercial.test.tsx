@@ -83,6 +83,28 @@ afterEach(() => {
   mocks.api.mockReset();
   mocks.uuid.mockClear();
 });
+it("reviews an address-only location without fabricating zero coordinates", async () => {
+  render(<FleetDestinationDirectory />);
+  await screen.findByRole("button", { name: "Edit Disposal Alpha" });
+  fireEvent.click(screen.getByRole("button", { name: "Add destination" }));
+  fireEvent.change(screen.getByLabelText("name"), {
+    target: { value: "Temporary lease pickup" },
+  });
+  fireEvent.change(screen.getByLabelText("address"), {
+    target: { value: "West gate road" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Review destination" }));
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Confirm destination" }),
+  );
+  await screen.findAllByText("Network interrupted");
+  const post = mocks.api.mock.calls.find((c) => c[1]?.method === "POST")!;
+  expect(JSON.parse(post[1].body).destination).toMatchObject({
+    latitude: null,
+    longitude: null,
+    address: "West gate road",
+  });
+});
 it("requires review and confirmation and retries the identical ticket payload", async () => {
   render(<FleetTicketPlan ticketId={8} />);
   await screen.findByText("Origin: Origin Alpha (locked)");

@@ -30,6 +30,18 @@ function fixture() {
   return { service, client, authorize, regen, calls, row: () => row, audits: () => audits };
 }
 describe("exact transactional labor finalization", () => {
+  it("finalizes manual marketplace billing once without generating hourly charges", async () => {
+    auth.valid = auth.readable = true;
+    const f = fixture(), command = { operationId: randomUUID(), expectedUpdatedAt: version };
+    f.regen.mockRejectedValueOnce(Error("manual_billing_required"));
+    const saved = await f.service.apply(session, 7, command);
+    expect(saved).toMatchObject({ autoLaborLineCount: 0, status: "applied", submitted: false });
+    expect(await f.service.apply(session, 7, command)).toEqual(saved);
+    expect(await f.service.read(session, 7, command.operationId)).toEqual(saved);
+    expect(f.regen).toHaveBeenCalledTimes(1);
+    expect(f.audits()).toHaveLength(1);
+    expect(f.row().status).toBe("pending_review");
+  });
   it("freezes once, preserves office/field status and returns exact saved receipt after a dropped response", async () => {
     auth.valid = auth.readable = true;
     const f = fixture(), command = { operationId: randomUUID(), expectedUpdatedAt: version };

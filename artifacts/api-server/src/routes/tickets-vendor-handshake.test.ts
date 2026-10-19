@@ -331,6 +331,22 @@ describe("POST /tickets/:id/deny — reason validation + authz", () => {
 });
 
 describe("POST /tickets/:id/reinvite — partner authz + status guards", () => {
+  it.each(["partner", "admin"])("blocks %s reinvites for accepted marketplace tickets without changing lineage", async role => {
+    ticketRow = makeTicketRow({ id: 123, status: "initiated", jobOfferId: 72, vendorId: 7, siteLocationId: 11, workTypeId: 22, partnerId: 5 });
+    const db = (await import("@workspace/db")).db;
+    const transaction = vi.spyOn(db, "transaction");
+    try {
+      const res = await request(app).post("/api/tickets/123/reinvite")
+        .set("Cookie", cookieFor({ userId: 1, role, vendorId: null, partnerId: role === "partner" ? 5 : null }))
+        .send({ vendorId: 42 });
+      expect(res.status).toBe(409);
+      expect(res.body.code).toBe("marketplace.ticket_reinvite_not_allowed");
+      expect(res.body.message).toMatch(/cancel.*new.*offer/i);
+      expect(transaction).not.toHaveBeenCalled();
+      expect(ticketRow).toMatchObject({ jobOfferId: 72, vendorId: 7, status: "initiated" });
+    } finally { transaction.mockRestore(); }
+  });
+
   it("returns 400 when vendorId body field is missing", async () => {
     ticketRow = makeTicketRow({
       id: 123,

@@ -7,11 +7,12 @@ import BrandTitleRow from "@/components/BrandTitleRow";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 
-export default function WorkHubPageTitle({ title, onBack }: { title: string; onBack?: () => void }) {
+export default function WorkHubPageTitle({ title, onBack, beforeTitle }: { title: string; onBack?: () => void; beforeTitle?: React.ReactNode }) {
   const colors = useColors();
   return (
     <View style={{ gap: 12 }}>
       <BrandTitleRow subtitle="iOS Portal" logoTestId="work-hub-company-logo" platformLogoTestId="work-hub-vndrly-logo" />
+      {beforeTitle}
       <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
         <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
           <SphereBackButton

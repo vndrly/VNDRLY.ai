@@ -493,6 +493,19 @@ export default function ProfileScreen() {
 
       <GateLocationsCard key={activeMembershipId ?? "no-membership"} />
 
+      {user?.role === "vendor" || user?.role === "partner" ? (
+        <LayeredPillButton
+          onPress={() => router.push("/service-marketplace")}
+          height={40}
+          style={styles.actionBtn}
+          testID="button-service-marketplace"
+        >
+          <Feather name="briefcase" size={16} color="#ffffff" style={styles.pillIconShadow} />
+          <Text style={[styles.actionText, styles.pillTextShadow]}>{t("mobileMarketplace.title")}</Text>
+          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
+        </LayeredPillButton>
+      ) : null}
+
       {canManageCompany ? (
         <LayeredPillButton
           onPress={() => router.push("/employees")}
@@ -521,6 +534,7 @@ export default function ProfileScreen() {
         </LayeredPillButton>
       ) : null}
 
+      {user?.partnerId&&canManageCompany?<LayeredPillButton onPress={()=>router.push("/fleet-agreements")} height={40} style={styles.actionBtn}><Text style={styles.actionText}>{t("fleet.agreementEditor")}</Text></LayeredPillButton>:null}
       {/* Task #838: brief language-change confirmation toast.
           Mirrors the manual-refresh toast styling used on the
           history/open-tickets screens so the visual language stays

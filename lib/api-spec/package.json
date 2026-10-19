@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "codegen": "orval --config ./orval.config.ts && node ./scripts/dedupe-zod-types.mjs"
+    "codegen": "orval --config ./orval.config.ts && node ./scripts/format-generated.mjs && node ./scripts/dedupe-zod-types.mjs",
+    "test": "node --test ./scripts/generated-file-write.test.mjs"
   },
   "devDependencies": {
     "orval": "^8.5.2"

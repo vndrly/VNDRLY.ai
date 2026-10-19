@@ -14,6 +14,7 @@ import { eq, asc, inArray, isNull, sql, and } from "drizzle-orm";
 import { ListWorkTypesResponse } from "@workspace/api-zod";
 import { requireAdmin, requireSession, getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
+import { classifySavedWorkType } from "../services/service-matching/catalog-classification";
 
 import { sendValidationFailed } from "../lib/validation-error";
 const router: IRouter = Router();
@@ -152,6 +153,7 @@ router.post("/work-types", requireAdmin, async (req, res): Promise<void> => {
     );
   }
 
+  await classifySavedWorkType(created.id);
   res.status(201).json(created);
 });
 
@@ -193,6 +195,7 @@ router.put("/work-types/:id", requireAdmin, async (req, res): Promise<void> => {
     }
   }
 
+  await classifySavedWorkType(updated.id);
   res.json(updated);
 });
 
@@ -302,6 +305,7 @@ router.post("/work-types/import", requireAdmin, async (req, res): Promise<void> 
         return { id, didCreate };
       });
 
+      await classifySavedWorkType(result.id);
       if (result.didCreate) {
         workTypeByCanonical.set(canonical(name), result.id);
         created++;

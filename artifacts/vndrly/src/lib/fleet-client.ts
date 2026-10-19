@@ -1,3 +1,4 @@
+import {FleetServiceTemplatePageSchema,FleetServiceTemplateSchema} from "@workspace/api-zod";
 import type {
   FleetSupportChoices,
   FleetSupportRead,
@@ -19,8 +20,47 @@ import type {
   FleetGateLink,
 } from "@workspace/api-zod";
 import {
-  FleetInventorySchema, FleetInventoryDetailSchema, FleetInventoryReceiptSchema,
-  FleetAssetCreateSchema, FleetAssetEnrollmentSchema, FleetAssetEditSchema,
+  FleetDestinationSaveSchema,
+  FleetRunOrderPageSchema,
+  FleetRunOrderSchema,
+  FleetRunOrderSaveSchema,
+  FleetRunOrderReceiptSchema,
+  FleetRunOrderHistorySchema,
+  FleetRunOrderLocationsSchema,
+  FleetComplianceAssessmentsSchema,
+  FleetComplianceSubjectsQuerySchema,
+  FleetComplianceRegisterQuerySchema,
+  FleetComplianceRegisterPageSchema,
+  FleetComplianceRecordSchema,
+  FleetComplianceVerifySchema,
+  FleetComplianceRecordReceiptSchema,
+  FleetComplianceConfigurationViewSchema,
+  FleetComplianceReviewerSaveSchema,
+  FleetComplianceRequirementsViewSchema,
+  FleetComplianceFactsViewSchema,
+  FleetComplianceFactsSaveSchema,
+  FleetComplianceSubjectSchema,
+  FleetComplianceRequirementAdoptSchema,
+  FleetComplianceSubjectChoicesQuerySchema,
+  FleetComplianceSubjectChoicesPageSchema,
+  FleetComplianceDocumentUploadSchema,
+  FleetComplianceDocumentReceiptSchema,
+  FleetComplianceSaveSchema,
+  FleetComplianceSourceContextSchema,
+  FleetRequirementVersionSchema,
+  FleetDestinationReceiptSchema,
+  FleetDestinationDirectorySchema,
+  FleetDetailPageSchema,
+  FleetRigPackagePageSchema,
+  FleetResourceReceiptSchema,
+  FleetDetailSchema,
+  FleetRigPackageSchema,
+  FleetInventorySchema,
+  FleetInventoryDetailSchema,
+  FleetInventoryReceiptSchema,
+  FleetAssetCreateSchema,
+  FleetAssetEnrollmentSchema,
+  FleetAssetEditSchema,
   FleetReviewPacketSchema,
   FleetReplacementInputSchema,
   FleetReplacementActionSchema,
@@ -41,7 +81,10 @@ import {
   FleetGateLinkInputSchema,
 } from "@workspace/api-zod";
 import type { z } from "zod/v4";
-import type { FleetBillingOptions, FleetBillingTicket } from "@/components/fleet-billing";
+import type {
+  FleetBillingOptions,
+  FleetBillingTicket,
+} from "@/components/fleet-billing";
 export class FleetRequestError extends Error {
   constructor(
     public code: string,
@@ -58,7 +101,7 @@ export function fleetErrorMessage(error: unknown, fallback: string) {
     "fleet.driver_unavailable":
       "The driver is not currently available in this company.",
     "fleet.driver_grant_required":
-      "The driver needs an explicit grant for this fleet and every run site.",
+      "Choose a current driver from the company's available pool with access to this Detail's resource group.",
     "fleet.equipment_on_hold":
       "This equipment has an active hold. Choose eligible equipment.",
     "fleet.equipment_unavailable":
@@ -107,17 +150,119 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
-  billingOptions: (siteId: number, afeNumber: string, workDate: string, fleetId?: string) => request<FleetBillingOptions>(`/billing-options?${new URLSearchParams({ siteId: String(siteId), afeNumber, workDate, ...(fleetId ? { fleetId } : {}) })}`),
-  billingTicket: (ticketId: number) => request<FleetBillingTicket>(`/tickets/${ticketId}/plan`),
-  finalizeBillingTicket: (ticketId: number, input: { operationId: string; expectedVersion: number }) => request<{ ticketId: number; status: string; operationId: string }>(`/tickets/${ticketId}/finalize`, input),
-  inventory: (after?: string, fleetId?: string) => {
-    const params = new URLSearchParams({ ...(after ? { after } : {}), ...(fleetId ? { fleetId } : {}) });
-    return request<unknown>(`/inventory${params.size ? `?${params}` : ""}`).then(value => FleetInventorySchema.parse(value));
+  serviceTemplates:()=>request<unknown>("/service-templates").then(value=>FleetServiceTemplatePageSchema.parse(value)),
+  serviceTemplate:(id:number,revision:number)=>request<unknown>(`/service-templates/${id}?revision=${revision}`).then(value=>FleetServiceTemplateSchema.parse(value)),
+  runOrders:(after?:number)=>request<unknown>(`/run-orders${after?`?after=${after}`:""}`).then(value=>FleetRunOrderPageSchema.parse(value)),
+  runOrder:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}`).then(value=>FleetRunOrderSchema.parse(value)),
+  runOrderLocations:(id:string)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/locations`).then(value=>FleetRunOrderLocationsSchema.parse(value)),
+  assessCompliance:(subjects:z.input<typeof FleetComplianceSubjectsQuerySchema>["subjects"])=>request<unknown>("/compliance/assessments",FleetComplianceSubjectsQuerySchema.parse({subjects})).then(value=>FleetComplianceAssessmentsSchema.parse(value)),
+  complianceRegister:(query:z.input<typeof FleetComplianceRegisterQuerySchema>={})=>{
+    const parsed=FleetComplianceRegisterQuerySchema.parse(query),params=new URLSearchParams();
+    Object.entries(parsed).forEach(([key,value])=>{if(value!==undefined)params.set(key,String(value));});
+    return request<unknown>(`/compliance?${params}`).then(value=>FleetComplianceRegisterPageSchema.parse(value));
   },
-  inventoryAsset: (id: string) => request<unknown>(`/inventory/${encodeURIComponent(id)}`).then(value => FleetInventoryDetailSchema.parse(value)),
-  createAsset: (input: z.infer<typeof FleetAssetCreateSchema>) => request<unknown>("/inventory", FleetAssetCreateSchema.parse(input)).then(value => FleetInventoryReceiptSchema.parse(value)),
-  enrollAsset: (id: string, input: z.infer<typeof FleetAssetEnrollmentSchema>) => request<unknown>(`/inventory/${encodeURIComponent(id)}/enroll`, FleetAssetEnrollmentSchema.parse(input)).then(value => FleetInventoryReceiptSchema.parse(value)),
-  editAsset: (id: string, input: z.infer<typeof FleetAssetEditSchema>) => request<unknown>(`/inventory/${encodeURIComponent(id)}`, FleetAssetEditSchema.parse(input), "PATCH").then(value => FleetInventoryReceiptSchema.parse(value)),
+  privateComplianceRecord:(id:string,revision:number)=>request<unknown>(`/compliance/${encodeURIComponent(id)}/private?revision=${revision}`).then(value=>FleetComplianceRecordSchema.parse(value)),
+  reviewCompliance:(input:z.input<typeof FleetComplianceVerifySchema>)=>request<unknown>(`/compliance/${encodeURIComponent(input.evidenceId)}/review`,FleetComplianceVerifySchema.parse(input)).then(value=>FleetComplianceRecordReceiptSchema.parse(value)),
+  complianceConfiguration:()=>request<unknown>("/compliance/configuration").then(value=>FleetComplianceConfigurationViewSchema.parse(value)),
+  saveComplianceReviewers:(input:z.input<typeof FleetComplianceReviewerSaveSchema>)=>request<unknown>("/compliance/reviewers",FleetComplianceReviewerSaveSchema.parse(input)).then(value=>FleetComplianceConfigurationViewSchema.pick({version:true,reviewerUserIds:true}).parse(value)),
+  complianceRequirements:()=>request<unknown>("/compliance/requirements").then(value=>FleetComplianceRequirementsViewSchema.parse(value)),
+  complianceSubjects:(input:z.input<typeof FleetComplianceSubjectChoicesQuerySchema>)=>{
+    const value=FleetComplianceSubjectChoicesQuerySchema.parse(input),query=new URLSearchParams({kind:value.kind,search:value.search,limit:String(value.limit)});if(value.after)query.set("after",value.after);
+    return request<unknown>(`/compliance/subjects?${query}`).then(value=>FleetComplianceSubjectChoicesPageSchema.parse(value));
+  },
+  uploadComplianceDocument:(input:z.input<typeof FleetComplianceDocumentUploadSchema>)=>request<unknown>("/compliance/documents",FleetComplianceDocumentUploadSchema.parse(input)).then(value=>FleetComplianceDocumentReceiptSchema.parse(value)),
+  receiveComplianceSource:(input:z.input<typeof FleetComplianceSaveSchema>)=>request<unknown>("/compliance",FleetComplianceSaveSchema.parse(input)).then(value=>FleetComplianceRecordReceiptSchema.parse(value)),
+  complianceReceipt:(id:string,revision:number)=>request<unknown>(`/compliance/${encodeURIComponent(id)}/receipt?revision=${revision}`).then(value=>FleetComplianceRecordReceiptSchema.parse(value)),
+  complianceSourceContext:(id:string,revision:number)=>request<unknown>(`/compliance/${encodeURIComponent(id)}/source-context?revision=${revision}`).then(value=>FleetComplianceSourceContextSchema.parse(value)),
+  complianceFacts:(raw:z.input<typeof FleetComplianceSubjectSchema>,revision?:number)=>{const subject=FleetComplianceSubjectSchema.parse(raw);if(revision!==undefined)FleetComplianceFactsViewSchema.shape.version.parse(revision);return request<unknown>(`/compliance/facts/${subject.kind}/${subject.id}${revision===undefined?"":`?revision=${revision}`}`).then(value=>FleetComplianceFactsViewSchema.nullable().parse(value));},
+  saveComplianceFacts:(input:z.input<typeof FleetComplianceFactsSaveSchema>)=>request<unknown>("/compliance/facts",FleetComplianceFactsSaveSchema.parse(input)).then(value=>FleetComplianceConfigurationViewSchema.pick({version:true}).parse(value)),
+  adoptComplianceRequirement:(input:z.input<typeof FleetComplianceRequirementAdoptSchema>)=>request<unknown>("/compliance/requirements",FleetComplianceRequirementAdoptSchema.parse(input)).then(value=>FleetRequirementVersionSchema.parse(value)),
+  saveRunOrder:(input:z.input<typeof FleetRunOrderSaveSchema>)=>request<unknown>("/run-orders",FleetRunOrderSaveSchema.parse(input)).then(value=>FleetRunOrderSchema.parse(value)),
+  runOrderReceipt:(id:string)=>request<unknown>(`/run-orders/operations/${encodeURIComponent(id)}`).then(value=>FleetRunOrderReceiptSchema.parse(value)),
+  runOrderHistory:(id:string,after?:number)=>request<unknown>(`/run-orders/${encodeURIComponent(id)}/history${after?`?after=${after}`:""}`).then(value=>FleetRunOrderHistorySchema.parse(value)),
+  commercial: (siteId?:number) =>
+    request<unknown>(`/commercial${siteId?`?siteId=${siteId}`:""}`).then((value) =>
+      FleetDestinationDirectorySchema.parse(value),
+    ),
+  saveDestination: (input: z.infer<typeof FleetDestinationSaveSchema>) =>
+    request<unknown>(
+      "/destinations",
+      FleetDestinationSaveSchema.parse(input),
+    ).then((value) => FleetDestinationReceiptSchema.parse(value)),
+  details: (after?: string) =>
+    request<unknown>(
+      `/details${after ? `?after=${encodeURIComponent(after)}` : ""}`,
+    ).then((value) => FleetDetailPageSchema.parse(value)),
+  rigPackages: (after?: string) =>
+    request<unknown>(
+      `/rig-packages${after ? `?after=${encodeURIComponent(after)}` : ""}`,
+    ).then((value) => FleetRigPackagePageSchema.parse(value)),
+  saveDetail: (input: {
+    operationId: string;
+    expectedVersion: number;
+    detail: import("@workspace/api-zod").FleetDetail;
+  }) =>
+    request<unknown>("/details", input).then((value) =>
+      FleetDetailSchema.parse(value),
+    ),
+  saveRigPackage: (input: {
+    operationId: string;
+    expectedVersion: number;
+    package: import("@workspace/api-zod").FleetRigPackage;
+  }) =>
+    request<unknown>("/rig-packages", input).then((value) =>
+      FleetRigPackageSchema.parse(value),
+    ),
+  billingOptions: (
+    siteId: number,
+    afeNumber: string,
+    workDate: string,
+    fleetId?: string,
+  ) =>
+    request<FleetBillingOptions>(
+      `/billing-options?${new URLSearchParams({ siteId: String(siteId), afeNumber, workDate, ...(fleetId ? { fleetId } : {}) })}`,
+    ),
+  billingTicket: (ticketId: number) =>
+    request<FleetBillingTicket>(`/tickets/${ticketId}/plan`),
+  finalizeBillingTicket: (
+    ticketId: number,
+    input: { operationId: string; expectedVersion: number },
+  ) =>
+    request<{ ticketId: number; status: string; operationId: string }>(
+      `/tickets/${ticketId}/finalize`,
+      input,
+    ),
+  inventory: (after?: string, fleetId?: string) => {
+    const params = new URLSearchParams({
+      ...(after ? { after } : {}),
+      ...(fleetId ? { fleetId } : {}),
+    });
+    return request<unknown>(
+      `/inventory${params.size ? `?${params}` : ""}`,
+    ).then((value) => FleetInventorySchema.parse(value));
+  },
+  inventoryAsset: (id: string) =>
+    request<unknown>(`/inventory/${encodeURIComponent(id)}`).then((value) =>
+      FleetInventoryDetailSchema.parse(value),
+    ),
+  createAsset: (input: z.infer<typeof FleetAssetCreateSchema>) =>
+    request<unknown>("/inventory", FleetAssetCreateSchema.parse(input)).then(
+      (value) => FleetInventoryReceiptSchema.parse(value),
+    ),
+  enrollAsset: (
+    id: string,
+    input: z.infer<typeof FleetAssetEnrollmentSchema>,
+  ) =>
+    request<unknown>(
+      `/inventory/${encodeURIComponent(id)}/enroll`,
+      FleetAssetEnrollmentSchema.parse(input),
+    ).then((value) => FleetInventoryReceiptSchema.parse(value)),
+  editAsset: (id: string, input: z.infer<typeof FleetAssetEditSchema>) =>
+    request<unknown>(
+      `/inventory/${encodeURIComponent(id)}`,
+      FleetAssetEditSchema.parse(input),
+      "PATCH",
+    ).then((value) => FleetInventoryReceiptSchema.parse(value)),
   reviewPacket: (id: string) =>
     request<unknown>(`/runs/${encodeURIComponent(id)}/review-packet`).then(
       (value) => FleetReviewPacketSchema.parse(value),
@@ -254,6 +399,8 @@ export const fleetClient = {
       input,
     ).then((value) => FleetCargoTransferSchema.parse(value)),
   resources: () => request<FleetResources>("/resources"),
+  monitoring:()=>request<unknown>("/monitoring"),
+  assignmentDelivery:(id:string)=>request<unknown>(`/runs/${encodeURIComponent(id)}/assignment-delivery`),
   run: (id: string) => request<FleetRun>(`/runs/${encodeURIComponent(id)}`),
   create: (input: z.infer<typeof CreateFleetRunSchema>) =>
     request<FleetRun>("/runs", input),

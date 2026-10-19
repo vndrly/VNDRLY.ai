@@ -50,12 +50,9 @@ export const nativeFleetOffline = createFleetOfflineStore({
 
 export async function clearFleetOfflineOnSignOut() {
   return nativeFleetOffline.exclusive(async () => {
-  const keys = registryKeys(await SecureStore.getItemAsync(REGISTRY, options));
-  for (const key of keys) {
-    if (!scopeKey.test(key)) continue;
-    for (const slot of [0, 1]) for (let index = 0; index < MAX_CHUNKS; index++) await SecureStore.deleteItemAsync(`${key}.${slot}.${index}`, options);
-    await SecureStore.deleteItemAsync(`${key}.meta`, options);
-  }
-  await SecureStore.deleteItemAsync(REGISTRY, options);
+    // Sign-out clears the authenticated UI, not the worker's original reports.
+    // Keys remain private and bound to their original user/company/membership;
+    // a subsequent session must verify that scope before replay/recovery.
+    registryKeys(await SecureStore.getItemAsync(REGISTRY, options));
   });
 }

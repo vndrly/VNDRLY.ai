@@ -26,6 +26,7 @@ it("does not disclose another account's pending notes or expose its retry",async
  render(<FleetEvidence run={run} account={account} disabled={false} onChanged={()=>{}}/>);
  expect(await screen.findByText(/Another run has an unresolved/)).toBeTruthy();
  expect(screen.queryByText("Private other notes")).toBeNull();expect(screen.queryByRole("button",{name:"Verify and retry exact Fleet evidence upload"})).toBeNull();
+ expect(screen.queryByRole("button",{name:"Discard pending device upload"})).toBeNull();
 });
 it("allows authorized metadata reads but never offers manager capture for another driver's run",async()=>{
  mocks.api.mockResolvedValue({runId:run.id,evidence:[]});

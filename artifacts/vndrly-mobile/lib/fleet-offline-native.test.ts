@@ -16,15 +16,15 @@ describe("Fleet encrypted chunk storage", () => {
     expect((await nativeFleetOffline.read(scope)).actions).toEqual([{ ...first, sessionVersion: 7 }]);
     failure.suffix = "";
     await clearFleetOfflineOnSignOut();
-    expect(records.size).toBe(0);
+    expect((await nativeFleetOffline.read(scope)).actions.length).toBeGreaterThan(0);
   });
-  it("uses bounded chunks and clears every indexed record on sign out", async () => {
+  it("uses bounded chunks and retains original scoped records on sign out", async () => {
     await nativeFleetOffline.enqueue(scope, { runId: "20000000-0000-4000-8000-000000000001", base: { runId: "20000000-0000-4000-8000-000000000001", companyId: 2, driverUserId: 1, vehicleAssetId: "30000000-0000-4000-8000-000000000001", trailerAssetId: null, version: 1 }, input: { action: "inspect", operationId: "10000000-0000-4000-8000-000000000001", expectedVersion: 1, notes: "中".repeat(1000) } as FleetActionInput, capturedAt: "2026-10-07T12:00:00Z", state: "unsynced" });
     expect(records.size).toBeGreaterThan(3);
     expect([...records.values()].every(value => fleetOfflineByteLength(value) < 2048)).toBe(true);
     expect((await nativeFleetOffline.read(scope)).actions[0].input.notes).toHaveLength(1000);
     await clearFleetOfflineOnSignOut();
-    expect(records.size).toBe(0);
+    expect((await nativeFleetOffline.read(scope)).actions.length).toBeGreaterThan(0);
   });
   it("refuses oversized unicode records before writing any chunks", async () => {
     const item = (index: number) => ({ runId: `20000000-0000-4000-8000-${String(index).padStart(12,"0")}`, base: { runId: `20000000-0000-4000-8000-${String(index).padStart(12,"0")}`, companyId: 2, driverUserId: 1, vehicleAssetId: "30000000-0000-4000-8000-000000000001", trailerAssetId: null, version: 1 }, input: { action: "inspect", operationId: `10000000-0000-4000-8000-${String(index).padStart(12,"0")}`, expectedVersion: 1, notes: "中".repeat(2000) } as FleetActionInput, capturedAt: "2026-10-07T12:00:00Z", state: "unsynced" as const });

@@ -9,6 +9,7 @@ import {
   within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+vi.mock("@/components/WorkdayControls", () => ({ default: () => <div data-testid="gate-start-clock">Start Shift</div> }));
 const env = vi.hoisted(() => ({
   api: vi.fn(),
   fetch: vi.fn(),
@@ -311,6 +312,9 @@ it("places the canonical back button immediately before the Dashboard title", as
 
   const back = await screen.findByTestId("dashboard-page-back");
   const title = screen.getByRole("heading", { name: "changeOver.title" });
+  const clock = screen.getByTestId("gate-start-clock");
+  expect(screen.getByText("company-portal-header").compareDocumentPosition(clock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(clock.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(back.parentElement).toBe(title.parentElement);
   expect(Array.from(back.parentElement!.children).indexOf(back)).toBeLessThan(
     Array.from(title.parentElement!.children).indexOf(title),

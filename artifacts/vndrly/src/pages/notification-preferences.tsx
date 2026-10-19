@@ -145,6 +145,11 @@ export default function NotificationPreferencesPage() {
         </div>
       </div>
 
+      <section className="rounded-lg border bg-card p-4 mb-6">
+        <a href="/sms/" target="_blank" rel="noopener noreferrer" className="underline font-medium">{t("smsEnrollment.link")}</a>
+        <p className="text-sm text-muted-foreground mt-1">{t("smsEnrollment.preferencesHint")}</p>
+      </section>
+
       <div className="rounded-lg border bg-card divide-y">
         <div className="hidden sm:grid grid-cols-[1fr_auto_auto] items-center gap-6 px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           <div />

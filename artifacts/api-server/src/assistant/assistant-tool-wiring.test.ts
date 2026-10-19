@@ -45,6 +45,8 @@ describe("AskV advertised tool wiring", () => {
   it("keeps every advertised action variant connected to a runtime branch", () => {
     const routeSource = readFileSync(new URL("../routes/assistant.ts", import.meta.url), "utf8");
     const workHubRuntime = readFileSync(new URL("./work-hub-tool-runtime.ts", import.meta.url), "utf8");
+    const marketplaceRuntime = readFileSync(new URL("./marketplace-tools.ts", import.meta.url), "utf8");
+    const workdayCommands = readFileSync(new URL("../../../../lib/api-zod/src/fleet-workday.ts", import.meta.url), "utf8");
     const displayCommands = readFileSync(new URL("./operations-display-commands.ts", import.meta.url), "utf8");
     expect(workHubRuntime).toContain("displayActionRequest(input)");
     const awayCommands = readFileSync(new URL("./away-responder-tools.ts", import.meta.url), "utf8");
@@ -54,7 +56,7 @@ describe("AskV advertised tool wiring", () => {
     const missing = ASK_V_TOOL_REGISTRY.flatMap((tool) => {
       const actionSchema = (tool.inputSchema.properties as Record<string, { enum?: unknown[] }> | undefined)?.action;
       const actions = Array.isArray(actionSchema?.enum) ? actionSchema.enum.filter((value): value is string => typeof value === "string") : [];
-      const source = tool.name === "propose_work_hub_action" ? routeSource : tool.name === "confirm_operations_displays_action" ? workHubRuntime + displayCommands : tool.name === "manage_work_hub_away_responder" ? workHubRuntime + awayCommands : workHubRuntime;
+      const source = tool.name.includes("marketplace") ? marketplaceRuntime : tool.name === "manage_my_workday" ? workHubRuntime + workdayCommands : tool.name === "propose_work_hub_action" ? routeSource : tool.name === "confirm_operations_displays_action" ? workHubRuntime + displayCommands : tool.name === "manage_work_hub_away_responder" ? workHubRuntime + awayCommands : workHubRuntime;
       return actions.filter((action) =>
         !source.includes(`"${action}"`) &&
         !source.includes(`'${action}'`) &&

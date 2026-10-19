@@ -5,7 +5,7 @@ import * as Crypto from "expo-crypto";
 import {z} from "zod/v4";
 import {FleetEvidenceInputSchema,type FleetEvidence,type FleetOverview,type FleetRun} from "@workspace/api-zod";
 import {apiFetch,getApiBase} from "./api";
-import {captureAuthScope,isAuthScopeCurrent,subscribeToken,subscribeUser,type AuthScope} from "./auth";
+import {captureAuthScope,isAuthScopeCurrent,getUser,subscribeToken,subscribeUser,type AuthScope} from "./auth";
 import {fleetOfflineByteLength} from "./fleet-offline";
 import {progressFleetEvidenceUpload,type FleetEvidencePending} from "./fleet-evidence-device";
 import type {FleetVerifiedAccount} from "./fleet-phone-location";
@@ -20,7 +20,10 @@ function localUri(value:FleetEvidencePending){if(!FileSystem.cacheDirectory)thro
 async function read(){const raw=await SecureStore.getItemAsync(`${KEY}.meta`,options);if(!raw)return null;const m=meta(raw),parts=await Promise.all(Array.from({length:m.count},(_,i)=>SecureStore.getItemAsync(`${KEY}.${m.slot}.${i}`,options)));if(parts.some(part=>part===null))throw new Error("Evidence pending storage is incomplete.");const text=parts.join("");if(fleetOfflineByteLength(text)>MAX_BYTES)throw new Error("Evidence pending storage is oversized.");const value=schema.parse(JSON.parse(text));if(value.asset.uri!==localUri(value))throw new Error("Evidence device cache scope is invalid.");return value;}
 async function store(value:FleetEvidencePending,current:()=>boolean){const raw=JSON.stringify(schema.parse(value));if(fleetOfflineByteLength(raw)>MAX_BYTES)throw new Error("Evidence pending metadata exceeds device capacity.");const previous=meta(await SecureStore.getItemAsync(`${KEY}.meta`,options)),slot=previous.slot===0?1:0,count=Math.ceil(raw.length/CHUNK);if(count>MAX_CHUNKS)throw new Error("Evidence pending metadata exceeds device capacity.");for(let i=0;i<count;i++){if(!current())throw new Error("Evidence account context changed.");await SecureStore.setItemAsync(`${KEY}.${slot}.${i}`,raw.slice(i*CHUNK,(i+1)*CHUNK),options);}if(!current())throw new Error("Evidence account context changed.");await SecureStore.setItemAsync(`${KEY}.meta`,JSON.stringify({slot,count}),options);for(let i=0;i<previous.count;i++)await SecureStore.deleteItemAsync(`${KEY}.${previous.slot}.${i}`,options);}
 async function remove(){let pending:FleetEvidencePending|null=null;try{pending=await read();}catch{/* Invalid metadata cannot authorize arbitrary file deletion. */}for(const slot of [0,1])for(let i=0;i<MAX_CHUNKS;i++)await SecureStore.deleteItemAsync(`${KEY}.${slot}.${i}`,options);await SecureStore.deleteItemAsync(`${KEY}.meta`,options);if(pending && pending.asset.uri===localUri(pending))await FileSystem.deleteAsync(pending.asset.uri,{idempotent:true});}
-export function clearFleetEvidencePending(){generation++;return exclusive(remove);}
+export function clearFleetEvidencePending(expected?:FleetVerifiedAccount){generation++;const scope=captureAuthScope();return exclusive(async()=>{
+ if(expected){const user=await getUser(),pending=await read();if(!isAuthScopeCurrent(scope)||!user||user.id!==expected.userId||user.vendorId!==expected.companyId||user.activeMembershipId!==expected.membershipId||pending&&JSON.stringify(pending.account)!==JSON.stringify(expected))throw Error("Original evidence account changed; originals retained");}
+ await remove();
+});}
 export function readFleetEvidencePending(){return exclusive(read);}
 async function authority(runId:string,scope:AuthScope){const overview=await apiFetch<FleetOverview>("/api/fleet/overview",{},scope);if(!overview.accountScope||!overview.capabilities.canDrive)throw new Error("Current own-driver Fleet evidence authority is required.");const run=await apiFetch<FleetRun>(`/api/fleet/runs/${runId}`,{},scope);return {account:overview.accountScope,run};}
 async function hash(uri:string){const {File}=await import("expo-file-system");const file=new File(uri);if(file.size<=0||file.size>10*1024*1024)throw new Error("Choose a supported image no larger than 10 MB.");const bytes=await file.bytes(),digest=await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256,bytes);return {size:bytes.byteLength,sha256:[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,"0")).join("")};}
@@ -48,4 +51,7 @@ export async function submitFleetEvidencePending():Promise<FleetEvidence>{
   if(!current())throw new Error("Evidence account context changed.");await remove();return result;
  });
 }
-let observed=captureAuthScope();function changed(){if(!isAuthScopeCurrent(observed)){observed=captureAuthScope();void clearFleetEvidencePending().catch(()=>undefined);}}subscribeToken(changed);subscribeUser(changed);
+// Invalidate in-flight uploads without erasing the original account's image.
+// The evidence surface matches the saved account before rendering it, and the
+// upload service re-verifies current own-driver authority before any transport.
+let observed=captureAuthScope();function changed(){if(!isAuthScopeCurrent(observed)){observed=captureAuthScope();generation++;}}subscribeToken(changed);subscribeUser(changed);

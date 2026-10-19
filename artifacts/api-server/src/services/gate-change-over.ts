@@ -1,4 +1,6 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
+import {recordGateWorkday} from "./gate-workday";
+import {WorkdayError} from "./workday";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
@@ -39,6 +41,7 @@ export async function changeOverTransaction<T>(
       return result;
     } catch (error) {
       await client.query("ROLLBACK");
+      if(error instanceof WorkdayError)throw new ChangeOverError(error.status,error.code,"Your shift clock could not be updated. Check your current company and retry; no Gate handoff was committed.");
       // PostgreSQL aborts a deadlock victim's entire transaction. Re-evaluate
       // authorization and the handoff revision after rollback; retain every
       // lock. Provider work stays outside this callback. Never replay an
@@ -453,7 +456,7 @@ export async function startGateShift(
     const access = await stationAccess(c, session, stationId);
     const shift = await activeShift(c, stationId);
     if (shift) {
-      if (shift.operator_id === session.userId) return shift;
+      if (shift.operator_id === session.userId) {await recordGateWorkday(c,session,"start_shift",shift.id,new Date());return shift;}
       return fail(
         409,
         "occupied",
@@ -463,12 +466,14 @@ export async function startGateShift(
     if (access.station.active === false)
       return fail(409, "station_inactive", "This gate is inactive");
     if (session.userId && (session.vendorId || session.partnerId)) await assertRequiredWorkClear(c, session.userId, session.partnerId ? {type:"partner",id:session.partnerId} : {type:"vendor",id:session.vendorId!});
-    return (
+    const started = (
       await c.query(
         "INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2) RETURNING *",
         [stationId, session.userId],
       )
     ).rows[0];
+    await recordGateWorkday(c,session,"start_shift",started.id,new Date(started.started_at));
+    return started;
   });
 }
 export async function prepareGateHandoff(
@@ -787,6 +792,13 @@ export async function transferGateShift(
         ],
       )
     ).rows[0];
+    // The incoming acknowledgement and delivered notes are the Gate-specific
+    // extra step. Both workers use the same Work Hub duty clock as every portal.
+    const outgoingDuties=(await c.query("SELECT id FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL",[input.stationId,outgoing.userId])).rows;
+    await recordGateWorkday(c,outgoing,"end_shift",shift.id,now,"America/Chicago",outgoingDuties.map(row=>row.id));
+    await recordGateWorkday(c,incoming,"start_shift",nextShift.id,now);
+    await c.query("UPDATE gate_duty_sessions SET ended_at=$3,ended_by_user_id=$2,end_reason='Completed acknowledged handoff' WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL",[input.stationId,outgoing.userId,now]);
+    await c.query("INSERT INTO gate_duty_sessions(id,station_id,user_id,started_at,source,idempotency_key,post_coverage) SELECT $6,$1,$2,$3,'web',$4,$5::jsonb WHERE NOT EXISTS(SELECT 1 FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL)",[input.stationId,incoming.userId,now,input.operationId,JSON.stringify(incoming.vendorId?{vendorId:incoming.vendorId}:{}),nextShift.id]);
     // Same revocation mechanism as Sign Out; rollback also restores this version.
     await c.query(
       "UPDATE users SET session_version=session_version+1 WHERE id=$1",

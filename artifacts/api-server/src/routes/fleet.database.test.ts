@@ -17,6 +17,7 @@ import {
   assetsTable,
   workTypesTable,
   vendorWorkTypesTable,
+  partnerVendorWorkTypeApprovalsTable,
   siteWorkAssignmentsTable,
   assetHoldsTable,
   siteVisitsTable,
@@ -69,6 +70,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         .returning();
       const [workType]=await db.insert(workTypesTable).values({name:`Synthetic hauling ${tag}`,category:"hauling"}).returning();
       await db.insert(vendorWorkTypesTable).values({vendorId:vendor.id,workTypeId:workType.id,unit:"per_job",unitPrice:"12.34",currency:"USD"});
+      await db.insert(partnerVendorWorkTypeApprovalsTable).values({partnerId:partner.id,vendorId:vendor.id,workTypeId:workType.id});
       await db.insert(siteWorkAssignmentsTable).values({vendorId:vendor.id,workTypeId:workType.id,siteLocationId:site.id});
       const users = await db
         .insert(usersTable)
@@ -172,7 +174,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           vehicleAssetId: vehicle.id,
           stops,
         });
-      expect(created.status).toBe(200);
+      expect(created.status, JSON.stringify(created.body)).toBe(200);
       const id = created.body.id;
       let version = created.body.version;
       const endpoint = "/fleet/runs/" + id + "/actions";
@@ -463,7 +465,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         .post("/fleet/views")
         .set("Cookie", cookies[1])
         .send(viewInput);
-      expect(view.status).toBe(200);
+      expect(view.status, JSON.stringify(view.body)).toBe(200);
       expect(view.body.lastOperationId).toBe(viewInput.operationId);
       expect(
         (

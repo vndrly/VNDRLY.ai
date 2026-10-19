@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import {computeTicketTaxPreview} from "@workspace/db";
+import {sumEffectiveFinancialLines} from "./effective-financial-line";
 import {
   ENGINE_VERSION,
   buildInvoiceLinesForTicket,
@@ -30,6 +32,13 @@ const DEFAULT_BILLING = {
   lateFeeRule: null,
   incomeCategoryOverrides: null,
 };
+
+it("agrees on a mixed exact Fleet packet with precise jurisdiction tax, minimum, surcharge and reimbursement",()=>{
+ const source=(id:number,quantity:string,rate:string,exact:string,payable:string,taxable:boolean)=>({id,ticketId:100,type:"other",description:`Synthetic reviewed charge ${id}`,quantity:"1",unitPrice:"0",preciseQuantity:quantity,preciseUnitPrice:rate,taxableOverride:taxable,fleetBillingMetadata:{version:2,charge:{id:`11111111-1111-4111-8111-${String(id).padStart(12,"0")}`,revision:1,quantity,unitRate:rate,exactAmount:exact,currencyAmount:payable,currency:"USD",reviewedByUserId:7,reviewedAt:"2026-10-17T18:00:00Z"}}});
+ const lineItems=[source(1,"123.456789","0.0125","1.5432098625","1.54",true),source(2,"1","98.46","98.46","98.46",true),source(3,"1","10","10","10",true),source(4,"1","25","25","25",false),source(5,"1","0.04","-0.04","-0.04",true),{id:6,ticketId:100,type:"part",description:"Historical exempt item",quantity:"1",unitPrice:"2.5",taxableOverride:false}];
+ const ctx=makeCtx({lineItems,taxRate:{state:"TX",rate:"0.08875"}}),invoice=buildInvoiceLinesForTicket(ctx),preview=computeTicketTaxPreview({lineItems,combinedTaxRate:0.08875,state:"TX",effectiveTaxTreatment:ctx.effectiveTaxTreatment});
+ expect(sumEffectiveFinancialLines(lineItems).currencyAmount).toBe("137.46");expect(preview.preciseTotals).toEqual({subtotal:"137.46",taxAmount:"9.77",grandTotal:"147.23"});expect(totalLines(invoice.lines)).toEqual({subtotal:"137.46",taxTotal:"9.77",total:"147.23"});expect(invoice.lines[0]).toMatchObject({quantity:"123.456789",unitPrice:"0.0125",taxRate:"0.08875"});
+});
 
 function makeCtx(overrides: Partial<EngineTicketContext> = {}): EngineTicketContext {
   return {
@@ -585,4 +594,10 @@ describe("invoice-engine", () => {
     expect(snapshot.rateLookups).toHaveLength(1);
     expect(snapshot.taxRateSource).toBe("tax_rates_table");
   });
+});
+
+it("copies approved Fleet precision and the original charge amount into the invoice without four-decimal repricing",()=>{
+ const metadata={version:2,charge:{id:"11111111-1111-4111-8111-111111111111",revision:1,quantity:"123.456789",unitRate:"0.000125",exactAmount:"0.015432098625",currencyAmount:"0.02",currency:"USD",reviewedByUserId:7,reviewedAt:"2026-10-17T18:00:00Z"}};
+ const ctx=makeCtx({lineItems:[{id:77,ticketId:100,type:"labor",description:"Synthetic Fleet barrels",quantity:"123.46",unitPrice:"0.00",preciseQuantity:"123.456789",preciseUnitPrice:"0.000125",fleetBillingMetadata:metadata}]});
+ const result=buildInvoiceLinesForTicket(ctx);expect(result.lines[0]).toMatchObject({quantity:"123.456789",unitPrice:"0.000125",amount:"0.02",preciseQuantity:"123.456789",preciseUnitPrice:"0.000125",fleetBillingMetadata:metadata});
 });

@@ -27,7 +27,8 @@ describe("Fleet existing language choice", () => {
     mocks.api.mockResolvedValue({ companyId: 609, enabled: true, roles: ["driver"], capabilities: { canDrive: true, canDispatch: false, canManage: false, canSetup: false }, runs: [], fleets: [], observations: [], unavailableIntegrations: [], generatedAt: "2026-10-07T12:00:00Z" });
     render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><FleetWorkspace /></QueryClientProvider>);
     expect(await screen.findByText("Mi jornada de flota")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Ajustes de flota" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Más" }));
+    expect(screen.getByText("Ajustes de flota")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", {name:"Map"}));
     expect(await screen.findByText(/Las ubicaciones de teléfonos identifican al conductor/)).toBeTruthy();
   });
@@ -41,7 +42,7 @@ describe("Fleet existing language choice", () => {
     render(<FleetSetup onSaved={vi.fn()} />);
     expect(await screen.findByRole("checkbox", { name: "Fleet Map" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Driver" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Guardar destacamentos de flota" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Guardar la configuración de acceso" })).toBeTruthy();
   });
   it("keeps English fallback and translates only supplied copy keys", () => {
     expect(fleetCopy("Refresh Fleet", "en")).toBe("Refresh Fleet");

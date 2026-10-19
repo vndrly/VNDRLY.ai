@@ -125,7 +125,7 @@ export function assertAdditiveSchemaPlan(plan) {
       /\b(?:DROP|TRUNCATE|DELETE|UPDATE|INSERT|DO|CALL|EXECUTE|COPY|GRANT|REVOKE)\b/iu.test(
         tokens,
       ) ||
-      !/^\s*(?:CREATE\s+(?:TABLE|TYPE|(?:UNIQUE\s+)?INDEX|SEQUENCE|SCHEMA)\b|ALTER\s+TABLE\s+\S+\s+ADD\s+(?:CONSTRAINT|COLUMN)\b)/iu.test(
+      !/^\s*(?:CREATE\s+(?:TABLE|TYPE|(?:UNIQUE\s+)?INDEX|SEQUENCE|SCHEMA)\b|ALTER\s+TABLE\s+\S+\s+(?:ADD\s+(?:CONSTRAINT|COLUMN)\b|ENABLE\s+ROW\s+LEVEL\s+SECURITY\b))/iu.test(
         tokens,
       ) ||
       /;\s*\S/u.test(tokens)

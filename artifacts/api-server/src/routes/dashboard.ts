@@ -1,3 +1,4 @@
+import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
 import { Router, type IRouter } from "express";
 import { sql, eq, desc, and } from "drizzle-orm";
 import crypto from "crypto";
@@ -226,7 +227,7 @@ router.get("/dashboard/awaiting-payment", requireSession, async (req, res): Prom
   }>(sql`
     select
       count(distinct t.id)::int as count,
-      coalesce(sum(li.quantity * li.unit_price), 0)::numeric(14,2)::text as total,
+      coalesce(sum(${sql.raw(effectiveFinancialAmountSql("li"))}), 0)::numeric(14,2)::text as total,
       to_char(min(t.approved_at) at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as oldest
     from ${ticketsTable} t
     left join ${siteLocationsTable} sl on sl.id = t.site_location_id

@@ -12,10 +12,15 @@ const env = vi.hoisted(() => ({
   setContext: vi.fn(),
   summary: vi.fn(),
   scan: vi.fn(),
+  pick: vi.fn(),
+  readDocument: vi.fn(),
   discard: vi.fn(),
 }));
 vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
 vi.mock("./api", () => ({ apiFetch: env.api }));
+// Context validation is real; its best-effort cache write is not this wrapper's
+// subject and must not open the device cache during a picker/scan unit test.
+vi.mock("./native-assigned-cache",()=>({cacheAssignedRead:vi.fn(async()=>undefined),readAssignedCache:vi.fn(async()=>null)}));
 vi.mock("./auth", () => ({
   captureAuthScope: () => ({ generation: 1 }),
   getUser: async () => env.user,
@@ -28,6 +33,8 @@ vi.mock("../modules/vndrly-work-capture/src/VndrlyWorkCaptureModule", () => ({
     setContext: env.setContext,
     summarizeDraft: env.summary,
     scanDocument: env.scan,
+    pickDocument: env.pick,
+    readDocumentDraft: env.readDocument,
     discardDraft: env.discard,
   },
 }));
@@ -35,9 +42,27 @@ import {
   scanWorkDocumentDraft,
   scanWorkTextDraft,
   summarizeWorkDraft,
+  pickWorkDocumentDraft,
+  readWorkDocumentDraft,
 } from "./native-work-capture";
 
 describe("current-account native work drafts", () => {
+  it("reads source bytes only for the picked account-bound identity and refuses changed bytes without deleting the draft",async()=>{
+    const picked={source:"system_document_picker" as const,reviewRequired:true as const,canonicalSaved:false as const,fileId:"70000000-0000-4000-8000-000000000001",uri:"file:///private/source",byteSize:14,sha256:"a".repeat(64),contentType:"application/pdf" as const};
+    const body={fileId:picked.fileId,contentType:picked.contentType,byteSize:14,sha256:picked.sha256,bodyBase64:"JVBERi1zeW50aGV0aWM="};
+    env.readDocument.mockResolvedValue(body);expect(await readWorkDocumentDraft(picked)).toEqual(body);expect(env.readDocument).toHaveBeenLastCalledWith({contextBinding:'["vndrly-work-capture",1069,795,"partner",609,2]',fileId:picked.fileId});
+    env.readDocument.mockResolvedValue({...body,sha256:"b".repeat(64)});await expect(readWorkDocumentDraft(picked)).rejects.toThrow();expect(env.discard).not.toHaveBeenCalled();
+  });
+  it("imports a bounded private PDF draft with no upload or canonical-save claim",async()=>{
+    env.pick.mockResolvedValue({source:"system_document_picker",reviewRequired:true,canonicalSaved:false,fileId:"70000000-0000-4000-8000-000000000001",uri:"file:///private/source",byteSize:12,sha256:"a".repeat(64),contentType:"application/pdf"});
+    expect(await pickWorkDocumentDraft()).toMatchObject({contentType:"application/pdf",canonicalSaved:false});expect(env.pick).toHaveBeenCalledWith('["vndrly-work-capture",1069,795,"partner",609,2]');
+  });
+  it("discards only the just-imported unaccepted document when the account changes or native output exceeds the source limit",async()=>{
+    const fileId="70000000-0000-4000-8000-000000000001",value={source:"system_document_picker",reviewRequired:true,canonicalSaved:false,fileId,uri:"file:///private/source",byteSize:12,sha256:"a".repeat(64),contentType:"application/pdf"};
+    env.pick.mockImplementation(async()=>{env.current=false;return value;});await expect(pickWorkDocumentDraft()).rejects.toThrow("account_changed");expect(env.discard).toHaveBeenLastCalledWith({contextBinding:'["vndrly-work-capture",1069,795,"partner",609,2]',fileIds:[fileId]});
+    env.current=true;env.pick.mockResolvedValue({...value,byteSize:10*1024*1024+1});await expect(pickWorkDocumentDraft()).rejects.toThrow();
+    expect(env.discard).toHaveBeenCalledTimes(2);
+  });
   beforeEach(() => {
     env.current = true;
     env.user.requiresContextChoice = false;

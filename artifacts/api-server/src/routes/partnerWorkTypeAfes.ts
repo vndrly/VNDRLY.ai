@@ -18,6 +18,7 @@ import {
 } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { sendValidationFailed } from "../lib/validation-error";
+import { classifySavedWorkType } from "../services/service-matching/catalog-classification";
 
 const router: IRouter = Router();
 
@@ -281,6 +282,7 @@ router.post(
       throw err;
     }
 
+    await classifySavedWorkType(created.id);
     res.status(201).json(created);
   },
 );
@@ -300,6 +302,7 @@ router.put("/partners/:partnerId/work-types/:workTypeId", requireSession, async 
     const [updated] = await db.update(workTypesTable).set(body.data)
       .where(and(eq(workTypesTable.id, workTypeId), eq(workTypesTable.partnerId, partnerId))).returning();
     if (!updated) { sendApiError(res, 404, "work_type.not_found", "Work type not found"); return; }
+    await classifySavedWorkType(updated.id);
     res.json(updated);
   } catch (error) {
     if (await handlePartnerWorkTypeNameConflict(error, body.data.name ?? "", partnerId, res)) return;
@@ -410,6 +413,9 @@ router.post(
       }
     });
 
+    // This importer updates AFEs, not catalog wording. It also repairs missing
+    // classification for the existing saved demand without changing its scope.
+    for (const workTypeId of finalByWorkType.keys()) await classifySavedWorkType(workTypeId);
     res.json({
       partnerId,
       created,

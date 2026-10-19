@@ -1,9 +1,11 @@
+import {FLEET_AUXILIARY_TOOLS,FLEET_COMMERCIAL_TOOLS} from "./fleet-commercial-tools";
 import { INVITATION_CAPABILITY_TOOLS } from "./capabilities/invitations";
 import { WORKFORCE_CAPABILITY_TOOLS } from "./capabilities/workforce";
 import { ASSET_CAPABILITY_TOOLS } from "./capabilities/assets";
 import { TRIP_CAPABILITY_TOOLS } from "./capabilities/trips";
 import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
 import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
+import { MARKETPLACE_TOOLS, MARKETPLACE_READ_TOOL_NAMES } from "./marketplace-tool-catalog";
 import {
   ASK_V_TOOL_REGISTRY,
   normalizeAskVRole,
@@ -36,6 +38,7 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "query_gate_daily_billing", "configure_gate_daily_billing", "invoice_gate_post",
   "query_gate_stations",
   "query_gate_change_over",
   "query_shift_notes",
@@ -99,6 +102,7 @@ export const VOICE_WORKFLOWS = [
   "finance",
   "reports",
   "catalog",
+  "marketplace",
   "market",
 ] as const;
 export type VoiceWorkflow = (typeof VOICE_WORKFLOWS)[number];
@@ -128,6 +132,7 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
     "query_flagged_tickets",
   ]),
   finance: new Set([
+    "query_gate_daily_billing",
     "lookup_open_invoices",
     "query_invoice_summary",
     "query_invoices",
@@ -149,12 +154,14 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
     "query_field_metrics",
   ]),
   catalog: new Set([
+    ...MARKETPLACE_READ_TOOL_NAMES,
     "query_hotlist_jobs",
     "query_hotlist_bids",
     "query_vendor_catalog",
     "query_partner_approvals",
   ]),
   market: new Set(["get_stock_quote", "get_crude_oil_price"]),
+  marketplace: new Set(MARKETPLACE_TOOLS.map(tool => tool.name)),
 };
 
 const ROLE_READ_TOOLS: Record<AskVRole, Set<string>> = {
@@ -186,6 +193,7 @@ export function voiceWorkflowForPath(path: string): VoiceWorkflow {
   if (/safety/i.test(path)) return "safety";
   if (/invoice|statement|bill|accounting/i.test(path)) return "finance";
   if (/report|analytics/i.test(path)) return "reports";
+  if (/service-marketplace|job-offers|vendor-capabilities/i.test(path)) return "marketplace";
   if (/hotlist|catalog/i.test(path)) return "catalog";
   if (/crew|site|field-employee/i.test(path)) return "operations";
   return "auto";
@@ -222,7 +230,13 @@ export function toolsForRealtime(args: {
   if (workflow !== "auto")
     for (const name of WORKFLOW_TOOLS[workflow]) allowed.add(name);
   if (/\/(fleet(?:-map|-log)?|gate-map|company-operations)(?:\/|$)/i.test(path)) {
-    for(const tool of ASK_V_TOOL_REGISTRY) if(tool.name.startsWith("query_fleet_") || ["create_fleet_inventory_asset","enroll_fleet_inventory_asset","edit_fleet_inventory_asset","recommend_fleet_destinations","save_fleet_ticket_plan","save_fleet_destination","finalize_fleet_ticket"].includes(tool.name) || tool.name === "query_gate_coverage_map" || tool.name === "query_company_operations" || tool.name === "set_company_operations") allowed.add(tool.name);
+    for(const tool of ASK_V_TOOL_REGISTRY) if([...FLEET_COMMERCIAL_TOOLS,...FLEET_AUXILIARY_TOOLS].some(row=>row.name===tool.name)||tool.name.startsWith("query_fleet_") || ["create_fleet_inventory_asset","enroll_fleet_inventory_asset","edit_fleet_inventory_asset","recommend_fleet_destinations","save_fleet_ticket_plan","save_fleet_destination","finalize_fleet_ticket"].includes(tool.name) || tool.name === "query_gate_coverage_map" || tool.name === "query_company_operations" || tool.name === "set_company_operations") allowed.add(tool.name);
+  }
+  if(role==="partner"&&args.membershipRole==="admin"&&/partners|fleet-agreements/.test(path))for(const name of ["approve_fleet_rate_agreement","query_fleet_compliance_policy","query_fleet_policy_impact","activate_fleet_compliance_policy"])allowed.add(name);
+  // Financial workflow selection remains read-only; Gate billing writes are
+  // offered on their own reviewed screen and still require trusted approval.
+  if (role === "vendor" && /\/gate(?:\/history\/billing|-billing)(?:\/|$)/i.test(path)) {
+    allowed.add("configure_gate_daily_billing"); allowed.add("invoice_gate_post");
   }
   const inWorkHub = /\/work-hub(?:\/|$)/i.test(path);
   if (/\/(?:profile|compliance)(?:\/|$)/i.test(path)) {
@@ -242,6 +256,7 @@ export function toolsForRealtime(args: {
         ? WORK_HUB_TOOL_FAMILIES
         : [workHubToolFamilyForPath(path)];
     if (/\/work-hub\/askv(?:[/?#]|$)/i.test(path)) {
+      for (const tool of MARKETPLACE_TOOLS) allowed.add(tool.name);
       for (const name of IMPLEMENTATION_A_TOOL_NAMES) allowed.add(name);
       for (const name of WORKFLOW_TOOLS.market) allowed.add(name);
     }

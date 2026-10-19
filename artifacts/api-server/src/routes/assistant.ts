@@ -1,8 +1,11 @@
+import { isGateBillingAction, readGateBillingAction } from "../assistant/gate-billing-action-recovery";
 import { z } from "zod/v4";
 import { readFleetBillingAction, readFleetRunCreation } from "../assistant/fleet-billing-action-recovery";
 import { readFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
 import { fleetInventoryAction, fleetInventoryOperationId } from "../assistant/fleet-inventory-tools";
 import { runBoundTypedAskVTool, synchronizeTypedAskVContext, organizationKeyFromSession } from "../assistant/askv-pending-confirmation";
+import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
+import { runMarketplaceTool } from "../assistant/marketplace-tools";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq, desc, ne, inArray, lte, sql } from "drizzle-orm";
 import {
@@ -843,6 +846,7 @@ export async function runTool(
       error: `Tool '${name}' is not available in field-employee invite mode.`,
     });
   }
+  if (isMarketplaceTool(name)) return JSON.stringify(await runMarketplaceTool(name, input, session, workHubMutationAuthorizedByServer));
   const workHubRequest = resolveExecutableWorkHubToolRequest(
     name,
     bindWorkHubToolScope(input, session, name),
@@ -862,6 +866,11 @@ export async function runTool(
       const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
       if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);
       return JSON.stringify(await readFleetRunCreation(input as Record<string,unknown>,fleetInventoryOperationId(input as Record<string,unknown>),z.uuid().parse((saved as Record<string,unknown>).id),session));
+    }
+    if (isGateBillingAction(name)) {
+      const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
+      if (!Array.isArray(saved) && (saved.error || saved.ok === false)) return JSON.stringify(saved);
+      return JSON.stringify(await readGateBillingAction(name,input as Record<string,unknown>,fleetInventoryOperationId(input as Record<string,unknown>),session));
     }
     if (name === "finalize_fleet_ticket") {
       const saved = await callNaturalVoiceDomainApi(workHubRequest.path, workHubRequest.method, workHubRequest.body, session, workHubRequest.headers);
@@ -1622,7 +1631,7 @@ async function handleConversationMessage(
           name: tu.name, input: tu.input, session, conversationId: conv.id, turnId: savedUserMsg.id,
           contextKey: typedConfirmationContext, phrase: userMessage,
           execute: (input) =>
-            isTypedWorkHubTool(tu.name)
+            (isTypedWorkHubTool(tu.name) || isMarketplaceTool(tu.name))
               ? runTool(
                   tu.name,
                   input,

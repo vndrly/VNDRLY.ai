@@ -5,12 +5,16 @@ import type {
   WorkCaptureSummary,
   WorkCaptureFile,
   WorkCaptureUpload,
+  WorkCaptureDocument,
+  WorkCaptureDocumentBytes,
 } from "./VndrlyWorkCapture.types";
 declare class VndrlyWorkCapture extends NativeModule {
   getCapabilities(): Promise<WorkCaptureCapabilities>;
   /** Current local account fence, never a server permission or consent. null cancels old-context transport. */
   setContext(contextBinding: string | null): Promise<void>;
   scanDocument(contextBinding: string): Promise<WorkCaptureScan>;
+  pickDocument(contextBinding: string): Promise<WorkCaptureDocument>;
+  readDocumentDraft(input:{contextBinding:string;fileId:string}):Promise<WorkCaptureDocumentBytes>;
   transcribeLocalDraft(input: { contextBinding: string; uri: string; language: "en-US" | "es-ES" }): Promise<{ source: "speech_on_device"; text: string; reviewRequired: true; canonicalSaved: false }>;
   summarizeDraft(input: {
     contextBinding: string;

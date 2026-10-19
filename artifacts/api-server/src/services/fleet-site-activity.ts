@@ -1,11 +1,12 @@
 import {
   FleetRunSchema,
   FleetSiteActivityFilterSchema,
+  projectFleetComplianceCheckpoints,
   type FleetSiteActivity,
   type FleetSiteChoices,
   type FleetRun,
 } from "@workspace/api-zod";
-import { ACTIVE_APPROVAL_STATUSES } from "@workspace/db";
+import { FLEET_APPROVAL_COLUMNS, authorityFromFleetRelationship } from "./fleet-commercial-authority";
 import type { Pool, PoolClient } from "pg";
 import { FleetError } from "./fleet-repository";
 export type FleetSiteActor = {
@@ -16,21 +17,28 @@ export type FleetSiteActor = {
   membershipRole: string;
   role: "partner";
 };
+import { completeFleetRunEvents, readCompleteFleetRunEvents } from "./fleet-run-events";
 export function projectFleetSiteRun(
   run: FleetRun,
   siteId: number,
   vendorName: string,
+  sourceEvents?: readonly FleetRun["events"][number][],
 ): FleetSiteActivity["records"][number] {
+  const events = completeFleetRunEvents(run,sourceEvents);
   const stops = run.stops.filter((s) => s.siteId === siteId),
     ids = new Set(stops.map((s) => s.id));
   return {
     runId: run.id,
     vendorName,
     status: run.status,
+    // Partner disclosure carries commercial compliance warnings without
+    // exposing the vendor's private fuel, meter or internal review activity.
+    complianceCheckpoints:projectFleetComplianceCheckpoints(events.filter(event=>
+      ["created","dispatch","acknowledge","inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout"].includes(event.type))),
     stops: stops.map((stop) => ({
       stopId: stop.id,
       kind: stop.kind,
-      events: run.events
+      events: events
         .filter(
           (e) =>
             e.details?.stopId === stop.id &&
@@ -114,13 +122,18 @@ export function createFleetSiteActivityService(
     sites: (actor: FleetSiteActor): Promise<FleetSiteChoices> =>
       transaction(actor, async (client) => {
         const found = await client.query(
-          "SELECT s.id,s.name FROM site_locations s WHERE s.partner_id=$1 AND COALESCE(s.hidden,false)=false AND EXISTS(SELECT 1 FROM partner_vendor_relationships r JOIN vendors v ON v.id=r.vendor_id WHERE r.partner_id=s.partner_id AND r.status=ANY($2::text[]) AND v.fleet_ops_state->>'enabled'='true') ORDER BY s.name LIMIT 201",
-          [actor.partnerId, [...ACTIVE_APPROVAL_STATUSES]],
+          `SELECT s.id,s.name,s.partner_id,r.vendor_id AS company_id,${FLEET_APPROVAL_COLUMNS}
+           FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id
+           JOIN vendors v ON v.id=r.vendor_id WHERE s.partner_id=$1 AND COALESCE(s.hidden,false)=false
+           AND r.status IN ('approved','auto_unapproved') AND v.fleet_ops_state->>'enabled'='true' ORDER BY s.id`,
+          [actor.partnerId],
         );
-        if (found.rows.length > 200)
+        const allowedSites=[...new Map(found.rows.filter(row=>authorityFromFleetRelationship(row,row.company_id,row.id).allowed)
+          .map(row=>[row.id,row])).values()];
+        if (allowedSites.length > 200)
           throw new FleetError("fleet.site_limit_reached", 409);
         return {
-          sites: found.rows.map((row) => ({ siteId: row.id, name: row.name })),
+          sites: allowedSites.map((row) => ({ siteId: row.id, name: row.name })),
           capabilities: {
             canReadSiteActivity: true,
             canDispatch: false,
@@ -152,10 +165,13 @@ export function createFleetSiteActivityService(
         );
         if (!site.rows.length)
           throw new FleetError("fleet.site_not_found", 404);
-        const companies = await client.query(
-          "SELECT v.id,v.name,v.fleet_ops_state FROM vendors v JOIN partner_vendor_relationships r ON r.vendor_id=v.id WHERE r.partner_id=$1 AND r.status=ANY($2::text[]) AND v.fleet_ops_state->>'enabled'='true' ORDER BY v.id LIMIT 201 FOR SHARE OF v,r",
-          [actor.partnerId, [...ACTIVE_APPROVAL_STATUSES]],
+        const candidates = await client.query(
+          `SELECT v.id,v.name,v.fleet_ops_state,r.partner_id,${FLEET_APPROVAL_COLUMNS}
+           FROM vendors v JOIN partner_vendor_relationships r ON r.vendor_id=v.id WHERE r.partner_id=$1
+           AND r.status IN ('approved','auto_unapproved') AND v.fleet_ops_state->>'enabled'='true' ORDER BY v.id FOR SHARE OF v,r`,
+          [actor.partnerId],
         );
+        const companies={rows:candidates.rows.filter(row=>authorityFromFleetRelationship(row,row.id,siteId).allowed)};
         if(companies.rows.length>200)throw new FleetError("fleet.site_company_capacity_reached",409);
         const companyIds = companies.rows.map((row) => row.id);
         const saved = await client.query(
@@ -192,13 +208,14 @@ export function createFleetSiteActivityService(
           siteId,
           siteName: site.rows[0].name,
           window: { startsAt, endsAt, dateBasis: "run_created_at" },
-          records: selected.map((run) =>
+          records: await Promise.all(selected.map(async (run) =>
             projectFleetSiteRun(
               run,
               siteId,
               companies.rows.find((c) => c.id === run.companyId)!.name,
+              await readCompleteFleetRunEvents(client,run),
             ),
-          ),
+          )),
           source: "recorded_fleet_events",
           coordinateDisclosure: false,
           unavailableMetrics: [

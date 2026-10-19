@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Modal, ScrollView, Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import {
-  FleetDestinationSchema,
+  FleetDestinationInputSchema,
   type FleetDestination,
 } from "@workspace/api-zod";
 import TogglePillButton from "./TogglePillButton";
@@ -83,8 +83,8 @@ function Directory({
             name: d.name,
             kind: d.kind,
             address: d.address,
-            latitude: String(d.latitude),
-            longitude: String(d.longitude),
+            latitude: d.latitude === null ? "" : String(d.latitude),
+            longitude: d.longitude === null ? "" : String(d.longitude),
             materials: d.materials.join(", "),
             hours: d.hours,
             instructions: d.instructions,
@@ -105,24 +105,16 @@ function Directory({
   }
   function review() {
     try {
-      if (!draft.latitude.trim() || !draft.longitude.trim())
-        throw new Error("Enter both coordinates.");
       const destination = {
         ...draft,
-        latitude: Number(draft.latitude),
-        longitude: Number(draft.longitude),
+        latitude: draft.latitude.trim() ? Number(draft.latitude) : null,
+        longitude: draft.longitude.trim() ? Number(draft.longitude) : null,
         materials: draft.materials
           .split(",")
           .map((v: string) => v.trim())
           .filter(Boolean),
       };
-      const { id, ...fields } = destination;
-      FleetDestinationSchema.omit({
-        id: true,
-        revision: true,
-        ownerType: true,
-        ownerId: true,
-      }).parse(fields);
+      FleetDestinationInputSchema.parse(destination);
       setAttempt({
         operationId: Crypto.randomUUID(),
         expectedVersion: data!.version,

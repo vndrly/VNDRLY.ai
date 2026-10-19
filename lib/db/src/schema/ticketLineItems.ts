@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, numeric, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, numeric, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { ticketsTable } from "./tickets";
@@ -10,6 +10,9 @@ export const ticketLineItemsTable = pgTable("ticket_line_items", {
   description: text("description").notNull(),
   quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull(),
   unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
+  preciseQuantity: numeric("precise_quantity", { precision: 24, scale: 9 }),
+  preciseUnitPrice: numeric("precise_unit_price", { precision: 24, scale: 9 }),
+  fleetBillingMetadata: jsonb("fleet_billing_metadata"),
   // T005: per-line tax rate as a decimal fraction (e.g. 0.0825 = 8.25%).
   // Nullable: most labor lines are non-taxable so callers leave it null;
   // only equipment / parts / day-rate labor lines that the vendor knows are

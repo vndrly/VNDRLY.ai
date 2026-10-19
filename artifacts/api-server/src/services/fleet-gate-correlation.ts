@@ -1,3 +1,4 @@
+import { appendFleetRunEvent } from "./fleet-run-events";
 import {
   FleetGateLinkInputSchema,
   type FleetGateObservation,
@@ -159,7 +160,7 @@ export function createFleetGateOperations(
           );
           if (existing.rows.length)
             throw new FleetError("fleet.gate_visit_already_linked", 409);
-          if (run.events.length >= 200)
+          if (!run.billingV2 && run.events.length >= 200)
             throw new FleetError("fleet.store_capacity_reached", 409);
           run.version++;
           const recordedAt = new Date().toISOString(),
@@ -173,7 +174,7 @@ export function createFleetGateOperations(
               observation,
               automaticAdmissionCreated: false,
             };
-          run.events.push({
+          appendFleetRunEvent(run, {
             id: randomUUID(),
             operationId: command.operationId,
             type: "gate_linked",

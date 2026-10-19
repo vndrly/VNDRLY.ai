@@ -9,6 +9,8 @@ import {
   type FleetRun,
   type FleetReplacement,
   type FleetResources,
+  type FleetWorkSession,
+  type FleetDetailPage,
 } from "@workspace/api-zod";
 import type { z } from "zod/v4";
 import { fleetClient } from "@/lib/fleet-client";
@@ -27,12 +29,14 @@ export function FleetReplacementPanel({
   canDispatch,
   equipment,
   onSaved,
+  workSession,
 }: {
   run: FleetRun;
   identity: string;
   canDispatch: boolean;
   equipment: FleetResources["equipment"];
   onSaved: () => Promise<void>;
+  workSession?:FleetWorkSession|null;
 }) {
   const { i18n } = useTranslation(),
     c = fleetCopy(i18n.language);
@@ -61,6 +65,8 @@ export function FleetReplacementPanel({
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   const locked = busy || !!pending;
+  const [details,setDetails]=useState<FleetDetailPage|null>(null),[detailId,setDetailId]=useState("");
+  async function readDetails(after?:string){if(!workSession)return;setBusy(true);try{const page=await workSession.detailChoices(after);setDetails(prior=>after&&prior?{...page,details:[...prior.details,...page.details]}:page);}catch{setMessage(c.replacementUnavailable);}finally{setBusy(false);}}
   async function reviewProposal() {
     if (!canDispatch || locked) return;
     setBusy(true);
@@ -74,11 +80,14 @@ export function FleetReplacementPanel({
         fresh.driverUserId !== run.driverUserId
       )
         throw Error("Run changed");
+      const snapshot=workSession&&fresh.ticketReference?await workSession.recoveryDetail(detailId):null;
+      if(snapshot&&snapshot.detail.driverUserId!==run.driverUserId)throw Error("Choose a Detail with the assigned driver");
       const input = FleetReplacementInputSchema.parse({
         operationId: crypto.randomUUID(),
         expectedVersion: fresh.version,
-        vehicleAssetId: vehicle,
-        trailerAssetId: trailer || null,
+        vehicleAssetId: snapshot?.detail.vehicleAssetId??vehicle,
+        trailerAssetId: snapshot?snapshot.rigPackage?.components.find(row=>row.role==="trailer")?.assetId??null:trailer||null,
+        ...(snapshot?{detailSelection:{version:2,detailId:snapshot.detail.id,detailVersion:snapshot.detail.version,timeZone:run.schedule?.timezone??Intl.DateTimeFormat().resolvedOptions().timeZone,returnPolicy:run.resourceAssignment!.returnPolicy}}:{}),
         reason: notes,
       });
       if (alive.current) setPending({ kind: "proposal", input });
@@ -132,6 +141,7 @@ export function FleetReplacementPanel({
     setBusy(true);
     setMessage("");
     try {
+      if(workSession&&run.ticketReference){const result=await workSession.captureAncillary(run,intent.kind==="proposal"?{kind:"replacement.propose",input:intent.input}:{kind:"replacement.action",recordId:intent.id,input:intent.input});if(!alive.current)return;if(!result.canonicalApplied){setMessage(i18n.language.startsWith("es")?"Guardado en el dispositivo; resultado pendiente de sincronización.":"Saved on this device; replacement outcome is pending sync.");await onSaved();return;}}
       const list = await fleetClient.replacements(run.id);
       if (!alive.current) return;
       if (list.runId !== run.id) throw Error("Run scope mismatch");
@@ -140,6 +150,7 @@ export function FleetReplacementPanel({
           (event) => event.operationId === intent.input.operationId,
         ),
       );
+      if (!saved && workSession && run.ticketReference) throw Error("Receipt readback pending");
       if (!saved)
         saved =
           intent.kind === "proposal"
@@ -226,7 +237,8 @@ export function FleetReplacementPanel({
         run.status === "in_progress" &&
         run.phase === "paused" && (
           <>
-            <label>
+            {workSession&&run.ticketReference&&<><PngPillButton disabled={locked} onClick={()=>void readDetails()}>{i18n.language.startsWith("es")?"Leer Details disponibles":"Read available Details"}</PngPillButton><label>Detail<select disabled={locked} value={detailId} onChange={event=>setDetailId(event.target.value)}><option value="">{c.choose}</option>{details?.details.filter(row=>row.driverUserId===run.driverUserId).map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>{details?.nextCursor&&<PngPillButton disabled={locked} onClick={()=>void readDetails(details.nextCursor!)}>{i18n.language.startsWith("es")?"Más":"More"}</PngPillButton>}</>}
+            <div hidden={!!workSession&&!!run.ticketReference}><label>
               {c.replacementVehicle}
               <select
                 disabled={locked}
@@ -262,12 +274,12 @@ export function FleetReplacementPanel({
                   ))}
               </select>
             </label>
-            <PngPillButton
+            </div><PngPillButton
               disabled={
                 locked ||
-                !vehicle ||
+                (workSession&&run.ticketReference?!detailId:!vehicle) ||
                 !notes.trim() ||
-                (vehicle === run.vehicleAssetId &&
+                (!workSession&&vehicle === run.vehicleAssetId &&
                   (trailer || null) === run.trailerAssetId)
               }
               onClick={() => void reviewProposal()}

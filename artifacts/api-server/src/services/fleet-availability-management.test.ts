@@ -114,6 +114,15 @@ function fixture() {
   };
 }
 describe("Fleet recorded availability commands", () => {
+  it("manages company driver availability without assigning drivers to customer sites", async () => {
+    const f=fixture();
+    f.state.fleets[0].siteIds=[];
+    f.state.grants.forEach(grant=>{grant.siteIds=[];});
+    await expect(f.service.driverAvailability(manager,2)).resolves.toHaveProperty("fingerprint");
+    await expect(f.service.driverAvailability(driver,2)).resolves.toHaveProperty("fingerprint");
+    f.state.grants.find(grant=>grant.userId===2)!.fleetIds=[];
+    await expect(f.service.driverAvailability(manager,2)).rejects.toMatchObject({code:"fleet.dispatch_required"});
+  });
   it("preserves covering evidence for assigned Gate shifts while allowing nonoverlapping edits", async () => {
     const f = fixture(),
       initial = await f.service.driverAvailability(manager, 2);

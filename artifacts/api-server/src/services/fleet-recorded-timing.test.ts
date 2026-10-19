@@ -14,6 +14,15 @@ function run(events: [string, string][], schedule?: FleetRun["schedule"]) {
 }
 const at = (minute: number) => new Date(Date.UTC(2026, 9, 7, 8, minute)).toISOString();
 describe("saved Fleet timing, separate from physical or billable proof", () => {
+  it("refuses to summarize a compact display window without its complete retained events", () => {
+    const item = run([["created", at(0)], ["start", at(5)], ["submit_closeout", at(65)]]);
+    const original = structuredClone(item.events);
+    item.events = [original[0], original[2]];
+    item.eventHistory = { version:2, totalEvents:3, firstEventId:original[0].id, latestEventId:original[2].id, complete:false };
+    expect(() => summarizeRecordedFleetTiming([item])).toThrow("fleet.complete_event_history_required");
+    expect(summarizeRecordedFleetTiming([item], new Map([[item.id, original]]))).toMatchObject({eligibleRunCount:1, elapsedMinutes:60});
+    expect(() => summarizeRecordedFleetTiming([item], new Map([[item.id, item.events]]))).toThrow("fleet.complete_event_history_required");
+  });
   it("subtracts repeated pauses using accepted times, ignores supplied capture times, and compares the saved plan", () => {
     const result = summarizeRecordedFleetTiming([run([
       ["start", at(5)], ["pause", at(15)], ["resume", at(25)], ["pause", at(30)], ["resume", at(35)], ["submit_closeout", at(65)],

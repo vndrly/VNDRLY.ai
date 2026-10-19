@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
+import {workdayService} from "./workday";
+import {startGateShift,prepareGateHandoff,transferGateShift,getShiftNotes} from "./gate-change-over";
 import {
   assumeGateDuty,
   endGateDuty,
@@ -101,6 +103,68 @@ async function fixture(policy: "on_site" | "paid_travel" = "on_site") {
 const key = () => randomUUID();
 
 describe("Gate duty teams", () => {
+  it("hands notes to the incoming watch and atomically switches both workers' shared clocks only after acknowledgement",async()=>{
+    const f=await fixture(),outgoing=f.workers[0]!,incoming=f.workers[1]!;
+    await startGateShift(outgoing,f.stationId);expect((await workdayService.current(outgoing)).workday).not.toBeNull();
+    await assumeGateDuty(outgoing,{stationId:f.stationId,source:"ios",idempotencyKey:key()});
+    const first=(await workdayService.current(outgoing)).workday!,prep=await prepareGateHandoff(outgoing,f.stationId,"Synthetic previous watch notes",async facts=>({source:"facts",facts}));
+    const input={stationId:f.stationId,preparationId:prep.id,operationId:key(),revision:prep.snapshot.revision,acknowledged:false};
+    await expect(transferGateShift(outgoing,incoming,input)).rejects.toMatchObject({code:"change_over.acknowledgment_required"});expect((await workdayService.current(outgoing)).workday?.id).toBe(first.id);expect((await workdayService.current(incoming)).workday).toBeNull();
+    const saved=await transferGateShift(outgoing,incoming,{...input,acknowledged:true}),refreshed={...outgoing,sv:outgoing.sv!+1};
+    const ended=await workdayService.read(refreshed,first.id),started=(await workdayService.current(incoming)).workday!;
+    expect(ended.summary.endedAt).toBe(new Date(saved.acknowledged_at).toISOString());expect(started.summary.startedAt).toBe(ended.summary.endedAt);
+    expect(ended.events.map(e=>e.kind)).toEqual(["start_shift","end_shift"]);expect((await workdayService.read(incoming,started.id)).events).toHaveLength(1);
+    expect(await getGateRoster(incoming,f.stationId)).toMatchObject([{userId:incoming.userId}]);expect(JSON.stringify(await getShiftNotes(incoming,{stationId:f.stationId}))).toContain("Synthetic previous watch notes");
+  });
+  it("uses the shared duty clock for Assume Shift and completed Handoff without duplicate shifts",async()=>{
+    const f=await fixture(),worker=f.workers[0]!,startedAt=new Date(Date.now()-3600000),operation=key();
+    expect((await workdayService.current(worker)).workday).toBeNull();
+    const duty=await assumeGateDuty(worker,{stationId:f.stationId,source:"ios",idempotencyKey:operation,at:startedAt});
+    const first=(await workdayService.current(worker)).workday;expect(first?.summary.startedAt).toBe(startedAt.toISOString());
+    await assumeGateDuty(worker,{stationId:f.stationId,source:"ios",idempotencyKey:operation,at:startedAt});expect((await workdayService.current(worker)).workday?.id).toBe(first!.id);
+    await expect(endGateDuty(worker,{dutySessionId:duty.id,reason:"Shift notes not handed off",handoffCompleted:false})).rejects.toMatchObject({code:"change_over.handoff_required"});
+    expect((await workdayService.current(worker)).workday?.id).toBe(first!.id);
+    await endGateDuty(worker,{dutySessionId:duty.id,reason:"Roster sign off is not an acknowledged notes handoff",handoffCompleted:true});
+    expect((await workdayService.current(worker)).workday?.id).toBe(first!.id);
+    expect((await workdayService.read(worker,first!.id)).events.map(e=>e.kind)).toEqual(["start_shift"]);
+  });
+  it("binds Gate handoff to the original employer and never closes another company's day",async()=>{
+    const f=await fixture(),worker=f.workers[0]!,incoming=f.workers[1]!;
+    await assumeGateDuty(worker,{stationId:f.stationId,source:"ios",idempotencyKey:key()});
+    const original=(await workdayService.current(worker)).workday!,prep=await prepareGateHandoff(worker,f.stationId,"Original employer notes",async facts=>({source:"facts",facts}));
+    const otherVendor=(await pool.query("INSERT INTO vendors(name,contact_name,contact_email) VALUES($1,'Test','test@example.invalid') RETURNING id",[`Other employer ${key()}`])).rows[0].id;
+    const membership=(await pool.query("INSERT INTO user_org_memberships(user_id,org_type,vendor_id,role) VALUES($1,'vendor',$2,'admin') RETURNING id",[worker.userId,otherVendor])).rows[0].id;
+    const workType=(await pool.query("SELECT work_type_id FROM site_work_assignments WHERE site_location_id=$1 LIMIT 1",[f.site])).rows[0].work_type_id;
+    await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)",[f.site,workType,otherVendor]);
+    const switched={...worker,vendorId:otherVendor,activeMembershipId:membership,membershipRole:"admin" as const},scope=(await workdayService.current(switched)).scope,otherId=key();
+    await workdayService.record(switched,{operationId:key(),shiftId:otherId,scope,action:"start_shift",capturedAt:new Date().toISOString(),timezone:"America/Chicago"});
+    await expect(transferGateShift(switched,incoming,{stationId:f.stationId,preparationId:prep.id,operationId:key(),revision:prep.snapshot.revision,acknowledged:true})).rejects.toMatchObject({code:"change_over.employer_context_changed"});
+    expect((await workdayService.current(worker)).workday?.id).toBe(original.id);expect((await workdayService.current(switched)).workday?.id).toBe(otherId);
+    expect(await getGateRoster(worker,f.stationId)).toMatchObject([{userId:worker.userId}]);
+  });
+  it("explicit Assume attaches a pre-update duty to today's shared clock without inventing historic hours",async()=>{
+    const f=await fixture(),worker=f.workers[0]!,operation=key(),old=new Date(Date.now()-30*86400000);
+    const legacy=(await pool.query("INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING id",[f.stationId,worker.userId,old])).rows[0];
+    const duty=(await pool.query("INSERT INTO gate_duty_sessions(station_id,user_id,started_at,source,idempotency_key,post_coverage) VALUES($1,$2,$3,'ios',$4,$5::jsonb) RETURNING id",[f.stationId,worker.userId,old,operation,JSON.stringify({vendorId:f.vendor})])).rows[0];
+    const before=Date.now();
+    await assumeGateDuty(worker,{stationId:f.stationId,source:"ios",idempotencyKey:operation});
+    const first=(await workdayService.current(worker)).workday!;expect(first).not.toBeNull();expect(Date.parse(first.summary.startedAt!)).toBeGreaterThanOrEqual(before);
+    await assumeGateDuty(worker,{stationId:f.stationId,source:"ios",idempotencyKey:key()});expect((await workdayService.current(worker)).workday?.id).toBe(first.id);
+    const proof=await pool.query("SELECT target_id FROM assistant_action_audit WHERE user_id=$1 AND target_type='gate-workday-binding'",[worker.userId]);expect(proof.rows).toHaveLength(2);
+    expect(duty.id).not.toBe(legacy.id);
+  });
+  it("ends the replacement watch's own clock after roster operator replacement and actual notes handoff",async()=>{
+    const f=await fixture(),first=f.workers[0]!,replacement=f.workers[1]!,incoming=f.workers[2]!;
+    const firstDuty=await assumeGateDuty(first,{stationId:f.stationId,source:"ios",idempotencyKey:key()});
+    await assumeGateDuty(replacement,{stationId:f.stationId,source:"ios",idempotencyKey:key()});
+    const replacementClock=(await workdayService.current(replacement)).workday!;
+    await endGateDuty(first,{dutySessionId:firstDuty.id,reason:"Roster departure only",handoffCompleted:false});
+    expect((await workdayService.current(first)).workday).not.toBeNull();
+    const prep=await prepareGateHandoff(replacement,f.stationId,"Replacement watch notes",async facts=>({source:"facts",facts}));
+    await transferGateShift(replacement,incoming,{stationId:f.stationId,preparationId:prep.id,operationId:key(),revision:prep.snapshot.revision,acknowledged:true});
+    const refreshed={...replacement,sv:replacement.sv!+1};expect((await workdayService.read(refreshed,replacementClock.id)).summary.endedAt).not.toBeNull();
+    expect((await workdayService.current(incoming)).workday).not.toBeNull();
+  });
   beforeAll(() => {
     if (process.env.VNDRLY_ISOLATED_TEST_DB !== "1") {
       throw new Error("Run Gate duty tests through the isolated database wrapper");

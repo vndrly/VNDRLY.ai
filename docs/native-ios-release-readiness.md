@@ -22,3 +22,12 @@ The production migration contains only additive `ADD COLUMN IF NOT EXISTS` state
 The existing installed ChatGPT plugin identity and linked grants are preserved in package **1.10.0**. The installed update, public review submission, approval and public availability are distinct states.
 
 Focused checks establish server authority, retry identities, permission redaction, transaction races and component behavior. The combined exact-tree repository gate, signed native archive, live release tracks and actual scoped plugin action/readback must be recorded separately. A server receipt or simulator test cannot establish physical iPhone camera, Siri, suspended upload, silent-push delivery, lock-screen or long-shift behavior. Physical execution remains unverified until evidence from a supported device exists.
+
+
+## Fleet commercial candidate, October 18
+
+The Fleet candidate uses app/runtime **1.0.4**, isolating its new native document-picker methods from already installed 1.0.3 binaries. It uses existing dependencies. The release verifier requires the exact source SHA, app version and runtime before submission. Native source/export and the Expo production-runtime impact guard are separate from a signed build and Apple submission. The exact merged source exports a 15.6 MB iOS Hermes bundle. Native journal software tests cover original account/device context, 5,000 events, 500 original BLOBs, capacity/atomic rollback, photos and reconciliation; they do not prove physical storage encryption, suspended behavior or device lock.
+
+Start Shift / End of Day share the canonical organization workday in every portal. Run closure and logout never end that day. Driver physical actions remain theirs; dispatch cannot manufacture acknowledgement, inspection or start. Original retained source adoption is a distinct office billing record without a current resource reservation. Private medical/testing originals remain excluded from ordinary assistant/partner output.
+
+Before claiming physical acceptance, record the actual new TestFlight build, device/OS, cold offline create/photo/close, termination/restart, interrupted sync, push exact-run open and consent-bound background collection. If no supported device is available, retain this explicit gap and the commercial activation gate. A successful export is not a TestFlight submission or a physical test.

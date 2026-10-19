@@ -6,6 +6,7 @@ import { createHmac } from "node:crypto";
 import { ASSISTANT_RESOURCE, CHATGPT_CLIENT_ID, assistantPkceChallenge, type AssistantOAuthGrant } from "../assistant/chatgpt-oauth";
 
 const mocks = vi.hoisted(() => ({ validate: vi.fn(), store: vi.fn(), run: vi.fn(), taskRead: vi.fn(), audit: vi.fn(), bound: vi.fn(), pending: vi.fn(), durableResult: vi.fn() }));
+vi.mock("../lib/staff-session-revocation", () => ({ isStaffTokenRevoked: async () => false }));
 vi.mock("../assistant/natural-voice-write-tools", async importOriginal => ({ ...await importOriginal<typeof import('../assistant/natural-voice-write-tools')>(), callNaturalVoiceDomainApi: (...args: unknown[]) => mocks.taskRead(...args) }));
 vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: mocks.validate, withAssistantGrants: mocks.store }));
 vi.mock("./assistant", () => ({ runTool: mocks.run }));
@@ -233,6 +234,40 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("adds marketplace tools to the existing connection only under separately granted scopes", async () => {
+    const old = await tokens("catalog:read");
+    const list = (access: string) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${access}`).send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
+    expect((await list(old.access_token)).body.result.tools.map((tool: { name: string }) => tool.name)).not.toContain("query_marketplace_demand");
+    const read = await tokens("marketplace:read");
+    const names = (await list(read.access_token)).body.result.tools.map((tool: { name: string }) => tool.name);
+    expect(names).toContain("query_marketplace_demand");
+    expect(names).toContain("v_show_workspace");
+    expect(names).not.toContain("compare_marketplace_vendors");
+    expect(names).not.toContain("confirm_marketplace_rate");
+    const denied = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${read.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "confirm_marketplace_job_offer_action", arguments: { action: "accept", offerId: 42, version: 1 } } });
+    expect(denied.body.result.isError).toBe(true);
+    expect(mocks.run).not.toHaveBeenCalled();
+    // Adding scopes did not replace or revoke the already-linked read grant.
+    expect((await list(old.access_token)).body.result.tools.map((tool: { name: string }) => tool.name)).toContain("query_vendor_catalog");
+  });
+  it("prepares exact marketplace values without model authority and returns approved canonical ticket readback", async () => {
+    const credentials = await tokens("marketplace:write");
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "confirm_marketplace_job_offer_action", arguments: { action: "accept", offerId: 42, version: 1, confirmed: true, latitude: 0, confidence: 1, complianceCurrent: true, idempotencyKey: "invented" } } });
+    const prepared = JSON.parse(response.body.result.content[0].text);
+    expect(prepared).toMatchObject({ status: "pending", requiresConfirmation: true });
+    expect(grants[0].actions?.[0].arguments).toEqual({ action: "accept", offerId: 42, version: 1 });
+    expect(mocks.run).not.toHaveBeenCalled();
+    const actionPath = new URL(prepared.approvalUrl).pathname;
+    const approval = await request(app).get(actionPath).set("Cookie", cookie());
+    const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+    const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+    mocks.run.mockResolvedValue(JSON.stringify({ id: 42, state: "accepted", ticketId: 901 }));
+    const approved = await request(app).post(actionPath).set("Origin", "https://vndrly.ai").set("Cookie", `${cookie()}; ${actionCookie}`).type("form").send({ nonce });
+    expect(approved.status).toBe(200);
+    expect(mocks.run).toHaveBeenCalledWith("confirm_marketplace_job_offer_action", expect.objectContaining({ offerId: 42, version: 1, idempotencyKey: "server-approved-test-key" }), expect.any(Object), "", false, true);
+    const status = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
+    expect(JSON.parse(status.body.result.content[0].text)).toMatchObject({ state: "completed", result: { id: 42, ticketId: 901 } });
+  });
   it.each([
     { name: "manage_work_hub_task", input: {"action":"update","owner":{"type":"vendor","id":4},"context":{"kind":"organization","id":4},"taskId":"11111111-1111-4111-8111-111111111111","expectedVersion":7,"payload":{"title":"Updated task title"}} },
     { name: "manage_work_hub_task", input: {"action":"update","owner":{"type":"vendor","id":4},"context":{"kind":"organization","id":4},"taskId":"11111111-1111-4111-8111-111111111111","expectedVersion":7,"payload":{"dueAt":"2026-10-09T14:00:00.000Z"}} },
@@ -737,10 +772,17 @@ describe("ChatGPT account connection boundary", () => {
     expect(JSON.stringify(mocks.audit.mock.calls)).not.toContain("private-tax-value");
   });
   it("keeps workspace reads within granted scopes and hides unassigned Gate navigation", async () => {
+    const { db } = await import("@workspace/db");
+    // Branding is a separate canonical read on current main. Keep this grant
+    // boundary test isolated from a real organization database.
+    vi.spyOn(db, "select").mockReturnValueOnce({
+      from: () => ({ where: () => ({ limit: async () => [] }) }),
+    } as never);
     const credentials = await tokens("work_hub:read");
     mocks.run.mockResolvedValue(JSON.stringify({ tasks: [], shifts: [], meetings: [], announcements: [] }));
     const call = (view: string) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_show_workspace", arguments: { view } } });
     const workday = await call("my_workday");
+    expect(workday.body.result.isError, JSON.stringify(workday.body)).toBe(false);
     expect(workday.body.result.structuredContent.availableViews).not.toContain("gate_board");
     expect(workday.body.result.isError).toBe(false);
     mocks.run.mockClear();

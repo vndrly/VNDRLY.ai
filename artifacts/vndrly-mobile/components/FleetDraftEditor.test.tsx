@@ -1,17 +1,25 @@
 import React from "react";
 import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
 import {afterEach,expect,it,vi} from "vitest";
-import {FleetRunSchema} from "@workspace/api-zod";
+import {FleetRunSchema,FleetRunOrderSchema,fleetRunOrderRoute,fleetRouteOperationalStops} from "@workspace/api-zod";
 const api=vi.hoisted(()=>vi.fn());
 vi.mock("@/lib/api",()=>({apiFetch:api}));
 vi.mock("@/lib/fleet-copy",()=>({useFleetCopy:()=>(v:string)=>v}));
 vi.mock("expo-crypto",()=>({randomUUID:()=>"10000000-0000-4000-8000-000000000001"}));
 vi.mock("@react-native-community/datetimepicker",()=>({default:()=>null}));
 vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
+vi.mock("./FleetRouteFields",()=>({default:({value,onChange,disabled}:any)=><button disabled={disabled} onClick={()=>onChange({...value,stops:value.stops.map((stop:any,index:number)=>index===0?{...stop,location:{type:"canonical",location:{...stop.location.location,name:"Alternate terminal"}}}:stop)})}>Change physical terminal</button>}));
 import FleetDraftEditor from "./FleetDraftEditor";
 const run=FleetRunSchema.parse({id:"20000000-0000-4000-8000-000000000001",fleetId:"60000000-0000-4000-8000-000000000001",companyId:609,title:"Synthetic draft",driverUserId:1,vehicleAssetId:"30000000-0000-4000-8000-000000000001",trailerAssetId:null,status:"draft",phase:null,version:4,stops:[{id:"40000000-0000-4000-8000-000000000001",siteId:392,kind:"pickup",sequence:0}],siteIds:[392],loads:[],inspections:[],records:[],events:[],currentStopId:null,visitedStopIds:[],linkedTicketId:null,allowedActions:["dispatch"],canEditDraft:true});
 const fleet={id:run.fleetId,name:"Synthetic fleet",siteIds:[392],equipmentAssetIds:[],requiredCertifications:[]};
+function physicalFixture(){const place=(name:string)=>({id:crypto.randomUUID(),revision:1,name,kind:"pickup",address:name,latitude:null,longitude:null,ownerType:"vendor",ownerId:run.companyId});const order=FleetRunOrderSchema.parse({id:crypto.randomUUID(),companyId:run.companyId,version:1,name:"Saved transport order",accessGroupIds:[run.fleetId],origin:place("Tank"),destination:place("Terminal"),base:null,returnPolicy:"delivery_only",instructions:"",timeZone:"America/Chicago",archivedAt:null}),route=fleetRunOrderRoute(order,()=>crypto.randomUUID());return {order,route,physical:FleetRunSchema.parse({...run,routePlan:route,stops:fleetRouteOperationalStops(route,392,run.stops[0].id)})};}
 afterEach(()=>{cleanup();api.mockReset();});
+it("edits physical destinations without turning them into billing-site stops",async()=>{
+ const {physical}=physicalFixture();const saved=vi.fn();api.mockImplementation(async(path,options)=>{if(path.includes("commercial"))return {version:1,defaultMode:"batch",destinations:[],canManage:true,sites:[],sitePolicy:null};const body=JSON.parse(options.body);return {...physical,routePlan:body.routePlan,stops:body.stops,version:5,events:[{id:crypto.randomUUID(),operationId:body.operationId,type:"draft_edited",actorUserId:1,recordedAt:new Date().toISOString()}]};});
+ render(<FleetDraftEditor run={physical} fleet={fleet} disabled={false} onSaved={saved}/>);const change=await screen.findByRole("button",{name:"Change physical terminal"});await waitFor(()=>expect((change as HTMLButtonElement).disabled).toBe(false));expect(screen.queryByRole("button",{name:/Add site/})).toBeNull();fireEvent.click(change);fireEvent.click(screen.getByRole("button",{name:"Save Fleet draft changes"}));await waitFor(()=>expect(saved).toHaveBeenCalled());
+ const request=api.mock.calls.find(call=>call[0].endsWith("/draft"))!;expect(JSON.parse(request[1].body)).toMatchObject({routePlan:{stops:[{location:{location:{name:"Alternate terminal"}}}]},stops:[{siteId:392,destination:{name:"Tank"}},{siteId:392,destination:{name:"Alternate terminal"}}]});
+});
+it("shows a saved Run pair without offering a silent physical-route rewrite",()=>{const {physical,order}=physicalFixture();render(<FleetDraftEditor run={{...physical,runOrder:order}} fleet={fleet} disabled={false} onSaved={()=>{}}/>);expect(screen.getByText(/Saved transport order/)).toBeTruthy();expect(screen.queryByRole("button",{name:"Change physical terminal"})).toBeNull();expect(screen.queryByRole("button",{name:/Add site/})).toBeNull();});
 it("requires explicit reload after an external revision instead of rebasing local edits",()=>{
  const props={fleet,disabled:false,onSaved:()=>{}};
  const {rerender}=render(<FleetDraftEditor run={run} {...props}/>);

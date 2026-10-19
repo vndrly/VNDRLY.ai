@@ -126,6 +126,7 @@ export const DEEP_LINK_SCREENS: ReadonlyArray<DeepLinkScreenDef> = [
   { screen: "crew-replay", pattern: "/crew-map/:id", requiresId: true },
   { screen: "site-map", pattern: "/site-map" },
   { screen: "gate-log", pattern: "/gate-log" },
+  { screen: "gate-billing", pattern: "/gate/history/billing" },
   { screen: "visitors", pattern: "/visitors" },
   { screen: "notification-preferences", pattern: "/notifications/preferences" },
   { screen: "notifications-inbox", pattern: "/notifications" },

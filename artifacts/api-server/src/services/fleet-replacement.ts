@@ -1,3 +1,4 @@
+import { appendFleetRunEvent } from "./fleet-run-events";
 import { createHash, randomUUID } from "node:crypto";
 import {
   FleetReplacementInputSchema,
@@ -5,7 +6,17 @@ import {
   FleetReplacementSchema,
   type FleetReplacement,
   type FleetRun,
+  type FleetDetailSnapshot,
+  FleetResourceAssignmentSchema,
+  fleetRunAssetIds,
 } from "@workspace/api-zod";
+import { resolveFleetRunDetailSnapshot } from "./fleet-run-details";
+import {
+  reserveFleetDetail,
+  releaseFleetReservation,
+  activateFleetReservation,
+} from "./fleet-reservations";
+import { assessFleetActionPolicy } from "./fleet-commercial-authority";
 import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
@@ -24,12 +35,15 @@ export async function assertFleetReplacementCustody(
   client: PoolClient,
   run: Pick<
     FleetRun,
-    "vehicleAssetId" | "trailerAssetId" | "companyId" | "driverUserId"
+    | "vehicleAssetId"
+    | "trailerAssetId"
+    | "companyId"
+    | "driverUserId"
+    | "resourceAssignment"
   >,
+  assetIds?: string[],
 ) {
-  for (const id of [run.vehicleAssetId, run.trailerAssetId].filter(
-    (id): id is string => !!id,
-  )) {
+  for (const id of (assetIds ?? fleetRunAssetIds(run)).slice().sort()) {
     const rows = await client.query(
       "SELECT id FROM assets WHERE id=$1 AND responsible_org_type='vendor' AND responsible_org_id=$2 AND status='checked_out' AND current_holder_user_id=$3 AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false FOR UPDATE",
       [id, run.companyId, run.driverUserId],
@@ -46,7 +60,9 @@ export function createFleetReplacementOperations(
     state: FleetState,
     client: PoolClient,
     run: FleetRun,
+    resourceSnapshot?: FleetDetailSnapshot,
   ) => Promise<void>,
+  options:{originalWorkOperationId?:string}={},
 ) {
   const hash = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -130,16 +146,50 @@ export function createFleetReplacementOperations(
     state: FleetState,
     client: PoolClient,
     run: FleetRun,
-    record: Pick<FleetReplacement, "vehicleAssetId" | "trailerAssetId">,
+    record: Pick<
+      FleetReplacement,
+      "vehicleAssetId" | "trailerAssetId" | "resourceProposal"
+    >,
   ) => {
     const next = {
       ...run,
       vehicleAssetId: record.vehicleAssetId,
       trailerAssetId: record.trailerAssetId,
     };
-    await eligible(state, client, next);
+    const ids = [
+      ...new Set([
+        ...fleetRunAssetIds(run),
+        ...(record.resourceProposal
+          ? [
+              record.resourceProposal.snapshot.detail.vehicleAssetId,
+              ...(record.resourceProposal.snapshot.rigPackage?.components.map(
+                (item) => item.assetId,
+              ) ?? []),
+            ]
+          : [
+              record.vehicleAssetId,
+              ...(record.trailerAssetId ? [record.trailerAssetId] : []),
+            ]),
+      ]),
+    ].sort();
+    await client.query(
+      "SELECT id FROM assets WHERE id=ANY($1::uuid[]) AND responsible_org_type='vendor' AND responsible_org_id=$2 ORDER BY id FOR UPDATE",
+      [ids, run.companyId],
+    );
+    await eligible(state, client, next, record.resourceProposal?.snapshot);
     // Inventory must have recorded custody first; Fleet never checks equipment out.
-    await assertFleetReplacementCustody(client, next);
+    await assertFleetReplacementCustody(
+      client,
+      next,
+      record.resourceProposal
+        ? [
+            record.resourceProposal.snapshot.detail.vehicleAssetId,
+            ...(record.resourceProposal.snapshot.rigPackage?.components.map(
+              (item) => item.assetId,
+            ) ?? []),
+          ]
+        : undefined,
+    );
   };
   return {
     replacements: (actor: FleetActor, runId: string) => {
@@ -167,11 +217,18 @@ export function createFleetReplacementOperations(
     },
     proposeReplacement: (actor: FleetActor, runId: string, input: unknown) => {
       const body = FleetReplacementInputSchema.parse(input),
-        bound = { ...actor, runId, operationId: body.operationId };
+        bound = {
+          ...actor,
+          runId,
+          operationId: body.operationId,
+          schedulingRunId: runId,
+          schedulingDriverUserIds: [],
+        };
       return transaction(bound, async (state, client) => {
         const run = runFor(state, bound, runId);
         if (!permitted(state, bound, run, "dispatch"))
           throw new FleetError("fleet.action_forbidden", 403);
+        if(run.billingV2&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         const fingerprint = hash({ runId, ...body }),
           saved = await replay(client, bound, body.operationId, fingerprint);
         if (saved) return saved;
@@ -180,6 +237,7 @@ export function createFleetReplacementOperations(
         if (run.version !== body.expectedVersion)
           throw new FleetError("fleet.version_conflict");
         if (
+          !body.detailSelection &&
           run.vehicleAssetId === body.vehicleAssetId &&
           run.trailerAssetId === body.trailerAssetId
         )
@@ -190,8 +248,29 @@ export function createFleetReplacementOperations(
         );
         if (pending.rows.length)
           throw new FleetError("fleet.operation_conflict");
-        await custody(state, client, run, body);
+        if (run.resourceAssignment && !body.detailSelection)
+          throw new FleetError("fleet.detail_selection_required", 400);
+        if (
+          run.resourceAssignment &&
+          body.detailSelection?.returnPolicy !==
+            run.resourceAssignment.returnPolicy
+        )
+          throw new FleetError("fleet.return_policy_locked", 409);
+        const resourceProposal = body.detailSelection
+          ? await resolveFleetRunDetailSnapshot(
+              { state, client },
+              bound,
+              {
+                ...run,
+                vehicleAssetId: body.vehicleAssetId,
+                trailerAssetId: body.trailerAssetId,
+              },
+              body.detailSelection,
+            )
+          : undefined;
+        await custody(state, client, run, { ...body, resourceProposal });
         const record: FleetReplacement = {
+          ...(resourceProposal ? { resourceProposal } : {}),
           id: randomUUID(),
           companyId: bound.companyId,
           runId,
@@ -233,7 +312,13 @@ export function createFleetReplacementOperations(
       input: unknown,
     ) => {
       const body = FleetReplacementActionSchema.parse(input),
-        bound = { ...actor, runId, operationId: body.operationId };
+        bound = {
+          ...actor,
+          runId,
+          operationId: body.operationId,
+          schedulingRunId: runId,
+          schedulingDriverUserIds: [],
+        };
       return transaction(bound, async (state, client) => {
         const run = runFor(state, bound, runId),
           record = await latest(client, bound, id);
@@ -245,6 +330,7 @@ export function createFleetReplacementOperations(
             : bound.userId === run.driverUserId &&
               permitted(state, bound, run, "perform_run");
         if (!authorized) throw new FleetError("fleet.action_forbidden", 403);
+        if(run.billingV2&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         const fingerprint = hash({ runId, id, ...body }),
           saved = await replay(client, bound, body.operationId, fingerprint);
         if (saved) return saved;
@@ -265,15 +351,56 @@ export function createFleetReplacementOperations(
             run.trailerAssetId !== record.priorTrailerAssetId
           )
             throw new FleetError("fleet.version_conflict");
-          if (run.events.length >= 200)
+          if (!run.billingV2 && run.events.length >= 200)
             throw new FleetError("fleet.store_capacity_reached");
           await custody(state, client, run, record);
+          const priorResourceAssignment = run.resourceAssignment
+            ? structuredClone(run.resourceAssignment)
+            : undefined;
+          if (record.resourceProposal && run.resourceAssignment)
+            await releaseFleetReservation({ state, client }, bound, {
+              runId,
+              kind: "replacement",
+              reason: body.notes,
+              occurredAt: new Date().toISOString(),
+            });
           record.status = "accepted";
           record.acceptedAt = new Date().toISOString();
           record.acceptedByUserId = bound.userId;
           run.vehicleAssetId = record.vehicleAssetId;
           run.trailerAssetId = record.trailerAssetId;
+          if (record.resourceProposal) {
+            const now = new Date().toISOString();
+            const reservation = await reserveFleetDetail(
+              { state, client },
+              bound,
+              {
+                runId,
+                detailSnapshot: record.resourceProposal.snapshot,
+                startAt: now,
+                plannedEndAt:
+                  run.schedule &&
+                  Date.parse(run.schedule.plannedEndAt) > Date.parse(now)
+                    ? run.schedule.plannedEndAt
+                    : null,
+                timeZone: record.resourceProposal.selection.timeZone,
+              },
+            );
+            run.resourceAssignment = FleetResourceAssignmentSchema.parse({
+              version: 2,
+              snapshot: record.resourceProposal.snapshot,
+              reservation,
+              returnPolicy: record.resourceProposal.selection.returnPolicy,
+            });
+            const active = await activateFleetReservation(
+              { state, client },
+              bound,
+              run,
+            );
+            if (active) run.resourceAssignment.reservation = active;
+          }
           run.activeReplacement = {
+            ...(priorResourceAssignment ? { priorResourceAssignment } : {}),
             replacementId: record.id,
             acceptedAt: record.acceptedAt,
             priorVehicleAssetId: record.priorVehicleAssetId,
@@ -282,13 +409,21 @@ export function createFleetReplacementOperations(
             recordCount: run.records.length,
           };
           run.version++;
-          run.events.push({
+          appendFleetRunEvent(run, {
             id: randomUUID(),
             operationId: body.operationId,
             type: "equipment_replacement_accepted",
             actorUserId: bound.userId,
             recordedAt: record.acceptedAt,
             details: {
+              fleetCompliance: await assessFleetActionPolicy(client, bound, {
+                run,
+                action: "replacement_accept",
+                requiredCertifications:
+                  state.fleets.find((f) => f.id === run.fleetId)
+                    ?.requiredCertifications ?? [],
+                policyAt: record.acceptedAt,
+              }),
               replacementId: record.id,
               priorVehicleAssetId: record.priorVehicleAssetId,
               priorTrailerAssetId: record.priorTrailerAssetId,

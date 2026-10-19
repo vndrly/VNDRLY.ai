@@ -2,6 +2,7 @@ import ExpoModulesCore
 import UIKit
 import CryptoKit
 import Speech
+import UniformTypeIdentifiers
 #if canImport(VisionKit)
 import VisionKit
 #endif
@@ -21,6 +22,10 @@ struct CaptureSummaryInput: Record {
 struct CaptureStageInput: Record {
   @Field var contextBinding: String = ""
   @Field var uri: String = ""
+}
+struct CaptureDocumentReadInput: Record {
+  @Field var contextBinding: String = ""
+  @Field var fileId: String = ""
 }
 struct CaptureDictationInput: Record {
   @Field var contextBinding: String = ""
@@ -47,6 +52,7 @@ struct CaptureJobInput: Record {
 
 public final class VndrlyWorkCaptureModule: Module {
   private var scanner: CaptureScanner?
+  private var documentPicker: CaptureDocumentPicker?
   private var speechDraft: CaptureSpeechDraft?
   public func definition() -> ModuleDefinition {
     Name("VndrlyWorkCapture")
@@ -65,20 +71,37 @@ public final class VndrlyWorkCaptureModule: Module {
         }
       } else { reason = "unsupported_os" }
       #endif
-      return ["scanner": scanner, "ocr": scanner, "onDeviceDraft": available, "draftReason": reason, "backgroundUpload": true]
+      return ["scanner": scanner, "ocr": scanner, "onDeviceDraft": available, "draftReason": reason, "backgroundUpload": true, "documentPicker": true]
     }
     AsyncFunction("setContext") { (binding: String?) in
       do {
         if try CaptureTransport.shared.setContext(binding) {
           self.scanner?.cancel(); self.scanner = nil
+          self.documentPicker?.cancel(); self.documentPicker = nil
           self.speechDraft?.cancel(); self.speechDraft = nil
         }
       } catch {
         self.scanner?.cancel(); self.scanner = nil
+        self.documentPicker?.cancel(); self.documentPicker = nil
         self.speechDraft?.cancel(); self.speechDraft = nil
         throw error
       }
     }.runOnQueue(.main)
+    AsyncFunction("pickDocument") { (binding: String, promise: Promise) in
+      do {
+        let generation = try CaptureTransport.shared.authorize(binding)
+        guard self.documentPicker == nil, self.scanner == nil,
+          let presenter = self.appContext?.utilities?.currentViewController() else { throw CaptureError.busy }
+        let picker = CaptureDocumentPicker(binding: binding, generation: generation) { result in
+          self.documentPicker = nil
+          switch result { case .success(let value): promise.resolve(value); case .failure(let error): promise.reject(error) }
+        }
+        self.documentPicker = picker; picker.present(from: presenter)
+      } catch { promise.reject(error) }
+    }.runOnQueue(.main)
+    AsyncFunction("readDocumentDraft") { (input: CaptureDocumentReadInput) -> [String: Any] in
+      try CaptureTransport.shared.readDocument(input)
+    }
     AsyncFunction("transcribeLocalDraft") { (input: CaptureDictationInput, promise: Promise) in
       do {
         let generation = try CaptureTransport.shared.authorize(input.contextBinding)
@@ -100,7 +123,7 @@ public final class VndrlyWorkCaptureModule: Module {
     AsyncFunction("scanDocument") { (binding: String, promise: Promise) in
       do {
         let generation = try CaptureTransport.shared.authorize(binding)
-        guard self.scanner == nil else { throw CaptureError.busy }
+        guard self.scanner == nil, self.documentPicker == nil else { throw CaptureError.busy }
         #if canImport(VisionKit) && canImport(Vision)
         guard VNDocumentCameraViewController.isSupported,
           let presenter = self.appContext?.utilities?.currentViewController() else { throw CaptureError.unavailable }
@@ -251,6 +274,72 @@ private final class CaptureScanner: NSObject, VNDocumentCameraViewControllerDele
 private final class CaptureScanner { func cancel() {} }
 #endif
 
+/** User-selected sources are copied into the same protected, account-bound
+ * staging area as scans. Neither picker success nor a filename proves upload,
+ * document verification or regulatory eligibility. */
+private final class CaptureDocumentPicker: NSObject, UIDocumentPickerDelegate {
+  private let binding: String, generation: Int
+  private var completion: ((Result<[String: Any], Error>) -> Void)?
+  private weak var controller: UIDocumentPickerViewController?
+  init(binding: String, generation: Int, completion: @escaping (Result<[String: Any], Error>) -> Void) {
+    self.binding = binding; self.generation = generation; self.completion = completion
+  }
+  func present(from presenter: UIViewController) {
+    let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.pdf, .jpeg, .png, .webP], asCopy: true)
+    picker.allowsMultipleSelection = false; picker.delegate = self; controller = picker
+    presenter.present(picker, animated: true)
+  }
+  func cancel() { controller?.dismiss(animated: true); finish(.failure(CaptureError.cancelled)) }
+  func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) { finish(.failure(CaptureError.cancelled)) }
+  private func finish(_ result: Result<[String: Any], Error>) {
+    guard let callback = completion else {
+      if case .success(let value) = result, let id = value["fileId"] as? String { CaptureTransport.shared.discard([id], binding: binding) }
+      return
+    }
+    completion = nil; callback(result)
+  }
+  func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+    guard urls.count == 1, let url = urls.first, url.isFileURL else { finish(.failure(CaptureError.invalidInput)); return }
+    DispatchQueue.global(qos: .userInitiated).async {
+      var stagedId: String?
+      do {
+        try CaptureTransport.shared.check(self.binding, self.generation)
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let data = try captureReadDocumentBytes(url), mime = try captureDocumentMIME(data)
+        var value = try CaptureTransport.shared.stage(data, binding: self.binding, generation: self.generation)
+        stagedId = value["fileId"] as? String
+        value["source"] = "system_document_picker"; value["contentType"] = mime
+        value["reviewRequired"] = true; value["canonicalSaved"] = false
+        DispatchQueue.main.async {
+          do { try CaptureTransport.shared.check(self.binding, self.generation); self.finish(.success(value)) }
+          catch { if let id = value["fileId"] as? String { CaptureTransport.shared.discard([id], binding: self.binding) }; self.finish(.failure(error)) }
+        }
+      } catch {
+        if let id = stagedId { CaptureTransport.shared.discard([id], binding: self.binding) }
+        DispatchQueue.main.async { self.finish(.failure(error)) }
+      }
+    }
+  }
+}
+
+private func captureReadDocumentBytes(_ url: URL) throws -> Data {
+  let handle = try FileHandle(forReadingFrom: url); defer { try? handle.close() }
+  let limit = 10 * 1024 * 1024
+  var data = Data()
+  while let part = try handle.read(upToCount: min(65536, limit + 1 - data.count)), !part.isEmpty {
+    data.append(part); guard data.count <= limit else { throw CaptureError.fileTooLarge }
+  }
+  guard !data.isEmpty else { throw CaptureError.invalidInput }; return data
+}
+private func captureDocumentMIME(_ data: Data) throws -> String {
+  if data.starts(with: Array("%PDF-".utf8)) { return "application/pdf" }
+  if data.starts(with: [255, 216, 255]) { return "image/jpeg" }
+  if data.starts(with: [137, 80, 78, 71, 13, 10, 26, 10]) { return "image/png" }
+  if data.count >= 12, data.starts(with: Array("RIFF".utf8)), String(data: data.subdata(in: 8..<12), encoding: .ascii) == "WEBP" { return "image/webp" }
+  throw CaptureError.invalidInput
+}
+
 private struct CaptureJob: Codable {
   var jobId: String, fileId: String, contextBinding: String, status: String, sha256: String
   var httpStatus: Int?, byteSize: Int
@@ -348,6 +437,18 @@ private final class CaptureTransport: NSObject, URLSessionTaskDelegate {
       } catch { discard([id], binding: binding); try? FileManager.default.removeItem(at: file); throw error }
       let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
       return ["fileId": id, "uri": file.absoluteString, "byteSize": data.count, "sha256": digest]
+    }
+  }
+  func readDocument(_ input: CaptureDocumentReadInput) throws -> [String: Any] {
+    return try synchronized {
+      let originalGeneration = try authorize(input.contextBinding)
+      guard UUID(uuidString: input.fileId) != nil,
+        (try? String(contentsOf: directory.appendingPathComponent(input.fileId + ".context"), encoding: .utf8)) == input.contextBinding else { throw CaptureError.contextChanged }
+      let data = try captureReadDocumentBytes(directory.appendingPathComponent(input.fileId))
+      let mime = try captureDocumentMIME(data)
+      try check(input.contextBinding, originalGeneration)
+      let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+      return ["fileId": input.fileId, "contentType": mime, "byteSize": data.count, "sha256": digest, "bodyBase64": data.base64EncodedString()]
     }
   }
   func start(_ input: CaptureUploadInput) throws -> [String: Any] {

@@ -1,3 +1,4 @@
+import {sumEffectiveFinancialLines} from "./effective-financial-line";
 export type ProofPacketTicket = {
   status?: string | null;
   notes?: string | null;
@@ -18,6 +19,7 @@ export type ProofPacketTicket = {
 };
 
 export type ProofPacketLineItem = {
+  preciseQuantity?:string|null;preciseUnitPrice?:string|null;fleetBillingMetadata?:unknown;
   type?: string | null;
   quantity?: string | number | null;
   unitPrice?: string | number | null;
@@ -79,6 +81,13 @@ function formatMoney(amount: number): string {
 }
 
 function costTotal(lineItems: readonly ProofPacketLineItem[]): number {
+  if (lineItems.some(item => item.fleetBillingMetadata != null)) {
+    const priced = lineItems.filter(item => item.fleetBillingMetadata != null ||
+      (numberFrom(item.quantity) !== null && numberFrom(item.unitPrice) !== null));
+    // Sum authoritative payable cents exactly. Convert only at this existing
+    // numeric response boundary, after all line additions are complete.
+    return Number(sumEffectiveFinancialLines(priced).currencyAmount);
+  }
   return lineItems.reduce((sum, item) => {
     const quantity = numberFrom(item.quantity);
     const unitPrice = numberFrom(item.unitPrice);

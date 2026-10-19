@@ -1,3 +1,5 @@
+import { isGateBillingAction, recoverGateBillingAction } from "../assistant/gate-billing-action-recovery";
+import {recoverFleetCommercialAction} from "../assistant/fleet-commercial-action-recovery";
 import { recoverFleetBillingAction, recoverFleetRunCreation } from "../assistant/fleet-billing-action-recovery";
 import { ACTION_LOCATION_CLIENT, requiresActionLocation, isOperatorGateAction } from "../assistant/chatgpt-action-location";
 import { recoverFleetInventoryAction } from "../assistant/fleet-inventory-action-recovery";
@@ -23,6 +25,7 @@ import { Router, type Request, type Response } from "express";
 import { exposedOperationTools, resolveOperationTool, planOperationTools, canonicalOperationToolName, operationToolAnnotations } from "../assistant/chatgpt-operation-tools";
 import { createHmac, createHash, randomUUID, randomBytes, timingSafeEqual } from "node:crypto";
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
+import { isStaffTokenRevoked } from "../lib/staff-session-revocation";
 import { createRateLimiter } from "../lib/rate-limit-factory";
 import { validateAssistantSession, withAssistantGrants } from "../assistant/chatgpt-grant-store";
 import { ASSISTANT_ISSUER, ASSISTANT_RESOURCE, ASSISTANT_SCOPES, CHATGPT_CLIENT_ID, AssistantOAuthError, validateAssistantAuthorization, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens, assistantAccessMatches, assistantAccessHashMatches, assistantTokenHash, assistantTokenUserId } from "../assistant/chatgpt-oauth";
@@ -43,6 +46,7 @@ import { ticketDeviceHandoff, requireMatchingTicketDevice, type TicketDeviceHand
 import { gateDeviceHandoff, requireMatchingGateDevice, type GateDeviceHandoff, GATE_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
 import { fleetDeviceHandoff, requireMatchingFleetDevice, type FleetDeviceHandoff, FLEET_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
+import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
 
 import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, plannedSingleReadRequest, preparePlanMetadataTool, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
 import { plannedReadOperationTools, resolvePlannedReadOperation, backgroundStepOperationTools } from "../assistant/plan-operation-tools";
@@ -73,6 +77,16 @@ import { TICKET_INVOICE_PREPARATION_TOOL } from "../assistant/ticket-invoice-pre
 import { WORKDAY_OPPORTUNITY_TOOLS, availableWorkdayOpportunityTools, handleWorkdayOpportunityTool } from "../assistant/workday-opportunity-chatgpt";
 
 const router = Router();
+
+// Browser consent/action panels use device sessions. OAuth bearer grants remain
+// independently consented and are checked against the account security version.
+async function readAssistantBrowserSession(req: Request): Promise<SessionPayload | null> {
+  const session = getSessionFromRequest(req);
+  if (session?.userId && await isStaffTokenRevoked(req.cookies?.vndrly_session, session.userId)) {
+    throw new AssistantOAuthError("access_denied");
+  }
+  return session;
+}
 const origin = new URL(ASSISTANT_ISSUER).origin;
 const limiter = createRateLimiter({ resourcePrefix: "assistant_connection", errorCode: "assistant_connection.rate_limited", logKind: "assistant_connection.rate_limit", defaultMax: 60, defaultWindowMs: 60_000, message: "Please wait before trying V again." });
 const SERVER_ACTION_FIELDS = new Set(["confirmed", "operationId", "idempotencyKey", "voiceSessionId", "latitude", "longitude", "accuracyMeters", "startLatitude", "startLongitude", "locationSharingActive", "currentLocation"]);
@@ -127,7 +141,7 @@ router.get("/.well-known/oauth-protected-resource", (_req, res) => res.json({ re
 router.get("/device/files/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as FileDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     requireMatchingFileDevice(handoff, current);
@@ -148,7 +162,7 @@ router.get("/device/files/:handoff", async (req, res) => {
 router.get("/device/meetings/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as MeetingDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingMeetingDevice(handoff, current);
@@ -168,7 +182,7 @@ router.get("/device/meetings/:handoff", async (req, res) => {
 router.get("/device/tickets/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as TicketDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingTicketDevice(handoff, current);
@@ -188,7 +202,7 @@ router.get("/device/tickets/:handoff", async (req, res) => {
 router.get("/device/gate/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as GateDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingGateDevice(handoff, current);
@@ -210,7 +224,7 @@ router.get("/device/gate/:handoff", async (req, res) => {
 router.get("/device/fleet/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as FleetDeviceHandoff;
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingFleetDevice(handoff, current);
@@ -234,7 +248,7 @@ router.get("/authorize", async (req, res) => {
   try {
     const authorizationRequest = await validateAssistantAuthorization(req.query, await clientRedirects());
     if (typeof req.query.state !== "string" || req.query.state.length > 4096) throw new AssistantOAuthError("invalid_request");
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session) return page(res, '<p>Sign into VNDRLY in another tab, then return here and refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const nonce = randomBytes(32).toString("base64url");
@@ -250,7 +264,7 @@ router.post("/authorize", async (req, res) => {
   try {
     if (req.headers.origin !== origin) throw new AssistantOAuthError("access_denied");
     const consent = readEnvelope(req.body.consent);
-    const session = getSessionFromRequest(req);
+    const session = await readAssistantBrowserSession(req);
     if (!session || session.userId !== consent.userId || req.cookies?.vndrly_assistant_consent !== consent.nonce) throw new AssistantOAuthError("access_denied");
     const current = await validateAssistantSession(session);
     if (current.sv !== consent.sv || (current.activeMembershipId ?? null) !== consent.activeMembershipId) throw new AssistantOAuthError("access_denied");
@@ -334,7 +348,7 @@ router.post("/mcp", async (req, res) => {
   if (!message || Array.isArray(message) || message.jsonrpc !== "2.0" || typeof message.method !== "string") return res.status(400).json({ error: "invalid_request" });
   const reply = (result: unknown) => res.json({ jsonrpc: "2.0", id: message.id, result });
   if (message.id === undefined) return res.status(202).end();
-  if (message.method === "initialize") return reply({ protocolVersion: "2025-06-18", capabilities: { tools: { listChanged: false }, resources: { listChanged: false }, extensions: { "io.modelcontextprotocol/ui": {} } }, serverInfo: { name: "VNDRLY.ai", version: "1.2.0" }, instructions: "These tools access live VNDRLY records within the connected account permissions." });
+  if (message.method === "initialize") return reply({ protocolVersion: "2025-06-18", capabilities: { tools: { listChanged: false }, resources: { listChanged: false }, extensions: { "io.modelcontextprotocol/ui": {} } }, serverInfo: { name: "VNDRLY.ai", version: "1.3.0" }, instructions: "These tools access live VNDRLY records within the connected account permissions." });
   if (message.method === "ping") return reply({});
   if (message.method === "resources/list") return reply({ resources: [{ uri: WORKSPACE_URI, name: "VNDRLY work desk", mimeType: "text/html;profile=mcp-app" }, { uri: ACTION_PANEL_URI, name: "VNDRLY action authorization", mimeType: "text/html;profile=mcp-app" }] });
   if (message.method === "resources/read") {
@@ -364,7 +378,7 @@ router.post("/mcp", async (req, res) => {
       if (authorized.session.role !== "admin" && ["get_work_hub_calendar", "get_work_hub_calendar_item", "get_work_hub_meeting_catchup", "find_work_hub_meeting_times"].every(name => reads.some(tool => tool.name === name)) && chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_meeting")) reads.push(PLAN_EXECUTION_CALENDAR_TOOL);
       if (chatGptActionTools(authorized.session, authorized.scopes).some(tool => tool.name === "manage_work_hub_task")) reads.push(PLAN_EXECUTION_PREPARE_TOOL,...backgroundStepOperationTools(new Set([...availablePlanReadNames(authorized.session,authorized.scopes),...chatGptActionTools(authorized.session,authorized.scopes).map(tool=>tool.name)])));
     }
-    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_fleet_briefing", "query_fleet_site_activity", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
+    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_fleet_briefing", "query_fleet_site_activity", "query_asset_custody", "search_marketplace_services"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const upgradeTools = financeConsentUpgradeTools(authorized.session, authorized.scopes).map(tool => ({ name: tool.name, description: `${tool.description} Additional finance consent is required before preparation; this does not transfer money.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter(key => !SERVER_ACTION_FIELDS.has(key)) }, securitySchemes: FINANCE_SECURITY_SCHEMES, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }, _meta: { securitySchemes: FINANCE_SECURITY_SCHEMES } }));
     upgradeTools.push(...fleetUpgradeDescriptors.filter(tool => !tool.annotations.readOnlyHint));
@@ -595,6 +609,7 @@ router.post("/mcp", async (req, res) => {
       } else if (allowedNames.has("query_field_trips")) output.availableViews.push("fleet");
       if (allowedNames.has("query_asset_custody")) output.availableViews.push("inventory");
       if (allowedNames.has("query_fleet_site_activity")) output.availableViews.push("fleet_site");
+      if (allowedNames.has("search_marketplace_services")) output.availableViews.push("marketplace");
       if (allowedNames.has("query_gate_stations")) {
         const gates = request.view === "gate_board" ? raw : JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
         if (request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0)) output.availableViews.push("gate_board");
@@ -769,6 +784,7 @@ const unresolved = (action: AssistantPreparedAction) => action.state === "runnin
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">, scopes: string[]) {
   if (!unresolved(action) || !action.executionFingerprint) return;
   let result = await readPersistentAskVMutationResult({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${action.turnId}`, key: `chatgpt:${action.tokenHash}`, fingerprint: action.executionFingerprint }, database);
+  if(result===null){const receipt=await recoverFleetCommercialAction(action,session,scopes);if(receipt!==null)result=JSON.stringify(receipt);}
   if (result === null && action.toolName === "manage_work_hub_shift" && action.arguments.action === "update") {
     const receipt = await recoverWorkHubShiftOpeningAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);
@@ -783,6 +799,10 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
   }
   if (result === null && action.toolName === "manage_fleet_run" && action.arguments.action === "create") {
     const receipt = await recoverFleetRunCreation(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && isGateBillingAction(action.toolName)) {
+    const receipt = await recoverGateBillingAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);
   }
   if (result === null && action.toolName === "finalize_fleet_ticket") {
@@ -839,7 +859,7 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
 async function authorizedAction(req: Request) {
   const token = String(req.params.actionToken ?? "");
   const userId = assistantTokenUserId(token);
-  const session = getSessionFromRequest(req);
+  const session = await readAssistantBrowserSession(req);
   if (!userId || !session || session.userId !== userId) throw new AssistantOAuthError("access_denied");
   const current = await validateAssistantSession(session);
   const found = await withAssistantGrants(userId, async (grants, database) => {
@@ -884,7 +904,7 @@ async function executePreparedAction(reserved: Awaited<ReturnType<typeof authori
       if (JSON.stringify(checked) !== JSON.stringify(preparedInput)) throw Error('Plan completion changed before approval');
     }
     askvPendingConfirmations.set({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${reserved.action.turnId}`, contextKey: reserved.action.tokenHash, toolName: tool.name, arguments: input, idempotencyKey: `chatgpt:${reserved.action.tokenHash}` });
-    const result = await runBoundTypedAskVTool({ name: tool.name, input, session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async authorizedInput => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, session, "", false, isTypedWorkHubTool(tool.name))))) });
+    const result = await runBoundTypedAskVTool({ name: tool.name, input, session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async authorizedInput => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, session, "", false, isTypedWorkHubTool(tool.name) || isMarketplaceTool(tool.name))))) });
     const output = chatGptActionResult(tool.name, JSON.parse(result)) as Record<string, unknown>;
     const savedResult = JSON.stringify(output);
     await withAssistantGrants(session.userId!, async grants => {

@@ -198,6 +198,30 @@ test("the complete plan is rejected before any schema write if any statement is 
   );
 });
 
+test("row-level security enablement is accepted as a single additive schema statement", () => {
+  assert.doesNotThrow(() =>
+    assertAdditiveSchemaPlan({
+      ...schemaPlan,
+      statementsToExecute: [
+        'ALTER TABLE "canonical_services" ENABLE ROW LEVEL SECURITY;',
+      ],
+    }),
+  );
+});
+
+test("row-level security enablement cannot hide a second command", () => {
+  assert.throws(
+    () =>
+      assertAdditiveSchemaPlan({
+        ...schemaPlan,
+        statementsToExecute: [
+          'ALTER TABLE "canonical_services" ENABLE ROW LEVEL SECURITY; DELETE FROM "canonical_services";',
+        ],
+      }),
+    /non-additive or multi-command/,
+  );
+});
+
 test("child guards reject target changes, missing provenance, and local-env override", () => {
   const target = resolveFreshLocalTestDatabaseTarget(environment);
   const child = freshLocalChildEnvironment(environment, target);

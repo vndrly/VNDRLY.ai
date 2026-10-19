@@ -121,6 +121,9 @@ function write(
 }
 
 const entries: Entry[] = [
+ read("query_my_workday","command","Read your current organization-scoped shift across Fleet, Field, Gate and office. No other-worker target. Start Shift includes yard time and time between Runs. End of Day is explicit and independent of sign out; On Call remains separate."),
+ write("manage_my_workday","command","Prepare your explicit Start Shift, unpaid break, return from break or End of Day. Read query_my_workday first and use its exact current shift ID (null for a new day) and IANA timezone. The server binds current worker/company and actual execution time. Requires authenticated confirmation; never start or end another worker's day, fabricate hours, driver acknowledgement, inspection, run start or GPS. Verify the operation receipt and current day afterward. Logging out never ends a shift.",schema({action:{type:"string",enum:["start_shift","start_unpaid_break","end_unpaid_break","end_shift"]},expectedShiftId:{type:["string","null"],format:"uuid"},timezone:{type:"string"}},["action","expectedShiftId","timezone"])),
+
  ...NATIVE_OPERATIONS_TOOL_ENTRIES,
  read(WORK_HUB_AVAILABILITY_TOOLS[0].name,"scheduling",WORK_HUB_AVAILABILITY_TOOLS[0].description,WORK_HUB_AVAILABILITY_TOOLS[0].inputSchema),
  write(WORK_HUB_AVAILABILITY_TOOLS[1].name,"scheduling",WORK_HUB_AVAILABILITY_TOOLS[1].description,WORK_HUB_AVAILABILITY_TOOLS[1].inputSchema),

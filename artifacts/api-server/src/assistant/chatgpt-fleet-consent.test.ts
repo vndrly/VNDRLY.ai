@@ -5,6 +5,13 @@ import { fleetConsentChallenge, fleetConsentUpgradeTools, partnerFleetConsentUpg
 const session = {userId: 10, vendorId: 20, role: "field_employee", membershipRole: "field_employee", vendorPeopleId: 30} as SessionPayload;
 const overview = {companyId: 20, enabled: true, roles: ["driver"], capabilities: {canDrive: true, canManage: false, canDispatch: false, canSetup: false}, fleets: [], runs: [], observations: [], unavailableIntegrations: [], generatedAt: new Date().toISOString()} as FleetOverview;
 describe("Fleet consent discovery", () => {
+  it("offers a separate policy consent to partner administrators without expanding billing grants",()=>{
+    const partner={userId:3,role:"partner",partnerId:9,membershipRole:"admin"} as SessionPayload,scopes=["fleet:read","fleet:billing"];
+    const offered=partnerFleetConsentUpgradeTools(partner,scopes,{sites:[{siteId:4}]});
+    expect(offered.filter(row=>row.scope==="fleet:policy").map(row=>row.tool.name)).toEqual(["activate_fleet_compliance_policy"]);
+    expect(scopes).toEqual(["fleet:read","fleet:billing"]);
+    expect(partnerFleetConsentUpgradeTools(partner,[...scopes,"fleet:policy"],{sites:[{siteId:4}]})).toEqual([]);
+  });
   it("offers explicit inventory consent to enabled-company administrators before a Detail grant exists", () => {
     const admin = { ...session, role: "vendor", membershipRole: "admin" } as SessionPayload;
     const setup = { ...overview, roles: [], capabilities: { ...overview.capabilities, canDrive: false, canSetup: true, canManage: false } };

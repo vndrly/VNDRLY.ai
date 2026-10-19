@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { fleetClient } from "@/lib/fleet-client";
 import { PngPillButton } from "./png-pill-rollover";
+import type {FleetWorkSession} from "@workspace/api-zod";
 
 export type FleetBillingDraft = {
   mode: "new_ticket" | "existing_ticket";
@@ -17,7 +18,7 @@ export type FleetBillingOptions = {
     name: string;
     rateCents?: number;
     afeNumber?: string;
-    unit?: "per_job" | "lump_sum" | "per_hour" | "per_day";
+    unit?: string|null;
   }[];
   tickets: {
     id: number;
@@ -29,6 +30,7 @@ export type FleetBillingOptions = {
   }[];
   afeRequired: boolean;
   siteAfe: string;
+  referenceFreshness?:"current"|"cached_unverified";
 };
 export type FleetBillingTicket = {
   ticketId: number;
@@ -119,6 +121,10 @@ const copy = (es: boolean) =>
         submitted: "Submitted",
         total: "Reviewed run total",
       };
+const preciseUnitLabel=(unit:string|null|undefined,spanish:boolean)=>{
+ const labels:Record<string,string>={per_barrel:"por barril",per_us_gallon:"por galón estadounidense",per_short_ton:"por tonelada corta",per_load:"por carga",per_mile:"por milla",per_job:"por trabajo",lump_sum:"suma global"};
+ return unit?(spanish?labels[unit]??unit.replaceAll("_"," "):unit.replaceAll("_"," ")):(spanish?"Acuerdo sin resolver":"Agreement unresolved");
+};
 
 export function FleetRunBillingFields({
   fleetId,
@@ -128,6 +134,7 @@ export function FleetRunBillingFields({
   onChange,
   onValidityChange,
   disabled,
+  workSession,
 }: {
   fleetId?: string;
   siteId: number;
@@ -136,12 +143,13 @@ export function FleetRunBillingFields({
   onChange: (value: FleetBillingDraft) => void;
   onValidityChange?: (valid: boolean) => void;
   disabled: boolean;
+  workSession?:FleetWorkSession|null;
 }) {
   const { i18n } = useTranslation(),
     c = copy(i18n.language.startsWith("es"));
   const scope = `${identity}:${fleetId ?? ""}:${siteId}`,
     seenScope = useRef("");
-  const query = useQuery({
+  const query = useQuery<FleetBillingOptions>({
     queryKey: [
       "fleet-billing-options",
       identity,
@@ -149,8 +157,9 @@ export function FleetRunBillingFields({
       siteId,
       value.afeNumber,
       value.workDate,
+      workSession?.scope.provisioningId,
     ],
-    queryFn: () =>
+    queryFn: () => workSession&&fleetId?workSession.billingOptions({fleetId,siteId,afeNumber:value.afeNumber,workDate:value.workDate}):
       fleetClient.billingOptions(
         siteId,
         value.afeNumber,
@@ -182,7 +191,7 @@ export function FleetRunBillingFields({
             (item.afeNumber === undefined ||
               item.afeNumber === value.afeNumber.trim()),
         )
-      : data.tickets.some(
+      : (!workSession||data.workTypes.some(item=>item.id===Number(value.workTypeId)&&(item.afeNumber===undefined||item.afeNumber===value.afeNumber.trim())))&&data.tickets.some(
           (item) =>
             item.id === Number(value.ticketId) &&
             item.siteId === siteId &&
@@ -198,6 +207,7 @@ export function FleetRunBillingFields({
   return (
     <div className="fleet-detail-group space-y-3" aria-label={c.heading}>
       <h3>{c.heading}</h3>
+      {data?.referenceFreshness==="cached_unverified"&&<p role="status">{i18n.language.startsWith("es")?"Opciones descargadas sin verificar; la oficina y el servidor revisarán la autoridad al sincronizar.":"Downloaded choices are unverified; authority is checked again when work synchronizes."}</p>}
       <div className="flex flex-wrap gap-3" role="group" aria-label={c.heading}>
         <PngPillButton
           disabled={disabled}
@@ -237,7 +247,7 @@ export function FleetRunBillingFields({
             }
           />
         </label>
-        {data && value.mode === "new_ticket" && (
+        {data && (value.mode === "new_ticket"||!!workSession) && (
           <label>
             {c.service}
             <select
@@ -277,7 +287,7 @@ export function FleetRunBillingFields({
                       ? i18n.language.startsWith("es")
                         ? " / día"
                         : " / day"
-                      : i18n.language.startsWith("es")
+                      : workSession?` · ${preciseUnitLabel(item.unit,i18n.language.startsWith("es"))}`:i18n.language.startsWith("es")
                         ? " / recorrido"
                         : " / run"}
                   {item.afeNumber ? ` · AFE ${item.afeNumber}` : ""}

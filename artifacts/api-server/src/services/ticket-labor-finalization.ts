@@ -63,7 +63,14 @@ export function createTicketLaborFinalizationService(database: Pick<Pool, "conne
       if (!command) throw new TicketLaborFinalizationError("ticket.state_changed");
       if (ticket.closed_at || FINALIZATION_REFUSE_STATUSES.has(ticket.status)) throw new TicketLaborFinalizationError("ticket.not_closeable");
       if (ticket.updated_at.toISOString() !== command.expectedUpdatedAt) throw new TicketLaborFinalizationError("ticket.state_changed");
-      const autoLaborLineCount = await regenerate(client, ticketId);
+      let autoLaborLineCount = 0;
+      try {
+        autoLaborLineCount = await regenerate(client, ticketId);
+      } catch (error) {
+        // Marketplace terms that require manual billing still use the current
+        // authorized, idempotent close receipt without inventing hourly charges.
+        if (!(error instanceof Error && error.message === "manual_billing_required")) throw error;
+      }
       const acceptedAt = new Date();
       const updatedAt = new Date(Math.max(acceptedAt.getTime(), ticket.updated_at.getTime() + 1));
       await client.query("UPDATE tickets SET closed_at=$2,closed_by_id=$3,updated_at=$4 WHERE id=$1", [ticketId, acceptedAt, session.userId, updatedAt]);

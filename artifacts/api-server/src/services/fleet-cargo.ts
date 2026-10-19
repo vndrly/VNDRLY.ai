@@ -1,3 +1,4 @@
+import { appendFleetRunEvent } from "./fleet-run-events";
 import { createHash, randomUUID } from "node:crypto";
 import {
   checkFleetManifestRequirements,
@@ -29,6 +30,7 @@ export function createFleetCargoOperations(
     client: PoolClient,
     run: FleetRun,
   ) => Promise<void>,
+  options:{originalWorkOperationId?:string}={},
 ) {
   const fingerprint = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -61,6 +63,7 @@ export function createFleetCargoOperations(
       if (run.companyId !== actor.companyId)
         throw new FleetError("fleet.not_found", 404);
       map.set(run.id, run);
+      state.runs.push(run);
       actor.currentRunsById?.set(run.id, run);
     }
     hydrated.set(actor, map);
@@ -183,8 +186,7 @@ export function createFleetCargoOperations(
     const grant = state.grants.find((row) => row.userId === run.driverUserId);
     if (
       !grant?.roles.includes("driver") ||
-      !grant.fleetIds.includes(run.fleetId) ||
-      !run.siteIds.every((id) => grant.siteIds.includes(id))
+      !grant.fleetIds.includes(run.fleetId)
     )
       throw new FleetError("fleet.driver_grant_required", 403);
     const person = await client.query(
@@ -274,9 +276,11 @@ export function createFleetCargoOperations(
       const body = FleetCargoTransferInputSchema.parse(input),
         bound = { ...actor, operationId: body.operationId };
       return transaction(bound, async (state, client) => {
+        await hydrate(state,bound,client,body);
         const { source, target } = pair(state, body);
         if (!manager(state, bound, source, target))
           throw new FleetError("fleet.not_found", 404);
+        if((source.billingV2||target.billingV2)&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         const hash = fingerprint(body),
           saved = await replay(client, bound, body.operationId, hash);
         if (saved)
@@ -384,6 +388,7 @@ export function createFleetCargoOperations(
           throw new FleetError("fleet.version_conflict");
         if (!visible.allowedActions.includes(body.action))
           throw new FleetError("fleet.action_forbidden", 403);
+        if((source.billingV2||target.billingV2)&&options.originalWorkOperationId!==body.operationId)throw new FleetError("fleet.work_command_required",409);
         if (body.action !== "cancel") {
           validateContext(source, target, record);
           if (
@@ -414,8 +419,8 @@ export function createFleetCargoOperations(
           )
             throw new FleetError("fleet.site_unavailable", 403);
           if (
-            source.events.length >= 200 ||
-            target.events.length >= 200 ||
+            (!source.billingV2 && source.events.length >= 200) ||
+            (!target.billingV2 && target.events.length >= 200) ||
             target.loads.length >= 100 ||
             target.loads.some((row) => row.id === record.targetLoadId)
           )
@@ -458,7 +463,7 @@ export function createFleetCargoOperations(
           record.status = "completed";
           record.completedAt = time;
           for (const run of [source, target])
-            run.events.push({
+            appendFleetRunEvent(run, {
               id: randomUUID(),
               operationId: body.operationId,
               type: "cargo_transferred",

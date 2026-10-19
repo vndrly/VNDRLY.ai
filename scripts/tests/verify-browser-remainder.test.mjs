@@ -1,0 +1,19 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {BASELINE_SHA,REPO,ALLOWED,cleanLog,parsePassed,parseSkipped,parseListed,validateDiff,validateBaseline,remainingTests} from '../verify-browser-remainder.mjs';
+const names=Array.from({length:47},(_,i)=>`[chromium] › tests/example-${i}.spec.ts:1:1 › test ${i}`);
+const skipped='[chromium] › tests/fleet-production-offline.spec.ts:12:1 › production Fleet boots offline, captures a new ticket and photo, then reconciles once after a lost response';
+const audio='[chromium] › tests/work-hub-audio.spec.ts:25:1 › two invited users exchange real internal audio while recording stays off';
+const workspace='[chromium] › tests/work-hub-workspace.spec.ts:51:3 › Work Hub workspace persisted flow › creates a Group conversation, scheduling page and confirmed CSV task, then opens files and notes';
+const passedLog=names.map((n,i)=>`2026-10-18T03:43:50.6109463Z \u001b[32m  ✓ ${i+1} ${n} (${i===0?'1.2m':'3.4s'})\u001b[0m`).join('\n');
+const skippedLog=`2026-10-18T14:01:06.0365762Z   -  22 ${skipped}`;
+const log='> workspace@0.0.0 test:e2e /home/runner\nRunning 50 tests using 1 worker\n'+passedLog+'\n'+skippedLog;
+const run={status:'completed',head_sha:BASELINE_SHA,repository:{full_name:REPO},head_repository:{full_name:REPO},head_branch:'codex/workhub-teams',path:'.github/workflows/verify-release.yml',conclusion:'cancelled'};
+const steps=['Typecheck and locale parity','Independent database-backed API gate','Rehearse first application and replay of guarded Work Hub migrations','Verify fresh test database safety invariants'].map(name=>({name,status:'completed',conclusion:'success'}));
+const jobs=[{id:1,name:'verify',status:'completed',conclusion:'cancelled',steps:[...steps,{name:'Full required test chain',conclusion:'cancelled'}]}];
+test('parser accepts Actions prefixes, timestamps, ANSI, skips and duration suffixes',()=>{const actions=`verify\tFull required test chain\t${passedLog.split('\n')[0]}\nverify\tFull required test chain\t${skippedLog}`;assert.deepEqual(parsePassed(actions),[names[0]]);assert.deepEqual(parseSkipped(actions),[skipped]);assert.deepEqual(parseListed(names.join('\n')),names);assert(!cleanLog(actions).includes('\u001b'));});
+test('coverage requires exactly the two known missing identities after one configured skip',()=>{const covered=[...names,skipped];assert.deepEqual(remainingTests(covered,[...covered,audio,workspace]),[audio,workspace]);assert.throws(()=>remainingTests(covered.slice(1),[...covered,audio,workspace]));assert.throws(()=>remainingTests(covered,[...covered,audio,workspace.replace('work-hub-workspace','other')]));});
+test('application edits and verification weakening fail closed',()=>{validateDiff(ALLOWED,'timeout-minutes: 35\r\n','timeout-minutes: 45\n');assert.throws(()=>validateDiff(['artifacts/api-server/src/app.ts'],'timeout-minutes: 35','timeout-minutes: 45'));assert.throws(()=>validateDiff(ALLOWED,'timeout-minutes: 35\nmandatory:true','timeout-minutes: 45\nmandatory:false'));});
+test('requires baseline provenance, all independent gates, 47 passes and the one configured skip',()=>{const proof=validateBaseline(run,jobs,log,'codex/workhub-teams');assert.equal(proof.passed.length,47);assert.deepEqual(proof.skipped,[skipped]);assert.equal(proof.covered.length,48);assert.throws(()=>validateBaseline({...run,head_sha:'bad'},jobs,log,'codex/workhub-teams'));assert.throws(()=>validateBaseline(run,[{...jobs[0],steps:[]}],log,'codex/workhub-teams'));assert.throws(()=>validateBaseline(run,jobs,log+'\n ✘ 49 [chromium] › broken (2s)','codex/workhub-teams'));assert.throws(()=>validateBaseline(run,jobs,log.replace(skippedLog,''),'codex/workhub-teams'));assert.throws(()=>validateBaseline({...run,conclusion:'failure'},jobs,log,'codex/workhub-teams'));});
+
+test("list reporter paths normalize to line reporter paths",()=>{assert.deepEqual(parseListed(names.map(n=>n.replace("tests/","")).join("\n")),names);});

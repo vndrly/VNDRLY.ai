@@ -3,6 +3,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 const mocks = vi.hoisted(() => ({ session: vi.fn(), validate: vi.fn(), review: vi.fn(), approve: vi.fn() }));
+vi.mock("../lib/staff-session-revocation", () => ({ isStaffTokenRevoked: async () => false }));
 vi.mock("../lib/session", () => ({ SESSION_SECRET: "s".repeat(32), getSessionFromRequest: mocks.session }));
 vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: mocks.validate }));
 vi.mock("../assistant/chatgpt-oauth", () => ({ ASSISTANT_ISSUER: "https://vndrly.ai/api/assistant-connection" }));

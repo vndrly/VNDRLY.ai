@@ -1,3 +1,4 @@
+import WorkdayControls from "@/components/workday-controls";
 import { fleetCopy } from "@/lib/fleet-copy";
 import { Link, useLocation } from "wouter";
 import { EnergyMarketTicker } from './energy-market-ticker';
@@ -37,12 +38,13 @@ import {
   Video,
   ArrowLeft,
 } from "lucide-react";
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import { fleetClient } from "@/lib/fleet-client";
+import { readWebFleetWorkspace } from "@/lib/fleet-offline-bootstrap";
 import LanguageToggle from "@/components/language-toggle";
 import { useTheme } from "@/hooks/use-theme";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
@@ -227,7 +229,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
   const fleetText = fleetCopy(i18n.language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const fleetAccess = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.overview, enabled: Boolean(user), retry: false, staleTime: 30_000 });
+  const fleetIdentity = `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`;
+  const currentFleetIdentity = useRef<string | null>(fleetIdentity);
+  currentFleetIdentity.current = fleetIdentity;
+  useEffect(() => {
+    currentFleetIdentity.current = fleetIdentity;
+    return () => { currentFleetIdentity.current = null; };
+  }, [fleetIdentity]);
+  const fleetAccess = useQuery({
+    queryKey: ["fleet", fleetIdentity],
+    queryFn: async () => {
+      try { return await fleetClient.overview(); }
+      catch (error) {
+        const status = Number((error as { status?: number })?.status);
+        // Original navigation survives network loss, but an authentication or
+        // permission rejection must never fall back to cached capabilities.
+        if (!user?.vendorId || !user.activeMembershipId ||
+          (Number.isFinite(status) && status < 500) ||
+          (!(error instanceof TypeError) && navigator.onLine !== false && !(status >= 500))) throw error;
+        const saved = await readWebFleetWorkspace(user, () => currentFleetIdentity.current === fleetIdentity).catch(() => null);
+        if (!saved || currentFleetIdentity.current !== fleetIdentity) throw error;
+        return saved.overview;
+      }
+    },
+    enabled: Boolean(user), retry: false, staleTime: 30_000,
+  });
   const portalNavItems = useNavItems(user);
   const siteFleetAccess = useQuery({ queryKey: ["fleet-site-choices", `${user?.userId}:${user?.activeMembershipId}:${user?.partnerId}`], queryFn: fleetClient.siteChoices, enabled: Boolean(user?.partnerId), retry: false, staleTime: 30_000 });
   const canReadFleetSites = !siteFleetAccess.isError && siteFleetAccess.data?.capabilities.canReadSiteActivity === true;
@@ -244,6 +270,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     ...(fleetAccess.data?.capabilities.canDrive ? [{ key: "fleet-my-day", href: "/fleet/my-day", label: fleetText.myDay, icon: Users }] : []),
     { key: "fleet-loads", href: "/fleet/loads", label: fleetText.loads, icon: Receipt },
     { key: "fleet-inventory", href: "/fleet/equipment", label: fleetText.equipment, icon: BriefcaseBusiness },
+    { key: "fleet-destinations", href: "/fleet/destinations", label: fleetText.destinations, icon: MapIcon },
+    { key: "fleet-compliance", href: "/fleet/compliance", label: fleetText.compliance, icon: ClipboardList },
     ...((fleetAccess.data?.capabilities.canReportDefect ?? (fleetAccess.data?.capabilities.canManage || fleetAccess.data?.capabilities.canDrive)) ? [{ key: "fleet-maintenance", href: "/fleet/maintenance", label: fleetText.maintenance, icon: ClipboardList }] : []),
     ...(fleetAccess.data?.capabilities.canManage ? [{ key: "fleet-review", href: "/fleet/review", label: fleetText.review, icon: UserCheck }] : []),
     ...(fleetAccess.data?.capabilities.canSetup ? [{ key: "fleet-setup", href: "/fleet/setup", label: fleetText.setup, icon: Gauge }] : []),
@@ -512,6 +540,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
         >
           <OnboardingProgressBanner />
+          <WorkdayControls />
           {children}
         </main>
       </div>

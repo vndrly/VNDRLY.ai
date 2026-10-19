@@ -1,3 +1,4 @@
+import {GATE_DAILY_BILLING_TOOLS} from "./gate-daily-billing-tools";
 import { FLEET_TOOLS } from "./fleet-tools";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import type { AuthorityCapability } from "../../../../lib/api-zod/src/implementation-a/authority";
@@ -10,6 +11,7 @@ import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
 import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
 import { TICKET_WORKFLOW_TOOLS } from "./ticket-workflow-tools";
 import { GATE_WORKFLOW_TOOLS } from "./gate-workflow-tools";
+import { MARKETPLACE_TOOL_METADATA } from "./marketplace-tool-catalog";
 import {
   WORK_HUB_TOOL_METADATA,
   type WorkHubToolFamily,
@@ -95,6 +97,11 @@ const DEFAULT_METADATA: ToolMetadata = {
 };
 
 const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
+  ...Object.fromEntries(Object.entries(MARKETPLACE_TOOL_METADATA).map(([name, metadata]) => [name, {
+    roles: metadata.roles, mutating: metadata.mutating,
+    confirmation: metadata.mutating ? "required" : "none",
+    risk: metadata.mutating ? "high" : "read", execution: "server", pack: "screen", auditTarget: "hotlist",
+  }])),
   query_gate_stations: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   query_gate_change_over: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   query_shift_notes: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
@@ -234,6 +241,7 @@ export const IMPLEMENTATION_A_CAPABILITY_TOOLS = [
 ];
 
 export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
+  ...GATE_DAILY_BILLING_TOOLS,
   ...FLEET_TOOLS,
   ...TICKET_WORKFLOW_TOOLS,
   ...GATE_WORKFLOW_TOOLS,

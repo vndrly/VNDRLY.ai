@@ -187,6 +187,16 @@ function schemaDriftSkipReason(resolved: ResolvedUrls): string | null {
   return null;
 }
 
+// Private authentication state is intentionally absent from ordinary user
+// projections. Apply its guarded migration after the schema drift check.
+async function provisionPrivateAuthColumns(url: string): Promise<void> {
+  const client = new pg.Client({ connectionString: url });
+  try {
+    await client.connect();
+    await client.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS revoked_staff_sessions jsonb");
+  } finally { await client.end(); }
+}
+
 async function main(): Promise<void> {
   const childArgs = parseChildArgs(process.argv.slice(2));
   if (childArgs.length === 0) {
@@ -228,6 +238,7 @@ async function main(): Promise<void> {
       env,
     );
     if (checkCode !== 0) process.exit(checkCode);
+    await provisionPrivateAuthColumns(target.testUrl);
     process.exit(await spawnChild(childArgs[0]!, childArgs.slice(1), env));
   }
   if (process.env.VNDRLY_TEST_DB_MODE) {
@@ -292,6 +303,7 @@ async function main(): Promise<void> {
     );
   }
 
+  await provisionPrivateAuthColumns(resolved.testUrl);
   const code = await spawnChild(childArgs[0]!, childArgs.slice(1), env);
   process.exit(code);
 }

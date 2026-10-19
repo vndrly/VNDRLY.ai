@@ -83,6 +83,7 @@ describe.skipIf(!isolated)(
           vendorId: vendor.id,
           status: "approved",
         });
+      await s.db.insert(s.partnerVendorWorkTypeApprovalsTable).values({partnerId:partner.id,vendorId:vendor.id,workTypeId:workType.id});
       const [manager, driver] = await s.db
         .insert(s.usersTable)
         .values([
@@ -201,6 +202,9 @@ describe.skipIf(!isolated)(
           },
         ],
       });
+      const savedSetup=await service.setupRead(actor());
+      expect(savedSetup.grants.find(g=>g.userId===driver.id)).toMatchObject({siteIds:[],roles:["driver"]});
+      expect(savedSetup.grants.find(g=>g.userId===manager.id)).toMatchObject({siteIds:[site.id],roles:["fleet_manager","dispatcher"]});
       expect(
         (await service.driverAvailability(driverActor(), driver.id)).canManage,
       ).toBe(false);

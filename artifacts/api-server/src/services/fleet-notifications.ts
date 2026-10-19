@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg";
 import type { FleetRun } from "@workspace/api-zod";
 import type { FleetState } from "./fleet-repository";
-import { ACTIVE_APPROVAL_STATUSES } from "@workspace/db";
+import { readFleetAuthoritySites } from "./fleet-commercial-authority";
 import { notifyUsers } from "../routes/notifications";
 const eventNames: Record<string, string> = {
   dispatch: "dispatched",
@@ -29,20 +29,16 @@ export async function fleetRunNotificationRecipients(
   actorUserId: number,
 ): Promise<FleetRunNotice | undefined> {
   if (!eventNames[action] || !state.enabled) return;
-  const siteResult = await client.query(
-    "SELECT s.id FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND s.id=ANY($2::int[]) AND r.status=ANY($3::text[]) AND COALESCE(s.hidden,false)=false",
-    [run.companyId, run.siteIds, [...ACTIVE_APPROVAL_STATUSES]],
-  );
-  if (!run.siteIds.every((id) => siteResult.rows.some((row) => row.id === id)))
+  const siteResult = await readFleetAuthoritySites(client,run.companyId,{siteIds:run.siteIds});
+  if (!run.siteIds.every((id) => siteResult.some((row) => row.id === id)))
     return;
   const candidates = state.grants
     .filter(
       (grant) =>
         grant.fleetIds.includes(run.fleetId) &&
-        run.siteIds.every((id) => grant.siteIds.includes(id)) &&
         grant.roles.length &&
-        (grant.roles.includes("fleet_manager") ||
-          grant.roles.includes("dispatcher") ||
+        (((grant.roles.includes("fleet_manager") ||
+          grant.roles.includes("dispatcher")) && run.siteIds.every(id => grant.siteIds.includes(id))) ||
           (grant.roles.includes("driver") &&
             run.driverUserId === grant.userId)),
     )

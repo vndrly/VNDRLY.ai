@@ -64,6 +64,7 @@ const VisitPublicPage = lazy(() => import("@/pages/visit-public"));
 const VerifyEmployeePage = lazy(() => import("@/pages/verify-employee"));
 const VisitorEntryPage = lazy(() => import("@/pages/visitor-entry"));
 const GatekeeperPage = lazy(() => import("@/pages/gatekeeper"));
+const GateDailyBillingPage=lazy(()=>import("@/pages/gate-daily-billing"));
 const GateHistoryPage = lazy(() => import("@/pages/gate-history"));
 const GateChangeOverPage = lazy(() => import("@/pages/gate-change-over"));
 const GateMapPage = lazy(() => import("@/pages/gate-map"));
@@ -92,6 +93,7 @@ const AdminRateLimits = lazy(() => import("@/pages/admin-rate-limits"));
 const AdminRemovedComments = lazy(() => import("@/pages/admin-removed-comments"));
 const AdminAskVAudit = lazy(() => import("@/pages/admin-askv-audit"));
 const AdminCommunicationsHealth = lazy(() => import("@/pages/admin-communications-health"));
+const AdminServiceMappings = lazy(() => import("@/pages/admin-service-mappings"));
 const AssistantLauncher = lazy(() =>
   import("@/components/assistant-panel").then((mod) => ({
     default: mod.AssistantLauncher,
@@ -209,6 +211,7 @@ function AdminRoutes() {
         <Route path="/admin/removed-comments" component={AdminRemovedComments} />
         <Route path="/admin/askv-audit" component={AdminAskVAudit} />
         <Route path="/admin/communications-health" component={AdminCommunicationsHealth} />
+        <Route path="/admin/service-mappings" component={AdminServiceMappings} />
         <Route path="/admin/1099-transmitter" component={TAX_REPORTING_ENABLED ? Admin1099Transmitter : NotFound} />
         <Route component={NotFound} />
         </Switch>
@@ -260,9 +263,15 @@ function AuthenticatedRouter() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
+        <Route path="/es/legal/privacy/" component={LegalPrivacyPage} />
+        <Route path="/es/legal/terms/" component={LegalTermsPage} />
+        <Route path="/es/legal/messaging/" component={LegalMessagingConsentPage} />
+        <Route path="/es/sms/" component={LegalMessagingConsentPage} />
         <Route path="/legal/privacy" component={LegalPrivacyPage} />
         <Route path="/legal/terms" component={LegalTermsPage} />
         <Route path="/legal/messaging" component={LegalMessagingConsentPage} />
+        <Route path="/sms" component={LegalMessagingConsentPage} />
+        <Route path="/sms/" component={LegalMessagingConsentPage} />
         <Route path="/legal/eula" component={PlatformEulaPage} />
         <Route path="/signup" component={Signup} />
         <Route path="/signup/vendor" component={OnboardingVendor} />
@@ -270,6 +279,7 @@ function AuthenticatedRouter() {
         <Route path="/onboarding/partner" component={OnboardingPartner} />
         <Route path="/onboarding/vendor" component={OnboardingVendor} />
         <Route path="/onboarding/field/:token" component={OnboardingField} />
+        {user && <Route path="/gate/history/billing"><GatePortalLayout returnToAdmin={!gateWorker}><GateDailyBillingPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/history"><GatePortalLayout returnToAdmin={!gateWorker}><GateHistoryPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/map"><GatePortalLayout returnToAdmin={!gateWorker}><GateMapPage /></GatePortalLayout></Route>}
@@ -296,6 +306,7 @@ function AuthenticatedRouter() {
         ) : (user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user) ? (
           <GatePortalLayout>
             <Switch>
+              <Route path="/gate/history/billing" component={GateDailyBillingPage} />
               <Route path="/gate/history" component={GateHistoryPage} />
               <Route path="/gate/change-over"><GateChangeOverPage /></Route>
               <Route path="/gate/map"><GateMapPage /></Route>
@@ -443,7 +454,7 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
     matches("/login") ||
     matches("/switch-account") ||
     matches("/signup") ||
-    matches("/legal");
+    matches("/legal") || matches("/sms") || matches("/es/legal") || matches("/es/sms");
   if (hidden) return null;
   // Main admin/partner/vendor chrome mounts Ask V in the layout AskV pane.
   // Field ops portals (/field, /foreman) use the same AskV pane in

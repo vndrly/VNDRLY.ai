@@ -19,6 +19,12 @@ vi.mock("react-i18next", async (original) => ({ ...await original<typeof import(
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 describe("responsive notification placement", () => {
+  it("places landing-page shift controls after portal branding and before the page title", () => {
+    const screen = render(<PortalPageHeader title="Field Ops" testIdPrefix="field" beforeTitle={<div data-testid="field-clock">Start Shift</div>} />);
+    const clock = screen.getByTestId("field-clock");
+    expect(screen.getByTestId("field-company-logo").compareDocumentPosition(clock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(clock.compareDocumentPosition(screen.getByText("Field Ops")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
   it("keeps one bell on a wide root page that has no sidebar", () => {
     state.width = 1024;
     const screen = render(<PortalPageHeader title="Edit profile" testIdPrefix="edit-profile" />);

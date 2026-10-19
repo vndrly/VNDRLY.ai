@@ -1,3 +1,4 @@
+import { applyStaffBearerSession } from "./lib/staff-bearer-session";
 import { RequiredWorkError } from "./work-hub/required-work-guard";
 import express, {
   type Express,
@@ -8,7 +9,8 @@ import express, {
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { isStaffSessionRevoked } from "./lib/staff-session-revocation";
 import { db, usersTable } from "@workspace/db";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -29,6 +31,7 @@ import helmet from "helmet";
 import assistantConnectionRouter from "./routes/assistantConnection";
 import { organizationSubscriptionWebhook } from "./routes/organizationSubscription";
 import {demoRequestBoundary} from './lib/demo-request-boundary';
+import fleetComplianceDocumentBodyParser from "./lib/fleet-compliance-body-parser";
 
 const app: Express = express();
 
@@ -92,6 +95,7 @@ app.use("/api/organization-subscription/webhook", organizationSubscriptionWebhoo
 // Four MiB of native meeting audio expands to roughly 5.34 MiB in base64.
 // Keep the larger JSON allowance confined to this authenticated capture route.
 app.post(/^\/api\/work-hub\/meetings\/[^/]+\/transcribe-audio\/?$/, express.json({ limit: "6mb" }));
+app.use(fleetComplianceDocumentBodyParser);
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(demoRequestBoundary);
@@ -107,22 +111,7 @@ app.get("/.well-known/oauth-protected-resource/api/assistant-connection/mcp", (_
 // `Authorization: Bearer <token>`. Route the token to the appropriate
 // cookie based on the embedded role so cookie-based session helpers
 // continue to work unchanged for both staff and guests.
-app.use((req, _res, next) => {
-  const auth = req.headers.authorization;
-  if (auth && auth.toLowerCase().startsWith("bearer ")) {
-    const token = auth.slice(7).trim();
-    const cookies: Record<string, string> = req.cookies ?? (req.cookies = {});
-    if (token) {
-      const role = decodeRole(token);
-      if (role === "guest") {
-        if (!cookies["vndrly_guest"]) cookies["vndrly_guest"] = token;
-      } else {
-        if (!cookies["vndrly_session"]) cookies["vndrly_session"] = token;
-      }
-    }
-  }
-  next();
-});
+app.use(applyStaffBearerSession);
 
 // Deny-by-default for guest-role sessions: a request that carries a
 // guest token (and no valid staff session) may only hit the explicit
@@ -164,9 +153,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Staff session version guard: on every authenticated staff request,
 // validate that the token's embedded session version (sv) matches the
-// current value stored in the database. This makes explicit logout and
-// any access-revocation (membership removal, user disable) immediately
-// effective even for long-lived Bearer tokens that have not yet expired.
+// current value stored in the database, plus this device's durable revocation.
+// Device logout and global revocation (membership removal, user disable) take
+// effect even for long-lived Bearer tokens that have not yet expired.
 app.use(async (req: Request, res: Response, next: NextFunction) => {
   if (!req.path.startsWith("/api/")) return next();
 
@@ -187,7 +176,7 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
 
   try {
     const [row] = await db
-      .select({ sv: usersTable.sessionVersion })
+      .select({ sv: usersTable.sessionVersion, revocations: sql`revoked_staff_sessions` })
       .from(usersTable)
       .where(eq(usersTable.id, session.userId))
       .limit(1);
@@ -202,7 +191,7 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    if (row.sv !== session.sv) {
+    if (row.sv !== session.sv || isStaffSessionRevoked(row.revocations, token)) {
       res.clearCookie("vndrly_session", { path: "/" });
       return res.status(401).json({
         message: "Session has been invalidated",
@@ -227,10 +216,9 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       });
     }
   } catch (err) {
-    // On a transient DB error let the request through; route-level
-    // auth still validates the token signature and expiry.
-    if (session.managedSubcontractor) return res.status(503).json({ message: "Unable to verify access", code: "auth.access_unavailable" });
-    logger.warn({ err }, "Session version check failed — allowing request");
+    // A database outage cannot make a durably revoked token valid again.
+    logger.warn({ err }, "Unable to verify staff session revocation");
+    return res.status(503).json({ message: "Unable to verify access", code: "auth.access_unavailable" });
   }
 
   next();

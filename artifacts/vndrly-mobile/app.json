@@ -2,7 +2,7 @@
   "expo": {
     "name": "VNDRLY Field Mobile",
     "slug": "vndrly-mobile",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "default",
     "icon": "./assets/icons/vndrly.png",
     "scheme": "vndrly-mobile",
@@ -124,6 +124,7 @@
       "expo-updates",
       "@sentry/react-native",
       "@rnmapbox/maps",
+      "./plugins/withDynamicAppIconIpad",
       [
         "expo-dynamic-app-icon",
         {

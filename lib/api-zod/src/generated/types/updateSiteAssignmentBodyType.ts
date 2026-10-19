@@ -7,6 +7,7 @@
  */
 
 export interface UpdateSiteAssignmentBodyType {
+  /** Explicit site-owner designation of this vendor as a Gate contractor. */
   isGateContractor?: boolean;
   /** @nullable */
   afe?: string | null;

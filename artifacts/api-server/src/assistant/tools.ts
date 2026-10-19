@@ -13,6 +13,7 @@ import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import { WORK_HUB_CONTEXT_KINDS } from "@workspace/api-zod";
 import { WORK_HUB_TOOLS } from "./work-hub-tools";
 import { CHANGE_OVER_TOOLS } from "./change-over-tools";
+import { MARKETPLACE_TOOLS } from "./marketplace-tool-catalog";
 
 // Screens the model is allowed to deep-link to. Mirrored in the
 // route's `buildDeepLink` switch and in the per-role allow lists in
@@ -48,6 +49,7 @@ export const DEEP_LINK_SCREENS = [
   "crew-replay",
   "site-map",
   "gate-log",
+  "gate-billing",
   "visitors",
   "notification-preferences",
   "notifications-inbox",
@@ -78,6 +80,7 @@ export const TOOLS: Anthropic.Tool[] = [
     input_schema: { type: "object", properties: { action: { type: "string", enum: ["create_channel", "invite_channel_member", "post_message", "create_note", "create_task", "update_task", "create_shift", "claim_shift", "create_meeting", "publish_announcement", "acknowledge_announcement", "publish_form_template", "publish_checklist_template", "assign_form", "assign_checklist", "submit_form", "respond_checklist", "request_approval", "decide_approval"] }, operationId: { type: "string", format: "uuid" }, owner: { type: "object", properties: { type: { type: "string", enum: ["vendor", "partner"] }, id: { type: "number" } }, required: ["type", "id"], additionalProperties: false }, context: { type: "object", properties: { kind: { type: "string", enum: [...WORK_HUB_CONTEXT_KINDS] }, id: { anyOf: [{ type: "number" }, { type: "string" }] } }, required: ["kind", "id"], additionalProperties: false }, expectedVersion: { anyOf: [{ type: "number" }, { type: "null" }] }, targetId: { type: "string" }, payload: { type: "object" } }, required: ["action", "operationId", "owner", "context", "payload"], additionalProperties: false },
   },
   ...WORK_HUB_TOOLS,
+  ...MARKETPLACE_TOOLS,
   ...CHANGE_OVER_TOOLS,
   {
     name: "lookup_user_progress",
@@ -1144,10 +1147,10 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "select_tool_pack",
-    description: "Load a focused set of permitted tools before a task. Choose onboarding to fill, advance, or finish the existing onboarding wizard, gate for visits, tickets for field work, safety for drafts, operations for crew/site status, finance or reports for existing read-only office queries, catalog for read-only Hotlist/catalog queries, market for prices, or auto for the current screen. This changes available tools without navigating or writing domain records.",
+    description: "Load a focused set of permitted tools before a task. Choose onboarding to fill, advance, or finish the existing onboarding wizard, gate for visits, tickets for field work, safety for drafts, operations for crew/site status, finance or reports for existing read-only office queries, catalog for read-only Hotlist/catalog queries, marketplace for service matches and confirmation-bound capabilities, rates and job offers, market for prices, or auto for the current screen. This changes available tools without navigating or writing domain records.",
     input_schema: {
       type: "object",
-      properties: { workflow: { type: "string", enum: ["auto", "gate", "tickets", "safety", "onboarding", "operations", "finance", "reports", "catalog", "market"] } },
+      properties: { workflow: { type: "string", enum: ["auto", "gate", "tickets", "safety", "onboarding", "operations", "finance", "reports", "catalog", "marketplace", "market"] } },
       required: ["workflow"],
       additionalProperties: false,
     },

@@ -1,9 +1,13 @@
+import { createFleetWorkRouter } from "./fleet-work";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { withNativeLocationCollection } from "../services/native-operations";
 import { NativeOperationError } from "../services/native-operations-policy";
 import { Router } from "express";
+import { createFleetComplianceRouter } from "./fleet-compliance";
+import {readFleetPolicy,previewFleetPolicy,activateFleetPolicy,readFleetPolicyActivation} from "../services/fleet-compliance-policy";
 import { pool } from "@workspace/db";
 import { z } from "zod/v4";
+import {FleetCanonicalIdSchema} from "@workspace/api-zod";
 import { getSessionFromRequest } from "../lib/session";
 import {
   databaseFleetRepository,
@@ -20,6 +24,51 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.use(createFleetComplianceRouter(service, actor));
+router.use(createFleetWorkRouter({actor}));
+const policyBinding=(req:import("express").Request)=>({partnerId:z.number().int().positive().parse(getSessionFromRequest(req)?.partnerId),vendorId:z.coerce.number().int().positive().parse(req.params.vendorId)});
+router.get("/fleet/compliance-policies/:vendorId",endpoint(req=>readFleetPolicy(getSessionFromRequest(req)??{},policyBinding(req))));
+router.post("/fleet/compliance-policies/:vendorId/preview",endpoint(req=>previewFleetPolicy(getSessionFromRequest(req)??{},policyBinding(req),req.body)));
+router.post("/fleet/compliance-policies/:vendorId/operations/:operationId",endpoint(req=>readFleetPolicyActivation(getSessionFromRequest(req)??{},policyBinding(req),{...req.body,operationId:z.uuid().parse(req.params.operationId)})));
+router.post("/fleet/compliance-policies/:vendorId/activate",endpoint(req=>activateFleetPolicy(getSessionFromRequest(req)??{},policyBinding(req),req.body)));
+router.get("/fleet/monitoring",endpoint(req=>service.readFleetMonitoring(actor(req))));
+router.post("/fleet/monitoring",endpoint(req=>service.saveFleetTrigger(actor(req),req.body)));
+router.get("/fleet/runs/:id/assignment-delivery",endpoint(req=>service.readFleetAssignmentDelivery(actor(req),z.uuid().parse(req.params.id))));
+router.post("/fleet/runs/:id/monitoring/evaluate",endpoint(req=>service.evaluateFleetRunTriggers(actor(req),z.uuid().parse(req.params.id))));
+router.get("/fleet/runs/:id/events", endpoint(req=>service.eventHistory(actor(req),z.uuid().parse(req.params.id),req.query)));
+router.get("/fleet/location-observations",endpoint(req=>service.locationObservationPage(actor(req),req.query)));
+router.post("/fleet/workdays/events", endpoint(req => service.recordWorkday(actor(req), req.body)));
+router.get("/fleet/workdays/operations/:operationId", endpoint(req => service.workdayOperation(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/workdays/:id", endpoint(req => service.workday(actor(req), z.uuid().parse(req.params.id))));
+router.get("/fleet/drivers/:driverUserId/workdays", endpoint(req => service.driverWorkdays(actor(req), z.coerce.number().int().positive().parse(req.params.driverUserId), req.query)));
+router.get("/fleet/run-orders",endpoint(req=>service.readFleetRunOrders(actor(req),req.query)));
+router.get("/fleet/run-orders/operations/:operationId",endpoint(req=>service.fleetRunOrderReceipt(actor(req),z.uuid().parse(req.params.operationId))));
+router.get("/fleet/run-orders/:id/history",endpoint(req=>service.fleetRunOrderHistory(actor(req),z.uuid().parse(req.params.id),req.query)));
+router.get("/fleet/run-orders/:id/locations",endpoint(req=>service.fleetRunOrderLocations(actor(req),z.uuid().parse(req.params.id))));
+router.get("/fleet/run-orders/:id",endpoint(req=>service.fleetRunOrder(actor(req),z.uuid().parse(req.params.id))));
+router.post("/fleet/run-orders",endpoint(req=>service.saveFleetRunOrder(actor(req),req.body)));
+router.patch("/fleet/run-orders/:id",endpoint(req=>{
+ if(FleetCanonicalIdSchema.parse(req.body?.order?.id)!==FleetCanonicalIdSchema.parse(req.params.id))throw new FleetError("fleet.invalid_request",400);
+ return service.saveFleetRunOrder(actor(req),req.body);
+}));
+router.get("/fleet/details", endpoint(req => service.readFleetDetails(actor(req), req.query)));
+router.get("/fleet/details/operations/:operationId", endpoint(req => service.fleetResourceReceipt(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/details/:id/history", endpoint(req => service.fleetResourceHistory(actor(req), "detail", z.uuid().parse(req.params.id), req.query)));
+router.get("/fleet/details/:id", endpoint(req => service.fleetDetailSnapshot(actor(req), z.uuid().parse(req.params.id))));
+router.post("/fleet/details", endpoint(req => service.saveFleetDetail(actor(req), req.body)));
+router.patch("/fleet/details/:id", endpoint(req => {
+  if (FleetCanonicalIdSchema.parse(req.body?.detail?.id) !== FleetCanonicalIdSchema.parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
+  return service.saveFleetDetail(actor(req), req.body);
+}));
+router.get("/fleet/rig-packages", endpoint(req => service.readFleetRigPackages(actor(req), req.query)));
+router.get("/fleet/rig-packages/operations/:operationId", endpoint(req => service.fleetResourceReceipt(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/rig-packages/:id/history", endpoint(req => service.fleetResourceHistory(actor(req), "rig_package", z.uuid().parse(req.params.id), req.query)));
+router.get("/fleet/rig-packages/:id", endpoint(req => service.fleetRigPackage(actor(req), z.uuid().parse(req.params.id))));
+router.post("/fleet/rig-packages", endpoint(req => service.saveFleetRigPackage(actor(req), req.body)));
+router.patch("/fleet/rig-packages/:id", endpoint(req => {
+  if (FleetCanonicalIdSchema.parse(req.body?.package?.id) !== FleetCanonicalIdSchema.parse(req.params.id)) throw new FleetError("fleet.invalid_request", 400);
+  return service.saveFleetRigPackage(actor(req), req.body);
+}));
 router.get("/fleet/inventory", endpoint(req => service.fleetInventory(actor(req), req.query)));
 router.get("/fleet/inventory/operations/:operationId", endpoint(req => service.fleetInventoryReceipt(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/inventory/:assetId", endpoint(req => service.fleetInventoryDetail(actor(req), z.uuid().parse(req.params.assetId))));
@@ -412,4 +461,6 @@ router.post(
     service.action(actor(req), z.uuid().parse(req.params.id), req.body),
   ),
 );
+router.get("/fleet/service-templates",endpoint(req=>service.serviceTemplates(actor(req))));
+router.get("/fleet/service-templates/:id",endpoint(req=>service.serviceTemplate(actor(req),z.coerce.number().int().positive().parse(req.params.id),req.query.revision===undefined?undefined:z.coerce.number().int().positive().parse(req.query.revision))));
 export default router;

@@ -1,3 +1,4 @@
+import {projectEffectiveInvoiceLine} from "../lib/effective-financial-line";
 import { Router, type IRouter } from "express";
 import { randomUUID } from "crypto";
 import { and, eq, desc, inArray, isNull, sql, gte, lt } from "drizzle-orm";
@@ -476,7 +477,7 @@ router.get("/invoices/:id", async (req, res): Promise<void> => {
     ...invoice,
     vendor,
     partner,
-    lines,
+    lines:lines.map(projectEffectiveInvoiceLine),
     ticketLinks,
     payments,
     creditMemos: credits,
@@ -2194,6 +2195,8 @@ router.patch("/invoices/:id/lines/:lineId", async (req, res): Promise<void> => {
     return;
   }
 
+  if(line.fleetBillingMetadata){res.status(409).json({code:"fleet.derived_charge_locked",message:"Reviewed Fleet charges require an explicit source adjustment and invoice regeneration."});return;}
+
   const newQty = body.data.quantity ?? line.quantity;
   const newPrice = body.data.unitPrice ?? line.unitPrice;
   // Use the engine's bigint fixed-precision math so manual edits round
@@ -2208,7 +2211,14 @@ router.patch("/invoices/:id/lines/:lineId", async (req, res): Promise<void> => {
     ? unitsToString2(mulUnits(amountUnits, taxRateUnits))
     : "0.00";
 
-  await db.transaction(async (tx) => {
+  const editResult=await db.transaction(async (tx) => {
+    // Serialize with invoice regeneration and recheck the financial source under
+    // the same lock that protects the write; a stale read cannot reprice it.
+    const [lockedInvoice]=await tx.select().from(invoicesTable).where(eq(invoicesTable.id,invoice.id)).for("update");
+    if(!lockedInvoice||!canEditInvoice(session,lockedInvoice))return "changed";
+    const [lockedLine]=await tx.select({metadata:invoiceLinesTable.fleetBillingMetadata}).from(invoiceLinesTable).where(and(eq(invoiceLinesTable.id,line.id),eq(invoiceLinesTable.invoiceId,invoice.id))).for("update");
+    if(!lockedLine)return "changed";
+    if(lockedLine.metadata)return "derived";
     await tx
       .update(invoiceLinesTable)
       .set({
@@ -2240,7 +2250,9 @@ router.patch("/invoices/:id/lines/:lineId", async (req, res): Promise<void> => {
         lastRecomputedAt: new Date(),
       })
       .where(eq(invoicesTable.id, invoice.id));
+    return "saved";
   });
+  if(editResult!=="saved"){res.status(409).json({code:editResult==="derived"?"fleet.derived_charge_locked":"invoice.changed",message:"Invoice or reviewed charge changed; read the canonical source before editing."});return;}
 
   const [updatedLine] = await db
     .select()
@@ -2583,7 +2595,7 @@ async function loadPdfInputs(invoiceId: number) {
     .from(invoiceCreditMemosTable)
     .where(eq(invoiceCreditMemosTable.invoiceId, invoice.id))
     .orderBy(invoiceCreditMemosTable.createdAt);
-  return { invoice, vendor, partner, lines, payments, credits };
+  return { invoice, vendor, partner, lines:lines.map(projectEffectiveInvoiceLine), payments, credits };
 }
 
 // ──────────────────────────────────────────────────────────────────

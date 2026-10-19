@@ -53,6 +53,7 @@ export const ROLE_ALLOWED_SCREENS: Record<AssistantRole, Set<string> | null> = {
     "crew-replay",
     "visitors",
     "gate-log",
+    "gate-billing",
     "invoices",
     "invoice-detail",
     "statement",

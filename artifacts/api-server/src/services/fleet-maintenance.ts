@@ -6,6 +6,7 @@ import {
   type FleetMaintenanceRecord,
   type FleetMaintenancePage,
   type FleetRun,
+  fleetRunAssetIds,
 } from "@workspace/api-zod";
 import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
@@ -38,10 +39,7 @@ export async function recordFleetInspectionException(
   notes: string,
 ) {
   const ids: string[] = [];
-  for (const assetId of [
-    run.vehicleAssetId,
-    ...(run.trailerAssetId ? [run.trailerAssetId] : []),
-  ]) {
+  for (const assetId of fleetRunAssetIds(run).sort()) {
     const asset = await client.query(
       "SELECT id FROM assets WHERE id=$1 AND responsible_org_type='vendor' AND responsible_org_id=$2 AND retired_at IS NULL AND merged_into_id IS NULL FOR UPDATE",
       [assetId, actor.companyId],
@@ -134,8 +132,7 @@ export function createFleetMaintenanceOperations(
         !run ||
         (!manager && run.driverUserId !== actor.userId) ||
         run.fleetId !== record.fleetId ||
-        ![run.vehicleAssetId, run.trailerAssetId].includes(record.assetId) ||
-        !run.siteIds.every((id: number) => grant.siteIds.includes(id))
+        !fleetRunAssetIds(run).includes(record.assetId)
       )
         throw new FleetError("fleet.maintenance_not_found", 404);
     }

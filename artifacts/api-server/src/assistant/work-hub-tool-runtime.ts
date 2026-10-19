@@ -1,3 +1,7 @@
+import {GATE_DAILY_BILLING_NAMES,gateDailyBillingToolRequest} from "./gate-daily-billing-tools";
+import {fleetAuxiliaryToolRequest,fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
+import {WorkdayAssistantInputSchema,FleetPolicyChangeSchema} from "@workspace/api-zod";
+import {randomUUID} from "node:crypto";
 import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
 import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
@@ -15,7 +19,7 @@ import { ticketInvoicePreparationCommand } from "./ticket-invoice-preparation-to
 import { ticketInvoiceCandidatesPath } from "./ticket-invoice-candidates-tools";
 import { financeRecordAction } from "./work-hub-finance-actions";
 import { z } from "zod/v4";
-import { FleetDestinationSchema } from "@workspace/api-zod";
+import { FleetDestinationInputSchema } from "@workspace/api-zod";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
@@ -69,6 +73,10 @@ export function describeWorkHubToolResult(name: string, rawInput: unknown, resul
   if (Array.isArray(result) || result.ok === false || result.error) return result;
   if (name === "confirm_asset_custody_action" && ["conflict", "blocked"].includes(String(result.status)))
     return { ...result, ok: false, error: result.code ?? "The asset changed or this action is blocked. Read it again before preparing a new action." };
+  if(FLEET_COMMERCIAL_TOOLS.some(row=>row.name===name)&&result.receipt&&typeof result.receipt==="object"){
+    const receipt=result.receipt as Record<string,unknown>;const {status,operationId,canonicalReferences,caseId,reason,recordedAt}=receipt;
+    return {operationId,status,canonicalReferences,caseId,reason,recordedAt,checkedAt:result.checkedAt,physicalWorkStarted:result.physicalWorkStarted,canonicalApplied:status==="applied"||status==="duplicate",nextStep:status==="applied"||status==="duplicate"?"Read the exact canonical references before describing the saved result.":"Keep this original operation; read its reconciliation case. Do not create a replacement action."};
+  }
   const input = record(rawInput);
   if ((name === "prepare_work_hub_file_upload" || name === "manage_work_hub_file" && input.action === "new_version") && record(result.resource).fileId)
     return { ...result, state: "reserved", uploaded: false, finalized: false, nextStep: "Upload the selected bytes on the device, then finalize the returned documentId and fileId." };
@@ -160,6 +168,7 @@ const direct = (input: Input, extra: Input = {}): Input => ({
 });
 
 function resolveImplementationACapabilityRequest(name: string, input: Input): WorkHubToolRequest | null {
+  if((GATE_DAILY_BILLING_NAMES as readonly string[]).includes(name)){try{return gateDailyBillingToolRequest(name,input);}catch{return {error:"Read the exact Gate billing post and current quote before confirming this change."};}}
   if (name === "manage_gate_shift") {
     const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     if (!uuid(input.stationId)) return { error: "Read the exact authorized Gate station first." };
@@ -211,12 +220,28 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     const transitions: Record<string, string> = { accept: "accept", deny: "deny", reinvite: "reinvite", submit: "submit", approve: "approve", kickback: "kickback", awaiting_payment: "awaiting-payment", cancel: "cancel", reactivate: "reactivate" };
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
   }
+  if(name==="query_my_workday")return z.object({}).strict().safeParse(input).success?request("GET","/work-hub/workday"):{error:"Workday reads accept no other-worker target"};
+  if(name==="manage_my_workday"){const {confirmed:_confirmed,...business}=input;const parsed=WorkdayAssistantInputSchema.safeParse(business);return parsed.success?request("POST","/work-hub/workday/assistant-events",parsed.data):{error:"Supply only your confirmed action, exact current shift and timezone; worker identity and capture time are server-owned"};}
   if(name==='query_work_hub_availability') return z.object({}).strict().safeParse(input).success ? request('GET','/work-hub/availability') : {error:'Personal availability accepts no other-user target.'};
   if(name==='manage_work_hub_availability') { const {confirmed:_confirmed,...business}=input;const parsed=WorkHubAvailabilityInputSchema.safeParse(business);return parsed.success?request('POST','/work-hub/availability',parsed.data):{error:'Supply the exact personal availability fingerprint and reviewed interval.'}; }
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === name)) {
     try { return fleetInventoryRequest(name, input); } catch { return { error: "Supply exact reviewed Fleet Inventory fields, current version and authorized asset ID." }; }
   }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
+    const auxiliary=fleetAuxiliaryToolRequest(name,input);if(auxiliary)return auxiliary;
+    if(name==="query_fleet_compliance_policy"){const value=z.object({vendorId:z.number().int().positive()}).strict().safeParse(input);return value.success?request("GET",`/fleet/compliance-policies/${value.data.vendorId}`):{error:"Select an actual vendor relationship; no actor override is accepted."};}
+    if(name==="query_fleet_policy_impact"){const value=FleetPolicyChangeSchema.omit({operationId:true}).extend({vendorId:z.number().int().positive()}).strict().safeParse(input);if(!value.success)return {error:"Supply the exact proposed future policy and configuration version."};const {vendorId,...body}=value.data;return request("POST",`/fleet/compliance-policies/${vendorId}/preview`,{...body,operationId:randomUUID()});}
+    if(name==="query_fleet_worker_day"){const parsed=z.object({workerUserId:z.number().int().positive(),start:z.iso.datetime({offset:true}),end:z.iso.datetime({offset:true}),after:z.number().int().positive().optional()}).strict().safeParse(input);if(!parsed.success)return {error:"Select an exact worker and day range."};const {workerUserId,...range}=parsed.data;return request("GET",`/work-hub/workday/workers/${workerUserId}?${new URLSearchParams(Object.entries(range).map(([k,v])=>[k,String(v)]))}`);}
+    const commercial=fleetCommercialToolRequest(name,input);if(commercial)return commercial;
+    if(name==="query_fleet_service_templates")return z.object({}).strict().safeParse(input).success?request("GET","/fleet/service-templates"):{error:"This read accepts no scope override."};
+    if(name==="query_fleet_monitoring_rules")return z.object({}).strict().safeParse(input).success?request("GET","/fleet/monitoring"):{error:"This read accepts no scope override."};
+    if(name==="query_fleet_assignment_delivery"){const body=z.object({runId:z.uuid()}).strict().safeParse(input);return body.success?request("GET",`/fleet/runs/${body.data.runId}/assignment-delivery`):{error:"Select an exact authorized run."};}
+    if(["query_fleet_details","query_fleet_rig_packages","query_fleet_run_orders"].includes(name)){const value=z.object({after:name==="query_fleet_run_orders"?z.number().int().positive().optional():z.uuid().optional()}).strict().safeParse(input);if(!value.success)return {error:"Use the exact returned next cursor."};const path=name==="query_fleet_details"?"details":name==="query_fleet_rig_packages"?"rig-packages":"run-orders";return request("GET",`/fleet/${path}${value.data.after?`?after=${value.data.after}`:""}`);}
+    if(name==="query_fleet_activity_commercial_review"){const value=z.object({runId:z.uuid(),after:z.string().optional()}).strict().safeParse(input);return value.success?request("POST","/fleet/work/assistant/review",value.data):{error:"Supply exact activity and returned cursor."};}
+    if(name==="query_fleet_retained_sources"){const value=z.object({caseId:z.uuid(),view:z.enum(["reports","plan","choices"]),cursor:z.string().optional()}).strict().safeParse(input);return value.success?request("POST","/fleet/work/assistant/sources",value.data):{error:"Select an exact authorized case, source view and returned cursor; no actor or scope override."};}
+    if(name==="query_fleet_retained_work")return request("POST","/fleet/work/assistant/recovery",input);
+    if(name==="query_fleet_compliance_subjects"){const value=z.object({after:z.string().optional(),limit:z.number().int().min(1).max(50).optional()}).strict().safeParse(input);return value.success?request("GET","/fleet/compliance/subjects?"+new URLSearchParams(Object.entries(value.data).map(([key,value])=>[key,String(value)]))):{error:"Use exact compliance cursor."};}
+
     if (name === "query_fleet_driver_availability") {
       if (!z.object({ driverUserId: z.number().int().positive() }).strict().safeParse(input).success) return { error: "Select an exact authorized Fleet driver." };
       return request("GET", `/fleet/drivers/${input.driverUserId}/availability`);
@@ -274,7 +299,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if(name==="set_fleet_preferences"){const parsed=FleetWorkspacePreferenceInputSchema.safeParse({expectedVersion:input.expectedVersion,defaultWorkspace:input.defaultWorkspace,selectedFleetId:input.selectedFleetId});return parsed.success?request("POST","/fleet/preferences",parsed.data):{error:"Supply exact current preference version and accessible fleet choice."};}
     if(name==="query_fleet_settings")return request("GET","/fleet/setup");
     if(name==="manage_fleet_settings"){const body=FleetSetupInputSchema.safeParse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants,supportGrants:input.supportGrants});return body.success?request("POST","/fleet/setup",body.data):{error:"Supply the exact current Fleet settings and version."};}
-    if(name === "save_fleet_destination") {const {confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...business}=input;const value=z.object({operationId:z.uuid(),expectedVersion:z.number().int().positive(),destination:FleetDestinationSchema.omit({revision:true,ownerType:true,ownerId:true}).extend({id:z.uuid().optional()})}).strict().safeParse(business);return value.success?request("POST","/fleet/destinations",value.data):{error:"Supply the current directory revision and reviewed destination fields."};}
+    if(name === "save_fleet_destination") {const {confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...business}=input;const value=z.object({operationId:z.uuid(),expectedVersion:z.number().int().positive(),destination:FleetDestinationInputSchema}).strict().safeParse(business);return value.success?request("POST","/fleet/destinations",value.data):{error:"Supply the current directory revision and reviewed destination fields."};}
     if(name === "save_fleet_ticket_plan") {const {ticketId,confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...fields}=input;const id=z.number().int().positive().safeParse(ticketId);const value=z.object({operationId:z.uuid(),expectedVersion:z.number().int().nonnegative(),mode:z.enum(["batch","singles"]).optional(),rateCents:z.number().int().min(0).max(100000000),closure:z.enum(["shift","day","manual"]),closesAt:z.string().datetime().nullable(),destinationIds:z.array(z.uuid()).min(1).max(30)}).strict().safeParse(fields);return id.success&&value.success?request("POST","/fleet/tickets/"+id.data+"/plan",value.data):{error:"Supply the exact ticket, current plan revision, explicit rate, closure and approved destinations."};}
     if(name === "query_fleet_billing_options") {const value=z.object({siteId:z.number().int().positive(),afeNumber:z.string().max(200),workDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)}).strict().safeParse(input);if(!value.success)return {error:"Supply exact origin site, AFE and work date."};return request("GET","/fleet/billing-options?"+new URLSearchParams({siteId:String(value.data.siteId),afeNumber:value.data.afeNumber,workDate:value.data.workDate}));}
     if(name === "finalize_fleet_ticket") {const {confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,...fields}=input;const business={...fields,operationId:fleetInventoryOperationId(input)};const value=z.object({ticketId:z.number().int().positive(),operationId:z.uuid(),expectedVersion:z.number().int().positive()}).strict().safeParse(business);return value.success?request("POST",`/fleet/tickets/${value.data.ticketId}/finalize`,{operationId:value.data.operationId,expectedVersion:value.data.expectedVersion}):{error:"Supply exact ticket, current plan version and server-authorized operation ID."};}
@@ -1180,7 +1205,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  ["manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  [...GATE_DAILY_BILLING_NAMES,"manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,
@@ -1188,9 +1213,11 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
+  if((GATE_DAILY_BILLING_NAMES as readonly string[]).includes(toolName??""))return input;
+  if (FLEET_COMMERCIAL_TOOLS.some(row=>row.name===toolName)||FLEET_COMMERCIAL_READ_TOOLS.some(row=>row.name===toolName))return input;
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination", "finalize_fleet_ticket", "query_fleet_billing_options"].includes(toolName ?? "")) return input;
-  if (["query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
+  if (["query_my_workday","manage_my_workday","query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any
   // caller-supplied owner/context instead of silently discarding those fields.

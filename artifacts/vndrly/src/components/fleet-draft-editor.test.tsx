@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { FleetRunSchema } from "@workspace/api-zod";
-const api = vi.hoisted(() => ({ editDraft: vi.fn() }));
+import { FleetRunSchema,FleetRunOrderSchema,fleetRunOrderRoute,fleetRouteOperationalStops } from "@workspace/api-zod";
+const api = vi.hoisted(() => ({ editDraft: vi.fn(),commercial:vi.fn() }));
 vi.mock("@/lib/fleet-client", () => ({ fleetClient: api }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ i18n: { language: "en" } }),
@@ -12,6 +12,7 @@ vi.mock("@/components/png-pill-rollover", () => ({
   ),
 }));
 import { FleetDraftEditor } from "./fleet-draft-editor";
+vi.mock("./fleet-route-fields",()=>({FleetRouteFields:({value,onChange}:any)=><button onClick={()=>onChange({...value,stops:value.stops.map((stop:any,index:number)=>index===0?{...stop,location:{type:"canonical",location:{...stop.location.location,name:"Alternate terminal"}}}:stop)})}>Change physical terminal</button>}));
 import {
   fleetScheduleDraft,
   parseFleetSchedule,
@@ -45,6 +46,15 @@ const run = FleetRunSchema.parse({
   allowedActions: [],
   canEditDraft: true,
 });
+function physicalFixture(){const place=(name:string)=>({id:crypto.randomUUID(),revision:1,name,kind:"pickup",address:name,latitude:null,longitude:null,ownerType:"vendor",ownerId:run.companyId});const order=FleetRunOrderSchema.parse({id:crypto.randomUUID(),companyId:run.companyId,version:1,name:"Saved transport order",accessGroupIds:[run.fleetId],origin:place("Tank"),destination:place("Terminal"),base:null,returnPolicy:"delivery_only",instructions:"",timeZone:"America/Chicago",archivedAt:null}),route=fleetRunOrderRoute(order,()=>crypto.randomUUID());return {order,route,physical:FleetRunSchema.parse({...run,routePlan:route,stops:fleetRouteOperationalStops(route,9,run.stops[0].id)})};}
+it("edits a physical route while retaining the independent billing site",async()=>{
+ const {physical}=physicalFixture();api.commercial.mockResolvedValue({version:1,defaultMode:"batch",destinations:[],canManage:true,sites:[],sitePolicy:null});api.editDraft.mockClear().mockImplementation(async(_id,input)=>({...physical,version:5,events:[{operationId:input.operationId}]}));
+ render(<FleetDraftEditor run={physical} sites={[9]} onSaved={async()=>{}}/>);fireEvent.click(screen.getByRole("button",{name:"Edit saved draft"}));
+ await waitFor(()=>expect(api.commercial).toHaveBeenCalled());fireEvent.click(await screen.findByRole("button",{name:"Change physical terminal"}));expect(screen.queryByRole("button",{name:"Add stop"})).toBeNull();
+ fireEvent.click(screen.getByRole("button",{name:"Review exact draft changes"}));fireEvent.click(screen.getByRole("button",{name:"Save reviewed draft changes"}));await waitFor(()=>expect(api.editDraft).toHaveBeenCalled());
+ expect(api.editDraft.mock.calls[0][1]).toMatchObject({routePlan:{stops:[{location:{location:{name:"Alternate terminal"}}}]},stops:[{siteId:9,destination:{name:"Tank"}},{siteId:9,destination:{name:"Alternate terminal"}}]});api.editDraft.mockClear();
+});
+it("keeps a saved transport order explicit and omits legacy site editing",()=>{const {physical,order}=physicalFixture();render(<FleetDraftEditor run={{...physical,runOrder:order}} sites={[9]} onSaved={async()=>{}}/>);fireEvent.click(screen.getByRole("button",{name:"Edit saved draft"}));expect(screen.getByText(/Saved transport order/)).toBeTruthy();expect(screen.queryByRole("button",{name:"Change physical terminal"})).toBeNull();expect(screen.queryByRole("button",{name:"Add stop"})).toBeNull();});
 it("reviews exact draft revision and preserves the operation after an uncertain save", async () => {
   api.editDraft
     .mockRejectedValueOnce(new Error("response lost"))
@@ -139,4 +149,11 @@ it("requires explicit reload rather than rebasing unsaved fields on a newer revi
   expect(
     screen.getByRole("button", { name: "Review exact draft changes" }),
   ).toHaveProperty("disabled", false);
+});
+
+it("retains a ticketed draft edit without calling the legacy writer or claiming sync",async()=>{
+ api.editDraft.mockClear();const captureDraft=vi.fn().mockResolvedValue({canonicalApplied:false});
+ render(<FleetDraftEditor run={{...run,ticketReference:{id:17,version:2}}} sites={[9]} workSession={{captureDraft} as any} onSaved={async()=>{}}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Edit saved draft"}));fireEvent.click(screen.getByRole("button",{name:"Review exact draft changes"}));fireEvent.click(screen.getByRole("button",{name:"Save reviewed draft changes"}));
+ expect(await screen.findByText("Saved on this device; awaiting sync.")).toBeTruthy();expect(captureDraft).toHaveBeenCalledTimes(1);expect(api.editDraft).not.toHaveBeenCalled();
 });
