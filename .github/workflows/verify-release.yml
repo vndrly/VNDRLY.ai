@@ -15,7 +15,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    # Run 39222093099 exceeded 90 minutes after Redis and the independent API
+    # gate passed. Allow the serialized full chain and browser gates to finish.
+    timeout-minutes: 150
     env:
       VNDRLY_TEST_DB_MODE: fresh-local
       VNDRLY_TEST_DB_MAINTENANCE_URL: postgresql://postgres@127.0.0.1:55439/postgres
