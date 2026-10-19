@@ -245,6 +245,10 @@ jobs:
           # three gated Go sites. Cutoff-bound and reference-checked; a no-op after.
           sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
             pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/remove-duplicate-stations.ts --apply
+          # Preserve referenced history while ensuring each synthetic gated site
+          # exposes only one active operational station.
+          sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
+            pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/retire-duplicate-stations.ts --apply
           observe_rc=0
           sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
             pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/observe.ts > /tmp/go-observe.json || observe_rc=$?
