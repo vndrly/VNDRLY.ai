@@ -18,11 +18,11 @@ notes; `go-demo-*@example.invalid` logins; `(fictional)` outside companies).
 
 The provisioner only writes to:
 
-- a **loopback** Postgres database (any name except `postgres`), or
-- the isolated demo database **`vndrly_prairie_demo`**.
+- a **loopback** Postgres database (any name except `postgres`);
+- the isolated demo database **`vndrly_prairie_demo`**; or
+- the **production** Supabase project `bihjmgbdzbhcnsuhzzwo`, only when `GO_DEMO_ALLOW_PRODUCTION=bihjmgbdzbhcnsuhzzwo` is set and the URL is that project's direct host or pooler user.
 
-It refuses Supabase/pooler hosts and every other target, and it never touches the
-shared production database. It is **one-shot and additive**: inside one transaction
+It refuses every other hosted target. It is **one-shot and additive**: inside one transaction
 under an advisory lock it inserts rows into an allow-listed set of tables, and it
 refuses to run if any Go company or `go-demo-*` user already exists. It never
 updates or deletes existing rows (apart from setting `active_membership_id` on
@@ -33,6 +33,17 @@ listed in `artifacts/api-server/src/lib/demo-identities.ts`, and the demo bounda
 is read-mostly (`lib/demo-boundary.ts`), so write workflows (ticket transitions,
 dispatch, gate check-in) are blocked there. A local database or a dedicated staging
 database is the right home for write-workflow testing.
+
+### Live (production)
+
+`.github/workflows/deploy-api.yml` has a step after the API health check, "Provision Go ecosphere companies (one-shot) and observe". It runs on the production server (VPS) with the production `DATABASE_URL`:
+
+- The first deploy that includes it inserts the companies, with history ending at that moment.
+- Every later deploy prints "already provisioned" and changes nothing.
+- The read-only observer then runs, and the step fails if any consistency check fails.
+- Generated logins are written to `/var/www/vndrly/.local/go-demo-accounts.json` on the server (owner `vndrly`, mode 600). They never go to CI logs or git. An admin can also reset any `go-demo-*` password from the app.
+
+Production has no synthetic-organization flag, so the Go companies show up in admin-wide views and reports, including the 2026 1099 aggregation. They have no federal tax ID. Every Go row is identifiable by the `go-ecosphere-v1` marker or by the Go organization and user ids. Removing them would be a delete, which needs explicit approval and a scoped plan first.
 
 ## Running it
 
