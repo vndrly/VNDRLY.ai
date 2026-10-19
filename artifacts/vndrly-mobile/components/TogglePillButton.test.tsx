@@ -11,6 +11,12 @@ import TogglePillButton from "./TogglePillButton";
 afterEach(cleanup);
 
 describe("TogglePillButton accessibility", () => {
+  it("wraps composed stop labels in native Text and gives the button its complete name", () => {
+    render(<TogglePillButton>{1}{". "}{"pickup"}{" · "}{"TEST Yard Origin"}</TogglePillButton>);
+    const button = screen.getByRole("button", {name:"1. pickup · TEST Yard Origin"});
+    expect(button.getAttribute("aria-label")).toBe("1. pickup · TEST Yard Origin");
+    expect(screen.getByText("1. pickup · TEST Yard Origin").tagName).toBe("SPAN");
+  });
   it("exposes its native button name and selected state", () => {
     render(
       <TogglePillButton accessibilityState={{ selected: true }}>

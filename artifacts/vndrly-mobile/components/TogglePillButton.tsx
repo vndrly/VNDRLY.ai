@@ -77,7 +77,12 @@ export default function TogglePillButton({
   const brand = useBrand();
   const { width } = useWindowDimensions();
   const isDisabled = disabled || loading;
-  const resolvedAccessibilityLabel = accessibilityLabel ?? (typeof children === "string" ? children : undefined);
+  // Adjacent JSX strings/numbers must share a Text wrapper on native. Keep
+  // custom icon/content elements intact instead of rendering raw text in a View.
+  const labelParts = React.Children.toArray(children);
+  const plainLabel = labelParts.every(part => typeof part === "string" || typeof part === "number")
+    ? labelParts.join("") : undefined;
+  const resolvedAccessibilityLabel = accessibilityLabel ?? plainLabel;
   const lockToRest = !!inactive || !!loading;
   const lockToColored = !!solid && !lockToRest;
   const visualHeight = Math.max(PILL_HEIGHT_PX, heightProp ?? PILL_HEIGHT_PX);
@@ -121,7 +126,7 @@ export default function TogglePillButton({
             <View style={styles.contentRow}>
               {loading ? (
                 <ActivityIndicator color={labelColor} size="small" />
-              ) : typeof children === "string" ? (
+              ) : plainLabel !== undefined ? (
                 <Text
                   style={[
                     styles.label,
@@ -130,7 +135,7 @@ export default function TogglePillButton({
                     textStyle,
                   ]}
                 >
-                  {children}
+                  {plainLabel}
                 </Text>
               ) : (
                 children

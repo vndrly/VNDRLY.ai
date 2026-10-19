@@ -7,6 +7,7 @@ const en = {
 
   fuelRecord: "Fuel reported",
   meterRecord: "Meter reported",
+  odometerReading: "Odometer reading (miles)",
   noFuelRecords: "No fuel or meter records in this view.",
   runBoard: "Run board",
   ready: "Ready",
@@ -482,6 +483,7 @@ const es: Record<keyof typeof en, string> = {
 
   fuelRecord: "Combustible reportado",
   meterRecord: "Medidor reportado",
+  odometerReading: "Lectura del odómetro (millas)",
   noFuelRecords: "No hay registros de combustible o medidor en esta vista.",
   runBoard: "Tablero de recorridos",
   ready: "Listos",
