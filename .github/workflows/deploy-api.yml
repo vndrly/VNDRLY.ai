@@ -241,6 +241,10 @@ jobs:
           [ -n "$database_url" ] || { echo "DATABASE_URL missing from .env.production" >&2; exit 1; }
           sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" GO_DEMO_ALLOW_PRODUCTION=bihjmgbdzbhcnsuhzzwo \
             pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/provision.ts --apply
+          # Approved 2026-10-19: remove the empty trigger-created duplicates at the
+          # three gated Go sites. Cutoff-bound and reference-checked; a no-op after.
+          sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
+            pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/remove-duplicate-stations.ts --apply
           observe_rc=0
           sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
             pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/observe.ts > /tmp/go-observe.json || observe_rc=$?
