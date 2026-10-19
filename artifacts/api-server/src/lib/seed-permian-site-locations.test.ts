@@ -9,8 +9,8 @@
 // silently regress and double-insert the next time someone ran the
 // script by hand.
 //
-// Skips with a no-op describe when DATABASE_URL is unavailable so CI can
-// still run the rest of the unit suite.
+// Runs only in explicit fresh-local mode so inherited shared database URLs
+// can never reach the connectivity probe or legacy isolation behavior.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   createIsolatedSchema,
@@ -18,7 +18,9 @@ import {
   type IsolatedSchemaHandle,
 } from "../test/db-harness";
 
-const haveRealDb = await hasReachableDatabase();
+const haveRealDb =
+  process.env.VNDRLY_TEST_DB_MODE === "fresh-local" &&
+  (await hasReachableDatabase());
 
 describe.runIf(haveRealDb)("seed-permian-site-locations idempotency", () => {
   let s: typeof import("@workspace/db");
