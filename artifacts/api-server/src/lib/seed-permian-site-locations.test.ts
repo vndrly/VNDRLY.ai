@@ -37,12 +37,7 @@ async function checkRealDb(): Promise<boolean> {
   }
 }
 
-// TODO(Task #774 follow-up): see the inline TODO on the `it.skip`d test
-// below. Using `describe.skip` here so the suite-level beforeAll/afterAll
-// (which delete partners that still have site_locations FK references)
-// also no-op, instead of failing the whole file.
-describe.skip("seed-permian-site-locations idempotency", () => {
-  void haveRealDb;
+describe.runIf(haveRealDb)("seed-permian-site-locations idempotency", () => {
   let db: typeof import("@workspace/db").db;
   let s: typeof import("@workspace/db");
   let seedAllPermianSiteLocations: typeof import("../../scripts/seed-permian-site-locations.js").seedAllPermianSiteLocations;
@@ -78,16 +73,7 @@ describe.skip("seed-permian-site-locations idempotency", () => {
     }
   });
 
-  // TODO(Task #774 follow-up): The second `seedAllPermianSiteLocations()`
-  // call inserts +15 sites instead of 0 (Continental Resources, Matador
-  // Resources, SM Energy, Vital Energy). The (partnerId, name)
-  // existing-row check in the seed script regressed and is no longer
-  // matching for those operators. Additionally, `afterAll` cleanup
-  // throws an FK violation on `partners` because there are
-  // `site_locations` rows the test didn't track in `newSiteIds`. Both
-  // issues pre-date Task #774 and need a separate seed-script fix.
-  // Skipping so the validation gate added in Task #774 can be green.
-  it.skip("re-running the seed makes no changes (no inserts, no errors)", async () => {
+  it("re-running the seed makes no changes (no inserts, no errors)", async () => {
     // The site-locations script requires the operator partner rows to
     // already exist (it warns and skips for any missing partner). Run
     // the prerequisite partner seed once so this test works on a fresh

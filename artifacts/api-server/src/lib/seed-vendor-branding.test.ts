@@ -44,13 +44,7 @@ type VendorBrandSnapshot = {
   brandAccentColor: string | null;
 };
 
-// TODO(Task #774 follow-up): The second-run assertion expects
-// `notFound` to be empty, but "NexTier Oilfield Solutions" is in the
-// branding spec yet not inserted by the vendor seed (likely a name
-// mismatch between the two seed scripts). Pre-existing bug; skipping
-// so the validation gate added in Task #774 can be green.
-describe.skip("seed-vendor-branding idempotency", () => {
-  void haveRealDb;
+describe.runIf(haveRealDb)("seed-vendor-branding idempotency", () => {
   let db: typeof import("@workspace/db").db;
   let s: typeof import("@workspace/db");
   let seedVendorBranding: typeof import("../../scripts/seed-vendor-branding.js").seedVendorBranding;

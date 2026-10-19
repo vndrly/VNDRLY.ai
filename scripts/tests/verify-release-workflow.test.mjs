@@ -146,6 +146,18 @@ test("API starts after database prerequisites regardless of browser or static ou
   );
 });
 
+test("release verification exercises the real Redis bucket store on loopback", () => {
+  const redis = namedStep("Real Redis integration");
+  assertCondition(
+    redis,
+    "${{ !cancelled() && steps.dependencies.outcome == 'success' }}",
+  );
+  assert.match(redis, /redis-server/);
+  assert.match(redis, /REDIS_TEST_URL=redis:\/\/127\.0\.0\.1:56379\/15/);
+  assert.match(redis, /bucket-store\.redis\.integration\.test\.ts/);
+  assert.doesNotMatch(redis, /secrets\.|continue-on-error|\|\|\s*true/);
+});
+
 test("migration evidence upgrades the pinned previous schema before replaying the real commands", () => {
   const migration = namedStep("Rehearse first application and replay of guarded Work Hub migrations");
   assertCondition(migration, "${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.postgres.outcome == 'success' && steps.db-safety.outcome == 'success' }}");
