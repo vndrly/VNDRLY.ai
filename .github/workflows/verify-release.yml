@@ -149,6 +149,16 @@ jobs:
           set -euo pipefail
           pnpm test 2>&1 | tee "$RUNNER_TEMP/vndrly-tests.log"
 
+      - name: Production Fleet offline browser gate
+        if: ${{ !cancelled() && steps.full-chain.outcome == 'success' }}
+        env:
+          E2E_PRODUCTION_PREVIEW: '1'
+          FLEET_COMMERCIAL_WORK_V2: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm run test:e2e fleet-production-offline.spec.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-production-offline-browser-tests.log"
+
       - name: Diagnose browser gate after an earlier chain failure
         if: ${{ !cancelled() && steps.full-chain.outcome == 'failure' }}
         shell: bash
@@ -165,6 +175,7 @@ jobs:
             ${{ runner.temp }}/vndrly-tests.log
             ${{ runner.temp }}/vndrly-api-tests.log
             ${{ runner.temp }}/vndrly-browser-tests.log
+            ${{ runner.temp }}/vndrly-production-offline-browser-tests.log
             ${{ runner.temp }}/vndrly-migration-replay.log
             ${{ runner.temp }}/vndrly-postgres.log
             lib/e2e/test-results

@@ -181,6 +181,26 @@ test("browser diagnosis is cancellation-safe and responds only to a failed full 
   );
 });
 
+test("production Fleet offline acceptance runs after the ordinary full chain on a fresh isolated target", () => {
+  const productionOffline = namedStep("Production Fleet offline browser gate");
+  assertCondition(
+    productionOffline,
+    "${{ !cancelled() && steps.full-chain.outcome == 'success' }}",
+  );
+  assert.match(productionOffline, /^          E2E_PRODUCTION_PREVIEW: '1'$/m);
+  assert.match(productionOffline, /^          FLEET_COMMERCIAL_WORK_V2: '1'$/m);
+  assert.match(
+    productionOffline,
+    /^          pnpm run test:e2e fleet-production-offline\.spec\.ts 2>&1 \| tee "\$RUNNER_TEMP\/vndrly-production-offline-browser-tests\.log"$/m,
+  );
+
+  const evidence = namedStep("Retain verification evidence");
+  assert.match(
+    evidence,
+    /^            \$\{\{ runner\.temp \}\}\/vndrly-production-offline-browser-tests\.log$/m,
+  );
+});
+
 test("failures remain fatal while evidence and owned-cluster cleanup always run", () => {
   assert.doesNotMatch(workflow, /continue-on-error|\|\|\s*true/);
 
