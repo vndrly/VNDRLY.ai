@@ -1,4 +1,5 @@
 import { withNativeLocationCollection } from "../services/native-operations";
+import { revokeOwnDeviceConsent } from "../services/device-consent-rebinding";
 import { NativeOperationError } from "../services/native-operations-policy";
 import { Router, type IRouter, type Request, type Response } from "express";
 import {
@@ -254,7 +255,7 @@ router.post("/location-consents", async (req: Request, res: Response) => {
 });
 
 router.delete("/location-consents", async (req: Request, res: Response) => {
-  const session = getSession(req);
+  const session = getSessionFromRequest(req);
   if (!session) {
     res
       .status(401)
@@ -262,15 +263,7 @@ router.delete("/location-consents", async (req: Request, res: Response) => {
     return;
   }
   const deviceId = req.query.deviceId ? String(req.query.deviceId) : null;
-  const filters = [
-    eq(locationConsentsTable.userId, session.userId),
-    isNull(locationConsentsTable.revokedAt),
-  ];
-  if (deviceId) filters.push(eq(locationConsentsTable.deviceId, deviceId));
-  await db
-    .update(locationConsentsTable)
-    .set({ revokedAt: new Date() })
-    .where(and(...filters));
+  await revokeOwnDeviceConsent(session, deviceId);
   res.status(204).end();
 });
 

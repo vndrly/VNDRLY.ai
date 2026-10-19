@@ -1,4 +1,5 @@
 import { and, asc, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import {
   db,
   workHubDeviceConnectionsTable,
@@ -58,7 +59,13 @@ function mapEvent(row: typeof workHubUserEventsTable.$inferSelect): DurableUserE
 
 export const databaseDeviceCoordinatorStore: DeviceCoordinatorStore = {
   async findDevice(id) { const [row] = await db.select().from(workHubDevicesTable).where(eq(workHubDevicesTable.id, id)).limit(1); return row ? mapDevice(row) : null; },
-  async createDevice(input) { const [row] = await db.insert(workHubDevicesTable).values({ ...(input.id ? { id: input.id } : {}), userId: input.userId, ownerOrgType: input.owner.type, ownerOrgId: input.owner.id, friendlyName: input.friendlyName, deviceClass: input.deviceClass, capabilities: input.capabilities, createdAt: input.now, updatedAt: input.now }).returning(); return mapDevice(row!); },
+  async createDevice(input) {
+    const [row] = await db.insert(workHubDevicesTable).values({ ...(input.id ? { id: input.id } : {}), userId: input.userId, ownerOrgType: input.owner.type, ownerOrgId: input.owner.id, friendlyName: input.friendlyName, deviceClass: input.deviceClass, capabilities: input.capabilities, createdAt: input.now, updatedAt: input.now }).onConflictDoNothing().returning();
+    if (row) return mapDevice(row);
+    const existing = input.id ? await this.findDevice(input.id) : null;
+    if (!existing || !sameActor(input, existing) || existing.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
+    return existing;
+  },
   async updateDevice(id, patch) {
     const set: Partial<typeof workHubDevicesTable.$inferInsert> = { updatedAt: patch.updatedAt };
     if (patch.owner) { set.ownerOrgType = patch.owner.type; set.ownerOrgId = patch.owner.id; }
@@ -109,11 +116,23 @@ export function createDeviceCoordinator(store: DeviceCoordinatorStore, options: 
   }
   async function requireOwnedDevice(actor: DeviceActor, id: string) { const device = await store.findDevice(id); if (!device || !sameActor(actor, device) || device.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found"); return device; }
   return {
-    async registerDevice(actor: DeviceActor, input: { deviceId?: string; friendlyName: string; deviceClass: string; capabilities: DeviceCapabilities }) {
+    async registerDevice(actor: DeviceActor, input: { deviceId?: string; separateAccount?: boolean; friendlyName: string; deviceClass: string; capabilities: DeviceCapabilities }) {
       const now = clock(); const friendlyName = normalizeName(input.friendlyName); const deviceClass = normalizeClass(input.deviceClass);
       if (!input.deviceId) return store.createDevice({ userId: actor.userId, owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, now });
       const existing = await store.findDevice(input.deviceId);
       if (!existing) return store.createDevice({ id: input.deviceId, userId: actor.userId, owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, now });
+      if (input.separateAccount && !sameActor(actor, existing)) {
+        // A stable identifier is not authority. Preserve the previous account's
+        // row and allocate this user's own registration on the shared installation.
+        const hex = createHash("sha256").update(JSON.stringify(["vndrly-account-device-v1", input.deviceId, actor.userId, actor.owner.type, actor.owner.id])).digest("hex");
+        const accountId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+        const prior = await store.findDevice(accountId);
+        if (prior) {
+          if (!sameActor(actor, prior) || prior.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
+          return (await store.updateDevice(prior.id, { friendlyName, deviceClass, capabilities: input.capabilities, updatedAt: now }))!;
+        }
+        return store.createDevice({ id: accountId, userId: actor.userId, owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, now });
+      }
       if (existing.userId !== actor.userId || existing.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
       if (existing.owner.type !== actor.owner.type || existing.owner.id !== actor.owner.id) await store.clearConnections(existing.id);
       const updated = await store.updateDevice(existing.id, { owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, updatedAt: now });

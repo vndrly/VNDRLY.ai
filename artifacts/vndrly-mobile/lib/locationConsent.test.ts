@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Simulate native (no `window.localStorage`) by leaving globalThis.window unset.
 // The module under test prefers SecureStore in that case.
 const store = new Map<string, string>();
+const account = vi.hoisted(() => ({ id: 1, activeMembershipId: 7 }));
+vi.mock("./auth", () => ({ getUser: async () => account }));
 
 vi.mock("expo-secure-store", () => ({
   getItemAsync: async (k: string) => (store.has(k) ? store.get(k)! : null),
@@ -21,6 +23,7 @@ vi.mock("./deviceId", () => ({ getDeviceId: async () => "device-test" }));
 describe("locationConsent — declined-flag persistence (SecureStore-backed)", () => {
   beforeEach(() => {
     store.clear();
+    account.id = 1; account.activeMembershipId = 7;
     vi.resetModules();
     // Make sure no DOM env leaks in.
     delete (globalThis as any).window;
@@ -56,6 +59,15 @@ describe("locationConsent — declined-flag persistence (SecureStore-backed)", (
   it("writes the flag to the SecureStore key the app expects", async () => {
     const mod = await import("./locationConsent");
     await mod.setConsentDeclined(true);
-    expect(store.get("vndrly.locationConsentDeclined")).toBe("1");
+    expect(store.get("vndrly.locationConsentDeclined.1.7")).toBe("1");
+  });
+
+  it("does not apply the previous user's declined choice on a shared device", async () => {
+    const mod = await import("./locationConsent");
+    await mod.setConsentDeclined(true);
+    account.id = 2; account.activeMembershipId = 8;
+    expect(await mod.isConsentDeclined()).toBe(false);
+    account.id = 1; account.activeMembershipId = 7;
+    expect(await mod.isConsentDeclined()).toBe(true);
   });
 });

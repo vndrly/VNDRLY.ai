@@ -1,6 +1,7 @@
 import React from "react";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("@/lib/deviceId", () => ({ getDeviceId: async () => "10000000-0000-4000-8000-000000000001" }));
 
 const env = vi.hoisted(() => ({
   user: { id: 7, activeMembershipId: 1, role: "vendor" },

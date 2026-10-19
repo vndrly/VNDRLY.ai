@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "migrate:device-consent": "node scripts/apply-device-consent-migration.mjs",
     "migrate:native-operations": "tsx scripts/migrate-native-operations.ts",
     "migrate:stripe-billing": "tsx scripts/migrate-stripe-billing.ts",
     "migrate:assistant-connection": "tsx scripts/migrate-assistant-connection.ts",
@@ -17,7 +18,7 @@
     "dev": "pnpm run dev:local",
     "dev:local": "node ../../scripts/run-api-local.mjs",
     "build": "node ./build.mjs",
-    "start": "node --import ../../scripts/load-env-local.mjs --enable-source-maps ./dist/index.mjs",
+    "start": "node ../../scripts/run-production-api.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run --no-file-parallelism",
     "test:no-isolated-db": "corepack pnpm --filter @workspace/db run check-schema && corepack pnpm exec vitest run",

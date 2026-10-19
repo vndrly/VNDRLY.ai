@@ -153,6 +153,12 @@ beforeEach(() => {
   });
 });
 describe("native operations durable boundary", () => {
+  it("does not replace a work phone changed during shared-device registration repair", async () => {
+    native.designatedDeviceId = nextPhone;
+    await expect(nativeOperationsService.device(worker, phone, phone)).rejects.toMatchObject({ code: "native.work_phone_changed" });
+    expect(native.designatedDeviceId).toBe(nextPhone);
+    expect(native.bindingVersion).toBe(0);
+  });
   it("rechecks current membership and session version before every write", async () => {
     memberships = false;
     await expect(

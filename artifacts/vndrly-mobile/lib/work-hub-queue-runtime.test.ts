@@ -18,6 +18,7 @@ const env = vi.hoisted(() => {
 vi.mock("./work-hub-queue-native", () => ({ getNativeWorkHubQueueStore: async () => env.store }));
 vi.mock("./api", () => ({ apiFetch: env.api, getApiBase: () => "https://vndrly.example" }));
 vi.mock("./auth", () => ({ getToken: env.token }));
+vi.mock("./deviceId", () => ({ getDeviceId: async () => "10000000-0000-4000-8000-000000000001" }));
 vi.mock("expo-file-system/legacy", () => ({
   FileSystemUploadType: { BINARY_CONTENT: 0 },
   uploadAsync: env.upload,

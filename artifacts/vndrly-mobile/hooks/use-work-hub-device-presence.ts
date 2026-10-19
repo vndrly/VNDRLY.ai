@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { AppState } from "react-native";
 import { apiFetch } from "@/lib/api";
-import { getDeviceId } from "@/lib/deviceId";
-import { workHubDeviceClass, workHubDeviceLabel } from "@/lib/work-hub-device-label";
+import { registerAccountWorkDevice } from "@/lib/account-device-registration";
+import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 
 let connectionId: string | null = null;
+let connectionGeneration = -1;
 
 function newConnectionId() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, character => {
@@ -15,7 +16,15 @@ function newConnectionId() {
 }
 
 export async function nativeWorkHubDeviceIdentity() {
-  return { deviceId: await getDeviceId(), connectionId: connectionId ?? (connectionId = newConnectionId()) };
+  const scope = captureAuthScope();
+  const deviceId = await registerAccountWorkDevice(scope);
+  if (!isAuthScopeCurrent(scope)) throw new Error("Account changed. Reopen device setup.");
+  return { deviceId, connectionId: accountConnection(scope.generation) };
+}
+
+function accountConnection(generation: number) {
+  if (connectionGeneration !== generation) { connectionGeneration = generation; connectionId = null; }
+  return connectionId ?? (connectionId = newConnectionId());
 }
 
 export type NativeWorkHubSurface = {
@@ -42,27 +51,20 @@ export function nativeWorkHubSurface(path: string, now = Date.now()): NativeWork
 }
 
 export function useWorkHubDevicePresence(path: string, enabled: boolean) {
+  const authGeneration = captureAuthScope().generation;
   useEffect(() => {
     if (!enabled) return;
     let stopped = false;
     let registered = false;
     let timer: ReturnType<typeof setInterval> | undefined;
     let deviceId = "";
-    const currentConnectionId = connectionId ?? (connectionId = newConnectionId());
+    const scope = captureAuthScope();
+    const currentConnectionId = accountConnection(scope.generation);
     const heartbeat = async () => {
-      if (stopped) return;
-      deviceId ||= await getDeviceId();
+      if (stopped || !isAuthScopeCurrent(scope)) return;
       if (!registered) {
-        await apiFetch("/api/work-hub/devices/register", {
-          method: "POST",
-          headers: { "x-work-hub-source": "ios" },
-          body: JSON.stringify({
-            deviceId,
-            friendlyName: workHubDeviceLabel(),
-            deviceClass: workHubDeviceClass(),
-            capabilities: { microphone: true, speaker: true, camera: true, fileSelection: true, pushNotifications: true },
-          }),
-        });
+        deviceId = await registerAccountWorkDevice(scope);
+        if (stopped || !isAuthScopeCurrent(scope)) return;
         registered = true;
       }
       await apiFetch(`/api/work-hub/devices/${deviceId}/heartbeat`, {
@@ -74,7 +76,7 @@ export function useWorkHubDevicePresence(path: string, enabled: boolean) {
           microphonePermission: "unknown",
           surface: nativeWorkHubSurface(path),
         }),
-      });
+      }, scope);
     };
     const send = () => { void heartbeat().catch(() => { registered = false; }); };
     send();
@@ -85,5 +87,5 @@ export function useWorkHubDevicePresence(path: string, enabled: boolean) {
       if (timer) clearInterval(timer);
       subscription.remove();
     };
-  }, [enabled, path]);
+  }, [enabled, path, authGeneration]);
 }

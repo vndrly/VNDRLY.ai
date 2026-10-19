@@ -7,6 +7,7 @@ export const locationConsentsTable = pgTable(
     id: serial("id").primaryKey(),
     userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
     deviceId: text("device_id").notNull(),
+    originalDeviceId: text("original_device_id"),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull().defaultNow(),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
   },

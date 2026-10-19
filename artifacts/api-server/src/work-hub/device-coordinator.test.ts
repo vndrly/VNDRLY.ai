@@ -118,6 +118,26 @@ describe("Work Hub device coordinator", () => {
     expect(device.id).toBe(id);
   });
 
+  it("gives a shared installation a stable separate account registration without taking over its previous owner", async () => {
+    const old = await coordinator.registerDevice(vendorActor, { friendlyName: "Shared iPad", deviceClass: "tablet", capabilities: {} });
+    const input = { deviceId: old.id, separateAccount: true, friendlyName: "Shared iPad", deviceClass: "tablet", capabilities: {} };
+    const next = await coordinator.registerDevice(otherUserActor, input);
+    expect(next.id).not.toBe(old.id);
+    expect(next.userId).toBe(otherUserActor.userId);
+    expect((await coordinator.registerDevice(otherUserActor, input)).id).toBe(next.id);
+    expect((await coordinator.listDevices(vendorActor)).map(d => d.id)).toEqual([old.id]);
+    await expect(coordinator.heartbeatDevice(otherUserActor, old.id, { connectionId: "10000000-0000-4000-8000-000000000001", foreground: true, microphonePermission: "unknown" })).rejects.toMatchObject({ code: "work_hub.not_found" });
+    await coordinator.revokeDevice(otherUserActor, next.id);
+    await expect(coordinator.registerDevice(otherUserActor, input)).rejects.toMatchObject({ code: "work_hub.not_found" });
+  });
+
+  it("separates organizations without moving the previous organization's device when account isolation is requested", async () => {
+    const old = await coordinator.registerDevice(vendorActor, { friendlyName: "Shared phone", deviceClass: "phone", capabilities: {} });
+    const next = await coordinator.registerDevice(otherOrgActor, { deviceId: old.id, separateAccount: true, friendlyName: "Shared phone", deviceClass: "phone", capabilities: {} });
+    expect(next.id).not.toBe(old.id);
+    expect((await coordinator.listDevices(vendorActor))[0]?.id).toBe(old.id);
+  });
+
   it("returns only live, permitted microphone devices", async () => {
     const device = await coordinator.registerDevice(vendorActor, { friendlyName: "Phone", deviceClass: "phone", capabilities: { microphone: true } });
     await coordinator.heartbeatDevice(vendorActor, device.id, { connectionId: "10000000-0000-4000-8000-000000000001", foreground: true, microphonePermission: "granted", surface: null });

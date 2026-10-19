@@ -1,5 +1,8 @@
 process.env.VNDRLY_LOAD_ENV_LOCAL = "1";
 import "./load-env-local.mjs";
+import { applyLocalSessionSecret } from "./local-session-secret.mjs";
+// Keep the local production-build preview separate from live sessions.
+applyLocalSessionSecret();
 process.env.PORT ??= "4173";
 process.env.BASE_PATH ??= "/";
 process.env.VITE_API_PROXY_TARGET ??= "http://127.0.0.1:8080";

@@ -969,7 +969,7 @@ export const nativeOperationsService = {
       });
       return status(c, s);
     }),
-  device: (s: SessionPayload, deviceId: string) =>
+  device: (s: SessionPayload, deviceId: string, expectedDeviceId?: string) =>
     transaction(s, async (c) => {
       const o = owner(s);
       if (o.type !== "vendor")
@@ -982,6 +982,7 @@ export const nativeOperationsService = {
       if (!d.rows.length)
         throw new NativeOperationError("native.work_phone_required", 403);
       const value = await state(c, s.userId!, o.id);
+      if (expectedDeviceId !== undefined && value.designatedDeviceId !== expectedDeviceId) throw new NativeOperationError("native.work_phone_changed", 403);
       if (value.designatedDeviceId !== deviceId) {
         value.designatedDeviceId = deviceId;
         value.bindingVersion++;

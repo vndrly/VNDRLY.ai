@@ -1,5 +1,8 @@
 process.env.VNDRLY_LOAD_ENV_LOCAL = "1";
 import "./load-env-local.mjs";
+import { applyLocalSessionSecret } from "./local-session-secret.mjs";
+// This wrapper serves a built API locally; it is not the VPS startup command.
+applyLocalSessionSecret();
 process.env.PORT ??= "8080";
 process.env.BASE_PATH ??= "/";
 

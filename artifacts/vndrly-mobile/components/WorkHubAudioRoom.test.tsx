@@ -12,8 +12,10 @@ const env = vi.hoisted(() => ({
   peers: [] as any[], offer: vi.fn(), remote: vi.fn(), nativeFactory: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({ apiFetch: env.api }));
+vi.mock("@/lib/account-device-registration", () => ({ registerAccountWorkDevice: async () => "10000000-0000-4000-8000-000000000001" }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue", text: "black", destructive: "red" }) }));
 vi.mock("@/lib/auth", () => ({
+  captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true,
   getCachedToken: () => env.token, getToken: async () => env.token,
   subscribeToken: (fn: any) => { env.tokens.add(fn); return () => env.tokens.delete(fn); },
   subscribeUser: (fn: any) => { env.users.add(fn); return () => env.users.delete(fn); },

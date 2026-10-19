@@ -53,7 +53,11 @@ export async function updateNativeConsent(locationSharing: boolean, automaticArr
   return result;
 }
 export async function designateNativeWorkPhone() {
-  const result = await apiFetch(`${base}/device`, { method: "PUT", body: JSON.stringify({ deviceId: await getDeviceId() }) });
+  const scope = captureAuthScope();
+  const { registerAccountWorkDevice } = await import("./account-device-registration");
+  const deviceId = await registerAccountWorkDevice(scope);
+  if (!isAuthScopeCurrent(scope)) throw new Error("Account changed. Reopen device setup.");
+  const result = await apiFetch(`${base}/device`, { method: "PUT", body: JSON.stringify({ deviceId }) }, scope);
   await import("./push").then(module => module.rebindRegisteredPushToken()).catch(() => undefined);
   return result;
 }
