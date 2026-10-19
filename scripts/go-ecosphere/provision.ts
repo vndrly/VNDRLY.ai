@@ -321,8 +321,8 @@ async function main() {
   await insertMany("vendor_site_location_afes", Object.values(vendorIds).flatMap((v) => SITES.map((s) => ({ vendor_id: v, site_location_id: siteIds[s.key], afe: s.afe }))));
   const stations: Record<string, string> = {};
   for (const s of SITES.filter((x) => x.gated)) {
-    const row = await insertOne("gate_stations", { id: uuid(`station:${s.key}`), site_id: siteIds[s.key], name: "Main Gate", latitude: s.lat + 0.0011, longitude: s.lng - 0.0004, geofence_radius_m: 150, created_at: companySince }, "id");
-    stations[s.key] = row.id;
+    const autoStation = (await client.query("select id from gate_stations where site_id=$1 order by created_at limit 1", [siteIds[s.key]])).rows[0];
+    stations[s.key] = autoStation?.id ?? (await insertOne("gate_stations", { id: uuid(`station:${s.key}`), site_id: siteIds[s.key], name: "Main Gate", latitude: s.lat + 0.0011, longitude: s.lng - 0.0004, geofence_radius_m: 150, created_at: companySince }, "id")).id;
   }
   if (!(await client.query("select 1 from tax_rates where state='TX'")).rowCount) await insertOne("tax_rates", { state: "TX", state_name: "Texas", rate: "0.0625" });
   await insertMany("onboarding_progress", [
@@ -739,7 +739,7 @@ async function main() {
         if (!step(loadAt, () => { run.loads.push({ id: loadId, pickupStopId: pickupStop, deliveryStopId: null, commodity: assign.type === "vac" ? "Produced water" : assign.type === "crude" ? "Crude oil" : pick(["Pump jack motor", "500 bbl frac tank", "Pipe rack (40 joints)", "Generator 45 kVA"]), quantity: qty, unit: assign.type === "hotshot" ? "load" : "bbl", manifestReference: manifest, deliveryReference: null, recordedByUserId: driver.userId, recordedAt: loadAt.toISOString(), deliveredAt: null, source: "user_report" }); run.phase = "loading"; ev(run, "record_load", driver, loadAt); })) continue;
         const departP = addMin(loadAt, assign.type === "vac" ? int(18, 32) : assign.type === "crude" ? int(28, 45) : int(15, 30));
         if (!step(departP, () => { run.visited.push(pickupStop); run.currentStopId = null; run.phase = "traveling_to_next_stop"; run.departPickup = departP; ev(run, "depart_stop", driver, departP); })) continue;
-        const target = { lat: destination.latitude, lng: destination.longitude };
+        const target = { lat: destination.latitude!, lng: destination.longitude! };
         const leg2 = drive(o, target, departP);
         run.points.push(...leg2.points.filter((p) => past(p.t)));
         meter[assign.truck] += Math.round(leg1.miles + leg2.miles);
