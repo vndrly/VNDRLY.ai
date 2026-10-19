@@ -28,6 +28,7 @@ import { enforceCommentsRateLimit } from "../lib/comments-rate-limit";
 import { enforceParticipantsRateLimit } from "../lib/participants-rate-limit";
 import { sendApiError } from "../lib/apiError";
 import { withSerialInsertRetry } from "../lib/pg-sequence-resync";
+import { logger } from "../lib/logger";
 
 const EDIT_WINDOW_MS = 5 * 60 * 1000;
 
@@ -622,7 +623,10 @@ router.post("/hotlist/jobs/:id/comments", async (req: Request, res: Response): P
 
   res.status(201).json(row);
   } catch (err) {
-    req.log.error({ err, jobId: req.params.id }, "POST /hotlist/jobs/:id/comments failed");
+    (req.log ?? logger).error(
+      { err, jobId: req.params.id },
+      "POST /hotlist/jobs/:id/comments failed",
+    );
     sendApiError(res, 500, "comment.create_failed", "Failed to post comment");
   }
 });
