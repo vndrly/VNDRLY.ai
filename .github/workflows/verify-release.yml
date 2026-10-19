@@ -100,6 +100,8 @@ jobs:
           pnpm lint:i18n
 
       - name: Real Redis integration
+        env:
+          VITEST_MAX_WORKERS: '1'
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         shell: bash
         run: |
@@ -123,6 +125,10 @@ jobs:
 
       - name: Independent database-backed API gate
         id: api
+        # Vitest 4 applies this env override after --no-file-parallelism.
+        # Shared database DDL must never overlap another test file.
+        env:
+          VITEST_MAX_WORKERS: '1'
         if: >-
           ${{ !cancelled() &&
               steps.dependencies.outcome == 'success' &&
@@ -160,6 +166,8 @@ jobs:
 
       - name: Full required test chain
         id: full-chain
+        env:
+          VITEST_MAX_WORKERS: '1'
         if: >-
           ${{ !cancelled() &&
               steps.dependencies.outcome == 'success' &&

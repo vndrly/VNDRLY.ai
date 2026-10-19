@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import test from "node:test";
 
 const workflow = await readFile(
@@ -148,6 +151,27 @@ test("API starts after database prerequisites regardless of browser or static ou
     api,
     /^          pnpm run test:api 2>&1 \| tee "\$RUNNER_TEMP\/vndrly-api-tests\.log"$/m,
   );
+});
+
+test("API gates retain one worker when Vitest applies workflow environment after serial CLI options", () => {
+  const apiRequire = createRequire(new URL("../../artifacts/api-server/package.json", import.meta.url));
+  const vitestNode = pathToFileURL(apiRequire.resolve("vitest/node")).href;
+  const inheritedWorkers = workflow.slice(0, stepStarts[0]).match(/^      VITEST_MAX_WORKERS: '([^']+)'$/m)?.[1];
+  for (const name of ["Real Redis integration", "Independent database-backed API gate", "Full required test chain"]) {
+    const step = namedStep(name);
+    const workers = step.match(/^          VITEST_MAX_WORKERS: '([^']+)'$/m)?.[1] ?? inheritedWorkers;
+    const result = spawnSync(process.execPath, ["--input-type=module", "--eval", `
+      import { resolveConfig } from ${JSON.stringify(vitestNode)};
+      const { vitestConfig } = await resolveConfig({ config: false, fileParallelism: false, watch: false });
+      console.log(JSON.stringify({ maxWorkers: vitestConfig.maxWorkers }));
+    `], {
+      env: { ...process.env, VITEST_MAX_WORKERS: workers },
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), { maxWorkers: 1 }, `${name} must serialize files sharing the test database`);
+  }
 });
 
 test("release verification exercises the real Redis bucket store on loopback", () => {
