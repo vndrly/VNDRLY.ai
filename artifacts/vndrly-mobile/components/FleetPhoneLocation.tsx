@@ -23,7 +23,8 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
   const colors=useColors(),copy=useFleetCopy();
   const [message,setMessage]=useState("Checking run location");
   const [allowPause,setAllowPause]=useState(false),[paused,setPaused]=useState(false),[needsSetup,setNeedsSetup]=useState(false);
-  const [changing,setChanging]=useState(false);
+  const [changing,setChanging]=useState(false),[checking,setChecking]=useState(true);
+  const syncBusy=useRef(false),controlBusy=useRef(false);
   const sync=useRef<()=>Promise<void>>(async()=>{});
   const stop=useRef<()=>void>(()=>{});
   const pauseKey=`vndrly.fleet-location-pause.${account.userId}.${account.companyId}.${account.membershipId}.${account.sessionVersion}.${run.id}`;
@@ -57,13 +58,13 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
         post:async input=>apiFetch(`/api/fleet/runs/${run.id}/location`,{method:"POST",headers:{"x-vndrly-device-id":await getDeviceId()},body:JSON.stringify(input)}),
         operationId:Crypto.randomUUID,
         contextCurrent:()=>current()&&AppState.currentState==="active",
-        changed:value=>{if(current())setMessage(value.state==="sharing"?"Location sharing active":value.state==="checking"?"Checking run location":"Location sharing unavailable");},
+        changed:value=>{if(["stopped","consent_required","permission_required"].includes(value.state))foreground=false;if(current())setMessage(value.state==="sharing"?"Location sharing active":value.state==="checking"?"Checking run location":"Location sharing unavailable");},
       },run);
       foreground=true;collector.start();void collector.poll();
     }
     async function synchronize(){
-      if(syncing||!current()||AppState.currentState!=="active")return;
-      syncing=true;
+      if(syncing||controlBusy.current||!current()||AppState.currentState!=="active")return;
+      syncing=true;syncBusy.current=true;setChecking(true);
       try{
         if(!eligible){stopAll();if(current())setMessage("Run location sharing stopped");return;}
         // Busy forms do not interrupt an already running background collector.
@@ -96,7 +97,7 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
         }else{if(backgroundReady){backgroundReady=false;await stopFleetBackgroundLocation(false);if(!current())return;}startForeground();}
         if(foreground)void collector?.poll();
       }catch{if(current()){stopAll();setAllowPause(false);setMessage("Location sharing unavailable");}}
-      finally{syncing=false;}
+      finally{syncing=false;if(current()){syncBusy.current=false;setChecking(false);}}
     }
     sync.current=synchronize;
     const authChanged=()=>{authValid=false;stopAll();if(alive){setAllowPause(false);setMessage("Location sharing unavailable");}};
@@ -104,12 +105,12 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
     const app=AppState.addEventListener("change",state=>{if(state==="active")void synchronize();else stopForeground();});
     const interval=setInterval(()=>void synchronize(),60_000);
     void synchronize();
-    return()=>{alive=false;clearInterval(interval);subscription();user();token();app.remove();stopForeground();};
+    return()=>{alive=false;syncBusy.current=false;clearInterval(interval);subscription();user();token();app.remove();stopForeground();};
     // A run revision may change action availability; the equipment/account binding is what owns collection.
   },[account.userId,account.companyId,account.membershipId,account.sessionVersion,run.id,run.vehicleAssetId,run.trailerAssetId,eligible,disabled,pauseKey]);
   async function changeSharing(enabled:boolean){
-    if(changing||disabled)return;
-    setChanging(true);
+    if(controlBusy.current||syncBusy.current||disabled)return;
+    controlBusy.current=true;setChanging(true);
     const scope=captureAuthScope();
     try{
       const native=await readNativeOperations(scope);
@@ -118,9 +119,8 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
       await Storage.setItemAsync(pauseKey,enabled?"false":"true",{keychainAccessible:Storage.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY});
       if(!isAuthScopeCurrent(scope)||binding.current!==pauseKey)return;
       if(!enabled)stop.current();
-      await sync.current();
     }catch{setMessage("Location sharing unavailable");}
-    finally{setChanging(false);}
+    finally{controlBusy.current=false;setChanging(false);await sync.current();}
   }
   async function setupLocation(){
     const scope=captureAuthScope();
@@ -139,7 +139,7 @@ export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;
   if(!eligible)return null;
   return <View style={{gap:8}}>
     <Text accessibilityLiveRegion="polite" style={{color:colors.text}}>{copy(message)}</Text>
-    {eligible&&allowPause&&<OptionSwitch label={copy("Share location during this run")} value={!paused} disabled={disabled||changing} onChange={value=>{void changeSharing(value);}}/>}
+    {eligible&&allowPause&&<OptionSwitch label={copy("Share location during this run")} value={!paused} disabled={disabled||changing||checking} onChange={value=>{void changeSharing(value);}}/>}
     {eligible&&needsSetup&&<TogglePillButton disabled={disabled} onPress={()=>{void setupLocation();}}>{copy("Enable run location")}</TogglePillButton>}
   </View>;
 }

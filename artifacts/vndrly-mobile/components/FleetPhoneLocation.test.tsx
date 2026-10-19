@@ -42,7 +42,7 @@ it("shows one sharing slider only after admin permission, preserves pause across
  fireEvent.click(screen.getByRole("switch"));await waitFor(()=>expect(m.start).toHaveBeenCalledTimes(1));
 });
 it("ignores an old driver pause when admin no longer permits it",async()=>{
- m.read.mockResolvedValue({policy:{enabled:true,allowDriverLocationPause:true}});const mounted=render(view());fireEvent.click(await screen.findByRole("switch"));await screen.findByText("Location sharing paused");mounted.unmount();m.start.mockClear();
+ m.read.mockResolvedValue({policy:{enabled:true,allowDriverLocationPause:true}});const mounted=render(view());const toggle=await screen.findByRole("switch");await waitFor(()=>expect((toggle as HTMLButtonElement).disabled).toBe(false));fireEvent.click(toggle);await screen.findByText("Location sharing paused");mounted.unmount();m.start.mockClear();
  m.read.mockResolvedValue({policy:{enabled:true,allowDriverLocationPause:false}});render(view());await waitFor(()=>expect(m.start).toHaveBeenCalled());expect(screen.queryByRole("switch")).toBeNull();
 });
 it("does not collect without device consent and offers setup instead of a stop control",async()=>{
@@ -58,4 +58,16 @@ it("stops on completed/paused duty without discarding pending reports",async()=>
 });
 it("does not start when fresh company policy cannot be verified",async()=>{
  m.read.mockRejectedValue(new Error("offline"));render(view());await screen.findByText("Location sharing unavailable");expect(m.start).not.toHaveBeenCalled();expect(screen.queryByRole("switch")).toBeNull();
+});
+it("automatically retries foreground collection after a temporary duty refusal clears",async()=>{
+ m.backgroundGranted=false;let refused=true;
+ const normal=m.api.getMockImplementation()!;m.api.mockImplementation(async(path,options)=>{if(path.endsWith("overview")&&refused){refused=false;throw Object.assign(new Error("temporary refusal"),{status:403});}return normal(path,options);});
+ render(view());await screen.findByText("Location sharing unavailable");act(()=>m.app?.("active"));
+ await waitFor(()=>expect(m.api.mock.calls.some(([,o])=>Boolean(o))).toBe(true));
+});
+it("keeps pause changes disabled until an in-flight automatic start settles",async()=>{
+ let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
+ m.native.mockImplementation(async()=>{await gate;return true;});m.read.mockResolvedValue({policy:{enabled:true,allowDriverLocationPause:true}});
+ render(view());const slider=await screen.findByRole("switch");expect((slider as HTMLButtonElement).disabled).toBe(true);
+ await act(async()=>release());await waitFor(()=>expect((slider as HTMLButtonElement).disabled).toBe(false));fireEvent.click(slider);await screen.findByText("Location sharing paused");
 });
