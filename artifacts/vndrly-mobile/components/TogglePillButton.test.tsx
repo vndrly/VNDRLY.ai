@@ -15,7 +15,7 @@ describe("TogglePillButton accessibility", () => {
     render(<TogglePillButton>{1}{". "}{"pickup"}{" · "}{"TEST Yard Origin"}</TogglePillButton>);
     const button = screen.getByRole("button", {name:"1. pickup · TEST Yard Origin"});
     expect(button.getAttribute("aria-label")).toBe("1. pickup · TEST Yard Origin");
-    expect(screen.getByText("1. pickup · TEST Yard Origin").tagName).toBe("SPAN");
+    expect(getComputedStyle(screen.getByText("1. pickup · TEST Yard Origin")).fontWeight).toBe("600");
   });
   it("exposes its native button name and selected state", () => {
     render(
