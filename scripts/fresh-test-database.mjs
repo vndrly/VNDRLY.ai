@@ -56,6 +56,7 @@ export function assertFreshLocalTestDatabaseEnvironment(env) {
 }
 
 export function freshLocalChildEnvironment(env, target) {
+  const redisTestUrl = resolveLoopbackRedisTestUrl(env.REDIS_TEST_URL);
   const clean = Object.fromEntries(
     Object.entries(env).filter(
       ([key]) =>
@@ -81,7 +82,33 @@ export function freshLocalChildEnvironment(env, target) {
     // configuration loopback-only; real provider credentials remain stripped.
     AI_INTEGRATIONS_ANTHROPIC_BASE_URL: "http://127.0.0.1:9",
     AI_INTEGRATIONS_ANTHROPIC_API_KEY: "local-test-disabled",
+    ...(redisTestUrl ? { REDIS_TEST_URL: redisTestUrl } : {}),
   };
+}
+
+function resolveLoopbackRedisTestUrl(value) {
+  if (value === undefined || value === "") return undefined;
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("REDIS_TEST_URL must be a valid loopback Redis URL");
+  }
+  if (
+    url.protocol !== "redis:" ||
+    url.hostname !== "127.0.0.1" ||
+    !url.port ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash ||
+    !/^\/(?:[0-9]|1[0-5])$/u.test(url.pathname)
+  ) {
+    throw new Error(
+      "REDIS_TEST_URL must name credential-free redis://127.0.0.1:<port>/<0-15>",
+    );
+  }
+  return url.href;
 }
 
 function assertServerIdentity(result, database, port) {

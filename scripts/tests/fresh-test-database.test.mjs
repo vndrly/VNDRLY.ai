@@ -295,6 +295,35 @@ test("child environment discards inherited outbound credentials and PostgreSQL f
   assert.equal(child.SESSION_SECRET, "test-secret");
 });
 
+test("child environment preserves only an explicit credential-free loopback Redis test target", () => {
+  const target = resolveFreshLocalTestDatabaseTarget(environment);
+  const child = freshLocalChildEnvironment(
+    {
+      ...environment,
+      REDIS_TEST_URL: "redis://127.0.0.1:56379/15",
+    },
+    target,
+  );
+  assert.equal(child.REDIS_TEST_URL, "redis://127.0.0.1:56379/15");
+
+  for (const REDIS_TEST_URL of [
+    "redis://localhost:56379/15",
+    "redis://remote.example:56379/15",
+    "redis://user:secret@127.0.0.1:56379/15",
+    "redis://127.0.0.1:56379/15?redirect=remote",
+    "rediss://127.0.0.1:56379/15",
+  ]) {
+    assert.throws(
+      () =>
+        freshLocalChildEnvironment(
+          { ...environment, REDIS_TEST_URL },
+          target,
+        ),
+      /REDIS_TEST_URL/,
+    );
+  }
+});
+
 test("child imports of the env loader cannot reload machine secrets or database URLs", () => {
   const target = resolveFreshLocalTestDatabaseTarget(environment);
   const child = freshLocalChildEnvironment(process.env, target);

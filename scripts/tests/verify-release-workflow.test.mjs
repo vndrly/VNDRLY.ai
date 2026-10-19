@@ -154,6 +154,7 @@ test("release verification exercises the real Redis bucket store on loopback", (
   );
   assert.match(redis, /redis-server/);
   assert.match(redis, /REDIS_TEST_URL=redis:\/\/127\.0\.0\.1:56379\/15/);
+  assert.match(redis, /pnpm run test:api -- src\/lib\/bucket-store\.redis\.integration\.test\.ts/);
   assert.match(redis, /bucket-store\.redis\.integration\.test\.ts/);
   assert.doesNotMatch(redis, /secrets\.|continue-on-error|\|\|\s*true/);
 });
