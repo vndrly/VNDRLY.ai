@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { SESSION_SECRET } from "../lib/session";
 import { findVendorMatches, normalizeVendorName } from "../lib/vendor-match";
+import { updateVendorAddressAndCoverage } from "../services/marketplace/vendor-address";
 import {
   assertCanManageVendorPeople,
   isForemanActor,
@@ -408,11 +409,15 @@ router.patch("/vendors/:id", async (req, res): Promise<void> => {
   }
   let vendor;
   try {
-    [vendor] = await db
-      .update(vendorsTable)
-      .set(parsed.data)
-      .where(eq(vendorsTable.id, params.data.id))
-      .returning();
+    if (parsed.data.physicalAddress !== undefined) {
+      [vendor] = await updateVendorAddressAndCoverage(db, params.data.id, parsed.data);
+    } else {
+      [vendor] = await db
+        .update(vendorsTable)
+        .set(parsed.data)
+        .where(eq(vendorsTable.id, params.data.id))
+        .returning();
+    }
   } catch (err) {
     // Race-condition fallback: a concurrent insert/rename slipped past
     // the pre-check and the DB unique index

@@ -23,6 +23,7 @@ import {
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { addMembership } from "../lib/membership-sync";
 import { syncOnboardingStepSideEffects } from "../lib/onboarding-step-sync";
+import { updateVendorAddressAndCoverageInTransaction } from "../services/marketplace/vendor-address";
 import { addOnboardingCatalogSelections, onboardingCatalogSelection } from "../lib/onboarding-catalog";
 import {
   buildPlatformEulaAcceptancePatch,
@@ -1037,9 +1038,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     }
     try {
       await db.transaction(async (tx) => {
-        await tx
-          .update(vendorsTable)
-          .set({
+        await updateVendorAddressAndCoverageInTransaction(tx, orgId, {
             federalTaxId: trim(tax.federalTaxId),
             stateTaxId: trim(tax.stateTaxId),
             physicalAddress: trim(tax.physicalAddress),
@@ -1060,8 +1059,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
             // values untouched.
             ...brandingPatch,
             ...platformEulaPatch,
-          })
-          .where(eq(vendorsTable.id, orgId));
+          });
 
         await addOnboardingCatalogSelections(tx, orgId, catalogIds);
 

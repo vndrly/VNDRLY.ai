@@ -504,5 +504,13 @@ export async function runWriteTool(
       return closeTicketForReview(args, session);
     case "draft_safety_report":
       return draftSafetyReport(args);
+    // Marketplace execution is routed before this dispatcher and additionally
+    // requires a server-owned authorization flag. Never accept confirmed alone.
+    case "confirm_marketplace_capability":
+    case "confirm_marketplace_service_area":
+    case "confirm_marketplace_rate":
+    case "confirm_marketplace_job_offer":
+    case "confirm_marketplace_job_offer_action":
+      return confirmationErr("Use the server-authorized marketplace confirmation flow.");
   }
 }

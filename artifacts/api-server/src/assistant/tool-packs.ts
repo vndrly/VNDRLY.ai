@@ -5,6 +5,7 @@ import { ASSET_CAPABILITY_TOOLS } from "./capabilities/assets";
 import { TRIP_CAPABILITY_TOOLS } from "./capabilities/trips";
 import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
 import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
+import { MARKETPLACE_TOOLS, MARKETPLACE_READ_TOOL_NAMES } from "./marketplace-tool-catalog";
 import {
   ASK_V_TOOL_REGISTRY,
   normalizeAskVRole,
@@ -101,6 +102,7 @@ export const VOICE_WORKFLOWS = [
   "finance",
   "reports",
   "catalog",
+  "marketplace",
   "market",
 ] as const;
 export type VoiceWorkflow = (typeof VOICE_WORKFLOWS)[number];
@@ -152,12 +154,14 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
     "query_field_metrics",
   ]),
   catalog: new Set([
+    ...MARKETPLACE_READ_TOOL_NAMES,
     "query_hotlist_jobs",
     "query_hotlist_bids",
     "query_vendor_catalog",
     "query_partner_approvals",
   ]),
   market: new Set(["get_stock_quote", "get_crude_oil_price"]),
+  marketplace: new Set(MARKETPLACE_TOOLS.map(tool => tool.name)),
 };
 
 const ROLE_READ_TOOLS: Record<AskVRole, Set<string>> = {
@@ -189,6 +193,7 @@ export function voiceWorkflowForPath(path: string): VoiceWorkflow {
   if (/safety/i.test(path)) return "safety";
   if (/invoice|statement|bill|accounting/i.test(path)) return "finance";
   if (/report|analytics/i.test(path)) return "reports";
+  if (/service-marketplace|job-offers|vendor-capabilities/i.test(path)) return "marketplace";
   if (/hotlist|catalog/i.test(path)) return "catalog";
   if (/crew|site|field-employee/i.test(path)) return "operations";
   return "auto";
@@ -251,6 +256,7 @@ export function toolsForRealtime(args: {
         ? WORK_HUB_TOOL_FAMILIES
         : [workHubToolFamilyForPath(path)];
     if (/\/work-hub\/askv(?:[/?#]|$)/i.test(path)) {
+      for (const tool of MARKETPLACE_TOOLS) allowed.add(tool.name);
       for (const name of IMPLEMENTATION_A_TOOL_NAMES) allowed.add(name);
       for (const name of WORKFLOW_TOOLS.market) allowed.add(name);
     }

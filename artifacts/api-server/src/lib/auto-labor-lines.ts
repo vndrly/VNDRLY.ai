@@ -1,4 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
+import { loadTicketCommercialRate, requireAutomaticHourlyRate } from "./ticket-commercial-rate";
 import {
   db,
   ticketsTable,
@@ -62,7 +63,7 @@ export async function regenerateAutoLaborLines(ticketId: number, database?: Omit
   await database.execute(sql`SELECT id FROM tickets WHERE id=${ticketId} FOR UPDATE`);
   // Resolve OT thresholds from vendor config (same precedence as labor-summary).
   const [ticketRow] = await database
-    .select({ vendorId: ticketsTable.vendorId, closedAt: ticketsTable.closedAt })
+    .select({ id: ticketsTable.id, jobOfferId: ticketsTable.jobOfferId, vendorId: ticketsTable.vendorId, closedAt: ticketsTable.closedAt })
     .from(ticketsTable)
     .where(eq(ticketsTable.id, ticketId));
 
@@ -73,6 +74,7 @@ export async function regenerateAutoLaborLines(ticketId: number, database?: Omit
   if (ticketRow?.closedAt) {
     return 0;
   }
+  const commercial = ticketRow ? requireAutomaticHourlyRate(await loadTicketCommercialRate(ticketRow, database)) : null;
 
   let vendorDailyOt: number | null = null;
   let vendorWeeklyOt: number | null = null;
@@ -86,8 +88,9 @@ export async function regenerateAutoLaborLines(ticketId: number, database?: Omit
       vendorWeeklyOt = v.weeklyOt != null ? parseFloat(v.weeklyOt) : null;
     }
   }
-  const dailyOt = vendorDailyOt || DEFAULT_DAILY_OT_HOURS;
-  const weeklyOt = vendorWeeklyOt || DEFAULT_WEEKLY_OT_HOURS;
+  const dailyOt = commercial ? Number(commercial.dailyOtHours) : vendorDailyOt || DEFAULT_DAILY_OT_HOURS;
+  const weeklyOt = commercial ? Number(commercial.weeklyOtHours) : vendorWeeklyOt || DEFAULT_WEEKLY_OT_HOURS;
+  const overtimeMultiplier = commercial ? Number(commercial.overtimeMultiplier) : 1.5;
 
   const sessions = await database
     .select({
@@ -128,7 +131,7 @@ export async function regenerateAutoLaborLines(ticketId: number, database?: Omit
     const outAt = new Date(s.checkOutAt);
     if (outAt <= inAt) continue;
 
-    if (s.rateKind === "daily") {
+    if (!commercial && s.rateKind === "daily") {
       const dRate = parseFloat(s.dailyRate ?? "0");
       const key = `${s.employeeId}:${dRate.toFixed(2)}`;
       let g = dailyGroups.get(key);
@@ -145,7 +148,7 @@ export async function regenerateAutoLaborLines(ticketId: number, database?: Omit
       continue;
     }
 
-    const rate = parseFloat(s.hourlyRateAtTime ?? s.defaultRate ?? "0");
+    const rate = parseFloat(commercial?.unitPrice ?? s.hourlyRateAtTime ?? s.defaultRate ?? "0");
     const sessionHours = hoursBetween(inAt, outAt);
     if (sessionHours <= 0) continue;
 
@@ -200,11 +203,11 @@ export async function regenerateAutoLaborLines(ticketId: number, database?: Omit
       });
     }
     if (p.overtime > 0) {
-      const otRate = p.rate * 1.5;
+      const otRate = p.rate * overtimeMultiplier;
       rows.push({
         ticketId,
         type: "labor",
-        description: `[auto] Labor OT — ${p.name}${p.rate ? ` @ $${otRate.toFixed(2)}/hr (1.5x)` : ""}`,
+        description: `[auto] Labor OT — ${p.name}${p.rate ? ` @ $${otRate.toFixed(2)}/hr (${overtimeMultiplier}x)` : ""}`,
         quantity: String(Math.round(p.overtime * 100) / 100),
         unitPrice: String(Math.round(otRate * 100) / 100),
       });

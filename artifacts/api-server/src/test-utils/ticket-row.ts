@@ -42,6 +42,7 @@ const ROUTE_COMPUTED_FIELDS = [
   // Lives on the response, never on the SQL row, so it stays out of DEFAULTS.
   "viewerCanReverseDispersal",
   "phoneIntakeCallerName",
+  "marketplaceCommercialTerms",
 ] as const;
 type RouteComputedField = (typeof ROUTE_COMPUTED_FIELDS)[number];
 
@@ -54,6 +55,7 @@ const FIXED_NOW = new Date("2025-01-15T10:00:00.000Z");
 
 const DEFAULTS: TicketRow = {
   id: 42,
+  jobOfferId: null,
   siteLocationId: 1,
   vendorId: 11,
   fieldEmployeeId: null,

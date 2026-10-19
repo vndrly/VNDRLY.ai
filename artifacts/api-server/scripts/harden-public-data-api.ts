@@ -20,9 +20,12 @@ try {
       WHERE n.nspname='public' AND r.rolname='supabase_admin') AS managed_default_acl_entries`);
   await client.query("COMMIT");
   console.log(JSON.stringify({ ...rows[0], managedDefaultsProtectedBySchemaDenial: rows[0].restricted_roles > 0 }));
-} catch {
+} catch (error) {
   await client.query("ROLLBACK").catch(() => undefined);
-  console.error("Public Data API hardening failed; transaction rolled back. Review database permissions without logging credentials.");
+  const diagnostic = error instanceof Error
+    ? { name: error.name, message: error.message, code: (error as Error & { code?: string }).code ?? null }
+    : { name: "UnknownError", message: "Unknown database hardening failure", code: null };
+  console.error("Public Data API hardening failed; transaction rolled back.", JSON.stringify(diagnostic));
   process.exitCode = 1;
 } finally {
   await client.end();

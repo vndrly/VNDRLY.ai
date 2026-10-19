@@ -9,10 +9,18 @@ import type { TicketStatusType } from "./ticketStatusType";
 import type { TicketTypeEffectiveTaxTreatment } from "./ticketTypeEffectiveTaxTreatment";
 import type { TicketTypeIntakeChannel } from "./ticketTypeIntakeChannel";
 import type { TicketTypeLifecycleState } from "./ticketTypeLifecycleState";
+import type { TicketTypeMarketplaceCommercialTerms } from "./ticketTypeMarketplaceCommercialTerms";
 import type { TicketTypePaymentMethod } from "./ticketTypePaymentMethod";
 import type { TicketTypeWorkTypeTaxTreatment } from "./ticketTypeWorkTypeTaxTreatment";
 
 export interface TicketType {
+  /** @nullable */
+  jobOfferId?: number | null;
+  /**
+   * Immutable accepted terms and automaticBilling mode; populated on single-ticket GET only.
+   * @nullable
+   */
+  marketplaceCommercialTerms?: TicketTypeMarketplaceCommercialTerms;
   id: number;
   siteLocationId: number;
   vendorId: number;

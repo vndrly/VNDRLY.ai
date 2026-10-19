@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, and, isNull, inArray } from "drizzle-orm";
+import { eq, sql, and, or, isNull, inArray } from "drizzle-orm";
 import { db, siteLocationsTable, partnersTable, siteWorkAssignmentsTable, workTypesTable, vendorsTable, vendorWorkTypesTable, vendorPeopleTable, ticketsTable, ticketCrewTable, siteLocationAdminAuditLogTable } from "@workspace/db";
-import { approvedPartnersForVendor, vendorCanReadPartner, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
+import { approvedPartnersForVendor, vendorCanReadSite, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
+import { acceptedMarketplaceSites } from "../lib/accepted-marketplace-access";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { notifyUsers } from "./notifications";
@@ -98,7 +99,7 @@ async function verifySiteReadAccess(
   }
 
   if (session.role === "vendor" && session.vendorId != null) {
-    if (await vendorCanReadPartner(session.vendorId, sitePartnerId)) return true;
+    if (await vendorCanReadSite(session.vendorId, sitePartnerId, siteId)) return true;
   }
 
   if (session.role === "field_employee" && session.userId != null) {
@@ -169,7 +170,7 @@ router.get("/site-locations", async (req, res): Promise<void> => {
       .select(siteSelect)
       .from(siteLocationsTable)
       .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
-      .where(and(eq(siteLocationsTable.hidden, false), inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(vendorId!)), employeeId == null ? undefined : inArray(siteLocationsTable.id, sitesAssignedToEmployee(employeeId, vendorId!)), query.success && query.data.partnerId ? eq(siteLocationsTable.partnerId, query.data.partnerId) : undefined))
+      .where(and(eq(siteLocationsTable.hidden, false), or(inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(vendorId!)), inArray(siteLocationsTable.id, acceptedMarketplaceSites(vendorId!, { employeeId: employeeId ?? undefined }))), employeeId == null ? undefined : inArray(siteLocationsTable.id, sitesAssignedToEmployee(employeeId, vendorId!)), query.success && query.data.partnerId ? eq(siteLocationsTable.partnerId, query.data.partnerId) : undefined))
       .orderBy(siteLocationsTable.createdAt);
   } else if (sessionPartnerId) {
     results = await db
@@ -318,6 +319,12 @@ router.get("/site-locations/:id", async (req, res): Promise<void> => {
   }
   if (!(await verifySiteReadAccess(session, req, res, site.partnerId, site.id))) return;
 
+  let assignmentVendorId = session.role === "vendor" ? session.vendorId : null;
+  if (session.role === "field_employee") {
+    const [worker] = await db.select({ vendorId: vendorPeopleTable.vendorId }).from(vendorPeopleTable).where(and(eq(vendorPeopleTable.userId, session.userId!), eq(vendorPeopleTable.isActive, true), isNull(vendorPeopleTable.deletedAt)));
+    assignmentVendorId = worker?.vendorId ?? -1;
+  }
+
   // Task #583: workTypeId / vendorId on siteWorkAssignments are NOT NULL
   // FKs (a row can't exist without an existing work type and vendor), so
   // an INNER join is correct here — and matches the response schema,
@@ -340,7 +347,7 @@ router.get("/site-locations/:id", async (req, res): Promise<void> => {
     .from(siteWorkAssignmentsTable)
     .innerJoin(workTypesTable, eq(siteWorkAssignmentsTable.workTypeId, workTypesTable.id))
     .innerJoin(vendorsTable, eq(siteWorkAssignmentsTable.vendorId, vendorsTable.id))
-    .where(eq(siteWorkAssignmentsTable.siteLocationId, params.data.id));
+    .where(and(eq(siteWorkAssignmentsTable.siteLocationId, params.data.id), assignmentVendorId == null ? undefined : eq(siteWorkAssignmentsTable.vendorId, assignmentVendorId)));
 
   sendResponse(res, GetSiteLocationResponse, { ...site, assignments });
 });

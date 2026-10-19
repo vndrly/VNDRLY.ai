@@ -140,6 +140,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:vendor-note-ownership
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:visit-entry-category
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PARTNER_OWNED_CATALOGS=1 pnpm --filter @workspace/api-server run migrate:partner-owned-catalogs
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_SEMANTIC_SERVICE_MARKETPLACE=1 pnpm --filter @workspace/api-server run migrate:semantic-service-marketplace
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-flags
@@ -216,3 +217,45 @@ jobs:
 
       - name: Verify API health
         run: curl --fail --silent --show-error --retry 8 --retry-delay 3 https://vndrly.ai/api/healthz
+
+      # One-shot, additive synthetic companies (GasGo/FieldGo/FleetGo/GateGo).
+      # The provisioner refuses to run twice, so later deploys are a no-op.
+      # Generated logins stay on the VPS in /var/www/vndrly/.local (mode 600).
+      - name: Provision Go ecosphere companies (one-shot) and observe
+        shell: bash
+        env:
+          SSHPASS: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          set -euo pipefail
+          sshpass -e ssh \
+            -p "$VPS_PORT" \
+            -o ConnectTimeout=20 \
+            -o PreferredAuthentications=password \
+            -o PubkeyAuthentication=no \
+            -o StrictHostKeyChecking=accept-new \
+            "$VPS_USER@$VPS_HOST" \
+            "bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd /var/www/vndrly
+          database_url="$(sudo sed -n 's/^DATABASE_URL=//p' .env.production | head -n 1)"
+          [ -n "$database_url" ] || { echo "DATABASE_URL missing from .env.production" >&2; exit 1; }
+          sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" GO_DEMO_ALLOW_PRODUCTION=bihjmgbdzbhcnsuhzzwo \
+            pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/provision.ts --apply
+          # Approved 2026-10-19: remove the empty trigger-created duplicates at the
+          # three gated Go sites. Cutoff-bound and reference-checked; a no-op after.
+          sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
+            pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/remove-duplicate-stations.ts --apply
+          # Preserve referenced history while ensuring each synthetic gated site
+          # exposes only one active operational station.
+          sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
+            pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/retire-duplicate-stations.ts --apply
+          observe_rc=0
+          sudo -u vndrly env HOME=/home/vndrly GO_DEMO_DATABASE_URL="$database_url" \
+            pnpm --silent --filter @workspace/scripts exec tsx go-ecosphere/observe.ts > /tmp/go-observe.json || observe_rc=$?
+          unset database_url
+          node -e 'const d=require("/tmp/go-observe.json"); console.log(JSON.stringify({footprint:d.footprint,fleet:d.fleet,gate:d.gate,checks:d.checks},null,1))' || true
+          rm -f /tmp/go-observe.json
+          if [ "$observe_rc" -ne 0 ]; then
+            echo "::warning title=Go ecosphere observer::Consistency violations in synthetic Go data (see checks above); the API deploy itself succeeded"
+          fi
+          REMOTE

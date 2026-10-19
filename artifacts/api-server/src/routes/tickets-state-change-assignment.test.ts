@@ -212,6 +212,12 @@ afterEach(() => {
 // All asserts stop at the assignment guard's response, so we don't need
 // to seed anything past step 5.
 describe("POST /tickets/:id/check-in — Task #572 assignment guard", () => {
+  it("allows an assigned worker on the exact accepted marketplace ticket without a blanket site assignment", async () => {
+    selectQueue = [ownershipRow, vendorPersonRow, { ...ticketAssignmentRow, jobOfferId: 72 }, null, { siteLocationId: SITE_ID }];
+    const r = await request(app).post(`/api/tickets/${TICKET_ID}/check-in`).set("Cookie", fieldCookie).send({});
+    expect(r.status).toBe(400);
+    expect(r.body.code).toBe("ticket.invalid_check_in_body");
+  });
   it("emits site_vendor_mismatch when vendor lost their site assignment", async () => {
     selectQueue = [
       ownershipRow,            // (1) ensureFieldOwnership

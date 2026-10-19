@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import test from "node:test";
 
 const workflow = await readFile(
   new URL("../../.github/workflows/verify-release.yml", import.meta.url),
   "utf8",
 );
+
+test("the exhaustive release job allows 150 minutes for serialized API passes and browser gates", () => {
+  assert.match(workflow, /^    timeout-minutes: 150$/m);
+});
 
 const stepStarts = [...workflow.matchAll(/^      - /gm)].map(({ index }) => index);
 const steps = stepStarts.map((start, index) =>
@@ -146,6 +153,40 @@ test("API starts after database prerequisites regardless of browser or static ou
   );
 });
 
+test("API gates retain one worker when Vitest applies workflow environment after serial CLI options", () => {
+  const apiRequire = createRequire(new URL("../../artifacts/api-server/package.json", import.meta.url));
+  const vitestNode = pathToFileURL(apiRequire.resolve("vitest/node")).href;
+  const inheritedWorkers = workflow.slice(0, stepStarts[0]).match(/^      VITEST_MAX_WORKERS: '([^']+)'$/m)?.[1];
+  for (const name of ["Real Redis integration", "Independent database-backed API gate", "Full required test chain"]) {
+    const step = namedStep(name);
+    const workers = step.match(/^          VITEST_MAX_WORKERS: '([^']+)'$/m)?.[1] ?? inheritedWorkers;
+    const result = spawnSync(process.execPath, ["--input-type=module", "--eval", `
+      import { resolveConfig } from ${JSON.stringify(vitestNode)};
+      const { vitestConfig } = await resolveConfig({ config: false, fileParallelism: false, watch: false });
+      console.log(JSON.stringify({ maxWorkers: vitestConfig.maxWorkers }));
+    `], {
+      env: { ...process.env, VITEST_MAX_WORKERS: workers },
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), { maxWorkers: 1 }, `${name} must serialize files sharing the test database`);
+  }
+});
+
+test("release verification exercises the real Redis bucket store on loopback", () => {
+  const redis = namedStep("Real Redis integration");
+  assertCondition(
+    redis,
+    "${{ !cancelled() && steps.dependencies.outcome == 'success' }}",
+  );
+  assert.match(redis, /redis-server/);
+  assert.match(redis, /REDIS_TEST_URL=redis:\/\/127\.0\.0\.1:56379\/15/);
+  assert.match(redis, /pnpm run test:api -- src\/lib\/bucket-store\.redis\.integration\.test\.ts/);
+  assert.match(redis, /bucket-store\.redis\.integration\.test\.ts/);
+  assert.doesNotMatch(redis, /secrets\.|continue-on-error|\|\|\s*true/);
+});
+
 test("migration evidence upgrades the pinned previous schema before replaying the real commands", () => {
   const migration = namedStep("Rehearse first application and replay of guarded Work Hub migrations");
   assertCondition(migration, "${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.postgres.outcome == 'success' && steps.db-safety.outcome == 'success' }}");
@@ -178,6 +219,26 @@ test("browser diagnosis is cancellation-safe and responds only to a failed full 
   assert.match(
     diagnostic,
     /^          pnpm run test:e2e 2>&1 \| tee "\$RUNNER_TEMP\/vndrly-browser-tests\.log"$/m,
+  );
+});
+
+test("production Fleet offline acceptance runs after the ordinary full chain on a fresh isolated target", () => {
+  const productionOffline = namedStep("Production Fleet offline browser gate");
+  assertCondition(
+    productionOffline,
+    "${{ !cancelled() && steps.full-chain.outcome == 'success' }}",
+  );
+  assert.match(productionOffline, /^          E2E_PRODUCTION_PREVIEW: '1'$/m);
+  assert.match(productionOffline, /^          FLEET_COMMERCIAL_WORK_V2: '1'$/m);
+  assert.match(
+    productionOffline,
+    /^          pnpm run test:e2e fleet-production-offline\.spec\.ts 2>&1 \| tee "\$RUNNER_TEMP\/vndrly-production-offline-browser-tests\.log"$/m,
+  );
+
+  const evidence = namedStep("Retain verification evidence");
+  assert.match(
+    evidence,
+    /^            \$\{\{ runner\.temp \}\}\/vndrly-production-offline-browser-tests\.log$/m,
   );
 });
 

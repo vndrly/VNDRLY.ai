@@ -93,6 +93,7 @@ const AdminRateLimits = lazy(() => import("@/pages/admin-rate-limits"));
 const AdminRemovedComments = lazy(() => import("@/pages/admin-removed-comments"));
 const AdminAskVAudit = lazy(() => import("@/pages/admin-askv-audit"));
 const AdminCommunicationsHealth = lazy(() => import("@/pages/admin-communications-health"));
+const AdminServiceMappings = lazy(() => import("@/pages/admin-service-mappings"));
 const AssistantLauncher = lazy(() =>
   import("@/components/assistant-panel").then((mod) => ({
     default: mod.AssistantLauncher,
@@ -210,6 +211,7 @@ function AdminRoutes() {
         <Route path="/admin/removed-comments" component={AdminRemovedComments} />
         <Route path="/admin/askv-audit" component={AdminAskVAudit} />
         <Route path="/admin/communications-health" component={AdminCommunicationsHealth} />
+        <Route path="/admin/service-mappings" component={AdminServiceMappings} />
         <Route path="/admin/1099-transmitter" component={TAX_REPORTING_ENABLED ? Admin1099Transmitter : NotFound} />
         <Route component={NotFound} />
         </Switch>

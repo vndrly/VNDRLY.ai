@@ -5,15 +5,23 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { ListTicketsStatus } from './listTicketsStatus';
+import type { ListTicketsSortBy } from "./listTicketsSortBy";
+import type { ListTicketsSortDir } from "./listTicketsSortDir";
+import type { ListTicketsStatus } from "./listTicketsStatus";
 
 export type ListTicketsParams = {
-status?: ListTicketsStatus;
-siteLocationId?: number;
-vendorId?: number;
-partnerId?: number;
-/**
- * When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).
- */
-awaitingPayment?: boolean;
+  status?: ListTicketsStatus;
+  siteLocationId?: number;
+  vendorId?: number;
+  partnerId?: number;
+  /**
+   * When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).
+   */
+  awaitingPayment?: boolean;
+  limit?: number;
+  offset?: number;
+  search?: string;
+  lifecycleState?: string;
+  sortBy?: ListTicketsSortBy;
+  sortDir?: ListTicketsSortDir;
 };

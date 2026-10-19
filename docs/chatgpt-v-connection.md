@@ -42,6 +42,25 @@ Action claims commit before domain execution. Completed results are stored befor
 
 ## Deployment and verification
 
+### Service Marketplace tools
+
+The same installed VNDRLY connection now supports `marketplace:read` and separately consented `marketplace:write`. Existing grants keep their original scopes. Refresh the existing connection's tools and request additional consent for these scopes; do not replace linked accounts, revoke unrelated grants, or create a second catalog entry. The MCP resource URL and workspace resource URI are unchanged.
+
+Reads include `search_marketplace_services`, `query_marketplace_demand`, `query_marketplace_capabilities`, `compare_marketplace_vendors`, `explain_marketplace_match`, `query_marketplace_job_offers`, and `prepare_marketplace_capability`. Vendor demand comes from all matching partner catalogs through the approved public projection: state-level coverage, approximate counts and only the caller's own offers/eligibility. Comparisons require authorized partner work-type/site IDs. Search uses saved mappings; its optional wording filter applies within the returned page. Capability preview is provisional and saves nothing. Mapping explanations come from stored records. Field employees cannot use office marketplace tools.
+
+Writes include `confirm_marketplace_capability`, `confirm_marketplace_service_area`, `confirm_marketplace_rate`, `confirm_marketplace_job_offer`, and `confirm_marketplace_job_offer_action`. The last supports partner send/withdraw and vendor review/accept/decline, with the exact saved offer version. Each tool prepares the existing secure approval flow. The server supplies authorization and replay identity; coordinates, confidence and compliance assertions from the model are discarded. The canonical marketplace API performs authorization and shared domain-service execution; no assistant SQL or eligibility implementation is added. Each completed write reads the canonical resource. Acceptance verifies the saved `createdTicketId` against the acceptance result and returns `ticketId`. Failed/lost readback is an uncertain outcome, never a success claim or automatic fresh write.
+
+`v_show_workspace` accepts `view: "marketplace"` in the existing work desk. Vendors see matching demand; partners supply `workTypeId` and `siteId` for comparisons. Administrators also select the company. This read-only view shares the connection's role and scope checks. AskV's `marketplace` tool pack exposes the same actions on web/native; the existing `catalog` pack stays read-only.
+
+Release verification (not performed by local implementation tests):
+
+1. Update the existing installed VNDRLY package/catalog entry and refresh definitions after API deployment. Preserve its identity, linked account and existing grants; consent separately to new marketplace scopes.
+2. With an authorized vendor, call `query_marketplace_demand` and inspect two matching partner projections. Confirm there are no competitors, other vendors' rates, exact site coordinates, budgets or private partner notes. With an authorized partner, compare only its saved work type and site. Verify field-employee denial and no write access from a read-only grant.
+3. Prepare one explicitly authorized synthetic capability or inert draft using the exact harmless values agreed for the release test. Confirm that preparation reports pending without claiming persistence. Approve on VNDRLY; use `v_action_status` and the matching read tool to verify the canonical ID and saved values. Retry the same prepared action and verify one result. Do not send or accept an operational offer as the harmless test.
+4. Record installed package version, real scoped-read evidence, synthetic action/reference/readback and cleanup disposition. Track installed, submitted, approved and publicly available statuses separately; pending OpenAI review is not public availability.
+
+Focused local checks: `pnpm --filter @workspace/api-spec run codegen`, API marketplace/connection/confirmation tests, and `pnpm --filter @workspace/api-server exec vitest run --config vitest.eval.config.ts src/assistant/__evals__/marketplace-tool-use.eval.ts`. The marketplace tool-use eval is deterministic and makes no live model, account or database calls. The repository has no root `generate` script.
+
 `migrate:assistant-connection` only runs `ALTER TABLE users ADD COLUMN IF NOT EXISTS assistant_oauth_grants jsonb`. It performs no reset, seed, delete or credential rotation. API deployment applies it before restarting and provisions only the two exact standard OAuth discovery proxy locations, preserving the existing Nginx site and retaining a backup. The proxy config is validated before reload.
 
 `ASSISTANT_CONNECTION_ENABLED=1` enables the routes. API deployment sets it only if absent; an explicit existing opt-out is preserved. Disabled routes return 503. Scoped bearer tokens never enter the general staff-cookie shim.

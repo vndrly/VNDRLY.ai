@@ -5,6 +5,1061 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+export interface MarketplaceJobOfferDraft {
+  /** @minimum 1 */
+  partnerId: number;
+  /** @minimum 1 */
+  workTypeId: number;
+  /** @minimum 1 */
+  vendorId: number;
+  /** @minimum 1 */
+  vendorCapabilityId: number;
+  /** @minimum 1 */
+  vendorPartnerServiceOfferId: number;
+  /** @minimum 1 */
+  siteLocationId: number;
+  /**
+   * @minLength 1
+   * @maxLength 10000
+   */
+  scope: string;
+  requestedStartAt: string;
+  requestedEndAt: string;
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  crewCount: number;
+  /** @maxLength 200 */
+  afeCode?: string;
+  /** @maxLength 200 */
+  poNumber?: string;
+  /** @maxItems 20 */
+  attachmentUrls: string[];
+  expiresAt: string;
+}
+
+export interface MarketplaceJobOfferVersion {
+  /** @minimum 1 */
+  version: number;
+}
+
+export type MarketplaceJobOfferAcceptanceAutomaticBilling =
+  (typeof MarketplaceJobOfferAcceptanceAutomaticBilling)[keyof typeof MarketplaceJobOfferAcceptanceAutomaticBilling];
+
+export const MarketplaceJobOfferAcceptanceAutomaticBilling = {
+  hourly_usd: "hourly_usd",
+  manual_billing_required: "manual_billing_required",
+} as const;
+
+export interface MarketplaceJobOfferAcceptance {
+  offerId: number;
+  ticketId: number;
+  replayed: boolean;
+  automaticBilling?: MarketplaceJobOfferAcceptanceAutomaticBilling;
+}
+
+export type MarketplaceJobOfferStatus =
+  (typeof MarketplaceJobOfferStatus)[keyof typeof MarketplaceJobOfferStatus];
+
+export const MarketplaceJobOfferStatus = {
+  draft: "draft",
+  offered: "offered",
+  vendor_reviewing: "vendor_reviewing",
+  accepted: "accepted",
+  declined: "declined",
+  expired: "expired",
+  withdrawn: "withdrawn",
+} as const;
+
+export type MarketplaceJobOfferCommercialSnapshot = { [key: string]: unknown };
+
+export interface MarketplaceJobOffer {
+  id: number;
+  partnerId: number;
+  vendorId: number;
+  workTypeId: number;
+  vendorCapabilityId: number;
+  vendorPartnerServiceOfferId: number;
+  siteLocationId: number;
+  canonicalServiceId: number;
+  scope: string;
+  crewCount: number;
+  status: MarketplaceJobOfferStatus;
+  version: number;
+  commercialSnapshot: MarketplaceJobOfferCommercialSnapshot;
+  scheduledStartAt?: string | null;
+  scheduledEndAt?: string | null;
+  expiresAt?: string | null;
+  afeReference?: string | null;
+  poReference?: string | null;
+  attachments?: string[] | null;
+  createdTicketId?: number | null;
+}
+
+export interface MarketplaceJobOfferList {
+  items: MarketplaceJobOffer[];
+}
+
+export type MarketplaceRankingFactorName =
+  (typeof MarketplaceRankingFactorName)[keyof typeof MarketplaceRankingFactorName];
+
+export const MarketplaceRankingFactorName = {
+  price: "price",
+  rating: "rating",
+  safety: "safety",
+  history: "history",
+  onTime: "onTime",
+  distance: "distance",
+  availability: "availability",
+  priorExperience: "priorExperience",
+} as const;
+
+export type MarketplaceRankingFactorStatus =
+  (typeof MarketplaceRankingFactorStatus)[keyof typeof MarketplaceRankingFactorStatus];
+
+export const MarketplaceRankingFactorStatus = {
+  available: "available",
+  not_yet_rated: "not_yet_rated",
+  not_comparable: "not_comparable",
+} as const;
+
+export interface MarketplaceRankingFactor {
+  name: MarketplaceRankingFactorName;
+  /**
+   * @minimum 0
+   * @maximum 1
+   * @nullable
+   */
+  normalized: number | null;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  weight: number;
+  status: MarketplaceRankingFactorStatus;
+  explanation: string;
+}
+
+export type MarketplaceRankedVendorOffer = {
+  /** @minimum 1 */
+  id: number;
+  /** @minimum 0 */
+  unitPrice: number;
+  unit: string;
+  currency: string;
+  /** @minimum 0 */
+  capacity: number;
+  available: boolean;
+  /** @nullable */
+  commercialConditions: string | null;
+};
+
+/**
+ * @nullable
+ */
+export type MarketplaceRankedVendorSafety = {
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  score: number;
+  source: string;
+  refreshedAt: string;
+} | null;
+
+export type MarketplaceRankedVendorEligibilityFacts = {
+  /**
+   * @minimum 0
+   * @nullable
+   */
+  distanceMiles: number | null;
+  /**
+   * @minimum 0
+   * @nullable
+   */
+  radiusMiles: number | null;
+  /** @minimum 0 */
+  availableCapacity: number;
+  /** @minimum 1 */
+  requiredCapacity: number;
+  missingCredentials: string[];
+};
+
+export type MarketplaceRankedVendorEligibility = {
+  eligible: boolean;
+  reasonCodes: string[];
+  facts: MarketplaceRankedVendorEligibilityFacts;
+};
+
+export type MarketplaceRankedVendorRatingStatus =
+  (typeof MarketplaceRankedVendorRatingStatus)[keyof typeof MarketplaceRankedVendorRatingStatus];
+
+export const MarketplaceRankedVendorRatingStatus = {
+  rated: "rated",
+  not_yet_rated: "not_yet_rated",
+} as const;
+
+export type MarketplaceRankedVendorSafetyStatus =
+  (typeof MarketplaceRankedVendorSafetyStatus)[keyof typeof MarketplaceRankedVendorSafetyStatus];
+
+export const MarketplaceRankedVendorSafetyStatus = {
+  rated: "rated",
+  not_yet_rated: "not_yet_rated",
+} as const;
+
+export interface MarketplaceRankedVendor {
+  /** @minimum 1 */
+  vendorId: number;
+  vendorName: string;
+  /** @minimum 1 */
+  capabilityId: number;
+  capabilityName: string;
+  /** @minimum 1 */
+  canonicalServiceId: number;
+  matchExplanation: string;
+  offer: MarketplaceRankedVendorOffer;
+  /**
+   * @minimum 1
+   * @maximum 5
+   * @nullable
+   */
+  rating: number | null;
+  /** @minimum 0 */
+  reviewCount: number;
+  /** @nullable */
+  safety: MarketplaceRankedVendorSafety;
+  /** @minimum 0 */
+  completedJobs: number;
+  /**
+   * @minimum 0
+   * @maximum 1
+   * @nullable
+   */
+  onTimeRate: number | null;
+  /** @minimum 0 */
+  priorPartnerJobs: number;
+  complianceCurrent: boolean;
+  /** @nullable */
+  relationshipStatus: string | null;
+  eligibility: MarketplaceRankedVendorEligibility;
+  offerable: boolean;
+  ratingStatus: MarketplaceRankedVendorRatingStatus;
+  safetyStatus: MarketplaceRankedVendorSafetyStatus;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  weightedScore: number;
+  factors: MarketplaceRankingFactor[];
+}
+
+export type MarketplaceCapabilityPatchDefaultRateCard = {
+  /**
+   * @minimum 0
+   * @maximum 9999999999.99
+   */
+  unitPrice: number;
+  /**
+   * @minLength 1
+   * @maxLength 50
+   */
+  unit: string;
+  /** @pattern ^[A-Z]{3}$ */
+  currency?: string;
+} | null;
+
+export type MarketplaceCapabilityPatchQualifications = {
+  [key: string]: unknown;
+} | null;
+
+export type MarketplaceCapabilityPatchEvidence = {
+  [key: string]: unknown;
+} | null;
+
+export interface MarketplaceCapabilityPatch {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name?: string;
+  /** @maxLength 2000 */
+  description?: string | null;
+  /** @maxLength 50 */
+  defaultUnit?: string | null;
+  defaultRateCard?: MarketplaceCapabilityPatchDefaultRateCard;
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  capacity?: number;
+  qualifications?: MarketplaceCapabilityPatchQualifications;
+  evidence?: MarketplaceCapabilityPatchEvidence;
+  active?: boolean;
+}
+
+export type MarketplaceCapabilityInput = MarketplaceCapabilityPatch & {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name: string;
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  capacity?: number;
+  active?: boolean;
+};
+
+export type MarketplaceCapabilityMappingStatus =
+  (typeof MarketplaceCapabilityMappingStatus)[keyof typeof MarketplaceCapabilityMappingStatus];
+
+export const MarketplaceCapabilityMappingStatus = {
+  active: "active",
+  review_required: "review_required",
+  rejected: "rejected",
+  superseded: "superseded",
+} as const;
+
+export type MarketplaceCapabilityMapping = {
+  canonicalServiceId: number | null;
+  canonicalServiceName: string | null;
+  status: MarketplaceCapabilityMappingStatus;
+  explanation: string;
+  confidence: number;
+} | null;
+
+export type MarketplaceCapability = MarketplaceCapabilityPatch & {
+  id: number;
+  vendorId: number;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name: string;
+  /** @minimum 1 */
+  capacity: number;
+  active: boolean;
+  createdById?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  mapping?: MarketplaceCapabilityMapping;
+};
+
+export interface MarketplaceServiceArea {
+  id: number;
+  vendorId: number;
+  vendorCapabilityId: number | null;
+  address: string;
+  latitude: number;
+  longitude: number;
+  /** Decimal miles as persisted by Postgres */
+  radiusMiles: string;
+  coordinateProvenance: string;
+  verifiedAt: string;
+  active: boolean;
+  effectiveFrom: string;
+  effectiveUntil: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MarketplacePartnerRateInputRateComponents = {
+  [key: string]: unknown;
+} | null;
+
+export type MarketplacePartnerRateInputAvailability = {
+  available: boolean;
+} | null;
+
+export interface MarketplacePartnerRateInput {
+  /** @minimum 1 */
+  vendorCapabilityId: number;
+  /** @minimum 1 */
+  workTypeId: number;
+  /**
+   * @minimum 0
+   * @maximum 9999999999.99
+   */
+  unitPrice: number;
+  /**
+   * @minLength 1
+   * @maxLength 50
+   */
+  unit: string;
+  /** @pattern ^[A-Z]{3}$ */
+  currency?: string;
+  rateComponents?: MarketplacePartnerRateInputRateComponents;
+  /** @maxLength 2000 */
+  notes?: string | null;
+  /** @maxLength 2000 */
+  commercialConditions?: string | null;
+  availability?: MarketplacePartnerRateInputAvailability;
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  capacity?: number;
+  active?: boolean;
+}
+
+export type MarketplacePartnerRateRateComponents = {
+  [key: string]: unknown;
+} | null;
+
+export type MarketplacePartnerRateAvailability = {
+  [key: string]: unknown;
+} | null;
+
+export interface MarketplacePartnerRate {
+  id: number;
+  vendorCapabilityId: number;
+  partnerId: number;
+  workTypeId: number;
+  sourceVendorWorkTypeId?: number | null;
+  /** Decimal currency value as persisted by Postgres */
+  unitPrice: string;
+  unit: string;
+  currency: string;
+  rateComponents?: MarketplacePartnerRateRateComponents;
+  notes?: string | null;
+  commercialConditions?: string | null;
+  availability?: MarketplacePartnerRateAvailability;
+  capacity: number;
+  active: boolean;
+  version: number;
+  effectiveFrom: string;
+  effectiveUntil: string | null;
+  createdById?: number | null;
+  updatedById?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MarketplaceEligibilityReasonCodesItem =
+  (typeof MarketplaceEligibilityReasonCodesItem)[keyof typeof MarketplaceEligibilityReasonCodesItem];
+
+export const MarketplaceEligibilityReasonCodesItem = {
+  UNAUTHORIZED: "UNAUTHORIZED",
+  COMPANY_INACTIVE: "COMPANY_INACTIVE",
+  CAPABILITY_INACTIVE: "CAPABILITY_INACTIVE",
+  SERVICE_MATCH_INACTIVE: "SERVICE_MATCH_INACTIVE",
+  OFFER_INACTIVE: "OFFER_INACTIVE",
+  SERVICE_AREA_MISSING: "SERVICE_AREA_MISSING",
+  SERVICE_AREA_AMBIGUOUS: "SERVICE_AREA_AMBIGUOUS",
+  SERVICE_AREA_INVALID: "SERVICE_AREA_INVALID",
+  SITE_COORDINATES_INVALID: "SITE_COORDINATES_INVALID",
+  OUT_OF_SERVICE_AREA: "OUT_OF_SERVICE_AREA",
+  COMPLIANCE_STALE: "COMPLIANCE_STALE",
+  CREDENTIAL_MISSING: "CREDENTIAL_MISSING",
+  INSUFFICIENT_CAPACITY: "INSUFFICIENT_CAPACITY",
+  UNAVAILABLE: "UNAVAILABLE",
+  RELATIONSHIP_REQUIRED: "RELATIONSHIP_REQUIRED",
+  RELATIONSHIP_RESTRICTED: "RELATIONSHIP_RESTRICTED",
+} as const;
+
+export type MarketplaceEligibilityFacts = {
+  /** Vendor discovery rounds upward to a 10-mile bucket; partner evaluation retains exact measured miles */
+  distanceMiles: number | null;
+  radiusMiles: number | null;
+  availableCapacity: number;
+  requiredCapacity: number;
+  missingCredentials: string[];
+};
+
+export interface MarketplaceEligibility {
+  eligible: boolean;
+  reasonCodes: MarketplaceEligibilityReasonCodesItem[];
+  facts: MarketplaceEligibilityFacts;
+}
+
+export type MarketplaceDemandLocationPrecision =
+  (typeof MarketplaceDemandLocationPrecision)[keyof typeof MarketplaceDemandLocationPrecision];
+
+export const MarketplaceDemandLocationPrecision = {
+  state: "state",
+} as const;
+
+export type MarketplaceDemandLocationsItem = {
+  state: string | null;
+  /** Site count rounded upward to a multiple of ten */
+  approximateSiteCount: number;
+};
+
+export interface MarketplaceDemand {
+  partnerId: number;
+  partnerName: string;
+  workTypeId: number;
+  name: string;
+  category: string;
+  description: string | null;
+  requiredCertifications: string[];
+  locationPrecision: MarketplaceDemandLocationPrecision;
+  locations: MarketplaceDemandLocationsItem[];
+  /** Matching active site count rounded upward to a multiple of ten */
+  approximateDemand: number;
+  capabilityId: number;
+  ownOffer: MarketplacePartnerRate | null;
+  eligibility: MarketplaceEligibility;
+}
+
+/**
+ * Canonical lifecycle state of a ticket. Single source of truth
+for the office web app's ticket-status badge / action-pill
+(`artifacts/vndrly/src/components/ticket-status-badge.tsx`,
+which derives its color buckets and labels from this enum
+via `@workspace/ticket-status-meta`) and the field mobile
+app's status pill
+(`artifacts/vndrly-mobile/lib/ticketStatusLabels.ts`). Adding
+a new status here automatically forces a meta entry on both
+platforms via the typed `Record<TicketStatus, …>` map in the
+shared lib; missing entries surface as a typecheck error so
+the UI cannot silently fall back to a raw snake_case string.
+
+ */
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
+
+export const TicketStatus = {
+  draft: "draft",
+  initiated: "initiated",
+  in_progress: "in_progress",
+  pending_review: "pending_review",
+  completed: "completed",
+  submitted: "submitted",
+  approved: "approved",
+  kicked_back: "kicked_back",
+  cancelled: "cancelled",
+  awaiting_acceptance: "awaiting_acceptance",
+  denied: "denied",
+  awaiting_payment: "awaiting_payment",
+  funds_dispersed: "funds_dispersed",
+} as const;
+
+/**
+ * Explicit tax classification set on the platform catalog work type.
+Null when the engine infers treatment from category + state rubric.
+Populated on single-ticket GET only.
+
+ * @nullable
+ */
+export type TicketWorkTypeTaxTreatment =
+  | (typeof TicketWorkTypeTaxTreatment)[keyof typeof TicketWorkTypeTaxTreatment]
+  | null;
+
+export const TicketWorkTypeTaxTreatment = {
+  exempt_labor: "exempt_labor",
+  taxable_repair_service: "taxable_repair_service",
+  taxable_all: "taxable_all",
+} as const;
+
+/**
+ * Resolved tax classification for this ticket after partner, vendor,
+and work-type overrides. Populated on single-ticket GET only.
+
+ * @nullable
+ */
+export type TicketEffectiveTaxTreatment =
+  | (typeof TicketEffectiveTaxTreatment)[keyof typeof TicketEffectiveTaxTreatment]
+  | null;
+
+export const TicketEffectiveTaxTreatment = {
+  exempt_labor: "exempt_labor",
+  taxable_repair_service: "taxable_repair_service",
+  taxable_all: "taxable_all",
+} as const;
+
+/**
+ * @nullable
+ */
+export type TicketLifecycleState =
+  | (typeof TicketLifecycleState)[keyof typeof TicketLifecycleState]
+  | null;
+
+export const TicketLifecycleState = {
+  pending_arrival: "pending_arrival",
+  en_route: "en_route",
+  on_location: "on_location",
+  on_site: "on_site",
+  off_site: "off_site",
+} as const;
+
+/**
+ * How this ticket was opened. Drives the Source badge in the ticket list (globe / phone / boots).
+ * @nullable
+ */
+export type TicketIntakeChannel =
+  | (typeof TicketIntakeChannel)[keyof typeof TicketIntakeChannel]
+  | null;
+
+export const TicketIntakeChannel = {
+  partner_self_service: "partner_self_service",
+  partner_hotlist: "partner_hotlist",
+  office_on_behalf_of_partner: "office_on_behalf_of_partner",
+  office_on_behalf_of_field_employee: "office_on_behalf_of_field_employee",
+  vendor_field_self_service: "vendor_field_self_service",
+} as const;
+
+/**
+ * @nullable
+ */
+export type TicketPaymentMethod =
+  | (typeof TicketPaymentMethod)[keyof typeof TicketPaymentMethod]
+  | null;
+
+export const TicketPaymentMethod = {
+  etf: "etf",
+  ach: "ach",
+  check: "check",
+  other: "other",
+} as const;
+
+/**
+ * Immutable accepted terms and automaticBilling mode; populated on single-ticket GET only.
+ * @nullable
+ */
+export type TicketMarketplaceCommercialTerms = {
+  [key: string]: unknown;
+} | null;
+
+export interface Ticket {
+  /** @nullable */
+  jobOfferId?: number | null;
+  /**
+   * Immutable accepted terms and automaticBilling mode; populated on single-ticket GET only.
+   * @nullable
+   */
+  marketplaceCommercialTerms?: TicketMarketplaceCommercialTerms;
+  id: number;
+  siteLocationId: number;
+  vendorId: number;
+  /** @nullable */
+  fieldEmployeeId: number | null;
+  workTypeId: number;
+  status: TicketStatus;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  notes: string | null;
+  /** @nullable */
+  kickbackReason: string | null;
+  /** @nullable */
+  checkInTime: string | null;
+  /** @nullable */
+  checkOutTime: string | null;
+  /** @nullable */
+  checkInLatitude: number | null;
+  /** @nullable */
+  checkInLongitude: number | null;
+  /** @nullable */
+  checkOutLatitude: number | null;
+  /** @nullable */
+  checkOutLongitude: number | null;
+  /** @nullable */
+  siteName: string | null;
+  /** @nullable */
+  vendorName: string | null;
+  /** @nullable */
+  workTypeName: string | null;
+  /** @nullable */
+  workTypeCategory?: string | null;
+  /**
+   * Explicit tax classification set on the platform catalog work type.
+Null when the engine infers treatment from category + state rubric.
+Populated on single-ticket GET only.
+
+   * @nullable
+   */
+  workTypeTaxTreatment?: TicketWorkTypeTaxTreatment;
+  /**
+   * Resolved tax classification for this ticket after partner, vendor,
+and work-type overrides. Populated on single-ticket GET only.
+
+   * @nullable
+   */
+  effectiveTaxTreatment?: TicketEffectiveTaxTreatment;
+  /** @nullable */
+  fieldEmployeeName: string | null;
+  /** @nullable */
+  partnerName: string | null;
+  /** @nullable */
+  partnerLogoUrl: string | null;
+  /** @nullable */
+  vendorLogoUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  unlockedAt: string | null;
+  /** @nullable */
+  unlockedById: number | null;
+  /** @nullable */
+  unlockedByName: string | null;
+  unlockCount: number;
+  /** @nullable */
+  createdById: number | null;
+  /** @nullable */
+  createdByName: string | null;
+  /** @nullable */
+  closedById: number | null;
+  /** @nullable */
+  closedByName: string | null;
+  /** @nullable */
+  lifecycleState: TicketLifecycleState;
+  /** @nullable */
+  enRouteAt: string | null;
+  /** @nullable */
+  arrivedAt: string | null;
+  /** @nullable */
+  departureLatitude: number | null;
+  /** @nullable */
+  departureLongitude: number | null;
+  /** @nullable */
+  siteLatitude: number | null;
+  /** @nullable */
+  siteLongitude: number | null;
+  /** @nullable */
+  siteRadiusMeters: number | null;
+  /** @nullable */
+  afe: string | null;
+  /** @nullable */
+  scheduledStartAt: string | null;
+  /** @nullable */
+  scheduledDurationMinutes: number | null;
+  /** @nullable */
+  foremanUserId: number | null;
+  /**
+   * How this ticket was opened. Drives the Source badge in the ticket list (globe / phone / boots).
+   * @nullable
+   */
+  intakeChannel: TicketIntakeChannel;
+  /**
+   * Task #865 — timestamp the ticket was approved by a partner /
+admin. Set the moment status flips to `approved`. Powers the
+"Approved on" / "Days waiting" columns the partner AP queue
+renders when filtering by `awaitingPayment=true`. Stays
+populated after dispersal so the ticket history is preserved.
+
+   * @nullable
+   */
+  approvedAt?: string | null;
+  /** @nullable */
+  paymentMethod: TicketPaymentMethod;
+  /** @nullable */
+  paymentReference: string | null;
+  /** @nullable */
+  paymentNote: string | null;
+  /** @nullable */
+  paymentDispersedAt: string | null;
+  /** @nullable */
+  paymentDispersedById: number | null;
+  /** @nullable */
+  paymentDispersedByName: string | null;
+  /**
+   * Optional proof-of-payment image attached at dispersal time
+(Task #852). Stored as an object-storage path/URL returned by
+the upload helper; renders inline in the read-only Payment
+Details panel on both web and mobile.
+
+   * @nullable
+   */
+  paymentReceiptUrl: string | null;
+  /**
+   * Odometer reading captured at En Route. Stored as a numeric
+string with one decimal so the UI can render it verbatim
+without float drift. Null until the field employee submits
+the value on the En Route modal.
+
+   * @nullable
+   */
+  startingMileage?: string | null;
+  /**
+   * Odometer reading captured at Check Out. Same numeric-string
+shape as `startingMileage`. Null until the Check Out modal
+persists the value.
+
+   * @nullable
+   */
+  endingMileage?: string | null;
+  /**
+   * Task #51 — number of comments on this ticket's thread that
+the signed-in viewer has not yet seen, used to render an
+unread badge on the tickets-list page. Excludes
+soft-deleted comments and the viewer's own messages.
+Always 0 when the request has no signed-in viewer (e.g.
+anonymous portal access).
+
+   * @minimum 0
+   */
+  unreadCommentCount: number;
+  /**
+   * Set on the single-ticket GET response only. True when the
+authenticated viewer is allowed to call POST /tickets/:id/disperse-funds
+for this ticket (admin OR partner contact in the Accounts Payable role
+on the owning partner). List responses omit this field.
+
+   * @nullable
+   */
+  viewerCanDisperseFunds?: boolean | null;
+  /**
+   * Set on the single-ticket GET response only. True when the
+authenticated viewer is allowed to call
+POST /tickets/:id/reverse-dispersal for this ticket — i.e.
+the same admin / partner-AP gate as `viewerCanDisperseFunds`
+AND the ticket is currently in `funds_dispersed`. List
+responses omit this field.
+
+   * @nullable
+   */
+  viewerCanReverseDispersal?: boolean | null;
+  /**
+   * Set on the single-ticket GET response only. The human caller's
+name captured by office phone intake on the ticket's initial
+status transition (extracted from
+`ticket_status_history.reason` formatted as
+`phone_intake_caller:<name>`). Null for tickets that weren't
+opened via phone intake. List responses omit this field.
+
+   * @nullable
+   */
+  phoneIntakeCallerName?: string | null;
+}
+
+export interface ListTicketsResponse {
+  items: Ticket[];
+  /** Total rows matching filters before pagination. */
+  total: number;
+}
+
+export interface AdminCanonicalServicePatch {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name?: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  category?: string;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  definition?: string;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  inclusionGuidance?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  exclusionGuidance?: string | null;
+}
+
+export interface AdminCanonicalServiceInput {
+  /** @pattern ^[a-z][a-z0-9_]{1,99}$ */
+  code: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  category: string;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  definition: string;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  inclusionGuidance?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  exclusionGuidance?: string | null;
+}
+
+export type AdminCanonicalAliasProvenance =
+  (typeof AdminCanonicalAliasProvenance)[keyof typeof AdminCanonicalAliasProvenance];
+
+export const AdminCanonicalAliasProvenance = {
+  platform: "platform",
+  partner_usage: "partner_usage",
+  vendor_usage: "vendor_usage",
+  reviewed_ai: "reviewed_ai",
+} as const;
+
+export interface AdminCanonicalAlias {
+  id: number;
+  canonicalServiceId: number;
+  alias: string;
+  industry?: string | null;
+  region?: string | null;
+  provenance: AdminCanonicalAliasProvenance;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminCanonicalService {
+  id: number;
+  code: string;
+  name: string;
+  category: string;
+  definition: string;
+  inclusionGuidance?: string | null;
+  exclusionGuidance?: string | null;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  aliases?: AdminCanonicalAlias[];
+}
+
+export type AdminCanonicalAliasPatchProvenance =
+  (typeof AdminCanonicalAliasPatchProvenance)[keyof typeof AdminCanonicalAliasPatchProvenance];
+
+export const AdminCanonicalAliasPatchProvenance = {
+  platform: "platform",
+  partner_usage: "partner_usage",
+  vendor_usage: "vendor_usage",
+  reviewed_ai: "reviewed_ai",
+} as const;
+
+export interface AdminCanonicalAliasPatch {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  alias?: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  industry?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  region?: string | null;
+  provenance?: AdminCanonicalAliasPatchProvenance;
+  active?: boolean;
+}
+
+export type AdminCanonicalAliasInputProvenance =
+  (typeof AdminCanonicalAliasInputProvenance)[keyof typeof AdminCanonicalAliasInputProvenance];
+
+export const AdminCanonicalAliasInputProvenance = {
+  platform: "platform",
+  partner_usage: "partner_usage",
+  vendor_usage: "vendor_usage",
+  reviewed_ai: "reviewed_ai",
+} as const;
+
+export interface AdminCanonicalAliasInput {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  alias: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  industry?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  region?: string | null;
+  provenance?: AdminCanonicalAliasInputProvenance;
+  active?: boolean;
+}
+
+export type AdminServiceMappingRowSubjectType =
+  (typeof AdminServiceMappingRowSubjectType)[keyof typeof AdminServiceMappingRowSubjectType];
+
+export const AdminServiceMappingRowSubjectType = {
+  partner_work_type: "partner_work_type",
+  vendor_capability: "vendor_capability",
+} as const;
+
+export type AdminServiceMappingRowStatus =
+  (typeof AdminServiceMappingRowStatus)[keyof typeof AdminServiceMappingRowStatus];
+
+export const AdminServiceMappingRowStatus = {
+  active: "active",
+  review_required: "review_required",
+  rejected: "rejected",
+  superseded: "superseded",
+} as const;
+
+export type AdminServiceMappingRowEvidence = { [key: string]: unknown };
+
+export type AdminServiceMappingRowSubject = {
+  name: string;
+  description?: string | null;
+  category?: string | null;
+} | null;
+
+export interface AdminServiceMappingRow {
+  id: number;
+  subjectType: AdminServiceMappingRowSubjectType;
+  subjectId: number;
+  workTypeId?: number | null;
+  vendorCapabilityId?: number | null;
+  canonicalServiceId: number | null;
+  status: AdminServiceMappingRowStatus;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  confidence: number;
+  evidenceSummary: string;
+  explanation: string;
+  evidence: AdminServiceMappingRowEvidence;
+  modelVersion: string;
+  mappingVersion: number;
+  actorUserId?: number | null;
+  actorProcess?: string | null;
+  createdAt?: string;
+  reviewedAt?: string | null;
+  supersededAt?: string | null;
+  subject?: AdminServiceMappingRowSubject;
+  canonicalService?: AdminCanonicalService | null;
+}
+
+export interface AdminServiceMappingPage {
+  items: AdminServiceMappingRow[];
+  total: number;
+  limit: number;
+  offset: number;
+  currentMapping?: AdminServiceMappingRow | null;
+}
+
+export type AdminServiceMappingResultStatus =
+  (typeof AdminServiceMappingResultStatus)[keyof typeof AdminServiceMappingResultStatus];
+
+export const AdminServiceMappingResultStatus = {
+  recorded: "recorded",
+  pending: "pending",
+} as const;
+
+export interface AdminServiceMappingResult {
+  mapping: AdminServiceMappingRow | null;
+  currentMapping: AdminServiceMappingRow | null;
+  status?: AdminServiceMappingResultStatus;
+  retryable?: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -1044,7 +2099,7 @@ export const SiteLocationDetailTaxProvider = {
 } as const;
 
 export interface SiteWorkAssignment {
-  /** Explicit site-owner Gate contractor designation. */
+  /** Explicit site-owner designation of this vendor as a Gate contractor. */
   isGateContractor?: boolean;
   id: number;
   siteLocationId: number;
@@ -1170,7 +2225,7 @@ export interface QrCodeData {
 }
 
 export interface CreateSiteAssignmentBody {
-  /** Explicit site-owner Gate contractor designation. */
+  /** Explicit site-owner designation of this vendor as a Gate contractor. */
   isGateContractor?: boolean;
   workTypeId: number;
   vendorId: number;
@@ -1179,7 +2234,7 @@ export interface CreateSiteAssignmentBody {
 }
 
 export interface UpdateSiteAssignmentBody {
-  /** Explicit site-owner Gate contractor designation. */
+  /** Explicit site-owner designation of this vendor as a Gate contractor. */
   isGateContractor?: boolean;
   /** @nullable */
   afe?: string | null;
@@ -1800,311 +2855,6 @@ export interface PortalInfo {
   siteLocation: SiteLocation;
   availableWorkTypes: SiteWorkAssignment[];
   partnerBrand: null | PartnerBrand;
-}
-
-/**
- * Canonical lifecycle state of a ticket. Single source of truth
-for the office web app's ticket-status badge / action-pill
-(`artifacts/vndrly/src/components/ticket-status-badge.tsx`,
-which derives its color buckets and labels from this enum
-via `@workspace/ticket-status-meta`) and the field mobile
-app's status pill
-(`artifacts/vndrly-mobile/lib/ticketStatusLabels.ts`). Adding
-a new status here automatically forces a meta entry on both
-platforms via the typed `Record<TicketStatus, …>` map in the
-shared lib; missing entries surface as a typecheck error so
-the UI cannot silently fall back to a raw snake_case string.
-
- */
-export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
-
-export const TicketStatus = {
-  draft: "draft",
-  initiated: "initiated",
-  in_progress: "in_progress",
-  pending_review: "pending_review",
-  completed: "completed",
-  submitted: "submitted",
-  approved: "approved",
-  kicked_back: "kicked_back",
-  cancelled: "cancelled",
-  awaiting_acceptance: "awaiting_acceptance",
-  denied: "denied",
-  awaiting_payment: "awaiting_payment",
-  funds_dispersed: "funds_dispersed",
-} as const;
-
-/**
- * Explicit tax classification set on the platform catalog work type.
-Null when the engine infers treatment from category + state rubric.
-Populated on single-ticket GET only.
-
- * @nullable
- */
-export type TicketWorkTypeTaxTreatment =
-  | (typeof TicketWorkTypeTaxTreatment)[keyof typeof TicketWorkTypeTaxTreatment]
-  | null;
-
-export const TicketWorkTypeTaxTreatment = {
-  exempt_labor: "exempt_labor",
-  taxable_repair_service: "taxable_repair_service",
-  taxable_all: "taxable_all",
-} as const;
-
-/**
- * Resolved tax classification for this ticket after partner, vendor,
-and work-type overrides. Populated on single-ticket GET only.
-
- * @nullable
- */
-export type TicketEffectiveTaxTreatment =
-  | (typeof TicketEffectiveTaxTreatment)[keyof typeof TicketEffectiveTaxTreatment]
-  | null;
-
-export const TicketEffectiveTaxTreatment = {
-  exempt_labor: "exempt_labor",
-  taxable_repair_service: "taxable_repair_service",
-  taxable_all: "taxable_all",
-} as const;
-
-/**
- * @nullable
- */
-export type TicketLifecycleState =
-  | (typeof TicketLifecycleState)[keyof typeof TicketLifecycleState]
-  | null;
-
-export const TicketLifecycleState = {
-  pending_arrival: "pending_arrival",
-  en_route: "en_route",
-  on_location: "on_location",
-  on_site: "on_site",
-  off_site: "off_site",
-} as const;
-
-/**
- * How this ticket was opened. Drives the Source badge in the ticket list (globe / phone / boots).
- * @nullable
- */
-export type TicketIntakeChannel =
-  | (typeof TicketIntakeChannel)[keyof typeof TicketIntakeChannel]
-  | null;
-
-export const TicketIntakeChannel = {
-  partner_self_service: "partner_self_service",
-  partner_hotlist: "partner_hotlist",
-  office_on_behalf_of_partner: "office_on_behalf_of_partner",
-  office_on_behalf_of_field_employee: "office_on_behalf_of_field_employee",
-  vendor_field_self_service: "vendor_field_self_service",
-} as const;
-
-/**
- * @nullable
- */
-export type TicketPaymentMethod =
-  | (typeof TicketPaymentMethod)[keyof typeof TicketPaymentMethod]
-  | null;
-
-export const TicketPaymentMethod = {
-  etf: "etf",
-  ach: "ach",
-  check: "check",
-  other: "other",
-} as const;
-
-export interface Ticket {
-  id: number;
-  siteLocationId: number;
-  vendorId: number;
-  /** @nullable */
-  fieldEmployeeId: number | null;
-  workTypeId: number;
-  status: TicketStatus;
-  /** @nullable */
-  description: string | null;
-  /** @nullable */
-  notes: string | null;
-  /** @nullable */
-  kickbackReason: string | null;
-  /** @nullable */
-  checkInTime: string | null;
-  /** @nullable */
-  checkOutTime: string | null;
-  /** @nullable */
-  checkInLatitude: number | null;
-  /** @nullable */
-  checkInLongitude: number | null;
-  /** @nullable */
-  checkOutLatitude: number | null;
-  /** @nullable */
-  checkOutLongitude: number | null;
-  /** @nullable */
-  siteName: string | null;
-  /** @nullable */
-  vendorName: string | null;
-  /** @nullable */
-  workTypeName: string | null;
-  /** @nullable */
-  workTypeCategory?: string | null;
-  /**
-   * Explicit tax classification set on the platform catalog work type.
-Null when the engine infers treatment from category + state rubric.
-Populated on single-ticket GET only.
-
-   * @nullable
-   */
-  workTypeTaxTreatment?: TicketWorkTypeTaxTreatment;
-  /**
-   * Resolved tax classification for this ticket after partner, vendor,
-and work-type overrides. Populated on single-ticket GET only.
-
-   * @nullable
-   */
-  effectiveTaxTreatment?: TicketEffectiveTaxTreatment;
-  /** @nullable */
-  fieldEmployeeName: string | null;
-  /** @nullable */
-  partnerName: string | null;
-  /** @nullable */
-  partnerLogoUrl: string | null;
-  /** @nullable */
-  vendorLogoUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-  /** @nullable */
-  unlockedAt: string | null;
-  /** @nullable */
-  unlockedById: number | null;
-  /** @nullable */
-  unlockedByName: string | null;
-  unlockCount: number;
-  /** @nullable */
-  createdById: number | null;
-  /** @nullable */
-  createdByName: string | null;
-  /** @nullable */
-  closedById: number | null;
-  /** @nullable */
-  closedByName: string | null;
-  /** @nullable */
-  lifecycleState: TicketLifecycleState;
-  /** @nullable */
-  enRouteAt: string | null;
-  /** @nullable */
-  arrivedAt: string | null;
-  /** @nullable */
-  departureLatitude: number | null;
-  /** @nullable */
-  departureLongitude: number | null;
-  /** @nullable */
-  siteLatitude: number | null;
-  /** @nullable */
-  siteLongitude: number | null;
-  /** @nullable */
-  siteRadiusMeters: number | null;
-  /** @nullable */
-  afe: string | null;
-  /** @nullable */
-  scheduledStartAt: string | null;
-  /** @nullable */
-  scheduledDurationMinutes: number | null;
-  /** @nullable */
-  foremanUserId: number | null;
-  /**
-   * How this ticket was opened. Drives the Source badge in the ticket list (globe / phone / boots).
-   * @nullable
-   */
-  intakeChannel: TicketIntakeChannel;
-  /**
-   * Task #865 — timestamp the ticket was approved by a partner /
-admin. Set the moment status flips to `approved`. Powers the
-"Approved on" / "Days waiting" columns the partner AP queue
-renders when filtering by `awaitingPayment=true`. Stays
-populated after dispersal so the ticket history is preserved.
-
-   * @nullable
-   */
-  approvedAt?: string | null;
-  /** @nullable */
-  paymentMethod: TicketPaymentMethod;
-  /** @nullable */
-  paymentReference: string | null;
-  /** @nullable */
-  paymentNote: string | null;
-  /** @nullable */
-  paymentDispersedAt: string | null;
-  /** @nullable */
-  paymentDispersedById: number | null;
-  /** @nullable */
-  paymentDispersedByName: string | null;
-  /**
-   * Optional proof-of-payment image attached at dispersal time
-(Task #852). Stored as an object-storage path/URL returned by
-the upload helper; renders inline in the read-only Payment
-Details panel on both web and mobile.
-
-   * @nullable
-   */
-  paymentReceiptUrl: string | null;
-  /**
-   * Odometer reading captured at En Route. Stored as a numeric
-string with one decimal so the UI can render it verbatim
-without float drift. Null until the field employee submits
-the value on the En Route modal.
-
-   * @nullable
-   */
-  startingMileage?: string | null;
-  /**
-   * Odometer reading captured at Check Out. Same numeric-string
-shape as `startingMileage`. Null until the Check Out modal
-persists the value.
-
-   * @nullable
-   */
-  endingMileage?: string | null;
-  /**
-   * Task #51 — number of comments on this ticket's thread that
-the signed-in viewer has not yet seen, used to render an
-unread badge on the tickets-list page. Excludes
-soft-deleted comments and the viewer's own messages.
-Always 0 when the request has no signed-in viewer (e.g.
-anonymous portal access).
-
-   * @minimum 0
-   */
-  unreadCommentCount: number;
-  /**
-   * Set on the single-ticket GET response only. True when the
-authenticated viewer is allowed to call POST /tickets/:id/disperse-funds
-for this ticket (admin OR partner contact in the Accounts Payable role
-on the owning partner). List responses omit this field.
-
-   * @nullable
-   */
-  viewerCanDisperseFunds?: boolean | null;
-  /**
-   * Set on the single-ticket GET response only. True when the
-authenticated viewer is allowed to call
-POST /tickets/:id/reverse-dispersal for this ticket — i.e.
-the same admin / partner-AP gate as `viewerCanDisperseFunds`
-AND the ticket is currently in `funds_dispersed`. List
-responses omit this field.
-
-   * @nullable
-   */
-  viewerCanReverseDispersal?: boolean | null;
-  /**
-   * Set on the single-ticket GET response only. The human caller's
-name captured by office phone intake on the ticket's initial
-status transition (extracted from
-`ticket_status_history.reason` formatted as
-`phone_intake_caller:<name>`). Null for tickets that weren't
-opened via phone intake. List responses omit this field.
-
-   * @nullable
-   */
-  phoneIntakeCallerName?: string | null;
 }
 
 /**
@@ -3613,6 +4363,335 @@ export interface OrgMemberErrorResponse {
   code: OrgMemberErrorResponseCode;
 }
 
+export type MarketplaceSiteIdParameter = number;
+
+export type MarketplaceDetailCapabilityIdParameter = number;
+
+export type MarketplaceDetailPartnerOfferIdParameter = number;
+
+export type MarketplaceRequestedCapacityParameter = number;
+
+export type MarketplaceSortParameter =
+  (typeof MarketplaceSortParameter)[keyof typeof MarketplaceSortParameter];
+
+export const MarketplaceSortParameter = {
+  recommended: "recommended",
+  price: "price",
+  rating: "rating",
+  safety: "safety",
+  history: "history",
+  onTime: "onTime",
+  distance: "distance",
+  availability: "availability",
+  priorExperience: "priorExperience",
+} as const;
+
+export type MarketplacePriceWeightParameter = number;
+
+export type MarketplaceRatingWeightParameter = number;
+
+export type MarketplaceSafetyWeightParameter = number;
+
+export type MarketplaceHistoryWeightParameter = number;
+
+export type MarketplaceOnTimeWeightParameter = number;
+
+export type MarketplaceDistanceWeightParameter = number;
+
+export type MarketplaceAvailabilityWeightParameter = number;
+
+export type MarketplacePriorExperienceWeightParameter = number;
+
+export type MarketplaceLimitParameter = number;
+
+export type MarketplaceOffsetParameter = number;
+
+export type SearchPartnerMarketplaceVendorsParams = {
+  /**
+   * @minimum 1
+   */
+  siteId: MarketplaceSiteIdParameter;
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  requestedCapacity?: MarketplaceRequestedCapacityParameter;
+  sort?: MarketplaceSortParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  priceWeight?: MarketplacePriceWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  ratingWeight?: MarketplaceRatingWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  safetyWeight?: MarketplaceSafetyWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  historyWeight?: MarketplaceHistoryWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  onTimeWeight?: MarketplaceOnTimeWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  distanceWeight?: MarketplaceDistanceWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  availabilityWeight?: MarketplaceAvailabilityWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  priorExperienceWeight?: MarketplacePriorExperienceWeightParameter;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * @minimum 0
+   */
+  offset?: number;
+};
+
+export type SearchPartnerMarketplaceVendors200 = {
+  items: MarketplaceRankedVendor[];
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 1 */
+  limit: number;
+  /** @minimum 0 */
+  offset: number;
+};
+
+export type GetPartnerMarketplaceVendorParams = {
+  /**
+   * @minimum 1
+   */
+  vendorCapabilityId: MarketplaceDetailCapabilityIdParameter;
+  /**
+   * @minimum 1
+   */
+  vendorPartnerServiceOfferId: MarketplaceDetailPartnerOfferIdParameter;
+  /**
+   * @minimum 1
+   */
+  siteId: MarketplaceSiteIdParameter;
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  requestedCapacity?: MarketplaceRequestedCapacityParameter;
+  sort?: MarketplaceSortParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  priceWeight?: MarketplacePriceWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  ratingWeight?: MarketplaceRatingWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  safetyWeight?: MarketplaceSafetyWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  historyWeight?: MarketplaceHistoryWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  onTimeWeight?: MarketplaceOnTimeWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  distanceWeight?: MarketplaceDistanceWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  availabilityWeight?: MarketplaceAvailabilityWeightParameter;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  priorExperienceWeight?: MarketplacePriorExperienceWeightParameter;
+};
+
+export type ListVendorMarketplaceCapabilities200 = {
+  items: MarketplaceCapability[];
+};
+
+export type PreviewVendorMarketplaceCapabilityBody = {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name: string;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   * @nullable
+   */
+  description?: string | null;
+};
+
+export type PreviewVendorMarketplaceCapability200Status =
+  (typeof PreviewVendorMarketplaceCapability200Status)[keyof typeof PreviewVendorMarketplaceCapability200Status];
+
+export const PreviewVendorMarketplaceCapability200Status = {
+  matched: "matched",
+  review_required: "review_required",
+  rejected: "rejected",
+  pending: "pending",
+} as const;
+
+export type PreviewVendorMarketplaceCapability200 = {
+  provisional: true;
+  status: PreviewVendorMarketplaceCapability200Status;
+  /** @nullable */
+  canonicalServiceId: number | null;
+  /** @nullable */
+  canonicalServiceName: string | null;
+  explanation: string;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  confidence: number;
+  /**
+   * @minimum 0
+   * @nullable
+   */
+  matchingPartnerCount: number | null;
+};
+
+export type ListVendorMarketplaceServiceAreas200 = {
+  items: MarketplaceServiceArea[];
+};
+
+export type SaveVendorMarketplaceServiceAreaBody = {
+  /**
+   * @minimum 1
+   * @nullable
+   */
+  vendorCapabilityId?: number | null;
+  /**
+   * @maximum 20000
+   * @exclusiveMinimum 0
+   */
+  radiusMiles: number;
+};
+
+export type ListVendorMarketplacePartnerRates200 = {
+  items: MarketplacePartnerRate[];
+};
+
+export type ListVendorMarketplaceMatchingDemandParams = {
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * @minimum 0
+   */
+  offset?: MarketplaceOffsetParameter;
+};
+
+export type ListVendorMarketplaceMatchingDemand200 = {
+  items: MarketplaceDemand[];
+  limit: number;
+  offset: number;
+};
+
+export type ListAdminCanonicalServicesParams = {
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: MarketplaceLimitParameter;
+  /**
+   * @minimum 0
+   */
+  offset?: MarketplaceOffsetParameter;
+};
+
+export type ListAdminCanonicalServices200 = {
+  items: AdminCanonicalService[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type ListAdminServiceMappingsParams = {
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: MarketplaceLimitParameter;
+  /**
+   * @minimum 0
+   */
+  offset?: MarketplaceOffsetParameter;
+};
+
+export type ReviewAdminServiceMappingBodyAction =
+  (typeof ReviewAdminServiceMappingBodyAction)[keyof typeof ReviewAdminServiceMappingBodyAction];
+
+export const ReviewAdminServiceMappingBodyAction = {
+  approve: "approve",
+  reject: "reject",
+  remap: "remap",
+} as const;
+
+export type ReviewAdminServiceMappingBody = {
+  action: ReviewAdminServiceMappingBodyAction;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  reason: string;
+  /**
+   * Required only for remap
+   * @minimum 1
+   */
+  canonicalServiceId?: number;
+};
+
+export type ListAdminServiceMappingHistoryParams = {
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: MarketplaceLimitParameter;
+  /**
+   * @minimum 0
+   */
+  offset?: MarketplaceOffsetParameter;
+};
+
 export type MatchPartnerParams = {
   name: string;
 };
@@ -3695,16 +4774,8 @@ export type ListTicketsParams = {
   offset?: number;
   search?: string;
   lifecycleState?: string;
-  sortBy?: "ticket" | "site" | "vendor" | "fieldEmployee" | "status" | "created" | "daysWaiting";
-  sortDir?: "asc" | "desc";
-};
-
-export type ListTicketsResponse = {
-  items: Ticket[];
-  /**
-   * Total rows matching filters before pagination.
-   */
-  total: number;
+  sortBy?: ListTicketsSortBy;
+  sortDir?: ListTicketsSortDir;
 };
 
 export type ListTicketsStatus =
@@ -3724,6 +4795,27 @@ export const ListTicketsStatus = {
   denied: "denied",
   awaiting_payment: "awaiting_payment",
   funds_dispersed: "funds_dispersed",
+} as const;
+
+export type ListTicketsSortBy =
+  (typeof ListTicketsSortBy)[keyof typeof ListTicketsSortBy];
+
+export const ListTicketsSortBy = {
+  ticket: "ticket",
+  site: "site",
+  vendor: "vendor",
+  fieldEmployee: "fieldEmployee",
+  status: "status",
+  created: "created",
+  daysWaiting: "daysWaiting",
+} as const;
+
+export type ListTicketsSortDir =
+  (typeof ListTicketsSortDir)[keyof typeof ListTicketsSortDir];
+
+export const ListTicketsSortDir = {
+  asc: "asc",
+  desc: "desc",
 } as const;
 
 export type GetTicketTransitionsParams = {

@@ -22,6 +22,7 @@ import { createTicketLaborFinalizationService, TicketLaborFinalizationError } fr
 import { ZodError } from "zod/v4";
 import { logger } from "../lib/logger";
 import { regenerateAutoLaborLines } from "../lib/auto-labor-lines";
+import { loadTicketCommercialRate } from "../lib/ticket-commercial-rate";
 import { notifyUsers } from "./notifications";
 import {
   checkInDistanceMeters,
@@ -63,6 +64,7 @@ async function loadTicketForAuth(ticketId: number) {
   const [t] = await db
     .select({
       id: ticketsTable.id,
+      jobOfferId: ticketsTable.jobOfferId,
       vendorId: ticketsTable.vendorId,
       status: ticketsTable.status,
       partnerId: siteLocationsTable.partnerId,
@@ -1023,8 +1025,14 @@ router.get("/tickets/:id/labor-summary", async (req, res): Promise<void> => {
       vendorWeeklyOt = v.weeklyOt != null ? parseFloat(v.weeklyOt) : null;
     }
   }
-  const dailyOt = Number(req.query.dailyOtHours) || vendorDailyOt || DEFAULT_DAILY_OT_HOURS;
-  const weeklyOt = Number(req.query.weeklyOtHours) || vendorWeeklyOt || DEFAULT_WEEKLY_OT_HOURS;
+  const commercial = ticket ? await loadTicketCommercialRate(ticket) : null;
+  if (commercial?.automaticBilling === "manual_billing_required") {
+    res.status(409).json({ error: "Manual billing required for the accepted commercial terms", code: "manual_billing_required", commercial });
+    return;
+  }
+  const dailyOt = commercial ? Number(commercial.dailyOtHours) : Number(req.query.dailyOtHours) || vendorDailyOt || DEFAULT_DAILY_OT_HOURS;
+  const weeklyOt = commercial ? Number(commercial.weeklyOtHours) : Number(req.query.weeklyOtHours) || vendorWeeklyOt || DEFAULT_WEEKLY_OT_HOURS;
+  const overtimeMultiplier = commercial ? Number(commercial.overtimeMultiplier) : 1.5;
   const longSessionThreshold = 8;
 
   const sessions = await db
@@ -1069,7 +1077,7 @@ router.get("/tickets/:id/labor-summary", async (req, res): Promise<void> => {
     const outAt = s.checkOutAt ? new Date(s.checkOutAt) : now;
     const isOpen = !s.checkOutAt;
     const hours = hoursBetween(inAt, outAt);
-    const rateStr = s.hourlyRateAtTime ?? s.defaultRate ?? "0";
+    const rateStr = commercial?.unitPrice ?? s.hourlyRateAtTime ?? s.defaultRate ?? "0";
     const rate = parseFloat(rateStr);
     const cost = hours * rate;
     const longSession = hours > longSessionThreshold;
@@ -1139,8 +1147,8 @@ router.get("/tickets/:id/labor-summary", async (req, res): Promise<void> => {
     agg.overtimeHours += otHours;
     agg.totalHours += hours;
     agg.regularCost += regHours * rate;
-    agg.overtimeCost += otHours * rate * 1.5;
-    agg.totalCost += regHours * rate + otHours * rate * 1.5;
+    agg.overtimeCost += otHours * rate * overtimeMultiplier;
+    agg.totalCost += regHours * rate + otHours * rate * overtimeMultiplier;
   }
 
   const people = Array.from(byPerson.values()).map(p => ({
@@ -1190,8 +1198,16 @@ router.post("/tickets/:id/generate-labor-line-items", async (req, res): Promise<
   if (!Number.isFinite(ticketId)) { res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" }); return; }
   const auth = await ensureCrewMutate(req, res, ticketId);
   if (!auth) return;
-  const created = await regenerateAutoLaborLines(ticketId);
-  res.json({ created });
+  try {
+    const created = await regenerateAutoLaborLines(ticketId);
+    res.json({ created });
+  } catch (error) {
+    if (error instanceof Error && error.message === "manual_billing_required") {
+      res.status(409).json({ error: "Manual billing required for the accepted commercial terms", code: "manual_billing_required" });
+      return;
+    }
+    throw error;
+  }
 });
 
 // GET /tickets/:id/assignment-rates — list per-employee ticket rate overrides

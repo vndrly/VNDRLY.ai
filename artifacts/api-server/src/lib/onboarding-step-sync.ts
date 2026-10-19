@@ -4,6 +4,7 @@
  * features like hotlist browsing/bidding without waiting for /complete.
  */
 import { and, eq } from "drizzle-orm";
+import { updateVendorAddressAndCoverage } from "../services/marketplace/vendor-address";
 import {
   buildPlatformEulaAcceptancePatch,
   isPlatformEulaPayloadAccepted,
@@ -87,7 +88,7 @@ async function syncVendorTaxIds(
   if (trim(tax.physicalAddress)) patch.physicalAddress = trim(tax.physicalAddress);
   if (trim(tax.billingAddress)) patch.billingAddress = trim(tax.billingAddress);
   if (Object.keys(patch).length === 0) return;
-  await db.update(vendorsTable).set(patch).where(eq(vendorsTable.id, vendorId));
+  await updateVendorAddressAndCoverage(db, vendorId, patch);
 }
 
 async function syncVendorWorkTypes(

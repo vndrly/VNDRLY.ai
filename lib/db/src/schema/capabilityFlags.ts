@@ -12,6 +12,9 @@ import {
 import { siteLocationsTable } from "./siteLocations";
 import { usersTable } from "./users";
 
+/** Opt-in per organization/site; absent rows and the column default remain disabled. */
+export const SEMANTIC_SERVICE_MARKETPLACE_FLAG = "semantic_service_marketplace";
+
 export const capabilityFlagsTable = pgTable(
   "capability_flags",
   {

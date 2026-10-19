@@ -21,7 +21,15 @@ import type {
   AddCrewRosterEntryBody,
   AddOrgMemberBody,
   AddOrgMemberResponse,
+  AdminCanonicalAlias,
+  AdminCanonicalAliasInput,
+  AdminCanonicalAliasPatch,
+  AdminCanonicalService,
+  AdminCanonicalServiceInput,
+  AdminCanonicalServicePatch,
   AdminReassignmentAggregate,
+  AdminServiceMappingPage,
+  AdminServiceMappingResult,
   AdminUser,
   AwaitingPaymentSummary,
   BulkFieldEmployeeLoginBody,
@@ -90,6 +98,7 @@ import type {
   GetDirectAwardCandidatesParams,
   GetExportsAuditLogParams,
   GetFieldOnboardingByToken404,
+  GetPartnerMarketplaceVendorParams,
   GetPortalOpenTicketsParams,
   GetTicketTransitionsParams,
   GpsLocationBody,
@@ -97,6 +106,10 @@ import type {
   HealthStatus,
   KickbackBody,
   LaborSummary,
+  ListAdminCanonicalServices200,
+  ListAdminCanonicalServicesParams,
+  ListAdminServiceMappingHistoryParams,
+  ListAdminServiceMappingsParams,
   ListDirectAssignmentsParams,
   ListFieldEmployeesParams,
   ListFireTransmitterSettingsHistoryParams,
@@ -108,6 +121,23 @@ import type {
   ListTicketsResponse,
   ListUpcomingScheduleParams,
   ListVendorContactsParams,
+  ListVendorMarketplaceCapabilities200,
+  ListVendorMarketplaceMatchingDemand200,
+  ListVendorMarketplaceMatchingDemandParams,
+  ListVendorMarketplacePartnerRates200,
+  ListVendorMarketplaceServiceAreas200,
+  MarketplaceCapability,
+  MarketplaceCapabilityInput,
+  MarketplaceCapabilityPatch,
+  MarketplaceJobOffer,
+  MarketplaceJobOfferAcceptance,
+  MarketplaceJobOfferDraft,
+  MarketplaceJobOfferList,
+  MarketplaceJobOfferVersion,
+  MarketplacePartnerRate,
+  MarketplacePartnerRateInput,
+  MarketplaceRankedVendor,
+  MarketplaceServiceArea,
   MatchPartnerParams,
   MatchPartnerResponse,
   MatchVendorParams,
@@ -123,6 +153,8 @@ import type {
   PartnerTransitionAggregate,
   PlatformSettings,
   PortalInfo,
+  PreviewVendorMarketplaceCapability200,
+  PreviewVendorMarketplaceCapabilityBody,
   PublicPlatformBrand,
   QrCodeData,
   ReinviteTicketBody,
@@ -131,6 +163,10 @@ import type {
   RespondDirectAssignmentBody,
   ReverseDispersalBody,
   ReverseFundsDispersalBody,
+  ReviewAdminServiceMappingBody,
+  SaveVendorMarketplaceServiceAreaBody,
+  SearchPartnerMarketplaceVendors200,
+  SearchPartnerMarketplaceVendorsParams,
   SetFieldEmployeeLoginBody,
   SetFieldEmployeeLoginResponse,
   SetVendorWorkTypeCatalogBody,
@@ -184,6 +220,3116 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Prepare a draft with authoritative saved rates
+ */
+export const getCreateMarketplaceJobOfferUrl = () => {
+  return `/api/service-marketplace/job-offers`;
+};
+
+export const createMarketplaceJobOffer = async (
+  marketplaceJobOfferDraft: MarketplaceJobOfferDraft,
+  options?: RequestInit,
+): Promise<MarketplaceJobOffer> => {
+  return customFetch<MarketplaceJobOffer>(getCreateMarketplaceJobOfferUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(marketplaceJobOfferDraft),
+  });
+};
+
+export const getCreateMarketplaceJobOfferMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMarketplaceJobOffer>>,
+    TError,
+    { data: BodyType<MarketplaceJobOfferDraft> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMarketplaceJobOffer>>,
+  TError,
+  { data: BodyType<MarketplaceJobOfferDraft> },
+  TContext
+> => {
+  const mutationKey = ["createMarketplaceJobOffer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMarketplaceJobOffer>>,
+    { data: BodyType<MarketplaceJobOfferDraft> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createMarketplaceJobOffer(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMarketplaceJobOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMarketplaceJobOffer>>
+>;
+export type CreateMarketplaceJobOfferMutationBody =
+  BodyType<MarketplaceJobOfferDraft>;
+export type CreateMarketplaceJobOfferMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Prepare a draft with authoritative saved rates
+ */
+export const useCreateMarketplaceJobOffer = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMarketplaceJobOffer>>,
+    TError,
+    { data: BodyType<MarketplaceJobOfferDraft> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createMarketplaceJobOffer>>,
+  TError,
+  { data: BodyType<MarketplaceJobOfferDraft> },
+  TContext
+> => {
+  return useMutation(getCreateMarketplaceJobOfferMutationOptions(options));
+};
+
+/**
+ * @summary Read an offer in the active organization
+ */
+export const getGetMarketplaceJobOfferUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}`;
+};
+
+export const getMarketplaceJobOffer = async (
+  offerId: number,
+  options?: RequestInit,
+): Promise<MarketplaceJobOffer> => {
+  return customFetch<MarketplaceJobOffer>(
+    getGetMarketplaceJobOfferUrl(offerId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMarketplaceJobOfferQueryKey = (offerId: number) => {
+  return [`/api/service-marketplace/job-offers/${offerId}`] as const;
+};
+
+export const getGetMarketplaceJobOfferQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMarketplaceJobOffer>>,
+  TError = ErrorType<unknown>,
+>(
+  offerId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMarketplaceJobOffer>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMarketplaceJobOfferQueryKey(offerId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMarketplaceJobOffer>>
+  > = ({ signal }) =>
+    getMarketplaceJobOffer(offerId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!offerId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMarketplaceJobOffer>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMarketplaceJobOfferQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMarketplaceJobOffer>>
+>;
+export type GetMarketplaceJobOfferQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Read an offer in the active organization
+ */
+
+export function useGetMarketplaceJobOffer<
+  TData = Awaited<ReturnType<typeof getMarketplaceJobOffer>>,
+  TError = ErrorType<unknown>,
+>(
+  offerId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMarketplaceJobOffer>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMarketplaceJobOfferQueryOptions(offerId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Read the latest 100 organization offers
+ */
+export const getListPartnerMarketplaceJobOffersUrl = (orgId: number) => {
+  return `/api/service-marketplace/partners/${orgId}/job-offers`;
+};
+
+export const listPartnerMarketplaceJobOffers = async (
+  orgId: number,
+  options?: RequestInit,
+): Promise<MarketplaceJobOfferList> => {
+  return customFetch<MarketplaceJobOfferList>(
+    getListPartnerMarketplaceJobOffersUrl(orgId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListPartnerMarketplaceJobOffersQueryKey = (orgId: number) => {
+  return [`/api/service-marketplace/partners/${orgId}/job-offers`] as const;
+};
+
+export const getListPartnerMarketplaceJobOffersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPartnerMarketplaceJobOffers>>,
+  TError = ErrorType<unknown>,
+>(
+  orgId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPartnerMarketplaceJobOffers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListPartnerMarketplaceJobOffersQueryKey(orgId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPartnerMarketplaceJobOffers>>
+  > = ({ signal }) =>
+    listPartnerMarketplaceJobOffers(orgId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!orgId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPartnerMarketplaceJobOffers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPartnerMarketplaceJobOffersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPartnerMarketplaceJobOffers>>
+>;
+export type ListPartnerMarketplaceJobOffersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Read the latest 100 organization offers
+ */
+
+export function useListPartnerMarketplaceJobOffers<
+  TData = Awaited<ReturnType<typeof listPartnerMarketplaceJobOffers>>,
+  TError = ErrorType<unknown>,
+>(
+  orgId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPartnerMarketplaceJobOffers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPartnerMarketplaceJobOffersQueryOptions(
+    orgId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Read the latest 100 organization offers
+ */
+export const getListVendorMarketplaceJobOffersUrl = (orgId: number) => {
+  return `/api/service-marketplace/vendors/${orgId}/job-offers`;
+};
+
+export const listVendorMarketplaceJobOffers = async (
+  orgId: number,
+  options?: RequestInit,
+): Promise<MarketplaceJobOfferList> => {
+  return customFetch<MarketplaceJobOfferList>(
+    getListVendorMarketplaceJobOffersUrl(orgId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListVendorMarketplaceJobOffersQueryKey = (orgId: number) => {
+  return [`/api/service-marketplace/vendors/${orgId}/job-offers`] as const;
+};
+
+export const getListVendorMarketplaceJobOffersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceJobOffers>>,
+  TError = ErrorType<unknown>,
+>(
+  orgId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceJobOffers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListVendorMarketplaceJobOffersQueryKey(orgId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listVendorMarketplaceJobOffers>>
+  > = ({ signal }) =>
+    listVendorMarketplaceJobOffers(orgId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!orgId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listVendorMarketplaceJobOffers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListVendorMarketplaceJobOffersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listVendorMarketplaceJobOffers>>
+>;
+export type ListVendorMarketplaceJobOffersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Read the latest 100 organization offers
+ */
+
+export function useListVendorMarketplaceJobOffers<
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceJobOffers>>,
+  TError = ErrorType<unknown>,
+>(
+  orgId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceJobOffers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListVendorMarketplaceJobOffersQueryOptions(
+    orgId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary send the current saved offer version
+ */
+export const getSendMarketplaceJobOfferUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}/send`;
+};
+
+export const sendMarketplaceJobOffer = async (
+  offerId: number,
+  marketplaceJobOfferVersion: MarketplaceJobOfferVersion,
+  options?: RequestInit,
+): Promise<MarketplaceJobOffer> => {
+  return customFetch<MarketplaceJobOffer>(
+    getSendMarketplaceJobOfferUrl(offerId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceJobOfferVersion),
+    },
+  );
+};
+
+export const getSendMarketplaceJobOfferMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  const mutationKey = ["sendMarketplaceJobOffer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendMarketplaceJobOffer>>,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> }
+  > = (props) => {
+    const { offerId, data } = props ?? {};
+
+    return sendMarketplaceJobOffer(offerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendMarketplaceJobOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendMarketplaceJobOffer>>
+>;
+export type SendMarketplaceJobOfferMutationBody =
+  BodyType<MarketplaceJobOfferVersion>;
+export type SendMarketplaceJobOfferMutationError = ErrorType<unknown>;
+
+/**
+ * @summary send the current saved offer version
+ */
+export const useSendMarketplaceJobOffer = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  return useMutation(getSendMarketplaceJobOfferMutationOptions(options));
+};
+
+/**
+ * @summary review the current saved offer version
+ */
+export const getReviewMarketplaceJobOfferUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}/review`;
+};
+
+export const reviewMarketplaceJobOffer = async (
+  offerId: number,
+  marketplaceJobOfferVersion: MarketplaceJobOfferVersion,
+  options?: RequestInit,
+): Promise<MarketplaceJobOffer> => {
+  return customFetch<MarketplaceJobOffer>(
+    getReviewMarketplaceJobOfferUrl(offerId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceJobOfferVersion),
+    },
+  );
+};
+
+export const getReviewMarketplaceJobOfferMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reviewMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  const mutationKey = ["reviewMarketplaceJobOffer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reviewMarketplaceJobOffer>>,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> }
+  > = (props) => {
+    const { offerId, data } = props ?? {};
+
+    return reviewMarketplaceJobOffer(offerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReviewMarketplaceJobOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reviewMarketplaceJobOffer>>
+>;
+export type ReviewMarketplaceJobOfferMutationBody =
+  BodyType<MarketplaceJobOfferVersion>;
+export type ReviewMarketplaceJobOfferMutationError = ErrorType<unknown>;
+
+/**
+ * @summary review the current saved offer version
+ */
+export const useReviewMarketplaceJobOffer = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof reviewMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  return useMutation(getReviewMarketplaceJobOfferMutationOptions(options));
+};
+
+/**
+ * @summary withdraw the current saved offer version
+ */
+export const getWithdrawMarketplaceJobOfferUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}/withdraw`;
+};
+
+export const withdrawMarketplaceJobOffer = async (
+  offerId: number,
+  marketplaceJobOfferVersion: MarketplaceJobOfferVersion,
+  options?: RequestInit,
+): Promise<MarketplaceJobOffer> => {
+  return customFetch<MarketplaceJobOffer>(
+    getWithdrawMarketplaceJobOfferUrl(offerId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceJobOfferVersion),
+    },
+  );
+};
+
+export const getWithdrawMarketplaceJobOfferMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof withdrawMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof withdrawMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  const mutationKey = ["withdrawMarketplaceJobOffer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof withdrawMarketplaceJobOffer>>,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> }
+  > = (props) => {
+    const { offerId, data } = props ?? {};
+
+    return withdrawMarketplaceJobOffer(offerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WithdrawMarketplaceJobOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof withdrawMarketplaceJobOffer>>
+>;
+export type WithdrawMarketplaceJobOfferMutationBody =
+  BodyType<MarketplaceJobOfferVersion>;
+export type WithdrawMarketplaceJobOfferMutationError = ErrorType<unknown>;
+
+/**
+ * @summary withdraw the current saved offer version
+ */
+export const useWithdrawMarketplaceJobOffer = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof withdrawMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof withdrawMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  return useMutation(getWithdrawMarketplaceJobOfferMutationOptions(options));
+};
+
+/**
+ * @summary decline the current saved offer version
+ */
+export const getDeclineMarketplaceJobOfferUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}/decline`;
+};
+
+export const declineMarketplaceJobOffer = async (
+  offerId: number,
+  marketplaceJobOfferVersion: MarketplaceJobOfferVersion,
+  options?: RequestInit,
+): Promise<MarketplaceJobOffer> => {
+  return customFetch<MarketplaceJobOffer>(
+    getDeclineMarketplaceJobOfferUrl(offerId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceJobOfferVersion),
+    },
+  );
+};
+
+export const getDeclineMarketplaceJobOfferMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declineMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  const mutationKey = ["declineMarketplaceJobOffer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declineMarketplaceJobOffer>>,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> }
+  > = (props) => {
+    const { offerId, data } = props ?? {};
+
+    return declineMarketplaceJobOffer(offerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclineMarketplaceJobOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declineMarketplaceJobOffer>>
+>;
+export type DeclineMarketplaceJobOfferMutationBody =
+  BodyType<MarketplaceJobOfferVersion>;
+export type DeclineMarketplaceJobOfferMutationError = ErrorType<unknown>;
+
+/**
+ * @summary decline the current saved offer version
+ */
+export const useDeclineMarketplaceJobOffer = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof declineMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  return useMutation(getDeclineMarketplaceJobOfferMutationOptions(options));
+};
+
+/**
+ * @summary accept the current saved offer version
+ */
+export const getAcceptMarketplaceJobOfferUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}/accept`;
+};
+
+export const acceptMarketplaceJobOffer = async (
+  offerId: number,
+  marketplaceJobOfferVersion: MarketplaceJobOfferVersion,
+  options?: RequestInit,
+): Promise<MarketplaceJobOfferAcceptance> => {
+  return customFetch<MarketplaceJobOfferAcceptance>(
+    getAcceptMarketplaceJobOfferUrl(offerId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceJobOfferVersion),
+    },
+  );
+};
+
+export const getAcceptMarketplaceJobOfferMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  const mutationKey = ["acceptMarketplaceJobOffer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptMarketplaceJobOffer>>,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> }
+  > = (props) => {
+    const { offerId, data } = props ?? {};
+
+    return acceptMarketplaceJobOffer(offerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptMarketplaceJobOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptMarketplaceJobOffer>>
+>;
+export type AcceptMarketplaceJobOfferMutationBody =
+  BodyType<MarketplaceJobOfferVersion>;
+export type AcceptMarketplaceJobOfferMutationError = ErrorType<unknown>;
+
+/**
+ * @summary accept the current saved offer version
+ */
+export const useAcceptMarketplaceJobOffer = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptMarketplaceJobOffer>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof acceptMarketplaceJobOffer>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobOfferVersion> },
+  TContext
+> => {
+  return useMutation(getAcceptMarketplaceJobOfferMutationOptions(options));
+};
+
+/**
+ * Active partner membership or identified system admin required. Eligibility is evaluated before ranking and pagination. Missing evidence stays null. Private terms, internal notes, and other partner assessments are excluded. Price factors are unavailable when currencies or units differ.
+ * @summary Compare current matching vendor offers for an owned work type and saved site
+ */
+export const getSearchPartnerMarketplaceVendorsUrl = (
+  partnerId: number,
+  workTypeId: number,
+  params: SearchPartnerMarketplaceVendorsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/service-marketplace/partners/${partnerId}/work-types/${workTypeId}/vendors?${stringifiedParams}`
+    : `/api/service-marketplace/partners/${partnerId}/work-types/${workTypeId}/vendors`;
+};
+
+export const searchPartnerMarketplaceVendors = async (
+  partnerId: number,
+  workTypeId: number,
+  params: SearchPartnerMarketplaceVendorsParams,
+  options?: RequestInit,
+): Promise<SearchPartnerMarketplaceVendors200> => {
+  return customFetch<SearchPartnerMarketplaceVendors200>(
+    getSearchPartnerMarketplaceVendorsUrl(partnerId, workTypeId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getSearchPartnerMarketplaceVendorsQueryKey = (
+  partnerId: number,
+  workTypeId: number,
+  params?: SearchPartnerMarketplaceVendorsParams,
+) => {
+  return [
+    `/api/service-marketplace/partners/${partnerId}/work-types/${workTypeId}/vendors`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getSearchPartnerMarketplaceVendorsQueryOptions = <
+  TData = Awaited<ReturnType<typeof searchPartnerMarketplaceVendors>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  workTypeId: number,
+  params: SearchPartnerMarketplaceVendorsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchPartnerMarketplaceVendors>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getSearchPartnerMarketplaceVendorsQueryKey(partnerId, workTypeId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof searchPartnerMarketplaceVendors>>
+  > = ({ signal }) =>
+    searchPartnerMarketplaceVendors(partnerId, workTypeId, params, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(partnerId && workTypeId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof searchPartnerMarketplaceVendors>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type SearchPartnerMarketplaceVendorsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof searchPartnerMarketplaceVendors>>
+>;
+export type SearchPartnerMarketplaceVendorsQueryError = ErrorType<void>;
+
+/**
+ * @summary Compare current matching vendor offers for an owned work type and saved site
+ */
+
+export function useSearchPartnerMarketplaceVendors<
+  TData = Awaited<ReturnType<typeof searchPartnerMarketplaceVendors>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  workTypeId: number,
+  params: SearchPartnerMarketplaceVendorsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchPartnerMarketplaceVendors>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getSearchPartnerMarketplaceVendorsQueryOptions(
+    partnerId,
+    workTypeId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Read an exact vendor capability and saved partner offer with fresh site-scoped eligibility
+ */
+export const getGetPartnerMarketplaceVendorUrl = (
+  partnerId: number,
+  workTypeId: number,
+  vendorId: number,
+  params: GetPartnerMarketplaceVendorParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/service-marketplace/partners/${partnerId}/work-types/${workTypeId}/vendors/${vendorId}?${stringifiedParams}`
+    : `/api/service-marketplace/partners/${partnerId}/work-types/${workTypeId}/vendors/${vendorId}`;
+};
+
+export const getPartnerMarketplaceVendor = async (
+  partnerId: number,
+  workTypeId: number,
+  vendorId: number,
+  params: GetPartnerMarketplaceVendorParams,
+  options?: RequestInit,
+): Promise<MarketplaceRankedVendor> => {
+  return customFetch<MarketplaceRankedVendor>(
+    getGetPartnerMarketplaceVendorUrl(partnerId, workTypeId, vendorId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetPartnerMarketplaceVendorQueryKey = (
+  partnerId: number,
+  workTypeId: number,
+  vendorId: number,
+  params?: GetPartnerMarketplaceVendorParams,
+) => {
+  return [
+    `/api/service-marketplace/partners/${partnerId}/work-types/${workTypeId}/vendors/${vendorId}`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetPartnerMarketplaceVendorQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPartnerMarketplaceVendor>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  workTypeId: number,
+  vendorId: number,
+  params: GetPartnerMarketplaceVendorParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPartnerMarketplaceVendor>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetPartnerMarketplaceVendorQueryKey(
+      partnerId,
+      workTypeId,
+      vendorId,
+      params,
+    );
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPartnerMarketplaceVendor>>
+  > = ({ signal }) =>
+    getPartnerMarketplaceVendor(partnerId, workTypeId, vendorId, params, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(partnerId && workTypeId && vendorId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPartnerMarketplaceVendor>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPartnerMarketplaceVendorQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPartnerMarketplaceVendor>>
+>;
+export type GetPartnerMarketplaceVendorQueryError = ErrorType<void>;
+
+/**
+ * @summary Read an exact vendor capability and saved partner offer with fresh site-scoped eligibility
+ */
+
+export function useGetPartnerMarketplaceVendor<
+  TData = Awaited<ReturnType<typeof getPartnerMarketplaceVendor>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  workTypeId: number,
+  vendorId: number,
+  params: GetPartnerMarketplaceVendorParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPartnerMarketplaceVendor>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPartnerMarketplaceVendorQueryOptions(
+    partnerId,
+    workTypeId,
+    vendorId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List own capabilities and stored mapping status (active vendor admin or system admin)
+ */
+export const getListVendorMarketplaceCapabilitiesUrl = (vendorId: number) => {
+  return `/api/service-marketplace/vendors/${vendorId}/capabilities`;
+};
+
+export const listVendorMarketplaceCapabilities = async (
+  vendorId: number,
+  options?: RequestInit,
+): Promise<ListVendorMarketplaceCapabilities200> => {
+  return customFetch<ListVendorMarketplaceCapabilities200>(
+    getListVendorMarketplaceCapabilitiesUrl(vendorId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListVendorMarketplaceCapabilitiesQueryKey = (
+  vendorId: number,
+) => {
+  return [`/api/service-marketplace/vendors/${vendorId}/capabilities`] as const;
+};
+
+export const getListVendorMarketplaceCapabilitiesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceCapabilities>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceCapabilities>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListVendorMarketplaceCapabilitiesQueryKey(vendorId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listVendorMarketplaceCapabilities>>
+  > = ({ signal }) =>
+    listVendorMarketplaceCapabilities(vendorId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!vendorId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listVendorMarketplaceCapabilities>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListVendorMarketplaceCapabilitiesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listVendorMarketplaceCapabilities>>
+>;
+export type ListVendorMarketplaceCapabilitiesQueryError = ErrorType<void>;
+
+/**
+ * @summary List own capabilities and stored mapping status (active vendor admin or system admin)
+ */
+
+export function useListVendorMarketplaceCapabilities<
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceCapabilities>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceCapabilities>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListVendorMarketplaceCapabilitiesQueryOptions(
+    vendorId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Save a capability and classify its saved wording
+ */
+export const getCreateVendorMarketplaceCapabilityUrl = (vendorId: number) => {
+  return `/api/service-marketplace/vendors/${vendorId}/capabilities`;
+};
+
+export const createVendorMarketplaceCapability = async (
+  vendorId: number,
+  marketplaceCapabilityInput: MarketplaceCapabilityInput,
+  options?: RequestInit,
+): Promise<MarketplaceCapability> => {
+  return customFetch<MarketplaceCapability>(
+    getCreateVendorMarketplaceCapabilityUrl(vendorId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceCapabilityInput),
+    },
+  );
+};
+
+export const getCreateVendorMarketplaceCapabilityMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createVendorMarketplaceCapability>>,
+    TError,
+    { vendorId: number; data: BodyType<MarketplaceCapabilityInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createVendorMarketplaceCapability>>,
+  TError,
+  { vendorId: number; data: BodyType<MarketplaceCapabilityInput> },
+  TContext
+> => {
+  const mutationKey = ["createVendorMarketplaceCapability"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createVendorMarketplaceCapability>>,
+    { vendorId: number; data: BodyType<MarketplaceCapabilityInput> }
+  > = (props) => {
+    const { vendorId, data } = props ?? {};
+
+    return createVendorMarketplaceCapability(vendorId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateVendorMarketplaceCapabilityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createVendorMarketplaceCapability>>
+>;
+export type CreateVendorMarketplaceCapabilityMutationBody =
+  BodyType<MarketplaceCapabilityInput>;
+export type CreateVendorMarketplaceCapabilityMutationError = ErrorType<void>;
+
+/**
+ * @summary Save a capability and classify its saved wording
+ */
+export const useCreateVendorMarketplaceCapability = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createVendorMarketplaceCapability>>,
+    TError,
+    { vendorId: number; data: BodyType<MarketplaceCapabilityInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createVendorMarketplaceCapability>>,
+  TError,
+  { vendorId: number; data: BodyType<MarketplaceCapabilityInput> },
+  TContext
+> => {
+  return useMutation(
+    getCreateVendorMarketplaceCapabilityMutationOptions(options),
+  );
+};
+
+/**
+ * @summary Preview unsaved capability wording and matching public catalog count without creating any records
+ */
+export const getPreviewVendorMarketplaceCapabilityUrl = (vendorId: number) => {
+  return `/api/service-marketplace/vendors/${vendorId}/capabilities/preview`;
+};
+
+export const previewVendorMarketplaceCapability = async (
+  vendorId: number,
+  previewVendorMarketplaceCapabilityBody: PreviewVendorMarketplaceCapabilityBody,
+  options?: RequestInit,
+): Promise<PreviewVendorMarketplaceCapability200> => {
+  return customFetch<PreviewVendorMarketplaceCapability200>(
+    getPreviewVendorMarketplaceCapabilityUrl(vendorId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(previewVendorMarketplaceCapabilityBody),
+    },
+  );
+};
+
+export const getPreviewVendorMarketplaceCapabilityMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewVendorMarketplaceCapability>>,
+    TError,
+    {
+      vendorId: number;
+      data: BodyType<PreviewVendorMarketplaceCapabilityBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof previewVendorMarketplaceCapability>>,
+  TError,
+  { vendorId: number; data: BodyType<PreviewVendorMarketplaceCapabilityBody> },
+  TContext
+> => {
+  const mutationKey = ["previewVendorMarketplaceCapability"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof previewVendorMarketplaceCapability>>,
+    { vendorId: number; data: BodyType<PreviewVendorMarketplaceCapabilityBody> }
+  > = (props) => {
+    const { vendorId, data } = props ?? {};
+
+    return previewVendorMarketplaceCapability(vendorId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PreviewVendorMarketplaceCapabilityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof previewVendorMarketplaceCapability>>
+>;
+export type PreviewVendorMarketplaceCapabilityMutationBody =
+  BodyType<PreviewVendorMarketplaceCapabilityBody>;
+export type PreviewVendorMarketplaceCapabilityMutationError = ErrorType<void>;
+
+/**
+ * @summary Preview unsaved capability wording and matching public catalog count without creating any records
+ */
+export const usePreviewVendorMarketplaceCapability = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewVendorMarketplaceCapability>>,
+    TError,
+    {
+      vendorId: number;
+      data: BodyType<PreviewVendorMarketplaceCapabilityBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof previewVendorMarketplaceCapability>>,
+  TError,
+  { vendorId: number; data: BodyType<PreviewVendorMarketplaceCapabilityBody> },
+  TContext
+> => {
+  return useMutation(
+    getPreviewVendorMarketplaceCapabilityMutationOptions(options),
+  );
+};
+
+/**
+ * @summary Update own capability; changed wording invalidates its previous mapping
+ */
+export const getUpdateVendorMarketplaceCapabilityUrl = (
+  vendorId: number,
+  capabilityId: number,
+) => {
+  return `/api/service-marketplace/vendors/${vendorId}/capabilities/${capabilityId}`;
+};
+
+export const updateVendorMarketplaceCapability = async (
+  vendorId: number,
+  capabilityId: number,
+  marketplaceCapabilityPatch: MarketplaceCapabilityPatch,
+  options?: RequestInit,
+): Promise<MarketplaceCapability> => {
+  return customFetch<MarketplaceCapability>(
+    getUpdateVendorMarketplaceCapabilityUrl(vendorId, capabilityId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceCapabilityPatch),
+    },
+  );
+};
+
+export const getUpdateVendorMarketplaceCapabilityMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateVendorMarketplaceCapability>>,
+    TError,
+    {
+      vendorId: number;
+      capabilityId: number;
+      data: BodyType<MarketplaceCapabilityPatch>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateVendorMarketplaceCapability>>,
+  TError,
+  {
+    vendorId: number;
+    capabilityId: number;
+    data: BodyType<MarketplaceCapabilityPatch>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateVendorMarketplaceCapability"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateVendorMarketplaceCapability>>,
+    {
+      vendorId: number;
+      capabilityId: number;
+      data: BodyType<MarketplaceCapabilityPatch>;
+    }
+  > = (props) => {
+    const { vendorId, capabilityId, data } = props ?? {};
+
+    return updateVendorMarketplaceCapability(
+      vendorId,
+      capabilityId,
+      data,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateVendorMarketplaceCapabilityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateVendorMarketplaceCapability>>
+>;
+export type UpdateVendorMarketplaceCapabilityMutationBody =
+  BodyType<MarketplaceCapabilityPatch>;
+export type UpdateVendorMarketplaceCapabilityMutationError = ErrorType<void>;
+
+/**
+ * @summary Update own capability; changed wording invalidates its previous mapping
+ */
+export const useUpdateVendorMarketplaceCapability = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateVendorMarketplaceCapability>>,
+    TError,
+    {
+      vendorId: number;
+      capabilityId: number;
+      data: BodyType<MarketplaceCapabilityPatch>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateVendorMarketplaceCapability>>,
+  TError,
+  {
+    vendorId: number;
+    capabilityId: number;
+    data: BodyType<MarketplaceCapabilityPatch>;
+  },
+  TContext
+> => {
+  return useMutation(
+    getUpdateVendorMarketplaceCapabilityMutationOptions(options),
+  );
+};
+
+/**
+ * @summary List own company default and capability coverage history
+ */
+export const getListVendorMarketplaceServiceAreasUrl = (vendorId: number) => {
+  return `/api/service-marketplace/vendors/${vendorId}/service-areas`;
+};
+
+export const listVendorMarketplaceServiceAreas = async (
+  vendorId: number,
+  options?: RequestInit,
+): Promise<ListVendorMarketplaceServiceAreas200> => {
+  return customFetch<ListVendorMarketplaceServiceAreas200>(
+    getListVendorMarketplaceServiceAreasUrl(vendorId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListVendorMarketplaceServiceAreasQueryKey = (
+  vendorId: number,
+) => {
+  return [
+    `/api/service-marketplace/vendors/${vendorId}/service-areas`,
+  ] as const;
+};
+
+export const getListVendorMarketplaceServiceAreasQueryOptions = <
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceServiceAreas>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceServiceAreas>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListVendorMarketplaceServiceAreasQueryKey(vendorId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listVendorMarketplaceServiceAreas>>
+  > = ({ signal }) =>
+    listVendorMarketplaceServiceAreas(vendorId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!vendorId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listVendorMarketplaceServiceAreas>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListVendorMarketplaceServiceAreasQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listVendorMarketplaceServiceAreas>>
+>;
+export type ListVendorMarketplaceServiceAreasQueryError = ErrorType<void>;
+
+/**
+ * @summary List own company default and capability coverage history
+ */
+
+export function useListVendorMarketplaceServiceAreas<
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceServiceAreas>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceServiceAreas>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListVendorMarketplaceServiceAreasQueryOptions(
+    vendorId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Save a radius using the company's saved geocoded base; null capability sets the default
+ */
+export const getSaveVendorMarketplaceServiceAreaUrl = (vendorId: number) => {
+  return `/api/service-marketplace/vendors/${vendorId}/service-areas`;
+};
+
+export const saveVendorMarketplaceServiceArea = async (
+  vendorId: number,
+  saveVendorMarketplaceServiceAreaBody: SaveVendorMarketplaceServiceAreaBody,
+  options?: RequestInit,
+): Promise<MarketplaceServiceArea> => {
+  return customFetch<MarketplaceServiceArea>(
+    getSaveVendorMarketplaceServiceAreaUrl(vendorId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(saveVendorMarketplaceServiceAreaBody),
+    },
+  );
+};
+
+export const getSaveVendorMarketplaceServiceAreaMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveVendorMarketplaceServiceArea>>,
+    TError,
+    { vendorId: number; data: BodyType<SaveVendorMarketplaceServiceAreaBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveVendorMarketplaceServiceArea>>,
+  TError,
+  { vendorId: number; data: BodyType<SaveVendorMarketplaceServiceAreaBody> },
+  TContext
+> => {
+  const mutationKey = ["saveVendorMarketplaceServiceArea"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveVendorMarketplaceServiceArea>>,
+    { vendorId: number; data: BodyType<SaveVendorMarketplaceServiceAreaBody> }
+  > = (props) => {
+    const { vendorId, data } = props ?? {};
+
+    return saveVendorMarketplaceServiceArea(vendorId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveVendorMarketplaceServiceAreaMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveVendorMarketplaceServiceArea>>
+>;
+export type SaveVendorMarketplaceServiceAreaMutationBody =
+  BodyType<SaveVendorMarketplaceServiceAreaBody>;
+export type SaveVendorMarketplaceServiceAreaMutationError = ErrorType<void>;
+
+/**
+ * @summary Save a radius using the company's saved geocoded base; null capability sets the default
+ */
+export const useSaveVendorMarketplaceServiceArea = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveVendorMarketplaceServiceArea>>,
+    TError,
+    { vendorId: number; data: BodyType<SaveVendorMarketplaceServiceAreaBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveVendorMarketplaceServiceArea>>,
+  TError,
+  { vendorId: number; data: BodyType<SaveVendorMarketplaceServiceAreaBody> },
+  TContext
+> => {
+  return useMutation(
+    getSaveVendorMarketplaceServiceAreaMutationOptions(options),
+  );
+};
+
+/**
+ * @summary End the own capability override and resume live company-default inheritance; history is retained
+ */
+export const getClearVendorMarketplaceServiceAreaOverrideUrl = (
+  vendorId: number,
+  capabilityId: number,
+) => {
+  return `/api/service-marketplace/vendors/${vendorId}/service-areas/capabilities/${capabilityId}`;
+};
+
+export const clearVendorMarketplaceServiceAreaOverride = async (
+  vendorId: number,
+  capabilityId: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(
+    getClearVendorMarketplaceServiceAreaOverrideUrl(vendorId, capabilityId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getClearVendorMarketplaceServiceAreaOverrideMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearVendorMarketplaceServiceAreaOverride>>,
+    TError,
+    { vendorId: number; capabilityId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearVendorMarketplaceServiceAreaOverride>>,
+  TError,
+  { vendorId: number; capabilityId: number },
+  TContext
+> => {
+  const mutationKey = ["clearVendorMarketplaceServiceAreaOverride"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearVendorMarketplaceServiceAreaOverride>>,
+    { vendorId: number; capabilityId: number }
+  > = (props) => {
+    const { vendorId, capabilityId } = props ?? {};
+
+    return clearVendorMarketplaceServiceAreaOverride(
+      vendorId,
+      capabilityId,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearVendorMarketplaceServiceAreaOverrideMutationResult =
+  NonNullable<
+    Awaited<ReturnType<typeof clearVendorMarketplaceServiceAreaOverride>>
+  >;
+
+export type ClearVendorMarketplaceServiceAreaOverrideMutationError =
+  ErrorType<void>;
+
+/**
+ * @summary End the own capability override and resume live company-default inheritance; history is retained
+ */
+export const useClearVendorMarketplaceServiceAreaOverride = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearVendorMarketplaceServiceAreaOverride>>,
+    TError,
+    { vendorId: number; capabilityId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof clearVendorMarketplaceServiceAreaOverride>>,
+  TError,
+  { vendorId: number; capabilityId: number },
+  TContext
+> => {
+  return useMutation(
+    getClearVendorMarketplaceServiceAreaOverrideMutationOptions(options),
+  );
+};
+
+/**
+ * @summary List only the calling vendor's partner-specific terms
+ */
+export const getListVendorMarketplacePartnerRatesUrl = (vendorId: number) => {
+  return `/api/service-marketplace/vendors/${vendorId}/partner-rates`;
+};
+
+export const listVendorMarketplacePartnerRates = async (
+  vendorId: number,
+  options?: RequestInit,
+): Promise<ListVendorMarketplacePartnerRates200> => {
+  return customFetch<ListVendorMarketplacePartnerRates200>(
+    getListVendorMarketplacePartnerRatesUrl(vendorId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListVendorMarketplacePartnerRatesQueryKey = (
+  vendorId: number,
+) => {
+  return [
+    `/api/service-marketplace/vendors/${vendorId}/partner-rates`,
+  ] as const;
+};
+
+export const getListVendorMarketplacePartnerRatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listVendorMarketplacePartnerRates>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplacePartnerRates>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListVendorMarketplacePartnerRatesQueryKey(vendorId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listVendorMarketplacePartnerRates>>
+  > = ({ signal }) =>
+    listVendorMarketplacePartnerRates(vendorId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!vendorId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listVendorMarketplacePartnerRates>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListVendorMarketplacePartnerRatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listVendorMarketplacePartnerRates>>
+>;
+export type ListVendorMarketplacePartnerRatesQueryError = ErrorType<void>;
+
+/**
+ * @summary List only the calling vendor's partner-specific terms
+ */
+
+export function useListVendorMarketplacePartnerRates<
+  TData = Awaited<ReturnType<typeof listVendorMarketplacePartnerRates>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplacePartnerRates>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListVendorMarketplacePartnerRatesQueryOptions(
+    vendorId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Save own partner rate after rechecking active semantic match; partner identity is server-derived
+ */
+export const getSaveVendorMarketplacePartnerRateUrl = (vendorId: number) => {
+  return `/api/service-marketplace/vendors/${vendorId}/partner-rates`;
+};
+
+export const saveVendorMarketplacePartnerRate = async (
+  vendorId: number,
+  marketplacePartnerRateInput: MarketplacePartnerRateInput,
+  options?: RequestInit,
+): Promise<MarketplacePartnerRate> => {
+  return customFetch<MarketplacePartnerRate>(
+    getSaveVendorMarketplacePartnerRateUrl(vendorId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplacePartnerRateInput),
+    },
+  );
+};
+
+export const getSaveVendorMarketplacePartnerRateMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveVendorMarketplacePartnerRate>>,
+    TError,
+    { vendorId: number; data: BodyType<MarketplacePartnerRateInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveVendorMarketplacePartnerRate>>,
+  TError,
+  { vendorId: number; data: BodyType<MarketplacePartnerRateInput> },
+  TContext
+> => {
+  const mutationKey = ["saveVendorMarketplacePartnerRate"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveVendorMarketplacePartnerRate>>,
+    { vendorId: number; data: BodyType<MarketplacePartnerRateInput> }
+  > = (props) => {
+    const { vendorId, data } = props ?? {};
+
+    return saveVendorMarketplacePartnerRate(vendorId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveVendorMarketplacePartnerRateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveVendorMarketplacePartnerRate>>
+>;
+export type SaveVendorMarketplacePartnerRateMutationBody =
+  BodyType<MarketplacePartnerRateInput>;
+export type SaveVendorMarketplacePartnerRateMutationError = ErrorType<void>;
+
+/**
+ * @summary Save own partner rate after rechecking active semantic match; partner identity is server-derived
+ */
+export const useSaveVendorMarketplacePartnerRate = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveVendorMarketplacePartnerRate>>,
+    TError,
+    { vendorId: number; data: BodyType<MarketplacePartnerRateInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveVendorMarketplacePartnerRate>>,
+  TError,
+  { vendorId: number; data: BodyType<MarketplacePartnerRateInput> },
+  TContext
+> => {
+  return useMutation(
+    getSaveVendorMarketplacePartnerRateMutationOptions(options),
+  );
+};
+
+/**
+ * @summary Discover all matching partner catalogs without a prior relationship using the approved coarse projection
+ */
+export const getListVendorMarketplaceMatchingDemandUrl = (
+  vendorId: number,
+  params?: ListVendorMarketplaceMatchingDemandParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/service-marketplace/vendors/${vendorId}/matching-demand?${stringifiedParams}`
+    : `/api/service-marketplace/vendors/${vendorId}/matching-demand`;
+};
+
+export const listVendorMarketplaceMatchingDemand = async (
+  vendorId: number,
+  params?: ListVendorMarketplaceMatchingDemandParams,
+  options?: RequestInit,
+): Promise<ListVendorMarketplaceMatchingDemand200> => {
+  return customFetch<ListVendorMarketplaceMatchingDemand200>(
+    getListVendorMarketplaceMatchingDemandUrl(vendorId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListVendorMarketplaceMatchingDemandQueryKey = (
+  vendorId: number,
+  params?: ListVendorMarketplaceMatchingDemandParams,
+) => {
+  return [
+    `/api/service-marketplace/vendors/${vendorId}/matching-demand`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListVendorMarketplaceMatchingDemandQueryOptions = <
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceMatchingDemand>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  params?: ListVendorMarketplaceMatchingDemandParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceMatchingDemand>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListVendorMarketplaceMatchingDemandQueryKey(vendorId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listVendorMarketplaceMatchingDemand>>
+  > = ({ signal }) =>
+    listVendorMarketplaceMatchingDemand(vendorId, params, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!vendorId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listVendorMarketplaceMatchingDemand>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListVendorMarketplaceMatchingDemandQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listVendorMarketplaceMatchingDemand>>
+>;
+export type ListVendorMarketplaceMatchingDemandQueryError = ErrorType<void>;
+
+/**
+ * @summary Discover all matching partner catalogs without a prior relationship using the approved coarse projection
+ */
+
+export function useListVendorMarketplaceMatchingDemand<
+  TData = Awaited<ReturnType<typeof listVendorMarketplaceMatchingDemand>>,
+  TError = ErrorType<void>,
+>(
+  vendorId: number,
+  params?: ListVendorMarketplaceMatchingDemandParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listVendorMarketplaceMatchingDemand>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListVendorMarketplaceMatchingDemandQueryOptions(
+    vendorId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List canonical services and aliases (identified admin only)
+ */
+export const getListAdminCanonicalServicesUrl = (
+  params?: ListAdminCanonicalServicesParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/canonical-services?${stringifiedParams}`
+    : `/api/admin/canonical-services`;
+};
+
+export const listAdminCanonicalServices = async (
+  params?: ListAdminCanonicalServicesParams,
+  options?: RequestInit,
+): Promise<ListAdminCanonicalServices200> => {
+  return customFetch<ListAdminCanonicalServices200>(
+    getListAdminCanonicalServicesUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAdminCanonicalServicesQueryKey = (
+  params?: ListAdminCanonicalServicesParams,
+) => {
+  return [
+    `/api/admin/canonical-services`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListAdminCanonicalServicesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminCanonicalServices>>,
+  TError = ErrorType<void>,
+>(
+  params?: ListAdminCanonicalServicesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAdminCanonicalServices>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListAdminCanonicalServicesQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAdminCanonicalServices>>
+  > = ({ signal }) =>
+    listAdminCanonicalServices(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminCanonicalServices>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAdminCanonicalServicesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminCanonicalServices>>
+>;
+export type ListAdminCanonicalServicesQueryError = ErrorType<void>;
+
+/**
+ * @summary List canonical services and aliases (identified admin only)
+ */
+
+export function useListAdminCanonicalServices<
+  TData = Awaited<ReturnType<typeof listAdminCanonicalServices>>,
+  TError = ErrorType<void>,
+>(
+  params?: ListAdminCanonicalServicesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAdminCanonicalServices>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAdminCanonicalServicesQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a canonical service (identified admin only)
+ */
+export const getCreateAdminCanonicalServiceUrl = () => {
+  return `/api/admin/canonical-services`;
+};
+
+export const createAdminCanonicalService = async (
+  adminCanonicalServiceInput: AdminCanonicalServiceInput,
+  options?: RequestInit,
+): Promise<AdminCanonicalService> => {
+  return customFetch<AdminCanonicalService>(
+    getCreateAdminCanonicalServiceUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(adminCanonicalServiceInput),
+    },
+  );
+};
+
+export const getCreateAdminCanonicalServiceMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAdminCanonicalService>>,
+    TError,
+    { data: BodyType<AdminCanonicalServiceInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAdminCanonicalService>>,
+  TError,
+  { data: BodyType<AdminCanonicalServiceInput> },
+  TContext
+> => {
+  const mutationKey = ["createAdminCanonicalService"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAdminCanonicalService>>,
+    { data: BodyType<AdminCanonicalServiceInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAdminCanonicalService(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAdminCanonicalServiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAdminCanonicalService>>
+>;
+export type CreateAdminCanonicalServiceMutationBody =
+  BodyType<AdminCanonicalServiceInput>;
+export type CreateAdminCanonicalServiceMutationError = ErrorType<void>;
+
+/**
+ * @summary Create a canonical service (identified admin only)
+ */
+export const useCreateAdminCanonicalService = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAdminCanonicalService>>,
+    TError,
+    { data: BodyType<AdminCanonicalServiceInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createAdminCanonicalService>>,
+  TError,
+  { data: BodyType<AdminCanonicalServiceInput> },
+  TContext
+> => {
+  return useMutation(getCreateAdminCanonicalServiceMutationOptions(options));
+};
+
+/**
+ * @summary Update canonical wording while preserving its stable code (identified admin only)
+ */
+export const getUpdateAdminCanonicalServiceUrl = (id: number) => {
+  return `/api/admin/canonical-services/${id}`;
+};
+
+export const updateAdminCanonicalService = async (
+  id: number,
+  adminCanonicalServicePatch: AdminCanonicalServicePatch,
+  options?: RequestInit,
+): Promise<AdminCanonicalService> => {
+  return customFetch<AdminCanonicalService>(
+    getUpdateAdminCanonicalServiceUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(adminCanonicalServicePatch),
+    },
+  );
+};
+
+export const getUpdateAdminCanonicalServiceMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminCanonicalService>>,
+    TError,
+    { id: number; data: BodyType<AdminCanonicalServicePatch> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAdminCanonicalService>>,
+  TError,
+  { id: number; data: BodyType<AdminCanonicalServicePatch> },
+  TContext
+> => {
+  const mutationKey = ["updateAdminCanonicalService"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAdminCanonicalService>>,
+    { id: number; data: BodyType<AdminCanonicalServicePatch> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateAdminCanonicalService(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAdminCanonicalServiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAdminCanonicalService>>
+>;
+export type UpdateAdminCanonicalServiceMutationBody =
+  BodyType<AdminCanonicalServicePatch>;
+export type UpdateAdminCanonicalServiceMutationError = ErrorType<void>;
+
+/**
+ * @summary Update canonical wording while preserving its stable code (identified admin only)
+ */
+export const useUpdateAdminCanonicalService = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminCanonicalService>>,
+    TError,
+    { id: number; data: BodyType<AdminCanonicalServicePatch> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateAdminCanonicalService>>,
+  TError,
+  { id: number; data: BodyType<AdminCanonicalServicePatch> },
+  TContext
+> => {
+  return useMutation(getUpdateAdminCanonicalServiceMutationOptions(options));
+};
+
+/**
+ * @summary Archive a canonical service without deleting historical references (identified admin only)
+ */
+export const getArchiveAdminCanonicalServiceUrl = (id: number) => {
+  return `/api/admin/canonical-services/${id}`;
+};
+
+export const archiveAdminCanonicalService = async (
+  id: number,
+  options?: RequestInit,
+): Promise<AdminCanonicalService> => {
+  return customFetch<AdminCanonicalService>(
+    getArchiveAdminCanonicalServiceUrl(id),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getArchiveAdminCanonicalServiceMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof archiveAdminCanonicalService>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof archiveAdminCanonicalService>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["archiveAdminCanonicalService"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof archiveAdminCanonicalService>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return archiveAdminCanonicalService(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ArchiveAdminCanonicalServiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof archiveAdminCanonicalService>>
+>;
+
+export type ArchiveAdminCanonicalServiceMutationError = ErrorType<void>;
+
+/**
+ * @summary Archive a canonical service without deleting historical references (identified admin only)
+ */
+export const useArchiveAdminCanonicalService = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof archiveAdminCanonicalService>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof archiveAdminCanonicalService>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getArchiveAdminCanonicalServiceMutationOptions(options));
+};
+
+/**
+ * @summary Add reviewed retrieval vocabulary (identified admin only)
+ */
+export const getAddAdminCanonicalServiceAliasUrl = (id: number) => {
+  return `/api/admin/canonical-services/${id}/aliases`;
+};
+
+export const addAdminCanonicalServiceAlias = async (
+  id: number,
+  adminCanonicalAliasInput: AdminCanonicalAliasInput,
+  options?: RequestInit,
+): Promise<AdminCanonicalAlias> => {
+  return customFetch<AdminCanonicalAlias>(
+    getAddAdminCanonicalServiceAliasUrl(id),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(adminCanonicalAliasInput),
+    },
+  );
+};
+
+export const getAddAdminCanonicalServiceAliasMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addAdminCanonicalServiceAlias>>,
+    TError,
+    { id: number; data: BodyType<AdminCanonicalAliasInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addAdminCanonicalServiceAlias>>,
+  TError,
+  { id: number; data: BodyType<AdminCanonicalAliasInput> },
+  TContext
+> => {
+  const mutationKey = ["addAdminCanonicalServiceAlias"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addAdminCanonicalServiceAlias>>,
+    { id: number; data: BodyType<AdminCanonicalAliasInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return addAdminCanonicalServiceAlias(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddAdminCanonicalServiceAliasMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addAdminCanonicalServiceAlias>>
+>;
+export type AddAdminCanonicalServiceAliasMutationBody =
+  BodyType<AdminCanonicalAliasInput>;
+export type AddAdminCanonicalServiceAliasMutationError = ErrorType<void>;
+
+/**
+ * @summary Add reviewed retrieval vocabulary (identified admin only)
+ */
+export const useAddAdminCanonicalServiceAlias = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addAdminCanonicalServiceAlias>>,
+    TError,
+    { id: number; data: BodyType<AdminCanonicalAliasInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addAdminCanonicalServiceAlias>>,
+  TError,
+  { id: number; data: BodyType<AdminCanonicalAliasInput> },
+  TContext
+> => {
+  return useMutation(getAddAdminCanonicalServiceAliasMutationOptions(options));
+};
+
+/**
+ * @summary Update or deactivate an alias (identified admin only)
+ */
+export const getUpdateAdminCanonicalServiceAliasUrl = (
+  id: number,
+  aliasId: number,
+) => {
+  return `/api/admin/canonical-services/${id}/aliases/${aliasId}`;
+};
+
+export const updateAdminCanonicalServiceAlias = async (
+  id: number,
+  aliasId: number,
+  adminCanonicalAliasPatch: AdminCanonicalAliasPatch,
+  options?: RequestInit,
+): Promise<AdminCanonicalAlias> => {
+  return customFetch<AdminCanonicalAlias>(
+    getUpdateAdminCanonicalServiceAliasUrl(id, aliasId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(adminCanonicalAliasPatch),
+    },
+  );
+};
+
+export const getUpdateAdminCanonicalServiceAliasMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminCanonicalServiceAlias>>,
+    TError,
+    { id: number; aliasId: number; data: BodyType<AdminCanonicalAliasPatch> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAdminCanonicalServiceAlias>>,
+  TError,
+  { id: number; aliasId: number; data: BodyType<AdminCanonicalAliasPatch> },
+  TContext
+> => {
+  const mutationKey = ["updateAdminCanonicalServiceAlias"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAdminCanonicalServiceAlias>>,
+    { id: number; aliasId: number; data: BodyType<AdminCanonicalAliasPatch> }
+  > = (props) => {
+    const { id, aliasId, data } = props ?? {};
+
+    return updateAdminCanonicalServiceAlias(id, aliasId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAdminCanonicalServiceAliasMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAdminCanonicalServiceAlias>>
+>;
+export type UpdateAdminCanonicalServiceAliasMutationBody =
+  BodyType<AdminCanonicalAliasPatch>;
+export type UpdateAdminCanonicalServiceAliasMutationError = ErrorType<void>;
+
+/**
+ * @summary Update or deactivate an alias (identified admin only)
+ */
+export const useUpdateAdminCanonicalServiceAlias = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminCanonicalServiceAlias>>,
+    TError,
+    { id: number; aliasId: number; data: BodyType<AdminCanonicalAliasPatch> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateAdminCanonicalServiceAlias>>,
+  TError,
+  { id: number; aliasId: number; data: BodyType<AdminCanonicalAliasPatch> },
+  TContext
+> => {
+  return useMutation(
+    getUpdateAdminCanonicalServiceAliasMutationOptions(options),
+  );
+};
+
+/**
+ * @summary List the latest pending or conflicting mapping per subject (identified admin only)
+ */
+export const getListAdminServiceMappingsUrl = (
+  params?: ListAdminServiceMappingsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/service-mappings?${stringifiedParams}`
+    : `/api/admin/service-mappings`;
+};
+
+export const listAdminServiceMappings = async (
+  params?: ListAdminServiceMappingsParams,
+  options?: RequestInit,
+): Promise<AdminServiceMappingPage> => {
+  return customFetch<AdminServiceMappingPage>(
+    getListAdminServiceMappingsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAdminServiceMappingsQueryKey = (
+  params?: ListAdminServiceMappingsParams,
+) => {
+  return [`/api/admin/service-mappings`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAdminServiceMappingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminServiceMappings>>,
+  TError = ErrorType<void>,
+>(
+  params?: ListAdminServiceMappingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAdminServiceMappings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListAdminServiceMappingsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAdminServiceMappings>>
+  > = ({ signal }) =>
+    listAdminServiceMappings(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminServiceMappings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAdminServiceMappingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminServiceMappings>>
+>;
+export type ListAdminServiceMappingsQueryError = ErrorType<void>;
+
+/**
+ * @summary List the latest pending or conflicting mapping per subject (identified admin only)
+ */
+
+export function useListAdminServiceMappings<
+  TData = Awaited<ReturnType<typeof listAdminServiceMappings>>,
+  TError = ErrorType<void>,
+>(
+  params?: ListAdminServiceMappingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAdminServiceMappings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAdminServiceMappingsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Append an audited approval, rejection or remap (identified admin only)
+ */
+export const getReviewAdminServiceMappingUrl = (id: number) => {
+  return `/api/admin/service-mappings/${id}/review`;
+};
+
+export const reviewAdminServiceMapping = async (
+  id: number,
+  reviewAdminServiceMappingBody: ReviewAdminServiceMappingBody,
+  options?: RequestInit,
+): Promise<AdminServiceMappingResult> => {
+  return customFetch<AdminServiceMappingResult>(
+    getReviewAdminServiceMappingUrl(id),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(reviewAdminServiceMappingBody),
+    },
+  );
+};
+
+export const getReviewAdminServiceMappingMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewAdminServiceMapping>>,
+    TError,
+    { id: number; data: BodyType<ReviewAdminServiceMappingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reviewAdminServiceMapping>>,
+  TError,
+  { id: number; data: BodyType<ReviewAdminServiceMappingBody> },
+  TContext
+> => {
+  const mutationKey = ["reviewAdminServiceMapping"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reviewAdminServiceMapping>>,
+    { id: number; data: BodyType<ReviewAdminServiceMappingBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return reviewAdminServiceMapping(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReviewAdminServiceMappingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reviewAdminServiceMapping>>
+>;
+export type ReviewAdminServiceMappingMutationBody =
+  BodyType<ReviewAdminServiceMappingBody>;
+export type ReviewAdminServiceMappingMutationError = ErrorType<void>;
+
+/**
+ * @summary Append an audited approval, rejection or remap (identified admin only)
+ */
+export const useReviewAdminServiceMapping = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewAdminServiceMapping>>,
+    TError,
+    { id: number; data: BodyType<ReviewAdminServiceMappingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof reviewAdminServiceMapping>>,
+  TError,
+  { id: number; data: BodyType<ReviewAdminServiceMappingBody> },
+  TContext
+> => {
+  return useMutation(getReviewAdminServiceMappingMutationOptions(options));
+};
+
+/**
+ * @summary Read immutable mapping history and the current active mapping (identified admin only)
+ */
+export const getListAdminServiceMappingHistoryUrl = (
+  subjectType: "partner_work_type" | "vendor_capability",
+  subjectId: number,
+  params?: ListAdminServiceMappingHistoryParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/service-subjects/${subjectType}/${subjectId}/mappings?${stringifiedParams}`
+    : `/api/admin/service-subjects/${subjectType}/${subjectId}/mappings`;
+};
+
+export const listAdminServiceMappingHistory = async (
+  subjectType: "partner_work_type" | "vendor_capability",
+  subjectId: number,
+  params?: ListAdminServiceMappingHistoryParams,
+  options?: RequestInit,
+): Promise<AdminServiceMappingPage> => {
+  return customFetch<AdminServiceMappingPage>(
+    getListAdminServiceMappingHistoryUrl(subjectType, subjectId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAdminServiceMappingHistoryQueryKey = (
+  subjectType: "partner_work_type" | "vendor_capability",
+  subjectId: number,
+  params?: ListAdminServiceMappingHistoryParams,
+) => {
+  return [
+    `/api/admin/service-subjects/${subjectType}/${subjectId}/mappings`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListAdminServiceMappingHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminServiceMappingHistory>>,
+  TError = ErrorType<void>,
+>(
+  subjectType: "partner_work_type" | "vendor_capability",
+  subjectId: number,
+  params?: ListAdminServiceMappingHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAdminServiceMappingHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListAdminServiceMappingHistoryQueryKey(subjectType, subjectId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAdminServiceMappingHistory>>
+  > = ({ signal }) =>
+    listAdminServiceMappingHistory(subjectType, subjectId, params, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(subjectType && subjectId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminServiceMappingHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAdminServiceMappingHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminServiceMappingHistory>>
+>;
+export type ListAdminServiceMappingHistoryQueryError = ErrorType<void>;
+
+/**
+ * @summary Read immutable mapping history and the current active mapping (identified admin only)
+ */
+
+export function useListAdminServiceMappingHistory<
+  TData = Awaited<ReturnType<typeof listAdminServiceMappingHistory>>,
+  TError = ErrorType<void>,
+>(
+  subjectType: "partner_work_type" | "vendor_capability",
+  subjectId: number,
+  params?: ListAdminServiceMappingHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAdminServiceMappingHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAdminServiceMappingHistoryQueryOptions(
+    subjectType,
+    subjectId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Classify saved subject text using the shared versioned matching engine (identified admin only)
+ */
+export const getReclassifyAdminServiceSubjectUrl = (
+  subjectType: "partner_work_type" | "vendor_capability",
+  subjectId: number,
+) => {
+  return `/api/admin/service-subjects/${subjectType}/${subjectId}/reclassify`;
+};
+
+export const reclassifyAdminServiceSubject = async (
+  subjectType: "partner_work_type" | "vendor_capability",
+  subjectId: number,
+  options?: RequestInit,
+): Promise<AdminServiceMappingResult> => {
+  return customFetch<AdminServiceMappingResult>(
+    getReclassifyAdminServiceSubjectUrl(subjectType, subjectId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getReclassifyAdminServiceSubjectMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reclassifyAdminServiceSubject>>,
+    TError,
+    {
+      subjectType: "partner_work_type" | "vendor_capability";
+      subjectId: number;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reclassifyAdminServiceSubject>>,
+  TError,
+  { subjectType: "partner_work_type" | "vendor_capability"; subjectId: number },
+  TContext
+> => {
+  const mutationKey = ["reclassifyAdminServiceSubject"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reclassifyAdminServiceSubject>>,
+    {
+      subjectType: "partner_work_type" | "vendor_capability";
+      subjectId: number;
+    }
+  > = (props) => {
+    const { subjectType, subjectId } = props ?? {};
+
+    return reclassifyAdminServiceSubject(
+      subjectType,
+      subjectId,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReclassifyAdminServiceSubjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reclassifyAdminServiceSubject>>
+>;
+
+export type ReclassifyAdminServiceSubjectMutationError = ErrorType<void>;
+
+/**
+ * @summary Classify saved subject text using the shared versioned matching engine (identified admin only)
+ */
+export const useReclassifyAdminServiceSubject = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reclassifyAdminServiceSubject>>,
+    TError,
+    {
+      subjectType: "partner_work_type" | "vendor_capability";
+      subjectId: number;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof reclassifyAdminServiceSubject>>,
+  TError,
+  { subjectType: "partner_work_type" | "vendor_capability"; subjectId: number },
+  TContext
+> => {
+  return useMutation(getReclassifyAdminServiceSubjectMutationOptions(options));
+};
 
 /**
  * Returns server health status
