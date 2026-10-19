@@ -247,5 +247,7 @@ jobs:
           unset database_url
           node -e 'const d=require("/tmp/go-observe.json"); console.log(JSON.stringify({footprint:d.footprint,fleet:d.fleet,gate:d.gate,checks:d.checks},null,1))' || true
           rm -f /tmp/go-observe.json
-          exit "$observe_rc"
+          if [ "$observe_rc" -ne 0 ]; then
+            echo "::warning title=Go ecosphere observer::Consistency violations in synthetic Go data (see checks above); the API deploy itself succeeded"
+          fi
           REMOTE

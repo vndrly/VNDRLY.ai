@@ -40,7 +40,8 @@ database is the right home for write-workflow testing.
 
 - The first deploy that includes it inserts the companies, with history ending at that moment.
 - Every later deploy prints "already provisioned" and changes nothing.
-- The read-only observer then runs, and the step fails if any consistency check fails.
+- The read-only observer then runs. Any violation is reported as a workflow warning, so a synthetic-data finding can't fail the API deploy.
+- Production's `gate_change_over_default_station` trigger creates a "Main gate" station for every new site. The provisioner reuses that station at gated sites instead of adding a second one.
 - Generated logins are written to `/var/www/vndrly/.local/go-demo-accounts.json` on the server (owner `vndrly`, mode 600). They never go to CI logs or git. An admin can also reset any `go-demo-*` password from the app.
 
 Production has no synthetic-organization flag, so the Go companies show up in admin-wide views and reports, including the 2026 1099 aggregation. They have no federal tax ID. Every Go row is identifiable by the `go-ecosphere-v1` marker or by the Go organization and user ids. Removing them would be a delete, which needs explicit approval and a scoped plan first.
@@ -163,10 +164,10 @@ Gate at "now": 8 vehicles on site, 3 pending admissions, 4 entries needing revie
 
 ## Consistency checks (`observe.ts`)
 
-The observer runs 21 checks:
+The observer runs 22 checks:
 
 - **Tickets:** status ↔ lifecycle pairing (field, gate and fleet); history ends at the current status and starts after creation; nothing recorded in the future; check-out after check-in; no worker double-booked; crew belongs to the ticket's vendor.
-- **Gate:** attendant sessions never overlap; every FieldGo gated arrival has a gate entry; every gate entry was recorded by an on-duty attendant or is flagged for review.
+- **Gate:** attendant sessions never overlap; every FieldGo gated arrival has a gate entry; every gate entry was recorded by an on-duty attendant or is flagged for review; exactly one gate station per gated site.
 - **Fleet:** runs have a linked ticket, a billed line and ordered events; no driver is on two runs at once; fleet plans are valid and locked to their site; route points stay inside the run window.
 - **Billing:** invoice totals equal lines plus tax; only approved tickets are invoiced.
 - **Work Hub and access:** message authors and task assignees are channel members; every non-admin vendor person can see at least one contracted site.
