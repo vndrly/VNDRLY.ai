@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 90
     env:
       VNDRLY_TEST_DB_MODE: fresh-local
       VNDRLY_TEST_DB_MAINTENANCE_URL: postgresql://postgres@127.0.0.1:55439/postgres

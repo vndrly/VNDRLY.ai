@@ -7,6 +7,10 @@ const workflow = await readFile(
   "utf8",
 );
 
+test("the exhaustive release job has enough bounded time for every gate", () => {
+  assert.match(workflow, /^    timeout-minutes: 90$/m);
+});
+
 const stepStarts = [...workflow.matchAll(/^      - /gm)].map(({ index }) => index);
 const steps = stepStarts.map((start, index) =>
   workflow.slice(start, stepStarts[index + 1] ?? workflow.length),
