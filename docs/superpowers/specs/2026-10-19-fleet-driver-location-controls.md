@@ -9,3 +9,5 @@ User UI preference: use dot-on-slider controls for binary settings as existing s
 Acceptance: current physical iPhone run/ticket100009 remains synthetic. UI changes, automated tests and an OTA release do not establish offline/photo/OS termination/push/background GPS/provider acceptance.
 
 Consent is durable for the same user/device, inherited by later shifts/runs, and checked before displaying the consent screen. Missing OS permissions use the permission setup action, not another consent question. Reuse preserves the original acceptance timestamp. Revoked/missing consent remains unaccepted. The existing clipped accept control loses conflicting vertical padding and gains bottom scroll spacing.
+
+Offline consent lookup is three-state: accepted, not accepted/revoked, or unavailable. Network failure never sends a worker back to the consent agreement; location collection still fails closed until current consent/authority can be verified. A manually opened consent screen shows a reconnect message when verification is unavailable.

@@ -2391,7 +2391,8 @@
     "decline": "Not now",
     "permissionNeeded": "Permission needed",
     "permissionMessage": "VNDRLY needs location permission to share your position with your vendor while on the clock. You can enable this later from Settings.",
-    "couldNotSave": "Could not save your choice"
+    "couldNotSave": "Could not save your choice",
+    "checkUnavailable": "Your saved consent could not be checked. Reconnect to continue; you do not need to accept again."
   },
   "mySchedule": {
     "upcomingTitle": "Upcoming Scheduled Work",

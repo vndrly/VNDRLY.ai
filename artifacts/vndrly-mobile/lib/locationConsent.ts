@@ -66,10 +66,17 @@ export async function getMyConsents(): Promise<LocationConsent[]> {
   }
 }
 
+export async function getDeviceConsentStatus(): Promise<"accepted" | "not_accepted" | "unavailable"> {
+  try {
+    const deviceId = await getDeviceId();
+    const result = await apiFetch<{consents: LocationConsent[]}>("/api/location-consents/me");
+    if (!Array.isArray(result.consents)) return "unavailable";
+    return result.consents.some(c => c.deviceId === deviceId && !c.revokedAt) ? "accepted" : "not_accepted";
+  } catch { return "unavailable"; }
+}
+
 export async function hasActiveConsentForThisDevice(): Promise<boolean> {
-  const deviceId = await getDeviceId();
-  const consents = await getMyConsents();
-  return consents.some((c) => c.deviceId === deviceId && !c.revokedAt);
+  return await getDeviceConsentStatus() === "accepted";
 }
 
 export async function acceptConsent(): Promise<void> {

@@ -55,7 +55,7 @@ import {
 import { isGatekeeperUser } from "@/lib/mobile-viewer";
 import { gateLandingRoute, isGatekeeperRouteAllowed } from "@/lib/app-navigation";
 import {
-  hasActiveConsentForThisDevice,
+  getDeviceConsentStatus,
   isConsentDeclined,
 } from "@/lib/locationConsent";
 import {
@@ -230,9 +230,10 @@ function AuthGate() {
       const user = await getUser();
       if (cancelled || !user) return;
       if (user.role !== "field_employee") return;
-      const consented = await hasActiveConsentForThisDevice();
+      const consent = await getDeviceConsentStatus();
       if (cancelled) return;
-      if (consented) {
+      if (consent === "unavailable") { stopLiveLocationReporter(); return; }
+      if (consent === "accepted") {
         startLiveLocationReporter();
         return;
       }

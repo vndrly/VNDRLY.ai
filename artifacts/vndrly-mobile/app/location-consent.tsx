@@ -15,7 +15,7 @@ import {
 import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
-import { acceptConsent, hasActiveConsentForThisDevice, setConsentDeclined } from "@/lib/locationConsent";
+import { acceptConsent, getDeviceConsentStatus, setConsentDeclined } from "@/lib/locationConsent";
 import { fleetConsentReturnRoute } from "@/lib/fleet-mobile";
 import { enableFleetRunLocation } from "@/lib/fleet-location-setup";
 import { startLiveLocationReporter } from "@/lib/liveLocationReporter";
@@ -27,14 +27,14 @@ export default function LocationConsentScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
-  const [checking,setChecking]=useState(true);
+  const [checking,setChecking]=useState(true),[unavailable,setUnavailable]=useState(false);
   useEffect(()=>{
     let current=true;
-    void hasActiveConsentForThisDevice().then(accepted=>{
+    void getDeviceConsentStatus().then(consent=>{
       if(!current)return;
-      if(accepted)router.replace(returnRoute as never);
-      else setChecking(false);
-    }).catch(()=>{if(current)setChecking(false);});
+      if(consent === "accepted")router.replace(returnRoute as never);
+      else {setUnavailable(consent === "unavailable");setChecking(false);}
+    }).catch(()=>{if(current){setUnavailable(true);setChecking(false);}});
     return()=>{current=false;};
   },[returnRoute]);
 
@@ -70,6 +70,7 @@ export default function LocationConsentScreen() {
   };
 
   if(checking)return <View style={styles.flex}/>;
+  if(unavailable)return <View style={styles.flex}><InPageHeader title={t("consent.title")} onBack={()=>router.replace(returnRoute as never)}/><Text style={[styles.body,{color:colors.mutedForeground,padding:24}]}>{t("consent.checkUnavailable")}</Text></View>;
   return (
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
