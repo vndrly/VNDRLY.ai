@@ -2,8 +2,9 @@
  *
  * Additive and one-shot: refuses to run when any Go company already exists,
  * never updates or deletes pre-existing rows, never rotates credentials.
- * Targets only a loopback database or the isolated `vndrly_prairie_demo`
- * database; production URLs are refused. Default is a dry run that rolls back.
+ * Targets a loopback database or the isolated `vndrly_prairie_demo` database.
+ * The production Supabase project is refused unless GO_DEMO_ALLOW_PRODUCTION
+ * equals its project ref. Default is a dry run that rolls back.
  *
  *   GO_DEMO_DATABASE_URL=postgres://.../db pnpm --filter @workspace/scripts exec tsx ../scripts/go-ecosphere/provision.ts [--apply]
  *   GO_DEMO_NOW=2026-10-18T19:30:00-05:00   (optional; anchors "now" for repeatable output)
@@ -34,9 +35,13 @@ const target = new URL(rawUrl);
 const targetDb = target.pathname.replace(/^\//, "");
 const loopback = ["127.0.0.1", "localhost", "::1", "[::1]"].includes(target.hostname);
 if (!["postgres:", "postgresql:"].includes(target.protocol)) throw new Error("Not a Postgres URL");
-if (/supabase|pooler|neon|rds\.amazonaws/i.test(target.hostname) && targetDb !== "vndrly_prairie_demo")
-  throw new Error("Hosted database refused; only loopback or vndrly_prairie_demo are allowed");
-if (!((loopback && targetDb && targetDb !== "postgres") || targetDb === "vndrly_prairie_demo"))
+const PRODUCTION_REF = "bihjmgbdzbhcnsuhzzwo";
+const production = process.env.GO_DEMO_ALLOW_PRODUCTION === PRODUCTION_REF
+  && (target.hostname === `db.${PRODUCTION_REF}.supabase.co` || (/\.pooler\.supabase\.com$/.test(target.hostname) && target.username === `postgres.${PRODUCTION_REF}`))
+  && targetDb === "postgres";
+if (/supabase|pooler|neon|rds\.amazonaws/i.test(target.hostname) && targetDb !== "vndrly_prairie_demo" && !production)
+  throw new Error(`Hosted database refused; only loopback, vndrly_prairie_demo, or the production project with GO_DEMO_ALLOW_PRODUCTION=${PRODUCTION_REF}`);
+if (!((loopback && targetDb && targetDb !== "postgres") || targetDb === "vndrly_prairie_demo" || production))
   throw new Error(`Refusing database '${targetDb}' on '${target.hostname}'. Allowed: loopback non-'postgres' database or vndrly_prairie_demo`);
 
 // ---------------------------------------------------------------- deterministic helpers
@@ -180,6 +185,7 @@ async function insertMany<T = any>(table: string, rows: Record<string, unknown>[
 const insertOne = async (table: string, row: Record<string, unknown>, returning = "id") => (await insertMany(table, [row], returning))[0] as any;
 
 // ---------------------------------------------------------------- main
+class AlreadyProvisioned extends Error { constructor() { super("Go companies are already provisioned in this database; nothing was changed (one-shot, additive)"); } }
 type Person = PersonSpec & { userId: number; peopleId: number | null; membershipId: number; name: string; device: string; preferred_language?: string };
 async function main() {
   await client.connect();
@@ -191,7 +197,8 @@ async function main() {
   const existing = await client.query("select name, blurb from partners where lower(btrim(name))=any($1) union all select name, blurb from vendors where lower(btrim(name))=any($1)", [names]);
   if (existing.rows.length) {
     const ours = existing.rows.every((r: any) => r.blurb === GO_MARKER);
-    throw new Error(ours ? "Go companies are already provisioned in this database; nothing was changed (one-shot, additive)" : "A real organization already uses a Go company name; nothing was changed");
+    if (ours) throw new AlreadyProvisioned();
+    throw new Error("A real organization already uses a Go company name; nothing was changed");
   }
   const preexistingUsers = await client.query("select count(*)::int n from users where username like 'go-demo-%@example.invalid'");
   if (preexistingUsers.rows[0].n) throw new Error("go-demo users already exist; nothing was changed");
@@ -1317,12 +1324,17 @@ async function main() {
     routePoints: routeRows.length, gatePosts: { total: posts.length, uncovered: posts.filter((p) => !p.user).length, late: posts.filter((p) => p.late).length }, visits: visits.length, rows: counts,
   };
   if (APPLY) {
-    await client.query("commit");
     await mkdir(new URL("../../.local/", import.meta.url), { recursive: true });
     await writeFile(new URL("../../.local/go-demo-accounts.json", import.meta.url), JSON.stringify({ version: GO_VERSION, database: targetDb, password, accounts: [...PEOPLE.map((s) => ({ username: `go-demo-${s.key}@example.invalid`, name: `${s.first} ${s.last}`, company: ORGS[s.org].name, title: s.title, membership: s.membership })), { username: "go-demo-review@example.invalid", name: "Go Reviewer", company: "all four", title: REVIEWER.title, membership: "admin" }] }, null, 2), { mode: 0o600 });
     await writeFile(new URL("../../.local/go-demo-report.json", import.meta.url), JSON.stringify(report, null, 2));
+    await client.query("commit");
   } else await client.query("rollback");
   console.log(JSON.stringify(report, null, 2));
 }
 
-main().catch(async (e) => { await client.query("rollback").catch(() => undefined); console.error(e); process.exitCode = 1; }).finally(() => client.end());
+main().catch(async (e) => {
+  await client.query("rollback").catch(() => undefined);
+  if (e instanceof AlreadyProvisioned) { console.log(e.message); return; }
+  console.error(e);
+  process.exitCode = 1;
+}).finally(() => client.end());
