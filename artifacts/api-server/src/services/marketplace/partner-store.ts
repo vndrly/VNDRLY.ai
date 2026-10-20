@@ -22,7 +22,7 @@ import {
   type VendorPartnerServiceOffer,
 } from "@workspace/db/schema";
 import { FleetComplianceConfigurationSchema } from "@workspace/api-zod";
-import { projectCanonicalFleetComplianceConfigurationScore } from "../fleet-compliance-score";
+import { mapWithBoundedConcurrency, projectCanonicalFleetComplianceConfigurationScore } from "../fleet-compliance-score";
 import type { SessionPayload } from "../../lib/session";
 import { missingVendorApprovalFields } from "../../lib/vendor-approval-readiness";
 import { calculateSafetyEventScore } from "../../lib/safety-score";
@@ -318,6 +318,12 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
           ),
         )
         .orderBy(asc(vendors.id), asc(capabilities.id));
+      const uniqueVendors = [...new Map(matches.map((match) => [match.vendor.id, match.vendor])).values()];
+      const safetyPairs = await mapWithBoundedConcurrency(uniqueVendors, 4, async (vendor) => [
+        vendor.id,
+        await marketplaceComplianceSummary(vendor.fleetComplianceConfiguration, vendor.id, now),
+      ] as const);
+      const safetyByVendor = new Map(safetyPairs);
       const result: PartnerMarketplaceCandidate[] = [];
       for (const match of matches) {
         if (
@@ -466,7 +472,7 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
               validRatings.length
             : null,
           reviewCount: validRatings.length,
-          safety: await marketplaceComplianceSummary(vendor.fleetComplianceConfiguration, vendorId, now),
+          safety: safetyByVendor.get(vendorId) ?? null,
           completedJobs: relevant.length,
           priorPartnerJobs: history.length,
           onTimeRate: scheduled.length

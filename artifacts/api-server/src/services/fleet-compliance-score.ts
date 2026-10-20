@@ -9,6 +9,27 @@ import { getObjectStore, type ObjectStore } from "../lib/objectStore";
 type Category = FleetComplianceScore["categories"][number]["category"];
 type Deduction = FleetComplianceScore["deductions"][number];
 const categories: readonly Category[] = ["vehicle", "driver_license", "insurance", "company_records"];
+const PRIVATE_EVIDENCE_READ_CONCURRENCY = 8;
+
+/** Preserves input order while placing a hard ceiling on object-store work. */
+export async function mapWithBoundedConcurrency<T, R>(
+  values: readonly T[],
+  limit: number,
+  project: (value: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (!Number.isInteger(limit) || limit < 1) throw new Error("Concurrency limit must be positive");
+  const results = new Array<R>(values.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, values.length) }, async () => {
+    while (true) {
+      const index = next++;
+      if (index >= values.length) return;
+      results[index] = await project(values[index], index);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 export function mergeFleetComplianceScoreHistory(history: FleetComplianceScore["history"], at: string, score: number): FleetComplianceScore["history"] {
   const day = at.slice(0, 10);
   return [...history.filter((item) => item.at.slice(0, 10) !== day), { at, score }]
@@ -116,22 +137,32 @@ export async function projectCanonicalFleetComplianceConfigurationScore(
   if (!secret) throw new FleetError("fleet.private_storage_unavailable", 503);
   const digest = (value: unknown) => createHmac("sha256", secret).update(JSON.stringify(value)).digest("hex");
   const store = options.store ?? getObjectStore;
-  const records = new Map<string, FleetComplianceRecord>();
-  for (const entry of configuration.entries)
-    records.set(entry.id, await readFleetPrivateComplianceSource(entry, companyId, store, digest));
+  const loaded = await mapWithBoundedConcurrency(
+    configuration.entries,
+    PRIVATE_EVIDENCE_READ_CONCURRENCY,
+    async (entry) => [entry.id, await readFleetPrivateComplianceSource(entry, companyId, store, digest)] as const,
+  );
+  const records = new Map<string, FleetComplianceRecord>(loaded);
+
+  const entriesBySubject = new Map<string, typeof configuration.entries>();
+  for (const entry of configuration.entries) {
+    const key = fleetComplianceSubjectKey(entry.subject);
+    const current = entriesBySubject.get(key) ?? [];
+    current.push(entry);
+    entriesBySubject.set(key, current);
+  }
+  const factsBySubject = new Map(configuration.facts.map((row) => [fleetComplianceSubjectKey(row.subject), row.facts] as const));
 
   const assessments = new Map<string, ReturnType<typeof evaluateFleetCompliance>[number]>();
-  for (const entry of configuration.entries) {
-    const subjectKey = fleetComplianceSubjectKey(entry.subject);
-    if (assessments.has(subjectKey)) continue;
-    const evidence = configuration.entries
-      .filter((related) => fleetComplianceSubjectKey(related.subject) === subjectKey)
+  for (const [subjectKey, subjectEntries] of entriesBySubject) {
+    const entry = subjectEntries[0];
+    const evidence = subjectEntries
       .map((related) => canonicalOperationalEvidence(records.get(related.id)!, configuration.requirements));
     const assessment = evaluateFleetCompliance({
       facts: { carrierId: companyId },
       members: [{
         subject: entry.subject,
-        facts: configuration.facts.find((row) => fleetComplianceSubjectKey(row.subject) === subjectKey)?.facts ?? {},
+        facts: factsBySubject.get(subjectKey) ?? {},
       }],
       requirements: configuration.requirements,
       evidence,

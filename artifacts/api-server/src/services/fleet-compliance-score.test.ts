@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FleetComplianceScoreSchema, type FleetCapability, type FleetComplianceOperationalEntry } from "@workspace/api-zod";
-import { readFleetComplianceScore, projectFleetComplianceScore, mergeFleetComplianceScoreHistory } from "./fleet-compliance-score";
+import { FleetComplianceConfigurationSchema, FleetComplianceScoreSchema, type FleetCapability, type FleetComplianceOperationalEntry } from "@workspace/api-zod";
+import { readFleetComplianceScore, projectFleetComplianceScore, mergeFleetComplianceScoreHistory, mapWithBoundedConcurrency } from "./fleet-compliance-score";
 
 const expired: Pick<FleetComplianceOperationalEntry, "id" | "subject" | "kind" | "verification" | "status" | "reasons" | "validUntil" | "evaluatedAt"> = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -14,6 +14,45 @@ const expired: Pick<FleetComplianceOperationalEntry, "id" | "subject" | "kind" |
 };
 
 describe("Fleet compliance score", () => {
+  it("bounds asynchronous projection work and preserves deterministic input order", async () => {
+    let active = 0;
+    let peak = 0;
+    const result = await mapWithBoundedConcurrency(Array.from({ length: 23 }, (_, index) => index), 4, async (value) => {
+      active++;
+      peak = Math.max(peak, active);
+      await new Promise((resolve) => setTimeout(resolve, value % 3));
+      active--;
+      return value * 2;
+    });
+    expect(peak).toBeLessThanOrEqual(4);
+    expect(peak).toBeGreaterThan(1);
+    expect(result).toEqual(Array.from({ length: 23 }, (_, index) => index * 2));
+  });
+
+  it("rejects oversized compliance configurations at the contract boundary", () => {
+    const entry = {
+      id: "11111111-1111-4111-8111-111111111111",
+      revision: 1,
+      subject: { kind: "carrier" as const, id: 3 },
+      requirementId: "insurance",
+      requirementVersion: 1,
+      status: "verified" as const,
+      validFrom: null,
+      validUntil: null,
+      verifiedAt: null,
+      verifiedByUserId: null,
+      attributeKind: "insurance" as const,
+      objectPath: `/objects/fleet-compliance-private/3/11111111-1111-4111-8111-111111111111/1/${"a".repeat(64)}`,
+      updatedAt: "2026-10-20T00:00:00.000Z",
+    };
+    const base = {
+      version: 1,
+      reviewerUserIds: [],
+      entries: Array.from({ length: 1000 }, () => entry),
+    };
+    expect(FleetComplianceConfigurationSchema.safeParse(base).success).toBe(true);
+    expect(FleetComplianceConfigurationSchema.safeParse({ ...base, entries: [...base.entries, entry] }).success).toBe(false);
+  });
   it("explains a red score, ranks expired evidence, and shows an honest Partner preview", () => {
     const result = projectFleetComplianceScore(3, [expired], "2026-10-20T00:00:00.000Z");
     expect(result.advisoryOnly).toBe(true);
