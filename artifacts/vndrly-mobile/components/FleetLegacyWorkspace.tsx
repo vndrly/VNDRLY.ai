@@ -421,8 +421,18 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     }
     // Resource libraries have their own scoped reads. The bounded dispatch
     // projection must not gate Inventory, locations or saved transport orders.
+    const initialTitle = {
+      desk: "Fleet Dispatch", "my-day": "My Fleet Day", log: "Fleet Log", map: "Fleet Map",
+      inventory: "Inventory and Details", locations: "Origins and Destinations", orders: "Runs", compliance: "Compliance",
+    }[initialMode];
     const page = (title: string, content: React.ReactNode, onBack?: () => void, beforeTitle?: React.ReactNode) => embedded
-      ? <View style={{ gap: 16 }}>{beforeTitle}{content}</View>
+      ? <View style={{ gap: 16 }}>
+          {onBack && <View style={{ gap: 10 }}>
+            <TogglePillButton color="blue" onPress={onBack} accessibilityLabel={`${copy("Back to")} ${copy(initialTitle)}`}>{`${copy("Back to")} ${copy(initialTitle)}`}</TogglePillButton>
+            <Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{title}</Text>
+          </View>}
+          {beforeTitle}{content}
+        </View>
       : <ScreenSafeArea><ScrollView testID="fleet-legacy-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}><WorkHubPageTitle title={title} onBack={onBack} beforeTitle={beforeTitle}/>{content}</ScrollView></ScreenSafeArea>;
     if(mode==="orders")return page(copy("Runs"), <FleetRunOrders key={identity} companyId={activeMembership?.orgId??user?.vendorId??0}/>, initialMode!=="orders"?()=>setMode(initialMode):undefined);
     if (mode === "locations") return page(copy("Origins and Destinations"), <FleetDestinationDirectory key={`locations:${identity}`}/>, initialMode !== "locations" ? () => setMode(initialMode) : undefined);

@@ -47,7 +47,7 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <div data-testid="fleet-safe-area">{children}</div>,
 }));
 vi.mock("@/components/WorkHubPageTitle", () => ({
-  default: ({ title, beforeTitle }: any) => <><div>{beforeTitle}</div><button data-testid="fleet-page-back">Back</button><h1>{title}</h1></>,
+  default: ({ title, beforeTitle, onBack }: any) => <><div>{beforeTitle}</div><button data-testid="fleet-page-back" onClick={onBack}>Back</button><h1>{title}</h1></>,
 }));
 vi.mock("@/components/MapboxNativeMap", () => ({
   default: () => <div>Fleet location map</div>,
@@ -95,6 +95,30 @@ describe("mobile Fleet authorization", () => {
     expect(screen.getAllByTestId("fleet-safe-area")).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-shell-scroll")).toHaveLength(1);
     expect(screen.queryByTestId("fleet-legacy-scroll")).toBeNull();
+  });
+  it("returns from an embedded resource view to the same Dispatch workspace", async () => {
+    const fleet = (id: string, name: string) => ({ id, name, siteIds: [], equipmentAssetIds: [] });
+    const run = (id: string, title: string, fleetId: string) => ({ id, title, fleetId, status: "in_progress", version: 1, driverUserId: 1, vehicleAssetId: null, trailerAssetId: null, allowedActions: [], stops: [], loads: [], inspections: [], records: [], events: [], currentStopId: null });
+    mocks.api.mockImplementation(async (path: string) => path === "/api/fleet/resources"
+      ? { drivers: [], equipment: [] }
+      : { ...overview, roles: ["dispatcher"], capabilities: { canDispatch: true, canManage: true, canDrive: false }, fleets: [fleet("fleet-1", "Fleet One"), fleet("fleet-2", "Fleet Two")], runs: [run("run-1", "Run One", "fleet-1"), run("run-2", "Run Two", "fleet-2")] });
+    render(<FleetShell module="dispatch" />);
+    expect(await screen.findByRole("button", { name: "Run Two" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Fleet One" }));
+    expect(screen.getByRole("button", { name: "Run One" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Run Two" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Origins and Destinations" }));
+    expect(await screen.findByText("Reusable destination settings")).toBeTruthy();
+    expect(screen.getByText("Origins and Destinations")).toBeTruthy();
+    expect(screen.getAllByRole("heading", { name: "Dispatch" })).toHaveLength(1);
+    expect(screen.getAllByTestId("fleet-page-back")).toHaveLength(1);
+    expect(screen.getAllByTestId("fleet-safe-area")).toHaveLength(1);
+    expect(screen.getAllByTestId("fleet-shell-scroll")).toHaveLength(1);
+    expect(screen.queryByTestId("fleet-legacy-scroll")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Back to Fleet Dispatch" }));
+    expect(screen.queryByText("Reusable destination settings")).toBeNull();
+    expect(screen.getByRole("button", { name: "Run One" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Run Two" })).toBeNull();
   });
   it("retains modern driver acknowledgement before transport and labels its pending outcome",async()=>{
     mocks.work.storageHealth={state:"low",availableBytes:1024,reserveBytes:67108864,retainedEvidenceBytes:500000,evidenceCount:50};
