@@ -596,7 +596,7 @@ describe("Yard and custody authorization regressions", () => {
       return { rows: [] };
     } } as unknown as PoolClient) } as any);
     await expect(api.custodyOperationReceipt(actor(["driver"]), operationId)).rejects.toMatchObject({ code: "fleet.permission_denied" });
-    fixture.runs[0].status = "submitted_for_review";
+    fixture.runs[0].status = "in_progress";
     await expect(api.custodyOperationReceipt(actor(["driver"]), operationId)).resolves.toMatchObject({ operationId, result: { observation: { assetId: truckA } } });
   });
 

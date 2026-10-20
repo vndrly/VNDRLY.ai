@@ -208,12 +208,12 @@ function activeDriverRunForAsset(state: FleetState, userId: number, runId: strin
   if (!runId) return null;
   const run = state.runs.find((row) => row.id === runId);
   const grant = state.grants.find((row) => row.userId === userId);
-  if (!run || run.driverUserId !== userId || !["dispatched", "acknowledged", "in_progress", "submitted_for_review"].includes(run.status) ||
+  if (!run || run.driverUserId !== userId || !["dispatched", "acknowledged", "in_progress"].includes(run.status) ||
     !grant?.fleetIds.includes(run.fleetId) || !run.siteIds.every((id) => grant.siteIds.includes(id)) ||
     (run.resourceAssignment && !["reserved", "active"].includes(run.resourceAssignment.reservation.state)) ||
     !fleetRunAssetIds(run).includes(assetId)) return null;
   if (state.runs.some((other) => other.id !== run.id &&
-    ["dispatched", "acknowledged", "in_progress", "submitted_for_review"].includes(other.status) &&
+    ["dispatched", "acknowledged", "in_progress"].includes(other.status) &&
     (!other.resourceAssignment || ["reserved", "active"].includes(other.resourceAssignment.reservation.state)) &&
     fleetRunAssetIds(other).includes(assetId))) return null;
   return run;
