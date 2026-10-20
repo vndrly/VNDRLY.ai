@@ -791,18 +791,23 @@ describe("Yard and custody authorization regressions", () => {
     expect(fixture.runs[0].status).toBe("draft");
   });
 
-  it("rechecks a retained attachment's truck on replay and receipt read, then allows recovery when restored", async () => {
-    const fixture = state(), detailId = id(), rigId = id();
+  it.each([
+    { role: "Driver", caps: ["driver"] },
+    { role: "Driver + Office", caps: ["driver", "office"] },
+  ])("rechecks retained attachment authority for $role on replay and receipt recovery", async ({ caps }) => {
+    const fixture = state(), detailId = id(), rigId = id(), siteId = 100;
     fixture.grants[0].roles = ["driver"];
-    fixture.runs = [{ id: runId, fleetId: fleetA, companyId: 7, siteIds: [], driverUserId: 12,
+    fixture.fleets[0].siteIds = [siteId];
+    fixture.runs = [{ id: runId, fleetId: fleetA, companyId: 7, siteIds: [siteId], driverUserId: 12,
       vehicleAssetId: truckA, trailerAssetId: null, status: "in_progress",
       resourceAssignment: { reservation: { state: "active" }, snapshot: {
         detail: { id: detailId, version: 1, vehicleAssetId: truckA, accessGroupIds: [fleetA] },
         rigPackage: { id: rigId, version: 1, components: [{ assetId: dolly }] },
       } } }];
-    let holder: number | null = null, saved: any = null, event = false, audit: any = null;
+    let approved = true, holder: number | null = null, saved: any = null, event = false, audit: any = null;
     const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string, args: any[] = []) => {
       if (sql.includes("FROM vendors WHERE")) return { rows: [{ fleet_resources: { version: 1, details: [], rigPackages: [], reservations: [] } }] };
+      if (sql.includes("FROM site_locations s JOIN partner_vendor_relationships")) return { rows: approved ? [{ id: siteId, is_active: true, partner_id: 99, relationship_id: 1, relationship_status: "approved", approval_events: [] }] : [] };
       if (sql.includes("FROM assets a")) return { rows: (args[0] as string[]).map(assetId => ({ id: assetId, name: "Asset", category: assetId === truckA ? "truck" : "dolly", status: "available", responsible_org_type: "vendor", responsible_org_id: 7, current_holder_user_id: assetId === truckA ? holder : null, retired_at: null, merged_into_id: null, provisional: false, enrolled: true })) };
       if (sql.includes("FROM fleet_asset_custody_events")) return { rows: event ? [{ id: id() }] : [] };
       if (sql.includes("FROM fleet_asset_custody WHERE")) return { rows: args[1] === dolly && saved ? [saved] : [] };
@@ -814,14 +819,26 @@ describe("Yard and custody authorization regressions", () => {
     } } as unknown as PoolClient) } as any);
     const base = custodyInput(dolly, runId);
     const input = { ...base, observation: { ...base.observation, state: "attached", detailId } };
-    const driver = actor(["driver"]);
+    const driver = actor(caps);
     const created = await api.observeCustody(driver, input);
     expect(created).toMatchObject({ attachment: { truckAssetId: truckA, detailId, detailVersion: 1, rigPackageVersion: 1 } });
+    await expect(api.observeCustody(driver, input)).resolves.toEqual(created);
+    await expect(api.custodyOperationReceipt(driver, input.operationId)).resolves.toEqual({ operationId: input.operationId, result: created });
+    approved = false;
+    await expect(api.observeCustody(driver, input)).rejects.toMatchObject({ code: "fleet.permission_denied" });
+    await expect(api.custodyOperationReceipt(driver, input.operationId)).rejects.toMatchObject({ code: caps.includes("office") ? "fleet.detail_attachment_required" : "fleet.permission_denied" });
+    approved = true;
+    await expect(api.observeCustody(driver, input)).resolves.toEqual(created);
+    await expect(api.custodyOperationReceipt(driver, input.operationId)).resolves.toEqual({ operationId: input.operationId, result: created });
     holder = 99;
     await expect(api.observeCustody(driver, input)).rejects.toMatchObject({ code: "fleet.detail_attachment_required" });
     await expect(api.custodyOperationReceipt(driver, input.operationId)).rejects.toMatchObject({ code: "fleet.detail_attachment_required" });
     holder = null;
     await expect(api.observeCustody(driver, input)).resolves.toEqual(created);
     await expect(api.custodyOperationReceipt(driver, input.operationId)).resolves.toMatchObject({ result: { attachment: { truckAssetId: truckA } } });
+  });
+
+  it("does not grant Office-only actors custody write authority", async () => {
+    await expect(service(state()).observeCustody(actor(["office"]), custodyInput(dolly, runId))).rejects.toMatchObject({ code: "fleet.permission_denied" });
   });
 });

@@ -170,6 +170,10 @@ function capabilities(state: FleetState, actor: FleetActor) {
   const grant = state.grants.find((g) => g.userId === actor.userId);
   return actor.fleetCapabilities ?? legacyFleetCapabilities(grant?.roles ?? []);
 }
+function usesAssignedDriverCustodyAuthority(caps: ReadonlySet<string>) {
+  // Office read access does not replace Driver authority for custody operations.
+  return caps.has("driver") && !["admin", "dispatch", "yard"].some((cap) => caps.has(cap));
+}
 function yardTargetFleets(
   state: FleetState,
   value: FleetYardOrder,
@@ -288,7 +292,7 @@ async function assertRetainedAttachmentAuthority(
   if (!attachment || attachment.componentAssetId !== observation.assetId || attachment.detailId !== observation.detailId)
     throw new FleetError("fleet.detail_attachment_required", 409);
   const caps = capabilities(state, actor);
-  const driverOnly = caps.has("driver") && !["admin", "dispatch", "yard"].some((cap) => caps.has(cap as never));
+  const driverOnly = usesAssignedDriverCustodyAuthority(caps);
   const run = observation.runId ? state.runs.find((row) => row.id === observation.runId) : null;
   const snapshot = run?.resourceAssignment?.snapshot ?? run?.recoveredWork?.snapshot;
   const snapshotRig = snapshot?.rigPackage;
@@ -1143,9 +1147,9 @@ export function createFleetYardOperations(
         const observation = FleetCustodyObservationSchema.parse(result.observation);
         requireAssetScope(state, grant, [observation.assetId]);
         const caps = capabilities(state, actor);
-        let currentSiteIds: readonly number[] = [];
-        if (caps.has("driver") && !["admin", "dispatch", "yard", "office"].some((cap) => caps.has(cap as never))) {
-          currentSiteIds = await currentAssignedDriverSites(client, state, actor);
+        const driverOnly = usesAssignedDriverCustodyAuthority(caps);
+        const currentSiteIds = driverOnly ? await currentAssignedDriverSites(client, state, actor) : [];
+        if (driverOnly && !caps.has("office")) {
           const [asset] = await readFleetResourceAssets(client, actor, state, [observation.assetId], true);
           if (!activeDriverRunForAsset(state, actor.userId, observation.runId, observation.assetId, currentSiteIds) ||
             (asset.current_holder_user_id !== null && asset.current_holder_user_id !== actor.userId))
@@ -1180,7 +1184,7 @@ export function createFleetYardOperations(
           throw new FleetError("fleet.coordinates_required", 400);
         const [asset] = await readFleetResourceAssets(client, actor, state, [value.assetId]);
         const caps = capabilities(state, actor);
-        const driverOnly = caps.has("driver") && !["admin", "dispatch", "yard"].some((c) => caps.has(c as never));
+        const driverOnly = usesAssignedDriverCustodyAuthority(caps);
         const currentSiteIds = driverOnly ? await currentAssignedDriverSites(client, state, actor) : [];
         if (driverOnly &&
           (value.method !== "driver_app" || !activeDriverRunForAsset(state, actor.userId, value.runId, value.assetId, currentSiteIds) ||
