@@ -15,6 +15,8 @@ import {
 } from "../services/fleet-repository";
 import { createFleetService, type FleetActor } from "../services/fleet-ops";
 import { readFleetCapabilities, saveFleetCapabilities } from "../services/fleet-mobile-permissions";
+import { readFleetHomeModule } from "../services/fleet-mobile-home";
+import { readFleetComplianceScore } from "../services/fleet-compliance-score";
 import { createFleetYardOperations } from "../services/fleet-yard";
 import {
   createFleetSiteActivityService,
@@ -46,6 +48,8 @@ router.get("/fleet/custody", endpoint(req => yardService.custody(actor(req), req
 router.post("/fleet/custody/operations", endpoint(req => yardService.observeCustody(actor(req), req.body)));
 router.get("/fleet/custody/operations/:operationId", endpoint(req => yardService.custodyOperationReceipt(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/capabilities", endpoint(req => readFleetCapabilities(actor(req), req.query.userId === undefined ? undefined : z.coerce.number().int().positive().parse(req.query.userId))));
+router.get("/fleet/home", endpoint(req => readFleetHomeModule(actor(req), z.enum(["summary", "dispatch", "yard", "driver", "office", "assets", "map", "history", "compliance"]).default("summary").parse(req.query.module))));
+router.get("/fleet/compliance-score", endpoint(req => readFleetComplianceScore(actor(req), service)));
 router.put("/fleet/capabilities/:userId", endpoint(req => saveFleetCapabilities(actor(req), z.coerce.number().int().positive().parse(req.params.userId), req.body)));
 router.use(createFleetComplianceRouter(service, actor));
 router.use(createFleetWorkRouter({actor}));

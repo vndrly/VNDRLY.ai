@@ -149,6 +149,7 @@ export function createFleetComplianceOperations(
       reviewer = isReviewer(config, actor),
       manager =
         admin ||
+        (!write && !!grant && actor.fleetCapabilities?.has("office")) ||
         !!grant?.roles.some((role) =>
           ["fleet_manager", "dispatcher"].includes(role),
         );

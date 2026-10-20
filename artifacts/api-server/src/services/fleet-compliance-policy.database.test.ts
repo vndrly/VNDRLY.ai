@@ -26,8 +26,8 @@ it("previews and explicitly activates future partner policy with current authori
   const after=new Date(Date.parse(proposal.effectiveFrom)+1000).toISOString(),before=new Date().toISOString(),snapshot:FleetActionPolicySnapshot={mode:"warn_only",status:"red",evaluatedAt:after,warnings:[{category:"regulatory_review",reason:"unverified"}]};
   const run={id:randomUUID(),companyId:f.vendor,linkedTicketId:ticket.id,events:[]} as unknown as FleetRun;
   expect(await service!.applyFleetPartnerPolicy(client,run,"start",{...snapshot,evaluatedAt:before})).toMatchObject({mode:"warn_only"});
-  await expect(service!.applyFleetPartnerPolicy(client,run,"start",snapshot)).rejects.toMatchObject({code:"fleet.partner_compliance_required",status:409});
-  expect(await service!.applyFleetPartnerPolicy(client,run,"start",{...snapshot,status:"green",warnings:[]})).toMatchObject({mode:"enforced",policies:[first.policy]});
+  expect(await service!.applyFleetPartnerPolicy(client,run,"start",snapshot)).toMatchObject({mode:"warn_only",status:"red",warnings:snapshot.warnings,policies:[first.policy]});
+  expect(await service!.applyFleetPartnerPolicy(client,run,"start",{...snapshot,status:"green",warnings:[]})).toMatchObject({mode:"warn_only",policies:[first.policy]});
   // A client-supplied old capture time is not an exemption. Only an actual
   // canonical creation event's server recording establishes existing work.
   expect(await service!.applyFleetPartnerPolicy(client,{...run,events:[{id:randomUUID(),operationId:randomUUID(),actorUserId:f.user,type:"created",recordedAt:before}]} as FleetRun,"start",snapshot)).toMatchObject({mode:"warn_only"});

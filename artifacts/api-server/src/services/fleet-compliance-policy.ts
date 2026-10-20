@@ -65,9 +65,9 @@ export async function applyFleetPartnerPolicy(client:PoolClient,run:FleetRun,act
  let policy=resolveFleetCompliancePolicy({...query,at:snapshot.evaluatedAt});
  const created=run.events.find(event=>event.type==="created"),createdAt=created?.recordedAt;
  if(createdAt&&policy.existingWorkTreatment==="preserve_capture_policy"&&Date.parse(createdAt)<Date.parse(policy.effectiveFrom))policy=resolveFleetCompliancePolicy({...query,at:createdAt});
- const applies=checkpoints.some(value=>policy.checkpoints.includes(value as typeof policy.checkpoints[number]));
- if(applies&&policy.mode==="enforced"&&snapshot.status==="red")throw new FleetError("fleet.partner_compliance_required",409);
- return {...snapshot,mode:applies?policy.mode:"warn_only" as const,policies:[policy]};
+ // Partner preferences remain visible in the recorded checkpoint. A red
+ // assessment informs hiring/review; it never prevents Fleet work from moving.
+ return {...snapshot,mode:"warn_only" as const,policies:[policy]};
 }
 
 /** Exact confirmed-operation receipt plus independent immutable policy revision.

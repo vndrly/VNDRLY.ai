@@ -195,5 +195,16 @@ export const FleetComplianceScoreSchema = z.object({
     dueAt: timestamp.nullable(),
   }).strict()).max(100),
   history: z.array(z.object({ at: timestamp, score }).strict()).max(365),
+  /** Additive read fields; older persisted projections remain parseable. */
+  categoryTotals: z.array(z.object({ category: complianceCategory, score, pointsAvailable: score, pointsEarned: score }).strict()).max(4).optional(),
+  estimatedResolvedScore: score.optional(),
+  partnerPreview: z.object({
+    score,
+    status: z.enum(["red", "amber", "green"]),
+    advisoryOnly: z.literal(true),
+    evaluatedAt: timestamp,
+    categories: z.array(z.object({ category: complianceCategory, score }).strict()).max(4),
+    reasons: z.array(z.object({ category: complianceCategory, reason: z.string().trim().min(1).max(500) }).strict()).max(100),
+  }).strict().optional(),
 }).strict();
 export type FleetComplianceScore = z.infer<typeof FleetComplianceScoreSchema>;
