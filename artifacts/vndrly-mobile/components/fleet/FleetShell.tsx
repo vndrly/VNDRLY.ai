@@ -14,6 +14,8 @@ import FleetSetup from "@/components/FleetSetup";
 import FleetModuleBoundary, { type FleetModuleBoundaryProps } from "./FleetModuleBoundary";
 
 const FleetLegacyWorkspace = React.lazy(() => import("@/components/FleetLegacyWorkspace"));
+const YardBoard = React.lazy(() => import("./YardBoard"));
+const AssetWorkspace = React.lazy(() => import("./AssetWorkspace"));
 
 export const FLEET_MODULES = ["home", "dispatch", "yard", "driver", "office", "assets", "runs", "map", "history", "locations", "compliance", "setup"] as const;
 export type FleetModuleId = typeof FLEET_MODULES[number];
@@ -59,7 +61,7 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
   const renderModule = (id: FleetModuleId) => {
     const entry = modules[id];
     const fallback: ReactNode = id === "home" ? null : id === "setup" ? <FleetSetup key={setupIdentity} onSaved={home.retry} /> : <Suspense fallback={<Text>{copy(`Loading ${moduleLabels[id]}`)}</Text>}>
-      <FleetLegacyWorkspace embedded initialMode={legacyModes[id as keyof typeof legacyModes]} initialAssetId={id === "assets" ? initialAssetId : undefined} initialRunId={initialRunId} initialYardOrderId={initialYardOrderId} />
+      {id === "yard" ? <YardBoard initialYardOrderId={initialYardOrderId} initialRunId={initialRunId} /> : id === "assets" ? <AssetWorkspace initialAssetId={initialAssetId} initialRunId={initialRunId} /> : <FleetLegacyWorkspace embedded initialMode={legacyModes[id as keyof typeof legacyModes]} initialRunId={initialRunId} />}
     </Suspense>;
     return <View key={id} style={{ width: wide && module === "home" ? "48%" : "100%", minWidth: 0 }}>
       <FleetModuleBoundary module={id} title={copy(moduleLabels[id])} state={entry?.state} error={entry?.error} onRetry={entry?.onRetry} onReview={entry?.onReview}>

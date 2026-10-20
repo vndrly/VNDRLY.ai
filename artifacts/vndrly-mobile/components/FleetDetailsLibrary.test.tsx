@@ -82,3 +82,20 @@ it("requests scoped company evidence for native Details without making missing c
       .body,
   ).toContain('"kind":"driver"');
 });
+
+it("shows new Details as driver-free while keeping a legacy driver readable", async () => {
+  const group = "11111111-1111-4111-8111-111111111111";
+  const truck = "22222222-2222-4222-8222-222222222222";
+  const base = { companyId: 7, version: 1, vehicleAssetId: truck, rigPackageId: null, rigPackageVersion: null, accessGroupIds: [group], effectiveFrom: "2026-10-20T12:00:00Z", effectiveUntil: null, archivedAt: null };
+  mocks.api.mockImplementation(async (path: string) => {
+    if (path.endsWith("/overview")) return { companyId: 7, fleets: [{ id: group, name: "Resources" }] };
+    if (path.endsWith("/resources")) return { drivers: [{ userId: 7, name: "Bob", fleetIds: [group] }], equipment: [{ id: truck, name: "Truck", category: "truck", status: "available", dispatchable: true }] };
+    if (path.endsWith("/details")) return { canManage: false, nextCursor: null, details: [{ ...base, id: "33333333-3333-4333-8333-333333333333", name: "Reusable", driverUserId: null }, { ...base, id: "44444444-4444-4444-8444-444444444444", name: "Historical", driverUserId: 7 }] };
+    if (path.endsWith("/rig-packages")) return { rigPackages: [], nextCursor: null };
+    if (path.endsWith("/assessments")) return { assessments: [], mode: "warn_only", summaries: [] };
+    throw Error(`Unexpected ${path}`);
+  });
+  render(<FleetDetailsLibrary />);
+  expect(await screen.findByText("Driver selected on Run", { exact: false })).toBeTruthy();
+  expect(screen.getByText("Historical driver: Bob", { exact: false })).toBeTruthy();
+});

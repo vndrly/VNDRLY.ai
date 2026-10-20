@@ -71,13 +71,13 @@ function Field({ label, value, onChange, disabled, maxLength = 200 }: { label: s
   return <View style={{ gap: 4 }}><Text style={{ color: colors.mutedForeground }}>{label}</Text><TextInput accessibilityLabel={label} editable={!disabled} value={value} onChangeText={onChange} maxLength={maxLength} style={{ color: colors.text, borderWidth: 2, borderColor: colors.border, borderRadius: 8, padding: 12 }} /></View>;
 }
 const openFullInventory = () => router.push("/work-hub/inventory" as never);
-type Props = { identity: string; initialAssetId?: string; onSaved?: () => void };
+type Props = { identity: string; initialAssetId?: string; onSaved?: () => void; embedded?: boolean };
 const FleetServiceTemplates=React.lazy(()=>import("./FleetServiceTemplates"));
 export default function FleetInventory(props: Props) {
   const generation = useAuthGeneration();
   return <InventoryContent key={`${props.identity}:${generation}`} {...props} />;
 }
-function InventoryContent({ identity, initialAssetId, onSaved }: Props) {
+function InventoryContent({ identity, initialAssetId, onSaved, embedded = false }: Props) {
   const c = useFleetInventoryCopy(), colors = useColors(), access = useRequestScope();
   const [list, setList] = useState<Inventory | null>(null), [detail, setDetail] = useState<FleetInventoryDetail | null>(null), [assetId, setAssetId] = useState(initialAssetId ?? "");
   const {i18n}=useTranslation();
@@ -117,7 +117,7 @@ function InventoryContent({ identity, initialAssetId, onSaved }: Props) {
       <Field label={c.search} value={search} onChange={setSearch} disabled={false} />
       {(list?.fleets.length ?? 0) > 0 && <View style={{ gap: 8 }}><TogglePillButton compactOnTablet solid={!fleet} onPress={() => setFleet("")}>{c.all}</TogglePillButton>{list?.fleets.map(f => <TogglePillButton compactOnTablet key={f.id} solid={fleet === f.id} onPress={() => setFleet(f.id)}>{f.name}</TogglePillButton>)}</View>}
       {list?.canManage && !adding && !error && <TogglePillButton compactOnTablet onPress={() => setAdding(true)}>{c.add}</TogglePillButton>}
-      <TogglePillButton compactOnTablet onPress={openFullInventory}>{c.full}</TogglePillButton>
+      {!embedded && <TogglePillButton compactOnTablet onPress={openFullInventory}>{c.full}</TogglePillButton>}
       {adding && list?.canManage && <AssetCreate onSaved={saved} onCancel={() => setAdding(false)} onDenied={denied} />}
       {assets.map(a => <Pressable key={a.id} accessibilityRole="button" accessibilityLabel={a.name} onPress={() => { setAssetId(a.id); setAdding(false); }} style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 2, borderRadius: 14, padding: 16, gap: 8 }}><Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{a.name}</Text><Text style={{ color: colors.mutedForeground }}>{[a.manufacturer, a.model].filter(Boolean).join(" · ") || c[a.category as "truck" | "trailer" | "vehicle"] || a.category}</Text><Text style={{ color: colors.text }}>{a.aliases.map(alias => alias.value).join(" · ")}</Text><Text style={{ color: colors.mutedForeground }}>{a.held ? c.held : c[a.status as "available" | "checked_out"] ?? a.status}</Text></Pressable>)}
       {!loading && !error && !assets.length && <Text style={{ color: colors.text }}>{c.empty}</Text>}

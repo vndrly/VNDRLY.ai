@@ -3,6 +3,7 @@ import { Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import {
   FleetDetailSchema,
+  FleetDetailSaveSchema,
   FleetRigPackageSchema,
   type FleetDetail,
   type FleetResources,
@@ -41,7 +42,6 @@ export function FleetDetailBuilder({
   const [name, setName] = useState(initialDetail?.name ?? ""),
     [truck, setTruck] = useState(initialDetail?.vehicleAssetId ?? ""),
     [rig, setRig] = useState(initialDetail?.rigPackageId ?? ""),
-    [driver, setDriver] = useState(String(initialDetail?.driverUserId ?? "")),
     [attempt, setAttempt] = useState<Save | null>(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
@@ -64,11 +64,10 @@ export function FleetDetailBuilder({
     try {
       if (
         !trucks.some((item) => item.id === truck) ||
-        !resources.drivers.some((item) => item.userId === Number(driver)) ||
         (rig && !chosen) ||
         !accessGroupIds.length
       )
-        throw new Error("Choose an authorized truck, optional rig and driver.");
+        throw new Error("Choose an authorized truck and optional rig.");
       const detail = FleetDetailSchema.parse({
         ...initialDetail,
         id: initialDetail?.id ?? Crypto.randomUUID(),
@@ -78,21 +77,21 @@ export function FleetDetailBuilder({
         vehicleAssetId: truck,
         rigPackageId: chosen?.id ?? null,
         rigPackageVersion: chosen?.version ?? null,
-        driverUserId: Number(driver),
+        driverUserId: null,
         accessGroupIds,
         effectiveFrom: initialDetail?.effectiveFrom ?? new Date().toISOString(),
         effectiveUntil: initialDetail?.effectiveUntil ?? null,
         archivedAt: null,
       });
-      setAttempt({
+      setAttempt(FleetDetailSaveSchema.parse({
         operationId: Crypto.randomUUID(),
         expectedVersion: initialDetail?.version ?? 0,
         detail,
-      });
+      }));
       setMessage("");
     } catch {
       setMessage(
-        "Enter a name and choose an authorized truck, optional rig and driver.",
+        "Enter a name and choose an authorized truck and optional rig.",
       );
     }
   }
@@ -130,8 +129,8 @@ export function FleetDetailBuilder({
         {initialDetail ? "Edit Detail" : "Build a Detail"}
       </Text>
       <Text style={text}>
-        A reusable truck, optional rig package and driver. Run reservations and
-        Inventory custody stay separate.
+        A reusable truck and optional rig package. The Driver is assigned to
+        the Run. Inventory custody stays separate.
       </Text>
       <TextInput
         accessibilityLabel="Detail name"
@@ -158,16 +157,6 @@ export function FleetDetailBuilder({
         onChange={setRig}
         disabled={busy || Boolean(attempt)}
       />
-      <FleetChoiceField
-        label="Driver"
-        value={driver}
-        options={resources.drivers.map((item) => ({
-          id: String(item.userId),
-          label: item.name,
-        }))}
-        onChange={setDriver}
-        disabled={busy || Boolean(attempt)}
-      />
       <Text style={text}>
         Evidence status is separate from availability and run-specific coverage.
         Document warnings remain selectable; current holds, custody and
@@ -184,12 +173,6 @@ export function FleetDetailBuilder({
             resources.equipment.find((asset) => asset.id === component.assetId)
               ?.name ?? component.role,
         })) ?? []),
-        {
-          id: `driver:${driver}`,
-          label: resources.drivers.find(
-            (item) => String(item.userId) === driver,
-          )?.name,
-        },
       ]
         .filter((item) => item.label)
         .map((item) => (
@@ -221,11 +204,7 @@ export function FleetDetailBuilder({
           <Text style={text}>
             Review {attempt.detail.name} ·{" "}
             {trucks.find((item) => item.id === truck)?.name} ·{" "}
-            {chosen?.name ?? "No towed package"} ·{" "}
-            {
-              resources.drivers.find((item) => item.userId === Number(driver))
-                ?.name
-            }
+            {chosen?.name ?? "No towed package"}
           </Text>
           <TogglePillButton disabled={busy} onPress={() => void save()}>
             Save Detail

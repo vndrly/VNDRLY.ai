@@ -32,6 +32,8 @@ vi.mock("@/components/WorkHubPageTitle", () => ({ default: ({ title }: { title: 
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress }: { children: React.ReactNode; onPress?: () => void }) => <button onClick={onPress}>{children}</button> }));
 vi.mock("@/components/FleetSetup", () => ({ default: () => { const [draft, setDraft] = React.useState("new"); return <button aria-label="Edit Setup draft" onClick={() => setDraft("edited")}>{draft}</button>; } }));
 vi.mock("@/components/FleetLegacyWorkspace", () => ({ default: ({ initialMode, initialAssetId, initialRunId, initialYardOrderId }: { initialMode: string; initialAssetId?: string; initialRunId?: string; initialYardOrderId?: string }) => <Text>{`${initialMode}:${initialAssetId ?? "none"}:${initialRunId ?? "none"}:${initialYardOrderId ?? "none"}`}</Text> }));
+vi.mock("./YardBoard", () => ({ default: ({ initialYardOrderId, initialRunId }: { initialYardOrderId?: string; initialRunId?: string }) => <Text>{`Yard Board:${initialRunId ?? "none"}:${initialYardOrderId ?? "none"}`}</Text> }));
+vi.mock("./AssetWorkspace", () => ({ default: ({ initialAssetId }: { initialAssetId?: string }) => <Text>{`Asset Workspace:${initialAssetId ?? "none"}`}</Text> }));
 
 afterEach(() => { cleanup(); nav.push.mockReset(); nav.retry.mockReset(); nav.width = 390; nav.brand = "#137c49"; nav.params = {}; nav.home = null; nav.companyId = 3; nav.membershipId = 9; });
 
@@ -94,10 +96,10 @@ describe("FleetShell", () => {
     expect(screen.queryByText("Stale compliance")).toBeNull();
   });
 
-  it("keeps a saved inventory asset selected through the legacy view link", async () => {
+  it("keeps a saved inventory asset selected in Asset Workspace", async () => {
     nav.params = { view: "inventory", assetId: "asset-42" };
     render(<FleetScreen />);
-    expect(await screen.findByText("inventory:asset-42:none:none")).toBeTruthy();
+    expect(await screen.findByText("Asset Workspace:asset-42")).toBeTruthy();
   });
 
   it("opens the exact run from a Home action deep link", async () => {
@@ -109,7 +111,7 @@ describe("FleetShell", () => {
   it("retains a Yard Order deep-link parameter for the Yard module", async () => {
     nav.params = { module: "yard", yardOrderId: "22222222-2222-4222-8222-222222222222" };
     render(<FleetScreen />);
-    expect(await screen.findByText("inventory:none:none:22222222-2222-4222-8222-222222222222")).toBeTruthy();
+    expect(await screen.findByText("Yard Board:none:22222222-2222-4222-8222-222222222222")).toBeTruthy();
   });
 
   it.each([

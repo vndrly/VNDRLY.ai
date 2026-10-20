@@ -212,8 +212,8 @@ export default function FleetDetailsLibrary() {
         Reusable Details
       </Text>
       <Text style={text}>
-        Canonical truck, optional rig package and driver. Inventory custody is
-        unchanged.
+        Canonical truck and optional rig package. Assign the Driver on each
+        Run. Inventory custody is unchanged.
       </Text>
       {error && (
         <Text accessibilityRole="alert" style={text}>
@@ -330,9 +330,9 @@ export default function FleetDetailsLibrary() {
               (asset) => asset.id === item.vehicleAssetId,
             )?.name ?? "Truck"}{" "}
             ·{" "}
-            {data.resources.drivers.find(
+            {item.driverUserId === null ? "Driver selected on Run" : `Historical driver: ${data.resources.drivers.find(
               (driver) => driver.userId === item.driverUserId,
-            )?.name ?? "Assigned driver"}{" "}
+            )?.name ?? item.driverUserId}`}{" "}
             · revision {item.version}
           </Text>
           {data.details.canManage && (

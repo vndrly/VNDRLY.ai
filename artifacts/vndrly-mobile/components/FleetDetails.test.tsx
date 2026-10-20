@@ -54,7 +54,7 @@ it("creates an ordered native rig package with branded component selection", asy
     package: { components: [{ assetId: truck, role: "trailer", sequence: 0 }] },
   });
 });
-it("reviews a reusable native truck and driver Detail without fabricating custody or driver acceptance", async () => {
+it("saves a reusable truck Detail without a permanent driver even when driver evidence warns", async () => {
   const save = vi.fn().mockResolvedValue(undefined);
   render(
     <FleetDetailBuilder
@@ -82,9 +82,7 @@ it("reviews a reusable native truck and driver Detail without fabricating custod
   });
   fireEvent.click(screen.getByRole("button", { name: "Available Trucks" }));
   fireEvent.click(await screen.findByRole("button", { name: "Truck 12" }));
-  fireEvent.click(screen.getByRole("button", { name: "Driver" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Bob Villa" }));
-  expect(await screen.findByText("Bob Villa · expired")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Driver" })).toBeNull();
   expect(screen.getByText("Truck 12 · Current reviewed evidence")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Review Detail" }));
   expect(save).not.toHaveBeenCalled();
@@ -92,7 +90,7 @@ it("reviews a reusable native truck and driver Detail without fabricating custod
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
   expect(save.mock.calls[0][0]).toMatchObject({
     expectedVersion: 0,
-    detail: { vehicleAssetId: truck, driverUserId: 2, rigPackageId: null },
+    detail: { vehicleAssetId: truck, driverUserId: null, rigPackageId: null },
   });
   expect(save.mock.calls[0][0]).not.toHaveProperty("driverAcknowledged");
 });
