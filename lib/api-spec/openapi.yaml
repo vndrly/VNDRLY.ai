@@ -4747,7 +4747,7 @@ components:
                 missingCredentials: { type: array, items: { type: string } }
         offerable: { type: boolean }
         ratingStatus: { type: string, enum: [rated, not_yet_rated] }
-        safetyStatus: { type: string, enum: [rated, not_yet_rated] }
+        safetyStatus: { type: string, enum: [rated, not_yet_rated, unavailable] }
         weightedScore: { type: number, minimum: 0, maximum: 1 }
         factors: { type: array, items: { $ref: '#/components/schemas/MarketplaceRankingFactor' } }
     MarketplaceCapabilityPatch:

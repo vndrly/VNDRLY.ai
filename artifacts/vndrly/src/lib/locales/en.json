@@ -71,6 +71,7 @@
     "ratingValue_other": "{{rating}} / 5 ({{count}} reviews)",
     "safety": "Safety score · source · refreshed",
     "vndrlySafety": "VNDRLY compliance score",
+    "complianceUnavailable": "VNDRLY compliance score is temporarily unavailable. Other vendor information remains available.",
     "scoreValue": "VNDRLY compliance score {{score}} out of 100",
     "scoreReasons": { "missing_evidence": "Current evidence is missing", "expired_record": "A required record is expired", "revoked_record": "A required record was revoked", "failed_record": "A required record did not pass review", "unverified_record": "A required record is not verified", "excluded_record": "A required record is outside the current scope", "requires_review": "Current evidence requires review" },
     "advisoryHiring": "Advisory information only. VNDRLY does not block tickets; your company decides whom to hire.",

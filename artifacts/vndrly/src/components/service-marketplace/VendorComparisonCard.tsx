@@ -79,8 +79,10 @@ export default function VendorComparisonCard({
         <div>
           <dt>{t("partnerMarketplace.vndrlySafety")}</dt>
           <dd>
-            {vendor.safety === null
-              ? unknown
+            {vendor.safetyStatus === "unavailable"
+              ? t("partnerMarketplace.complianceUnavailable")
+              : vendor.safety === null
+                ? unknown
               : <><ImagePill color={vendor.safety.score < 60 ? "red" : vendor.safety.score < 85 ? "amber" : "green"} aria-label={t("partnerMarketplace.scoreValue", { score: vendor.safety.score })}>{vendor.safety.score} / 100</ImagePill><span>{vendor.safety.source} · {new Date(vendor.safety.refreshedAt).toISOString().slice(0, 10)}</span>{vendor.safety.reasons.map((reason) => <span className="block" key={reason}>{t(`partnerMarketplace.scoreReasons.${reason}`)}</span>)}</>}
           </dd>
         </div>

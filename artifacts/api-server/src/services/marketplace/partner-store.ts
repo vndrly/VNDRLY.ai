@@ -64,6 +64,7 @@ export interface PartnerMarketplaceCandidate {
   rating: number | null;
   reviewCount: number;
   safety: RankingCandidate["safety"];
+  safetyUnavailable: boolean;
   completedJobs: number;
   onTimeRate: number | null;
   priorPartnerJobs: number;
@@ -181,6 +182,7 @@ export async function discoverPartnerMarketplaceVendors(
       rating: row.rating,
       reviewCount: row.reviewCount,
       safety: row.safety,
+      safetyUnavailable: row.safetyUnavailable,
       completedJobs: row.completedJobs,
       onTimeRate: row.onTimeRate,
       priorPartnerJobs: row.priorPartnerJobs,
@@ -207,7 +209,10 @@ const currentMapping = and(
 );
 
 /** Lazy persistence adapter. Search never invokes the classifier and never writes records. */
-export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof import("@workspace/db").db, "select">): PartnerMarketplaceStore {
+export function createPostgresPartnerMarketplaceStore(
+  connection?: Pick<typeof import("@workspace/db").db, "select">,
+  options: { complianceSummary?: typeof marketplaceComplianceSummary } = {},
+): PartnerMarketplaceStore {
   const database = async () => connection ?? (await import("@workspace/db")).db;
   return {
     async authorize(session, partnerId) {
@@ -318,21 +323,34 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
           ),
         )
         .orderBy(asc(vendors.id), asc(capabilities.id));
-      const uniqueVendors = [...new Map(matches.map((match) => [match.vendor.id, match.vendor])).values()];
-      const safetyPairs = await mapWithBoundedConcurrency(uniqueVendors, 4, async (vendor) => [
-        vendor.id,
-        await marketplaceComplianceSummary(vendor.fleetComplianceConfiguration, vendor.id, now),
-      ] as const);
+      // Reject stale or tampered semantic mappings before any private
+      // compliance projection is attempted.
+      const validatedMatches = matches.filter((match) =>
+        mappingMatchesSavedSubject(
+          match.capabilityMapping,
+          capabilitySubject(match.capability),
+        ),
+      );
+      const uniqueVendors = [...new Map(validatedMatches.map((match) => [match.vendor.id, match.vendor])).values()];
+      const complianceSummary = options.complianceSummary ?? marketplaceComplianceSummary;
+      const safetyPairs = await mapWithBoundedConcurrency<
+        (typeof uniqueVendors)[number],
+        readonly [number, { safety: RankingCandidate["safety"]; unavailable: boolean }]
+      >(uniqueVendors, 4, async (vendor) => {
+        try {
+          return [vendor.id, {
+            safety: await complianceSummary(vendor.fleetComplianceConfiguration, vendor.id, now),
+            unavailable: false,
+          }] as const;
+        } catch {
+          // Compliance is advisory. Isolate private-storage failures to this
+          // vendor rather than blanking the rest of marketplace discovery.
+          return [vendor.id, { safety: null, unavailable: true }] as const;
+        }
+      });
       const safetyByVendor = new Map(safetyPairs);
       const result: PartnerMarketplaceCandidate[] = [];
-      for (const match of matches) {
-        if (
-          !mappingMatchesSavedSubject(
-            match.capabilityMapping,
-            capabilitySubject(match.capability),
-          )
-        )
-          continue;
+      for (const match of validatedMatches) {
         const vendorId = match.vendor.id;
         const serviceAreas = await db
           .select()
@@ -472,7 +490,8 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
               validRatings.length
             : null,
           reviewCount: validRatings.length,
-          safety: safetyByVendor.get(vendorId) ?? null,
+          safety: safetyByVendor.get(vendorId)?.safety ?? null,
+          safetyUnavailable: safetyByVendor.get(vendorId)?.unavailable ?? false,
           completedJobs: relevant.length,
           priorPartnerJobs: history.length,
           onTimeRate: scheduled.length

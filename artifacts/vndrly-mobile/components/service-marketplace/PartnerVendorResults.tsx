@@ -163,7 +163,7 @@ export default function PartnerVendorResults({
                   : `${vendor.rating} (${vendor.reviewCount})`}
               </Label>
               <Label>{t("mobileMarketplace.vndrlySafety")}</Label>
-              {vendor.safetyStatus === "not_yet_rated" || !vendor.safety ? <Label>{t("mobileMarketplace.notRated")}</Label> : <>
+              {vendor.safetyStatus === "unavailable" ? <Label alert>{t("mobileMarketplace.complianceUnavailable")}</Label> : vendor.safetyStatus === "not_yet_rated" || !vendor.safety ? <Label>{t("mobileMarketplace.notRated")}</Label> : <>
                 <ImagePill color={vendor.safety.score < 60 ? "red" : vendor.safety.score < 85 ? "amber" : "green"} accessibilityLabel={t("mobileMarketplace.scoreValue", { score: vendor.safety.score })}>{vendor.safety.score} / 100</ImagePill>
                 <Label>{vendor.safety.source} · {new Date(vendor.safety.refreshedAt).toLocaleDateString()}</Label>
                 {vendor.safety.reasons.map((reason) => <Label key={reason}>{t(`mobileMarketplace.scoreReasons.${reason}`)}</Label>)}

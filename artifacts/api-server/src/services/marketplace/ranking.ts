@@ -31,6 +31,8 @@ export interface RankingCandidate {
   rating: number | null;
   reviewCount: number;
   safety: { score: number; source: string; refreshedAt: string; reasons: string[] } | null;
+  /** Technical projection failure is distinct from a vendor with no score. */
+  safetyUnavailable?: boolean;
   completedJobs: number;
   onTimeRate: number | null;
   priorPartnerJobs: number;
@@ -49,7 +51,7 @@ export type RankedVendor = Omit<RankingCandidate, "eligibility"> & {
   eligibility: Omit<EligibilityResult, "internalEvidence">;
   offerable: boolean;
   ratingStatus: "rated" | "not_yet_rated";
-  safetyStatus: "rated" | "not_yet_rated";
+  safetyStatus: "rated" | "not_yet_rated" | "unavailable";
   weightedScore: number;
   factors: RankingFactor[];
 };
@@ -231,7 +233,11 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
       },
       offerable: row.eligibility.eligible,
       ratingStatus: row.rating === null ? "not_yet_rated" : "rated",
-      safetyStatus: row.safety === null ? "not_yet_rated" : "rated",
+      safetyStatus: row.safetyUnavailable
+        ? "unavailable"
+        : row.safety === null
+          ? "not_yet_rated"
+          : "rated",
       weightedScore,
       factors,
     };

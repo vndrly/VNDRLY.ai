@@ -287,6 +287,83 @@ describe("partner marketplace persistence boundary", () => {
     state.data.vendor_partner_service_offers[0].capability = { ...capability, name: "Gate actuator repairs" };
     expect(await discover()).toEqual([]);
   });
+  it("rejects a tampered capability mapping before reading private compliance", async () => {
+    state.data.vendor_partner_service_offers[0].capability = {
+      ...capability,
+      name: "Tampered capability name",
+    };
+    const complianceSummary = vi.fn(async () => ({
+      score: 80,
+      source: "VNDRLY compliance score",
+      refreshedAt: now.toISOString(),
+      reasons: [],
+    }));
+    const store = createPostgresPartnerMarketplaceStore(undefined, {
+      complianceSummary,
+    });
+
+    await expect(store.listCandidates(context, now)).resolves.toEqual([]);
+    expect(complianceSummary).not.toHaveBeenCalled();
+  });
+  it("isolates one vendor compliance outage without hiding valid candidates", async () => {
+    const secondCapability = { ...capability, id: 8, vendorId: 4, name: "Gate crews two" };
+    state.data.vendor_partner_service_offers.push({
+      capability: secondCapability,
+      capabilityMapping: mapping({
+        ...secondCapability,
+        subjectType: "vendor_capability",
+        subjectId: secondCapability.id,
+      }),
+      offer: {
+        ...state.data.vendor_partner_service_offers[0].offer,
+        id: 13,
+        vendorCapabilityId: secondCapability.id,
+      },
+      vendor: {
+        ...state.data.vendor_partner_service_offers[0].vendor,
+        id: 4,
+        name: "OtherCo",
+      },
+    });
+    state.data.vendor_service_areas.push({
+      ...state.data.vendor_service_areas[0],
+      vendorId: 4,
+    });
+    state.data.vendor_people.push({
+      ...state.data.vendor_people[0],
+      id: 4,
+      vendorId: 4,
+    });
+    const complianceSummary = vi.fn(async (_raw: unknown, vendorId: number) => {
+      if (vendorId === 3) throw new Error("private storage unavailable");
+      return {
+        score: 82,
+        source: "VNDRLY compliance score",
+        refreshedAt: now.toISOString(),
+        reasons: [],
+      };
+    });
+    const store = createPostgresPartnerMarketplaceStore(undefined, {
+      complianceSummary,
+    });
+
+    const rows = await discoverPartnerMarketplaceVendors(
+      store,
+      context,
+      { requestedCapacity: 1 },
+      now,
+    );
+    expect(rows).toHaveLength(2);
+    expect(rows.find((row) => row.vendorId === 3)).toMatchObject({
+      safety: null,
+      safetyStatus: "unavailable",
+      offerable: true,
+    });
+    expect(rows.find((row) => row.vendorId === 4)).toMatchObject({
+      safety: { score: 82 },
+      safetyStatus: "rated",
+    });
+  });
   it.each(["revoked", "rejected", "suspended"])("blocks explicit %s relationships without requiring a prior relationship", async (status) => {
     const discover = () => discoverPartnerMarketplaceVendors(createPostgresPartnerMarketplaceStore(), context, { requestedCapacity: 1 }, now);
     expect((await discover())[0].offerable).toBe(true);

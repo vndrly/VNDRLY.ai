@@ -71,6 +71,7 @@
     "ratingValue_other": "{{rating}} / 5 ({{count}} reseñas)",
     "safety": "Puntaje de seguridad · fuente · actualización",
     "vndrlySafety": "Puntuación de cumplimiento de VNDRLY",
+    "complianceUnavailable": "La puntuación de cumplimiento de VNDRLY no está disponible temporalmente. La demás información del proveedor sigue disponible.",
     "scoreValue": "Puntuación de cumplimiento de VNDRLY: {{score}} de 100",
     "scoreReasons": { "missing_evidence": "Falta evidencia vigente", "expired_record": "Un registro obligatorio está vencido", "revoked_record": "Se revocó un registro obligatorio", "failed_record": "Un registro obligatorio no aprobó la revisión", "unverified_record": "Un registro obligatorio no está verificado", "excluded_record": "Un registro obligatorio está fuera del alcance actual", "requires_review": "La evidencia actual requiere revisión" },
     "advisoryHiring": "Información solo orientativa. VNDRLY no bloquea tickets; su empresa decide a quién contratar.",

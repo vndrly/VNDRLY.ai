@@ -29,7 +29,7 @@ describe("Fleet compliance score", () => {
     expect(result).toEqual(Array.from({ length: 23 }, (_, index) => index * 2));
   });
 
-  it("rejects oversized compliance configurations at the contract boundary", () => {
+  it("keeps existing large compliance configurations parse-compatible", () => {
     const entry = {
       id: "11111111-1111-4111-8111-111111111111",
       revision: 1,
@@ -51,7 +51,7 @@ describe("Fleet compliance score", () => {
       entries: Array.from({ length: 1000 }, () => entry),
     };
     expect(FleetComplianceConfigurationSchema.safeParse(base).success).toBe(true);
-    expect(FleetComplianceConfigurationSchema.safeParse({ ...base, entries: [...base.entries, entry] }).success).toBe(false);
+    expect(FleetComplianceConfigurationSchema.safeParse({ ...base, entries: [...base.entries, entry] }).success).toBe(true);
   });
   it("explains a red score, ranks expired evidence, and shows an honest Partner preview", () => {
     const result = projectFleetComplianceScore(3, [expired], "2026-10-20T00:00:00.000Z");

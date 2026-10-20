@@ -643,7 +643,7 @@ export const SearchPartnerMarketplaceVendorsResponse = zod.object({
       }),
       offerable: zod.boolean(),
       ratingStatus: zod.enum(["rated", "not_yet_rated"]),
-      safetyStatus: zod.enum(["rated", "not_yet_rated"]),
+      safetyStatus: zod.enum(["rated", "not_yet_rated", "unavailable"]),
       weightedScore: zod
         .number()
         .min(searchPartnerMarketplaceVendorsResponseItemsItemWeightedScoreMin)
@@ -914,7 +914,7 @@ export const GetPartnerMarketplaceVendorResponse = zod.object({
   }),
   offerable: zod.boolean(),
   ratingStatus: zod.enum(["rated", "not_yet_rated"]),
-  safetyStatus: zod.enum(["rated", "not_yet_rated"]),
+  safetyStatus: zod.enum(["rated", "not_yet_rated", "unavailable"]),
   weightedScore: zod
     .number()
     .min(getPartnerMarketplaceVendorResponseWeightedScoreMin)

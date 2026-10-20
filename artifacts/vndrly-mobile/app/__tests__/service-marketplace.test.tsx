@@ -471,6 +471,20 @@ describe("mobile service marketplace", () => {
       Object.assign(vendor, previous);
     }
   });
+  it("labels a compliance projection outage separately from an unrated vendor", async () => {
+    const previous = { safety: vendor.safety, safetyStatus: vendor.safetyStatus };
+    Object.assign(vendor, { safety: null, safetyStatus: "unavailable" });
+    try {
+      await partner();
+      expect(
+        screen.getAllByText(
+          "VNDRLY compliance score is temporarily unavailable. Other vendor information remains available.",
+        ).length,
+      ).toBeGreaterThan(0);
+    } finally {
+      Object.assign(vendor, previous);
+    }
+  });
   it("confirms server-saved terms before sending and sends the saved version", async () => {
     await partner();
     click("Offer job to MidCon");

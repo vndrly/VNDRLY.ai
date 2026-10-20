@@ -352,9 +352,9 @@ export const FleetComplianceConfigurationSchema = z
   .object({
     version: z.number().int().positive(),
     reviewerUserIds: z.array(z.number().int().positive()).max(100),
-    entries: z.array(FleetComplianceIndexEntrySchema).max(1000),
-    requirements: z.array(FleetRequirementVersionSchema).max(500).default([]),
-    facts: z.array(FleetComplianceFactRecordSchema).max(1000).default([]),
+    entries: z.array(FleetComplianceIndexEntrySchema),
+    requirements: z.array(FleetRequirementVersionSchema).default([]),
+    facts: z.array(FleetComplianceFactRecordSchema).default([]),
     scoreHistory: z.array(z.object({ at: timestamp, score: z.number().int().min(0).max(100) }).strict()).max(365).default([]),
     partnerScorePreview: z.object({
       score: z.number().int().min(0).max(100),

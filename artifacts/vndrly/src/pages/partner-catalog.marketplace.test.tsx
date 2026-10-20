@@ -289,6 +289,20 @@ describe("partner marketplace", () => {
     ).toBe(true);
     expect(screen.queryByText(/SECRET_/)).toBeNull();
   });
+  it("shows a compliance projection outage separately from an unrated vendor", async () => {
+    vendors[0] = {
+      ...vendors[0],
+      safety: null,
+      safetyStatus: "unavailable",
+    };
+    mount();
+    await discover();
+    expect(
+      within(screen.getByRole("region", { name: "MidCon" })).getByText(
+        "VNDRLY compliance score is temporarily unavailable. Other vendor information remains available.",
+      ),
+    ).toBeTruthy();
+  });
   it("passes capacity and sort to the server, filters and compares without selecting a winner", async () => {
     mount();
     await discover();

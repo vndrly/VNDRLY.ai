@@ -216,6 +216,7 @@ export type MarketplaceRankedVendorSafetyStatus =
 export const MarketplaceRankedVendorSafetyStatus = {
   rated: "rated",
   not_yet_rated: "not_yet_rated",
+  unavailable: "unavailable",
 } as const;
 
 export interface MarketplaceRankedVendor {
