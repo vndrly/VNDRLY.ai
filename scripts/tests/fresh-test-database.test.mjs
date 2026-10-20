@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { spawnSync } from "node:child_process";
 import {
@@ -27,6 +28,18 @@ const schemaPlan = {
     'ALTER TABLE "child" ADD CONSTRAINT "child_fk" FOREIGN KEY ("parent_id") REFERENCES "parent"("id") ON DELETE cascade ON UPDATE no action;',
   ],
 };
+
+test("the API test wrapper fails closed instead of entering the legacy reset path", async () => {
+  const wrapper = await readFile(
+    new URL(
+      "../../artifacts/api-server/scripts/run-with-test-db.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(wrapper, /API tests require VNDRLY_TEST_DB_MODE=fresh-local/);
+  assert.doesNotMatch(wrapper, /await resetAndPushSchema\(resolved\.testUrl\)/);
+});
 
 function databaseHarness(
   target,

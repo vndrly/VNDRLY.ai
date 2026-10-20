@@ -37,9 +37,11 @@ test("the test database wrapper validates its target before every database opera
     new URL("artifacts/api-server/scripts/run-with-test-db.ts", repoRoot),
     "utf8",
   );
-  const resolution = wrapper.indexOf("const resolved = resolveTestDbUrl()");
+  const resolution = wrapper.indexOf(
+    "const target = resolveFreshLocalTestDatabaseTarget(setupEnvironment)",
+  );
   const firstDatabaseOperation = wrapper.indexOf(
-    "await ensureDatabaseExists(resolved.maintenanceUrl",
+    "await provisionFreshLocalTestDatabase(",
   );
   const environmentSanitization = wrapper.indexOf(
     "stripLibpqTargetEnvironment(process.env)",
@@ -47,11 +49,8 @@ test("the test database wrapper validates its target before every database opera
   const setupEnvironmentCleanup = wrapper.indexOf(
     "delete process.env[key]",
   );
-  const setupDatabaseRewrite = wrapper.indexOf(
-    "process.env.DATABASE_URL = resolved.testUrl",
-  );
-  const setupTestDatabaseRewrite = wrapper.indexOf(
-    "process.env.TEST_DATABASE_URL = resolved.testUrl",
+  const childEnvironment = wrapper.indexOf(
+    "const env = freshLocalChildEnvironment(setupEnvironment, target)",
   );
 
   assert.ok(
@@ -65,20 +64,18 @@ test("the test database wrapper validates its target before every database opera
   assert.ok(resolution >= 0, "wrapper must resolve the validated target");
   assert.ok(
     firstDatabaseOperation > resolution && resolution > setupEnvironmentCleanup,
-    "environment cleanup and target validation must finish before create/reset/connect work begins",
+    "environment cleanup and target validation must finish before database creation",
   );
   assert.ok(
-    setupDatabaseRewrite > resolution &&
-      setupDatabaseRewrite < firstDatabaseOperation &&
-      setupTestDatabaseRewrite > resolution &&
-      setupTestDatabaseRewrite < firstDatabaseOperation,
-    "the setup process must replace raw database URLs with canonical resolved URLs before database work",
+    childEnvironment > resolution && childEnvironment < firstDatabaseOperation,
+    "the child provenance must be derived from the validated fresh target before database work",
   );
   assert.match(
     wrapper,
-    /const env: NodeJS\.ProcessEnv = \{\s*\.\.\.setupEnvironment,\s*DATABASE_URL: resolved\.testUrl,\s*TEST_DATABASE_URL: resolved\.testUrl,/s,
-    "the child must inherit the stripped environment and canonical resolved URLs",
+    /const env = freshLocalChildEnvironment\(setupEnvironment, target\)/,
+    "the child must receive the complete fresh-local provenance environment",
   );
+  assert.doesNotMatch(wrapper, /DROP SCHEMA|resetAndPushSchema/);
   assert.doesNotMatch(
     wrapper,
     /new pg\.(?:Client|Pool)\(\{[^}]*connectionString:\s*process\.env/s,
