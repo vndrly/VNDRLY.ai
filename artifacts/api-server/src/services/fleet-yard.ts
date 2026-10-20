@@ -27,6 +27,7 @@ import {
   readFleetResourceAssets,
   readFleetResourceRegistry,
 } from "./fleet-resource-store";
+import { readFleetAuthoritySites } from "./fleet-commercial-authority";
 import { notifyUsers } from "../routes/notifications";
 
 type YardRow = Record<string, any>;
@@ -170,6 +171,7 @@ function capabilities(state: FleetState, actor: FleetActor) {
 function yardTargetFleets(
   state: FleetState,
   value: FleetYardOrder,
+  detailAccessGroupIds?: readonly string[] | null,
 ) {
   const run = value.runId ? state.runs.find((row) => row.id === value.runId) : null;
   if (value.runId && !run) return [];
@@ -182,6 +184,7 @@ function yardTargetFleets(
   if (!assets.length) return [];
   return state.fleets.filter((fleet) =>
     assets.every((id) => fleet.equipmentAssetIds.includes(id)) &&
+    (!value.detailId || detailAccessGroupIds?.includes(fleet.id)) &&
     (!run || (run.fleetId === fleet.id && run.siteIds.every((id) => fleet.siteIds.includes(id)))),
   ).map((fleet) => fleet.id);
 }
@@ -190,10 +193,11 @@ function assertYardOrderScope(
   actor: FleetActor,
   value: FleetYardOrder,
   notFound = true,
+  detailAccessGroupIds?: readonly string[] | null,
 ) {
   const grant = state.grants.find((g) => g.userId === actor.userId);
   const caps = capabilities(state, actor);
-  const targetFleets = yardTargetFleets(state, value);
+  const targetFleets = yardTargetFleets(state, value, detailAccessGroupIds);
   if (!targetFleets.length || (!caps.has("admin") && !targetFleets.some((id) => grant?.fleetIds.includes(id))))
     throw new FleetError(notFound ? "fleet.yard_order_not_found" : "fleet.asset_not_found", 404);
   if (value.runId) {
@@ -204,12 +208,52 @@ function assertYardOrderScope(
   }
   return targetFleets;
 }
-function activeDriverRunForAsset(state: FleetState, userId: number, runId: string | null, assetId: string) {
+async function currentCompanySiteIds(client: PoolClient, companyId: number, siteIds: readonly number[]) {
+  const unique = [...new Set(siteIds)];
+  if (!unique.length) return [];
+  const rows = await readFleetAuthoritySites(client, companyId, { siteIds: unique, activeOnly: true });
+  return rows.map((row) => row.id as number);
+}
+async function requireOrderCompanySites(client: PoolClient, state: FleetState, actor: FleetActor, value: FleetYardOrder, notFound = true) {
+  const run = value.runId ? state.runs.find((row) => row.id === value.runId) : null;
+  if (!run?.siteIds.length) return;
+  const current = await currentCompanySiteIds(client, actor.companyId, run.siteIds);
+  if (!run.siteIds.every((id) => current.includes(id)))
+    throw new FleetError(notFound ? "fleet.yard_order_not_found" : "fleet.permission_denied", notFound ? 404 : 403);
+}
+async function detailAccessForOrder(client: PoolClient, actor: FleetActor, value: FleetYardOrder): Promise<string[] | null> {
+  if (!value.detailId) return null;
+  const event = await client.query(
+    "SELECT detail FROM fleet_yard_order_events WHERE company_id=$1 AND order_id=$2 AND event_type='requested' ORDER BY occurred_at,id LIMIT 1",
+    [actor.companyId, value.id],
+  );
+  const captured = event.rows[0]?.detail?.detailAccessGroupIds;
+  if (Array.isArray(captured)) return captured.filter((id): id is string => typeof id === "string");
+  // Older events never captured Detail access. Current mutable configuration
+  // cannot retroactively establish who was authorized for that order.
+  return [];
+}
+async function assertScopedYardOrder(client: PoolClient, state: FleetState, actor: FleetActor, value: FleetYardOrder, notFound = true) {
+  const groups = await detailAccessForOrder(client, actor, value);
+  const target = assertYardOrderScope(state, actor, value, notFound, groups);
+  await requireOrderCompanySites(client, state, actor, value, notFound);
+  return target;
+}
+async function currentAssignedDriverSites(client: PoolClient, state: FleetState, actor: FleetActor) {
+  const grant = state.grants.find((row) => row.userId === actor.userId);
+  const ids = state.runs.filter((run) => run.driverUserId === actor.userId && grant?.fleetIds.includes(run.fleetId) &&
+    state.fleets.some((fleet) => fleet.id === run.fleetId && run.siteIds.every((id) => fleet.siteIds.includes(id))))
+    .flatMap((run) => run.siteIds);
+  return currentCompanySiteIds(client, actor.companyId, ids);
+}
+function activeDriverRunForAsset(state: FleetState, userId: number, runId: string | null, assetId: string, currentSiteIds: readonly number[]) {
   if (!runId) return null;
   const run = state.runs.find((row) => row.id === runId);
   const grant = state.grants.find((row) => row.userId === userId);
   if (!run || run.driverUserId !== userId || !["dispatched", "acknowledged", "in_progress"].includes(run.status) ||
-    !grant?.fleetIds.includes(run.fleetId) || !run.siteIds.every((id) => grant.siteIds.includes(id)) ||
+    !grant?.fleetIds.includes(run.fleetId) ||
+    !state.fleets.some((fleet) => fleet.id === run.fleetId && run.siteIds.every((id) => fleet.siteIds.includes(id))) ||
+    !run.siteIds.every((id) => currentSiteIds.includes(id)) ||
     (run.resourceAssignment && !["reserved", "active"].includes(run.resourceAssignment.reservation.state)) ||
     !fleetRunAssetIds(run).includes(assetId)) return null;
   if (state.runs.some((other) => other.id !== run.id &&
@@ -580,10 +624,13 @@ export function createFleetYardOperations(
           "SELECT * FROM fleet_yard_orders WHERE company_id=$1 AND ($2::boolean OR requested_by_user_id=$3 OR assigned_to_user_id=$3) ORDER BY requested_at DESC,id LIMIT $4",
           [actor.companyId, !!broad, actor.userId, limit],
         );
-        return { orders: found.rows.map(order).filter((value) => {
-          try { assertYardOrderScope(state, actor, value); return true; }
-          catch (error) { if (error instanceof FleetError) return false; throw error; }
-        }) };
+        const orders: FleetYardOrder[] = [];
+        for (const row of found.rows) {
+          const value = order(row);
+          try { await assertScopedYardOrder(client, state, actor, value); orders.push(value); }
+          catch (error) { if (!(error instanceof FleetError)) throw error; }
+        }
+        return { orders };
       }),
     yardOrder: (actor: FleetActor, id: string) =>
       tx(actor, async (state, client) => {
@@ -602,7 +649,7 @@ export function createFleetYardOperations(
         if (!found.rows.length)
           throw new FleetError("fleet.yard_order_not_found", 404);
         const value = order(found.rows[0]);
-        assertYardOrderScope(state, actor, value);
+        await assertScopedYardOrder(client, state, actor, value);
         const caps =
           actor.fleetCapabilities ??
           legacyFleetCapabilities(
@@ -652,7 +699,7 @@ export function createFleetYardOperations(
         );
         if (!current.rows.length) throw new FleetError("fleet.operation_not_found", 404);
         const value = order(current.rows[0]);
-        assertYardOrderScope(state, actor, value);
+        await assertScopedYardOrder(client, state, actor, value);
         const caps = capabilities(state, actor);
         if (!["admin", "dispatch", "office"].some((cap) => caps.has(cap as never)) &&
           value.requestedByUserId !== actor.userId && value.assignedToUserId !== actor.userId)
@@ -679,7 +726,7 @@ export function createFleetYardOperations(
           throw new FleetError("fleet.version_conflict", 409);
         const ownSelfDispatch = capabilities(state, actor).has("driver") && capabilities(state, actor).has("self_dispatch") &&
           !!value.runId && state.runs.some((run) => run.id === value.runId && run.driverUserId === actor.userId &&
-            ["dispatched", "acknowledged", "in_progress", "submitted_for_review"].includes(run.status));
+            ["draft", "dispatched", "acknowledged", "in_progress", "submitted_for_review"].includes(run.status));
         if (!capabilities(state, actor).has("admin") && !capabilities(state, actor).has("dispatch") && !ownSelfDispatch)
           throw new FleetError("fleet.permission_denied", 403);
         const hash = fingerprint(input);
@@ -702,7 +749,7 @@ export function createFleetYardOperations(
           );
           if (!receipt) throw new FleetError("fleet.operation_conflict", 409);
           const previous = FleetYardOrderSchema.parse(receipt);
-          assertYardOrderScope(state, actor, previous);
+          await assertScopedYardOrder(client, state, actor, previous);
           return previous;
         }
         await assertYard(client, actor.companyId, value.yardId);
@@ -728,9 +775,11 @@ export function createFleetYardOperations(
           targetIds.push(...fleetRunAssetIds(run));
         }
         const targeted = FleetYardOrderSchema.parse({ ...value, requestedAssetIds: [...new Set(targetIds)] });
-        const targetFleets = assertYardOrderScope(state, actor, targeted, false);
-        if (detailFleetIds && !targetFleets.some((id) => detailFleetIds!.includes(id)))
+        if (detailFleetIds && !yardTargetFleets(state, targeted).some((id) =>
+          detailFleetIds!.includes(id) && (capabilities(state, actor).has("admin") || grant.fleetIds.includes(id))))
           throw new FleetError("fleet.detail_not_found", 404);
+        assertYardOrderScope(state, actor, targeted, false, detailFleetIds);
+        await requireOrderCompanySites(client, state, actor, targeted, false);
         if (targeted.requestedAssetIds.length)
           await readFleetResourceAssets(
             client,
@@ -769,7 +818,7 @@ export function createFleetYardOperations(
             value.id,
             input.operationId,
             actor.userId,
-            JSON.stringify({ fingerprint: hash, status: result.status }),
+            JSON.stringify({ fingerprint: hash, status: result.status, detailAccessGroupIds: detailFleetIds }),
           ],
         );
         await saveOrderReceipt(client, actor, input.operationId, hash, result);
@@ -798,11 +847,11 @@ export function createFleetYardOperations(
         if (!found.rows.length)
           throw new FleetError("fleet.yard_order_not_found", 404);
         const prior = order(found.rows[0]);
-        const targetFleets = assertYardOrderScope(state, actor, prior);
+        const targetFleets = await assertScopedYardOrder(client, state, actor, prior);
         const caps = capabilities(state, actor);
         const ownSelfDispatch = caps.has("driver") && caps.has("self_dispatch") &&
           !!prior.runId && state.runs.some((run) => run.id === prior.runId && run.driverUserId === actor.userId &&
-            ["dispatched", "acknowledged", "in_progress", "submitted_for_review"].includes(run.status));
+            ["draft", "dispatched", "acknowledged", "in_progress", "submitted_for_review"].includes(run.status));
         if (!caps.has("admin") && !caps.has("dispatch") && !caps.has("yard") && !ownSelfDispatch)
           throw new FleetError("fleet.permission_denied", 403);
         if (input.kind === "assign" && !caps.has("admin") && !caps.has("dispatch") &&
@@ -834,14 +883,14 @@ export function createFleetYardOperations(
           const receipt = await auditReplay(client, actor, input.operationId, hash, "fleet-yard-order-operation");
           if (!receipt) throw new FleetError("fleet.operation_conflict", 409);
           const previous = FleetYardOrderSchema.parse(receipt);
-          assertYardOrderScope(state, actor, previous);
+          await assertScopedYardOrder(client, state, actor, previous);
           return previous;
         }
         const next = transitionYardOrder(prior, input, new Date());
         if (input.kind === "report") {
           const grant = state.grants.find((g) => g.userId === actor.userId)!;
           requireAssetScope(state, grant, next.actualAssetIds);
-          assertYardOrderScope(state, actor, next, false);
+          await assertScopedYardOrder(client, state, actor, next, false);
           if (next.actualAssetIds.length)
             await readFleetResourceAssets(
               client,
@@ -945,6 +994,8 @@ export function createFleetYardOperations(
         const { limit } = page.parse(raw);
         const caps =
           actor.fleetCapabilities ?? legacyFleetCapabilities(grant.roles);
+        const driverOnly = caps.has("driver") && !["admin", "dispatch", "yard", "office"].some((c) => caps.has(c as never));
+        const currentSiteIds = driverOnly ? await currentAssignedDriverSites(client, state, actor) : [];
         const candidateIds = state.fleets
           .filter((f) => grant.fleetIds.includes(f.id))
           .flatMap((f) => f.equipmentAssetIds)
@@ -954,9 +1005,8 @@ export function createFleetYardOperations(
               ["admin", "dispatch", "yard", "office"].some((c) =>
                 caps.has(c as never),
               ) ||
-              state.runs.some((run) => !!activeDriverRunForAsset(state, actor.userId, run.id, assetId)),
+              state.runs.some((run) => !!activeDriverRunForAsset(state, actor.userId, run.id, assetId, currentSiteIds)),
           );
-        const driverOnly = caps.has("driver") && !["admin", "dispatch", "yard", "office"].some((c) => caps.has(c as never));
         const holderRows = driverOnly && candidateIds.length ? await client.query(
           "SELECT id,current_holder_user_id FROM assets WHERE id=ANY($1::uuid[]) AND responsible_org_type='vendor' AND responsible_org_id=$2",
           [candidateIds, actor.companyId],
@@ -1037,8 +1087,9 @@ export function createFleetYardOperations(
         requireAssetScope(state, grant, [observation.assetId]);
         const caps = capabilities(state, actor);
         if (caps.has("driver") && !["admin", "dispatch", "yard", "office"].some((cap) => caps.has(cap as never))) {
+          const currentSiteIds = await currentAssignedDriverSites(client, state, actor);
           const [asset] = await readFleetResourceAssets(client, actor, state, [observation.assetId], true);
-          if (!activeDriverRunForAsset(state, actor.userId, observation.runId, observation.assetId) ||
+          if (!activeDriverRunForAsset(state, actor.userId, observation.runId, observation.assetId, currentSiteIds) ||
             (asset.current_holder_user_id !== null && asset.current_holder_user_id !== actor.userId))
             throw new FleetError("fleet.permission_denied", 403);
         }
@@ -1070,8 +1121,10 @@ export function createFleetYardOperations(
           throw new FleetError("fleet.coordinates_required", 400);
         const [asset] = await readFleetResourceAssets(client, actor, state, [value.assetId]);
         const caps = capabilities(state, actor);
-        if (caps.has("driver") && !["admin", "dispatch", "yard"].some((c) => caps.has(c as never)) &&
-          (value.method !== "driver_app" || !activeDriverRunForAsset(state, actor.userId, value.runId, value.assetId) ||
+        const driverOnly = caps.has("driver") && !["admin", "dispatch", "yard"].some((c) => caps.has(c as never));
+        const currentSiteIds = driverOnly ? await currentAssignedDriverSites(client, state, actor) : [];
+        if (driverOnly &&
+          (value.method !== "driver_app" || !activeDriverRunForAsset(state, actor.userId, value.runId, value.assetId, currentSiteIds) ||
             (asset.current_holder_user_id !== null && asset.current_holder_user_id !== actor.userId)))
           throw new FleetError("fleet.permission_denied", 403);
         if (value.runId && !state.runs.some((r) => r.id === value.runId))
@@ -1094,6 +1147,8 @@ export function createFleetYardOperations(
           );
           const run = value.runId ? state.runs.find((row) => row.id === value.runId) : null;
           const runSnapshot = run?.resourceAssignment?.snapshot ?? run?.recoveredWork?.snapshot;
+          if (runSnapshot && runSnapshot.detail.id !== value.detailId)
+            throw new FleetError("fleet.detail_attachment_required", 409);
           const detail = runSnapshot?.detail.id === value.detailId
             ? runSnapshot.detail
             : registry.details.find((row) => row.id === value.detailId && !row.archivedAt);
@@ -1101,6 +1156,27 @@ export function createFleetYardOperations(
             ? runSnapshot.rigPackage
             : registry.rigPackages.find((row) => row.id === detail?.rigPackageId && row.version === detail?.rigPackageVersion && !row.archivedAt);
           if (!detail || !rig || !rig.components.some((part) => part.assetId === value.assetId))
+            throw new FleetError("fleet.detail_attachment_required", 409);
+          const targetFleets = state.fleets.filter((fleet) =>
+            detail.accessGroupIds.includes(fleet.id) &&
+            fleet.equipmentAssetIds.includes(value.assetId) &&
+            fleet.equipmentAssetIds.includes(detail.vehicleAssetId) &&
+            (caps.has("admin") || grant.fleetIds.includes(fleet.id)));
+          if (!targetFleets.length || (run && (!targetFleets.some((fleet) => fleet.id === run.fleetId) ||
+            run.vehicleAssetId !== detail.vehicleAssetId || !fleetRunAssetIds(run).includes(value.assetId))))
+            throw new FleetError("fleet.detail_attachment_required", 409);
+          const [truck] = await readFleetResourceAssets(client, actor, state, [detail.vehicleAssetId]);
+          const truckHolder = truck.current_holder_user_id;
+          if ((driverOnly && (!activeDriverRunForAsset(state, actor.userId, value.runId, detail.vehicleAssetId, currentSiteIds) ||
+            (truckHolder !== null && truckHolder !== actor.userId))) ||
+            (!driverOnly && truckHolder !== null && truckHolder !== actor.userId && truckHolder !== run?.driverUserId))
+            throw new FleetError("fleet.detail_attachment_required", 409);
+          const truckCustody = await client.query(
+            "SELECT run_id,state FROM fleet_asset_custody WHERE company_id=$1 AND asset_id=$2 FOR UPDATE",
+            [actor.companyId, detail.vehicleAssetId],
+          );
+          if (truckCustody.rows.some((row) => (row.run_id && row.run_id !== value.runId) ||
+            (!run && row.state === "in_transit")))
             throw new FleetError("fleet.detail_attachment_required", 409);
           attachment = { truckAssetId: detail.vehicleAssetId, componentAssetId: value.assetId,
             detailId: detail.id, detailVersion: detail.version, rigPackageId: rig.id, rigPackageVersion: rig.version };

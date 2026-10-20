@@ -458,6 +458,7 @@ describe("Yard and custody authorization regressions", () => {
     if (sql.includes("FROM user_org_memberships")) return { rows: [{ id: 5 }] };
     if (sql.includes("FROM fleet_person_capabilities")) return { rows: [{ capabilities: ["yard"] }] };
     if (sql.includes("FROM assets a")) return { rows: (args[0] as string[]).map(assetId => ({ id: assetId, name: assetId, category: "truck", status: "available", responsible_org_type: "vendor", responsible_org_id: 7, current_holder_user_id: null, retired_at: null, merged_into_id: null, provisional: false, enrolled: true })) };
+    if (sql.includes("FROM site_locations s JOIN partner_vendor_relationships")) return { rows: (args[1] as number[] ?? []).map(siteId => ({ id: siteId, is_active: true, partner_id: 99, relationship_id: 1, relationship_status: "approved", approval_events: [] })) };
     if (sql.includes("INSERT INTO fleet_asset_custody(")) return { rows: [{ id: args[0], company_id: 7, asset_id: args[2], state: args[3], method: args[4], observed_at: new Date(args[5]), observed_by_user_id: 12, yard_id: args[7], run_id: args[8], detail_id: args[9], latitude: args[10], longitude: args[11], notes: args[12], version: 1 }] };
     if (sql.includes("UPDATE fleet_yard_orders SET")) return { rows: [{ ...rows[0], status: args[2], outcome: args[3], assigned_to_user_id: args[4], started_at: args[5] ? new Date(args[5]) : null, reported_at: args[6] ? new Date(args[6]) : null, actual_asset_ids: args[7], findings: JSON.parse(args[8]), notes: args[9], version: args[10] }] };
     if (sql.includes("INSERT INTO fleet_yard_orders(")) return { rows: [{ id: args[0], company_id: 7, yard_id: args[2], detail_id: args[3], run_id: args[4], status: args[5], outcome: args[6], requested_by_user_id: args[7], assigned_to_user_id: args[8], requested_at: new Date(args[9]), scheduled_at: null, started_at: null, reported_at: null, requested_asset_ids: args[13], actual_asset_ids: args[14], findings: JSON.parse(args[15]), notes: args[16], version: args[17] }] };
@@ -604,5 +605,139 @@ describe("Yard and custody authorization regressions", () => {
     const fixture = state(), row = orderRow(truckA);
     const api = service(fixture, [row]);
     await expect(api.actOnYardOrder(actor(), row.id, { kind: "assign", operationId: id(), expectedVersion: 1, scope: scope(), orderId: row.id, assignedToUserId: 13 })).rejects.toMatchObject({ code: "fleet.permission_denied" });
+  });
+
+  it("accepts assigned Driver custody with no personal site grant, then hides it after company site revocation", async () => {
+    const fixture = state(), siteId = 100;
+    fixture.fleets[0].siteIds = [siteId];
+    fixture.grants[0].roles = ["driver"];
+    fixture.runs = [{ id: runId, fleetId: fleetA, companyId: 7, siteIds: [siteId], driverUserId: 12,
+      vehicleAssetId: truckA, trailerAssetId: null, status: "in_progress",
+      resourceAssignment: { reservation: { state: "active" }, snapshot: { detail: { vehicleAssetId: truckA }, rigPackage: { components: [{ assetId: dolly }] } } } }];
+    let approved = true, saved: any = null, event = false, receipt: any = null, receiptInput: any = null;
+    const input = { ...custodyInput(dolly, runId), observation: { ...custodyInput(dolly, runId).observation, state: "returned" } };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string, args: any[] = []) => {
+      if (sql.includes("FROM site_locations s JOIN partner_vendor_relationships")) return { rows: approved ? [{ id: siteId, is_active: true, partner_id: 99, relationship_id: 1, relationship_status: "approved", approval_events: [] }] : [] };
+      if (sql.includes("FROM assets a")) return { rows: (args[0] as string[]).map(assetId => ({ id: assetId, name: "Asset", category: "dolly", status: "available", responsible_org_type: "vendor", responsible_org_id: 7, current_holder_user_id: null, retired_at: null, merged_into_id: null, provisional: false, enrolled: true })) };
+      if (sql.includes("SELECT id,current_holder_user_id FROM assets")) return { rows: [truckA, dolly].map(assetId => ({ id: assetId, current_holder_user_id: null })) };
+      if (sql.includes("FROM fleet_asset_custody_events")) return { rows: event ? [{ id: id() }] : [] };
+      if (sql.includes("FROM fleet_asset_custody c")) return { rows: saved && (args[1] as string[]).includes(saved.asset_id) ? [saved] : [] };
+      if (sql.includes("FROM fleet_asset_custody WHERE")) return { rows: saved ? [saved] : [] };
+      if (sql.includes("INSERT INTO fleet_asset_custody(")) { saved = { id: args[0], company_id: 7, asset_id: args[2], state: args[3], method: args[4], observed_at: new Date(args[5]), observed_by_user_id: 12, yard_id: args[7], run_id: args[8], detail_id: args[9], latitude: args[10], longitude: args[11], notes: args[12], version: 1 }; return { rows: [saved] }; }
+      if (sql.includes("INSERT INTO fleet_asset_custody_events")) { event = true; return { rows: [] }; }
+      if (sql.includes("INSERT INTO assistant_action_audit")) { receiptInput = JSON.parse(args[5]); receipt = JSON.parse(args[6]); return { rows: [] }; }
+      if (sql.includes("FROM assistant_action_audit")) return { rows: receipt ? [{ user_id: 12, tool_input: receiptInput, tool_output: receipt }] : [] };
+      return { rows: [] };
+    } } as unknown as PoolClient) } as any);
+    const driver = actor(["driver"]);
+    await expect(api.observeCustody(driver, input)).resolves.toMatchObject({ observation: { assetId: dolly, state: "returned" } });
+    expect((await api.custody(driver)).custody.map((row: any) => row.observation.assetId)).toContain(dolly);
+    await expect(api.custodyOperationReceipt(driver, input.operationId)).resolves.toMatchObject({ result: { observation: { assetId: dolly } } });
+    await expect(api.observeCustody(driver, input)).resolves.toMatchObject({ operationId: input.operationId, version: 1 });
+    approved = false;
+    expect((await api.custody(driver)).custody).toEqual([]);
+    await expect(api.custodyOperationReceipt(driver, input.operationId)).rejects.toMatchObject({ code: "fleet.permission_denied" });
+    await expect(api.observeCustody(driver, input)).rejects.toMatchObject({ code: "fleet.permission_denied" });
+  });
+
+  it("rejects a Driver attaching its dolly to a foreign Detail and truck", async () => {
+    const fixture = state(), ownDetailId = id(), foreignDetailId = id(), rigId = id();
+    fixture.fleets[1].equipmentAssetIds.push(dolly);
+    fixture.runs = [{ id: runId, fleetId: fleetA, siteIds: [], driverUserId: 12, vehicleAssetId: truckA, trailerAssetId: null, status: "in_progress",
+      resourceAssignment: { reservation: { state: "active" }, snapshot: { detail: { id: ownDetailId, vehicleAssetId: truckA }, rigPackage: { components: [{ assetId: dolly }] } } } }];
+    const registry = { version: 1, details: [{ id: foreignDetailId, companyId: 7, version: 1, name: "Foreign", vehicleAssetId: truckB, rigPackageId: rigId, rigPackageVersion: 1, driverUserId: null, accessGroupIds: [fleetB], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null }],
+      rigPackages: [{ id: rigId, companyId: 7, version: 1, name: "Dolly", components: [{ assetId: dolly, role: "dolly", sequence: 0 }], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null }], reservations: [] };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string, args: any[] = []) => {
+      if (sql.includes("FROM assets a")) return { rows: (args[0] as string[]).map(assetId => ({ id: assetId, name: "Asset", category: "dolly", status: "available", responsible_org_type: "vendor", responsible_org_id: 7, current_holder_user_id: null, retired_at: null, merged_into_id: null, provisional: false, enrolled: true })) };
+      if (sql.includes("FROM vendors WHERE")) return { rows: [{ fleet_resources: registry }] };
+      if (sql.includes("INSERT INTO fleet_asset_custody(")) return { rows: [{ id: args[0], company_id: 7, asset_id: args[2], state: args[3], method: args[4], observed_at: new Date(args[5]), observed_by_user_id: 12, yard_id: args[7], run_id: args[8], detail_id: args[9], latitude: args[10], longitude: args[11], notes: args[12], version: 1 }] };
+      return { rows: [] };
+    } } as unknown as PoolClient) } as any);
+    await expect(api.observeCustody(actor(["driver"]), { ...custodyInput(dolly, runId), observation: { ...custodyInput(dolly, runId).observation, state: "attached", detailId: foreignDetailId } })).rejects.toMatchObject({ code: "fleet.detail_attachment_required" });
+  });
+
+  it("rejects a shared-asset Detail restricted to another Fleet", async () => {
+    const fixture = state(), detailId = id();
+    fixture.fleets[1].equipmentAssetIds.push(truckA);
+    const detail = { id: detailId, companyId: 7, version: 1, name: "B-only", vehicleAssetId: truckA, rigPackageId: null, rigPackageVersion: null, driverUserId: null, accessGroupIds: [fleetB], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null };
+    const value = { id: id(), companyId: 7, version: 1, yardId: null, detailId, runId: null, status: "requested", outcome: null, requestedByUserId: 12, assignedToUserId: null, requestedAt: "2026-10-19T12:00:00Z", scheduledAt: null, startedAt: null, reportedAt: null, requestedAssetIds: [truckA], actualAssetIds: [], findings: [], notes: "" };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string, args: any[] = []) => {
+      if (sql.includes("FROM vendors WHERE")) return { rows: [{ fleet_resources: { version: 1, details: [detail], rigPackages: [], reservations: [] } }] };
+      if (sql.includes("FROM assets a")) return { rows: [{ id: truckA, name: "Truck", category: "truck", status: "available", responsible_org_type: "vendor", responsible_org_id: 7, current_holder_user_id: null, retired_at: null, merged_into_id: null, provisional: false, enrolled: true }] };
+      if (sql.includes("INSERT INTO fleet_yard_orders(")) return { rows: [{ id: value.id, company_id: 7, version: 1, yard_id: null, detail_id: detailId, run_id: null, status: "requested", outcome: null, requested_by_user_id: 12, assigned_to_user_id: null, requested_at: new Date(value.requestedAt), scheduled_at: null, started_at: null, reported_at: null, requested_asset_ids: [truckA], actual_asset_ids: [], findings: [], notes: "" }] };
+      return { rows: [] };
+    } } as unknown as PoolClient) } as any);
+    await expect(api.createYardOrder(actor(), { operationId: id(), expectedVersion: 0, scope: scope(), order: value })).rejects.toMatchObject({ code: "fleet.detail_not_found" });
+  });
+
+  it("lets Self-Dispatch prepare an own draft Run before dispatch without changing Run status", async () => {
+    const fixture = state(), siteId = 100;
+    fixture.fleets[0].siteIds = [siteId];
+    fixture.runs = [{ id: runId, fleetId: fleetA, companyId: 7, siteIds: [siteId], driverUserId: 12, vehicleAssetId: truckA, trailerAssetId: null, status: "draft" }];
+    const value = { id: id(), companyId: 7, version: 1, yardId: null, detailId: null, runId, status: "requested", outcome: null, requestedByUserId: 12, assignedToUserId: null, requestedAt: "2026-10-19T12:00:00Z", scheduledAt: null, startedAt: null, reportedAt: null, requestedAssetIds: [truckA], actualAssetIds: [], findings: [], notes: "" };
+    const self = actor(["driver", "self_dispatch"]);
+    await expect(service(fixture).createYardOrder(self, { operationId: id(), expectedVersion: 0, scope: scope(), order: value })).resolves.toMatchObject({ runId, status: "requested" });
+    const requested = { ...orderRow(truckA), run_id: runId };
+    await expect(service(fixture, [requested]).actOnYardOrder(self, requested.id, { kind: "assign", operationId: id(), expectedVersion: 1, scope: scope(), orderId: requested.id, assignedToUserId: 12 })).resolves.toMatchObject({ status: "assigned" });
+    const assigned = { ...requested, status: "assigned", assigned_to_user_id: 12 };
+    await expect(service(fixture, [assigned]).actOnYardOrder(self, assigned.id, { kind: "start", operationId: id(), expectedVersion: 1, scope: scope(), orderId: assigned.id })).resolves.toMatchObject({ status: "in_progress" });
+    const started = { ...assigned, version: 2, status: "in_progress", started_at: new Date() };
+    await expect(service(fixture, [started]).actOnYardOrder(self, started.id, { kind: "report", operationId: id(), expectedVersion: 2, scope: scope(), orderId: started.id, outcome: "ready", notes: "Prepared" })).resolves.toMatchObject({ status: "reported", outcome: "ready" });
+    expect(fixture.runs[0].status).toBe("draft");
+  });
+
+  it("keeps captured Detail ACL on order list, detail, action, and receipt after shared equipment overlaps", async () => {
+    const fixture = state(), detailId = id(), operationId = id();
+    fixture.fleets[1].equipmentAssetIds.push(truckA);
+    const row = { ...orderRow(truckA, 12), detail_id: detailId };
+    const receipt = { id: row.id, companyId: 7, version: 1, yardId: null, detailId, runId: null,
+      status: "assigned", outcome: null, requestedByUserId: 12, assignedToUserId: 12,
+      requestedAt: row.requested_at.toISOString(), scheduledAt: null, startedAt: null, reportedAt: null,
+      requestedAssetIds: [truckA], actualAssetIds: [], findings: [], notes: "" };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string) => {
+      if (sql.includes("FROM fleet_yard_orders")) return { rows: [row] };
+      if (sql.includes("FROM fleet_yard_order_events") && sql.includes("event_type='requested'")) return { rows: [{ detail: { detailAccessGroupIds: [fleetB] } }] };
+      if (sql.includes("FROM assistant_action_audit")) return { rows: [{ user_id: 12, target_type: "fleet-yard-order-operation", tool_output: receipt }] };
+      return { rows: [] };
+    } } as unknown as PoolClient) } as any);
+    expect((await api.yardOrders(actor())).orders).toEqual([]);
+    await expect(api.yardOrder(actor(), row.id)).rejects.toMatchObject({ code: "fleet.yard_order_not_found" });
+    await expect(api.actOnYardOrder(actor(), row.id, { kind: "start", operationId: id(), expectedVersion: 1, scope: scope(), orderId: row.id })).rejects.toMatchObject({ code: "fleet.yard_order_not_found" });
+    await expect(api.yardOperationReceipt(actor(), operationId)).rejects.toMatchObject({ code: "fleet.yard_order_not_found" });
+  });
+
+  it("does not promote a legacy order with no captured Detail ACL from a mutable current template", async () => {
+    const fixture = state(), detailId = id(), row = { ...orderRow(truckA), detail_id: detailId };
+    const detail = { id: detailId, companyId: 7, version: 2, name: "Edited", vehicleAssetId: truckA, rigPackageId: null, rigPackageVersion: null, driverUserId: null, accessGroupIds: [fleetA], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string) => {
+      if (sql.includes("FROM fleet_yard_orders")) return { rows: [row] };
+      if (sql.includes("FROM fleet_yard_order_events")) return { rows: [{ detail: { fingerprint: "old" } }] };
+      if (sql.includes("FROM vendors WHERE")) return { rows: [{ fleet_resources: { version: 1, details: [detail], rigPackages: [], reservations: [] } }] };
+      return { rows: [] };
+    } } as unknown as PoolClient) } as any);
+    expect((await api.yardOrders(actor())).orders).toEqual([]);
+    await expect(api.yardOrder(actor(), row.id)).rejects.toMatchObject({ code: "fleet.yard_order_not_found" });
+  });
+
+  it("rejects a Yard attachment when its target truck is held by an unrelated person", async () => {
+    const fixture = state(), detailId = id(), rigId = id();
+    const registry = { version: 1, details: [{ id: detailId, companyId: 7, version: 1, name: "Own Detail", vehicleAssetId: truckA, rigPackageId: rigId, rigPackageVersion: 1, driverUserId: null, accessGroupIds: [fleetA], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null }],
+      rigPackages: [{ id: rigId, companyId: 7, version: 1, name: "Dolly", components: [{ assetId: dolly, role: "dolly", sequence: 0 }], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null }], reservations: [] };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string, args: any[] = []) => {
+      if (sql.includes("FROM vendors WHERE")) return { rows: [{ fleet_resources: registry }] };
+      if (sql.includes("FROM assets a")) return { rows: (args[0] as string[]).map(assetId => ({ id: assetId, name: "Asset", category: assetId === truckA ? "truck" : "dolly", status: "available", responsible_org_type: "vendor", responsible_org_id: 7, current_holder_user_id: assetId === truckA ? 99 : null, retired_at: null, merged_into_id: null, provisional: false, enrolled: true })) };
+      return { rows: [] };
+    } } as unknown as PoolClient) } as any);
+    const input = custodyInput(dolly, runId);
+    await expect(api.observeCustody(actor(["yard"]), { ...input, observation: { ...input.observation, method: "manual", runId: null, state: "attached", detailId } })).rejects.toMatchObject({ code: "fleet.detail_attachment_required" });
+  });
+
+  it("denies draft Self-Dispatch Yard preparation after the company loses the Run site", async () => {
+    const fixture = state(), siteId = 100;
+    fixture.fleets[0].siteIds = [siteId];
+    fixture.runs = [{ id: runId, fleetId: fleetA, companyId: 7, siteIds: [siteId], driverUserId: 12, vehicleAssetId: truckA, trailerAssetId: null, status: "draft" }];
+    const value = { id: id(), companyId: 7, version: 1, yardId: null, detailId: null, runId, status: "requested", outcome: null, requestedByUserId: 12, assignedToUserId: null, requestedAt: "2026-10-19T12:00:00Z", scheduledAt: null, startedAt: null, reportedAt: null, requestedAssetIds: [truckA], actualAssetIds: [], findings: [], notes: "" };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async () => ({ rows: [] }) } as unknown as PoolClient) } as any);
+    await expect(api.createYardOrder(actor(["driver", "self_dispatch"]), { operationId: id(), expectedVersion: 0, scope: scope(), order: value })).rejects.toMatchObject({ code: "fleet.permission_denied" });
   });
 });
