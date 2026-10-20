@@ -29,6 +29,9 @@ import {
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
 const yardService = createFleetYardOperations(databaseFleetRepository);
+router.get("/fleet/yard-assets", endpoint(req => yardService.yardAssets(actor(req), req.query)));
+router.get("/fleet/yard-assets/operations/:operationId", endpoint(req => yardService.yardAssetReceipt(actor(req), z.uuid().parse(req.params.operationId))));
+router.post("/fleet/yard-assets", endpoint(req => yardService.receiveYardAsset(actor(req), req.body)));
 router.get("/fleet/yards", endpoint(req => yardService.yards(actor(req), req.query)));
 router.post("/fleet/yards", endpoint(req => yardService.saveYard(actor(req), req.body)));
 router.patch("/fleet/yards", endpoint(req => yardService.saveYard(actor(req), req.body)));

@@ -2,6 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod/v4";
 import {
   FleetCanonicalIdSchema,
+  FleetAssetCreateSchema,
+  FleetInventorySchema,
   FleetCustodyObservationInputSchema,
   FleetCustodyObservationSchema,
   FleetDetailSchema,
@@ -36,6 +38,22 @@ type YardRow = Record<string, any>;
 const page = z
   .object({ limit: z.coerce.number().int().min(1).max(100).default(50) })
   .strict();
+const yardAssetQuery = z.object({ after: z.uuid().optional(), assetId: z.uuid().optional() }).strict();
+const yardAssetCreate = z.object({
+  scope: z.object({ owner: z.object({ type: z.literal("vendor"), id: z.number().int().positive() }), userId: z.number().int().positive(), membershipId: z.number().int().positive(), sessionVersion: z.number().int().nonnegative() }),
+  fleetId: z.uuid(), asset: FleetAssetCreateSchema,
+}).strict();
+const assetColumns = `SELECT a.*, EXISTS(SELECT 1 FROM asset_holds h WHERE h.asset_id=a.id AND h.released_at IS NULL) AS held,
+ COALESCE((SELECT jsonb_agg(jsonb_build_object('kind',x.kind,'value',x.display_value,'jurisdiction',NULLIF(x.jurisdiction,''))) FROM asset_aliases x WHERE x.asset_id=a.id AND x.active=true),'[]'::jsonb) AS aliases FROM assets a`;
+function yardAsset(row: YardRow, fleets: FleetState["fleets"]) {
+  return { id: row.id, name: row.name, manufacturer: row.manufacturer ?? "", model: row.model ?? "", category: row.category,
+    status: row.status, version: row.version, legalOwner: row.legal_owner_name, held: Boolean(row.held),
+    currentHolderUserId: row.current_holder_user_id ?? null,
+    aliases: (row.aliases ?? []).map((alias: { kind: string; value: string; jurisdiction?: string | null }) => ({
+      kind: alias.kind, value: alias.value, ...(alias.jurisdiction ? { jurisdiction: alias.jurisdiction } : {}),
+    })),
+    fleetIds: fleets.filter(fleet => fleet.equipmentAssetIds.includes(row.id)).map(fleet => fleet.id) };
+}
 const recommendation = z
   .object({
     yardId: FleetCanonicalIdSchema,
@@ -565,6 +583,61 @@ export function createFleetYardOperations(
     work: (state: FleetState, client: PoolClient) => Promise<T>,
   ) => repository.transaction(actor.companyId, actor.userId, work, actor);
   return {
+    yardAssets: (actor: FleetActor, raw: unknown = {}) => tx(actor, async (state, client) => {
+      const grant = permission(state, actor, ["admin", "dispatch", "yard", "office", "driver"]);
+      const input = yardAssetQuery.parse(raw);
+      const visibleFleets = state.fleets.filter(fleet => grant.fleetIds.includes(fleet.id));
+      const allIds = [...new Set(visibleFleets.flatMap(fleet => fleet.equipmentAssetIds))];
+      const caps = capabilities(state, actor);
+      const driverOnly = usesAssignedDriverCustodyAuthority(caps) && !caps.has("office");
+      const currentSiteIds = driverOnly ? await currentAssignedDriverSites(client, state, actor) : [];
+      const assigned = driverOnly ? allIds.filter(assetId => state.runs.some(run => activeDriverRunForAsset(state, actor.userId, run.id, assetId, currentSiteIds))) : allIds;
+      const holders = driverOnly && assigned.length ? await client.query("SELECT id,current_holder_user_id FROM assets WHERE id=ANY($1::uuid[]) AND responsible_org_type='vendor' AND responsible_org_id=$2", [assigned, actor.companyId]) : { rows: [] };
+      const ids = driverOnly ? assigned.filter(assetId => holders.rows.some(row => row.id === assetId && (row.current_holder_user_id === null || row.current_holder_user_id === actor.userId))) : assigned;
+      if (input.assetId && !ids.includes(input.assetId)) throw new FleetError("fleet.asset_not_found", 404);
+      const found = await client.query(`${assetColumns} WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=$1 AND a.id=ANY($2::uuid[]) AND ($3::uuid IS NULL OR a.id>$3::uuid) AND ($4::uuid IS NULL OR a.id=$4::uuid) AND a.merged_into_id IS NULL ORDER BY a.id LIMIT 51`,
+        [actor.companyId, ids, input.after ?? null, input.assetId ?? null]);
+      return FleetInventorySchema.parse({ canManage: !actor.readOnly && ["admin", "dispatch", "yard"].some(cap => capabilities(state, actor).has(cap as never)),
+        version: state.version, fleets: visibleFleets.map(fleet => ({ id: fleet.id, name: fleet.name })),
+        assets: found.rows.slice(0, 50).map(row => yardAsset(row, visibleFleets)), nextCursor: found.rows.length > 50 ? found.rows[49].id : null });
+    }),
+    yardAssetReceipt: (actor: FleetActor, rawId: string) => tx(actor, async (state, client) => {
+      const grant = permission(state, actor, ["admin", "dispatch", "yard"]);
+      const operationId = FleetCanonicalIdSchema.parse(rawId);
+      const found = await client.query("SELECT user_id,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-yard-asset-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1", [actor.companyId, operationId]);
+      const record = found.rows[0];
+      if (!record || record.user_id !== actor.userId) throw new FleetError("fleet.operation_not_found", 404);
+      requireAssetScope(state, grant, [record.tool_output.assetId]);
+      return record.tool_output as { operationId: string; assetId: string; version: number };
+    }),
+    receiveYardAsset: (actor: FleetActor, raw: unknown) => tx(actor, async (state, client) => {
+      const input = yardAssetCreate.parse(raw);
+      scope(actor, input.scope);
+      const grant = permission(state, actor, ["admin", "dispatch", "yard"], true);
+      const fleet = state.fleets.find(item => item.id === input.fleetId && grant.fleetIds.includes(item.id));
+      if (!fleet) throw new FleetError("fleet.asset_not_found", 404);
+      const hash = fingerprint(input);
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`fleet-yard-asset:${input.asset.operationId}`]);
+      const replay = await client.query("SELECT user_id,tool_input,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-yard-asset-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1", [actor.companyId, input.asset.operationId]);
+      if (replay.rows.length) {
+        if (replay.rows[0].user_id !== actor.userId || replay.rows[0].tool_input?.fingerprint !== hash) throw new FleetError("fleet.operation_conflict", 409);
+        const receipt = replay.rows[0].tool_output;
+        requireAssetScope(state, grant, [receipt.assetId]);
+        return receipt;
+      }
+      const assetId = randomUUID();
+      await client.query("INSERT INTO assets(id,name,category,legal_owner_name,responsible_org_type,responsible_org_id,manufacturer,model,created_by_user_id) VALUES($1,$2,$3,$4,'vendor',$5,$6,$7,$8)",
+        [assetId, input.asset.name, input.asset.category, input.asset.legalOwner, actor.companyId, input.asset.manufacturer || null, input.asset.model || null, actor.userId]);
+      const alias = input.asset.identifier;
+      await client.query("INSERT INTO asset_aliases(asset_id,kind,jurisdiction,normalized_value,display_value) VALUES($1,$2,$3,$4,$5)",
+        [assetId, alias.kind, alias.jurisdiction?.trim().toUpperCase() ?? "", alias.value.toUpperCase().replace(/[^A-Z0-9]/g, ""), alias.value]);
+      await client.query("INSERT INTO asset_attachment_links(asset_id,attachment_type,attachment_id,linked_by_user_id) VALUES($1,'fleet_inventory',$2,$3)", [assetId, String(actor.companyId), actor.userId]);
+      fleet.equipmentAssetIds.push(assetId); state.version++;
+      const receipt = { operationId: input.asset.operationId, assetId, version: 1 };
+      await client.query("INSERT INTO assistant_action_audit(user_id,vendor_id,target_id,tool_input,tool_output,actor_role,client_surface,input_mode,provider,tool_name,action_type,target_type,result_status) VALUES($1,$2,$3,$4::jsonb,$5::jsonb,$6,'fleet','typed','canonical','fleet_yard_asset','create','fleet-yard-asset-operation','completed')",
+        [actor.userId, actor.companyId, input.asset.operationId, JSON.stringify({ fingerprint: hash }), JSON.stringify(receipt), actor.role]);
+      return receipt;
+    }),
     yards: (actor: FleetActor, raw: unknown = {}) =>
       tx(actor, async (state, client) => {
         permission(state, actor, [
@@ -1052,7 +1125,7 @@ export function createFleetYardOperations(
           "driver",
           "office",
         ]);
-        const { limit } = page.parse(raw);
+        const { limit, assetId } = page.extend({ assetId: FleetCanonicalIdSchema.optional() }).parse(raw);
         const caps =
           actor.fleetCapabilities ?? legacyFleetCapabilities(grant.roles);
         const driverOnly = caps.has("driver") && !["admin", "dispatch", "yard", "office"].some((c) => caps.has(c as never));
@@ -1074,9 +1147,11 @@ export function createFleetYardOperations(
         ) : { rows: [] };
         const allowed = driverOnly ? candidateIds.filter((id) => holderRows.rows.some((row) =>
           row.id === id && (row.current_holder_user_id === null || row.current_holder_user_id === actor.userId))) : candidateIds;
+        if (assetId && !allowed.includes(assetId)) throw new FleetError("fleet.asset_not_found", 404);
+        const selectedIds = assetId ? [assetId] : allowed;
         const found = await client.query(
           "SELECT c.* FROM fleet_asset_custody c WHERE c.company_id=$1 AND c.asset_id=ANY($2::uuid[]) ORDER BY c.updated_at DESC,c.id LIMIT $3",
-          [actor.companyId, allowed, limit],
+          [actor.companyId, selectedIds, limit],
         );
         const observations = found.rows.map(custody);
         // The attachment is fixed by its custody event, never by today's editable Detail.

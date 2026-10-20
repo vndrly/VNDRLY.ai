@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
-import { FleetYardOrderSchema, FleetYardSchema, FleetDetailPageSchema, type FleetYardOrder, type FleetYard, type FleetYardOrderAction, type FleetDetail } from "@workspace/api-zod";
+import { FleetYardOrderSchema, FleetYardOrderInputSchema, FleetYardSchema, FleetDetailPageSchema, FleetInventorySchema, type FleetInventoryAsset, type FleetYardOrder, type FleetYard, type FleetYardOrderAction, type FleetDetail } from "@workspace/api-zod";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,7 +12,7 @@ import FleetChoiceField from "@/components/FleetChoiceField";
 import { readFleetYardActor, yardScope, type FleetYardActor } from "./yard-client";
 
 type OrderDetail = { order: FleetYardOrder; events: { id: string; type: string; at: string; detail: unknown }[] };
-type Attempt = { id: string; input: FleetYardOrderAction } | { input: { operationId: string; expectedVersion: 0; scope: ReturnType<typeof yardScope>; order: FleetYardOrder } };
+type Attempt = { id: string; input: FleetYardOrderAction } | { input: ReturnType<typeof FleetYardOrderInputSchema.parse> };
 
 export default function YardBoard({ initialYardOrderId, initialRunId }: { initialYardOrderId?: string; initialRunId?: string }) {
   const { user, activeMembership, activeMembershipId } = useAuth();
@@ -35,6 +35,8 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
   const [damaged, setDamaged] = useState<string[]>([]);
   const [alternatives, setAlternatives] = useState<{ assetId: string; available: boolean; reasons: string[] }[]>([]);
   const [substitutions, setSubstitutions] = useState<Record<string, { assetId: string; reasons: string[] }>>({});
+  const [assetNames, setAssetNames] = useState<Record<string, FleetInventoryAsset>>({});
+  const [reviewAction, setReviewAction] = useState<"assign" | "start" | "report" | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState("");
   const current = () => alive.current && isAuthScopeCurrent(authScope.current);
   const read = async <T,>(path: string): Promise<T> => {
@@ -57,34 +59,53 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
       if (!current()) return;
       setActor(nextActor); setYards(nextYards); setOrders(nextOrders);
       setYardId(value => value || nextYards.find(yard => yard.isHomeBase)?.id || nextYards[0]?.id || "");
-      if (selectedId) await loadOrder(selectedId);
+      if (selectedId) await loadOrder(selectedId, 0, !!pending.current || !!reviewAction);
       setError("");
     } catch (cause) { if (current()) {
       if ([401, 403, 404].includes((cause as { status?: number }).status ?? 0)) { setActor(null); setYards([]); setOrders([]); setDetail(null); setShowCreate(false); pending.current = null; }
       setError(cause instanceof Error ? cause.message : "Yard Board unavailable.");
     } }
   }
-  async function loadOrder(id: string, minimumVersion = 0) {
+  async function loadOrder(id: string, minimumVersion = 0, preserveDraft = false) {
     const value = await read<OrderDetail>(`/api/fleet/yard-orders/${encodeURIComponent(id)}`);
     const order = FleetYardOrderSchema.parse(value.order);
     if (order.id !== id || order.companyId !== identity.companyId) throw Error("Yard Order scope mismatch.");
     if (order.version < minimumVersion) throw Error("Yard Order readback mismatch. Retry the exact request.");
-    if (current()) { setDetail({ order, events: value.events }); setSelectedId(id); setMissing([]); setDamaged([]); setReportNotes(""); setAlternatives([]); setSubstitutions({}); setOrders(prior => [order, ...prior.filter(item => item.id !== id)]); }
+    if (current()) { setDetail({ order, events: value.events }); setSelectedId(id); if (!preserveDraft) { setMissing([]); setDamaged([]); setReportNotes(""); setAlternatives([]); setSubstitutions({}); } setOrders(prior => [order, ...prior.filter(item => item.id !== id)]); }
+    const names = await Promise.all(order.requestedAssetIds.map(async assetId => {
+      try { const page = FleetInventorySchema.parse(await read(`/api/fleet/yard-assets?assetId=${encodeURIComponent(assetId)}`)); return page.assets[0]; }
+      catch { return null; }
+    }));
+    if (current()) setAssetNames(prior => ({ ...prior, ...Object.fromEntries(names.filter((asset): asset is FleetInventoryAsset => !!asset).map(asset => [asset.id, asset])) }));
   }
   useEffect(() => { alive.current = true; void load(); return () => { alive.current = false; }; }, []);
   async function act(input: FleetYardOrderAction) {
     if (lock.current || !actor || !detail) return;
+    if (pending.current && (!("id" in pending.current) || pending.current.id !== detail.order.id)) { setError(copy("Finish recovering the selected Yard Order before changing orders.")); return; }
+    const retry = !!pending.current;
     pending.current ??= { id: detail.order.id, input };
     const exact = pending.current;
     if (!("id" in exact)) return;
     lock.current = true; setBusy(true); setError("");
     try {
-      const result = FleetYardOrderSchema.parse(await apiFetch(`/api/fleet/yard-orders/${exact.id}/actions`, { method: "POST", body: JSON.stringify(exact.input) }, authScope.current));
+      let receipt: FleetYardOrder | null = null;
+      if (retry) try {
+        const found = await read<{ operationId: string; result: unknown }>(`/api/fleet/yard-orders/operations/${exact.input.operationId}`);
+        receipt = FleetYardOrderSchema.parse(found.result);
+      } catch (cause) { if ((cause as { status?: number }).status !== 404) throw cause; }
+      const result = receipt ?? FleetYardOrderSchema.parse(await apiFetch(`/api/fleet/yard-orders/${exact.id}/actions`, { method: "POST", body: JSON.stringify(exact.input) }, authScope.current));
       if (result.id !== exact.id || result.version < exact.input.expectedVersion + 1) throw Error("Yard Order readback mismatch.");
       await loadOrder(exact.id, result.version);
       if (!current()) return;
-      pending.current = null; setNotice(copy("Yard Order saved."));
-    } catch (cause) { if (current()) setError(cause instanceof Error ? cause.message : "Yard action needs recovery. Retry the same request."); }
+      pending.current = null; setReviewAction(null); setNotice(copy("Yard Order saved."));
+    } catch (cause) { if (current()) {
+      const status = (cause as { status?: number }).status;
+      if (status && status >= 400 && ![408, 429].includes(status)) {
+        pending.current = null;
+        if (status === 409) { setReviewAction(exact.input.kind); try { await loadOrder(exact.id, 0, true); } catch { /* Keep the draft and allow refresh. */ } setError(copy("Yard Order changed. Review your findings, then reapply.")); }
+        else setError(cause instanceof Error ? cause.message : copy("Yard action was rejected. Review and correct it."));
+      } else setError(cause instanceof Error ? cause.message : copy("Yard action needs recovery. Retry the same request."));
+    } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   function action(kind: "assign" | "start" | "report", outcome?: "ready" | "needs_attention" | "unable_to_complete") {
@@ -105,20 +126,29 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
     } catch (cause) { if (current()) setError(cause instanceof Error ? cause.message : "Alternatives unavailable."); }
   }
   async function createOrder() {
-    if (!actor || lock.current || !yardId || (!detailId && !runId)) { setError("Choose a Yard and a Detail or Run."); return; }
-    const chosen = availableDetails.find(item => item.id === detailId);
-    const now = new Date().toISOString();
-    const order = FleetYardOrderSchema.parse({ id: Crypto.randomUUID(), companyId: actor.companyId, version: 1, yardId, detailId: chosen?.id ?? null, runId: runId || null, status: "requested", outcome: null, requestedByUserId: actor.userId, assignedToUserId: null, requestedAt: now, scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null, startedAt: null, reportedAt: null, requestedAssetIds: chosen ? [chosen.vehicleAssetId] : [], actualAssetIds: [], findings: [], notes });
-    pending.current ??= { input: { operationId: Crypto.randomUUID(), expectedVersion: 0, scope: yardScope(actor), order } };
-    const exact = pending.current;
-    if ("id" in exact) return;
-    lock.current = true; setBusy(true); setError("");
+    if (!actor || lock.current) return;
     try {
-      const saved = FleetYardOrderSchema.parse(await apiFetch("/api/fleet/yard-orders", { method: "POST", body: JSON.stringify(exact.input) }, authScope.current));
+      const retry = !!pending.current;
+      if (!pending.current) {
+        if (!yardId || (!detailId && !runId)) throw Error(copy("Choose a Yard and a Detail or Run."));
+        if (runId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(runId)) throw Error(copy("Run ID must be a valid identifier."));
+        if (scheduledAt && !Number.isFinite(Date.parse(scheduledAt))) throw Error(copy("Scheduled time must be a valid date and time."));
+        const chosen = availableDetails.find(item => item.id === detailId);
+        const now = new Date().toISOString();
+        const order = FleetYardOrderSchema.parse({ id: Crypto.randomUUID(), companyId: actor.companyId, version: 1, yardId, detailId: chosen?.id ?? null, runId: runId || null, status: "requested", outcome: null, requestedByUserId: actor.userId, assignedToUserId: null, requestedAt: now, scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null, startedAt: null, reportedAt: null, requestedAssetIds: chosen ? [chosen.vehicleAssetId] : [], actualAssetIds: [], findings: [], notes });
+        pending.current = { input: FleetYardOrderInputSchema.parse({ operationId: Crypto.randomUUID(), expectedVersion: 0, scope: yardScope(actor), order }) };
+      }
+      const exact = pending.current!;
+      if ("id" in exact) return;
+      lock.current = true; setBusy(true); setError("");
+      let receipt: FleetYardOrder | null = null;
+      if (retry) try { const found = await read<{ operationId: string; result: unknown }>(`/api/fleet/yard-orders/operations/${exact.input.operationId}`); receipt = FleetYardOrderSchema.parse(found.result); }
+      catch (cause) { if ((cause as { status?: number }).status !== 404) throw cause; }
+      const saved = receipt ?? FleetYardOrderSchema.parse(await apiFetch("/api/fleet/yard-orders", { method: "POST", body: JSON.stringify(exact.input) }, authScope.current));
       if (saved.id !== exact.input.order.id) throw Error("Yard Order receipt mismatch.");
       await loadOrder(saved.id);
-      pending.current = null; setShowCreate(false); setNotice("Yard Order requested.");
-    } catch (cause) { if (current()) setError(cause instanceof Error ? cause.message : "Yard Order needs recovery. Retry the same request."); }
+      pending.current = null; setShowCreate(false); setNotice(copy("Yard Order requested."));
+    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (status && status >= 400 && ![408, 429].includes(status)) pending.current = null; setError(cause instanceof Error ? cause.message : copy("Yard Order needs recovery. Retry the same request.")); } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   async function openCreate() {
@@ -132,6 +162,7 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
   const canWork = actor?.capabilities.some(value => ["admin", "dispatch", "yard", "self_dispatch"].includes(value));
   const canProgress = canWork && !!order && (order.assignedToUserId === actor?.userId || !!actor?.capabilities.some(value => ["admin", "dispatch"].includes(value)));
   const card = { backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 2, borderRadius: 16, padding: 16, gap: 10 } as const;
+  const assetLabel = (id: string) => { const asset = assetNames[id]; return asset ? `${asset.name} · ${asset.aliases[0]?.value ?? asset.category} · ${id}` : id; };
   return <View style={{ gap: 16 }}>
     <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{copy("Yard Board")}</Text>
     <Text style={{ color: colors.mutedForeground }}>{copy("Receive, assemble, and report readiness for the exact Yard Order.")}</Text>
@@ -140,40 +171,42 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
     <TogglePillButton color="blue" disabled={busy} onPress={() => void load()}>{copy("Refresh Yard Board")}</TogglePillButton>
     {!selectedId && !showCreate && <View style={{ gap: 10 }}>
       {canAssign && <TogglePillButton color="blue" onPress={() => void openCreate()}>{copy("Request Yard work")}</TogglePillButton>}
-      {orders.map(item => <View key={item.id} style={card}><Text style={{ color: colors.text, fontWeight: "700" }}>{item.notes || copy("Yard Order")}</Text><Text style={{ color: colors.mutedForeground }}>{yards.find(yard => yard.id === item.yardId)?.name ?? copy("No Yard assigned")} · {item.status.replaceAll("_", " ")}</Text><TogglePillButton color="blue" accessibilityLabel={`Open Yard Order ${item.id}`} onPress={() => void loadOrder(item.id)}>{copy("Open Yard Order")}</TogglePillButton></View>)}
+      {orders.map(item => <View key={item.id} style={card}><Text style={{ color: colors.text, fontWeight: "700" }}>{item.notes || copy("Yard Order")}</Text><Text style={{ color: colors.mutedForeground }}>{yards.find(yard => yard.id === item.yardId)?.name ?? copy("No Yard assigned")} · {copy(item.status.replaceAll("_", " "))}</Text><TogglePillButton color="blue" accessibilityLabel={`${copy("Open Yard Order")} ${item.id}`} onPress={() => void loadOrder(item.id)}>{copy("Open Yard Order")}</TogglePillButton></View>)}
     </View>}
     {showCreate && actor && <View style={card}>
       <Text style={{ color: colors.text, fontWeight: "700" }}>{copy("Request Yard work")}</Text>
-      <FleetChoiceField label="Yard" value={yardId} options={yards.filter(yard => yard.active).map(yard => ({ id: yard.id, label: yard.name }))} onChange={setYardId} disabled={busy} />
-      <FleetChoiceField label="Reusable Detail" value={detailId} options={[{ id: "", label: "Choose from a Run" }, ...availableDetails.map(item => ({ id: item.id, label: item.name }))]} onChange={setDetailId} disabled={busy} />
-      <TextInput accessibilityLabel="Run ID" placeholder="Optional assigned Run ID" value={runId} onChangeText={setRunId} editable={!busy} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
-      <TextInput accessibilityLabel="Scheduled time" placeholder="Optional ISO time" value={scheduledAt} onChangeText={setScheduledAt} editable={!busy} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
-      <TextInput accessibilityLabel="Work request" value={notes} onChangeText={setNotes} editable={!busy} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
+      <FleetChoiceField label={copy("Yard")} value={yardId} options={yards.filter(yard => yard.active).map(yard => ({ id: yard.id, label: yard.name }))} onChange={setYardId} disabled={busy || !!pending.current} />
+      <FleetChoiceField label={copy("Reusable Detail")} value={detailId} options={[{ id: "", label: copy("Choose from a Run") }, ...availableDetails.map(item => ({ id: item.id, label: item.name }))]} onChange={setDetailId} disabled={busy || !!pending.current} />
+      <TextInput accessibilityLabel={copy("Run ID")} placeholder={copy("Optional assigned Run ID")} value={runId} onChangeText={setRunId} editable={!busy && !pending.current} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
+      <TextInput accessibilityLabel={copy("Scheduled time")} placeholder={copy("Optional ISO time")} value={scheduledAt} onChangeText={setScheduledAt} editable={!busy && !pending.current} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
+      <TextInput accessibilityLabel={copy("Work request")} value={notes} onChangeText={setNotes} editable={!busy && !pending.current} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
       <TogglePillButton color="blue" disabled={busy} onPress={() => void createOrder()}>{copy("Save Yard request")}</TogglePillButton>
       <TogglePillButton disabled={busy || !!pending.current} onPress={() => setShowCreate(false)}>{copy("Cancel")}</TogglePillButton>
     </View>}
     {order && <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{order.notes || copy("Yard Order")}</Text>
-      <Text style={{ color: colors.mutedForeground }}>{yards.find(yard => yard.id === order.yardId)?.name ?? copy("No Yard")} · {order.status.replaceAll("_", " ")}</Text>
+      <Text style={{ color: colors.mutedForeground }}>{yards.find(yard => yard.id === order.yardId)?.name ?? copy("No Yard")} · {copy(order.status.replaceAll("_", " "))}</Text>
       <Text style={{ color: colors.text }}>{copy("Requested components")}: {order.requestedAssetIds.length}</Text>
-      {order.findings.map((finding, index) => <Text key={`${finding.assetId}:${index}`} accessibilityRole="alert" style={{ color: colors.destructive }}>{finding.kind}: {finding.assetId} · {finding.note}</Text>)}
-      {order.status === "reported" && <Text style={{ color: colors.text }}>{`Reported · ${order.outcome?.replaceAll("_", " ")}`}</Text>}
-      {order.status === "requested" && canAssign && <View style={{ gap: 8 }}>{canAssignOthers && <TextInput accessibilityLabel="Assign Yard worker user ID" placeholder="Leave blank to assign yourself" keyboardType="numeric" value={assignee} onChangeText={setAssignee} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />}<TogglePillButton color="blue" disabled={busy} onPress={() => action("assign")}>{canAssignOthers && assignee ? copy("Assign Yard worker") : copy("Assign to me")}</TogglePillButton></View>}
+      {order.requestedAssetIds.map(id => <Text key={`asset:${id}`} style={{ color: colors.text }}>{assetLabel(id)}</Text>)}
+      {order.findings.map((finding, index) => <Text key={`${finding.assetId}:${index}`} accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(finding.kind)}: {assetLabel(finding.assetId)} · {finding.note}</Text>)}
+      {order.status === "reported" && <Text style={{ color: colors.text }}>{`${copy("Reported")} · ${copy(order.outcome?.replaceAll("_", " ") ?? "")}`}</Text>}
+      {order.status === "requested" && canAssign && <View style={{ gap: 8 }}>{canAssignOthers && <TextInput accessibilityLabel={copy("Assign Yard worker user ID")} placeholder={copy("Leave blank to assign yourself")} keyboardType="numeric" value={assignee} onChangeText={setAssignee} editable={!busy && !pending.current} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />}<TogglePillButton color="blue" disabled={busy} onPress={() => action("assign")}>{canAssignOthers && assignee ? copy("Assign Yard worker") : copy("Assign to me")}</TogglePillButton></View>}
       {order.status === "assigned" && canProgress && <TogglePillButton color="blue" disabled={busy} onPress={() => action("start")}>{copy("Start Yard work")}</TogglePillButton>}
+      {!!reviewAction && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy("Review the current Yard Order and your retained findings, then reapply the action.")}</Text>}
       {order.status === "in_progress" && canProgress && <View style={{ gap: 10 }}>
         <Text style={{ color: colors.mutedForeground }}>{copy("Check requested components. Findings are advisory and remain on the report.")}</Text>
-        {order.requestedAssetIds.map((assetId, index) => <TogglePillButton key={assetId} color="blue" disabled={busy} onPress={() => setMissing(prior => prior.includes(assetId) ? prior.filter(id => id !== assetId) : [...prior, assetId])}>{missing.includes(assetId) ? `Found component ${index + 1}` : "Missing component"}</TogglePillButton>)}
-        {order.requestedAssetIds.map((assetId, index) => <TogglePillButton key={`condition:${assetId}`} color="blue" disabled={busy} onPress={() => setDamaged(prior => prior.includes(assetId) ? prior.filter(id => id !== assetId) : [...prior, assetId])}>{damaged.includes(assetId) ? `Condition cleared ${index + 1}` : "Damaged component"}</TogglePillButton>)}
-        {!!missing.length && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{`${missing.length} component missing. You can still report an outcome.`}</Text>}
-        {!!missing.length && <TogglePillButton color="blue" disabled={busy} onPress={() => void reviewAlternatives()}>{copy("Review alternatives")}</TogglePillButton>}
-        {alternatives.map(candidate => <View key={candidate.assetId} style={{ gap: 4 }}><Text style={{ color: candidate.available ? colors.text : colors.destructive }}>{candidate.reasons.length ? candidate.reasons.join(", ") : copy("Co-located and unreserved")}</Text><TogglePillButton color="blue" disabled={busy} accessibilityLabel={`Use ${candidate.assetId}`} onPress={() => { const original = missing.find(id => !substitutions[id]) ?? missing[0]; if (original) setSubstitutions(prior => ({ ...prior, [original]: candidate })); }}>{`Use ${candidate.assetId}`}</TogglePillButton></View>)}
-        <TextInput accessibilityLabel="Yard report reasons" placeholder="Condition and substitution reasons" value={reportNotes} onChangeText={setReportNotes} editable={!busy} multiline style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
+        {order.requestedAssetIds.map(assetId => <View key={assetId} style={{ gap: 5 }}><Text style={{ color: colors.text }}>{assetLabel(assetId)}</Text><TogglePillButton color="blue" disabled={busy || !!pending.current} accessibilityLabel={`${missing.includes(assetId) ? copy("Found component") : copy("Missing component")} ${assetLabel(assetId)}`} onPress={() => { setMissing(prior => prior.includes(assetId) ? prior.filter(id => id !== assetId) : [...prior, assetId]); setSubstitutions(prior => { const next = { ...prior }; delete next[assetId]; return next; }); }}>{missing.includes(assetId) ? copy("Found component") : copy("Missing component")}</TogglePillButton><TogglePillButton color="blue" disabled={busy || !!pending.current} accessibilityLabel={`${damaged.includes(assetId) ? copy("Condition cleared") : copy("Damaged component")} ${assetLabel(assetId)}`} onPress={() => setDamaged(prior => prior.includes(assetId) ? prior.filter(id => id !== assetId) : [...prior, assetId])}>{damaged.includes(assetId) ? copy("Condition cleared") : copy("Damaged component")}</TogglePillButton></View>)}
+        {!!missing.length && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{missing.length} {copy("components missing. You can still report an outcome.")}</Text>}
+        {!!missing.length && <TogglePillButton color="blue" disabled={busy || !!pending.current} onPress={() => void reviewAlternatives()}>{copy("Review alternatives")}</TogglePillButton>}
+        {missing.map(original => <View key={`replacement:${original}`} style={{ gap: 4 }}><Text style={{ color: colors.text }}>{copy("Replacement for")} {assetLabel(original)}: {substitutions[original] ? assetLabel(substitutions[original].assetId) : copy("None selected")}</Text>{alternatives.map(candidate => <View key={`${original}:${candidate.assetId}`} style={{ gap: 4 }}><Text style={{ color: candidate.available ? colors.text : colors.destructive }}>{candidate.reasons.length ? candidate.reasons.map(copy).join(", ") : copy("Co-located and unreserved")}</Text><TogglePillButton color="blue" disabled={busy || !!pending.current} accessibilityLabel={`${copy("Use")} ${assetLabel(candidate.assetId)} ${copy("for")} ${assetLabel(original)}`} onPress={() => setSubstitutions(prior => ({ ...prior, [original]: candidate }))}>{copy("Use")} {assetLabel(candidate.assetId)} {copy("for")} {assetLabel(original)}</TogglePillButton></View>)}{!!substitutions[original] && <TogglePillButton disabled={busy || !!pending.current} onPress={() => setSubstitutions(prior => { const next = { ...prior }; delete next[original]; return next; })}>{copy("Clear replacement")}</TogglePillButton>}</View>)}
+        <TextInput accessibilityLabel={copy("Yard report reasons")} placeholder={copy("Condition and substitution reasons")} value={reportNotes} onChangeText={setReportNotes} editable={!busy && !pending.current} multiline style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />
         <TogglePillButton color="green" disabled={busy} onPress={() => action("report", "ready")}>{copy("Ready")}</TogglePillButton>
         <TogglePillButton color="blue" disabled={busy} onPress={() => action("report", "needs_attention")}>{copy("Needs attention")}</TogglePillButton>
         <TogglePillButton color="blue" disabled={busy} onPress={() => action("report", "unable_to_complete")}>{copy("Unable to complete")}</TogglePillButton>
       </View>}
       {detail.events.length > 0 && <View style={{ gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{copy("Yard history")}</Text>{detail.events.map(event => <Text key={event.id} style={{ color: colors.mutedForeground }}>{event.type} · {new Date(event.at).toLocaleString()}</Text>)}</View>}
-      {!initialYardOrderId && <TogglePillButton onPress={() => { setSelectedId(""); setDetail(null); }}>{copy("All Yard Orders")}</TogglePillButton>}
+      {!initialYardOrderId && <TogglePillButton disabled={busy || !!pending.current} onPress={() => { setSelectedId(""); setDetail(null); setReviewAction(null); }}>{copy("All Yard Orders")}</TogglePillButton>}
+      {!!pending.current && "id" in pending.current && <Text accessibilityRole="alert" style={{ color: colors.text }}>{copy("Pending action belongs to Yard Order")} {pending.current.id}. {copy("Retry this order before leaving.")}</Text>}
     </View>}
   </View>;
 }
