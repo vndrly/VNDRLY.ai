@@ -58,4 +58,31 @@ describe("Fleet Home modules", () => {
     expect(data.moduleStates).toContainEqual({ module: "map", state: "unavailable" });
     expect((await read(actor, "map")).state).toBe("unavailable");
   });
+
+  it("keeps an assigned Yard action when the run overview fails", async () => {
+    const orderId = "33333333-3333-4333-8333-333333333333";
+    const read = createFleetHomeReader({
+      ...source(["yard"]),
+      overview: async () => { throw new Error("run read unavailable"); },
+      yardOrders: async () => ({ orders: [{ id: orderId, status: "assigned", assignedToUserId: 7, runId: null }] }),
+    });
+    const result = await read(actor, "summary");
+    const data = result.data as FleetHomeProjection;
+    expect(result.state).toBe("warning");
+    expect(data.nextAction).toMatchObject({ kind: "report_yard_order", yardOrderId: orderId });
+    expect(data.moduleStates).toContainEqual({ module: "yard", state: "ready" });
+    expect(data.moduleStates).toContainEqual({ module: "history", state: "unavailable" });
+  });
+
+  it("keeps an active Driver action ahead of a separate Yard follow-up for the same run", async () => {
+    const runId = "11111111-1111-4111-8111-111111111111";
+    const orderId = "33333333-3333-4333-8333-333333333333";
+    const read = createFleetHomeReader({
+      ...source(["driver", "yard"], [run(runId, "in_progress")]),
+      yardOrders: async () => ({ orders: [{ id: orderId, status: "assigned", assignedToUserId: 7, runId }] }),
+    });
+    const data = (await read(actor, "summary")).data as FleetHomeProjection;
+    expect(data.nextAction).toMatchObject({ kind: "continue_run", runId });
+    expect(data.priorities).toContainEqual(expect.objectContaining({ kind: "report_yard_order", runId, yardOrderId: orderId }));
+  });
 });

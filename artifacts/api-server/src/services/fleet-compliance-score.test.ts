@@ -50,4 +50,36 @@ describe("Fleet compliance score", () => {
     await expect(readFleetComplianceScore(actor as never, register as never, async () => new Set<FleetCapability>(["driver"]))).rejects.toMatchObject({ status: 403 });
     await expect(readFleetComplianceScore(actor as never, register as never, async () => new Set<FleetCapability>(["office"]))).resolves.toMatchObject({ advisoryOnly: true, score: 0 });
   });
+
+  it("retains a capped category total across 26 failing records without invalid zero-point deductions", () => {
+    const records = Array.from({ length: 26 }, (_, index) => ({ ...expired, id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}` }));
+    const result = projectFleetComplianceScore(3, records, "2026-10-20T00:00:00.000Z");
+    expect(result.deductions).toHaveLength(29);
+    expect(result.deductions.filter((item) => item.category === "driver_license").reduce((sum, item) => sum + item.points, 0)).toBe(25);
+    expect(result.deductions.some((item) => item.points === 0)).toBe(true);
+    expect(result.deductions.filter((item) => item.category === "driver_license").every((item) => item.estimatedImprovement === 0)).toBe(true);
+    expect(result.categoryTotals?.find((item) => item.category === "driver_license")?.pointsEarned).toBe(0);
+  });
+
+  it("keeps a small mixed-category deduction and bounds a multipage company response", async () => {
+    const at = "2026-10-20T00:00:00.000Z";
+    const records = Array.from({ length: 150 }, (_, index) => ({
+      ...expired,
+      id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      status: index === 0 ? "red" as const : "green" as const,
+      validUntil: index === 0 ? expired.validUntil : "2027-10-01T00:00:00.000Z",
+    }));
+    const mixed = projectFleetComplianceScore(3, records.slice(0, 50), at);
+    expect(mixed.deductions.find((item) => item.category === "driver_license")?.points).toBe(1);
+    expect(mixed.categoryTotals?.find((item) => item.category === "driver_license")?.pointsEarned).toBe(24);
+    const failing = records.map((record) => ({ ...record, status: "red" as const, validUntil: expired.validUntil }));
+    const pages = [failing.slice(0, 100), failing.slice(100)];
+    const register = { readFleetComplianceRegister: async (_actor: unknown, query: { after?: string }) => query.after ? { entries: pages[1], nextCursor: null } : { entries: pages[0], nextCursor: failing[99].id } };
+    const result = await readFleetComplianceScore({ userId: 7, companyId: 3 } as never, register as never, async () => new Set<FleetCapability>(["office"]));
+    expect(result.deductions.length).toBeLessThanOrEqual(100);
+    expect(result.partnerPreview?.reasons.length).toBeLessThanOrEqual(100);
+    expect(result.remainingIssueCount).toBeGreaterThan(0);
+    expect(result.estimatedResolvedScore).toBe(16);
+    expect(result.score + result.deductions.reduce((sum, item) => sum + item.points, 0)).toBeLessThanOrEqual(100);
+  });
 });

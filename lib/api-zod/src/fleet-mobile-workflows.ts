@@ -160,6 +160,7 @@ const homeAction = z.object({
   kind: z.enum(["review_ticket", "prepare_detail", "start_run", "continue_run", "report_yard_order", "review_closeout", "finalize_ticket"]),
   label: z.string().trim().min(1).max(160),
   runId: FleetCanonicalIdSchema.nullable().optional(),
+  yardOrderId: FleetCanonicalIdSchema.optional(),
 }).strict();
 export const FleetHomeProjectionSchema = z.object({
   companyId: positiveId,
@@ -185,7 +186,7 @@ export const FleetComplianceScoreSchema = z.object({
   deductions: z.array(z.object({
     id: FleetCanonicalIdSchema,
     category: complianceCategory,
-    points: z.number().int().positive().max(100),
+    points: z.number().int().nonnegative().max(100),
     reason: z.string().trim().min(1).max(500),
     urgency: z.enum(["now", "soon", "later"]),
     estimatedImprovement: z.number().int().nonnegative().max(100),
@@ -198,6 +199,7 @@ export const FleetComplianceScoreSchema = z.object({
   /** Additive read fields; older persisted projections remain parseable. */
   categoryTotals: z.array(z.object({ category: complianceCategory, score, pointsAvailable: score, pointsEarned: score }).strict()).max(4).optional(),
   estimatedResolvedScore: score.optional(),
+  remainingIssueCount: z.number().int().nonnegative().optional(),
   partnerPreview: z.object({
     score,
     status: z.enum(["red", "amber", "green"]),

@@ -37,10 +37,11 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
       return { category, score: 0 };
     }
     const lost = Math.ceil(25 * failing.length / records.length);
+    const oneResolved = Math.ceil(25 * Math.max(0, failing.length - 1) / records.length);
     failing.forEach((entry, index) => {
       const points = Math.floor(lost / failing.length) + (index < lost % failing.length ? 1 : 0);
       const expired = !!entry.validUntil && Date.parse(entry.validUntil) <= Date.parse(evaluatedAt);
-      deductions.push({ id: entry.id, category, points, reason: expired ? `Expired ${category.replaceAll("_", " ")} record.` : entry.reasons[0] ?? `Current ${category.replaceAll("_", " ")} evidence requires review.`, urgency: expired ? "now" : entry.status === "red" ? "soon" : "later", estimatedImprovement: points, remediation: guidance[category].remediation, evidenceDestination: guidance[category].destination, responsibleCapability: guidance[category].capability, dueAt: entry.validUntil });
+      deductions.push({ id: entry.id, category, points, reason: expired ? `Expired ${category.replaceAll("_", " ")} record.` : entry.reasons[0] ?? `Current ${category.replaceAll("_", " ")} evidence requires review.`, urgency: expired ? "now" : entry.status === "red" ? "soon" : "later", estimatedImprovement: lost - oneResolved, remediation: guidance[category].remediation, evidenceDestination: guidance[category].destination, responsibleCapability: guidance[category].capability, dueAt: entry.validUntil });
     });
     return { category, score: 100 - lost * 4 };
   });
@@ -49,11 +50,20 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
   const status = score < 60 ? "red" : score < 85 ? "amber" : "green";
   const urgency = { now: 0, soon: 1, later: 2 } as const;
   deductions.sort((a, b) => urgency[a.urgency] - urgency[b.urgency] || b.estimatedImprovement - a.estimatedImprovement || a.id.localeCompare(b.id));
+  const visible = deductions.slice(0, 100);
+  const resolved = new Set(visible.map((item) => item.id));
+  const estimatedRemainingLoss = categories.reduce((sum, category) => {
+    const records = entries.filter((entry) => categoryFor(entry) === category);
+    if (!records.length) return sum + (resolved.has(coverageId(companyId, category)) ? 0 : 25);
+    const stillFailing = records.filter((entry) => !resolved.has(entry.id) && (entry.status !== "green" || entry.verification !== "verified" || !!entry.validUntil && Date.parse(entry.validUntil) <= Date.parse(evaluatedAt))).length;
+    return sum + Math.ceil(25 * stillFailing / records.length);
+  }, 0);
   return FleetComplianceScoreSchema.parse({
-    companyId, score, status, advisoryOnly: true, evaluatedAt, categories: categoryScores, deductions, history: [],
+    companyId, score, status, advisoryOnly: true, evaluatedAt, categories: categoryScores, deductions: visible, history: [],
     categoryTotals: categoryScores.map((item) => ({ ...item, pointsAvailable: 25, pointsEarned: item.score / 4 })),
-    estimatedResolvedScore: Math.min(100, score + deductions.reduce((sum, item) => sum + item.estimatedImprovement, 0)),
-    partnerPreview: { score, status, advisoryOnly: true as const, evaluatedAt, categories: categoryScores, reasons: deductions.map((item) => ({ category: item.category, reason: item.reason })) },
+    estimatedResolvedScore: Math.max(score, 100 - estimatedRemainingLoss),
+    remainingIssueCount: deductions.length - visible.length,
+    partnerPreview: { score, status, advisoryOnly: true as const, evaluatedAt, categories: categoryScores, reasons: visible.map((item) => ({ category: item.category, reason: item.reason })) },
   });
 }
 

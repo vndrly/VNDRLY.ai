@@ -70,9 +70,9 @@ function actions(actor: FleetActor, c: ReadonlySet<FleetCapability>, runs: reado
     }
   }
   for (const order of orders) if (c.has("yard") && order.assignedToUserId === actor.userId && ["assigned", "in_progress"].includes(order.status))
-    result.push({ kind: "report_yard_order", label: "Report Yard Order", ...(order.runId ? { runId: order.runId } : {}) });
-  // The same employee's Dispatch, Yard, and Driver handoffs belong to one job.
-  return [...new Map(result.map((item) => [item.runId ?? `${item.kind}:${result.indexOf(item)}`, item])).values()].slice(0, 50);
+    result.push({ kind: "report_yard_order", label: "Report Yard Order", yardOrderId: order.id, ...(order.runId ? { runId: order.runId } : {}) });
+  // Keep the active run first. A Yard follow-up for that run remains separately actionable.
+  return [...new Map(result.map((item) => [item.yardOrderId ?? `${item.kind}:${item.runId}`, item])).values()].slice(0, 50);
 }
 
 /** Each module uses its own canonical read and returns a scoped recovery result. */
@@ -88,18 +88,17 @@ export function createFleetHomeReader(source: Source = canonical) {
         permitted(capabilities, "assets") ? source.resources(actor) : Promise.resolve(null),
         permitted(capabilities, "map") ? source.map(actor) : Promise.resolve(null),
       ]);
-      if (overview.status === "rejected") return failure(module, overview.reason);
-      const runs = overview.value.runs.filter((run) => capabilities.has("admin") || capabilities.has("dispatch") || capabilities.has("office") || run.driverUserId === actor.userId);
+      const runs = overview.status === "fulfilled" ? overview.value.runs.filter((run) => capabilities.has("admin") || capabilities.has("dispatch") || capabilities.has("office") || run.driverUserId === actor.userId) : [];
       const orders = yardOrders.status === "fulfilled" ? yardOrders.value.orders : [];
       const ownedDrivers = new Set(runs.map((run) => run.driverUserId));
       const independent = capabilities.has("driver") && (capabilities.has("admin") || capabilities.has("dispatch") || capabilities.has("self_dispatch")) && [...ownedDrivers].every((id) => id === actor.userId);
       const priorities = actions(actor, capabilities, runs, orders);
       const moduleStates: FleetHomeProjection["moduleStates"] = [
-        { module: "dispatch", state: permitted(capabilities, "dispatch") ? runs.length ? "ready" : "empty" : "empty" },
+        { module: "dispatch", state: permitted(capabilities, "dispatch") ? overview.status === "rejected" ? "unavailable" : runs.length ? "ready" : "empty" : "empty" },
         { module: "yard", state: permitted(capabilities, "yard") ? yardOrders.status === "rejected" ? "unavailable" : orders.length ? "ready" : "empty" : "empty" },
         { module: "assets", state: permitted(capabilities, "assets") ? assets.status === "rejected" ? "unavailable" : "ready" : "empty" },
         { module: "map", state: permitted(capabilities, "map") ? map.status === "rejected" ? "unavailable" : "ready" : "empty" },
-        { module: "history", state: runs.length ? "ready" : "empty" },
+        { module: "history", state: overview.status === "rejected" ? "unavailable" : runs.length ? "ready" : "empty" },
         { module: "compliance", state: permitted(capabilities, "compliance") ? compliance.status === "rejected" ? "unavailable" : (compliance.value as { status?: string } | null)?.status === "red" ? "warning" : "ready" : "empty" },
       ];
       const data = FleetHomeProjectionSchema.parse({ companyId: actor.companyId, userId: actor.userId, mode: independent ? "my_fleet_day" : "coordinated", capabilities: [...capabilities], nextAction: priorities[0] ?? null, priorities, warnings: [], moduleStates });

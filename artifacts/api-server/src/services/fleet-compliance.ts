@@ -345,7 +345,7 @@ export function createFleetComplianceOperations(
       return transaction(actor,async(state,client)=>{
         if(!state.enabled)throw new FleetError("fleet.unavailable",403);
         const config=await readConfig(client,actor),grant=access(state,actor),admin=actor.role==="vendor"&&actor.membershipRole==="admin",reviewer=isReviewer(config,actor);
-        const manager=admin||reviewer||!!grant?.roles.some(role=>["fleet_manager","dispatcher"].includes(role));
+        const manager=admin||reviewer||!!grant&&(actor.fleetCapabilities?.has("office")||grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role)));
         let rows:Array<{subject:FleetComplianceSubject;label:string}>=[];
         if(query.kind==="carrier"){
           await canUseSubject(state,client,actor,config,{kind:"carrier",id:actor.companyId});
@@ -799,6 +799,8 @@ export function createFleetComplianceOperations(
     readFleetComplianceRegister: (actor: FleetActor, input: unknown) => {
       const query = FleetComplianceRegisterQuerySchema.parse(input);
       return transaction(actor, async (state, client) => {
+        if (actor.fleetCapabilities?.has("office") && !actor.fleetCapabilities.has("admin") && !actor.fleetCapabilities.has("dispatch") && !access(state, actor))
+          throw new FleetError("fleet.finance_required", 403);
         const config = await readConfig(client, actor),
           rows = [];
         for (const entry of [...config.entries].sort((a, b) =>

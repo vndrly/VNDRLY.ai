@@ -126,6 +126,14 @@ function companyGrantFor(state: FleetState, actor: FleetActor): FleetGrant | nul
   const fleetIds = grant.fleetIds.filter(id => state.fleets.some(group => group.id === id));
   return fleetIds.length ? {...grant,fleetIds,companyId:actor.companyId} : null;
 }
+/** Office read access retains the original finance flag and current Fleet/site scope. */
+function officeGrantFor(state: FleetState, actor: FleetActor): FleetGrant | null {
+  const grant = state.grants.find(g => g.userId === actor.userId);
+  if (!state.enabled || !actor.fleetCapabilities?.has("office") || !grant?.financeRead) return null;
+  const fleetIds = grant.fleetIds.filter(id => state.fleets.some(group => group.id === id));
+  const siteIds = grant.siteIds.filter(id => actor.currentSiteIds?.includes(id) && state.fleets.some(group => fleetIds.includes(group.id) && group.siteIds.includes(id)));
+  return fleetIds.length && siteIds.length ? { ...grant, fleetIds, siteIds, companyId: actor.companyId } : null;
+}
 function target(run: FleetRun) {
   return {
     companyId: run.companyId,
@@ -144,6 +152,11 @@ function permitted(
     ? actor.currentRunsById.get(run.id)
     : run;
   if (!current) return false;
+  if ((action === "view" || action === "view_finance") &&
+      [run, current].every(record => ["draft", "submitted_for_review", "completed"].includes(record.status) && record.companyId === actor.companyId)) {
+    const office = officeGrantFor(state, actor);
+    if (office && [run, current].every(record => office.fleetIds.includes(record.fleetId) && record.siteIds.every(id => office.siteIds.includes(id)))) return true;
+  }
   // A driver receives only their actual assigned activity, not customer-wide
   // access. Recheck both historical and current assignments before readback.
   const driverGrant = companyGrantFor(state, actor);
@@ -537,7 +550,10 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
       },
       actor,
     );
-  const locations = createFleetLocationOperations(transaction, permitted);
+  const locationPermitted: typeof permitted = (state, actor, run, action) =>
+    actor.fleetCapabilities && !["admin", "dispatch", "driver"].some(capability => actor.fleetCapabilities?.has(capability as "admin" | "dispatch" | "driver"))
+      ? false : permitted(state, actor, run, action);
+  const locations = createFleetLocationOperations(transaction, locationPermitted);
   const runOrders = createFleetRunOrderOperations(transaction, companyGrantFor);
   return {
     ...runOrders,
@@ -551,8 +567,8 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
     ...createFleetServiceTemplateOperations(transaction,companyGrantFor),
     ...createFleetComplianceOperations(transaction, (state, actor) => {
       const grant=state.grants.find(row=>row.userId===actor.userId);
-      if(!state.enabled||!grant?.roles.length)return null;
-      const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id));
+      if(!state.enabled||!grant||!grant.roles.length && !(actor.fleetCapabilities?.has("office") && grant.financeRead))return null;
+      const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id && (grant.roles.length || group.siteIds.some(siteId=>grant.siteIds.includes(siteId) && actor.currentSiteIds?.includes(siteId)))));
       return fleetIds.length?{roles:grant.roles,fleetIds}:null;
     },options.compliance),
     ...createFleetMonitoringOperations(transaction,permitted,options.monitoringNow,options.monitoringNotify),
@@ -611,6 +627,11 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           const poolGrant = companyGrantFor(state, actor);
           const grant = commercialGrant ?? (poolGrant?.roles.includes("driver") ? {...poolGrant,roles:["driver" as const],safetyRelease:false,financeRead:false} : null);
           const roles = grant?.roles ?? [];
+          let locationProjectionUnavailable = false;
+          const observations = await locations.readObservations(state, client, actor).catch(() => {
+            locationProjectionUnavailable = true;
+            return [];
+          });
           return {
             ...(Number.isInteger(actor.activeMembershipId) &&
             Number.isInteger(actor.sv)
@@ -662,17 +683,14 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
               )
               .filter((run) => permitted(state, actor, run, "view"))
               .map((run) => project(state, actor, run)),
-            observations: await locations.readObservations(
-              state,
-              client,
-              actor,
-            ),
+            observations,
             unavailableIntegrations: [
               "vehicle_telemetry",
               "device_capture",
               "inspection_media",
               "delivery_media",
               "regulated_compliance",
+              ...(locationProjectionUnavailable ? ["location_observations"] : []),
               "ticket_billing_linkage",
             ],
             generatedAt: new Date().toISOString(),
