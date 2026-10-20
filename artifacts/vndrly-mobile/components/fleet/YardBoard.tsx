@@ -63,7 +63,7 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
       setError("");
     } catch (cause) { if (current()) {
       if ([401, 403, 404].includes((cause as { status?: number }).status ?? 0)) { setActor(null); setYards([]); setOrders([]); setDetail(null); setShowCreate(false); pending.current = null; }
-      setError(cause instanceof Error ? cause.message : "Yard Board unavailable.");
+      setError(copy(cause instanceof Error ? cause.message : "Yard Board unavailable."));
     } }
   }
   async function loadOrder(id: string, minimumVersion = 0, preserveDraft = false) {
@@ -87,24 +87,27 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
     const exact = pending.current;
     if (!("id" in exact)) return;
     lock.current = true; setBusy(true); setError("");
+    let posting = false;
     try {
       let receipt: FleetYardOrder | null = null;
       if (retry) try {
         const found = await read<{ operationId: string; result: unknown }>(`/api/fleet/yard-orders/operations/${exact.input.operationId}`);
         receipt = FleetYardOrderSchema.parse(found.result);
       } catch (cause) { if ((cause as { status?: number }).status !== 404) throw cause; }
-      const result = receipt ?? FleetYardOrderSchema.parse(await apiFetch(`/api/fleet/yard-orders/${exact.id}/actions`, { method: "POST", body: JSON.stringify(exact.input) }, authScope.current));
+      let response: unknown = receipt;
+      if (!response) { posting = true; response = await apiFetch(`/api/fleet/yard-orders/${exact.id}/actions`, { method: "POST", body: JSON.stringify(exact.input) }, authScope.current); posting = false; }
+      const result = FleetYardOrderSchema.parse(response);
       if (result.id !== exact.id || result.version < exact.input.expectedVersion + 1) throw Error("Yard Order readback mismatch.");
       await loadOrder(exact.id, result.version);
       if (!current()) return;
       pending.current = null; setReviewAction(null); setNotice(copy("Yard Order saved."));
     } catch (cause) { if (current()) {
       const status = (cause as { status?: number }).status;
-      if (status && status >= 400 && ![408, 429].includes(status)) {
+      if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) {
         pending.current = null;
         if (status === 409) { setReviewAction(exact.input.kind); try { await loadOrder(exact.id, 0, true); } catch { /* Keep the draft and allow refresh. */ } setError(copy("Yard Order changed. Review your findings, then reapply.")); }
-        else setError(cause instanceof Error ? cause.message : copy("Yard action was rejected. Review and correct it."));
-      } else setError(cause instanceof Error ? cause.message : copy("Yard action needs recovery. Retry the same request."));
+        else setError(copy(cause instanceof Error ? cause.message : "Yard action was rejected. Review and correct it."));
+      } else setError(copy(cause instanceof Error ? cause.message : "Yard action needs recovery. Retry the same request."));
     } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
@@ -123,10 +126,11 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
     try {
       const value = await read<{ candidates: { assetId: string; available: boolean; reasons: string[] }[] }>(`/api/fleet/yards/${encodeURIComponent(order.yardId)}/suggestions?${query}`);
       if (current()) setAlternatives(value.candidates.filter(candidate => !order.requestedAssetIds.includes(candidate.assetId)));
-    } catch (cause) { if (current()) setError(cause instanceof Error ? cause.message : "Alternatives unavailable."); }
+    } catch (cause) { if (current()) setError(copy(cause instanceof Error ? cause.message : "Alternatives unavailable.")); }
   }
   async function createOrder() {
     if (!actor || lock.current) return;
+    let posting = false;
     try {
       const retry = !!pending.current;
       if (!pending.current) {
@@ -144,11 +148,13 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
       let receipt: FleetYardOrder | null = null;
       if (retry) try { const found = await read<{ operationId: string; result: unknown }>(`/api/fleet/yard-orders/operations/${exact.input.operationId}`); receipt = FleetYardOrderSchema.parse(found.result); }
       catch (cause) { if ((cause as { status?: number }).status !== 404) throw cause; }
-      const saved = receipt ?? FleetYardOrderSchema.parse(await apiFetch("/api/fleet/yard-orders", { method: "POST", body: JSON.stringify(exact.input) }, authScope.current));
+      let response: unknown = receipt;
+      if (!response) { posting = true; response = await apiFetch("/api/fleet/yard-orders", { method: "POST", body: JSON.stringify(exact.input) }, authScope.current); posting = false; }
+      const saved = FleetYardOrderSchema.parse(response);
       if (saved.id !== exact.input.order.id) throw Error("Yard Order receipt mismatch.");
       await loadOrder(saved.id);
       pending.current = null; setShowCreate(false); setNotice(copy("Yard Order requested."));
-    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (status && status >= 400 && ![408, 429].includes(status)) pending.current = null; setError(cause instanceof Error ? cause.message : copy("Yard Order needs recovery. Retry the same request.")); } }
+    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) pending.current = null; setError(copy(cause instanceof Error ? cause.message : "Yard Order needs recovery. Retry the same request.")); } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   async function openCreate() {
@@ -190,6 +196,7 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
       {order.requestedAssetIds.map(id => <Text key={`asset:${id}`} style={{ color: colors.text }}>{assetLabel(id)}</Text>)}
       {order.findings.map((finding, index) => <Text key={`${finding.assetId}:${index}`} accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(finding.kind)}: {assetLabel(finding.assetId)} · {finding.note}</Text>)}
       {order.status === "reported" && <Text style={{ color: colors.text }}>{`${copy("Reported")} · ${copy(order.outcome?.replaceAll("_", " ") ?? "")}`}</Text>}
+      {!!pending.current && "id" in pending.current && pending.current.id === order.id && <TogglePillButton color="blue" disabled={busy} onPress={() => void act((pending.current as { id: string; input: Parameters<typeof act>[0] }).input)}>{copy("Recover Yard Order action")}</TogglePillButton>}
       {order.status === "requested" && canAssign && <View style={{ gap: 8 }}>{canAssignOthers && <TextInput accessibilityLabel={copy("Assign Yard worker user ID")} placeholder={copy("Leave blank to assign yourself")} keyboardType="numeric" value={assignee} onChangeText={setAssignee} editable={!busy && !pending.current} style={{ color: colors.text, borderColor: colors.border, borderWidth: 1, padding: 12 }} />}<TogglePillButton color="blue" disabled={busy} onPress={() => action("assign")}>{canAssignOthers && assignee ? copy("Assign Yard worker") : copy("Assign to me")}</TogglePillButton></View>}
       {order.status === "assigned" && canProgress && <TogglePillButton color="blue" disabled={busy} onPress={() => action("start")}>{copy("Start Yard work")}</TogglePillButton>}
       {!!reviewAction && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy("Review the current Yard Order and your retained findings, then reapply the action.")}</Text>}
@@ -204,7 +211,7 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
         <TogglePillButton color="blue" disabled={busy} onPress={() => action("report", "needs_attention")}>{copy("Needs attention")}</TogglePillButton>
         <TogglePillButton color="blue" disabled={busy} onPress={() => action("report", "unable_to_complete")}>{copy("Unable to complete")}</TogglePillButton>
       </View>}
-      {detail.events.length > 0 && <View style={{ gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{copy("Yard history")}</Text>{detail.events.map(event => <Text key={event.id} style={{ color: colors.mutedForeground }}>{event.type} · {new Date(event.at).toLocaleString()}</Text>)}</View>}
+      {detail.events.length > 0 && <View style={{ gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{copy("Yard history")}</Text>{detail.events.map(event => <Text key={event.id} style={{ color: colors.mutedForeground }}>{copy(event.type.replaceAll("_", " "))} · {new Date(event.at).toLocaleString()}</Text>)}</View>}
       {!initialYardOrderId && <TogglePillButton disabled={busy || !!pending.current} onPress={() => { setSelectedId(""); setDetail(null); setReviewAction(null); }}>{copy("All Yard Orders")}</TogglePillButton>}
       {!!pending.current && "id" in pending.current && <Text accessibilityRole="alert" style={{ color: colors.text }}>{copy("Pending action belongs to Yard Order")} {pending.current.id}. {copy("Retry this order before leaving.")}</Text>}
     </View>}

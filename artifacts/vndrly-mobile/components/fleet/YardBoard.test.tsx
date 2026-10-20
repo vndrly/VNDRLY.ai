@@ -157,12 +157,13 @@ it("refreshes a definite Yard conflict while preserving report reasons for reapp
   network(["yard"], { ...base, status: "in_progress", assignedToUserId: 7 });
   const baseApi = env.api.getMockImplementation()!;
   let conflict = true;
+  let savedOrder: FleetYardOrder | null = null;
   env.api.mockImplementation((path: string, init?: any) => {
     if (path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST") {
       if (conflict) { conflict = false; return Promise.reject(Object.assign(Error("Version conflict"), { status: 409 })); }
-      const input = JSON.parse(init.body); return { ...base, version: 3, status: "reported", outcome: input.outcome, assignedToUserId: 7, reportedAt: "2026-10-20T13:00:00Z", findings: input.findings };
+      const input = JSON.parse(init.body); savedOrder = { ...base, version: 3, status: "reported", outcome: input.outcome, assignedToUserId: 7, reportedAt: "2026-10-20T13:00:00Z", findings: input.findings }; return savedOrder;
     }
-    if (!conflict && path === `/api/fleet/yard-orders/${orderId}`) return { order: { ...base, version: 2, status: "in_progress", assignedToUserId: 7 }, events: [] };
+    if (!conflict && path === `/api/fleet/yard-orders/${orderId}`) return { order: savedOrder ?? { ...base, version: 2, status: "in_progress", assignedToUserId: 7 }, events: [] };
     return baseApi(path, init);
   });
   render(<YardBoard initialYardOrderId={orderId} />);
@@ -172,6 +173,7 @@ it("refreshes a definite Yard conflict while preserving report reasons for reapp
   expect(await screen.findByText(/Review your findings/)).toBeTruthy();
   expect(screen.getByLabelText("Yard report reasons")).toHaveProperty("value", "Bent coupling");
   fireEvent.click(screen.getByRole("button", { name: "Needs attention" }));
+  expect(await screen.findByText("Reported · needs attention")).toBeTruthy();
   await waitFor(() => expect(env.api.mock.calls.filter(([path, init]) => path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST")).toHaveLength(2));
   const actions = env.api.mock.calls.filter(([path, init]) => path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST").map(([, init]) => JSON.parse(init.body));
   expect(actions[1].expectedVersion).toBe(2);
@@ -186,6 +188,22 @@ it("shows translated Yard actions and identified component controls in Spanish",
   expect(await screen.findByRole("heading", { name: "Panel del patio" })).toBeTruthy();
   expect(screen.getByRole("button", { name: /Componente faltante Rig pump/ })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Requiere atención" })).toBeTruthy();
+});
+
+it("translates Yard assignment, recorded history, and recovery in Spanish", async () => {
+  env.language = "es";
+  network(["dispatch"], base, true);
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === `/api/fleet/yard-orders/${orderId}`
+    ? Promise.resolve(baseApi(path, init)).then((value: any) => ({ ...value, events: [{ id: "90000000-0000-4000-8000-000000000090", type: "assigned", at: "2026-10-20T12:00:00Z" }] }))
+    : baseApi(path, init));
+  render(<YardBoard initialYardOrderId={orderId} />);
+  const assignee = await screen.findByLabelText("ID de usuario del trabajador del patio");
+  expect(assignee).toHaveProperty("placeholder", "Deje en blanco para asignarse a sí mismo");
+  expect(screen.getByText(/asignado ·/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Asignarme" }));
+  await waitFor(() => expect(screen.getAllByRole("alert").some(element => element.textContent?.includes("La lectura de la orden del patio no coincide"))).toBe(true));
+  expect(screen.getByRole("button", { name: "Recuperar acción de la orden del patio" })).toBeTruthy();
 });
 
 it("guides invalid scheduled time and Run ID, then saves the corrected Yard request", async () => {
@@ -226,4 +244,67 @@ it("records findings and an explicit replacement for the named second component"
   const report = JSON.parse(env.api.mock.calls.find(([path, init]) => path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST")![1].body);
   expect(report.actualAssetIds).toEqual([assetId, replacementId]);
   expect(report.findings).toMatchObject([{ assetId: alternativeId, kind: "substituted" }]);
+});
+
+it.each(["gateway failure after commit", "canonical GET failure after POST"])("recovers an assigned Yard action from its first receipt after %s", async failure => {
+  network(["dispatch"]);
+  const baseApi = env.api.getMockImplementation()!;
+  let failed = false;
+  env.api.mockImplementation(async (path: string, init?: any) => {
+    if (path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST" && !failed && failure === "gateway failure after commit") {
+      failed = true; await baseApi(path, init); throw Object.assign(Error("Gateway failed"), { status: 502 });
+    }
+    if (path === `/api/fleet/yard-orders/${orderId}` && !failed && failure === "canonical GET failure after POST" && env.api.mock.calls.some(([called, request]) => called === `/api/fleet/yard-orders/${orderId}/actions` && request?.method === "POST")) {
+      failed = true; throw Object.assign(Error("Readback failed"), { status: 503 });
+    }
+    return baseApi(path, init);
+  });
+  render(<YardBoard initialYardOrderId={orderId} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Assign to me" }));
+  expect(await screen.findByText(failure === "gateway failure after commit" ? "Gateway failed" : "Readback failed")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Assign to me" }));
+  expect(await screen.findByRole("button", { name: "Start Yard work" })).toBeTruthy();
+  const posts = env.api.mock.calls.filter(([path, init]) => path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST");
+  expect(posts).toHaveLength(1);
+  expect(env.api.mock.calls.some(([path]) => path.startsWith("/api/fleet/yard-orders/operations/"))).toBe(true);
+});
+
+it("recovers a committed Yard request after a 502 without making a second order", async () => {
+  network(["dispatch"]);
+  const baseApi = env.api.getMockImplementation()!;
+  let saved: FleetYardOrder | null = null;
+  env.api.mockImplementation((path: string, init?: any) => {
+    if (path === "/api/fleet/yard-orders" && init?.method === "POST") { saved = JSON.parse(init.body).order; throw Object.assign(Error("Gateway failed"), { status: 502 }); }
+    if (path.startsWith("/api/fleet/yard-orders/operations/") && saved) return { operationId: path.split("/").at(-1), result: saved };
+    if (saved && path === `/api/fleet/yard-orders/${saved.id}`) return { order: saved, events: [] };
+    return baseApi(path, init);
+  });
+  render(<YardBoard />);
+  fireEvent.click(await screen.findByRole("button", { name: "Request Yard work" }));
+  fireEvent.change(screen.getByLabelText("Run ID"), { target: { value: "50000000-0000-4000-8000-000000000001" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save Yard request" }));
+  expect(await screen.findByText("Gateway failed")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Save Yard request" }));
+  expect(await screen.findByText("Yard Order requested.")).toBeTruthy();
+  expect(env.api.mock.calls.filter(([path, init]) => path === "/api/fleet/yard-orders" && init?.method === "POST")).toHaveLength(1);
+});
+
+it("can verify a lost report after Refresh moves the order to reported", async () => {
+  network(["yard"], { ...base, status: "in_progress", assignedToUserId: 7 });
+  const baseApi = env.api.getMockImplementation()!;
+  let lost = false;
+  env.api.mockImplementation(async (path: string, init?: any) => {
+    if (!lost && path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST") { lost = true; await baseApi(path, init); throw Object.assign(Error("Response lost"), { status: 502 }); }
+    return baseApi(path, init);
+  });
+  render(<YardBoard />);
+  fireEvent.click(await screen.findByRole("button", { name: `Open Yard Order ${orderId}` }));
+  fireEvent.click(await screen.findByRole("button", { name: "Ready" }));
+  expect(await screen.findByText("Response lost")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Refresh Yard Board" }));
+  expect(await screen.findByText("Reported · ready")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Recover Yard Order action" }));
+  expect(await screen.findByText("Yard Order saved.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "All Yard Orders" })).toHaveProperty("disabled", false);
+  expect(env.api.mock.calls.filter(([path, init]) => path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST")).toHaveLength(1);
 });

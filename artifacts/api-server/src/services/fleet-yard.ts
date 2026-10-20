@@ -7,6 +7,7 @@ import {
   FleetCustodyObservationInputSchema,
   FleetCustodyObservationSchema,
   FleetDetailSchema,
+  FleetDetailPageSchema,
   FleetCommercialSettingsSchema,
   FleetYardInputSchema,
   FleetYardOrderActionSchema,
@@ -583,6 +584,20 @@ export function createFleetYardOperations(
     work: (state: FleetState, client: PoolClient) => Promise<T>,
   ) => repository.transaction(actor.companyId, actor.userId, work, actor);
   return {
+    yardAssemblyTargets: (actor: FleetActor, raw: unknown) => tx(actor, async (state, client) => {
+      const { assetId } = z.object({ assetId: FleetCanonicalIdSchema }).strict().parse(raw);
+      const grant = permission(state, actor, ["admin", "dispatch", "yard"]);
+      requireAssetScope(state, grant, [assetId]);
+      const registry = await readFleetResourceRegistry(client, actor.companyId);
+      const details = registry.details.filter(detail => {
+        if (detail.archivedAt || detail.driverUserId !== null || !detail.rigPackageId || detail.rigPackageVersion === null) return false;
+        const rig = registry.rigPackages.find(item => item.id === detail.rigPackageId && item.version === detail.rigPackageVersion && !item.archivedAt);
+        if (!rig?.components.some(component => component.assetId === assetId)) return false;
+        return state.fleets.some(fleet => grant.fleetIds.includes(fleet.id) && detail.accessGroupIds.includes(fleet.id) &&
+          fleet.equipmentAssetIds.includes(assetId) && fleet.equipmentAssetIds.includes(detail.vehicleAssetId));
+      }).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+      return FleetDetailPageSchema.parse({ details, nextCursor: null, canManage: false });
+    }),
     yardAssets: (actor: FleetActor, raw: unknown = {}) => tx(actor, async (state, client) => {
       const grant = permission(state, actor, ["admin", "dispatch", "yard", "office", "driver"]);
       const input = yardAssetQuery.parse(raw);

@@ -517,6 +517,22 @@ describe("Yard and custody authorization regressions", () => {
     await expect(api.yardAssets(actor(["driver", "self_dispatch"]), { assetId: dolly })).rejects.toMatchObject({ code: "fleet.asset_not_found" });
   });
 
+  it.each([["Yard-only", ["yard"]], ["Driver + Yard", ["driver", "yard"]]])("lists only attachable driver-free Details for %s", async (_role, caps) => {
+    const fixture = state(), rigId = id(), otherRigId = id(), allowedId = id(), foreignId = id(), wrongComponentId = id(), driverBoundId = id();
+    fixture.grants[0].roles = ["driver"];
+    const detail = (detailId: string, name: string, groups: string[], vehicleAssetId = truckA) => ({ id: detailId, companyId: 7, version: 1, name, vehicleAssetId,
+      rigPackageId: rigId, rigPackageVersion: 1, driverUserId: null, accessGroupIds: groups,
+      effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null });
+    const registry = { version: 1, details: [detail(allowedId, "Dolly on A", [fleetA]), detail(foreignId, "Foreign", [fleetB], truckB), { ...detail(wrongComponentId, "Tank on A", [fleetA]), rigPackageId: otherRigId }, { ...detail(driverBoundId, "Driver bound", [fleetA]), driverUserId: 12 }],
+      rigPackages: [{ id: rigId, companyId: 7, version: 1, name: "Dolly", components: [{ assetId: dolly, role: "dolly", sequence: 0 }], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null },
+        { id: otherRigId, companyId: 7, version: 1, name: "Tank", components: [{ assetId: tank, role: "tank", sequence: 0 }], effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null }], reservations: [] };
+    const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string) => sql.includes("FROM vendors WHERE") ? { rows: [{ fleet_resources: registry }] } : { rows: [] } } as unknown as PoolClient) } as any);
+    const page = await api.yardAssemblyTargets(actor(caps), { assetId: dolly });
+    expect(page.details.map(row => row.name)).toEqual(["Dolly on A"]);
+    expect(page.canManage).toBe(false);
+    await expect(api.yardAssemblyTargets(actor(caps), { assetId: truckB })).rejects.toMatchObject({ code: "fleet.asset_not_found" });
+  });
+
   it("hides and rejects another Fleet's Yard Order, including requested target on create", async () => {
     const row = orderRow(truckB);
     const api = service(state(), [row]);
