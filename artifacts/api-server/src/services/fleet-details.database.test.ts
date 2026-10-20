@@ -180,7 +180,7 @@ async function fixture() {
       vehicleAssetId: assets[index].id,
       rigPackageId: packageId,
       rigPackageVersion: 1,
-      driverUserId: staff[index + 1].id,
+      driverUserId: null,
       accessGroupIds: [groupId],
       ...window,
     },
@@ -197,6 +197,7 @@ async function fixture() {
     transaction,
     packageInput,
     detailInput,
+    driverUserId: (index: number) => staff[index + 1].id,
   };
 }
 
@@ -366,7 +367,7 @@ describe("canonical Detail persistence", () => {
       operationId: randomUUID(),
       fleetId: f.groupId,
       title: "Synthetic round trip",
-      driverUserId: details[index].driverUserId,
+      driverUserId: f.driverUserId(index),
       vehicleAssetId: details[index].vehicleAssetId,
       trailerAssetId: f.assets[2 + index].id,
       detailSelection: {
@@ -481,7 +482,6 @@ describe("canonical Detail persistence", () => {
     expect(run.resourceAssignment?.reservation.state).toBe("active");
     await act("pause", { reason: "Driver reported a truck issue" });
     const replacementInput = f.detailInput(1, packages[1].id);
-    replacementInput.detail.driverUserId = actors[1].userId;
     replacementInput.detail.name = "Separate replacement Detail";
     const replacementDetail = await f.service.saveFleetDetail(
       f.actor,
@@ -627,7 +627,7 @@ describe("canonical Detail persistence", () => {
       operationId: randomUUID(),
       expectedVersion: next.version,
       action: "reassign",
-      driverUserId: details[0].driverUserId,
+      driverUserId: f.driverUserId(0),
       vehicleAssetId: details[0].vehicleAssetId,
       trailerAssetId: f.assets[2].id,
       detailSelection: { ...input(0).detailSelection, detailVersion: 2 },
@@ -772,7 +772,7 @@ describe("canonical Detail persistence", () => {
       f.actor,
       f.detailInput(0, saved.id),
     );
-    const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id);
+    const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id, f.driverUserId(0));
     await f.service.saveFleetRigPackage(f.actor, {
       ...input,
       operationId: randomUUID(),
@@ -826,8 +826,8 @@ describe("canonical Detail persistence", () => {
       ),
     );
     const snapshots = await Promise.all(
-      details.map((detail) =>
-        f.service.fleetDetailSnapshot(f.actor, detail.id),
+      details.map((detail, index) =>
+        f.service.fleetDetailSnapshot(f.actor, detail.id, f.driverUserId(index)),
       ),
     );
     const results = await Promise.allSettled(
@@ -874,7 +874,7 @@ describe("canonical Detail persistence", () => {
       f.detailInput(0, rig.id),
     );
     expect(
-      (await f.service.fleetDetailSnapshot(f.actor, detail.id.toUpperCase()))
+      (await f.service.fleetDetailSnapshot(f.actor, detail.id.toUpperCase(), f.driverUserId(0)))
         .detail.id,
     ).toBe(detail.id);
   });
@@ -887,7 +887,8 @@ describe("canonical Detail persistence", () => {
         f.actor,
         f.detailInput(0, rig.id),
       );
-      const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id);
+      const driverUserId = f.driverUserId(0);
+      const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id, driverUserId);
       let companyId = f.actor.companyId;
       if (where === "other_company")
         companyId = (
@@ -901,7 +902,7 @@ describe("canonical Detail persistence", () => {
         companyId,
         fleetId: randomUUID(),
         title: "Private active legacy work",
-        driverUserId: detail.driverUserId,
+        driverUserId,
         vehicleAssetId:
           where === "same_company" ? detail.vehicleAssetId : randomUUID(),
         trailerAssetId: null,
@@ -933,7 +934,7 @@ describe("canonical Detail persistence", () => {
         );
       await expect(
         f.transaction(
-          { ...f.actor, schedulingDriverUserIds: detail.driverUserId === null ? [] : [detail.driverUserId] },
+          { ...f.actor, schedulingDriverUserIds: [driverUserId] },
           (state, client) => {
             if (where === "same_company") state.runs.push(legacy);
             return f.module.reserveFleetDetail({ state, client }, f.actor, {
@@ -955,7 +956,8 @@ describe("canonical Detail persistence", () => {
       f.actor,
       f.detailInput(0, rig.id),
     );
-    const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id);
+    const driverUserId = f.driverUserId(0);
+    const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id, driverUserId);
     const forged = {
       ...snapshot,
       rigPackage: {
@@ -973,7 +975,7 @@ describe("canonical Detail persistence", () => {
     };
     await expect(
       f.transaction(
-        { ...f.actor, schedulingDriverUserIds: detail.driverUserId === null ? [] : [detail.driverUserId] },
+        { ...f.actor, schedulingDriverUserIds: [driverUserId] },
         (state, client) =>
           f.module.reserveFleetDetail({ state, client }, f.actor, {
             runId: randomUUID(),
@@ -992,13 +994,14 @@ describe("canonical Detail persistence", () => {
       f.actor,
       f.detailInput(0, rig.id),
     );
-    const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id);
+    const driverUserId = f.driverUserId(0);
+    const snapshot = await f.service.fleetDetailSnapshot(f.actor, detail.id, driverUserId);
     await f.pool.query("UPDATE users SET suspended_at=NOW() WHERE id=$1", [
-      detail.driverUserId,
+      driverUserId,
     ]);
     await expect(
       f.transaction(
-        { ...f.actor, schedulingDriverUserIds: detail.driverUserId === null ? [] : [detail.driverUserId] },
+        { ...f.actor, schedulingDriverUserIds: [driverUserId] },
         (state, client) =>
           f.module.reserveFleetDetail({ state, client }, f.actor, {
             runId: randomUUID(),
