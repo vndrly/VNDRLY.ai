@@ -44,7 +44,7 @@ vi.mock("expo-crypto", () => ({
   randomUUID: () => "10000000-0000-4000-8000-000000000001",
 }));
 vi.mock("@/components/ScreenSafeArea", () => ({
-  default: ({ children }: any) => <div>{children}</div>,
+  default: ({ children }: any) => <div data-testid="fleet-safe-area">{children}</div>,
 }));
 vi.mock("@/components/WorkHubPageTitle", () => ({
   default: ({ title, beforeTitle }: any) => <><div>{beforeTitle}</div><h1>{title}</h1></>,
@@ -61,6 +61,7 @@ vi.mock("@/components/TogglePillButton", () => ({
 }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 import FleetWorkspace from "./FleetWorkspace";
+import FleetShell from "./fleet/FleetShell";
 vi.mock("@/components/FleetRunPlan",async(original)=>{
  const module=await original<typeof import("./FleetRunPlan")>();
  return {...module,default:({onChange,groupId,companyId}:any)=><button onClick={()=>{const place=(id:string,name:string)=>({id,revision:1,name,address:name,latitude:null,longitude:null,kind:"pickup",active:true,ownerType:"vendor",ownerId:companyId,materials:[],instructions:"",hours:"",timeZone:"America/Chicago"});onChange({detail:{detail:{id:"22222222-2222-4222-8222-222222222222",companyId,version:2,name:"Synthetic Detail",vehicleAssetId:"30000000-0000-4000-8000-000000000001",rigPackageId:null,rigPackageVersion:null,driverUserId:5,accessGroupIds:[groupId],effectiveFrom:"2026-01-01T00:00:00Z",effectiveUntil:null,archivedAt:null},rigPackage:null,labels:{truck:"Truck",rigPackage:null,driver:"Driver",components:[]},carrierOfRecordId:companyId,snapshottedAt:"2026-10-16T12:00:00Z"},route:{origin:{type:"canonical",location:place("44444444-4444-4444-8444-444444444444","Physical tank")},stops:[{id:"55555555-5555-4555-8555-555555555555",sequence:0,kind:"delivery",cycleId:null,location:{type:"canonical",location:place("66666666-6666-4666-8666-666666666666","Physical terminal")}}],returnPolicy:"delivery_only",base:null,plannedWindow:null},billingSiteId:392,timeZone:"America/Chicago"});}}>Choose synthetic Detail and route</button>};
@@ -85,6 +86,15 @@ afterEach(() => {
   mocks.work.storageHealth=null;
 });
 describe("mobile Fleet authorization", () => {
+  it("embeds the real Compliance fallback under one page frame", async () => {
+    mocks.api.mockResolvedValue({ entries: [], mode: "warn_only", nextCursor: null });
+    render(<FleetShell module="compliance" />);
+    expect(await screen.findByText(/No evidence recorded/)).toBeTruthy();
+    expect(screen.getAllByRole("heading", { name: "Compliance" })).toHaveLength(1);
+    expect(screen.getAllByTestId("fleet-safe-area")).toHaveLength(1);
+    expect(screen.getAllByTestId("fleet-shell-scroll")).toHaveLength(1);
+    expect(screen.queryByTestId("fleet-legacy-scroll")).toBeNull();
+  });
   it("retains modern driver acknowledgement before transport and labels its pending outcome",async()=>{
     mocks.work.storageHealth={state:"low",availableBytes:1024,reserveBytes:67108864,retainedEvidenceBytes:500000,evidenceCount:50};
     const run={id:"20000000-0000-4000-8000-000000000001",title:"Retained crude activity",version:4,driverUserId:1,status:"dispatched",allowedActions:["acknowledge"],currentStopId:null,loads:[],inspections:[],records:[],events:[],stops:[],ticketReference:{id:500,version:1}};

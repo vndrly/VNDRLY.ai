@@ -10,7 +10,8 @@ import FleetMapRedirect from "@/app/(tabs)/fleet-map";
 import FleetLocationsRedirect from "@/app/(tabs)/fleet-locations";
 import FleetComplianceRedirect from "@/app/(tabs)/fleet-compliance";
 
-const nav = vi.hoisted(() => ({ push: vi.fn(), width: 390, params: {} as Record<string, string> }));
+const nav = vi.hoisted(() => ({ push: vi.fn(), width: 390, brand: "#137c49", params: {} as Record<string, string> }));
+vi.mock("@expo/vector-icons", () => ({ Feather: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} /> }));
 vi.mock("expo-router", () => ({
   router: { push: nav.push },
   useLocalSearchParams: () => nav.params,
@@ -21,7 +22,7 @@ vi.mock("react-native", async (importOriginal) => ({
   useWindowDimensions: () => ({ width: nav.width, height: 800, scale: 1, fontScale: 1 }),
 }));
 vi.mock("@/hooks/useColors", () => ({
-  useColors: () => ({ card: "#222", text: "white", mutedForeground: "#aaa", border: "#555", primary: "#f90", destructive: "#f33" }),
+  useColors: () => ({ card: "#222", text: "white", mutedForeground: "#aaa", border: "#555", primary: nav.brand, destructive: "#f33" }),
 }));
 vi.mock("@/lib/fleet-copy", () => ({ useFleetCopy: () => (value: string) => value }));
 vi.mock("@/components/ScreenSafeArea", () => ({ default: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
@@ -29,17 +30,23 @@ vi.mock("@/components/WorkHubPageTitle", () => ({ default: ({ title }: { title: 
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress }: { children: React.ReactNode; onPress?: () => void }) => <button onClick={onPress}>{children}</button> }));
 vi.mock("@/components/FleetLegacyWorkspace", () => ({ default: ({ initialMode, initialAssetId }: { initialMode: string; initialAssetId?: string }) => <Text>{`${initialMode}:${initialAssetId ?? "none"}`}</Text> }));
 
-afterEach(() => { cleanup(); nav.push.mockReset(); nav.width = 390; nav.params = {}; });
+afterEach(() => { cleanup(); nav.push.mockReset(); nav.width = 390; nav.brand = "#137c49"; nav.params = {}; });
 
 describe("FleetShell", () => {
   it.each([390, 1024])("uses one Fleet workspace and module links at width %i", (width) => {
     nav.width = width;
     render(<FleetShell module="home" />);
     expect(screen.getByRole("heading", { name: "Fleet Ops" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Dispatch" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Map" }));
+    expect(screen.getByRole("button", { name: "Open Dispatch" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Open Map" }));
     expect(nav.push).toHaveBeenCalledWith("/(tabs)/fleet?module=map");
     expect(screen.getByTestId("fleet-module-grid").style.flexDirection).toBe(width >= 768 ? "row" : "column");
+    const card = screen.getByTestId("fleet-launch-map");
+    expect(card.style.borderTopWidth).toBe("2px");
+    expect(card.style.borderTopColor).toBe("rgb(19, 124, 73)");
+    expect(card.style.width).toBe(width >= 768 ? "48%" : "100%");
+    expect(screen.getByTestId("icon-map")).toBeTruthy();
+    expect(screen.getAllByText("Open Fleet records and actions").length).toBeGreaterThan(0);
   });
 
   it("keeps Dispatch and Map mounted when Compliance reports a 409", () => {

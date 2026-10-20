@@ -50,10 +50,12 @@ import { apiFetch } from "@/lib/api";
 import { fleetActionInput, fleetErrorMessage, fleetQueueErrorMessage, fleetRunLabel } from "@/lib/fleet-mobile";
 import { nativeFleetOffline } from "@/lib/fleet-offline-native";
 import { FLEET_OFFLINE_MAX_ACTIONS, fleetQueueBase, fleetQueueAssignmentMatches, replayFleetSequence, type FleetOfflineScope, type FleetQueuedAction } from "@/lib/fleet-offline";
-export default function FleetWorkspace({ initialRunId, initialAssetId, initialMode = "desk" }: {
+export default function FleetWorkspace({ initialRunId, initialAssetId, initialMode = "desk", embedded = false }: {
     initialRunId?: string;
     initialAssetId?: string;
     initialMode?: "desk" | "my-day" | "log" | "map" | "inventory" | "locations" | "orders" | "compliance";
+    /** The Fleet shell supplies the page title, safe area, and scrolling. */
+    embedded?: boolean;
 } = {}) {
     const colors = useColors();
     const { width } = useWindowDimensions();
@@ -419,15 +421,16 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
     }
     // Resource libraries have their own scoped reads. The bounded dispatch
     // projection must not gate Inventory, locations or saved transport orders.
-    if(mode==="orders")return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:16,gap:16}}><WorkHubPageTitle title={copy("Runs")} onBack={initialMode!=="orders"?()=>setMode(initialMode):undefined}/><FleetRunOrders key={identity} companyId={activeMembership?.orgId??user?.vendorId??0}/></ScrollView></ScreenSafeArea>;
-    if (mode === "locations") return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:16,gap:16}}><WorkHubPageTitle title={copy("Origins and Destinations")} onBack={initialMode !== "locations" ? () => setMode(initialMode) : undefined}/><FleetDestinationDirectory key={`locations:${identity}`}/></ScrollView></ScreenSafeArea>;
-    if(mode==="compliance")return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:16,gap:16}}><WorkHubPageTitle title={copy("Compliance")} onBack={initialMode!=="compliance"?()=>setMode(initialMode):undefined}/><FleetComplianceRegister companyId={activeMembership?.orgId??user?.vendorId??undefined} key={`compliance:${identity}`}/></ScrollView></ScreenSafeArea>;
-    if (mode === "inventory") return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <WorkHubPageTitle title={copy("Inventory and Details")} onBack={initialMode !== "inventory" ? () => setMode(initialMode) : undefined} />
+    const page = (title: string, content: React.ReactNode, onBack?: () => void, beforeTitle?: React.ReactNode) => embedded
+      ? <View style={{ gap: 16 }}>{beforeTitle}{content}</View>
+      : <ScreenSafeArea><ScrollView testID="fleet-legacy-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}><WorkHubPageTitle title={title} onBack={onBack} beforeTitle={beforeTitle}/>{content}</ScrollView></ScreenSafeArea>;
+    if(mode==="orders")return page(copy("Runs"), <FleetRunOrders key={identity} companyId={activeMembership?.orgId??user?.vendorId??0}/>, initialMode!=="orders"?()=>setMode(initialMode):undefined);
+    if (mode === "locations") return page(copy("Origins and Destinations"), <FleetDestinationDirectory key={`locations:${identity}`}/>, initialMode !== "locations" ? () => setMode(initialMode) : undefined);
+    if(mode==="compliance")return page(copy("Compliance"), <FleetComplianceRegister companyId={activeMembership?.orgId??user?.vendorId??undefined} key={`compliance:${identity}`}/>, initialMode!=="compliance"?()=>setMode(initialMode):undefined);
+    if (mode === "inventory") return page(copy("Inventory and Details"),
       <FleetInventory key={`${identity}:${initialAssetId ?? ""}`} identity={identity} initialAssetId={initialAssetId} onSaved={() => setRevision(n => n + 1)} />
-    </ScrollView></ScreenSafeArea>;
-    return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-    <WorkHubPageTitle beforeTitle={!initialRunId && ["desk", "my-day"].includes(initialMode) && ["desk", "my-day"].includes(mode) ? <WorkdayControls /> : undefined} onBack={mode !== initialMode ? () => { setMode(initialMode); setSettingsOpen(false); } : undefined} title={copy(mode === "setup" ? "Fleet access settings" : mode === "my-day" || (overview?.roles.includes("driver") && !overview.capabilities.canDispatch) ? "My Fleet Day" : mode === "log" ? "Fleet Log" : mode === "map" ? "Fleet Map" : "Fleet Dispatch")}/>
+    , initialMode !== "inventory" ? () => setMode(initialMode) : undefined);
+    return page(copy(mode === "setup" ? "Fleet access settings" : mode === "my-day" || (overview?.roles.includes("driver") && !overview.capabilities.canDispatch) ? "My Fleet Day" : mode === "log" ? "Fleet Log" : mode === "map" ? "Fleet Map" : "Fleet Dispatch"), <>
     {work.session && overview && (!driverView||!!work.status.pending||!!work.status.needsReconciliation||!!work.status.pendingEvidence||!!work.error||!!work.storageHealth&&work.storageHealth.state!=="ready") && <View accessibilityLabel="Retained Fleet work" style={{backgroundColor:colors.card,borderColor:colors.primary,borderWidth:2,borderRadius:12,padding:16,gap:10}}>
       {!driverView&&<Text style={textStyle}>{work.status.pending} {copy("pending sync")} · {work.status.needsReconciliation} {copy("needing office reconciliation")} · {work.status.pendingEvidence} {copy("pending evidence")}</Text>}
       <Text style={textStyle}>{copy(driverView?"Your work is saved on this phone. It will send when connected.":"Device saves remain pending until accepted by the server. Local references are not billing ticket numbers.")}</Text>
@@ -570,5 +573,5 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
         <TogglePillButton disabled={busy || !!unresolved || !!cachedAt} onPress={createRun}>{copy("Create draft run")}</TogglePillButton>
       </View>}
     </>}
-  </ScrollView></ScreenSafeArea>;
+  </>, mode !== initialMode ? () => { setMode(initialMode); setSettingsOpen(false); } : undefined, !initialRunId && ["desk", "my-day"].includes(initialMode) && ["desk", "my-day"].includes(mode) ? <WorkdayControls /> : undefined);
 }

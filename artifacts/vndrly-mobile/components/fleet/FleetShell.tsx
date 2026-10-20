@@ -1,4 +1,5 @@
 import React, { Suspense, type ReactNode } from "react";
+import { Feather } from "@expo/vector-icons";
 import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 
@@ -29,6 +30,11 @@ const moduleLabels: Record<FleetModuleId, string> = {
   locations: "Origins and Destinations", compliance: "Compliance",
 };
 
+const moduleIcons: Record<Exclude<FleetModuleId, "home">, React.ComponentProps<typeof Feather>["name"]> = {
+  dispatch: "truck", yard: "package", driver: "user", office: "briefcase", assets: "layers",
+  runs: "repeat", map: "map", history: "clock", locations: "map-pin", compliance: "shield",
+};
+
 const legacyModes = {
   dispatch: "desk", yard: "inventory", driver: "my-day", office: "desk", assets: "inventory",
   runs: "orders", map: "map", history: "log", locations: "locations", compliance: "compliance",
@@ -49,7 +55,7 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
   const renderModule = (id: FleetModuleId) => {
     const entry = modules[id];
     const fallback: ReactNode = id === "home" ? null : <Suspense fallback={<Text>{copy(`Loading ${moduleLabels[id]}`)}</Text>}>
-      <FleetLegacyWorkspace initialMode={legacyModes[id as keyof typeof legacyModes]} initialAssetId={id === "assets" ? initialAssetId : undefined} />
+      <FleetLegacyWorkspace embedded initialMode={legacyModes[id as keyof typeof legacyModes]} initialAssetId={id === "assets" ? initialAssetId : undefined} />
     </Suspense>;
     return <View key={id} style={{ width: wide && module === "home" ? "48%" : "100%", minWidth: 0 }}>
       <FleetModuleBoundary module={id} title={copy(moduleLabels[id])} state={entry?.state} error={entry?.error} onRetry={entry?.onRetry} onReview={entry?.onReview}>
@@ -58,12 +64,16 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
     </View>;
   };
 
-  return <ScreenSafeArea><ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+  return <ScreenSafeArea><ScrollView testID="fleet-shell-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}>
     <WorkHubPageTitle title={copy(moduleLabels[module])} onBack={module === "home" ? undefined : () => open("home")} />
     {module !== "home" && <TogglePillButton color="blue" compactOnTablet onPress={() => open("home")}>{copy("All Fleet modules")}</TogglePillButton>}
     {module === "home" && !selected.length && <View testID="fleet-module-grid" style={{ flexDirection: wide ? "row" : "column", flexWrap: "wrap", gap: 12 }}>
-      {FLEET_MODULES.filter((id) => id !== "home").map((id) => <View key={id} style={{ width: wide ? "48%" : "100%", padding: 14, gap: 8, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>
-        <TogglePillButton color="blue" onPress={() => open(id)} accessibilityLabel={copy(moduleLabels[id])}>{copy(moduleLabels[id])}</TogglePillButton>
+      {FLEET_MODULES.filter((id): id is Exclude<FleetModuleId, "home"> => id !== "home").map((id) => <View key={id} testID={`fleet-launch-${id}`} style={{ width: wide ? "48%" : "100%", padding: 16, gap: 12, borderRadius: 16, borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.card }}>
+        <View style={{ alignItems: "center", flexDirection: "row", gap: 10 }}>
+          <View style={{ alignItems: "center", backgroundColor: `${colors.primary}22`, borderRadius: 12, height: 40, justifyContent: "center", width: 40 }}><Feather name={moduleIcons[id]} size={21} color={colors.primary} /></View>
+          <View style={{ flex: 1 }}><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{copy(moduleLabels[id])}</Text><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{copy("Open Fleet records and actions")}</Text></View>
+        </View>
+        <TogglePillButton color="blue" onPress={() => open(id)} accessibilityLabel={copy(moduleLabels[id])}>{copy("Open")} {copy(moduleLabels[id])}</TogglePillButton>
       </View>)}
     </View>}
     {selected.length > 0 && <View testID="fleet-module-grid" style={{ flexDirection: wide ? "row" : "column", flexWrap: "wrap", gap: 12 }}>

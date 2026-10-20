@@ -11,3 +11,9 @@ TDD evidence: the first focused run failed on the four extra Fleet navigation en
 Verification: focused navigation/shell/boundary tests **3 files, 48 tests passed**; existing `FleetWorkspace` compatibility tests **1 file, 18 tests passed**; mobile TypeScript typecheck passed. `git diff --check` passed; Git noted line-ending conversion for an unrelated dirty mockup file. The parent owns broader mobile, localization, and package gates after Tasks 6–11.
 
 No AskV or Work Hub routes were changed. Existing unrelated dirty files and build output were left alone.
+
+## Review fix round 1
+
+Resolved all three P2 findings from `task-6-review.md`. A caught render error now offers Retry even without a module callback; Retry awaits any supplied callback and clears only that module's render boundary, allowing stable children to render again while siblings stay mounted. The legacy workspace accepts an `embedded` flag for FleetShell fallbacks, so the shell alone owns the safe area, scrolling, and page title; the default standalone mode used by the run-detail compatibility adapter retains its original frame. Launcher and boundary cards now use the live company primary color in a two-pixel outline, with the Work Hub icon/title/helper layout and semantic warning/error icons.
+
+Focused regression coverage includes a throwing child with stable element identity and sibling mount count, a real Compliance fallback with exactly one page frame, and phone/tablet card composition using a non-default company color. The focused navigation, shell, boundary, and compatibility suites pass: **4 files, 68 tests**. `git diff --check` passes. Broad mobile/type/localization gates remain with the parent mobile batch as directed.
