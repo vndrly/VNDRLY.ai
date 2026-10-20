@@ -78,6 +78,44 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
       { id: "00000000-0000-4000-8000-000000000001", name: "FleetGo Truck 1", category: "truck" },
       { id: "00000000-0000-4000-8000-000000000002", name: "fleetgo truck 1", category: "truck" },
       { id: "00000000-0000-4000-8000-000000000003", name: "FleetGo Trailer 1", category: "trailer" },
-    ])).toThrow(/ambiguous duplicate vehicle\/truck natural key/i);
+    ])).toThrow(/ambiguous duplicate vehicle\/truck preferred natural key/i);
+  });
+
+  it("rejects distinct same-priority assets unless one preferred natural key resolves the role", () => {
+    const trailer = { id: "00000000-0000-4000-8000-000000000009", name: "FleetGo Trailer 1", category: "trailer" };
+    const truck = { id: "00000000-0000-4000-8000-000000000008", name: "FleetGo Truck 1", category: "truck" };
+
+    expect(() => selectCompanyGoAssetRoles([
+      { id: "00000000-0000-4000-8000-000000000001", name: "Truck Alpha", category: "truck" },
+      { id: "00000000-0000-4000-8000-000000000002", name: "Truck Bravo", category: "truck" },
+      trailer,
+    ])).toThrow(/ambiguous vehicle\/truck assets without a unique preferred natural key/i);
+
+    expect(() => selectCompanyGoAssetRoles([
+      truck,
+      { id: "00000000-0000-4000-8000-000000000003", name: "Trailer Alpha", category: "trailer" },
+      { id: "00000000-0000-4000-8000-000000000004", name: "Trailer Bravo", category: "trailer" },
+    ])).toThrow(/ambiguous trailer\/rigging assets without a unique preferred natural key/i);
+
+    expect(selectCompanyGoAssetRoles([
+      truck,
+      { id: "00000000-0000-4000-8000-000000000005", name: "Truck Alpha", category: "truck" },
+      trailer,
+      { id: "00000000-0000-4000-8000-000000000006", name: "Trailer Alpha", category: "trailer" },
+    ])).toEqual({ vehicleAssetId: truck.id, trailerAssetId: trailer.id });
+  });
+
+  it("rejects duplicate preferred matches across accepted category variants", () => {
+    expect(() => selectCompanyGoAssetRoles([
+      { id: "00000000-0000-4000-8000-000000000001", name: "FleetGo Truck 1", category: "truck" },
+      { id: "00000000-0000-4000-8000-000000000002", name: "fleetgo truck 1", category: "vehicle" },
+      { id: "00000000-0000-4000-8000-000000000003", name: "FleetGo Trailer 1", category: "trailer" },
+    ])).toThrow(/ambiguous duplicate vehicle\/truck preferred natural key/i);
+
+    expect(() => selectCompanyGoAssetRoles([
+      { id: "00000000-0000-4000-8000-000000000004", name: "FleetGo Truck 1", category: "truck" },
+      { id: "00000000-0000-4000-8000-000000000005", name: "FleetGo Trailer 1", category: "trailer" },
+      { id: "00000000-0000-4000-8000-000000000006", name: "fleetgo trailer 1", category: "rigging" },
+    ])).toThrow(/ambiguous duplicate trailer\/rigging preferred natural key/i);
   });
 });

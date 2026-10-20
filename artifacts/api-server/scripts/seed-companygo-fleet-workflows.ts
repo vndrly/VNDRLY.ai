@@ -40,21 +40,19 @@ type CompanyGoAssetCandidate = { id: string; name: string; category: string };
 export function selectCompanyGoAssetRoles(candidates: CompanyGoAssetCandidate[]): { vehicleAssetId: string; trailerAssetId: string } {
   const select = (categories: string[], preferredName: string, label: string) => {
     const categoryPriority = new Map(categories.map((category, index) => [category, index]));
-    const matches = candidates
-      .filter((asset) => categoryPriority.has(asset.category.toLowerCase()))
-      .sort((left, right) => {
-        const leftName = left.name.trim().toLowerCase();
-        const rightName = right.name.trim().toLowerCase();
-        const leftPreferred = leftName === preferredName ? 0 : 1;
-        const rightPreferred = rightName === preferredName ? 0 : 1;
-        return leftPreferred - rightPreferred
-          || categoryPriority.get(left.category.toLowerCase())! - categoryPriority.get(right.category.toLowerCase())!
-          || leftName.localeCompare(rightName);
-      });
-    if (!matches[0]) throw new Error(`CompanyGo authoritative Fleet prerequisites require a ${label} asset.`);
-    if (matches[1] && matches[0].category.toLowerCase() === matches[1].category.toLowerCase() && matches[0].name.trim().toLowerCase() === matches[1].name.trim().toLowerCase())
-      throw new Error(`CompanyGo authoritative Fleet prerequisites contain an ambiguous duplicate ${label} natural key.`);
-    return matches[0].id;
+    const matches = candidates.filter((asset) => categoryPriority.has(asset.category.trim().toLowerCase()));
+    if (matches.length === 0) throw new Error(`CompanyGo authoritative Fleet prerequisites require a ${label} asset.`);
+
+    const preferredMatches = matches.filter((asset) => asset.name.trim().toLowerCase() === preferredName);
+    if (preferredMatches.length === 1) return preferredMatches[0].id;
+    if (preferredMatches.length > 1)
+      throw new Error(`CompanyGo authoritative Fleet prerequisites contain an ambiguous duplicate ${label} preferred natural key.`);
+
+    const bestPriority = Math.min(...matches.map((asset) => categoryPriority.get(asset.category.trim().toLowerCase())!));
+    const bestMatches = matches.filter((asset) => categoryPriority.get(asset.category.trim().toLowerCase()) === bestPriority);
+    if (bestMatches.length !== 1)
+      throw new Error(`CompanyGo authoritative Fleet prerequisites contain ambiguous ${label} assets without a unique preferred natural key.`);
+    return bestMatches[0].id;
   };
 
   return {
