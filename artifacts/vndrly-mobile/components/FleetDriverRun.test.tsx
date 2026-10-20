@@ -50,5 +50,6 @@ it("advances retained offline reports without claiming server acceptance and nev
 it("keeps return defects advisory while presenting closeout as the next action",()=>{
  const submit=vi.fn();render(<FleetDriverRun run={{...run,status:"in_progress",allowedActions:["submit_closeout"],visitedStopIds:[]}} disabled={false} onSubmit={submit}/>);
  expect(screen.getByText(/reported issue affects the Fleet score but does not block ticket flow/i)).toBeTruthy();
+ expect(screen.getByText(/yard verification follow-up/i)).toBeTruthy();
  expect(screen.getByRole("button",{name:"Close Run"})).toBeTruthy();
 });

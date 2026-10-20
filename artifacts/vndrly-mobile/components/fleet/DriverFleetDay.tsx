@@ -17,7 +17,7 @@ export default function DriverFleetDay({ initialRunId, projection: supplied, onO
   const home = useFleetHome(supplied === undefined);
   const projection = supplied === undefined ? home.projection : supplied;
   const capabilities = new Set(projection?.capabilities ?? []);
-  const yardAction = projection?.priorities.find(action => action.kind === "report_yard_order" && action.yardOrderId) ?? (projection?.nextAction?.kind === "report_yard_order" && projection.nextAction.yardOrderId ? projection.nextAction : null);
+  const yardAction = projection?.nextAction?.kind === "report_yard_order" && projection.nextAction.yardOrderId ? projection.nextAction : null;
   const canWorkYard = capabilities.has("admin") || capabilities.has("yard") || capabilities.has("self_dispatch");
   const independent = capabilities.has("driver") && capabilities.has("self_dispatch");
   const card = { backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 16, borderWidth: 2, gap: 10, padding: 16 } as const;
@@ -35,6 +35,6 @@ export default function DriverFleetDay({ initialRunId, projection: supplied, onO
       {!!projection?.warnings.length && <Text style={{ color: colors.text }}>{copy("Warnings affect the Fleet score but do not stop ticket work.")}</Text>}
       {supplied === undefined && home.state === "unavailable" && <><Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(home.error ?? "Driver Fleet Day is unavailable.")}</Text><TogglePillButton color="blue" onPress={home.retry}>{copy("Retry Driver Fleet Day")}</TogglePillButton></>}
     </View>
-    <FleetLegacyWorkspace embedded initialMode="my-day" initialRunId={initialRunId ?? projection?.nextAction?.runId ?? undefined} />
+    {!yardAction && <FleetLegacyWorkspace embedded initialMode="my-day" initialRunId={initialRunId ?? projection?.nextAction?.runId ?? undefined} />}
   </View>;
 }

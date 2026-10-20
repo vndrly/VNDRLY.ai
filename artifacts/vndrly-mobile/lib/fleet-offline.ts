@@ -51,7 +51,7 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
       if (!["unsynced", "conflict", "revoked"].includes(action.state)) throw new Error("Fleet queue state is invalid.");
     }
     if(scope.sessionVersion!==undefined&&value.scope.sessionVersion!==undefined&&scope.sessionVersion!==value.scope.sessionVersion)return {...value,overview:null,cachedAt:null,actions:value.actions.map(action=>({...action,state:"revoked" as const,message:"Original session changed; originals retained for recovery."}))};
-    return value;
+    return { ...value, actions: value.actions.map(action => action.membershipId === undefined ? { ...action, membershipId: value.scope.membershipId } : action) };
   }
   async function write(value: FleetOfflineDocument) { await store.setItem(fleetOfflineKey(value.scope), JSON.stringify(value)); }
   function validateBase(scope: FleetOfflineScope, action: FleetQueuedAction) {

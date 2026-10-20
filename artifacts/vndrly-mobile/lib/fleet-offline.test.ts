@@ -7,6 +7,10 @@ function fixture() {
   const records = new Map<string, string>();
   return createFleetOfflineStore({ getItem: async key => records.get(key) ?? null, setItem: async (key, value) => { records.set(key, value); }, removeItem: async key => { records.delete(key); } });
 }
+function exposedFixture() {
+  const records = new Map<string, string>();
+  return { records, queue: createFleetOfflineStore({ getItem: async key => records.get(key) ?? null, setItem: async (key, value) => { records.set(key, value); }, removeItem: async key => { records.delete(key); } }) };
+}
 describe("Fleet scoped offline actions", () => {
   it("preserves ordered immutable operations/revisions and separates accounts", async () => {
     const queue = fixture();
@@ -92,4 +96,16 @@ it("refuses an original operation before readback when the membership or company
   await replayFleetSequence([item],{scope:changed,readRun:async()=>{reads++;throw Error("unexpected");},submit:async()=>{throw Error("unexpected");},resolve:async(_,state)=>{outcomes.push(state);}});
   expect(reads).toBe(0);expect(outcomes).toEqual(["revoked"]);
  }
+});
+it("normalizes a pre-upgrade action from its verified document scope without rewriting the original bytes",async()=>{
+ const {records,queue}=exposedFixture(),verified={...scope,sessionVersion:3};
+ const action={base,runId:base.runId,input:{action:"acknowledge",operationId:"10000000-0000-4000-8000-000000000001",expectedVersion:7} as FleetActionInput,capturedAt:"2026-10-07T12:00:00Z",state:"unsynced" as const,sessionVersion:3};
+ const original=JSON.stringify({version:1,scope:verified,overview:null,cachedAt:null,actions:[action]});
+ records.set(`vndrly.fleet.${scope.userId}.${scope.companyId}.${scope.membershipId}`,original);
+ const normalized=await queue.read(verified);
+ expect(normalized.actions[0].membershipId).toBe(scope.membershipId);
+ expect(records.get(`vndrly.fleet.${scope.userId}.${scope.companyId}.${scope.membershipId}`)).toBe(original);
+ let reads=0;
+ await replayFleetSequence(normalized.actions,{scope:verified,readRun:async()=>{reads++;return {...base,id:base.runId,events:[{operationId:action.input.operationId}]} as never;},submit:async()=>{throw Error("unexpected");},resolve:async()=>{}});
+ expect(reads).toBe(1);
 });

@@ -12,6 +12,11 @@ it("prepares retained v1 actions without inventing a Detail or ticket revision a
  const original=JSON.stringify(fixture()),plan=prepareFleetLegacyMigration(original,scope);expect(plan.phase).toBe("awaiting_durable_import");expect(plan.originalDocument).toBe(original);expect(plan.canDeleteOriginal).toBe(false);expect(plan.commands).toHaveLength(1);
  expect(plan.commands[0]).toMatchObject({kind:"activity.legacy_action",operationId:id(6),capturedAt:at,payload:{base:{runId:id(2),companyId:11,driverUserId:7,vehicleAssetId:id(4),version:1},ticket:{id:123,version:null,source:"legacy_cached_run_link"},action:{expectedVersion:1},legacyState:"unsynced"}});expect(plan.commands[0].payload).not.toHaveProperty("detailSnapshot");
 });
+it("imports a newly queued v1 action that already carries its verified membership",()=>{
+ const doc=fixture(),original=JSON.stringify({...doc,actions:doc.actions.map(action=>({...action,membershipId:9}))});
+ const plan=prepareFleetLegacyMigration(original,scope);
+ expect(plan.commands).toHaveLength(1);expect(plan.recovery).toEqual([]);expect(plan.originalDocument).toBe(original);
+});
 it("retains unresolved legacy records while preparing unrelated valid records for durable import",()=>{
  const doc=fixture(),bad={...doc.actions[0],input:{...doc.actions[0].input,operationId:id(7)},sessionVersion:undefined};const plan=prepareFleetLegacyMigration(JSON.stringify({...doc,actions:[bad,doc.actions[0]]}),scope);expect(plan.commands).toHaveLength(1);expect(plan.recovery).toEqual([expect.objectContaining({sourceIndex:0,reason:"unverified_session"})]);expect(plan.canDeleteOriginal).toBe(false);
 });

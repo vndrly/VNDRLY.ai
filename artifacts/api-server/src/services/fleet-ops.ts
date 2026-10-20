@@ -64,6 +64,7 @@ import { createFleetReportingOperations } from "./fleet-reporting";
 import { createFleetGateOperations } from "./fleet-gate-correlation";
 import { createFleetLocationOperations } from "./fleet-location";
 import { createFleetEtaOperations } from "./fleet-eta";
+import { recordFleetReturn } from "./fleet-return";
 import { createHash, randomUUID } from "node:crypto";
 import {
   CreateFleetRunSchema,
@@ -1332,6 +1333,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             trailerAssetId: run.trailerAssetId,
           };
           let maintenanceIds: string[] = [];
+          let returnHandoff: Awaited<ReturnType<typeof recordFleetReturn>> | null = null;
           if (
             body.action === "submit_closeout" &&
             run.events.at(-1)?.type === "review" &&
@@ -1594,6 +1596,8 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           } else if (body.action === "submit_closeout") {
             if ((await readFleetReviewPacket(client, run)).missingRequiredCount)
               throw new FleetError("fleet.evidence_required", 400);
+            if (run.resourceAssignment?.returnPolicy === "return_required" || run.routePlan?.returnPolicy === "return_required")
+              returnHandoff = await recordFleetReturn(client, actor, run, body.notes ?? "");
             run.status = "submitted_for_review";
             run.phase = null;
           } else if (body.action === "review") {
@@ -1704,6 +1708,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             details: {
               fleetCompliance,
               ...(maintenanceIds.length ? { maintenanceIds } : {}),
+              ...(returnHandoff ? { returnHandoff } : {}),
               ...(body.reason ? { reason: body.reason } : {}),
               ...(body.notes ? { notes: body.notes } : {}),
               ...(body.decision ? { decision: body.decision } : {}),

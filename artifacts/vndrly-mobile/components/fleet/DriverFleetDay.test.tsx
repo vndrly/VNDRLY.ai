@@ -24,13 +24,21 @@ it("keeps the canonical assigned-run workspace as the driver's one primary workf
   expect(screen.queryByRole("button", { name: "Open assigned Yard Order" })).toBeNull();
 });
 
-it("lets a Driver plus Yard worker complete the assigned Yard Order before the run", () => {
+it("keeps a Yard follow-up secondary while an active run is the canonical next action", () => {
   const open = vi.fn();
   const yard = { kind: "report_yard_order" as const, label: "Complete Yard hookup", runId: id(1), yardOrderId: id(2) };
   render(<DriverFleetDay projection={{ ...projection(["driver", "yard"], { kind: "start_run", label: "Start assigned run", runId: id(1) }), priorities: [yard] }} onOpenYard={open} />);
+  expect(screen.queryByRole("button", { name: "Open assigned Yard Order" })).toBeNull();
+  expect(screen.getByText(`run-workspace:my-day:${id(1)}`)).toBeTruthy();
+});
+
+it("makes the assigned Yard Order the sole primary action when the projection says it is next", () => {
+  const open = vi.fn();
+  const yard = { kind: "report_yard_order" as const, label: "Complete Yard hookup", runId: id(1), yardOrderId: id(2) };
+  render(<DriverFleetDay projection={{ ...projection(["driver", "yard"], yard), priorities: [yard] }} onOpenYard={open} />);
   fireEvent.click(screen.getByRole("button", { name: "Open assigned Yard Order" }));
   expect(open).toHaveBeenCalledWith(id(2), id(1));
-  expect(screen.getByText("Complete the Yard hookup yourself, then return here to start the run.")).toBeTruthy();
+  expect(screen.queryByText(`run-workspace:my-day:${id(1)}`)).toBeNull();
 });
 
 it("supports a self-dispatching independent without requiring Yard staff", () => {

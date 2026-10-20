@@ -31,7 +31,7 @@ export default function FleetDriverRun({run,pendingActions=[],disabled,onSubmit,
  const colors=useColors(),copy=useFleetCopy(),[photosOpen,setPhotosOpen]=useState(false);
  const next=nextDriverRunAction(run,pendingActions);
  return <View style={{gap:14}} accessibilityLabel={copy("Your next step")}>
-  {next==="submit_closeout"&&<Text style={{color:colors.text}}>{copy("Return the truck and attached rigging, report any condition issue, then close the run. A reported issue affects the Fleet score but does not block ticket flow.")}</Text>}
+  {next==="submit_closeout"&&<Text style={{color:colors.text}}>{copy("Return the truck and attached rigging, report any condition issue, then close the run. VNDRLY records the return and creates a Yard verification follow-up. A reported issue affects the Fleet score but does not block ticket flow.")}</Text>}
   {next?<FleetRunAction key={`${run.version}:${next}`} run={run} action={next} guided disabled={disabled} onSubmit={fields=>onSubmit(next,fields)}/>:<Text style={{color:colors.text}}>{copy(["submitted_for_review","completed"].includes(run.status)?"Run closed. The office handles review and billing.":"No driver action is available. Contact dispatch if you need help.")}</Text>}
   {photo&&<><TogglePillButton compactOnTablet onPress={()=>setPhotosOpen(value=>!value)}>{copy(photosOpen?"Hide photos":"Add photo (optional)")}</TogglePillButton>{photosOpen&&photo}</>}
  </View>;

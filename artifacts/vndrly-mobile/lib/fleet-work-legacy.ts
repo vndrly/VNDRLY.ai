@@ -6,7 +6,7 @@ export type FleetLegacyMigrationPlan={
  recovery:Array<{sourceIndex:number;reason:"invalid_legacy_record"|"unverified_session"|"missing_cached_run"|"changed_assignment"|"missing_ticket"|"invalid_v2_intent"}>;
 };
 const oldScope=z.object({userId:z.number().int().positive(),companyId:z.number().int().positive(),membershipId:z.number().int().positive().nullable(),sessionVersion:z.number().int().nonnegative().optional()}).strict();
-const oldAction=z.object({sessionVersion:z.number().int().nonnegative().optional(),runId:z.uuid(),base:FleetLegacyAssignmentSchema,input:FleetActionInputSchema,capturedAt:z.iso.datetime(),state:z.enum(["unsynced","conflict","revoked"]),message:z.string().optional()}).strict();
+const oldAction=z.object({sessionVersion:z.number().int().nonnegative().optional(),membershipId:z.number().int().positive().nullable().optional(),runId:z.uuid(),base:FleetLegacyAssignmentSchema,input:FleetActionInputSchema,capturedAt:z.iso.datetime(),state:z.enum(["unsynced","conflict","revoked"]),message:z.string().optional()}).strict();
 /** Preparation only. The original private document stays at its old scoped
  * key until B3's actual encrypted transaction + exact readback confirms import.
  * This function never deletes, replays, refreshes, or rebases legacy work. */
@@ -22,6 +22,7 @@ export function prepareFleetLegacyMigration(originalDocument:string,rawScope:Fle
    const parsed=oldAction.safeParse(raw);
    if(!parsed.success){plan.recovery.push({sourceIndex:index,reason:"invalid_legacy_record"});return;}
    const item=parsed.data;
+   if(item.membershipId!==undefined&&item.membershipId!==scope.membershipId){plan.recovery.push({sourceIndex:index,reason:"unverified_session"});return;}
    if(item.sessionVersion===undefined||item.sessionVersion!==scope.sessionVersion){plan.recovery.push({sourceIndex:index,reason:"unverified_session"});return;}
    const run=runs.find(row=>row.id===item.runId);
    if(!run){plan.recovery.push({sourceIndex:index,reason:"missing_cached_run"});return;}

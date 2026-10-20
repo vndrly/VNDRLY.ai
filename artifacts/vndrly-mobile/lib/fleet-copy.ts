@@ -11,6 +11,7 @@ const spanish: Record<string, string> = {
 "Driver Fleet Day is unavailable.":"La jornada de flota del conductor no está disponible.",
 "Retry Driver Fleet Day":"Reintentar jornada de flota del conductor",
 "Return the truck and attached rigging, report any condition issue, then close the run. A reported issue affects the Fleet score but does not block ticket flow.":"Devuelva el camión y el aparejo conectado, informe cualquier problema de condición y luego cierre el recorrido. Un problema informado afecta la puntuación de flota, pero no bloquea el flujo del ticket.",
+"Return the truck and attached rigging, report any condition issue, then close the run. VNDRLY records the return and creates a Yard verification follow-up. A reported issue affects the Fleet score but does not block ticket flow.":"Devuelva el camión y el aparejo conectado, informe cualquier problema de condición y luego cierre el recorrido. VNDRLY registra la devolución y crea un seguimiento de verificación del patio. Un problema informado afecta la puntuación de flota, pero no bloquea el flujo del ticket.",
 "Dispatch Board":"Panel de despacho",
 "Loading Dispatch Board":"Cargando panel de despacho",
 "Retry Dispatch Board":"Reintentar panel de despacho",
