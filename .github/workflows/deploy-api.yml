@@ -7,6 +7,7 @@ on:
     paths:
       - "artifacts/api-server/**"
       - "lib/db/drizzle/**"
+      - "lib/db/src/schema/**"
       - "scripts/plate-state-migration.mjs"
       - "scripts/notes-admission-migration.mjs"
       - "scripts/askv-greeting-migration.mjs"
@@ -194,6 +195,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:fleet-resources
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:fleet-compliance
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/db run migrate:fleet-pricing
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:fleet-mobile-workflows
           demo_database_url="$(sudo sed -n 's/^DEMO_DATABASE_URL=//p' .env.production | head -n 1)"
           if [ -n "$demo_database_url" ]; then
             sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" DEMO_DATABASE_URL="$demo_database_url" pnpm --filter @workspace/db run migrate:ios-parity-demo

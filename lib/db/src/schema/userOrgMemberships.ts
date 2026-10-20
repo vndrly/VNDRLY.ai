@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, uniqueIndex, index, check } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, uniqueIndex, unique, index, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -25,7 +25,7 @@ export const userOrgMembershipsTable = pgTable(
     userPartnerUnique: uniqueIndex("user_org_memberships_user_partner_unique")
       .on(t.userId, t.partnerId),
     // Symmetric for vendor rows.
-    userVendorUnique: uniqueIndex("user_org_memberships_user_vendor_unique")
+    userVendorUnique: unique("user_org_memberships_user_vendor_unique")
       .on(t.userId, t.vendorId),
     // Lookup helpers for resolveContext() (filters by userId) and reverse joins.
     userIdx: index("user_org_memberships_user_idx").on(t.userId),

@@ -3,6 +3,7 @@ import { pushSchema } from "drizzle-kit/api";
 
 import { db, pool } from "../index";
 import * as schema from "../schema";
+import { filterEquivalentFleetConstraintDrift } from "./fleet-constraint-drift";
 
 async function mainEntry(): Promise<void> {
   if (!process.env.DATABASE_URL) {
@@ -23,7 +24,20 @@ async function mainEntry(): Promise<void> {
   // truncated name, but `pushSchema` keeps proposing a DROP+ADD pair to
   // "fix" the name. The constraint is functionally identical, so treat
   // these as cosmetic noise and drop them from the drift report.
-  const filtered = filterCosmeticDrift(statementsToExecute);
+  const filtered = await filterEquivalentFleetConstraintDrift(
+    filterCosmeticDrift(statementsToExecute),
+    async (table, name) => {
+      const result = await pool.query<{ definition: string }>(
+        `SELECT pg_get_constraintdef(c.oid) AS definition
+           FROM pg_constraint c
+           JOIN pg_class t ON t.oid = c.conrelid
+           JOIN pg_namespace n ON n.oid = t.relnamespace
+          WHERE n.nspname = 'public' AND t.relname = $1 AND c.conname = $2`,
+        [table, name],
+      );
+      return result.rows[0]?.definition ?? null;
+    },
+  );
 
   if (filtered.length === 0) {
     process.stdout.write(

@@ -124,6 +124,10 @@ export * from "./workParticipationAuthorizations";
 export * from "./workforceCoverage";
 export * from "./assets";
 export * from "./fieldTrips";
+export * from "./fleetYards";
+export * from "./fleetPersonCapabilities";
+export * from "./fleetYardOrders";
+export * from "./fleetAssetCustody";
 
 export * from "./safetyResponse";
 
