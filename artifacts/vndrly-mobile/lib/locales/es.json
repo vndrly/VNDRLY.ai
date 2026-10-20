@@ -2396,7 +2396,8 @@
     "decline": "Ahora no",
     "permissionNeeded": "Se necesita permiso",
     "permissionMessage": "VNDRLY necesita permiso de ubicación para compartir tu posición con tu proveedor mientras estás en turno. Puedes habilitarlo más tarde desde Ajustes.",
-    "couldNotSave": "No se pudo guardar tu elección"
+    "couldNotSave": "No se pudo guardar tu elección",
+    "checkUnavailable": "No se pudo verificar su consentimiento guardado. Vuelva a conectarse; no necesita aceptarlo de nuevo."
   },
   "mySchedule": {
     "upcomingTitle": "Trabajo programado próximo",

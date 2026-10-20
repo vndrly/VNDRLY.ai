@@ -1,4 +1,5 @@
 vi.mock("@/components/WorkHubCallPolicy", () => ({ default: () => null }));
+vi.mock("@/lib/account-device-registration", () => ({ registerAccountWorkDevice: async () => "10000000-0000-4000-8000-000000000001" }));
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {

@@ -153,6 +153,12 @@ beforeEach(() => {
   });
 });
 describe("native operations durable boundary", () => {
+  it("does not replace a work phone changed during shared-device registration repair", async () => {
+    native.designatedDeviceId = nextPhone;
+    await expect(nativeOperationsService.device(worker, phone, phone)).rejects.toMatchObject({ code: "native.work_phone_changed" });
+    expect(native.designatedDeviceId).toBe(nextPhone);
+    expect(native.bindingVersion).toBe(0);
+  });
   it("rechecks current membership and session version before every write", async () => {
     memberships = false;
     await expect(
@@ -549,4 +555,8 @@ it("own shift response atomically saves canonical status and immutable retry rec
   await expect(
     nativeOperationsService.shiftResponse(worker, key, body),
   ).rejects.toThrow("native.membership_required");
+});
+
+it("does not let a worker enable their own location pause policy",async()=>{
+ await expect(nativeOperationsService.policy(worker,{allowDriverLocationPause:true})).rejects.toThrow("native.admin_required");
 });

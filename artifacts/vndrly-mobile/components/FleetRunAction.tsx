@@ -21,9 +21,8 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
     const [loadId, setLoadId] = useState("");
     const [inspectionOutcome, setInspectionOutcome] = useState<"passed" | "defect_reported">("defect_reported");
     const [inspectionChosen,setInspectionChosen]=useState(false);
-    const [unitsOpen,setUnitsOpen]=useState(false);
     const [decision, setDecision] = useState<"accept" | "return">("return");
-    const [unit, setUnit] = useState(guided&&action==="record_meter"?"miles":"");
+    const [unit, setUnit] = useState(action==="record_meter"?"miles":"");
     const [ticketId, setTicketId] = useState<number | null>(null);
     const [destinationId,setDestinationId]=useState<string>(run.commercial?.destinationId??"");
     const [error, setError] = useState("");
@@ -84,8 +83,8 @@ export default function FleetRunAction({ run, action, disabled, onSubmit, ticket
     {action === "submit_closeout" && <Text style={{ color: colors.text }}>{copy("Submit recorded stops and load/delivery references for review. This does not approve billing or verify physical proof.")}</Text>}
     {action === "start" && run.commercial && <><Text style={{color:colors.text}}>{copy("Choose the approved destination for this run. Capacity remains unconfirmed.")}</Text>{run.commercial.approvedDestinations.filter(destination=>destination.active).map(destination=><TogglePillButton key={destination.id} compactOnTablet disabled={disabled} solid={destinationId===destination.id} onPress={()=>setDestinationId(destination.id)}>{destination.name}{copy(" · ")}{destination.address}</TogglePillButton>)}</>}
     {action === "link_ticket" && <><Text style={{ color: colors.text }}>{copy("Choose an authorized existing ticket for this run's sites. Linking does not change ticket status or approve billing.")}</Text>{tickets.length === 0 && <Text style={{ color: colors.text }}>{copy("No eligible existing tickets are available.")}</Text>}{tickets.map(ticket => <TogglePillButton key={ticket.id} solid={ticketId === ticket.id} onPress={() => setTicketId(ticket.id)}>{copy("Ticket #")}{ticket.id}{copy(" \u00B7 site ")}{ticket.siteId}{copy(" \u00B7 ")}{ticket.status}</TogglePillButton>)}</>}
-    {guided&&action==="record_meter"&&<TogglePillButton onPress={()=>setUnitsOpen(value=>!value)}>{copy(unit)} · {copy("Change unit")}</TogglePillButton>}
-    {(["record_fuel", "record_meter"].includes(action)) && (!guided||action!=="record_meter"||unitsOpen) && (action === "record_fuel" ? ["gallons", "liters"] : guided?["miles","kilometers"]:["miles", "kilometers", "engine_hours"]).map(value => <TogglePillButton key={value} solid={unit === value} onPress={() => {setUnit(value);setUnitsOpen(false);}}>{copy(value.replaceAll("_", " "))}</TogglePillButton>)}
+    {action==="record_meter"&&<Text style={{color:colors.text}}>{copy("miles")}</Text>}
+    {action==="record_fuel"&&["gallons", "liters"].map(value => <TogglePillButton key={value} solid={unit === value} onPress={() => setUnit(value)}>{copy(value)}</TogglePillButton>)}
     {["arrive_stop", "depart_stop"].includes(action) && run.stops.map(stop => <TogglePillButton key={stop.id} solid={stopId === stop.id} onPress={() => setStopId(stop.id)}>{stop.sequence + 1}{copy(". ")}{copy(stop.kind)}{copy(" \u00B7 ")}{stop.destination?.name ?? run.labels?.sites.find(site => site.siteId === stop.siteId)?.name ?? `site ${stop.siteId}`}</TogglePillButton>)}
     {action === "record_delivery" && run.loads.filter(load => !load.deliveredAt && !load.delivered && !load.transferOut).map(load => <TogglePillButton key={load.id} solid={loadId === load.id} onPress={() => setLoadId(load.id)}>{load.commodity}{copy(" \u00B7 ")}{load.quantity} {load.unit}{copy(" \u00B7 ")}{load.manifestReference}</TogglePillButton>)}
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}

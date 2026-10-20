@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { FleetRunSchema } from "@workspace/api-zod";
 import type { FleetActionInput, FleetRun } from "@workspace/api-zod";
 import { FleetActionFields, fleetActionComplete,prepareFleetInspectionInput } from "./fleet-action-fields";
+
+it("records new odometer entries in miles without asking for a unit", () => {
+  const change = vi.fn();
+  render(<FleetActionFields run={{stops:[],siteIds:[],events:[],loads:[]} as any} input={{action:"record_meter",operationId:"10000000-0000-4000-8000-000000000001",expectedVersion:1}} onChange={change} disabled={false}/>);
+  expect(screen.queryByRole("combobox")).toBeNull();
+  fireEvent.change(screen.getByLabelText(/Odometer reading/), {target:{value:"8100"}});
+  expect(change).toHaveBeenCalledWith(expect.objectContaining({reading:8100,unit:"miles"}));
+});
 const input = { operationId: "op", expectedVersion: 1 };
 const baseRun = FleetRunSchema.parse({
   id: "11111111-1111-4111-8111-111111111111",

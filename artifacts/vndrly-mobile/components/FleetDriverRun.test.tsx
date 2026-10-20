@@ -37,6 +37,7 @@ it("records a problem without requiring a typed note or falsely marking it passe
 it("uses the saved inspection to advance to one plainly labeled odometer entry without inventing a reading",()=>{
  const submit=vi.fn();render(<FleetDriverRun run={{...run,inspections:[{outcome:"passed"} as any]}} disabled={false} onSubmit={submit}/>);
  expect(screen.queryByRole("button",{name:"No defects found"})).toBeNull();
+ expect(screen.queryByRole("button",{name:/miles|kilometers|Change unit/})).toBeNull();
  fireEvent.click(screen.getByRole("button",{name:"Save odometer"}));expect(submit).not.toHaveBeenCalled();
  fireEvent.change(screen.getByLabelText("Odometer reading"),{target:{value:"8100"}});
  fireEvent.click(screen.getByRole("button",{name:"Save odometer"}));

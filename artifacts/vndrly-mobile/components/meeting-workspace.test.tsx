@@ -116,6 +116,8 @@ vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({ user: env.user }),
 }));
 vi.mock("@/lib/auth", () => ({ getToken: env.getToken, captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {} }));
+vi.mock("@/lib/account-device-registration", () => ({ registerAccountWorkDevice: async () => "10000000-0000-4000-8000-000000000001" }));
+vi.mock("@/lib/deviceId", () => ({ getDeviceId: async () => "10000000-0000-4000-8000-000000000001" }));
 vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: vi.fn() }));
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(async () => env.moduleData),

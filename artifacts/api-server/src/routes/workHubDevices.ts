@@ -13,6 +13,8 @@ import {
 import { getDevicePreferences, saveDevicePreferences } from "../work-hub/device-preferences";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import { fenceAudioLeasesForDevice } from "../work-hub/audio-lease-database";
+import { rebindOwnDeviceConsent } from "../services/device-consent-rebinding";
+import { NativeOperationError } from "../services/native-operations-policy";
 
 const router: IRouter = Router();
 const uuid = z.string().uuid();
@@ -25,7 +27,7 @@ const surfaceSchema = z.object({
   entityId: z.string().trim().max(160).nullable(), updatedAt: z.number().int().nonnegative(),
 }).strict();
 const registerSchema = z.object({
-  deviceId: uuid.optional(), friendlyName: z.string().trim().min(1).max(80),
+  deviceId: uuid.optional(), separateAccount: z.boolean().optional(), friendlyName: z.string().trim().min(1).max(80),
   deviceClass: z.string().trim().min(1).max(32), capabilities: capabilitiesSchema.default({}),
 }).strict();
 const heartbeatSchema = z.object({
@@ -84,6 +86,15 @@ router.use("/work-hub/devices", async (req: Request, res: Response, next: NextFu
 router.post("/work-hub/devices/register", async (req, res) => {
   try { const row = await deviceCoordinator.registerDevice(res.locals.deviceActor, registerSchema.parse(req.body)); await appendWorkHubAudit({ actorUserId: res.locals.deviceActor.userId, owner: res.locals.deviceActor.owner, action: "device.registered", subjectType: "work_hub_device", subjectId: row.id, source: deviceAuditSource(req), metadata: { deviceClass: row.deviceClass } }); return res.status(201).json(row); }
   catch (error) { return handleError(res, error); }
+});
+router.post("/work-hub/devices/:deviceId/inherit-consent", async (req, res) => {
+  try {
+    const input = z.object({ previousDeviceId: uuid }).strict().parse(req.body);
+    return res.json(await rebindOwnDeviceConsent(getSessionFromRequest(req)!, input.previousDeviceId, uuid.parse(req.params.deviceId)));
+  } catch (error) {
+    if (error instanceof NativeOperationError) return sendApiError(res, error.status, error.code, error.message);
+    return handleError(res, error);
+  }
 });
 router.post("/work-hub/devices/:deviceId/heartbeat", async (req, res) => {
   try { const row = await deviceCoordinator.heartbeatDevice(res.locals.deviceActor, uuid.parse(req.params.deviceId), heartbeatSchema.parse(req.body)); return res.json(row); }

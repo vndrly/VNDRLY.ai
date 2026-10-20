@@ -221,6 +221,7 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/locationConsent", () => ({
   hasActiveConsentForThisDevice: vi.fn(async () => true),
+  getDeviceConsentStatus: vi.fn(async () => "accepted"),
   isConsentDeclined: vi.fn(async () => false),
 }));
 

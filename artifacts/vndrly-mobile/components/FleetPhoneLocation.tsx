@@ -1,4 +1,4 @@
-import {startFleetBackgroundLocation, stopFleetBackgroundLocation, subscribeFleetBackgroundLocation, type FleetBackgroundStatus} from "@/lib/fleet-background-location-native";
+import {startFleetBackgroundLocation, stopFleetBackgroundLocation, subscribeFleetBackgroundLocation} from "@/lib/fleet-background-location-native";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Text, View } from "react-native";
 import * as Location from "expo-location";
@@ -6,68 +6,140 @@ import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import type { FleetOverview, FleetRun } from "@workspace/api-zod";
 import TogglePillButton from "@/components/TogglePillButton";
+import OptionSwitch from "@/components/work-hub/library/OptionSwitch";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent, subscribeToken, subscribeUser } from "@/lib/auth";
 import { getDeviceId } from "@/lib/deviceId";
 import { hasActiveConsentForThisDevice } from "@/lib/locationConsent";
-import { createFleetPhoneLocationCollector, type FleetPhoneLocationState, type FleetVerifiedAccount } from "@/lib/fleet-phone-location";
+import { enableFleetRunLocation } from "@/lib/fleet-location-setup";
+import { nativeLocationCollectionAllowed, readNativeOperations } from "@/lib/native-operations";
+import * as Storage from "@/lib/fleet-device-storage";
+import { createFleetPhoneLocationCollector, type FleetVerifiedAccount } from "@/lib/fleet-phone-location";
 import { useColors } from "@/hooks/useColors";
 import { useFleetCopy } from "@/lib/fleet-copy";
 
+/** Company-controlled sharing starts with verified active work, never by overriding OS permission. */
 export default function FleetPhoneLocation({run,account,disabled}:{run:FleetRun;account:FleetVerifiedAccount;disabled:boolean}) {
   const colors=useColors(),copy=useFleetCopy();
-  const [status,setStatus]=useState<FleetPhoneLocationState>({state:"stopped",message:"Phone sharing is stopped.",lastAccepted:null});
-  const [background,setBackground]=useState<FleetBackgroundStatus>({state:"stopped",message:"Background phone sharing is stopped.",lastAcceptedAt:null});
-  const controller=useRef<ReturnType<typeof createFleetPhoneLocationCollector>|null>(null);
-  const timer=useRef<ReturnType<typeof setInterval>|null>(null);
-  const alive=useRef(true);
-  function stop(message="Phone sharing is stopped.",discard=false){if(timer.current)clearInterval(timer.current);timer.current=null;controller.current?.stop(message,discard);}
+  const [message,setMessage]=useState("Checking run location");
+  const [allowPause,setAllowPause]=useState(false),[paused,setPaused]=useState(false),[needsSetup,setNeedsSetup]=useState(false);
+  const [changing,setChanging]=useState(false),[checking,setChecking]=useState(true);
+  const syncBusy=useRef(false),controlBusy=useRef(false);
+  const sync=useRef<()=>Promise<void>>(async()=>{});
+  const stop=useRef<()=>void>(()=>{});
+  const pauseKey=`vndrly.fleet-location-pause.${account.userId}.${account.companyId}.${account.membershipId}.${account.sessionVersion}.${run.id}`;
+  const binding=useRef(pauseKey);binding.current=pauseKey;
+  const eligible=run.status==="in_progress"&&run.phase!=="paused";
   useEffect(()=>{
-    alive.current=true;
-    const backgroundSubscription=subscribeFleetBackgroundLocation(value=>{if(alive.current)setBackground(value);});
-    const stopAuth=()=>{stop("The account or device context changed. Phone sharing stopped.",true);controller.current=null;};
-    const user=subscribeUser(stopAuth),token=subscribeToken(stopAuth);
-    const app=AppState.addEventListener("change",state=>{if(state!=="active")stop("Phone sharing is foreground only and stopped while the app is inactive.");});
-    return()=>{alive.current=false;stop();backgroundSubscription();user();token();app.remove();};
-  },[]);
-  useEffect(()=>{if(disabled || run.status!=="in_progress" || run.phase==="paused"){stop("This run is paused or no longer active. Phone sharing stopped.");void stopFleetBackgroundLocation(true).catch(()=>undefined);}},[disabled,run.status,run.phase]);
-  function start(){
-    if(disabled || run.status!=="in_progress" || run.phase==="paused" || AppState.currentState!=="active")return;
-    stop();
-    void stopFleetBackgroundLocation(false).catch(()=>undefined);
-    if(controller.current){controller.current.start();void controller.current.poll();timer.current=setInterval(()=>void controller.current?.poll(),60_000);return;}
+    let alive=true,authValid=true,syncing=false,foreground=false,backgroundReady=false;
     const scope=captureAuthScope();
-    controller.current=createFleetPhoneLocationCollector(account,{
-      readCurrent:async()=>{
-        const overview=await apiFetch<FleetOverview>("/api/fleet/overview");
-        if(!overview.accountScope || !overview.capabilities.canDrive)throw Object.assign(new Error("Current Fleet duty verification is required."),{status:403});
-        if(!isAuthScopeCurrent(scope))throw Object.assign(new Error("Account changed."),{status:403});
-        const current=await apiFetch<FleetRun>(`/api/fleet/runs/${run.id}`);
-        return {account:overview.accountScope,run:current};
-      },
-      consent:async()=> await hasActiveConsentForThisDevice() && await import("@/lib/native-operations").then(module=>module.nativeLocationCollectionAllowed()),
-      permission:async()=>(await Location.getForegroundPermissionsAsync()).status==="granted",
-      deviceId:getDeviceId,
-      sample:async()=>{const position=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.Balanced});return {latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy:position.coords.accuracy,speed:position.coords.speed,heading:position.coords.heading,timestamp:position.timestamp};},
-      post:async input=>apiFetch(`/api/fleet/runs/${run.id}/location`,{method:"POST",headers:{"x-vndrly-device-id":await getDeviceId()},body:JSON.stringify(input)}),
-      operationId:Crypto.randomUUID,
-      contextCurrent:()=>alive.current && isAuthScopeCurrent(scope) && AppState.currentState==="active",
-      changed:value=>{if(alive.current)setStatus(value);},
-    },run);
-    controller.current.start();void controller.current.poll();
-    timer.current=setInterval(()=>void controller.current?.poll(),60_000);
+    let collector:ReturnType<typeof createFleetPhoneLocationCollector>|null=null;
+    const current=()=>alive&&authValid&&isAuthScopeCurrent(scope);
+    const stopForeground=()=>{foreground=false;collector?.stop();};
+    const stopAll=()=>{stopForeground();backgroundReady=false;void stopFleetBackgroundLocation(false).catch(()=>undefined);};
+    stop.current=stopAll;
+    const subscription=subscribeFleetBackgroundLocation(value=>{
+      if(!current())return;
+      backgroundReady=value.state==="configured"||value.state==="accepted";
+      if(backgroundReady)setMessage("Location sharing active");
+    });
+    function startForeground(){
+      if(foreground||!current()||AppState.currentState!=="active")return;
+      collector??=createFleetPhoneLocationCollector(account,{
+        readCurrent:async()=>{
+          const overview=await apiFetch<FleetOverview>("/api/fleet/overview");
+          if(!overview.accountScope||!overview.capabilities.canDrive||!current())throw Object.assign(new Error("Current Fleet duty verification is required."),{status:403});
+          return {account:overview.accountScope,run:await apiFetch<FleetRun>(`/api/fleet/runs/${run.id}`)};
+        },
+        consent:async()=>await hasActiveConsentForThisDevice()&&await nativeLocationCollectionAllowed(),
+        permission:async()=>(await Location.getForegroundPermissionsAsync()).status==="granted",
+        deviceId:getDeviceId,
+        sample:async()=>{const p=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.Balanced});return {...p.coords,timestamp:p.timestamp};},
+        post:async input=>apiFetch(`/api/fleet/runs/${run.id}/location`,{method:"POST",headers:{"x-vndrly-device-id":await getDeviceId()},body:JSON.stringify(input)}),
+        operationId:Crypto.randomUUID,
+        contextCurrent:()=>current()&&AppState.currentState==="active",
+        changed:value=>{if(["stopped","consent_required","permission_required"].includes(value.state))foreground=false;if(current())setMessage(value.state==="sharing"?"Location sharing active":value.state==="checking"?"Checking run location":"Location sharing unavailable");},
+      },run);
+      foreground=true;collector.start();void collector.poll();
+    }
+    async function synchronize(){
+      if(syncing||controlBusy.current||!current()||AppState.currentState!=="active")return;
+      syncing=true;syncBusy.current=true;setChecking(true);
+      try{
+        if(!eligible){stopAll();if(current())setMessage("Run location sharing stopped");return;}
+        // Busy forms do not interrupt an already running background collector.
+        if(disabled)return;
+        const native=await readNativeOperations(scope);
+        if(!current())return;
+        const allowed=native.policy.allowDriverLocationPause===true;
+        setAllowPause(allowed);
+        const savedPause=allowed&&await Storage.getItemAsync(pauseKey)==="true";
+        if(!current())return;
+        if(!allowed)await Storage.deleteItemAsync(pauseKey);
+        if(!current())return;
+        setPaused(savedPause);
+        if(savedPause){stopAll();setNeedsSetup(false);setMessage("Location sharing paused");return;}
+        const consent=await hasActiveConsentForThisDevice()&&await nativeLocationCollectionAllowed();
+        const permission=await Location.getForegroundPermissionsAsync();
+        if(!current())return;
+        if(!consent||permission.status!=="granted"){
+          stopAll();setNeedsSetup(true);setMessage("Location permission needed");return;
+        }
+        const background=await Location.getBackgroundPermissionsAsync();
+        if(!current())return;
+        setNeedsSetup(background.status!=="granted");
+        if(background.status==="granted"){
+          if(!backgroundReady){
+            try{await startFleetBackgroundLocation(account,run);if(!current()){return;}backgroundReady=true;setMessage("Location sharing active");}
+            catch{if(current())startForeground();}
+          }
+          if(backgroundReady){stopForeground();if(current())setMessage("Location sharing active");}
+        }else{if(backgroundReady){backgroundReady=false;await stopFleetBackgroundLocation(false);if(!current())return;}startForeground();}
+        if(foreground)void collector?.poll();
+      }catch{if(current()){stopAll();setAllowPause(false);setMessage("Location sharing unavailable");}}
+      finally{syncing=false;if(current()){syncBusy.current=false;setChecking(false);}}
+    }
+    sync.current=synchronize;
+    const authChanged=()=>{authValid=false;stopAll();if(alive){setAllowPause(false);setMessage("Location sharing unavailable");}};
+    const user=subscribeUser(authChanged),token=subscribeToken(authChanged);
+    const app=AppState.addEventListener("change",state=>{if(state==="active")void synchronize();else stopForeground();});
+    const interval=setInterval(()=>void synchronize(),60_000);
+    void synchronize();
+    return()=>{alive=false;syncBusy.current=false;clearInterval(interval);subscription();user();token();app.remove();stopForeground();};
+    // A run revision may change action availability; the equipment/account binding is what owns collection.
+  },[account.userId,account.companyId,account.membershipId,account.sessionVersion,run.id,run.vehicleAssetId,run.trailerAssetId,eligible,disabled,pauseKey]);
+  async function changeSharing(enabled:boolean){
+    if(controlBusy.current||syncBusy.current||disabled)return;
+    controlBusy.current=true;setChanging(true);
+    const scope=captureAuthScope();
+    try{
+      const native=await readNativeOperations(scope);
+      if(binding.current!==pauseKey)return;
+      if(!isAuthScopeCurrent(scope)||native.policy.allowDriverLocationPause!==true){await sync.current();return;}
+      await Storage.setItemAsync(pauseKey,enabled?"false":"true",{keychainAccessible:Storage.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY});
+      if(!isAuthScopeCurrent(scope)||binding.current!==pauseKey)return;
+      if(!enabled)stop.current();
+    }catch{setMessage("Location sharing unavailable");}
+    finally{controlBusy.current=false;setChanging(false);await sync.current();}
   }
+  async function setupLocation(){
+    const scope=captureAuthScope();
+    try{
+      const accepted=await hasActiveConsentForThisDevice();
+      if(!isAuthScopeCurrent(scope))return;
+      if(!accepted){router.push({pathname:"/location-consent",params:{returnTo:`/fleet-run/${run.id}`}} as never);return;}
+      await enableFleetRunLocation();
+      if(!isAuthScopeCurrent(scope))return;
+      if((await Location.getForegroundPermissionsAsync()).status!=="granted")await Location.requestForegroundPermissionsAsync();
+      if(!isAuthScopeCurrent(scope))return;
+      if((await Location.getBackgroundPermissionsAsync()).status!=="granted")await Location.requestBackgroundPermissionsAsync();
+      if(isAuthScopeCurrent(scope))await sync.current();
+    }catch{if(isAuthScopeCurrent(scope))setMessage("Location sharing unavailable");}
+  }
+  if(!eligible)return null;
   return <View style={{gap:8}}>
-    <Text style={{color:colors.text}}>{copy("Driver phone location")}</Text>
-    <Text style={{color:colors.text}}>{copy("Sharing uses this phone while this screen is open and the app is active. It requires current duty and device consent; it does not provide truck telemetry or prove arrival, loading or delivery.")}</Text>
-    <Text style={{color:colors.text}}>{copy(status.message)}</Text>
-    {status.lastAccepted && <Text style={{color:colors.text}}>{copy("Last accepted phone observation")}: {status.lastAccepted.recordedAt} · {copy(status.lastAccepted.freshness)} · {copy("Accuracy")}: {status.lastAccepted.accuracyMeters ?? copy("unavailable")}</Text>}
-    <TogglePillButton disabled={disabled || run.status!=="in_progress" || run.phase==="paused" || status.state==="checking" || status.state==="sharing"} onPress={start}>{copy("Start foreground phone sharing")}</TogglePillButton>
-    <TogglePillButton onPress={()=>{stop();void stopFleetBackgroundLocation(true).catch(()=>undefined);}}>{copy("Stop phone sharing")}</TogglePillButton>
-    <Text style={{color:colors.text}}>{copy(background.message)}</Text>
-    {background.lastAcceptedAt && <Text style={{color:colors.text}}>{copy("Last accepted background phone report")}: {background.lastAcceptedAt}</Text>}
-    <TogglePillButton disabled={disabled || run.status!=="in_progress" || run.phase==="paused" || background.state==="configured" || background.state==="accepted"} onPress={()=>{stop();void (async()=>{try {await Location.requestBackgroundPermissionsAsync();await startFleetBackgroundLocation(account,run);}catch(error){if(alive.current)setBackground({state:"unavailable",message:error instanceof Error?error.message:"Background phone sharing is unavailable.",lastAcceptedAt:null});}})();}}>{copy("Start duty-bound background phone sharing")}</TogglePillButton>
-    <Text style={{color:colors.text}}>{copy("Background sharing uses this phone only during the verified active run. Always location permission and device consent are required. OS suspension can delay reports; no truck telemetry or physical proof is provided.")}</Text>
-    <TogglePillButton disabled={disabled} onPress={()=>{stop();void stopFleetBackgroundLocation(true).catch(()=>undefined);router.push({pathname:"/location-consent",params:{returnTo:`/fleet-run/${run.id}`}} as never);}}>{copy("Review device location consent")}</TogglePillButton>
+    <Text accessibilityLiveRegion="polite" style={{color:colors.text}}>{copy(message)}</Text>
+    {eligible&&allowPause&&<OptionSwitch label={copy("Share location during this run")} value={!paused} disabled={disabled||changing||checking} onChange={value=>{void changeSharing(value);}}/>}
+    {eligible&&needsSetup&&<TogglePillButton disabled={disabled} onPress={()=>{void setupLocation();}}>{copy("Enable run location")}</TogglePillButton>}
   </View>;
 }

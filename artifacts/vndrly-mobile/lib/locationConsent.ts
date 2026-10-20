@@ -2,6 +2,7 @@ import * as SecureStore from "expo-secure-store";
 
 import { apiFetch } from "./api";
 import { getDeviceId } from "./deviceId";
+import { getUser } from "./auth";
 
 const DECLINED_KEY = "vndrly.locationConsentDeclined";
 
@@ -41,12 +42,16 @@ async function safeDel(key: string): Promise<void> {
 }
 
 export async function isConsentDeclined(): Promise<boolean> {
-  return (await safeGet(DECLINED_KEY)) === "1";
+  const user = await getUser();
+  return user ? (await safeGet(`${DECLINED_KEY}.${user.id}.${user.activeMembershipId ?? 0}`)) === "1" : false;
 }
 
 export async function setConsentDeclined(declined: boolean): Promise<void> {
-  if (declined) await safeSet(DECLINED_KEY, "1");
-  else await safeDel(DECLINED_KEY);
+  const user = await getUser();
+  if (!user) return;
+  const key = `${DECLINED_KEY}.${user.id}.${user.activeMembershipId ?? 0}`;
+  if (declined) await safeSet(key, "1");
+  else await safeDel(key);
 }
 
 export type LocationConsent = {
@@ -66,10 +71,17 @@ export async function getMyConsents(): Promise<LocationConsent[]> {
   }
 }
 
+export async function getDeviceConsentStatus(): Promise<"accepted" | "not_accepted" | "unavailable"> {
+  try {
+    const deviceId = await getDeviceId();
+    const result = await apiFetch<{consents: LocationConsent[]}>("/api/location-consents/me");
+    if (!Array.isArray(result.consents)) return "unavailable";
+    return result.consents.some(c => c.deviceId === deviceId && !c.revokedAt) ? "accepted" : "not_accepted";
+  } catch { return "unavailable"; }
+}
+
 export async function hasActiveConsentForThisDevice(): Promise<boolean> {
-  const deviceId = await getDeviceId();
-  const consents = await getMyConsents();
-  return consents.some((c) => c.deviceId === deviceId && !c.revokedAt);
+  return await getDeviceConsentStatus() === "accepted";
 }
 
 export async function acceptConsent(): Promise<void> {

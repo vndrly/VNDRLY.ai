@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -15,8 +15,9 @@ import {
 import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
-import { acceptConsent, setConsentDeclined } from "@/lib/locationConsent";
+import { acceptConsent, getDeviceConsentStatus, setConsentDeclined } from "@/lib/locationConsent";
 import { fleetConsentReturnRoute } from "@/lib/fleet-mobile";
+import { enableFleetRunLocation } from "@/lib/fleet-location-setup";
 import { startLiveLocationReporter } from "@/lib/liveLocationReporter";
 
 export default function LocationConsentScreen() {
@@ -26,6 +27,16 @@ export default function LocationConsentScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const [checking,setChecking]=useState(true),[unavailable,setUnavailable]=useState(false);
+  useEffect(()=>{
+    let current=true;
+    void getDeviceConsentStatus().then(consent=>{
+      if(!current)return;
+      if(consent === "accepted")router.replace(returnRoute as never);
+      else {setUnavailable(consent === "unavailable");setChecking(false);}
+    }).catch(()=>{if(current){setUnavailable(true);setChecking(false);}});
+    return()=>{current=false;};
+  },[returnRoute]);
 
   const onAccept = async () => {
     setBusy(true);
@@ -41,7 +52,8 @@ export default function LocationConsentScreen() {
         // foreground-only updates while the app is open.
         try { await Location.requestBackgroundPermissionsAsync(); } catch { /* ignore */ }
       }
-      await acceptConsent();
+      if (fleetReturn) await enableFleetRunLocation();
+      else await acceptConsent();
       await setConsentDeclined(false);
       await startLiveLocationReporter();
       router.replace(returnRoute as never);
@@ -57,6 +69,8 @@ export default function LocationConsentScreen() {
     router.replace(returnRoute as never);
   };
 
+  if(checking)return <View style={styles.flex}/>;
+  if(unavailable)return <View style={styles.flex}><InPageHeader title={t("consent.title")} onBack={()=>router.replace(returnRoute as never)}/><Text style={[styles.body,{color:colors.mutedForeground,padding:24}]}>{t("consent.checkUnavailable")}</Text></View>;
   return (
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -112,7 +126,7 @@ function Bullet({ icon, text, color, fg }: { icon: any; text: string; color: str
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scroll: { padding: 24, alignItems: "center" },
+  scroll: { padding: 24, paddingBottom: 48, alignItems: "center" },
   iconWrap: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", marginBottom: 16, marginTop: 24 },
   title: { fontSize: 22, fontFamily: "Inter_700Bold", textAlign: "center", marginBottom: 12 },
   body: { fontSize: 15, lineHeight: 22, fontFamily: "Inter_400Regular", textAlign: "center", marginBottom: 16 },
@@ -120,7 +134,7 @@ const styles = StyleSheet.create({
   bullets: { width: "100%", borderWidth: 1, borderRadius: 12, padding: 12, gap: 10, marginBottom: 24 },
   bullet: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
   bulletText: { flex: 1, fontSize: 13, lineHeight: 19, fontFamily: "Inter_400Regular" },
-  primary: { width: "100%", paddingVertical: 14, borderRadius: 12, alignItems: "center", marginBottom: 8 },
+  primary: { width: "100%", borderRadius: 12, alignItems: "center", marginBottom: 8 },
   primaryText: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   secondary: { width: "100%", paddingVertical: 14, alignItems: "center" },
   secondaryText: { fontSize: 15, fontFamily: "Inter_500Medium" },

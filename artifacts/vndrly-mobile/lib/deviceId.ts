@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import { captureAuthScope, getUser, isAuthScopeCurrent } from "./auth";
 
 const KEY = "vndrly.deviceId";
 let cached: string | null = null;
@@ -39,7 +40,7 @@ async function setStore(key: string, value: string): Promise<void> {
   }
 }
 
-export async function getDeviceId(): Promise<string> {
+async function installationDeviceId(): Promise<string> {
   if (cached) return cached;
   let id = await getStore(KEY);
   if (!id) {
@@ -48,4 +49,23 @@ export async function getDeviceId(): Promise<string> {
   }
   cached = id;
   return id;
+}
+
+export async function getDeviceId(): Promise<string> {
+  const scope = captureAuthScope(), user = await getUser();
+  const key = user ? `${KEY}.${user.id}.${user.activeMembershipId ?? 0}` : null;
+  const id = (key ? await getStore(key) : null) ?? await installationDeviceId();
+  if (!isAuthScopeCurrent(scope)) throw new Error("Account changed. Reopen device setup.");
+  return id;
+}
+
+/** Only adopt the server-returned owned registration in the initiating account. */
+export async function adoptAccountDeviceId(id: string, userId: number, membershipId: number) {
+  const scope = captureAuthScope(), user = await getUser();
+  if (!user || user.id !== userId || (user.activeMembershipId ?? 0) !== membershipId || !isAuthScopeCurrent(scope)) throw new Error("Account changed. Reopen device setup.");
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)) throw new Error("Invalid device registration.");
+  const key = `${KEY}.${userId}.${membershipId}`;
+  if (typeof window !== "undefined" && window.localStorage) window.localStorage.setItem(key, id);
+  else await SecureStore.setItemAsync(key, id);
+  if (!isAuthScopeCurrent(scope)) throw new Error("Account changed. Reopen device setup.");
 }

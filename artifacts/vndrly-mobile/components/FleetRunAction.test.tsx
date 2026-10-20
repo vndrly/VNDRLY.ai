@@ -23,14 +23,12 @@ describe("Fleet reported workflow forms", () => {
     fireEvent.click(screen.getByRole("button", { name: "link ticket" }));
     expect(submit).toHaveBeenCalledWith({ ticketId: 77 });
   });
-  it("requires explicit meter units and records the supplied reading without inventing mileage", () => {
+  it("records the supplied odometer reading in miles without a unit selection", () => {
     const submit = vi.fn();
     render(<FleetRunAction run={run} action="record_meter" disabled={false} onSubmit={submit} />);
     fireEvent.change(screen.getByLabelText("record_meter reading"), { target: { value: "8100" } });
     fireEvent.change(screen.getByLabelText("record_meter notes"), { target: { value: "Truck odometer at pickup" } });
-    fireEvent.click(screen.getByRole("button", { name: "record meter" }));
-    expect(submit).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "miles" }));
+    expect(screen.queryByRole("button", { name: /miles|kilometers|engine hours/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "record meter" }));
     expect(submit).toHaveBeenCalledWith({ reading: 8100, notes: "Truck odometer at pickup", unit: "miles" });
   });

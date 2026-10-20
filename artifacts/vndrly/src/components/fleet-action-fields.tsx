@@ -33,7 +33,7 @@ export function FleetActionFields({
   const { i18n } = useTranslation();
   const c = fleetCopy(i18n.language);
   const update = (fields: Partial<FleetActionInput>) =>
-    onChange({ ...input, ...fields });
+    onChange({ ...input, ...fields, ...(input.action==="record_meter"?{unit:"miles"}:{}) });
   const text = (
     key:
       | "notes"
@@ -65,7 +65,7 @@ export function FleetActionFields({
           </p>
           <label className="block">
             {input.action === "record_meter"
-              ? "Meter reading"
+              ? c.odometerReading
               : "Fuel quantity"}
             <input
               disabled={disabled}
@@ -86,7 +86,7 @@ export function FleetActionFields({
               }
             />
           </label>
-          <label className="block">
+          {input.action==="record_fuel"&&<label className="block">
             Unit
             <select
               disabled={disabled}
@@ -94,16 +94,13 @@ export function FleetActionFields({
               onChange={(e) => update({ unit: e.target.value })}
             >
               <option value="">Choose unit</option>
-              {(input.action === "record_meter"
-                ? ["miles", "kilometers", "engine_hours"]
-                : ["gallons", "liters"]
-              ).map((unit) => (
+              {["gallons", "liters"].map((unit) => (
                 <option key={unit} value={unit}>
                   {unit.replaceAll("_", " ")}
                 </option>
               ))}
             </select>
-          </label>
+          </label>}
           {text("notes", "Reading notes")}
         </>
       )}

@@ -7,7 +7,7 @@ export type NativeDeviceRequest = {
   result?: { late?: boolean; photo?: { noteId?: number; objectPath?: string } } | null;
 };
 export type NativeOperationsStatus = {
-  policy: { enabled: boolean; automaticArrival?: boolean; modules?: string[]; dutyModes?: ("manual" | "ticket" | "scheduled")[] };
+  policy: { enabled: boolean; automaticArrival?: boolean; allowDriverLocationPause?: boolean; modules?: string[]; dutyModes?: ("manual" | "ticket" | "scheduled")[] };
   duty: { active: boolean; startedAt?: string; mode?: string } | null;
   consent: { locationSharing: boolean; automaticArrival?: boolean };
   designatedDeviceId: string | null; bindingVersion: number;
