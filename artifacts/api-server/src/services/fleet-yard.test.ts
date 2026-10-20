@@ -444,7 +444,7 @@ describe("Yard and custody authorization regressions", () => {
   const actor = (caps: string[] = ["dispatch"]) => ({ userId: 12, companyId: 7, role: "field_employee", membershipRole: "field_employee", activeMembershipId: 5, sv: 1, fleetCapabilities: new Set(caps) }) as any;
   const fleetA = id(), fleetB = id(), truckA = id(), truckB = id(), dolly = id(), tank = id(), runId = id();
   const state = () => ({ ...emptyFleetState(), enabled: true,
-    fleets: [{ id: fleetA, name: "A", siteIds: [], equipmentAssetIds: [truckA, dolly, tank], requiredCertifications: [] }, { id: fleetB, name: "B", siteIds: [], equipmentAssetIds: [truckB], requiredCertifications: [] }],
+    fleets: [{ id: fleetA, name: "A", siteIds: [] as number[], equipmentAssetIds: [truckA, dolly, tank], requiredCertifications: [] }, { id: fleetB, name: "B", siteIds: [] as number[], equipmentAssetIds: [truckB], requiredCertifications: [] }],
     grants: [{ userId: 12, fleetIds: [fleetA], siteIds: [], roles: ["dispatcher", "driver"], safetyRelease: false, financeRead: false }, { userId: 13, fleetIds: [fleetB], siteIds: [], roles: ["yard"], safetyRelease: false, financeRead: false }],
     runs: [] as any[],
   });

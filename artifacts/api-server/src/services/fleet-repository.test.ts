@@ -290,7 +290,7 @@ describe("stored Fleet capabilities through the repository and service", () => {
       attributes: { kind: "driver_license", issuingState: "OK", licenseNumber: `PRIVATE-${driverId}`, licenseClass: "A", endorsements: [], restrictions: [], licenseStatus: "active", sourceRecordId: null },
       retentionClass: "qualification", retainUntil: null, legalHold: false,
     }));
-    const stored = new Map(records.map((record) => {
+    const stored = new Map<string, (typeof records)[number]>(records.map((record) => {
       const digest = createHmac("sha256", secret).update(JSON.stringify(record)).digest("hex");
       return [`/objects/fleet-compliance-private/7/${record.evidence.id}/1/${digest}`, record] as const;
     }));
