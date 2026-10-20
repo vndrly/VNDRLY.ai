@@ -63,6 +63,8 @@
     "refreshResults": "Refresh vendors",
     "rating": "Rating",
     "safety": "Safety",
+    "vndrlySafety": "VNDRLY safety and compliance score",
+    "advisoryHiring": "Advisory information only. VNDRLY does not block tickets; your company decides whom to hire.",
     "notRated": "Not yet rated",
     "history": "{{jobs}} completed jobs · {{prior}} prior partner jobs",
     "onTime": "On-time performance",

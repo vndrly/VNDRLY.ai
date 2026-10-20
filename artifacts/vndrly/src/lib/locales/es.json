@@ -70,6 +70,8 @@
     "ratingValue_one": "{{rating}} / 5 ({{count}} reseña)",
     "ratingValue_other": "{{rating}} / 5 ({{count}} reseñas)",
     "safety": "Puntaje de seguridad · fuente · actualización",
+    "vndrlySafety": "Puntuación de seguridad y cumplimiento de VNDRLY",
+    "advisoryHiring": "Información solo orientativa. VNDRLY no bloquea tickets; su empresa decide a quién contratar.",
     "distance": "Distancia y cobertura",
     "distanceValue": "{{distance}} millas · radio {{radius}} millas",
     "history": "Historial de trabajo relevante",

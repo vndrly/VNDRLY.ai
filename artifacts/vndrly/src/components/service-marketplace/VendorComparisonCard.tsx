@@ -77,11 +77,11 @@ export default function VendorComparisonCard({
           </dd>
         </div>
         <div>
-          <dt>{t("partnerMarketplace.safety")}</dt>
+          <dt>{t("partnerMarketplace.vndrlySafety")}</dt>
           <dd>
             {vendor.safety === null
               ? unknown
-              : `${vendor.safety.score} / 100 · ${vendor.safety.source} · ${vendor.safety.refreshedAt.slice(0, 10)}`}
+              : `${vendor.safety.score < 60 ? "🔴" : vendor.safety.score < 85 ? "🟠" : "🟢"} ${vendor.safety.score} / 100 · ${vendor.safety.source} · ${vendor.safety.refreshedAt.slice(0, 10)}`}
           </dd>
         </div>
         <div>
@@ -142,6 +142,9 @@ export default function VendorComparisonCard({
           </dd>
         </div>
       </dl>
+      <p className="text-sm text-muted-foreground">
+        {t("partnerMarketplace.advisoryHiring")}
+      </p>
       {vendor.offer.commercialConditions && (
         <p className="text-sm">{vendor.offer.commercialConditions}</p>
       )}

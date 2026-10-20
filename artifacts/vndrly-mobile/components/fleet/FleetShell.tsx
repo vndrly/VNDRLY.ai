@@ -20,6 +20,7 @@ const DispatchBoard = React.lazy(() => import("./DispatchBoard"));
 const FleetOfficeBoard = React.lazy(() => import("./FleetOfficeBoard"));
 const DriverFleetDay = React.lazy(() => import("./DriverFleetDay"));
 const FleetRunOrders = React.lazy(() => import("@/components/FleetRunOrders"));
+const FleetComplianceHelper = React.lazy(() => import("./FleetComplianceHelper"));
 
 export const FLEET_MODULES = ["home", "dispatch", "yard", "driver", "office", "assets", "runs", "map", "history", "locations", "compliance", "setup"] as const;
 export type FleetModuleId = typeof FLEET_MODULES[number];
@@ -65,7 +66,7 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
   const renderModule = (id: FleetModuleId) => {
     const entry = modules[id];
     const fallback: ReactNode = id === "home" ? null : id === "setup" ? <FleetSetup key={setupIdentity} onSaved={home.retry} /> : <Suspense fallback={<Text>{copy(`Loading ${moduleLabels[id]}`)}</Text>}>
-      {id === "yard" ? <YardBoard initialYardOrderId={initialYardOrderId} initialRunId={initialRunId} /> : id === "assets" ? <AssetWorkspace initialAssetId={initialAssetId} initialRunId={initialRunId} /> : id === "dispatch" ? <DispatchBoard /> : id === "driver" ? <DriverFleetDay initialRunId={initialRunId} onOpenYard={(yardOrderId, runId) => open("yard", runId, yardOrderId)} /> : id === "office" ? <FleetOfficeBoard /> : id === "runs" ? <FleetRunOrders companyId={activeMembership?.orgId ?? user?.vendorId ?? 0} /> : <FleetLegacyWorkspace embedded initialMode={legacyModes[id as keyof typeof legacyModes]} initialRunId={initialRunId} />}
+      {id === "yard" ? <YardBoard initialYardOrderId={initialYardOrderId} initialRunId={initialRunId} /> : id === "assets" ? <AssetWorkspace initialAssetId={initialAssetId} initialRunId={initialRunId} /> : id === "dispatch" ? <DispatchBoard /> : id === "driver" ? <DriverFleetDay initialRunId={initialRunId} onOpenYard={(yardOrderId, runId) => open("yard", runId, yardOrderId)} /> : id === "office" ? <FleetOfficeBoard /> : id === "runs" ? <FleetRunOrders companyId={activeMembership?.orgId ?? user?.vendorId ?? 0} /> : id === "compliance" ? <FleetComplianceHelper onOpenRegisters={() => router.push("/(tabs)/fleet-compliance" as never)} /> : <FleetLegacyWorkspace embedded initialMode={legacyModes[id as keyof typeof legacyModes]} initialRunId={initialRunId} />}
     </Suspense>;
     return <View key={id} style={{ width: wide && module === "home" ? "48%" : "100%", minWidth: 0 }}>
       <FleetModuleBoundary module={id} title={copy(moduleLabels[id])} state={entry?.state} error={entry?.error} onRetry={entry?.onRetry} onReview={entry?.onReview}>

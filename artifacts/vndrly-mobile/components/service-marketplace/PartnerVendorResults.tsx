@@ -161,11 +161,11 @@ export default function PartnerVendorResults({
                   ? t("mobileMarketplace.notRated")
                   : `${vendor.rating} (${vendor.reviewCount})`}
               </Label>
-              <Label>{t("mobileMarketplace.safety")}</Label>
+              <Label>{t("mobileMarketplace.vndrlySafety")}</Label>
               <Label>
                 {vendor.safetyStatus === "not_yet_rated" || !vendor.safety
                   ? t("mobileMarketplace.notRated")
-                  : `${vendor.safety.score} · ${vendor.safety.source} · ${vendor.safety.refreshedAt}`}
+                  : `${vendor.safety.score < 60 ? "🔴" : vendor.safety.score < 85 ? "🟠" : "🟢"} ${vendor.safety.score} / 100 · ${vendor.safety.source} · ${vendor.safety.refreshedAt}`}
               </Label>
               <Label>
                 {t("mobileMarketplace.history", {
@@ -206,6 +206,7 @@ export default function PartnerVendorResults({
                       )
                       .join(", ")}
               </Label>
+              <Label>{t("mobileMarketplace.advisoryHiring")}</Label>
               {vendor.eligibility.facts.missingCredentials.length > 0 && (
                 <Label>
                   {vendor.eligibility.facts.missingCredentials.join(", ")}

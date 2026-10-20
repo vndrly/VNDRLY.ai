@@ -1,6 +1,6 @@
 import {currentFleetPositions,fleetCurrentPhoneSpeed} from "@workspace/api-zod";
 import React, { useState } from "react";
-import { Text, View, Pressable, useWindowDimensions } from "react-native";
+import { Text, TextInput, View, Pressable, useWindowDimensions } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import type {
   FleetOverview,
@@ -85,6 +85,7 @@ function FleetMapPanel({
   const [mapMode, setMapMode] = useState<"live" | "history">("live"),
     [followDriver, setFollowDriver] = useState<number | null>(null),
     [replayRun, setReplayRun] = useState<string | null>(null);
+  const [historySearch, setHistorySearch] = useState("");
   const [runPickerOpen, setRunPickerOpen] = useState(false);
   const [cameraReset,setCameraReset]=useState(0);
   const history = useQuery({
@@ -202,6 +203,14 @@ function FleetMapPanel({
       : shownPositions.find(point => view.runs.find(run => run.id === point.runId)?.driverUserId === followDriver);
   const active = (run: FleetRun) =>
     !["completed", "cancelled"].includes(run.status);
+  const locationSummary = (observation: FleetOverview["observations"][number]) => {
+    const confidence = observation.freshness === "recent"
+      ? copy("Current observation")
+      : observation.freshness === "stale"
+        ? copy("Stale observation")
+        : copy("Paused or unavailable observation");
+    return `${copy("VNDRLY driver phone")} · ${confidence} · ${new Date(observation.recordedAt).toLocaleString()}`;
+  };
   const row = (
     id: string,
     name: string,
@@ -238,6 +247,7 @@ function FleetMapPanel({
             new Date(observation.recordedAt).toLocaleString()
           : copy("No reported location")}
       </Text>
+      {observation && <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{locationSummary(observation)}</Text>}
       {id.startsWith("driver-")&&<TogglePillButton compactOnTablet disabled={!observation} solid={followDriver===Number(id.slice(7))} onPress={()=>{setFollowDriver(Number(id.slice(7)));setMapMode("live");setSelected(run?.vehicleAssetId ?? id);}}>{`${copy("Follow")} · ${name}`}</TogglePillButton>}
       {run && (
         <TogglePillButton compactOnTablet onPress={() => onOpen(run)}>
@@ -342,8 +352,12 @@ function FleetMapPanel({
       </View>
       {mapMode === "history" ? (
         <View style={{ gap: 10 }}>
+          <TextInput accessibilityLabel={copy("Search Fleet history")} placeholder={copy("Search runs, drivers, trucks, or tickets")} placeholderTextColor={colors.mutedForeground} value={historySearch} onChangeText={setHistorySearch} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12 }} />
           <TogglePillButton compactOnTablet accessibilityLabel="Choose recorded run" onPress={() => setRunPickerOpen(value => !value)}>{view.runs.find(run => run.id === replayRun)?.title ?? copy("Choose a recorded run")} ▾</TogglePillButton>
-          {runPickerOpen && view.runs.map((run) => (
+          {runPickerOpen && view.runs.filter((run) => {
+            const needle = historySearch.trim().toLowerCase();
+            return !needle || [run.title, run.labels?.driverName, run.labels?.vehicleName, run.linkedTicketId ? `ticket ${run.linkedTicketId}` : ""].some((value) => value?.toLowerCase().includes(needle));
+          }).map((run) => (
             <TogglePillButton
               compactOnTablet
               key={run.id}
@@ -474,7 +488,7 @@ function FleetMapPanel({
       {!shownPositions.length && <Text style={{ color: colors.text }}>{copy("No recent positions in this view")}</Text>}
       {shownPositions.map((point, index) => {
         const run = view.runs.find(item => item.id === point.runId)!;
-        return <Pressable key={point.vehicleAssetId ?? run.vehicleAssetId} accessibilityRole="button" accessibilityLabel={`${index + 1} · ${run.labels?.vehicleName ?? copy("Assigned vehicle")}`} onPress={() => { setSelected(point.vehicleAssetId ?? run.vehicleAssetId); setExpanded(false); onOpen(run); }} style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{index + 1} · {run.labels?.vehicleName ?? copy("Assigned vehicle")}</Text><Text style={{ color: colors.mutedForeground }}>{run.labels?.driverName ?? copy("Assigned driver")} · {run.title}</Text><Text style={{ color: colors.mutedForeground }}>{copy(point.freshness === "recent" ? "Recent" : "Stale / paused")} · {new Date(point.recordedAt).toLocaleString()}</Text></Pressable>;
+        return <Pressable key={point.vehicleAssetId ?? run.vehicleAssetId} accessibilityRole="button" accessibilityLabel={`${index + 1} · ${run.labels?.vehicleName ?? copy("Assigned vehicle")}`} onPress={() => { setSelected(point.vehicleAssetId ?? run.vehicleAssetId); setExpanded(false); onOpen(run); }} style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{index + 1} · {run.labels?.vehicleName ?? copy("Assigned vehicle")}</Text><Text style={{ color: colors.mutedForeground }}>{run.labels?.driverName ?? copy("Assigned driver")} · {run.title}</Text><Text style={{ color: colors.mutedForeground }}>{copy(point.freshness === "recent" ? "Recent" : "Stale / paused")} · {locationSummary(point)}</Text></Pressable>;
       })}
       {company && !site && (
         <Text style={{ color: colors.mutedForeground }}>

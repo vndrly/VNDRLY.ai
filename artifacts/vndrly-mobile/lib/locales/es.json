@@ -63,6 +63,8 @@
     "refreshResults": "Actualizar proveedores",
     "rating": "Calificación",
     "safety": "Seguridad",
+    "vndrlySafety": "Puntuación de seguridad y cumplimiento de VNDRLY",
+    "advisoryHiring": "Información solo orientativa. VNDRLY no bloquea tickets; su empresa decide a quién contratar.",
     "notRated": "Aún sin calificación",
     "history": "{{jobs}} trabajos completados · {{prior}} trabajos previos con el socio",
     "onTime": "Puntualidad",

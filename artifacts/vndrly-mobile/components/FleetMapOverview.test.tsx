@@ -28,3 +28,18 @@ it("numbers the latest vehicle positions, hides stale pins until requested and s
  expect(points).toHaveLength(2);expect(points[1]).toMatchObject({label:"2",color:"#6b7280"});
  const before=mocks.map.mock.lastCall![0].height;fireEvent.click(screen.getByText("Expand map"));expect(mocks.map.mock.lastCall![0].height).toBeGreaterThan(before);
 });
+it("labels VNDRLY location source, freshness confidence and capture time",()=>{
+ mocks.query.mockReturnValue({data:{company:{name:"Synthetic HQ",latitude:35.5,longitude:-97.2},sites:[]}});
+ render(<FleetMapOverview overview={{companyId:7,fleets:[],runs:[{id:"r1",siteIds:[9],driverUserId:2,vehicleAssetId:"truck",linkedTicketId:null,status:"in_progress",title:"Synthetic current",events:[]}],observations:[{runId:"r1",vehicleAssetId:"truck",driverUserId:2,latitude:36,longitude:-98,accuracyMeters:18,source:"driver_phone",freshness:"recent",recordedAt:"2026-10-15T12:00:00Z",receivedAt:"2026-10-15T12:00:01Z",physicalProofVerified:false}]} as any} resources={{equipment:[],drivers:[]} as any} onOpen={vi.fn()}/>);
+ expect(screen.getAllByText(/VNDRLY driver phone · Current observation/).length).toBeGreaterThan(0);
+ expect(screen.getByText(/Phone locations identify the reporting driver/)).toBeTruthy();
+});
+
+it("searches recorded history by driver, truck, run or ticket",()=>{
+ mocks.query.mockReturnValue({data:{company:{name:"Synthetic HQ",latitude:35.5,longitude:-97.2},sites:[]}});
+ render(<FleetMapOverview overview={{companyId:7,fleets:[],runs:[{id:"r1",siteIds:[9],driverUserId:2,vehicleAssetId:"truck",linkedTicketId:42,status:"completed",title:"North haul",events:[],labels:{driverName:"Dana Driver",vehicleName:"Truck 12"}},{id:"r2",siteIds:[9],driverUserId:3,vehicleAssetId:"truck2",linkedTicketId:43,status:"completed",title:"South haul",events:[],labels:{driverName:"Pat Driver",vehicleName:"Truck 9"}}],observations:[]} as any} resources={{equipment:[],drivers:[]} as any} onOpen={vi.fn()}/>);
+ fireEvent.click(screen.getByText("History & Replay"));
+ fireEvent.change(screen.getByLabelText("Search Fleet history"),{target:{value:"Truck 12"}});
+ fireEvent.click(screen.getByRole("button",{name:"Choose recorded run"}));
+ expect(screen.getByText(/North haul/)).toBeTruthy();expect(screen.queryByText(/South haul/)).toBeNull();
+});

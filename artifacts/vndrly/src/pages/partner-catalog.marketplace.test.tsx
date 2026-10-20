@@ -50,7 +50,7 @@ const midcon: MarketplaceRankedVendor = {
   reviewCount: 12,
   ratingStatus: "rated",
   safetyStatus: "rated",
-  safety: { score: 96, source: "PEC", refreshedAt: "2026-10-17T00:00:00Z" },
+  safety: { score: 96, source: "VNDRLY safety events", refreshedAt: "2026-10-17T00:00:00Z" },
   completedJobs: 25,
   onTimeRate: 0.96,
   priorPartnerJobs: 8,
@@ -259,7 +259,7 @@ describe("partner marketplace", () => {
     for (const fact of [
       "USD 45.00 / per_hour",
       "4.8 / 5 (12 reviews)",
-      "96 / 100 · PEC · 2026-10-17",
+      "🟢 96 / 100 · VNDRLY safety events · 2026-10-17",
       "25 completed jobs",
       "96% on time",
       "8 jobs with this partner",
@@ -271,6 +271,9 @@ describe("partner marketplace", () => {
     expect(
       within(card).getByText(/70 miles from the saved service base/),
     ).toBeTruthy();
+    expect(within(card).getByText("VNDRLY safety and compliance score")).toBeTruthy();
+    expect(within(card).getByText(/🟢 96 \/ 100 · VNDRLY safety events/)).toBeTruthy();
+    expect(within(card).getByText(/VNDRLY does not block tickets/)).toBeTruthy();
     expect(screen.getAllByText("Not yet rated").length).toBe(2);
     expect(screen.getByText("Out of Service Area")).toBeTruthy();
     expect(

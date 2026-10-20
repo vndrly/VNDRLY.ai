@@ -444,6 +444,8 @@ describe("mobile service marketplace", () => {
   });
   it("uses server eligibility and unknown evidence labels without turning missing evidence into zero", async () => {
     await partner();
+    expect(screen.getAllByText("VNDRLY safety and compliance score").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/VNDRLY does not block tickets/).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Not yet rated").length).toBe(4);
     expect(screen.getByText("Out of Service Area")).toBeTruthy();
     expect(

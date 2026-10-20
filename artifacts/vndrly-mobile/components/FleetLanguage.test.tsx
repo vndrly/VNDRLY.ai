@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FleetRun } from "@workspace/api-zod";
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 1 }, activeMembershipId: 1 }) }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 1, vendorId: 609 }, activeMembershipId: 1, activeMembership: { id: 1, orgType: "vendor", orgId: 609, role: "admin" } }) }));
 vi.mock("@/lib/fleet-offline-native", () => ({ nativeFleetOffline: { read: async () => ({ actions: [] }), cache: async () => {} } }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ text: "black", border: "gray", destructive: "red" }) }));
 vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
@@ -29,7 +29,7 @@ describe("Fleet existing language choice", () => {
     expect(await screen.findByText("Mi jornada de flota")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Más" }));
     expect(screen.getByText("Ajustes de flota")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", {name:"Map"}));
+    fireEvent.click(screen.getByRole("button", {name:"Mapa"}));
     expect(await screen.findByText(/Las ubicaciones de teléfonos identifican al conductor/)).toBeTruthy();
   });
   it("localizes inspection fields without changing the supplied values", () => {
