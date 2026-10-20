@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.20.0
+
+Adds permission-scoped Fleet Home, Yard Order, custody, and canonical compliance-score reads plus confirmed Yard and custody actions. Company, actor, membership, session, and operation identity remain server-bound; permitted Driver Yard/self-dispatch capability is rechecked by the API. Compliance deductions remain advisory and ticket flow remains available. Preserve the existing plugin/app identity, linked accounts, and grants: the new actions require separate `fleet:yard` consent, and existing `fleet:dispatch` or `fleet:run` grants do not expand. Completion requires exact operation recovery and independent canonical readback.
+
 # VNDRLY plugin 1.19.0
 
 Adds office-authorized Gate post-day billing across web/native/Ask V/ChatGPT: completed America/Chicago days, explicit approved agreement and first unbilled date, full partial-day rate unless agreement overrides, reviewed coverage gaps, continuation, conditional completed-day requests and opt-in interval. Uses existing financial scopes and exact trusted confirmation. Original receipt plus independent post readback distinguish submitted-for-partner-approval from delivered/paid. Assume/Handoff share the employee workday clock, separate from billing. Existing identity, accounts, grants and five service skills preserved. Installation, live scoped verification and public review are separate release evidence.

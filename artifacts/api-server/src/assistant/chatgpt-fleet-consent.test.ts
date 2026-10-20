@@ -44,10 +44,17 @@ describe("Fleet consent discovery", () => {
     expect(result.some(item => item.tool.name === "query_fleet_resources")).toBe(false);
     expect(scopes).toEqual(["tickets:read"]);
   });
+  it("offers Yard actions through a separate explicit scope without changing existing run consent", () => {
+    const scopes = ["fleet:run"];
+    const result = fleetConsentUpgradeTools(session, scopes, overview);
+    expect(result.filter(item => item.scope === "fleet:yard").map(item => item.tool.name)).toEqual(["manage_fleet_yard_order", "record_fleet_custody"]);
+    expect(scopes).toEqual(["fleet:run"]);
+    expect(fleetToolSecuritySchemes("manage_fleet_yard_order")).toEqual([{ type: "oauth2", scopes: ["fleet:yard"] }]);
+  });
   it("denies foreign company, absent authority and already consented hints", () => {
     expect(fleetConsentUpgradeTools(session, [], {...overview, companyId: 21})).toEqual([]);
     expect(fleetConsentUpgradeTools(session, [], null)).toEqual([]);
-    expect(fleetConsentUpgradeTools(session, ["fleet:read", "fleet:run"], overview)).toEqual([]);
+    expect(fleetConsentUpgradeTools(session, ["fleet:read", "fleet:run", "fleet:yard"], overview)).toEqual([]);
   });
   it("does not derive Fleet privileges from a title alone", () => {
     expect(fleetConsentUpgradeTools({...session, vendorRole: "foreman"}, [], {...overview, roles: [], capabilities: {...overview.capabilities, canDrive: false}})).toEqual([]);

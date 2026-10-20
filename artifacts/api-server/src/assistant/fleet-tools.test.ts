@@ -1,12 +1,71 @@
 import { describe, expect, it } from "vitest";
 import { chatGptActionTools, chatGptReadToolAnnotations } from "./chatgpt-tool-access";
 import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
-import { resolveExecutableWorkHubToolRequest } from "./work-hub-tool-runtime";
-import { validateChatGptActionInput } from "./chatgpt-write-capabilities";
+import { bindWorkHubToolScope, resolveExecutableWorkHubToolRequest } from "./work-hub-tool-runtime";
+import { sanitizeChatGptActionInput, validateChatGptActionInput } from "./chatgpt-write-capabilities";
 const runId = "11111111-1111-4111-8111-111111111111",
   operationId = "22222222-2222-4222-8222-222222222222";
 const session = { userId: 1, role: "vendor", membershipRole: "admin" };
+const fleetSession = { ...session, vendorId: 42, activeMembershipId: 9, sv: 3 };
 describe("Fleet assistant canonical action boundary", () => {
+  it("preserves strict Fleet mobile workflow inputs instead of injecting model-visible company scope", () => {
+    const actor = { vendorId: 42, partnerId: null };
+    expect(bindWorkHubToolScope({ module: "yard" }, actor, "query_fleet_home")).toEqual({ module: "yard" });
+    expect(bindWorkHubToolScope({ limit: 20 }, actor, "query_fleet_yard_orders")).toEqual({ limit: 20 });
+    expect(bindWorkHubToolScope({}, actor, "query_fleet_compliance_score")).toEqual({});
+    expect(bindWorkHubToolScope({ assetId: runId }, actor, "query_fleet_custody")).toEqual({ assetId: runId });
+  });
+
+  it("exposes scoped Fleet workflow reads and confirmation-bound actions without model authority fields", () => {
+    for (const name of ["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_compliance_score"])
+      expect(CHATGPT_READ_CAPABILITIES["fleet:read"].tools).toContain(name);
+
+    const previousActions = chatGptActionTools(session, ["fleet:dispatch", "fleet:run"]).map((tool) => tool.name);
+    expect(previousActions).not.toEqual(expect.arrayContaining(["manage_fleet_yard_order", "record_fleet_custody"]));
+    const actions = chatGptActionTools(session, ["fleet:yard"]).map((tool) => tool.name);
+    expect(actions).toEqual(expect.arrayContaining(["manage_fleet_yard_order", "record_fleet_custody"]));
+    expect(sanitizeChatGptActionInput("record_fleet_custody", {
+      assetId: runId,
+      companyId: 99,
+      observedByUserId: 88,
+      scope: { owner: { type: "vendor", id: 99 } },
+      operationId,
+      confirmed: true,
+    })).toEqual({ assetId: runId });
+  });
+
+  it("routes canonical Fleet mobile reads without caller-supplied scope", () => {
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_home", { module: "driver" }, false, fleetSession)).toEqual({ method: "GET", path: "/fleet/home?module=driver", body: {} });
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_yard_orders", { limit: 20 }, false, fleetSession)).toEqual({ method: "GET", path: "/fleet/yard-orders?limit=20", body: {} });
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_custody", { assetId: runId, limit: 10 }, false, fleetSession)).toEqual({ method: "GET", path: `/fleet/custody?assetId=${runId}&limit=10`, body: {} });
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_compliance_score", {}, false, fleetSession)).toEqual({ method: "GET", path: "/fleet/compliance-score", body: {} });
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_compliance_score", { companyId: 99 }, false, fleetSession)).toHaveProperty("error");
+  });
+
+  it("binds Yard and custody actions to the signed membership and one recoverable operation identity", () => {
+    const yard = { orderId: runId, expectedVersion: 2, kind: "report", outcome: "ready", notes: "Rigging verified", operationId };
+    expect(resolveExecutableWorkHubToolRequest("manage_fleet_yard_order", yard, false, fleetSession)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("manage_fleet_yard_order", yard, true, fleetSession)).toMatchObject({
+      method: "POST",
+      path: `/fleet/yard-orders/${runId}/actions`,
+      body: { operationId, expectedVersion: 2, orderId: runId, kind: "report", outcome: "ready", scope: { owner: { type: "vendor", id: 42 }, userId: 1, membershipId: 9, sessionVersion: 3 } },
+    });
+
+    const custody = { expectedVersion: 1, assetId: runId, state: "at_yard", method: "driver_app", observedAt: "2026-10-20T12:00:00.000Z", latitude: 35.2, longitude: -97.4, operationId, companyId: 99, observedByUserId: 88 };
+    expect(resolveExecutableWorkHubToolRequest("record_fleet_custody", custody, true, fleetSession)).toMatchObject({
+      method: "POST",
+      path: "/fleet/custody/operations",
+      body: { operationId, observation: { companyId: 42, observedByUserId: 1, assetId: runId, latitude: 35.2, longitude: -97.4 } },
+    });
+    expect(resolveExecutableWorkHubToolRequest("record_fleet_custody", { ...custody, longitude: null }, true, fleetSession)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("record_fleet_custody", custody, true, { ...fleetSession, activeMembershipId: null })).toHaveProperty("error");
+  });
+
+  it("validates exact Yard and custody prepared-action shapes before approval", () => {
+    expect(() => validateChatGptActionInput("manage_fleet_yard_order", { orderId: runId, expectedVersion: 2, kind: "start", operationId })).not.toThrow();
+    expect(() => validateChatGptActionInput("manage_fleet_yard_order", { orderId: runId, expectedVersion: -1, kind: "start", operationId })).toThrow();
+    expect(() => validateChatGptActionInput("record_fleet_custody", { expectedVersion: 1, assetId: runId, state: "at_yard", method: "manual", observedAt: "2026-10-20T12:00:00.000Z", latitude: 35.2, operationId })).toThrow();
+  });
   it("keeps cargo dispatch and own-driver consent families separate", () => {
     const dispatch=chatGptActionTools(session,["fleet:dispatch"]).map(tool=>tool.name),driver=chatGptActionTools(session,["fleet:run"]).map(tool=>tool.name);
     expect(dispatch).toContain("prepare_fleet_cargo_transfer");expect(dispatch).toContain("complete_fleet_cargo_transfer");expect(dispatch).not.toContain("acknowledge_fleet_cargo_source");

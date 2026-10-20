@@ -1,7 +1,7 @@
 import { MARKETPLACE_WRITE_TOOL_NAMES, isMarketplaceTool, sanitizeMarketplaceInput } from "./marketplace-tool-catalog";
 import {GATE_DAILY_BILLING_ARGUMENTS} from "./gate-daily-billing-tools";
 import {FLEET_AUXILIARY_DEFINITIONS,FLEET_COMMERCIAL_DEFINITIONS} from "./fleet-commercial-tools";
-import {WorkdayAssistantInputSchema} from "@workspace/api-zod";
+import {WorkdayAssistantInputSchema,FleetYardOrderActionSchema,FleetCustodyObservationInputSchema} from "@workspace/api-zod";
 import { fleetInventoryAction, fleetInventoryArguments } from "./fleet-inventory-tools";
 import { WorkHubAvailabilityArgumentsSchema } from "./work-hub-availability-tools";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
@@ -29,7 +29,8 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "fleet:maintenance": {label:"Prepare Fleet Manager maintenance and explicitly permitted hold release; no physical certification",tools:["manage_fleet_maintenance","report_fleet_defect"]},
   "fleet:admin":{label:"Prepare current company administrator Fleet settings and explicit role grants",tools:["manage_fleet_settings"]},
   "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: [...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:dispatch"||row.name==="act_on_fleet_ticketed_run").map(row=>row.name),"save_fleet_ticket_plan","save_fleet_destination","record_fleet_driver_availability","prepare_fleet_equipment_replacement","cancel_fleet_equipment_replacement","prepare_fleet_cargo_transfer","complete_fleet_cargo_transfer","cancel_fleet_cargo_transfer","edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
-  "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: [...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:run"||row.name==="create_fleet_ticketed_run").map(row=>row.name),"accept_fleet_equipment_replacement","acknowledge_fleet_cargo_source","acknowledge_fleet_cargo_recipient","report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, inspection, stops, load/delivery and closeout", tools: [...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:run"||row.name==="create_fleet_ticketed_run").map(row=>row.name),"accept_fleet_equipment_replacement","acknowledge_fleet_cargo_source","acknowledge_fleet_cargo_recipient","report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:yard": { label: "Prepare explicitly authorized Yard and VNDRLY custody observations for a permitted Yard or small-shop self-dispatch worker", tools: ["manage_fleet_yard_order","record_fleet_custody"] },
   "fleet:billing": { label: "Prepare office finalization and submission of fully reviewed Fleet billing tickets; no approval or payment", tools: [...FLEET_AUXILIARY_DEFINITIONS.filter(row=>row.scope==="fleet:billing").map(row=>row.name),...FLEET_COMMERCIAL_DEFINITIONS.filter(row=>row.scope==="fleet:billing").map(row=>row.name),"finalize_fleet_ticket"] },
   "fleet:policy": {label:"Prepare explicit future partner compliance enforcement changes with impact review; current partner administrator only",tools:["activate_fleet_compliance_policy"]},
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
@@ -49,6 +50,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+ if(["manage_fleet_yard_order","record_fleet_custody"].includes(name)){const {operationId:_operationId,confirmed:_confirmed,scope:_scope,companyId:_companyId,observedByUserId:_observedByUserId,...fields}=input;return fields;}
  if(name==="configure_gate_daily_billing"||name==="invoice_gate_post"){const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
  if([...FLEET_COMMERCIAL_DEFINITIONS,...FLEET_AUXILIARY_DEFINITIONS].some(row=>row.name===name)){const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
  if (name === "finalize_fleet_ticket") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
@@ -83,6 +85,17 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+ if(name==="manage_fleet_yard_order"){
+  const {operationId="00000000-0000-4000-8000-000000000001",...fields}=input;
+  const scope={owner:{type:"vendor" as const,id:1},userId:1,membershipId:1,sessionVersion:0};
+  const common={operationId,expectedVersion:fields.expectedVersion,scope,orderId:fields.orderId};
+  const command=fields.kind==="assign"?{...common,kind:"assign",assignedToUserId:fields.assignedToUserId}:fields.kind==="start"?{...common,kind:"start"}:{...common,kind:fields.kind,outcome:fields.outcome,...(fields.actualAssetIds===undefined?{}:{actualAssetIds:fields.actualAssetIds}),...(fields.findings===undefined?{}:{findings:fields.findings}),notes:fields.notes};
+  FleetYardOrderActionSchema.parse(command);return;
+ }
+ if(name==="record_fleet_custody"){
+  const {operationId="00000000-0000-4000-8000-000000000001",...fields}=input;
+  FleetCustodyObservationInputSchema.parse({operationId,expectedVersion:fields.expectedVersion,scope:{owner:{type:"vendor",id:1},userId:1,membershipId:1,sessionVersion:0},observation:{companyId:1,assetId:fields.assetId,state:fields.state,method:fields.method,observedAt:fields.observedAt,observedByUserId:1,yardId:fields.yardId??null,runId:fields.runId??null,detailId:fields.detailId??null,latitude:fields.latitude??null,longitude:fields.longitude??null,notes:fields.notes??""}});return;
+ }
  if(name==="configure_gate_daily_billing"||name==="invoice_gate_post"){const {operationId:_operationId,confirmed:_confirmed,...fields}=input;GATE_DAILY_BILLING_ARGUMENTS[name].parse(fields);return;}
  const commercial=[...FLEET_COMMERCIAL_DEFINITIONS,...FLEET_AUXILIARY_DEFINITIONS].find(row=>row.name===name);if(commercial){const {operationId:_op,confirmed:_c,...fields}=input;commercial.schema.parse(fields);return;}
   if(name==="manage_my_workday"){const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);WorkdayAssistantInputSchema.omit({operationId:true}).parse(fields);}

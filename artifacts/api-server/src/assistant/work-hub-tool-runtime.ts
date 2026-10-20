@@ -1,6 +1,6 @@
 import {GATE_DAILY_BILLING_NAMES,gateDailyBillingToolRequest} from "./gate-daily-billing-tools";
 import {fleetAuxiliaryToolRequest,fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
-import {WorkdayAssistantInputSchema,FleetPolicyChangeSchema} from "@workspace/api-zod";
+import {WorkdayAssistantInputSchema,FleetPolicyChangeSchema,FleetYardOrderActionSchema,FleetCustodyObservationInputSchema} from "@workspace/api-zod";
 import {randomUUID} from "node:crypto";
 import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
 import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
@@ -1179,7 +1179,7 @@ export function resolveExecutableWorkHubToolRequest(
   name: string,
   rawInput: unknown,
   mutationAuthorizedByServer: boolean,
-  session?: { userId?: number; role?: string; membershipRole?: string | null; vendorRole?: string | null; vendorId?: number | null; managedSubcontractor?: unknown },
+  session?: { userId?: number; role?: string; membershipRole?: string | null; vendorRole?: string | null; vendorId?: number | null; partnerId?: number | null; activeMembershipId?: number | null; sv?: number; managedSubcontractor?: unknown },
 ): WorkHubToolRequest | null {
   const metadata = resolveWorkHubToolMetadata(name);
   if (!metadata) return null;
@@ -1193,6 +1193,45 @@ export function resolveExecutableWorkHubToolRequest(
       error: "Please confirm the exact Work Hub action first.",
       requiresConfirmation: true,
     };
+  if (["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_compliance_score"].includes(name)) {
+    if (name === "query_fleet_home") {
+      const parsed = z.object({ module: z.enum(["summary", "dispatch", "yard", "driver", "office", "assets", "map", "history", "compliance"]).optional() }).strict().safeParse(input);
+      return parsed.success ? request("GET", `/fleet/home?module=${parsed.data.module ?? "summary"}`) : { error: "Select a supported Fleet home module." };
+    }
+    if (name === "query_fleet_yard_orders") {
+      const parsed = z.object({ limit: z.number().int().min(1).max(50).optional() }).strict().safeParse(input);
+      const query = parsed.success && parsed.data.limit ? `?limit=${parsed.data.limit}` : "";
+      return parsed.success ? request("GET", `/fleet/yard-orders${query}`) : { error: "Yard Order page limit must be 1 to 50." };
+    }
+    if (name === "query_fleet_custody") {
+      const parsed = z.object({ assetId: z.uuid().optional(), limit: z.number().int().min(1).max(50).optional() }).strict().safeParse(input);
+      if (!parsed.success) return { error: "Use an exact asset ID and page limit from 1 to 50." };
+      const query = new URLSearchParams(); if (parsed.data.assetId) query.set("assetId", parsed.data.assetId); if (parsed.data.limit) query.set("limit", String(parsed.data.limit));
+      return request("GET", `/fleet/custody${query.size ? `?${query}` : ""}`);
+    }
+    return Object.keys(input).length === 0 ? request("GET", "/fleet/compliance-score") : { error: "Fleet compliance score accepts no model-supplied scope." };
+  }
+  if (["manage_fleet_yard_order", "record_fleet_custody"].includes(name)) {
+    if (!session?.userId || !session.vendorId || !session.activeMembershipId || session.sv === undefined)
+      return { error: "A current signed company membership is required for this Fleet action." };
+    const scope = { owner: { type: "vendor" as const, id: session.vendorId }, userId: session.userId, membershipId: session.activeMembershipId, sessionVersion: session.sv };
+    const operationId = fleetInventoryOperationId(input);
+    if (name === "manage_fleet_yard_order") {
+      const common = { operationId, expectedVersion: input.expectedVersion, scope, orderId: input.orderId };
+      const command = input.kind === "assign"
+        ? { ...common, kind: "assign", assignedToUserId: input.assignedToUserId }
+        : input.kind === "start"
+          ? { ...common, kind: "start" }
+          : { ...common, kind: input.kind, outcome: input.outcome, ...(input.actualAssetIds === undefined ? {} : { actualAssetIds: input.actualAssetIds }), ...(input.findings === undefined ? {} : { findings: input.findings }), notes: input.notes };
+      const parsed = FleetYardOrderActionSchema.safeParse(command);
+      return parsed.success ? request("POST", `/fleet/yard-orders/${parsed.data.orderId}/actions`, parsed.data) : { error: "Supply one exact authorized Yard Order action and its current version." };
+    }
+    const parsed = FleetCustodyObservationInputSchema.safeParse({
+      operationId, expectedVersion: input.expectedVersion, scope,
+      observation: { companyId: session.vendorId, assetId: input.assetId, state: input.state, method: input.method, observedAt: input.observedAt, observedByUserId: session.userId, yardId: input.yardId ?? null, runId: input.runId ?? null, detailId: input.detailId ?? null, latitude: input.latitude ?? null, longitude: input.longitude ?? null, notes: input.notes ?? "" },
+    });
+    return parsed.success ? request("POST", "/fleet/custody/operations", parsed.data) : { error: "Supply one exact authorized custody observation with paired coordinates when location is used." };
+  }
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === name)) return nativeOperationsToolRequest(name, input, mutationAuthorizedByServer);
   return resolveWorkHubToolRequest(name, input) ?? resolveImplementationACapabilityRequest(name, input) ?? unsupported("tool");
 }
@@ -1217,6 +1256,7 @@ export function bindWorkHubToolScope(
   if (FLEET_COMMERCIAL_TOOLS.some(row=>row.name===toolName)||FLEET_COMMERCIAL_READ_TOOLS.some(row=>row.name===toolName))return input;
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination", "finalize_fleet_ticket", "query_fleet_billing_options"].includes(toolName ?? "")) return input;
+  if (["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_compliance_score", "manage_fleet_yard_order", "record_fleet_custody"].includes(toolName ?? "")) return input;
   if (["query_my_workday","manage_my_workday","query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any
