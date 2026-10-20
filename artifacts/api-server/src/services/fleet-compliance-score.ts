@@ -67,12 +67,13 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
   });
 }
 
-type Register = { readFleetComplianceRegister: (actor: FleetActor, query: unknown) => Promise<{ entries: FleetComplianceOperationalEntry[]; nextCursor: string | null }> };
+type Register = { assertFleetComplianceScoreAccess: (actor: FleetActor) => Promise<void>; readFleetComplianceRegister: (actor: FleetActor, query: unknown) => Promise<{ entries: FleetComplianceOperationalEntry[]; nextCursor: string | null }> };
 /** Reuses canonical register authorization and its current facts/evidence assessment. */
 export async function readFleetComplianceScore(actor: FleetActor, register: Register, capabilities = resolveFleetCapabilities) {
   const current = await capabilities(actor, actor.companyId);
   if (!["admin", "office", "dispatch"].some((capability) => current.has(capability as "admin" | "office" | "dispatch")))
     throw new FleetError("fleet.permission_denied", 403);
+  await register.assertFleetComplianceScoreAccess(actor);
   const entries: FleetComplianceOperationalEntry[] = [];
   let after: string | null = null;
   do {

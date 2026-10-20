@@ -45,7 +45,7 @@ describe("Fleet compliance score", () => {
   });
 
   it("requires a current score-viewing capability before reading the register", async () => {
-    const register = { readFleetComplianceRegister: async () => ({ entries: [expired], nextCursor: null }) };
+    const register = { assertFleetComplianceScoreAccess: async () => {}, readFleetComplianceRegister: async () => ({ entries: [expired], nextCursor: null }) };
     const actor = { userId: 7, companyId: 3 };
     await expect(readFleetComplianceScore(actor as never, register as never, async () => new Set<FleetCapability>(["driver"]))).rejects.toMatchObject({ status: 403 });
     await expect(readFleetComplianceScore(actor as never, register as never, async () => new Set<FleetCapability>(["office"]))).resolves.toMatchObject({ advisoryOnly: true, score: 0 });
@@ -74,7 +74,7 @@ describe("Fleet compliance score", () => {
     expect(mixed.categoryTotals?.find((item) => item.category === "driver_license")?.pointsEarned).toBe(24);
     const failing = records.map((record) => ({ ...record, status: "red" as const, validUntil: expired.validUntil }));
     const pages = [failing.slice(0, 100), failing.slice(100)];
-    const register = { readFleetComplianceRegister: async (_actor: unknown, query: { after?: string }) => query.after ? { entries: pages[1], nextCursor: null } : { entries: pages[0], nextCursor: failing[99].id } };
+    const register = { assertFleetComplianceScoreAccess: async () => {}, readFleetComplianceRegister: async (_actor: unknown, query: { after?: string }) => query.after ? { entries: pages[1], nextCursor: null } : { entries: pages[0], nextCursor: failing[99].id } };
     const result = await readFleetComplianceScore({ userId: 7, companyId: 3 } as never, register as never, async () => new Set<FleetCapability>(["office"]));
     expect(result.deductions.length).toBeLessThanOrEqual(100);
     expect(result.partnerPreview?.reasons.length).toBeLessThanOrEqual(100);

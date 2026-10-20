@@ -51,7 +51,7 @@ type Transaction = <T>(
 type Access = (
   state: FleetState,
   actor: FleetActor,
-) => { fleetIds: readonly string[]; roles: readonly string[] } | null;
+) => { fleetIds: readonly string[]; officeFleetIds?: readonly string[]; officeSiteIds?: readonly number[]; roles: readonly string[] } | null;
 type Configuration = z.infer<typeof FleetComplianceConfigurationSchema>;
 const uploadSchema = FleetComplianceDocumentUploadSchema;
 const receiptSchema = z
@@ -115,6 +115,13 @@ export function createFleetComplianceOperations(
   };
   const isReviewer = (config: Configuration, actor: FleetActor) =>
     config.reviewerUserIds.includes(actor.userId);
+  const managementFleetIds = (grant: ReturnType<Access>) =>
+    grant?.roles.some(role => ["fleet_manager", "dispatcher"].includes(role))
+      ? grant.fleetIds : grant?.officeFleetIds ?? [];
+  const managesDriver = (grant: ReturnType<Access>, row: FleetState["grants"][number]) =>
+    row.fleetIds.some(id => managementFleetIds(grant).includes(id)) &&
+    (grant?.roles.some(role => ["fleet_manager", "dispatcher"].includes(role)) ||
+      row.siteIds.some(id => grant?.officeSiteIds?.includes(id)));
   function writable(actor: FleetActor) {
     if (actor.readOnly) throw new FleetError("fleet.read_only", 403);
   }
@@ -149,7 +156,7 @@ export function createFleetComplianceOperations(
       reviewer = isReviewer(config, actor),
       manager =
         admin ||
-        (!write && !!grant && actor.fleetCapabilities?.has("office")) ||
+        (!write && !!grant?.officeFleetIds?.length) ||
         !!grant?.roles.some((role) =>
           ["fleet_manager", "dispatcher"].includes(role),
         );
@@ -183,7 +190,7 @@ export function createFleetComplianceOperations(
             (row) =>
               row.userId === subject.id &&
               row.roles.includes("driver") &&
-              row.fleetIds.some((id) => grant?.fleetIds.includes(id)),
+              managesDriver(grant, row),
           ))
       )
         throw new FleetError("fleet.not_found", 404);
@@ -198,14 +205,14 @@ export function createFleetComplianceOperations(
           !reviewer &&
           !state.fleets.some(
             (group) =>
-              grant?.fleetIds.includes(group.id) &&
+              managementFleetIds(grant).includes(group.id) &&
               group.equipmentAssetIds.includes(subject.id),
           ))
       )
         throw new FleetError("fleet.not_found", 404);
     } else {
       const run = await loadFleetComplianceTrip(state, client, actor.companyId, subject.id);
-      if (!run || !grant?.fleetIds.includes(run.fleetId))
+      if (!run || !(managementFleetIds(grant).includes(run.fleetId) && (grant?.roles.some(role => ["fleet_manager", "dispatcher"].includes(role)) || run.siteIds.every(id => grant?.officeSiteIds?.includes(id))) || run.driverUserId === actor.userId && grant?.roles.includes("driver") && grant.fleetIds.includes(run.fleetId)))
         throw new FleetError("fleet.not_found", 404);
     }
   }
@@ -340,27 +347,32 @@ export function createFleetComplianceOperations(
       ? { ...record.evidence, status: "reviewed" as const }
       : record.evidence;
   return {
+    assertFleetComplianceScoreAccess: (actor: FleetActor) => transaction(actor, async (state) => {
+      const grant = access(state, actor);
+      if (actor.role === "vendor" && actor.membershipRole === "admin") return;
+      if (!managementFleetIds(grant).length) throw new FleetError("fleet.finance_required", 403);
+    }),
     readFleetComplianceSubjects: (actor: FleetActor, input: unknown) => {
       const query=FleetComplianceSubjectChoicesQuerySchema.parse(input);
       return transaction(actor,async(state,client)=>{
         if(!state.enabled)throw new FleetError("fleet.unavailable",403);
         const config=await readConfig(client,actor),grant=access(state,actor),admin=actor.role==="vendor"&&actor.membershipRole==="admin",reviewer=isReviewer(config,actor);
-        const manager=admin||reviewer||!!grant&&(actor.fleetCapabilities?.has("office")||grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role)));
+        const manager=admin||reviewer||!!grant&&(!!grant.officeFleetIds?.length||grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role)));
         let rows:Array<{subject:FleetComplianceSubject;label:string}>=[];
         if(query.kind==="carrier"){
           await canUseSubject(state,client,actor,config,{kind:"carrier",id:actor.companyId});
           const company=await client.query("SELECT name FROM vendors WHERE id=$1 AND name ILIKE $2",[actor.companyId,`%${query.search}%`]);
           if(company.rows.length)rows=[{subject:{kind:"carrier",id:actor.companyId},label:company.rows[0].name}];
         } else if(query.kind==="driver"){
-          const ids=state.grants.filter(row=>row.roles.includes("driver")&&(admin||reviewer||(manager&&row.fleetIds.some(id=>grant?.fleetIds.includes(id)))||row.userId===actor.userId)).map(row=>row.userId);
+          const ids=state.grants.filter(row=>row.roles.includes("driver")&&(admin||reviewer||(manager&&managesDriver(grant,row))||row.userId===actor.userId)).map(row=>row.userId);
           const people=await client.query("SELECT DISTINCT u.id,COALESCE(NULLIF(u.display_name,''),u.username) AS label FROM user_org_memberships m JOIN users u ON u.id=m.user_id WHERE m.vendor_id=$1 AND m.org_type='vendor' AND u.suspended_at IS NULL AND ($2::integer[] IS NULL OR u.id=ANY($2::integer[])) AND u.id>$3 AND COALESCE(NULLIF(u.display_name,''),u.username) ILIKE $4 ORDER BY u.id LIMIT $5",[actor.companyId,ids,Number(query.after??0),`%${query.search}%`,query.limit+1]);
           rows=people.rows.map(row=>({subject:{kind:"driver",id:row.id},label:row.label}));
         } else if(query.kind==="vehicle"||query.kind==="component"){
-          const ids=manager?[...new Set(state.fleets.filter(group=>admin||reviewer||grant?.fleetIds.includes(group.id)).flatMap(group=>group.equipmentAssetIds))]:[];
+          const ids=manager?[...new Set(state.fleets.filter(group=>admin||reviewer||managementFleetIds(grant).includes(group.id)).flatMap(group=>group.equipmentAssetIds))]:[];
           const assets=await client.query("SELECT id,name FROM assets WHERE responsible_org_type='vendor' AND responsible_org_id=$1 AND id=ANY($2::uuid[]) AND retired_at IS NULL AND merged_into_id IS NULL AND ($3::uuid IS NULL OR id>$3::uuid) AND name ILIKE $4 AND ((category=ANY($5::text[]))=$6::boolean) ORDER BY id LIMIT $7",[actor.companyId,ids,query.after??null,`%${query.search}%`,["truck","vehicle","service_vehicle","support_vehicle"],query.kind==="vehicle",query.limit+1]);
           rows=assets.rows.map(row=>({subject:{kind:query.kind as "vehicle"|"component",id:row.id},label:row.name}));
         } else {
-          rows=manager?await listFleetComplianceTrips(state,client,actor.companyId,grant?.fleetIds??[],query):[];
+          rows=manager?await listFleetComplianceTrips(state,client,actor.companyId,managementFleetIds(grant),query):[];
         }
         const entries=[];
         for(const row of rows.slice(0,query.limit)){

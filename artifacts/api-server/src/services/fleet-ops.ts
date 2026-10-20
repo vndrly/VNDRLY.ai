@@ -550,9 +550,17 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
       },
       actor,
     );
-  const locationPermitted: typeof permitted = (state, actor, run, action) =>
-    actor.fleetCapabilities && !["admin", "dispatch", "driver"].some(capability => actor.fleetCapabilities?.has(capability as "admin" | "dispatch" | "driver"))
-      ? false : permitted(state, actor, run, action);
+  const locationPermitted: typeof permitted = (state, actor, run, action) => {
+    const capabilities = actor.fleetCapabilities;
+    if (!capabilities || capabilities.has("admin") || capabilities.has("dispatch"))
+      return permitted(state, actor, run, action);
+    if (!capabilities.has("driver")) return false;
+    const current = actor.currentRunsById ? actor.currentRunsById.get(run.id) : run;
+    const grant = companyGrantFor(state, actor);
+    return !!current && !!grant?.roles.includes("driver") && [run, current].every(record =>
+      record.companyId === actor.companyId && record.driverUserId === actor.userId &&
+      grant.fleetIds.includes(record.fleetId) && record.siteIds.every(id => actor.currentSiteIds?.includes(id)));
+  };
   const locations = createFleetLocationOperations(transaction, locationPermitted);
   const runOrders = createFleetRunOrderOperations(transaction, companyGrantFor);
   return {
@@ -567,9 +575,13 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
     ...createFleetServiceTemplateOperations(transaction,companyGrantFor),
     ...createFleetComplianceOperations(transaction, (state, actor) => {
       const grant=state.grants.find(row=>row.userId===actor.userId);
-      if(!state.enabled||!grant||!grant.roles.length && !(actor.fleetCapabilities?.has("office") && grant.financeRead))return null;
-      const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id && (grant.roles.length || group.siteIds.some(siteId=>grant.siteIds.includes(siteId) && actor.currentSiteIds?.includes(siteId)))));
-      return fleetIds.length?{roles:grant.roles,fleetIds}:null;
+      if(!state.enabled||!grant)return null;
+      const office = officeGrantFor(state, actor);
+      const officeFleetIds = office ? office.fleetIds.filter(id => state.fleets.some(group => group.id === id && group.siteIds.some(siteId => office.siteIds.includes(siteId)))) : [];
+      const roles = actor.fleetCapabilities === undefined ? grant.roles : grant.roles.filter(role =>
+        role === "driver" ? actor.fleetCapabilities?.has("driver") : actor.fleetCapabilities?.has("dispatch") || actor.fleetCapabilities?.has("admin"));
+      const fleetIds=grant.fleetIds.filter(id=>state.fleets.some(group=>group.id===id));
+      return fleetIds.length && (roles.length || officeFleetIds.length) ? {roles,fleetIds,officeFleetIds,officeSiteIds:office?.siteIds ?? []}:null;
     },options.compliance),
     ...createFleetMonitoringOperations(transaction,permitted,options.monitoringNow,options.monitoringNotify),
     recordLocation: locations.record,

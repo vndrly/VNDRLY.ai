@@ -7,8 +7,9 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("@workspace/db", () => ({ pool: { connect: mocks.connect } }));
 import { databaseFleetRepository, emptyFleetState } from "./fleet-repository";
-import { FleetComplianceRecordSchema, FleetRunSchema } from "@workspace/api-zod";
+import { FleetComplianceRecordSchema, FleetLocationObservationSchema, FleetRunSchema } from "@workspace/api-zod";
 import { createFleetService, type FleetServiceOptions } from "./fleet-ops";
+import { readFleetComplianceScore } from "./fleet-compliance-score";
 const authority = {
   sv: 2,
   activeMembershipId: 8,
@@ -134,9 +135,9 @@ describe("stored Fleet capabilities through the repository and service", () => {
   const runId = "11111111-1111-4111-8111-111111111111";
   const vehicleId = "22222222-2222-4222-8222-222222222222";
   const actor = () => ({ userId: 1, companyId: 7, ...authority });
-  function arrange(input: { capabilities: string[] | null; financeRead?: boolean; siteIds?: number[]; fleetIds?: string[]; legacyRoles?: Array<"fleet_manager" | "driver">; runStatus?: "draft" | "dispatched" | "submitted_for_review" | "in_progress"; ticketSiteId?: number; ownUnplannedCreate?: boolean; locationFailure?: boolean; complianceConfiguration?: unknown; compliance?: FleetServiceOptions["compliance"]; otherDriver?: boolean }) {
+  function arrange(input: { capabilities: string[] | null; financeRead?: boolean; siteIds?: number[]; groupSiteIds?: number[]; fleetIds?: string[]; legacyRoles?: Array<"fleet_manager" | "driver">; runStatus?: "draft" | "dispatched" | "submitted_for_review" | "in_progress" | "completed"; runDriverUserId?: number; ticketSiteId?: number; ownUnplannedCreate?: boolean; locationFailure?: boolean; locationObservation?: boolean; complianceConfiguration?: unknown; compliance?: FleetServiceOptions["compliance"]; otherDriver?: boolean }) {
     const run = FleetRunSchema.parse({
-      id: runId, fleetId, companyId: 7, title: "Own capture", driverUserId: 1,
+      id: runId, fleetId, companyId: 7, title: "Synthetic capture", driverUserId: input.runDriverUserId ?? 1,
       vehicleAssetId: vehicleId, trailerAssetId: null, siteIds: [9],
       status: input.runStatus ?? "dispatched", phase: null, version: 1,
       stops: [{ id: "33333333-3333-4333-8333-333333333333", siteId: 9, kind: "pickup", sequence: 0 }],
@@ -145,13 +146,15 @@ describe("stored Fleet capabilities through the repository and service", () => {
     });
     const state = {
       ...emptyFleetState(), enabled: true,
-      fleets: [{ id: fleetId, name: "Synthetic", siteIds: [9], requiredCertifications: [], equipmentAssetIds: [] }],
+      fleets: [{ id: fleetId, name: "Synthetic", siteIds: input.groupSiteIds ?? [9], requiredCertifications: [], equipmentAssetIds: [] }],
       grants: [{ userId: 1, fleetIds: input.fleetIds ?? [fleetId], siteIds: input.siteIds ?? [9], roles: input.legacyRoles ?? ["fleet_manager", "driver"], safetyRelease: false, financeRead: input.financeRead ?? true }, ...(input.otherDriver ? [{ userId: 2, fleetIds: [fleetId], siteIds: [9], roles: ["driver"], safetyRelease: false, financeRead: false }] : [])],
       runs: [run],
     };
+    const observation = FleetLocationObservationSchema.parse({ runId, vehicleAssetId: vehicleId, driverUserId: run.driverUserId, latitude: 35, longitude: -97, accuracyMeters: 12, recordedAt: "2026-10-20T00:00:00Z", receivedAt: "2026-10-20T00:00:00Z", source: "driver_phone", freshness: "stale", physicalProofVerified: false });
+    const savedLocation = { operationId: "99999999-9999-4999-8999-999999999999", fingerprint: "synthetic", deviceId: "synthetic-device", assignment: JSON.stringify([run.id, run.companyId, run.driverUserId, run.vehicleAssetId, run.trailerAssetId]), observation };
     mocks.connect.mockResolvedValue({ query: mocks.query, release: mocks.release });
     mocks.query.mockImplementation(async (sql: string, params: unknown[] = []) => {
-      if (sql.includes("run->>'driverUserId' AS driver_user_id")) return { rows: [{ driver_user_id: "1" }] };
+      if (sql.includes("run->>'driverUserId' AS driver_user_id")) return { rows: [{ driver_user_id: String(run.driverUserId) }] };
       if (sql.includes("SELECT DISTINCT u.id,COALESCE(NULLIF(u.display_name")) return { rows: input.otherDriver && (params[1] as number[])?.includes(2) ? [{ id: 2, label: "Other Driver" }] : [] };
       if (sql.includes("JOIN users u ON u.id=m.user_id")) return { rows: [{ id: 8 }] };
       if (sql.includes("SELECT fleet_ops_state FROM vendors")) return { rows: [{ fleet_ops_state: state }] };
@@ -161,6 +164,7 @@ describe("stored Fleet capabilities through the repository and service", () => {
       if (sql.includes("SELECT tool_output FROM (SELECT DISTINCT ON(target_id) tool_output,target_id,id")) return { rows: [{ tool_output: run }] };
       if (sql.includes("FROM fleet_person_capabilities")) return { rows: input.capabilities === null ? [] : [{ capabilities: input.capabilities }] };
       if (input.locationFailure && sql.includes("target_type='fleet-location'")) throw new Error("location source unavailable");
+      if (input.locationObservation && sql.includes("target_type='fleet-location'")) return { rows: [{ tool_output: savedLocation }] };
       if (sql.includes("FROM site_locations s JOIN partner_vendor_relationships")) return { rows: [9, 11].filter(id => params[1] === null || (params[1] as number[]).includes(id)).map(id => ({ id, name: `Site ${id}`, partner_id: 8, is_active: true, relationship_id: id, relationship_status: "approved", fleet_commercial_authority: null })) };
       if (sql.includes("FROM tickets t JOIN site_locations")) return { rows: [{ id: 10, site_location_id: input.ticketSiteId ?? 9, vendor_id: 7, partner_id: 8, status: "initiated", lifecycle_state: "pending_arrival", fleet_plan: null }] };
       if (sql.includes("SELECT count(*)::int AS runs")) return { rows: [{ runs: 0, total: "0" }] };
@@ -228,6 +232,40 @@ describe("stored Fleet capabilities through the repository and service", () => {
     await expect(service.locationObservations(actor())).rejects.toThrow("location source unavailable");
   });
 
+  it("does not let an Office+Driver role read another driver's submitted phone route", async () => {
+    for (const runStatus of ["submitted_for_review", "completed"] as const) {
+      const mixed = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], otherDriver: true, runDriverUserId: 2, runStatus, locationObservation: true });
+      expect((await mixed.overview(actor())).runs.map((run) => run.id)).toEqual([runId]);
+      expect((await mixed.overview(actor())).observations).toEqual([]);
+      await expect(mixed.locationHistory(actor(), runId)).rejects.toMatchObject({ status: 404 });
+    }
+    const own = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], runStatus: "in_progress", locationObservation: true });
+    expect((await own.overview(actor())).observations.map((point) => point.runId)).toEqual([runId]);
+    expect((await own.locationHistory(actor(), runId)).points.map((point) => point.runId)).toEqual([runId]);
+    const dispatch = arrange({ capabilities: ["dispatch"], legacyRoles: ["fleet_manager"], otherDriver: true, runDriverUserId: 2, runStatus: "submitted_for_review", locationObservation: true });
+    expect((await dispatch.overview(actor())).observations.map((point) => point.runId)).toEqual([runId]);
+    expect((await dispatch.locationHistory(actor(), runId)).points.map((point) => point.runId)).toEqual([runId]);
+  });
+
+  it("keeps Office finance and current-site scope even when the actor also has a legacy Driver role", async () => {
+    const cases = [{ financeRead: false }, { siteIds: [11] }, { fleetIds: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"] }];
+    for (const scope of cases) {
+      const mixed = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], otherDriver: true, ...scope });
+      expect((await mixed.readFleetComplianceSubjects(actor(), { kind: "driver" })).entries.map((entry) => entry.subject.id)).not.toContain(2);
+    }
+    const splitSite = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], groupSiteIds: [9, 11], siteIds: [11], otherDriver: true });
+    expect((await splitSite.readFleetComplianceSubjects(actor(), { kind: "driver" })).entries.map((entry) => entry.subject.id)).not.toContain(2);
+    const allowed = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], otherDriver: true });
+    expect((await allowed.readFleetComplianceSubjects(actor(), { kind: "driver" })).entries.map((entry) => entry.subject.id)).toContain(2);
+  });
+
+  it("does not turn Driver-only compliance into an Office company score", async () => {
+    const mixed = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], financeRead: false });
+    await expect(readFleetComplianceScore(actor(), mixed, async () => new Set(["office", "driver"] as const))).rejects.toMatchObject({ status: 403 });
+    const valid = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"] });
+    await expect(readFleetComplianceScore(actor(), valid, async () => new Set(["office", "driver"] as const))).resolves.toMatchObject({ advisoryOnly: true });
+  });
+
   it("includes current Office compliance records without granting out-of-scope records", async () => {
     const record = FleetComplianceRecordSchema.parse({
       evidence: { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", revision: 1, subject: { kind: "driver", id: 1 }, requirementId: "driver_license", requirementVersion: 1, status: "document_received", validFrom: "2026-01-01T00:00:00Z", validUntil: "2027-01-01T00:00:00Z", verifiedAt: null, verifiedByUserId: null, source: "Synthetic upload", privateDocumentRef: null, restrictions: {} },
@@ -243,6 +281,29 @@ describe("stored Fleet capabilities through the repository and service", () => {
     expect((await office.readFleetComplianceRegister(actor(), {})).entries.map((entry) => entry.id)).toEqual([record.evidence.id]);
     await expect(arrange({ capabilities: ["office"], financeRead: false, complianceConfiguration: configuration, compliance: options }).readFleetComplianceRegister(actor(), {})).rejects.toMatchObject({ status: 403 });
     await expect(arrange({ capabilities: ["office"], siteIds: [11], complianceConfiguration: configuration, compliance: options }).readFleetComplianceRegister(actor(), {})).rejects.toMatchObject({ status: 403 });
+  });
+
+  it("keeps another driver's private compliance record outside an Office+Driver actor's lost Office scope", async () => {
+    const secret = "synthetic-test-key";
+    const records = [1, 2].map((driverId) => FleetComplianceRecordSchema.parse({
+      evidence: { id: driverId === 1 ? "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" : "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", revision: 1, subject: { kind: "driver", id: driverId }, requirementId: "driver_license", requirementVersion: 1, status: "document_received", validFrom: "2026-01-01T00:00:00Z", validUntil: "2027-01-01T00:00:00Z", verifiedAt: null, verifiedByUserId: null, source: "Synthetic upload", privateDocumentRef: null, restrictions: {} },
+      attributes: { kind: "driver_license", issuingState: "OK", licenseNumber: `PRIVATE-${driverId}`, licenseClass: "A", endorsements: [], restrictions: [], licenseStatus: "active", sourceRecordId: null },
+      retentionClass: "qualification", retainUntil: null, legalHold: false,
+    }));
+    const stored = new Map(records.map((record) => {
+      const digest = createHmac("sha256", secret).update(JSON.stringify(record)).digest("hex");
+      return [`/objects/fleet-compliance-private/7/${record.evidence.id}/1/${digest}`, record] as const;
+    }));
+    const configuration = { version: 1, reviewerUserIds: [], entries: [...stored].map(([objectPath, record]) => ({ id: record.evidence.id, revision: 1, subject: record.evidence.subject, requirementId: "driver_license", requirementVersion: 1, status: "document_received", validFrom: record.evidence.validFrom, validUntil: record.evidence.validUntil, verifiedAt: null, verifiedByUserId: null, attributeKind: "driver_license", objectPath, updatedAt: "2026-10-20T00:00:00Z" })) };
+    const options = { store: () => ({ getObject: async (path: string) => ({ contentType: "application/json", body: Buffer.from(JSON.stringify(stored.get(path))), size: 1, acl: { owner: "fleet-compliance:7", visibility: "private", purpose: "fleet-compliance-private" } }) }) as never, secret: () => secret, now: () => new Date("2026-10-20T00:00:00Z") };
+    for (const scope of [{ financeRead: false }, { siteIds: [11] }]) {
+      const mixed = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], otherDriver: true, complianceConfiguration: configuration, compliance: options, ...scope });
+      expect((await mixed.readFleetComplianceRegister(actor(), {})).entries.map((entry) => entry.subject.id)).toEqual([1]);
+    }
+    const revoked = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], otherDriver: true, complianceConfiguration: configuration, compliance: options, fleetIds: ["cccccccc-cccc-4ccc-8ccc-cccccccccccc"] });
+    await expect(revoked.readFleetComplianceRegister(actor(), {})).rejects.toMatchObject({ status: 403 });
+    const valid = arrange({ capabilities: ["office", "driver"], legacyRoles: ["driver"], otherDriver: true, complianceConfiguration: configuration, compliance: options });
+    expect((await valid.readFleetComplianceRegister(actor(), {})).entries.map((entry) => entry.subject.id)).toEqual([1, 2]);
   });
 
   it("lets an Office reader find scoped compliance subjects for remediation", async () => {
