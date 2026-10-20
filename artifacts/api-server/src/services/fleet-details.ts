@@ -101,13 +101,14 @@ export function createFleetDetailsOperations(
     selectedDriverUserId?: number,
   ): Promise<FleetDetailSnapshot> {
     const grant = scope(state, actor);
+    const dispatcher = grant.roles.some((role) => ["fleet_manager", "dispatcher"].includes(role));
+    const selfDispatch = grant.roles.includes("driver") &&
+      actor.fleetCapabilities?.has("driver") && actor.fleetCapabilities.has("self_dispatch") &&
+      detail.driverUserId === null;
     if (
       detail.companyId !== actor.companyId ||
       !detail.accessGroupIds.some((id) => grant.fleetIds.includes(id)) ||
-      (!grant.roles.some((role) =>
-        ["fleet_manager", "dispatcher"].includes(role),
-      ) &&
-        detail.driverUserId !== actor.userId)
+      (!dispatcher && detail.driverUserId !== actor.userId && !selfDispatch)
     )
       throw new FleetError("fleet.detail_not_found", 404);
     const driverUserId = detail.driverUserId ?? selectedDriverUserId;
@@ -116,7 +117,7 @@ export function createFleetDetailsOperations(
     if (detail.driverUserId !== null && selectedDriverUserId !== undefined && detail.driverUserId !== selectedDriverUserId)
       throw new FleetError("fleet.detail_revision_conflict", 409);
     if (detail.driverUserId === null) {
-      if (!grant.roles.some(role => ["fleet_manager", "dispatcher"].includes(role)))
+      if (!dispatcher && (!selfDispatch || driverUserId !== actor.userId))
         throw new FleetError("fleet.dispatch_required", 403);
       const driverGrant = state.grants.find(row => row.userId === driverUserId);
       if (!driverGrant?.roles.includes("driver") ||
@@ -341,10 +342,10 @@ export function createFleetDetailsOperations(
             (row) =>
               !row.archivedAt &&
               row.accessGroupIds.some((id) => grant.fleetIds.includes(id)) &&
-              (grant.roles.some((role) =>
-                ["fleet_manager", "dispatcher"].includes(role),
-              ) ||
-                row.driverUserId === actor.userId) &&
+              (grant.roles.some((role) => ["fleet_manager", "dispatcher"].includes(role)) ||
+                row.driverUserId === actor.userId ||
+                (row.driverUserId === null && grant.roles.includes("driver") &&
+                  actor.fleetCapabilities?.has("driver") && actor.fleetCapabilities.has("self_dispatch"))) &&
               (!query.after || row.id > query.after),
           )
           .sort((a, b) => a.id.localeCompare(b.id));

@@ -195,3 +195,29 @@ it("captures a selected Run driver without changing the saved Detail", async () 
   expect(snapshot.labels.driver).toBe("Casey");
   expect(detail.driverUserId).toBeNull();
 });
+
+it("lets Driver plus Self-Dispatch select only their own reusable Detail without write authority", async () => {
+  const { createFleetDetailsOperations } = await import("./fleet-details");
+  const group = randomUUID(), truck = randomUUID(), detailId = randomUUID();
+  const detail = { id: detailId, companyId: 7, version: 1, name: "Reusable truck", vehicleAssetId: truck,
+    rigPackageId: null, rigPackageVersion: null, driverUserId: null, accessGroupIds: [group],
+    effectiveFrom: "2026-10-19T00:00:00Z", effectiveUntil: null, archivedAt: null };
+  const state = { ...emptyFleetState(), enabled: true,
+    fleets: [{ id: group, name: "Fleet", siteIds: [], equipmentAssetIds: [truck], requiredCertifications: [] }],
+    grants: [{ userId: 42, fleetIds: [group], siteIds: [], roles: ["driver"], safetyRelease: false, financeRead: false },
+      { userId: 43, fleetIds: [group], siteIds: [], roles: ["driver"], safetyRelease: false, financeRead: false }] };
+  const client = { query: async (sql: string) => {
+    if (sql.includes("SELECT fleet_resources")) return { rows: [{ fleet_resources: { version: 1, rigPackages: [], details: [detail], reservations: [] } }] };
+    if (sql.includes("FROM assets a")) return { rows: [{ id: truck, name: "Truck", category: "truck", status: "available", responsible_org_type: "vendor", responsible_org_id: 7, current_holder_user_id: null, retired_at: null, merged_into_id: null, provisional: false, enrolled: true }] };
+    if (sql.includes("FROM users")) return { rows: [{ id: 42, display_name: "Self" }] };
+    return { rows: [] };
+  } } as unknown as PoolClient;
+  const service = createFleetDetailsOperations(async (_actor, work) => work(state as any, client), (_state, actor) => state.grants.find(g => g.userId === actor.userId)!);
+  const self = { userId: 42, companyId: 7, role: "field_employee", membershipRole: "field_employee", fleetCapabilities: new Set(["driver", "self_dispatch"]) } as any;
+  const driverOnly = { ...self, fleetCapabilities: new Set(["driver"]) } as any;
+  expect((await service.readFleetDetails(self)).details.map(d => d.id)).toContain(detailId);
+  expect((await service.fleetDetailSnapshot(self, detailId, 42)).detail.driverUserId).toBe(42);
+  await expect(service.fleetDetailSnapshot(self, detailId, 43)).rejects.toMatchObject({ code: "fleet.dispatch_required" });
+  await expect(service.fleetDetailSnapshot(driverOnly, detailId, 42)).rejects.toMatchObject({ code: "fleet.detail_not_found" });
+  await expect(service.saveFleetDetail(self, { operationId: randomUUID(), expectedVersion: 0, detail })).rejects.toMatchObject({ code: "fleet.dispatch_required" });
+});

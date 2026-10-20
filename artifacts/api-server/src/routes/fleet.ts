@@ -38,10 +38,13 @@ router.get("/fleet/yards/:id/suggestions", endpoint(req => yardService.suggestYa
 })));
 router.get("/fleet/yard-orders", endpoint(req => yardService.yardOrders(actor(req), req.query)));
 router.post("/fleet/yard-orders", endpoint(req => yardService.createYardOrder(actor(req), req.body)));
+router.get("/fleet/yard-orders/operations/:operationId", endpoint(req => yardService.yardOperationReceipt(actor(req), z.uuid().parse(req.params.operationId))));
+router.get("/fleet/yards/operations/:operationId", endpoint(req => yardService.yardOperationReceipt(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/yard-orders/:id", endpoint(req => yardService.yardOrder(actor(req), z.uuid().parse(req.params.id))));
 router.post("/fleet/yard-orders/:id/actions", endpoint(req => yardService.actOnYardOrder(actor(req), z.uuid().parse(req.params.id), req.body)));
 router.get("/fleet/custody", endpoint(req => yardService.custody(actor(req), req.query)));
 router.post("/fleet/custody/operations", endpoint(req => yardService.observeCustody(actor(req), req.body)));
+router.get("/fleet/custody/operations/:operationId", endpoint(req => yardService.custodyOperationReceipt(actor(req), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/capabilities", endpoint(req => readFleetCapabilities(actor(req), req.query.userId === undefined ? undefined : z.coerce.number().int().positive().parse(req.query.userId))));
 router.put("/fleet/capabilities/:userId", endpoint(req => saveFleetCapabilities(actor(req), z.coerce.number().int().positive().parse(req.params.userId), req.body)));
 router.use(createFleetComplianceRouter(service, actor));

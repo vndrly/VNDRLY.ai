@@ -1,6 +1,6 @@
 # Task 4 report: Yard Orders and asset custody API
 
-Status: implemented locally; focused unit verification and API typecheck pass. Fresh-local database execution remains pending because this shell does not have `VNDRLY_TEST_DB_MAINTENANCE_URL`. No shared development or production database was read or modified.
+Status: implemented locally with review-round-1 corrections. Focused in-memory verification passes; the prior-commit API typecheck passed, while current-tree typecheck is reserved for the parent's batched gate. Fresh-local database execution remains pending because this shell does not have `VNDRLY_TEST_DB_MAINTENANCE_URL`. No shared development or production database was read or modified.
 
 ## Delivered
 
@@ -25,3 +25,12 @@ With an approved loopback `VNDRLY_TEST_DB_MAINTENANCE_URL` set privately, run th
 `pnpm --filter @workspace/api-server test -- src/services/fleet-yard.test.ts src/services/fleet-yard.database.test.ts src/services/fleet-details.test.ts src/services/fleet-reservations.test.ts`
 
 The existing broader Detail database fixtures still submit legacy driver-bound Detail saves. Those fixture flows need migration to driver-free Detail saves plus explicit snapshot Driver selection before the broader database suite can be treated as a parity gate. No production migration, online publication, or full ship was attempted in Task 4.
+
+## Review round 1 correction (2026-10-20)
+
+- Yard Order create/list/detail/action/replay now check the actual target Fleet and Run site scope. Creation captures the complete referenced Detail/Run equipment set into the order's immutable requested assets; assignees must hold the target Fleet and relevant Run sites. Orders without a canonical Fleet target are rejected. Self-Dispatch can create and self-assign an order for its own active Run, then start/report only its own assigned order; Driver-only and other-work paths remain denied.
+- Driver custody read/write/replay and receipt read now require an active assigned Run with an unreleased reservation, no competing active equipment assignment, a current Fleet/site grant, and no different Inventory holder. `submitted_for_review` remains eligible for end-of-run return/check-in; completed/cancelled Runs are not. The equipment set comes from the immutable Run assignment, including every rig component, with legacy truck/trailer fallback.
+- Every new `attached` observation saves the actual truck, Detail version, and rig-package version in its append-only operation receipt. Readback joins that exact custody event and receipt, so later Detail revisions or package archival cannot move an attached component. Legacy attached observations without the immutable event metadata fail closed by not inheriting a truck; explicit transfer/detach still ends inheritance.
+- Driver + Self-Dispatch may list and snapshot driver-free reusable Details only for their own selected driver identity; it does not gain configuration write authority or general Dispatcher visibility. Historical driver-bound snapshots remain readable.
+- Added owned operation-specific readback routes for Yard save/order and custody receipts. Each read rechecks current company, target Fleet, assignee/actor, or active Driver authority.
+- TDD evidence: new cross-Fleet order listing and full-rig custody regressions failed before the service fixes; the self-dispatch Detail test failed before its authorization fix. Final focused command, with `VNDRLY_LOAD_ENV_LOCAL=0` and an unusable loopback `DATABASE_URL`: `pnpm --filter @workspace/api-server exec vitest run src/services/fleet-yard.test.ts src/services/fleet-details.test.ts --no-file-parallelism` — **2 files, 24 tests passed**. Additional in-memory probes cover assignee isolation, lost-response receipt readback, stale/superseded Runs, Inventory holder conflicts, all rig components, immutable attachment location, and self-dispatch own-work denial cases. `git diff --check` passes. Per parent direction, no unchanged package/API typecheck was repeated in this correction; it remains part of the batched gate.
