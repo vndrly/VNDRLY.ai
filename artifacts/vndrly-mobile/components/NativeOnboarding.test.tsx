@@ -31,6 +31,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/onboarding-field-photo", () => ({
   pickOnboardingCompanyLogo: vi.fn(),
 }));
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ text: "black" }) }));
 vi.mock("@/components/TogglePillButton", () => ({
   default: ({ children, onPress, disabled, accessibilityLabel }: any) => (

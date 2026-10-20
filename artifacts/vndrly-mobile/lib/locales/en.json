@@ -62,7 +62,6 @@
     "eligibleOnly": "Eligible vendors only",
     "refreshResults": "Refresh vendors",
     "rating": "Rating",
-    "safety": "Safety",
     "vndrlySafety": "VNDRLY compliance score",
     "scoreValue": "VNDRLY compliance score {{score}} out of 100",
     "scoreReasons": { "missing_evidence": "Current evidence is missing", "expired_record": "A required record is expired", "revoked_record": "A required record was revoked", "failed_record": "A required record did not pass review", "unverified_record": "A required record is not verified", "excluded_record": "A required record is outside the current scope", "requires_review": "Current evidence requires review" },
