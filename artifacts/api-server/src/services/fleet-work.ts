@@ -177,9 +177,8 @@ export function createFleetWorkService(
     }
     if(command.kind==="activity.reconcile"&&command.payload.recoveryDriverUserId)transactionalActor.schedulingDriverUserIds=[command.payload.recoveryDriverUserId];
     if (command.kind === "detail.save")
-      transactionalActor.schedulingDriverUserIds = [
-        command.payload.detail.driverUserId,
-      ];
+      transactionalActor.schedulingDriverUserIds = command.payload.detail.driverUserId === null
+        ? [] : [command.payload.detail.driverUserId];
     if (command.kind === "workday.event")
       transactionalActor.schedulingDriverUserIds = [actor.userId];
     if (command.kind === "activity.create")

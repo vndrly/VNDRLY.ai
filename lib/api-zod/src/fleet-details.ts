@@ -85,7 +85,7 @@ export const FleetDetailSchema = z
     vehicleAssetId: FleetCanonicalIdSchema,
     rigPackageId: FleetCanonicalIdSchema.nullable(),
     rigPackageVersion: version.nullable(),
-    driverUserId: z.number().int().positive(),
+    driverUserId: z.number().int().positive().nullable(),
     accessGroupIds: z.array(FleetCanonicalIdSchema).max(50).default([]),
     ...effectiveWindow,
   })
@@ -106,12 +106,22 @@ export const FleetDetailSchema = z
       });
   });
 export type FleetDetail = z.infer<typeof FleetDetailSchema>;
-export const FleetDetailSaveSchema=z.object({operationId:FleetCanonicalIdSchema,expectedVersion:z.number().int().nonnegative(),detail:FleetDetailSchema}).strict();
+/** Legacy Details retain their driver for historical reads; reusable selection does not. */
+export function normalizeFleetDetail(value: unknown): FleetDetail {
+  return { ...FleetDetailSchema.parse(value), driverUserId: null };
+}
+export const FleetDetailSaveSchema=z.object({operationId:FleetCanonicalIdSchema,expectedVersion:z.number().int().nonnegative(),detail:FleetDetailSchema}).strict().superRefine((value,ctx)=>{
+  if(value.detail.driverUserId!==null)ctx.addIssue({code:"custom",path:["detail","driverUserId"],message:"A reusable Detail cannot bind a driver"});
+});
 export const FleetRigPackageSaveSchema=z.object({operationId:FleetCanonicalIdSchema,expectedVersion:z.number().int().nonnegative(),package:FleetRigPackageSchema}).strict();
 
 export const FleetDetailSnapshotSchema = z
   .object({
-    detail: FleetDetailSchema,
+    // Historical run snapshots keep the driver bound at capture time. New
+    // reusable Detail saves have no driver; run assignment owns that choice.
+    detail: FleetDetailSchema
+      .refine((detail) => detail.driverUserId !== null, "Historical snapshot needs its captured driver")
+      .transform((detail) => detail as FleetDetail & { driverUserId: number }),
     rigPackage: FleetRigPackageSchema.nullable(),
     labels: z
       .object({

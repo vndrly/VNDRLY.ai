@@ -49,6 +49,7 @@ export * from "./work-hub-library";
 
 export * from "./safety-readiness";
 export * from "./fleet-details";
+export * from "./fleet-mobile-workflows";
 export * from "./fleet-route";
 export * from "./fleet-run-order";
 export * from "./fleet-time";

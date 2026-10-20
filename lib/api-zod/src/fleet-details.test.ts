@@ -38,6 +38,40 @@ const detailInput = {
 };
 
 describe("canonical Fleet Detail contracts", () => {
+  it("parses legacy Detail driver history but new Detail saves require null driver", () => {
+    const snapshot = schema("FleetDetailSnapshotSchema").parse({
+      detail: detailInput,
+      rigPackage: packageInput,
+      labels: { truck: "Truck 1", rigPackage: "Tank package", driver: "Bob Villa", components: [{ assetId: trailer, label: "Tank 1" }] },
+      carrierOfRecordId: 11,
+      snapshottedAt: "2026-10-16T12:05:00Z",
+    });
+    expect(snapshot.detail.driverUserId).toBe(42);
+    expect(snapshot.labels.driver).toBe("Bob Villa");
+    expect(schema("FleetDetailSnapshotSchema").safeParse({
+      ...snapshot, detail: { ...snapshot.detail, driverUserId: null },
+    }).success).toBe(false);
+    const normalize = (contracts as any).normalizeFleetDetail;
+    expect(normalize, "legacy Detail normalizer").toBeTypeOf("function");
+    expect(normalize(detailInput).driverUserId).toBeNull();
+    const save = schema("FleetDetailSaveSchema");
+    expect(save.safeParse({ operationId: packageId, expectedVersion: 1, detail: detailInput }).success).toBe(false);
+    expect(save.parse({ operationId: packageId, expectedVersion: 1, detail: { ...detailInput, driverUserId: null } }).detail.driverUserId).toBeNull();
+  });
+
+  it("keeps run assignment driver separate from reusable Detail identity", () => {
+    const reusable = { ...detailInput, driverUserId: null };
+    const detail = schema("FleetDetailSchema").parse(reusable);
+    expect(detail.driverUserId).toBeNull();
+    const reservation = schema("FleetReservationSchema").parse({
+      id: packageId, runId: packageId, detailId, detailVersion: 1,
+      driverUserId: 57, assetIds: [truck], startAt: "2026-10-16T12:00:00Z",
+      plannedEndAt: null, timeZone: "America/Chicago", state: "reserved",
+      actualReleasedAt: null, releaseReason: null, version: 1,
+    });
+    expect(reservation.driverUserId).toBe(57);
+    expect(detail.driverUserId).toBeNull();
+  });
   it("compares assigned resources and revisions independently of cached display labels and read time", () => {
     const snapshot = schema("FleetDetailSnapshotSchema").parse({
       detail: detailInput, rigPackage: packageInput,

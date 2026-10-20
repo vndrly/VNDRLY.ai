@@ -493,7 +493,7 @@ export function createFleetDetailsOperations(
     saveFleetDetail: (actor: FleetActor, raw: unknown) => {
       const body = saveDetail.parse(raw);
       return transaction(
-        { ...actor, schedulingDriverUserIds: [body.detail.driverUserId] },
+        { ...actor, schedulingDriverUserIds: body.detail.driverUserId === null ? [] : [body.detail.driverUserId] },
         async (state, client) => {
           const grant = scope(state, actor, true),
             value = body.detail;

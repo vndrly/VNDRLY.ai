@@ -933,7 +933,7 @@ describe("canonical Detail persistence", () => {
         );
       await expect(
         f.transaction(
-          { ...f.actor, schedulingDriverUserIds: [detail.driverUserId] },
+          { ...f.actor, schedulingDriverUserIds: detail.driverUserId === null ? [] : [detail.driverUserId] },
           (state, client) => {
             if (where === "same_company") state.runs.push(legacy);
             return f.module.reserveFleetDetail({ state, client }, f.actor, {
@@ -973,7 +973,7 @@ describe("canonical Detail persistence", () => {
     };
     await expect(
       f.transaction(
-        { ...f.actor, schedulingDriverUserIds: [detail.driverUserId] },
+        { ...f.actor, schedulingDriverUserIds: detail.driverUserId === null ? [] : [detail.driverUserId] },
         (state, client) =>
           f.module.reserveFleetDetail({ state, client }, f.actor, {
             runId: randomUUID(),
@@ -998,7 +998,7 @@ describe("canonical Detail persistence", () => {
     ]);
     await expect(
       f.transaction(
-        { ...f.actor, schedulingDriverUserIds: [detail.driverUserId] },
+        { ...f.actor, schedulingDriverUserIds: detail.driverUserId === null ? [] : [detail.driverUserId] },
         (state, client) =>
           f.module.reserveFleetDetail({ state, client }, f.actor, {
             runId: randomUUID(),
