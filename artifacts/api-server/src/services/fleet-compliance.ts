@@ -44,6 +44,7 @@ import {
   type StoredObject,
 } from "../lib/objectStore";
 import { appendFleetResourceRecord } from "./fleet-resource-store";
+import { mergeFleetComplianceScoreHistory } from "./fleet-compliance-score";
 type Transaction = <T>(
   actor: FleetActor,
   work: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -351,6 +352,15 @@ export function createFleetComplianceOperations(
       const grant = access(state, actor);
       if (actor.role === "vendor" && actor.membershipRole === "admin") return;
       if (!managementFleetIds(grant).length) throw new FleetError("fleet.finance_required", 403);
+    }),
+    recordFleetComplianceScoreSnapshot: (actor: FleetActor, preview: { score: number; status: "red" | "amber" | "green"; advisoryOnly: true; evaluatedAt: string; categories: Array<{ category: "vehicle" | "driver_license" | "insurance" | "company_records"; score: number }>; reasons: Array<{ category: "vehicle" | "driver_license" | "insurance" | "company_records"; reason: string; reasonCode: "missing_evidence" | "expired_record" | "revoked_record" | "failed_record" | "unverified_record" | "excluded_record" | "requires_review" }> }) => transaction(actor, async (state, client) => {
+      const grant = access(state, actor);
+      if (!(actor.role === "vendor" && actor.membershipRole === "admin") && !managementFleetIds(grant).length)
+        throw new FleetError("fleet.finance_required", 403);
+      const config = await readConfig(client, actor);
+      const scoreHistory = mergeFleetComplianceScoreHistory(config.scoreHistory, preview.evaluatedAt, preview.score);
+      await writeConfig(client, actor, { ...config, scoreHistory, partnerScorePreview: preview });
+      return scoreHistory;
     }),
     readFleetComplianceSubjects: (actor: FleetActor, input: unknown) => {
       const query=FleetComplianceSubjectChoicesQuerySchema.parse(input);

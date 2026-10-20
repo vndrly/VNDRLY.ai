@@ -166,6 +166,16 @@ export type MarketplaceRankedVendorSafety = {
   score: number;
   source: string;
   refreshedAt: string;
+  /** @maxItems 100 */
+  reasons: (
+    | "missing_evidence"
+    | "expired_record"
+    | "revoked_record"
+    | "failed_record"
+    | "unverified_record"
+    | "excluded_record"
+    | "requires_review"
+  )[];
 } | null;
 
 export type MarketplaceRankedVendorEligibilityFacts = {

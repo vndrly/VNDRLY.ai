@@ -6,6 +6,7 @@ import { backfillMappingEvidence } from "../../scripts/backfill-semantic-service
 import {
   createPostgresPartnerMarketplaceStore,
   discoverPartnerMarketplaceVendors,
+  marketplaceComplianceSummary,
   marketplaceSafetySummary,
 } from "../services/marketplace/partner-store";
 
@@ -165,6 +166,22 @@ beforeEach(() => {
         vendor: {
           id: 3,
           name: "MidCon",
+          fleetComplianceConfiguration: {
+            version: 1,
+            reviewerUserIds: [],
+            entries: [],
+            requirements: [],
+            facts: [],
+            scoreHistory: [{ at: now.toISOString(), score: 85 }],
+            partnerScorePreview: {
+              score: 85,
+              status: "green",
+              advisoryOnly: true,
+              evaluatedAt: now.toISOString(),
+              categories: [],
+              reasons: [],
+            },
+          },
           federalTaxId: "verified",
           coiDocumentUrl: "private",
           insuranceExpirationDate: "2027-01-01",
@@ -317,15 +334,12 @@ describe("partner marketplace persistence boundary", () => {
       onTimeRate: 1,
       priorPartnerJobs: 1,
     });
-    for (const table of [
-      "safety_events",
-      "vendor_ratings",
-      "partner_vendor_relationships",
-    ]) {
+    for (const table of ["vendor_ratings", "partner_vendor_relationships"]) {
       const query = state.reads.find((row) => row.table === table)!;
       expect(query.params).toContain(9);
       expect(query.params).toContain(3);
     }
+    expect(state.reads.some((row) => row.table === "safety_events")).toBe(false);
     const ratingQuery = state.reads.find(
       (row) => row.table === "vendor_ratings",
     )!;
@@ -356,6 +370,7 @@ describe("partner marketplace persistence boundary", () => {
     state.data.safety_events = [];
     state.data.vendor_ratings = [];
     state.data.tickets = [];
+    state.data.vendor_partner_service_offers[0].vendor.fleetComplianceConfiguration = null;
     const [row] = await discoverPartnerMarketplaceVendors(
       createPostgresPartnerMarketplaceStore(),
       context,
@@ -386,5 +401,9 @@ describe("partner marketplace persistence boundary", () => {
         now,
       ),
     ).toMatchObject({ score: 0, refreshedAt: "2026-10-18T00:00:00.000Z" });
+  });
+  it("projects the exact saved VNDRLY Partner preview without private evidence", () => {
+    expect(marketplaceComplianceSummary(null)).toBeNull();
+    expect(marketplaceComplianceSummary({ version: 1, reviewerUserIds: [], entries: [], partnerScorePreview: { score: 58, status: "red", advisoryOnly: true, evaluatedAt: "2026-10-20T12:00:00.000Z", categories: [{ category: "vehicle", score: 60 }], reasons: [{ category: "driver_license", reason: "private wording is not rendered", reasonCode: "expired_record" }] } })).toEqual({ score: 58, source: "VNDRLY compliance score", refreshedAt: "2026-10-20T12:00:00.000Z", reasons: ["expired_record"] });
   });
 });

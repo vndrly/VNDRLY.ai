@@ -7,6 +7,7 @@ import {
 } from "@workspace/api-zod";
 
 import TogglePillButton from "@/components/TogglePillButton";
+import ImagePill from "@/components/ImagePill";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -20,6 +21,12 @@ const categoryLabel: Record<FleetComplianceScore["categories"][number]["category
 };
 
 const statusColor = { green: "#15803D", amber: "#F59E0B", red: "#DC2626" } as const;
+const reasonLabel = {
+  missing_evidence: "No current evidence is available.", expired_record: "A required record is expired.", revoked_record: "A required record was revoked.", failed_record: "A required record did not pass review.", unverified_record: "A required record is not verified.", excluded_record: "A required record does not apply to the current scope.", requires_review: "Current evidence requires review.",
+} as const;
+const remediationLabel = {
+  review_vehicle_records: "Review vehicle records and upload current evidence for Office review.", review_driver_license: "Review the driver's license record and submit current evidence for Office review.", review_insurance: "Review coverage and submit a current insurance source for Office review.", review_company_records: "Review company requirements and submit the missing record for Office review.",
+} as const;
 
 export default function FleetComplianceHelper({ onOpenRegisters }: { onOpenRegisters?: () => void }) {
   const colors = useColors();
@@ -41,9 +48,9 @@ export default function FleetComplianceHelper({ onOpenRegisters }: { onOpenRegis
   </View>;
   const value = score.data;
   return <View style={{ gap: 12 }}>
-    <View style={card} accessibilityLabel={copy(`VNDRLY compliance score ${value.score} out of 100`)}>
+    <View style={card} accessibilityLabel={`${copy("VNDRLY compliance score")} ${value.score} ${copy("out of 100")}`}>
       <Text style={{ color: colors.text, fontWeight: "800", fontSize: 20 }}>{copy("VNDRLY compliance score")}</Text>
-      <Text style={{ color: statusColor[value.status], fontWeight: "900", fontSize: 34 }}>● {value.score} / 100</Text>
+      <ImagePill color={value.status} accessibilityLabel={`${copy(value.status)} · ${value.score} ${copy("out of 100")}`}>{copy(value.status)} · {value.score} / 100</ImagePill>
       <Text style={{ color: colors.text }}>{copy("Advisory only. A low score never blocks VNDRLY work or tickets; Partners decide whom they hire.")}</Text>
       <Text style={{ color: colors.mutedForeground }}>{copy("Evaluated")} · {new Date(value.evaluatedAt).toLocaleString()}</Text>
     </View>
@@ -56,12 +63,12 @@ export default function FleetComplianceHelper({ onOpenRegisters }: { onOpenRegis
     <View style={card}>
       <Text style={{ color: colors.text, fontWeight: "800", fontSize: 18 }}>{copy("Improvement queue")}</Text>
       {!value.deductions.length && <Text style={{ color: colors.text }}>{copy("No current score deductions.")}</Text>}
-      {value.deductions.map((item, index) => <View key={item.id} accessibilityLabel={copy(`Priority ${index + 1}: ${item.reason}`)} style={{ borderTopWidth: index ? 1 : 0, borderColor: colors.border, paddingTop: index ? 10 : 0, gap: 3 }}>
-        <Text style={{ color: item.urgency === "now" ? statusColor.red : item.urgency === "soon" ? statusColor.amber : colors.text, fontWeight: "700" }}>{copy(item.reason)}</Text>
+      {value.deductions.map((item, index) => { const reason = copy(reasonLabel[item.reasonCode]); return <View key={item.id} accessibilityLabel={`${copy("Priority")} ${index + 1}: ${reason}`} style={{ borderTopWidth: index ? 1 : 0, borderColor: colors.border, paddingTop: index ? 10 : 0, gap: 3 }}>
+        <Text style={{ color: item.urgency === "now" ? statusColor.red : item.urgency === "soon" ? statusColor.amber : colors.text, fontWeight: "700" }}>{reason}</Text>
         <Text style={{ color: colors.text }}>{copy("Estimated score gain")} +{item.estimatedImprovement}</Text>
-        <Text style={{ color: colors.text }}>{copy(item.remediation)}</Text>
+        <Text style={{ color: colors.text }}>{copy(remediationLabel[item.remediationCode])}</Text>
         <Text style={{ color: colors.mutedForeground }}>{copy("Responsible role")} · {copy(item.responsibleCapability)}{item.dueAt ? ` · ${copy("Due")} ${new Date(item.dueAt).toLocaleDateString()}` : ""}</Text>
-      </View>)}
+      </View>; })}
       {typeof value.estimatedResolvedScore === "number" && <Text style={{ color: colors.text, fontWeight: "700" }}>{copy("Estimated score after listed fixes")} · {value.estimatedResolvedScore} / 100</Text>}
     </View>
     <View style={card}>

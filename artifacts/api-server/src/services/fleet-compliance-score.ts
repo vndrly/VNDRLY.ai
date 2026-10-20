@@ -7,12 +7,29 @@ import { resolveFleetCapabilities } from "./fleet-mobile-permissions";
 type Category = FleetComplianceScore["categories"][number]["category"];
 type Deduction = FleetComplianceScore["deductions"][number];
 const categories: readonly Category[] = ["vehicle", "driver_license", "insurance", "company_records"];
+export function mergeFleetComplianceScoreHistory(history: FleetComplianceScore["history"], at: string, score: number): FleetComplianceScore["history"] {
+  const day = at.slice(0, 10);
+  return [...history.filter((item) => item.at.slice(0, 10) !== day), { at, score }]
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+    .slice(-365);
+}
 const guidance: Record<Category, { remediation: string; destination: string; capability: Deduction["responsibleCapability"] }> = {
   vehicle: { remediation: "Review vehicle records and upload current evidence for Office review.", destination: "/fleet/compliance/subjects?kind=vehicle", capability: "office" },
   driver_license: { remediation: "Review the driver's license record and submit current evidence for Office review.", destination: "/fleet/compliance/subjects?kind=driver", capability: "office" },
   insurance: { remediation: "Review coverage and submit a current insurance source for Office review.", destination: "/fleet/compliance/subjects?kind=carrier", capability: "office" },
   company_records: { remediation: "Review company requirements and submit the missing record for Office review.", destination: "/fleet/compliance/subjects?kind=carrier", capability: "office" },
 };
+const remediationCode: Record<Category, Deduction["remediationCode"]> = {
+  vehicle: "review_vehicle_records", driver_license: "review_driver_license", insurance: "review_insurance", company_records: "review_company_records",
+};
+function reasonCode(entry: Pick<FleetComplianceOperationalEntry, "verification" | "status" | "reasons" | "validUntil">, evaluatedAt: string): Deduction["reasonCode"] {
+  if (entry.validUntil && Date.parse(entry.validUntil) <= Date.parse(evaluatedAt)) return "expired_record";
+  if (entry.verification === "revoked") return "revoked_record";
+  if (entry.verification === "failed") return "failed_record";
+  if (entry.verification !== "verified") return "unverified_record";
+  if (entry.reasons.includes("excluded")) return "excluded_record";
+  return "requires_review";
+}
 
 function categoryFor(entry: Pick<FleetComplianceOperationalEntry, "subject" | "kind">): Category {
   if (entry.kind === "insurance") return "insurance";
@@ -33,7 +50,7 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
     const records = entries.filter((entry) => categoryFor(entry) === category);
     const failing = records.filter((entry) => entry.status !== "green" || entry.verification !== "verified" || !!entry.validUntil && Date.parse(entry.validUntil) <= Date.parse(evaluatedAt));
     if (!records.length) {
-      deductions.push({ id: coverageId(companyId, category), category, points: 25, reason: `No current evidence is available for ${category.replaceAll("_", " ")}.`, urgency: "soon", estimatedImprovement: 25, remediation: guidance[category].remediation, evidenceDestination: guidance[category].destination, responsibleCapability: guidance[category].capability, dueAt: null });
+      deductions.push({ id: coverageId(companyId, category), category, points: 25, reason: `No current evidence is available for ${category.replaceAll("_", " ")}.`, reasonCode: "missing_evidence", urgency: "soon", estimatedImprovement: 25, remediation: guidance[category].remediation, remediationCode: remediationCode[category], evidenceDestination: guidance[category].destination, responsibleCapability: guidance[category].capability, dueAt: null });
       return { category, score: 0 };
     }
     const lost = Math.ceil(25 * failing.length / records.length);
@@ -41,7 +58,7 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
     failing.forEach((entry, index) => {
       const points = Math.floor(lost / failing.length) + (index < lost % failing.length ? 1 : 0);
       const expired = !!entry.validUntil && Date.parse(entry.validUntil) <= Date.parse(evaluatedAt);
-      deductions.push({ id: entry.id, category, points, reason: expired ? `Expired ${category.replaceAll("_", " ")} record.` : entry.reasons[0] ?? `Current ${category.replaceAll("_", " ")} evidence requires review.`, urgency: expired ? "now" : entry.status === "red" ? "soon" : "later", estimatedImprovement: lost - oneResolved, remediation: guidance[category].remediation, evidenceDestination: guidance[category].destination, responsibleCapability: guidance[category].capability, dueAt: entry.validUntil });
+      deductions.push({ id: entry.id, category, points, reason: expired ? `Expired ${category.replaceAll("_", " ")} record.` : entry.reasons[0] ?? `Current ${category.replaceAll("_", " ")} evidence requires review.`, reasonCode: reasonCode(entry, evaluatedAt), urgency: expired ? "now" : entry.status === "red" ? "soon" : "later", estimatedImprovement: lost - oneResolved, remediation: guidance[category].remediation, remediationCode: remediationCode[category], evidenceDestination: guidance[category].destination, responsibleCapability: guidance[category].capability, dueAt: entry.validUntil });
     });
     return { category, score: 100 - lost * 4 };
   });
@@ -63,11 +80,11 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
     categoryTotals: categoryScores.map((item) => ({ ...item, pointsAvailable: 25, pointsEarned: item.score / 4 })),
     estimatedResolvedScore: Math.max(score, 100 - estimatedRemainingLoss),
     remainingIssueCount: deductions.length - visible.length,
-    partnerPreview: { score, status, advisoryOnly: true as const, evaluatedAt, categories: categoryScores, reasons: visible.map((item) => ({ category: item.category, reason: item.reason })) },
+    partnerPreview: { score, status, advisoryOnly: true as const, evaluatedAt, categories: categoryScores, reasons: visible.map((item) => ({ category: item.category, reason: item.reason, reasonCode: item.reasonCode })) },
   });
 }
 
-type Register = { assertFleetComplianceScoreAccess: (actor: FleetActor) => Promise<void>; readFleetComplianceRegister: (actor: FleetActor, query: unknown) => Promise<{ entries: FleetComplianceOperationalEntry[]; nextCursor: string | null }> };
+type Register = { assertFleetComplianceScoreAccess: (actor: FleetActor) => Promise<void>; readFleetComplianceRegister: (actor: FleetActor, query: unknown) => Promise<{ entries: FleetComplianceOperationalEntry[]; nextCursor: string | null }>; recordFleetComplianceScoreSnapshot?: (actor: FleetActor, preview: NonNullable<FleetComplianceScore["partnerPreview"]>) => Promise<FleetComplianceScore["history"]> };
 /** Reuses canonical register authorization and its current facts/evidence assessment. */
 export async function readFleetComplianceScore(actor: FleetActor, register: Register, capabilities = resolveFleetCapabilities) {
   const current = await capabilities(actor, actor.companyId);
@@ -81,5 +98,9 @@ export async function readFleetComplianceScore(actor: FleetActor, register: Regi
     entries.push(...page.entries);
     after = page.nextCursor;
   } while (after);
-  return projectFleetComplianceScore(actor.companyId, entries);
+  const projected = projectFleetComplianceScore(actor.companyId, entries);
+  const history = register.recordFleetComplianceScoreSnapshot && projected.partnerPreview
+    ? await register.recordFleetComplianceScoreSnapshot(actor, projected.partnerPreview)
+    : projected.history;
+  return FleetComplianceScoreSchema.parse({ ...projected, history });
 }

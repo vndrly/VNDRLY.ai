@@ -52,6 +52,7 @@ describe("transparent marketplace ranking", () => {
         score: 100,
         source: "VNDRLY",
         refreshedAt: "2026-10-18T00:00:00.000Z",
+        reasons: [],
       },
     });
     outside.eligibility = {

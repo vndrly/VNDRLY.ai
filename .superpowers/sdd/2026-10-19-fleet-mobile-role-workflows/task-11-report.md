@@ -7,6 +7,10 @@
 - Added searchable recorded-run history and explicit VNDRLY driver-phone source, capture time, and freshness confidence to Fleet Map rows. The server's existing role-scoped projection remains authoritative, so the client does not widen Office, Yard, or Driver visibility.
 - Updated mobile and web Partner vendor cards to label the VNDRLY safety/compliance score, show semantic red/amber/green status, retain source/freshness, and state that Partners—not VNDRLY—set hiring policy.
 - Added matching English/Spanish copy and corrected the existing Fleet language test to use its localized Map label and a complete authorized setup context.
+- Unified the vendor helper and both Partner marketplace cards on the same persisted VNDRLY compliance-score preview. The separate Partner-scoped safety-event metric remains distinct and is no longer presented as the company compliance score.
+- Persisted one company score snapshot per UTC day in the existing guarded vendor configuration, retaining the newest 365 snapshots and exposing only stable reason codes to Partner clients.
+- Added advisory red/amber/green company markers to Fleet Map while keeping location-source and freshness indicators separate, and replaced hand-built dots/emoji with semantic shared pill components.
+- Replaced server-authored display text with stable reason/remediation codes mapped by EN/ES clients, including localized accessibility labels.
 
 ## Verification
 
@@ -15,9 +19,13 @@
 - Mobile typecheck passed.
 - EN/ES locale parity passed for mobile and web.
 - `git diff --check` passed.
+- Focused API score/marketplace suites: 3 files, 21 tests passed.
+- Focused mobile helper/map/marketplace/language suites: 4 files, 28 tests passed.
+- API Zod workflow suite: 8 tests passed; web Partner marketplace: 16 tests passed.
+- Library, API, mobile, and web typechecks passed; EN/ES locale parity passed.
 
 ## Boundaries
 
 - No compliance deficiency blocks Yard, Dispatch, Run, ticket, or billing flow.
 - No third-party telematics or compliance provider was added; the marketplace score remains sourced from existing VNDRLY partner-scoped safety events.
-- No database migration or external dependency was introduced.
+- No database migration or external dependency was introduced; history and the privacy-safe Partner preview use the existing vendor configuration JSON.

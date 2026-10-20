@@ -30,7 +30,7 @@ export interface RankingCandidate {
   };
   rating: number | null;
   reviewCount: number;
-  safety: { score: number; source: string; refreshedAt: string } | null;
+  safety: { score: number; source: string; refreshedAt: string; reasons: string[] } | null;
   completedJobs: number;
   onTimeRate: number | null;
   priorPartnerJobs: number;
@@ -211,6 +211,7 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
               score: row.safety.score,
               source: row.safety.source,
               refreshedAt: row.safety.refreshedAt,
+              reasons: [...row.safety.reasons],
             },
       completedJobs: row.completedJobs,
       onTimeRate: row.onTimeRate,

@@ -355,6 +355,15 @@ export const FleetComplianceConfigurationSchema = z
     entries: z.array(FleetComplianceIndexEntrySchema),
     requirements: z.array(FleetRequirementVersionSchema).default([]),
     facts: z.array(FleetComplianceFactRecordSchema).default([]),
+    scoreHistory: z.array(z.object({ at: timestamp, score: z.number().int().min(0).max(100) }).strict()).max(365).default([]),
+    partnerScorePreview: z.object({
+      score: z.number().int().min(0).max(100),
+      status: z.enum(["red", "amber", "green"]),
+      advisoryOnly: z.literal(true),
+      evaluatedAt: timestamp,
+      categories: z.array(z.object({ category: z.enum(["vehicle", "driver_license", "insurance", "company_records"]), score: z.number().int().min(0).max(100) }).strict()).max(4),
+      reasons: z.array(z.object({ category: z.enum(["vehicle", "driver_license", "insurance", "company_records"]), reason: z.string().trim().min(1).max(500), reasonCode: z.enum(["missing_evidence", "expired_record", "revoked_record", "failed_record", "unverified_record", "excluded_record", "requires_review"]) }).strict()).max(100),
+    }).strict().nullable().default(null),
   })
   .strict();
 const { source: _source, ...requirementFields } =

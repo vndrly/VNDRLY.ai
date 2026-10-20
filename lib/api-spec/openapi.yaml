@@ -4714,11 +4714,15 @@ components:
         safety:
           type: ['object', 'null']
           additionalProperties: false
-          required: [score, source, refreshedAt]
+          required: [score, source, refreshedAt, reasons]
           properties:
             score: { type: number, minimum: 0, maximum: 100 }
             source: { type: string }
             refreshedAt: { type: string, format: date-time }
+            reasons:
+              type: array
+              maxItems: 100
+              items: { type: string, enum: [missing_evidence, expired_record, revoked_record, failed_record, unverified_record, excluded_record, requires_review] }
         completedJobs: { type: integer, minimum: 0 }
         onTimeRate: { type: ['number', 'null'], minimum: 0, maximum: 1 }
         priorPartnerJobs: { type: integer, minimum: 0 }

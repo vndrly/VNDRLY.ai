@@ -444,7 +444,7 @@ describe("mobile service marketplace", () => {
   });
   it("uses server eligibility and unknown evidence labels without turning missing evidence into zero", async () => {
     await partner();
-    expect(screen.getAllByText("VNDRLY safety and compliance score").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("VNDRLY compliance score").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/VNDRLY does not block tickets/).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Not yet rated").length).toBe(4);
     expect(screen.getByText("Out of Service Area")).toBeTruthy();
@@ -459,6 +459,17 @@ describe("mobile service marketplace", () => {
     expect(
       requests.find((r) => r.path.includes("/work-types/9/vendors?"))?.path,
     ).toContain("siteId=11");
+  });
+  it("renders the canonical VNDRLY Partner compliance preview and coded reasons", async () => {
+    const previous = { safety: vendor.safety, safetyStatus: vendor.safetyStatus };
+    Object.assign(vendor, { safety: { score: 58, source: "VNDRLY compliance score", refreshedAt: new Date("2026-10-20T12:00:00Z"), reasons: ["expired_record"] }, safetyStatus: "rated" });
+    try {
+      await partner();
+      expect(screen.getAllByLabelText("VNDRLY compliance score 58 out of 100")).not.toHaveLength(0);
+      expect(screen.getAllByText("A required record is expired")).not.toHaveLength(0);
+    } finally {
+      Object.assign(vendor, previous);
+    }
   });
   it("confirms server-saved terms before sending and sends the saved version", async () => {
     await partner();

@@ -175,6 +175,12 @@ export const FleetHomeProjectionSchema = z.object({
 export type FleetHomeProjection = z.infer<typeof FleetHomeProjectionSchema>;
 
 const complianceCategory = z.enum(["vehicle", "driver_license", "insurance", "company_records"]);
+export const FleetComplianceReasonCodeSchema = z.enum([
+  "missing_evidence", "expired_record", "revoked_record", "failed_record", "unverified_record", "excluded_record", "requires_review",
+]);
+export const FleetComplianceRemediationCodeSchema = z.enum([
+  "review_vehicle_records", "review_driver_license", "review_insurance", "review_company_records",
+]);
 const score = z.number().int().min(0).max(100);
 export const FleetComplianceScoreSchema = z.object({
   companyId: positiveId,
@@ -188,9 +194,11 @@ export const FleetComplianceScoreSchema = z.object({
     category: complianceCategory,
     points: z.number().int().nonnegative().max(100),
     reason: z.string().trim().min(1).max(500),
+    reasonCode: FleetComplianceReasonCodeSchema,
     urgency: z.enum(["now", "soon", "later"]),
     estimatedImprovement: z.number().int().nonnegative().max(100),
     remediation: z.string().trim().min(1).max(1000),
+    remediationCode: FleetComplianceRemediationCodeSchema,
     evidenceDestination: z.string().trim().min(1).max(200),
     responsibleCapability: FleetCapabilitySchema,
     dueAt: timestamp.nullable(),
@@ -206,7 +214,7 @@ export const FleetComplianceScoreSchema = z.object({
     advisoryOnly: z.literal(true),
     evaluatedAt: timestamp,
     categories: z.array(z.object({ category: complianceCategory, score }).strict()).max(4),
-    reasons: z.array(z.object({ category: complianceCategory, reason: z.string().trim().min(1).max(500) }).strict()).max(100),
+    reasons: z.array(z.object({ category: complianceCategory, reason: z.string().trim().min(1).max(500), reasonCode: FleetComplianceReasonCodeSchema }).strict()).max(100),
   }).strict().optional(),
 }).strict();
 export type FleetComplianceScore = z.infer<typeof FleetComplianceScoreSchema>;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FleetComplianceScoreSchema, type FleetCapability, type FleetComplianceOperationalEntry } from "@workspace/api-zod";
-import { readFleetComplianceScore, projectFleetComplianceScore } from "./fleet-compliance-score";
+import { readFleetComplianceScore, projectFleetComplianceScore, mergeFleetComplianceScoreHistory } from "./fleet-compliance-score";
 
 const expired: Pick<FleetComplianceOperationalEntry, "id" | "subject" | "kind" | "verification" | "status" | "reasons" | "validUntil" | "evaluatedAt"> = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -24,6 +24,8 @@ describe("Fleet compliance score", () => {
       category: "driver_license",
       urgency: "now",
       responsibleCapability: "office",
+      reasonCode: "expired_record",
+      remediationCode: "review_driver_license",
     });
     expect(result.deductions[0].remediation).toBeTruthy();
     expect(result.deductions[0].evidenceDestination).toBeTruthy();
@@ -36,6 +38,17 @@ describe("Fleet compliance score", () => {
     });
   });
 
+  it("stores at most one score per day and retains the newest 365 snapshots", () => {
+    const old = Array.from({ length: 365 }, (_, index) => ({ at: new Date(Date.UTC(2025, 0, index + 1)).toISOString(), score: index % 101 }));
+    const replaced = mergeFleetComplianceScoreHistory(old, old[364].at.replace("00:00:00", "12:00:00"), 77);
+    expect(replaced).toHaveLength(365);
+    expect(replaced.at(-1)).toMatchObject({ score: 77 });
+    const advanced = mergeFleetComplianceScoreHistory(replaced, "2026-10-20T12:00:00.000Z", 88);
+    expect(advanced).toHaveLength(365);
+    expect(advanced[0].at).not.toBe(old[0].at);
+    expect(advanced.at(-1)).toEqual({ at: "2026-10-20T12:00:00.000Z", score: 88 });
+  });
+
   it("does not claim green compliance when no records exist", () => {
     const result = projectFleetComplianceScore(3, [], "2026-10-20T00:00:00.000Z");
     expect(result.score).toBe(0);
@@ -45,10 +58,13 @@ describe("Fleet compliance score", () => {
   });
 
   it("requires a current score-viewing capability before reading the register", async () => {
-    const register = { assertFleetComplianceScoreAccess: async () => {}, readFleetComplianceRegister: async () => ({ entries: [expired], nextCursor: null }) };
+    const recorded: unknown[] = [];
+    const register = { assertFleetComplianceScoreAccess: async () => {}, readFleetComplianceRegister: async () => ({ entries: [expired], nextCursor: null }), recordFleetComplianceScoreSnapshot: async (_actor: unknown, preview: unknown) => { recorded.push(preview); return [{ at: "2026-10-01T00:00:00.000Z", score: 40 }]; } };
     const actor = { userId: 7, companyId: 3 };
     await expect(readFleetComplianceScore(actor as never, register as never, async () => new Set<FleetCapability>(["driver"]))).rejects.toMatchObject({ status: 403 });
-    await expect(readFleetComplianceScore(actor as never, register as never, async () => new Set<FleetCapability>(["office"]))).resolves.toMatchObject({ advisoryOnly: true, score: 0 });
+    expect(recorded).toHaveLength(0);
+    await expect(readFleetComplianceScore(actor as never, register as never, async () => new Set<FleetCapability>(["office"]))).resolves.toMatchObject({ advisoryOnly: true, score: 0, history: [{ score: 40 }] });
+    expect(recorded).toHaveLength(1);
   });
 
   it("retains a capped category total across 26 failing records without invalid zero-point deductions", () => {

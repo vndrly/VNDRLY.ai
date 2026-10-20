@@ -1,4 +1,4 @@
-import {currentFleetPositions,fleetCurrentPhoneSpeed} from "@workspace/api-zod";
+import {currentFleetPositions,fleetCurrentPhoneSpeed,FleetComplianceScoreSchema} from "@workspace/api-zod";
 import React, { useState } from "react";
 import { Text, TextInput, View, Pressable, useWindowDimensions } from "react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import MapRouteReplay from "./MapRouteReplay";
 import MapboxNativeMap from "./MapboxNativeMap";
 import TogglePillButton from "./TogglePillButton";
 import FleetCheckbox from "./FleetCheckbox";
+import ImagePill from "./ImagePill";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
@@ -24,6 +25,7 @@ type Place = {
   address?: string;
   siteId?: number;
 };
+const statusColor = { red: "#DC2626", amber: "#F59E0B", green: "#15803D" } as const;
 const valid = (
   p: Place | undefined,
 ): p is Place & { latitude: number; longitude: number } =>
@@ -81,6 +83,12 @@ function FleetMapPanel({
         "/api/fleet/map-context",
       ),
     enabled: !!user,
+  });
+  const compliance = useQuery({
+    queryKey: ["fleet-map-compliance", user?.id, activeMembershipId, overview.companyId],
+    queryFn: async () => FleetComplianceScoreSchema.parse(await apiFetch<unknown>("/api/fleet/compliance-score")),
+    enabled: !!user,
+    retry: false,
   });
   const [mapMode, setMapMode] = useState<"live" | "history">("live"),
     [followDriver, setFollowDriver] = useState<number | null>(null),
@@ -176,9 +184,9 @@ function FleetMapPanel({
             id: "center",
             latitude: place.latitude,
             longitude: place.longitude,
-            title: place.name,
+            title: `${place.name}${compliance.data ? ` · ${copy("VNDRLY compliance score")} ${compliance.data.score} ${copy("out of 100")}` : ""}`,
             label: site ? "S" : "HQ",
-            color: colors.primary,
+            color: compliance.data ? statusColor[compliance.data.status] : colors.primary,
           },
         ]
       : []),
@@ -260,6 +268,7 @@ function FleetMapPanel({
   );
   return (
     <View style={{ gap: 12 }}>
+      {compliance.data && <ImagePill color={compliance.data.status} accessibilityLabel={`${copy("VNDRLY compliance status")} · ${copy(compliance.data.status)} · ${compliance.data.score} ${copy("out of 100")}`}>{copy(compliance.data.status)} · {compliance.data.score} / 100</ImagePill>}
       <View style={{ flexDirection: width >= 768 ? "row" : "column", gap: 10 }}>
         <Pressable
           accessibilityRole="button"
@@ -353,7 +362,7 @@ function FleetMapPanel({
       {mapMode === "history" ? (
         <View style={{ gap: 10 }}>
           <TextInput accessibilityLabel={copy("Search Fleet history")} placeholder={copy("Search runs, drivers, trucks, or tickets")} placeholderTextColor={colors.mutedForeground} value={historySearch} onChangeText={setHistorySearch} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12 }} />
-          <TogglePillButton compactOnTablet accessibilityLabel="Choose recorded run" onPress={() => setRunPickerOpen(value => !value)}>{view.runs.find(run => run.id === replayRun)?.title ?? copy("Choose a recorded run")} ▾</TogglePillButton>
+          <TogglePillButton compactOnTablet accessibilityLabel={copy("Choose recorded run")} onPress={() => setRunPickerOpen(value => !value)}>{view.runs.find(run => run.id === replayRun)?.title ?? copy("Choose a recorded run")} ▾</TogglePillButton>
           {runPickerOpen && view.runs.filter((run) => {
             const needle = historySearch.trim().toLowerCase();
             return !needle || [run.title, run.labels?.driverName, run.labels?.vehicleName, run.linkedTicketId ? `ticket ${run.linkedTicketId}` : ""].some((value) => value?.toLowerCase().includes(needle));

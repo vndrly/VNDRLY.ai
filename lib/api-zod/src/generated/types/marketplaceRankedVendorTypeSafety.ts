@@ -17,4 +17,14 @@ export type MarketplaceRankedVendorTypeSafety = {
   score: number;
   source: string;
   refreshedAt: Date;
+  /** @maxItems 100 */
+  reasons: (
+    | "missing_evidence"
+    | "expired_record"
+    | "revoked_record"
+    | "failed_record"
+    | "unverified_record"
+    | "excluded_record"
+    | "requires_review"
+  )[];
 } | null;

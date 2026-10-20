@@ -512,6 +512,8 @@ export const searchPartnerMarketplaceVendorsResponseItemsItemReviewCountMin = 0;
 export const searchPartnerMarketplaceVendorsResponseItemsItemSafetyScoreMin = 0;
 export const searchPartnerMarketplaceVendorsResponseItemsItemSafetyScoreMax = 100;
 
+export const searchPartnerMarketplaceVendorsResponseItemsItemSafetyReasonsMax = 100;
+
 export const searchPartnerMarketplaceVendorsResponseItemsItemCompletedJobsMin = 0;
 
 export const searchPartnerMarketplaceVendorsResponseItemsItemOnTimeRateMin = 0;
@@ -582,6 +584,21 @@ export const SearchPartnerMarketplaceVendorsResponse = zod.object({
             ),
           source: zod.string(),
           refreshedAt: zod.coerce.date(),
+          reasons: zod
+            .array(
+              zod.enum([
+                "missing_evidence",
+                "expired_record",
+                "revoked_record",
+                "failed_record",
+                "unverified_record",
+                "excluded_record",
+                "requires_review",
+              ]),
+            )
+            .max(
+              searchPartnerMarketplaceVendorsResponseItemsItemSafetyReasonsMax,
+            ),
         })
         .nullable(),
       completedJobs: zod
@@ -784,6 +801,8 @@ export const getPartnerMarketplaceVendorResponseReviewCountMin = 0;
 export const getPartnerMarketplaceVendorResponseSafetyScoreMin = 0;
 export const getPartnerMarketplaceVendorResponseSafetyScoreMax = 100;
 
+export const getPartnerMarketplaceVendorResponseSafetyReasonsMax = 100;
+
 export const getPartnerMarketplaceVendorResponseCompletedJobsMin = 0;
 
 export const getPartnerMarketplaceVendorResponseOnTimeRateMin = 0;
@@ -842,6 +861,19 @@ export const GetPartnerMarketplaceVendorResponse = zod.object({
         .max(getPartnerMarketplaceVendorResponseSafetyScoreMax),
       source: zod.string(),
       refreshedAt: zod.coerce.date(),
+      reasons: zod
+        .array(
+          zod.enum([
+            "missing_evidence",
+            "expired_record",
+            "revoked_record",
+            "failed_record",
+            "unverified_record",
+            "excluded_record",
+            "requires_review",
+          ]),
+        )
+        .max(getPartnerMarketplaceVendorResponseSafetyReasonsMax),
     })
     .nullable(),
   completedJobs: zod

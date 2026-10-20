@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import {
   workTypesTable as workTypes,
   siteLocationsTable as sites,
@@ -14,7 +14,6 @@ import {
   employeeCertificationsTable as certifications,
   ticketsTable as tickets,
   vendorRatingsTable as ratings,
-  safetyEventsTable as safetyEvents,
   partnerVendorRelationshipsTable as relationships,
   type WorkType,
   type SiteLocation,
@@ -22,6 +21,7 @@ import {
   type VendorCapability,
   type VendorPartnerServiceOffer,
 } from "@workspace/db/schema";
+import { FleetComplianceConfigurationSchema } from "@workspace/api-zod";
 import type { SessionPayload } from "../../lib/session";
 import { missingVendorApprovalFields } from "../../lib/vendor-approval-readiness";
 import { calculateSafetyEventScore } from "../../lib/safety-score";
@@ -435,29 +435,6 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
         const scheduled = relevant.filter(
           ({ ticket }) => ticket.scheduledStartAt && ticket.checkInTime,
         );
-        const events = await db
-          .select({
-            status: safetyEvents.status,
-            recordable: safetyEvents.isRecordable,
-            hipo: safetyEvents.isHighPotential,
-            type: safetyEvents.eventType,
-            createdAt: safetyEvents.createdAt,
-            updatedAt: safetyEvents.updatedAt,
-          })
-          .from(safetyEvents)
-          .where(
-            and(
-              eq(safetyEvents.vendorId, vendorId),
-              eq(safetyEvents.partnerId, context.partnerId),
-              inArray(safetyEvents.status, [
-                "submitted",
-                "under_review",
-                "resolved",
-                "closed",
-              ]),
-            ),
-          )
-          .orderBy(desc(safetyEvents.updatedAt));
         const [relationship] = await db
           .select({
             status: relationships.status,
@@ -488,7 +465,7 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
               validRatings.length
             : null,
           reviewCount: validRatings.length,
-          safety: marketplaceSafetySummary(events, now),
+          safety: marketplaceComplianceSummary(vendor.fleetComplianceConfiguration),
           completedJobs: relevant.length,
           priorPartnerJobs: history.length,
           onTimeRate: scheduled.length
@@ -500,6 +477,19 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
       }
       return result;
     },
+  };
+}
+
+/** Public Partner projection uses the same persisted preview returned to the vendor helper. */
+export function marketplaceComplianceSummary(raw: unknown): RankingCandidate["safety"] {
+  const parsed = FleetComplianceConfigurationSchema.safeParse(raw ?? {});
+  const preview = parsed.success ? parsed.data.partnerScorePreview : null;
+  if (!preview) return null;
+  return {
+    score: preview.score,
+    source: "VNDRLY compliance score",
+    refreshedAt: preview.evaluatedAt,
+    reasons: preview.reasons.map((item) => item.reasonCode),
   };
 }
 
@@ -542,5 +532,6 @@ export function marketplaceSafetySummary(
     refreshedAt: new Date(
       Math.max(...events.map((row) => row.updatedAt.getTime())),
     ).toISOString(),
+    reasons: [],
   };
 }

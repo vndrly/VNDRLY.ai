@@ -64,8 +64,8 @@ describe("Fleet mobile workflow contracts", () => {
       evaluatedAt: at, history: [],
       categories: [{ category: "vehicle", score: 72 }],
       deductions: [{ id, category: "vehicle", points: 8,
-        reason: "Inspection expires soon", urgency: "soon",
-        estimatedImprovement: 8, remediation: "Upload the renewed inspection",
+        reason: "Inspection expires soon", reasonCode: "requires_review", urgency: "soon",
+        estimatedImprovement: 8, remediation: "Upload the renewed inspection", remediationCode: "review_vehicle_records",
         evidenceDestination: "Fleet vehicle records", responsibleCapability: "admin",
         dueAt: at }],
     };
