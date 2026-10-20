@@ -1,4 +1,6 @@
 import { Pool } from "pg";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Only additive DDL. Keep names aligned with lib/db/src/schema/fleet*.ts. */
 export const fleetMobileWorkflowsMigration = [
@@ -47,7 +49,8 @@ export const fleetMobileWorkflowsMigration = [
     CONSTRAINT fleet_yard_orders_yard_fk FOREIGN KEY (company_id,yard_id) REFERENCES fleet_yards(company_id,id),
     CONSTRAINT fleet_yard_orders_version_check CHECK (version > 0),
     CONSTRAINT fleet_yard_orders_status_check CHECK (status IN ('requested','assigned','in_progress','reported')),
-    CONSTRAINT fleet_yard_orders_report_check CHECK ((status = 'reported' AND outcome IN ('ready','needs_attention','unable_to_complete') AND reported_at IS NOT NULL) OR (status <> 'reported' AND outcome IS NULL AND reported_at IS NULL)),
+    CONSTRAINT fleet_yard_orders_report_check CHECK ((status = 'reported' AND outcome IS NOT NULL AND outcome IN ('ready','needs_attention','unable_to_complete') AND reported_at IS NOT NULL) OR (status <> 'reported' AND outcome IS NULL AND reported_at IS NULL)),
+    CONSTRAINT fleet_yard_orders_report_presence_check CHECK (status <> 'reported' OR outcome IS NOT NULL),
     CONSTRAINT fleet_yard_orders_findings_check CHECK (jsonb_typeof(findings) = 'array' AND jsonb_array_length(findings) <= 100),
     CONSTRAINT fleet_yard_orders_company_id_unique UNIQUE (company_id,id)
   )`,
@@ -86,7 +89,8 @@ export const fleetMobileWorkflowsMigration = [
     CONSTRAINT fleet_asset_custody_version_check CHECK (version > 0),
     CONSTRAINT fleet_asset_custody_state_check CHECK (state IN ('intake','at_yard','reserved','attached','in_transit','returned','transferred')),
     CONSTRAINT fleet_asset_custody_method_check CHECK (method IN ('gate_scan','gps_geofence','manual','driver_app')),
-    CONSTRAINT fleet_asset_custody_coordinates_check CHECK ((latitude IS NULL AND longitude IS NULL) OR (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)),
+    CONSTRAINT fleet_asset_custody_coordinates_check CHECK ((latitude IS NULL AND longitude IS NULL) OR (latitude IS NOT NULL AND longitude IS NOT NULL AND latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)),
+    CONSTRAINT fleet_asset_custody_coordinates_pair_check CHECK ((latitude IS NULL) = (longitude IS NULL)),
     CONSTRAINT fleet_asset_custody_company_asset_unique UNIQUE (company_id,asset_id),
     CONSTRAINT fleet_asset_custody_asset_unique UNIQUE (asset_id)
   )`,
@@ -106,7 +110,8 @@ export const fleetMobileWorkflowsMigration = [
     CONSTRAINT fleet_asset_custody_events_version_check CHECK (asset_version > 0),
     CONSTRAINT fleet_asset_custody_events_state_check CHECK (state IN ('intake','at_yard','reserved','attached','in_transit','returned','transferred')),
     CONSTRAINT fleet_asset_custody_events_method_check CHECK (method IN ('gate_scan','gps_geofence','manual','driver_app')),
-    CONSTRAINT fleet_asset_custody_events_coordinates_check CHECK ((latitude IS NULL AND longitude IS NULL) OR (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180))
+    CONSTRAINT fleet_asset_custody_events_coordinates_check CHECK ((latitude IS NULL AND longitude IS NULL) OR (latitude IS NOT NULL AND longitude IS NOT NULL AND latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)),
+    CONSTRAINT fleet_asset_custody_events_coordinates_pair_check CHECK ((latitude IS NULL) = (longitude IS NULL))
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS fleet_asset_custody_events_operation_unique ON fleet_asset_custody_events(operation_id)`,
   `CREATE INDEX IF NOT EXISTS fleet_asset_custody_events_history_idx ON fleet_asset_custody_events(company_id,asset_id,occurred_at)`,
@@ -148,6 +153,44 @@ export const fleetMobileWorkflowsMigration = [
       END IF;
     END LOOP;
   END $$`,
+  `CREATE OR REPLACE FUNCTION fleet_mobile_reject_company_change() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN IF NEW.company_id IS DISTINCT FROM OLD.company_id THEN
+      RAISE EXCEPTION 'Fleet record company cannot change';
+    END IF; RETURN NEW; END $$`,
+  `DO $$ DECLARE table_name text; trigger_name text; BEGIN
+    FOREACH table_name IN ARRAY ARRAY['fleet_yards','fleet_person_capabilities','fleet_yard_orders','fleet_yard_order_assignments','fleet_asset_custody'] LOOP
+      trigger_name := table_name || '_company_immutable';
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = to_regclass(table_name) AND tgname = trigger_name) THEN
+        EXECUTE format('CREATE TRIGGER %I BEFORE UPDATE OF company_id ON %I FOR EACH ROW EXECUTE FUNCTION fleet_mobile_reject_company_change()', trigger_name, table_name);
+      END IF;
+    END LOOP;
+  END $$`,
+] as const;
+
+/** Replays also repair checks on tables initially created by an older Drizzle schema. */
+const checkRepairs = [
+  ["fleet_yards", "fleet_yards_version_check", "version > 0"],
+  ["fleet_person_capabilities", "fleet_person_capabilities_version_check", "version > 0"],
+  ["fleet_person_capabilities", "fleet_person_capabilities_values_check", "capabilities <@ ARRAY['admin','office','dispatch','yard','driver','self_dispatch']::text[]"],
+  ["fleet_person_capabilities", "fleet_person_capabilities_self_dispatch_check", "NOT ('self_dispatch' = ANY(capabilities)) OR 'driver' = ANY(capabilities)"],
+  ["fleet_yard_orders", "fleet_yard_orders_version_check", "version > 0"],
+  ["fleet_yard_orders", "fleet_yard_orders_status_check", "status IN ('requested','assigned','in_progress','reported')"],
+  ["fleet_yard_orders", "fleet_yard_orders_report_check", "(status = 'reported' AND outcome IS NOT NULL AND outcome IN ('ready','needs_attention','unable_to_complete') AND reported_at IS NOT NULL) OR (status <> 'reported' AND outcome IS NULL AND reported_at IS NULL)"],
+  ["fleet_yard_orders", "fleet_yard_orders_report_presence_check", "status <> 'reported' OR outcome IS NOT NULL"],
+  ["fleet_yard_orders", "fleet_yard_orders_findings_check", "jsonb_typeof(findings) = 'array' AND jsonb_array_length(findings) <= 100"],
+  ["fleet_yard_order_assignments", "fleet_yard_order_assignments_time_check", "ended_at IS NULL OR ended_at >= assigned_at"],
+  ["fleet_yard_order_events", "fleet_yard_order_events_version_check", "order_version > 0"],
+  ["fleet_yard_order_events", "fleet_yard_order_events_detail_check", "jsonb_typeof(detail) = 'object' AND pg_column_size(detail) <= 32768"],
+  ["fleet_asset_custody", "fleet_asset_custody_version_check", "version > 0"],
+  ["fleet_asset_custody", "fleet_asset_custody_state_check", "state IN ('intake','at_yard','reserved','attached','in_transit','returned','transferred')"],
+  ["fleet_asset_custody", "fleet_asset_custody_method_check", "method IN ('gate_scan','gps_geofence','manual','driver_app')"],
+  ["fleet_asset_custody", "fleet_asset_custody_coordinates_check", "(latitude IS NULL AND longitude IS NULL) OR (latitude IS NOT NULL AND longitude IS NOT NULL AND latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)"],
+  ["fleet_asset_custody", "fleet_asset_custody_coordinates_pair_check", "(latitude IS NULL) = (longitude IS NULL)"],
+  ["fleet_asset_custody_events", "fleet_asset_custody_events_version_check", "asset_version > 0"],
+  ["fleet_asset_custody_events", "fleet_asset_custody_events_state_check", "state IN ('intake','at_yard','reserved','attached','in_transit','returned','transferred')"],
+  ["fleet_asset_custody_events", "fleet_asset_custody_events_method_check", "method IN ('gate_scan','gps_geofence','manual','driver_app')"],
+  ["fleet_asset_custody_events", "fleet_asset_custody_events_coordinates_check", "(latitude IS NULL AND longitude IS NULL) OR (latitude IS NOT NULL AND longitude IS NOT NULL AND latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)"],
+  ["fleet_asset_custody_events", "fleet_asset_custody_events_coordinates_pair_check", "(latitude IS NULL) = (longitude IS NULL)"],
 ] as const;
 
 async function main(): Promise<void> {
@@ -156,7 +199,13 @@ async function main(): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext('fleet_mobile_workflows_migration'))");
     for (const statement of fleetMobileWorkflowsMigration) await client.query(statement);
+    for (const [table, name, definition] of checkRepairs) {
+      await client.query(`DO $$ BEGIN IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('${table}') AND conname = '${name}'
+      ) THEN ALTER TABLE ${table} ADD CONSTRAINT ${name} CHECK (${definition}); END IF; END $$`);
+    }
     await client.query("COMMIT");
     console.log("Fleet mobile workflow tables ready");
   } catch (error) {
@@ -168,6 +217,15 @@ async function main(): Promise<void> {
   }
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replaceAll("\\", "/")}`).href) {
+export function isFleetMigrationMain(moduleUrl: string, argvPath: string | undefined, platform: NodeJS.Platform = process.platform): boolean {
+  if (!argvPath) return false;
+  const windows = platform === "win32";
+  const pathApi = windows ? path.win32 : path.posix;
+  const modulePath = pathApi.resolve(fileURLToPath(moduleUrl, { windows }));
+  const invokedPath = pathApi.resolve(argvPath);
+  return windows ? modulePath.toLowerCase() === invokedPath.toLowerCase() : modulePath === invokedPath;
+}
+
+if (isFleetMigrationMain(import.meta.url, process.argv[1])) {
   main().catch((error) => { console.error(error); process.exitCode = 1; });
 }

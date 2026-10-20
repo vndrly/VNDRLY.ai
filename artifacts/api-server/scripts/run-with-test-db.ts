@@ -239,6 +239,12 @@ async function main(): Promise<void> {
     );
     if (checkCode !== 0) process.exit(checkCode);
     await provisionPrivateAuthColumns(target.testUrl);
+    const fleetMigrationCode = await spawnChild(
+      "corepack",
+      ["pnpm", "--filter", "@workspace/api-server", "run", "migrate:fleet-mobile-workflows"],
+      env,
+    );
+    if (fleetMigrationCode !== 0) process.exit(fleetMigrationCode);
     process.exit(await spawnChild(childArgs[0]!, childArgs.slice(1), env));
   }
   if (process.env.VNDRLY_TEST_DB_MODE) {
