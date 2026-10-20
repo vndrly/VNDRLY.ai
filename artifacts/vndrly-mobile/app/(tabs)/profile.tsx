@@ -464,7 +464,7 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
-      {user?.vendorId && availableMemberships.some(m => m.id === activeMembershipId && m.role === "admin") ? <LayeredPillButton onPress={() => router.push("/company-operations")} height={40} style={styles.actionBtn}><Text style={styles.actionText}>Company operations</Text></LayeredPillButton> : null}<LayeredPillButton onPress={() => router.push("/onboarding")} height={40} style={styles.actionBtn} testID="button-onboarding">
+      {(user?.vendorId || user?.partnerId) && availableMemberships.some(m => m.id === activeMembershipId && m.role === "admin") ? <LayeredPillButton onPress={() => router.push("/company-operations")} height={40} style={styles.actionBtn}><Text style={styles.actionText}>Company operations</Text></LayeredPillButton> : null}<LayeredPillButton onPress={() => router.push("/onboarding")} height={40} style={styles.actionBtn} testID="button-onboarding">
         <Text style={[styles.actionText, styles.pillTextShadow]}>{t("onboardingNative.title")}</Text>
       </LayeredPillButton>
       <LayeredPillButton
@@ -534,7 +534,6 @@ export default function ProfileScreen() {
         </LayeredPillButton>
       ) : null}
 
-      {user?.partnerId&&canManageCompany?<LayeredPillButton onPress={()=>router.push("/fleet-agreements")} height={40} style={styles.actionBtn}><Text style={styles.actionText}>{t("fleet.agreementEditor")}</Text></LayeredPillButton>:null}
       {/* Task #838: brief language-change confirmation toast.
           Mirrors the manual-refresh toast styling used on the
           history/open-tickets screens so the visual language stays

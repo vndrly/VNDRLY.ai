@@ -9,12 +9,22 @@ import type { z } from "zod/v4";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import TogglePillButton from "@/components/TogglePillButton";
+import { useAuth } from "@/hooks/use-auth";
+import { readFleetHomeVisibility, saveFleetHomeVisibility } from "@/hooks/use-fleet-home";
+import type { FleetHomeVisibility } from "@/components/fleet/FleetHome";
 type Role = z.infer<typeof FleetRoleSchema>;
 export default function FleetSetup({ onSaved }: {
     onSaved: () => void;
 }) {
     const colors = useColors();
     const copy = useFleetCopy();
+    const { user, activeMembership, activeMembershipId } = useAuth();
+    const homeIdentity = user?.id && (activeMembership?.orgId ?? user.vendorId) && (activeMembershipId ?? user.activeMembershipId)
+        ? { userId: user.id, companyId: (activeMembership?.orgId ?? user.vendorId)!, membershipId: (activeMembershipId ?? user.activeMembershipId)! } : null;
+    const homeIdentityKey = homeIdentity ? `${homeIdentity.companyId}:${homeIdentity.userId}:${homeIdentity.membershipId}` : "";
+    const canSetHomeVisibility = user?.role === "admin" || activeMembership?.role === "admin" || user?.vendorRole === "admin";
+    const [homeVisibility, setHomeVisibility] = useState<FleetHomeVisibility>({});
+    const [homeVisibilityError, setHomeVisibilityError] = useState("");
     const [setup, setSetup] = useState<Setup | null>(null);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
@@ -24,6 +34,20 @@ export default function FleetSetup({ onSaved }: {
     const [sites, setSites] = useState<number[]>([]);
     const [memberId, setMemberId] = useState<number | null>(null);
     const [roles, setRoles] = useState<Role[]>([]);
+    useEffect(() => {
+        if (!homeIdentity || !canSetHomeVisibility) return;
+        let alive = true;
+        void readFleetHomeVisibility(homeIdentity).then(value => { if (alive) setHomeVisibility(value); }).catch(() => { if (alive) setHomeVisibilityError("Home visibility could not be loaded."); });
+        return () => { alive = false; };
+    }, [homeIdentityKey, canSetHomeVisibility]);
+    async function changeHomeVisibility(module: keyof FleetHomeVisibility, checked: boolean) {
+        if (!homeIdentity) return;
+        const next = { ...homeVisibility, [module]: checked };
+        setHomeVisibility(next);
+        setHomeVisibilityError("");
+        try { await saveFleetHomeVisibility(homeIdentity, next); }
+        catch { setHomeVisibility(homeVisibility); setHomeVisibilityError("Home visibility could not be saved."); }
+    }
     useEffect(() => {
         let alive = true;
         void apiFetch<Setup>("/api/fleet/setup").then(value => { if (alive)
@@ -89,6 +113,13 @@ export default function FleetSetup({ onSaved }: {
       <Text style={{ color: colors.text }}>{copy("Draft changes are unsaved. Fleet roles grant operational access only; safety release and finance remain separate.")}</Text>
       <Text style={{color:colors.text}}>{copy("Build truck/rig/driver Details in Inventory and Details. These settings control company resource access and office dispatch permissions; drivers do not need site assignments.")}</Text>
       <FleetCheckbox label={copy("Enable Fleet Ops")} disabled={busy} checked={setup.enabled} onChange={enabled => setSetup({ ...setup, enabled })} />
+      {canSetHomeVisibility && homeIdentity && <View style={{ gap: 8, backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 2, borderRadius: 16, padding: 16 }}>
+        <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{copy("Fleet Home visibility")}</Text>
+        <Text style={{ color: colors.text }}>{copy("Choose which eligible Fleet cards appear on this device. Access permissions stay the same.")}</Text>
+        {homeVisibilityError ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(homeVisibilityError)}</Text> : null}
+        {([ ["dispatch", "Dispatch Board"], ["yard", "Yard Board"], ["runs", "Active Runs"], ["map", "Fleet Map"], ["compliance", "Compliance"] ] as const).map(([module, label]) =>
+          <FleetCheckbox key={module} label={copy(`Show ${label} on Home`)} checked={homeVisibility[module] !== false} onChange={checked => void changeHomeVisibility(module, checked)} />)}
+      </View>}
       {setup.fleets.map(fleet => <TogglePillButton compactOnTablet key={fleet.id} disabled={busy} solid={selectedFleet === fleet.id} onPress={() => setSelectedFleet(fleet.id)}>{`${fleet.name}${copy(" \u00B7 sites ")}${fleet.siteIds.join(", ")}`}</TogglePillButton>)}
       {setup.fleets.filter(fleet => fleet.id === selectedFleet).map(fleet => <View key={`detail:${fleet.id}`} style={{ gap: 8, backgroundColor: colors.card, padding: 16, borderRadius: 14 }}>
         <TextInput accessibilityLabel={copy("Resource pool name")} editable={!busy} value={fleet.name} onChangeText={value => setSetup({ ...setup, fleets: setup.fleets.map(item => item.id === fleet.id ? { ...item, name: value } : item) })} style={{ color: colors.text, padding: 12, borderColor: colors.border, borderWidth: 1 }} />

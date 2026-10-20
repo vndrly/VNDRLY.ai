@@ -4,11 +4,14 @@ import TogglePillButton from "./TogglePillButton";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
+import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export type CompanyOperations = { vendorId: number; categories: ("field" | "fleet" | "gate")[]; canManage: boolean };
 export default function CompanyOperationsChoice() {
   const { user, activeMembershipId } = useAuth();
   const colors = useColors();
+  const { t } = useTranslation();
   const [current, setCurrent] = useState<CompanyOperations | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -18,6 +21,10 @@ export default function CompanyOperationsChoice() {
     if (user?.vendorId) void apiFetch<CompanyOperations>("/api/company-operations").then(value => { if (alive && value.vendorId === user.vendorId) setCurrent(value); }).catch(cause => { if (alive) setError(cause.message); });
     return () => { alive = false; };
   }, [user?.vendorId, activeMembershipId]);
+  if (!user?.vendorId && user?.partnerId && (user.role === "admin" || user.availableMemberships?.some(item => item.id === activeMembershipId && item.role === "admin"))) return <View style={{ gap: 10, padding: 16 }}>
+    <Text style={{ color: colors.foreground, fontWeight: "700" }}>Company operations</Text>
+    <TogglePillButton accessibilityLabel={t("fleet.agreementEditor")} onPress={() => router.push("/fleet-agreements")}>{t("fleet.agreementEditor")}</TogglePillButton>
+  </View>;
   if (!user?.vendorId) return null;
   if (!current) return <Text style={{ color: colors.foreground, padding: 16 }}>{error || "Loading company operations…"}</Text>;
   if (!current.canManage) return <Text style={{ color: colors.foreground, padding: 16 }}>Ask your company administrator to change its operations categories.</Text>;

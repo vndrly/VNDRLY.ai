@@ -1,16 +1,32 @@
 import React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ api: vi.fn() }));
+const mocks = vi.hoisted(() => ({ api: vi.fn(), stored: vi.fn(), saveVisibility: vi.fn(), role: "admin" }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 7, role: mocks.role }, activeMembershipId: 9, activeMembership: { orgId: 3, role: mocks.role } }) }));
+vi.mock("@react-native-async-storage/async-storage", () => ({ default: { getItem: mocks.stored, setItem: mocks.saveVisibility } }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ text: "black", border: "gray", destructive: "red" }) }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => "30000000-0000-4000-8000-000000000001" }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, disabled }: any) => <button disabled={disabled} onClick={onPress}>{children}</button> }));
 import FleetSetup from "./FleetSetup";
 const fleetId = "10000000-0000-4000-8000-000000000001";
 const configuration = { expectedVersion: 5, enabled: true, fleets: [{ id: fleetId, name: "North Fleet", siteIds: [392], requiredCertifications: ["CDL"] }], grants: [{ userId: 1069, fleetIds: [fleetId], siteIds: [392], roles: ["driver"], financeRead: true, safetyRelease: false }], members: [{ userId: 1069, name: "Synthetic Reviewer" }], sites: [{ siteId: 392, name: "Fictional site" }] };
-afterEach(() => { cleanup(); mocks.api.mockReset(); });
+afterEach(() => { cleanup(); mocks.api.mockReset(); mocks.stored.mockReset(); mocks.saveVisibility.mockReset(); mocks.role = "admin"; });
 describe("mobile Fleet setup", () => {
+  it("lets an Admin hide an eligible Home module on this device", async () => {
+    mocks.api.mockResolvedValue(configuration);
+    mocks.stored.mockResolvedValue(null);
+    render(<FleetSetup onSaved={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Show Fleet Map on Home" }));
+    await waitFor(() => expect(mocks.saveVisibility).toHaveBeenCalledWith("fleet-home-visibility:3:7:9", expect.stringContaining('"map":false')));
+  });
+  it("does not offer Home visibility controls to an Office user", async () => {
+    mocks.role = "office";
+    mocks.api.mockResolvedValue(configuration);
+    render(<FleetSetup onSaved={vi.fn()} />);
+    expect(await screen.findByText("Save Fleet access settings")).toBeTruthy();
+    expect(screen.queryByRole("checkbox", { name: "Show Fleet Map on Home" })).toBeNull();
+  });
   it("drops obsolete pure-driver sites while preserving mixed office authority",async()=>{
     mocks.api.mockResolvedValueOnce({...configuration,grants:[...configuration.grants,{...configuration.grants[0],userId:1070,roles:["driver","dispatcher"]}]}).mockResolvedValue({version:6});
     render(<FleetSetup onSaved={vi.fn()}/>);fireEvent.click(await screen.findByText("Save Fleet access settings"));
