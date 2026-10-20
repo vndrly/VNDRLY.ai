@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/components/WorkdayControls", () => ({default: () => <div data-testid="fleet-start-clock">Start Shift</div>}));
 const mocks = vi.hoisted(() => ({
   api: vi.fn(),
+  push: vi.fn(),
   membership: 1,
   actions: [] as any[],
   work:{session:null as any,storageHealth:null as any,status:{pending:0,needsReconciliation:0,pendingEvidence:0,locked:false},commands:[],error:"",refresh:vi.fn()},
@@ -39,7 +40,7 @@ vi.mock("@/hooks/use-auth", () => ({
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({ text: "black", border: "gray", destructive: "red" }),
 }));
-vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
+vi.mock("expo-router", () => ({ router: { push: mocks.push } }));
 vi.mock("expo-crypto", () => ({
   randomUUID: () => "10000000-0000-4000-8000-000000000001",
 }));
@@ -82,43 +83,43 @@ afterEach(() => {
   mocks.api.mockReset();
   mocks.membership = 1;
   mocks.actions = [];
+  mocks.push.mockReset();
   mocks.work.session=null;
   mocks.work.storageHealth=null;
 });
 describe("mobile Fleet authorization", () => {
   it("embeds the real Compliance fallback under one page frame", async () => {
-    mocks.api.mockResolvedValue({ entries: [], mode: "warn_only", nextCursor: null });
-    render(<FleetShell module="compliance" />);
-    expect(await screen.findByText(/No evidence recorded/)).toBeTruthy();
+    mocks.api.mockResolvedValue({ companyId: 609, score: 100, status: "green", advisoryOnly: true, evaluatedAt: "2026-10-20T12:00:00Z", categories: [], deductions: [], history: [] });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><FleetShell module="compliance" /></QueryClientProvider>);
+    expect(await screen.findByText(/No current score deductions/)).toBeTruthy();
     expect(screen.getAllByRole("heading", { name: "Compliance" })).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-page-back")).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-safe-area")).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-shell-scroll")).toHaveLength(1);
     expect(screen.queryByTestId("fleet-legacy-scroll")).toBeNull();
   });
-  it("returns from an embedded resource view to the same Dispatch workspace", async () => {
+  it("loads the routed Dispatch workspace from its current endpoint shapes", async () => {
     const fleet = (id: string, name: string) => ({ id, name, siteIds: [], equipmentAssetIds: [] });
-    const run = (id: string, title: string, fleetId: string) => ({ id, title, fleetId, status: "in_progress", version: 1, driverUserId: 1, vehicleAssetId: null, trailerAssetId: null, allowedActions: [], stops: [], loads: [], inspections: [], records: [], events: [], currentStopId: null });
-    mocks.api.mockImplementation(async (path: string) => path === "/api/fleet/resources"
-      ? { drivers: [], equipment: [] }
-      : { ...overview, roles: ["dispatcher"], capabilities: { canDispatch: true, canManage: true, canDrive: false }, fleets: [fleet("fleet-1", "Fleet One"), fleet("fleet-2", "Fleet Two")], runs: [run("run-1", "Run One", "fleet-1"), run("run-2", "Run Two", "fleet-2")] });
+    mocks.api.mockImplementation(async (path: string) => path === "/api/fleet/overview"
+      ? { ...overview, roles: ["dispatcher"], capabilities: { canDispatch: true, canManage: true, canDrive: false }, fleets: [fleet("fleet-1", "Fleet One"), fleet("fleet-2", "Fleet Two")] }
+      : path === "/api/fleet/resources" ? { drivers: [], equipment: [] }
+      : path === "/api/fleet/dispatch-plans" ? { plans: [] }
+      : path === "/api/fleet/commercial" ? { destinations: [] }
+      : path === "/api/fleet/yards" ? { yards: [] }
+      : path === "/api/fleet/yard-orders" ? { orders: [] }
+      : path === "/api/fleet/details" ? { details: [], nextCursor: null, canManage: true }
+      : (() => { throw Error(`Unexpected Fleet endpoint: ${path}`); })());
     render(<FleetShell module="dispatch" />);
-    expect(await screen.findByRole("button", { name: "Run Two" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Fleet One" }));
-    expect(screen.getByRole("button", { name: "Run One" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Run Two" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Origins and Destinations" }));
-    expect(await screen.findByText("Reusable destination settings")).toBeTruthy();
-    expect(screen.getByText("Origins and Destinations")).toBeTruthy();
+    expect(await screen.findByText("Authorized work → route and return → Yard Detail → driver → review and release")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Fleet One/ })).toBeTruthy();
     expect(screen.getAllByRole("heading", { name: "Dispatch" })).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-page-back")).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-safe-area")).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-shell-scroll")).toHaveLength(1);
     expect(screen.queryByTestId("fleet-legacy-scroll")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Back to Fleet Dispatch" }));
-    expect(screen.queryByText("Reusable destination settings")).toBeNull();
-    expect(screen.getByRole("button", { name: "Run One" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Run Two" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "All Fleet modules" }));
+    expect(mocks.push).toHaveBeenCalledWith("/(tabs)/fleet?module=home");
   });
   it("retains modern driver acknowledgement before transport and labels its pending outcome",async()=>{
     mocks.work.storageHealth={state:"low",availableBytes:1024,reserveBytes:67108864,retainedEvidenceBytes:500000,evidenceCount:50};
