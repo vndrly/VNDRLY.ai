@@ -81,7 +81,10 @@ function DispatchBoardContent() {
       const visibleOrders = yardOrders.orders.filter(order => order.companyId === overview.companyId);
       const visibleOrderIds = new Set(visibleOrders.map(order => order.id));
       const missingOrderIds = [...new Set(parsed.map(plan => plan.yardOrderId).filter((id): id is string => !!id && !visibleOrderIds.has(id)))];
-      const linkedOrders = await Promise.all(missingOrderIds.map(async id => FleetYardOrderSchema.parse(await read(`/api/fleet/yard-orders/${id}`))));
+      const linkedOrders = await Promise.all(missingOrderIds.map(async id => {
+        const response = await read<{ order: unknown; events: unknown[] }>(`/api/fleet/yard-orders/${id}`);
+        return FleetYardOrderSchema.parse(response.order);
+      }));
       if (!current() || linkedOrders.some(order => order.companyId !== overview.companyId)) throw Error("Dispatch permission or company scope changed.");
       setData({ overview, resources, places: commercial.destinations, yards: yardPage.yards, yardOrders: [...visibleOrders, ...linkedOrders], details, plans: parsed });
       setFleetId(prior => prior || overview.fleets[0]?.id || "");
@@ -97,7 +100,10 @@ function DispatchBoardContent() {
   const group = data?.overview.fleets.find(item => item.id === fleetId);
   const selected = data?.plans.find(plan => plan.id === selectedId);
   const selectedRun = data?.overview.runs.find(run => run.id === selected?.runId);
-  const selectedAssignmentComplete = !!selected?.detailId && !!selected.driverUserId && !!data?.details.some(detail => detail.id === selected.detailId && detail.accessGroupIds.includes(selected.fleetId) && !detail.archivedAt);
+  const selectedAssignmentComplete = !!selected?.detailId
+    && !!selected.driverUserId
+    && !!data?.details.some(detail => detail.id === selected.detailId && detail.accessGroupIds.includes(selected.fleetId) && !detail.archivedAt)
+    && !!data?.resources.drivers.some(driver => driver.userId === selected.driverUserId && driver.fleetIds.includes(selected.fleetId));
   async function save() {
     if (lock.current || !route || !ticket || !group || !billingSiteId) return;
     const exact = pendingCreate.current ?? FleetDispatchPlanInputSchema.parse({ operationId: Crypto.randomUUID(), fleetId, title, billingSiteId, routePlan: route, ticket, detailId: null, driverUserId: null, ...(selectedRunOrder ? { runOrderSelection: selectedRunOrder } : {}) });

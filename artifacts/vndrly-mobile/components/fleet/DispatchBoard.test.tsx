@@ -140,7 +140,7 @@ it("reads a linked Yard Order directly when it is outside the first list page", 
     if (path === "/api/fleet/commercial") return { destinations: [yard, job], sites: [] };
     if (path === "/api/fleet/yards") return { yards: [] };
     if (path === "/api/fleet/yard-orders") return { orders: [] };
-    if (path === `/api/fleet/yard-orders/${orderId}`) return linkedOrder;
+    if (path === `/api/fleet/yard-orders/${orderId}`) return { order: linkedOrder, events: [] };
     if (path === "/api/fleet/details") return { details: [detail], nextCursor: null, canManage: true };
     throw Error(path);
   });
@@ -164,6 +164,26 @@ it("explains and disables release when a stale ready plan has no complete assign
   });
   render(<DispatchBoard />);
   fireEvent.click(await screen.findByRole("button", { name: /Incomplete ready plan/ }));
+  expect(screen.getByText(/Choose an available Detail and driver/)).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Release to driver" }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it("disables release when the assigned driver is no longer available to the Fleet", async () => {
+  const route = defaultFleetDispatchRoute(yard, job), detailId = id(6);
+  const detail = { id: detailId, companyId: 11, version: 1, name: "Reusable Detail", vehicleAssetId: id(10), rigPackageId: null, rigPackageVersion: null, driverUserId: null, accessGroupIds: [id(3)], effectiveFrom: "2026-01-01T00:00:00Z", effectiveUntil: null, archivedAt: null };
+  const plan: any = { id: id(7), operationId: id(8), companyId: 11, version: 2, state: "ready_to_dispatch", runId: null, createdByUserId: 9, createdAt: "2026-10-20T12:00:00Z", fleetId: id(3), title: "Removed driver plan", billingSiteId: 7, routePlan: route, ticket: { kind: "authorized", ticketId: 88 }, detailId, driverUserId: 21 };
+  api.mockImplementation(async (path: string) => {
+    if (path === "/api/fleet/overview") return overview;
+    if (path === "/api/fleet/resources") return { drivers: [{ userId: 21, name: "Driver", fleetIds: [id(99)] }], equipment: [], tickets: [{ id: 88, siteId: 7, status: "initiated" }] };
+    if (path === "/api/fleet/dispatch-plans") return { plans: [plan] };
+    if (path === "/api/fleet/commercial") return { destinations: [yard, job], sites: [] };
+    if (path === "/api/fleet/yards") return { yards: [] };
+    if (path === "/api/fleet/yard-orders") return { orders: [] };
+    if (path === "/api/fleet/details") return { details: [detail], nextCursor: null, canManage: true };
+    throw Error(path);
+  });
+  render(<DispatchBoard />);
+  fireEvent.click(await screen.findByRole("button", { name: /Removed driver plan/ }));
   expect(screen.getByText(/Choose an available Detail and driver/)).toBeTruthy();
   expect((screen.getByRole("button", { name: "Release to driver" }) as HTMLButtonElement).disabled).toBe(true);
 });
