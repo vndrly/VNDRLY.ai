@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createHmac } from "node:crypto";
+import { FleetComplianceRecordSchema } from "@workspace/api-zod";
+import type { ObjectStore } from "../lib/objectStore";
 import { getTableName } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { subjectFingerprint } from "../services/service-matching/candidates";
@@ -9,6 +12,7 @@ import {
   marketplaceComplianceSummary,
   marketplaceSafetySummary,
 } from "../services/marketplace/partner-store";
+import { projectCanonicalFleetComplianceConfigurationScore } from "../services/fleet-compliance-score";
 
 const state = vi.hoisted(() => ({
   reads: [] as { table: string; sql: string; params: unknown[] }[],
@@ -386,7 +390,16 @@ describe("partner marketplace persistence boundary", () => {
       safetyStatus: "not_yet_rated",
     });
   });
-  it("reprojects Partner compliance from current evidence without a vendor page visit", () => {
+  it("uses the full canonical evaluator for Partner scores without a vendor page visit", async () => {
+    const secret = "marketplace-compliance-test-secret";
+    const record = FleetComplianceRecordSchema.parse({
+      evidence: { id: "11111111-1111-4111-8111-111111111111", revision: 2, subject: { kind: "carrier", id: 3 }, requirementId: "insurance", requirementVersion: 1, status: "verified", validFrom: "2026-01-01T00:00:00.000Z", validUntil: "2027-10-19T00:00:00.000Z", verifiedAt: "2026-01-01T00:00:00.000Z", verifiedByUserId: 7, source: "private", privateDocumentRef: null, restrictions: {} },
+      attributes: { kind: "insurance", coverage: { id: "11111111-1111-4111-8111-111111111111", revision: 2, policyNumber: "PRIVATE", insuredLegalEntity: "PRIVATE", privateDocumentRef: null, coverageType: "auto_liability", state: "verified", reviewedByUserId: 7, reviewedAt: "2026-01-01T00:00:00.000Z", validFrom: "2026-01-01T00:00:00.000Z", validUntil: "2027-10-19T00:00:00.000Z", carrierIds: [3], states: ["OK"], cargoCodes: null, equipmentIds: null, scopesReviewed: false, limitUSD: "750000", filingStatus: "unverified", filingVerifiedAt: null, underlyingPolicyId: null, attachmentPointUSD: null, followFormReviewed: false } },
+      retentionClass: "insurance", retainUntil: null, legalHold: false,
+    });
+    const digest = createHmac("sha256", secret).update(JSON.stringify(record)).digest("hex");
+    const objectPath = `/objects/fleet-compliance-private/3/${record.evidence.id}/2/${digest}`;
+    const store = { getObject: async (path: string) => path === objectPath ? { body: Buffer.from(JSON.stringify(record)), acl: { owner: "fleet-compliance:3", visibility: "private", purpose: "fleet-compliance-private" } } : null } as unknown as ObjectStore;
     const configuration = {
       version: 2,
       reviewerUserIds: [],
@@ -401,11 +414,11 @@ describe("partner marketplace persistence boundary", () => {
         requirementVersion: 1,
         status: "verified",
         validFrom: "2026-01-01T00:00:00.000Z",
-        validUntil: "2026-10-19T00:00:00.000Z",
+        validUntil: "2027-10-19T00:00:00.000Z",
         verifiedAt: "2026-01-01T00:00:00.000Z",
         verifiedByUserId: 7,
         attributeKind: "insurance",
-        objectPath: "/objects/fleet-compliance-private/3/11111111-1111-4111-8111-111111111111/2/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        objectPath,
         updatedAt: "2026-10-19T00:00:00.000Z",
       }],
       partnerScorePreview: {
@@ -417,16 +430,22 @@ describe("partner marketplace persistence boundary", () => {
         reasons: [],
       },
     };
-    expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"))).toMatchObject({
-      score: 0,
+    const vendorProjection = await projectCanonicalFleetComplianceConfigurationScore(3, configuration, "2026-10-20T00:00:00.000Z", { store, secret });
+    await expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"), { store, secret })).resolves.toMatchObject({
+      score: expect.any(Number),
       refreshedAt: "2026-10-20T00:00:00.000Z",
-      reasons: expect.arrayContaining(["expired_record"]),
+      reasons: expect.arrayContaining(["requires_review"]),
     });
-    configuration.entries[0].validUntil = "2027-10-19T00:00:00.000Z";
-    configuration.entries[0].status = "revoked";
-    expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"))?.reasons).toContain("revoked_record");
-    configuration.entries[0].status = "verified";
-    expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"))?.reasons).not.toContain("revoked_record");
+    const partnerProjection = await marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"), { store, secret });
+    expect(partnerProjection!.score).toBeLessThan(85);
+    expect(partnerProjection).toMatchObject({ score: vendorProjection.score, reasons: vendorProjection.partnerPreview!.reasons.map((item) => item.reasonCode) });
+    record.evidence.validUntil = "2026-10-19T00:00:00.000Z";
+    if (record.attributes.kind === "insurance") record.attributes.coverage.validUntil = record.evidence.validUntil;
+    configuration.entries[0].validUntil = record.evidence.validUntil;
+    const expiredDigest = createHmac("sha256", secret).update(JSON.stringify(record)).digest("hex");
+    configuration.entries[0].objectPath = `/objects/fleet-compliance-private/3/${record.evidence.id}/2/${expiredDigest}`;
+    const expiredStore = { getObject: async () => ({ body: Buffer.from(JSON.stringify(record)), acl: { owner: "fleet-compliance:3", visibility: "private", purpose: "fleet-compliance-private" } }) } as unknown as ObjectStore;
+    await expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"), { store: expiredStore, secret })).resolves.toMatchObject({ reasons: expect.arrayContaining(["expired_record"]) });
   });
   it("uses the saved safety source refresh date and caps the existing event formula", () => {
     expect(marketplaceSafetySummary([], now)).toBeNull();
@@ -444,8 +463,8 @@ describe("partner marketplace persistence boundary", () => {
       ),
     ).toMatchObject({ score: 0, refreshedAt: "2026-10-18T00:00:00.000Z" });
   });
-  it("projects the exact saved VNDRLY Partner preview without private evidence", () => {
-    expect(marketplaceComplianceSummary(null)).toBeNull();
-    expect(marketplaceComplianceSummary({ version: 1, reviewerUserIds: [], entries: [], partnerScorePreview: { score: 58, status: "red", advisoryOnly: true, evaluatedAt: "2026-10-20T12:00:00.000Z", categories: [{ category: "vehicle", score: 60 }], reasons: [{ category: "driver_license", reason: "private wording is not rendered", reasonCode: "expired_record" }] } })).toEqual({ score: 58, source: "VNDRLY compliance score", refreshedAt: "2026-10-20T12:00:00.000Z", reasons: ["expired_record"] });
+  it("projects the exact saved VNDRLY Partner preview without private evidence", async () => {
+    await expect(marketplaceComplianceSummary(null)).resolves.toBeNull();
+    await expect(marketplaceComplianceSummary({ version: 1, reviewerUserIds: [], entries: [], partnerScorePreview: { score: 58, status: "red", advisoryOnly: true, evaluatedAt: "2026-10-20T12:00:00.000Z", categories: [{ category: "vehicle", score: 60 }], reasons: [{ category: "driver_license", reason: "private wording is not rendered", reasonCode: "expired_record" }] } })).resolves.toEqual({ score: 58, source: "VNDRLY compliance score", refreshedAt: "2026-10-20T12:00:00.000Z", reasons: ["expired_record"] });
   });
 });

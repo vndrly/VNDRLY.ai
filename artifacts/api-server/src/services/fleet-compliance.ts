@@ -44,7 +44,7 @@ import {
   type StoredObject,
 } from "../lib/objectStore";
 import { appendFleetResourceRecord } from "./fleet-resource-store";
-import { mergeFleetComplianceScoreHistory, projectFleetComplianceConfigurationScore } from "./fleet-compliance-score";
+import { mergeFleetComplianceScoreHistory, projectCanonicalFleetComplianceConfigurationScore } from "./fleet-compliance-score";
 type Transaction = <T>(
   actor: FleetActor,
   work: (state: FleetState, client: PoolClient) => Promise<T>,
@@ -362,7 +362,7 @@ export function createFleetComplianceOperations(
       if (!(actor.role === "vendor" && actor.membershipRole === "admin") && !managementFleetIds(grant).length)
         throw new FleetError("fleet.finance_required", 403);
       const config = await readConfig(client, actor);
-      const projected = projectFleetComplianceConfigurationScore(actor.companyId, config, now());
+      const projected = await projectCanonicalFleetComplianceConfigurationScore(actor.companyId, config, now(), { store, secret: options.secret?.() });
       const scoreHistory = mergeFleetComplianceScoreHistory(config.scoreHistory, projected.evaluatedAt, projected.score);
       await writeConfig(client, actor, { ...config, scoreHistory, partnerScorePreview: projected.partnerPreview ?? null }, true);
       return { ...projected, history: scoreHistory };

@@ -1,8 +1,10 @@
-import { createHash } from "node:crypto";
-import { FleetComplianceConfigurationSchema, FleetComplianceScoreSchema, type FleetComplianceOperationalEntry, type FleetComplianceScore } from "@workspace/api-zod";
+import { createHash, createHmac } from "node:crypto";
+import { FleetComplianceConfigurationSchema, FleetComplianceScoreSchema, evaluateFleetCompliance, fleetComplianceSourceSupportsRequirement, fleetComplianceSubjectKey, type FleetComplianceOperationalEntry, type FleetComplianceRecord, type FleetComplianceScore, type FleetRequirementVersion } from "@workspace/api-zod";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError } from "./fleet-repository";
 import { resolveFleetCapabilities } from "./fleet-mobile-permissions";
+import { readFleetPrivateComplianceSource } from "./fleet-compliance-source";
+import { getObjectStore, type ObjectStore } from "../lib/objectStore";
 
 type Category = FleetComplianceScore["categories"][number]["category"];
 type Deduction = FleetComplianceScore["deductions"][number];
@@ -84,39 +86,76 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
   });
 }
 
-/** Company-wide, privacy-safe projection shared by Fleet and Partner surfaces. */
-export function projectFleetComplianceConfigurationScore(
+function matchesRequirement(record: FleetComplianceRecord, requirements: FleetRequirementVersion[]) {
+  const rule = requirements.find((row) => row.id === record.evidence.requirementId && row.version === record.evidence.requirementVersion);
+  return !rule || (rule.subjectKinds.includes(record.evidence.subject.kind) && fleetComplianceSourceSupportsRequirement(record.attributes.kind, rule.category));
+}
+
+function canonicalOperationalEvidence(record: FleetComplianceRecord, requirements: FleetRequirementVersion[]) {
+  // A generic verified insurance document is not a work-specific coverage
+  // decision. The canonical evaluator must still apply scope, limit and source
+  // requirements before it can earn a green result.
+  return (record.attributes.kind === "insurance" || !matchesRequirement(record, requirements)) && record.evidence.status === "verified"
+    ? { ...record.evidence, status: "reviewed" as const }
+    : record.evidence;
+}
+
+/**
+ * Canonical company score used by both Fleet and Partner surfaces. Private
+ * evidence is evaluated server-side and only the privacy-safe score/reason
+ * codes leave this function.
+ */
+export async function projectCanonicalFleetComplianceConfigurationScore(
   companyId: number,
   raw: unknown,
   evaluatedAt = new Date().toISOString(),
+  options: { store?: ObjectStore | (() => ObjectStore); secret?: string } = {},
 ) {
   const configuration = FleetComplianceConfigurationSchema.parse(raw);
-  const entries = configuration.entries.map((entry) => {
-    const expired = !!entry.validUntil && Date.parse(entry.validUntil) <= Date.parse(evaluatedAt);
-    const status = !expired && entry.status === "verified"
-      ? "green" as const
-      : "red" as const;
-    const reasons: FleetComplianceOperationalEntry["reasons"] = expired
-      ? ["expired"]
-      : status === "green"
-        ? []
-        : entry.status === "revoked"
-          ? ["revoked"]
-          : entry.status === "failed"
-            ? ["failed"]
-            : ["unverified"];
+  const secret = options.secret ?? process.env.SESSION_SECRET;
+  if (!secret) throw new FleetError("fleet.private_storage_unavailable", 503);
+  const digest = (value: unknown) => createHmac("sha256", secret).update(JSON.stringify(value)).digest("hex");
+  const store = options.store ?? getObjectStore;
+  const records = new Map<string, FleetComplianceRecord>();
+  for (const entry of configuration.entries)
+    records.set(entry.id, await readFleetPrivateComplianceSource(entry, companyId, store, digest));
+
+  const assessments = new Map<string, ReturnType<typeof evaluateFleetCompliance>[number]>();
+  for (const entry of configuration.entries) {
+    const subjectKey = fleetComplianceSubjectKey(entry.subject);
+    if (assessments.has(subjectKey)) continue;
+    const evidence = configuration.entries
+      .filter((related) => fleetComplianceSubjectKey(related.subject) === subjectKey)
+      .map((related) => canonicalOperationalEvidence(records.get(related.id)!, configuration.requirements));
+    const assessment = evaluateFleetCompliance({
+      facts: { carrierId: companyId },
+      members: [{
+        subject: entry.subject,
+        facts: configuration.facts.find((row) => fleetComplianceSubjectKey(row.subject) === subjectKey)?.facts ?? {},
+      }],
+      requirements: configuration.requirements,
+      evidence,
+      at: evaluatedAt,
+      freshness: "current",
+    })[0];
+    assessments.set(subjectKey, assessment);
+  }
+
+  const operational = configuration.entries.map((entry) => {
+    const record = records.get(entry.id)!;
+    const assessment = assessments.get(fleetComplianceSubjectKey(entry.subject))!;
     return {
       id: entry.id,
       subject: entry.subject,
-      kind: entry.attributeKind,
+      kind: record.attributes.kind,
       verification: entry.status,
-      status,
-      reasons,
+      status: assessment.status,
+      reasons: assessment.findings.map((finding) => finding.reason),
       validUntil: entry.validUntil,
       evaluatedAt,
-    };
+    } satisfies Pick<FleetComplianceOperationalEntry, "id" | "subject" | "kind" | "verification" | "status" | "reasons" | "validUntil" | "evaluatedAt">;
   });
-  return projectFleetComplianceScore(companyId, entries, evaluatedAt);
+  return projectFleetComplianceScore(companyId, operational, evaluatedAt);
 }
 
 type Register = { assertFleetComplianceScoreAccess: (actor: FleetActor) => Promise<void>; readFleetComplianceScoreProjection?: (actor: FleetActor) => Promise<FleetComplianceScore>; readFleetComplianceRegister: (actor: FleetActor, query: unknown) => Promise<{ entries: FleetComplianceOperationalEntry[]; nextCursor: string | null }>; recordFleetComplianceScoreSnapshot?: (actor: FleetActor, preview: NonNullable<FleetComplianceScore["partnerPreview"]>) => Promise<FleetComplianceScore["history"]> };

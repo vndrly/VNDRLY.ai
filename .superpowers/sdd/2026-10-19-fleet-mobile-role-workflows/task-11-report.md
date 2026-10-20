@@ -11,6 +11,7 @@
 - Persisted one company score snapshot per UTC day in the existing guarded vendor configuration, retaining the newest 365 snapshots and exposing only stable reason codes to Partner clients.
 - Added advisory red/amber/green company markers to Fleet Map while keeping location-source and freshness indicators separate, and replaced hand-built dots/emoji with semantic shared pill components.
 - Replaced server-authored display text with stable reason/remediation codes mapped by EN/ES clients, including localized accessibility labels.
+- Replaced the temporary public-index shortcut with the full canonical compliance evaluator for both Fleet and Partner projections. Private evidence, requirements, applicability facts, coverage scope/limits, filing review, and generic-insurance review remain server-side; Partner clients receive only the privacy-safe score and reason codes. Partner reads reevaluate current evidence, so expiry and evidence changes do not require a vendor page visit.
 
 ## Verification
 
@@ -23,9 +24,10 @@
 - Focused mobile helper/map/marketplace/language suites: 4 files, 28 tests passed.
 - API Zod workflow suite: 8 tests passed; web Partner marketplace: 16 tests passed.
 - Library, API, mobile, and web typechecks passed; EN/ES locale parity passed.
+- Final canonical-projection regression batch: 3 API files, 23 tests passed; API typecheck and diff check passed.
 
 ## Boundaries
 
 - No compliance deficiency blocks Yard, Dispatch, Run, ticket, or billing flow.
-- No third-party telematics or compliance provider was added; the marketplace score remains sourced from existing VNDRLY partner-scoped safety events.
+- No third-party telematics or compliance provider was added; the company compliance score is sourced from VNDRLY's canonical requirements/facts/evidence evaluator. The separate Partner-scoped safety-event metric remains distinct.
 - No database migration or external dependency was introduced; history and the privacy-safe Partner preview use the existing vendor configuration JSON.
