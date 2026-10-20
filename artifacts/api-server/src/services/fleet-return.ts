@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { FleetRun } from "@workspace/api-zod";
+import { FleetError } from "./fleet-repository";
 
 type ReturnActor = { companyId: number; userId: number };
 
@@ -15,15 +16,28 @@ function returnAssetIds(run: FleetRun) {
 
 /** Records the physical return before closeout is submitted. Attached rigging
  * keeps following the truck until Yard verifies detach/transfer/discrepancies. */
-export async function recordFleetReturn(client: PoolClient, actor: ReturnActor, run: FleetRun, notes: string) {
-  const assetIds = returnAssetIds(run);
+export async function recordFleetReturn(client: PoolClient, actor: ReturnActor, run: FleetRun, notes: string, capturedAt: string) {
+  const expectedAssetIds = returnAssetIds(run);
   const detailId = run.resourceAssignment?.snapshot.detail.id ?? run.recoveredWork?.snapshot.detail.id ?? null;
+  const current = await client.query(
+    "SELECT asset_id,state,run_id,detail_id,observed_at FROM fleet_asset_custody WHERE company_id=$1 AND asset_id=ANY($2::uuid[]) FOR UPDATE",
+    [actor.companyId, expectedAssetIds],
+  );
+  const observedAt = new Date(capturedAt).toISOString();
+  if (current.rows.some(row => Date.parse(String(row.observed_at)) > Date.parse(observedAt)))
+    throw new FleetError("fleet.custody_observation_conflict", 409);
+  const currentByAsset = new Map(current.rows.map(row => [String(row.asset_id), row]));
+  const assetIds = expectedAssetIds.filter(assetId => {
+    const row = currentByAsset.get(assetId);
+    return !!row && ["reserved", "attached", "in_transit"].includes(String(row.state)) &&
+      (row.run_id === run.id || (!!detailId && row.detail_id === detailId));
+  });
+  const discrepancyAssetIds = expectedAssetIds.filter(assetId => !assetIds.includes(assetId));
   const yard = await client.query(
     "SELECT id FROM fleet_yards WHERE company_id=$1 AND active=true ORDER BY is_home_base DESC,id LIMIT 1",
     [actor.companyId],
   );
   const yardId = (yard.rows[0]?.id as string | undefined) ?? null;
-  const observedAt = new Date().toISOString();
   for (const assetId of assetIds) {
     const saved = await client.query(
       "INSERT INTO fleet_asset_custody(id,company_id,asset_id,state,method,observed_at,observed_by_user_id,yard_id,run_id,detail_id,latitude,longitude,notes,version) VALUES($1,$2,$3,$4,'driver_app',$5,$6,$7,$8,$9,NULL,NULL,$10,1) ON CONFLICT(company_id,asset_id) DO UPDATE SET state=EXCLUDED.state,method=EXCLUDED.method,observed_at=EXCLUDED.observed_at,observed_by_user_id=EXCLUDED.observed_by_user_id,yard_id=EXCLUDED.yard_id,run_id=EXCLUDED.run_id,detail_id=EXCLUDED.detail_id,latitude=NULL,longitude=NULL,notes=EXCLUDED.notes,version=fleet_asset_custody.version+1,updated_at=now() RETURNING version",
@@ -47,15 +61,16 @@ export async function recordFleetReturn(client: PoolClient, actor: ReturnActor, 
   let yardOrderId = (existing.rows[0]?.id as string | undefined) ?? null;
   if (!yardOrderId) {
     yardOrderId = randomUUID();
-    const orderNotes = `Return verification: ${notes || "Verify returned Detail, condition, detach, and final Yard placement."}`;
+    const discrepancy = discrepancyAssetIds.length ? ` Current-custody discrepancies: ${discrepancyAssetIds.join(", ")}.` : "";
+    const orderNotes = `Return verification: ${notes || "Verify returned Detail, condition, detach, and final Yard placement."}${discrepancy}`;
     await client.query(
       "INSERT INTO fleet_yard_orders(id,company_id,yard_id,detail_id,run_id,status,outcome,requested_by_user_id,assigned_to_user_id,requested_at,scheduled_at,started_at,reported_at,requested_asset_ids,actual_asset_ids,findings,notes,version) VALUES($1,$2,$3,$4,$5,'requested',NULL,$6,NULL,$7,NULL,NULL,NULL,$8::uuid[],'{}'::uuid[],'[]'::jsonb,$9,1)",
-      [yardOrderId, actor.companyId, yardId, detailId, run.id, actor.userId, observedAt, assetIds, orderNotes],
+      [yardOrderId, actor.companyId, yardId, detailId, run.id, actor.userId, observedAt, expectedAssetIds, orderNotes],
     );
     await client.query(
       "INSERT INTO fleet_yard_order_events(company_id,order_id,operation_id,actor_user_id,event_type,order_version,detail) VALUES($1,$2,$3,$4,'requested',1,$5::jsonb)",
-      [actor.companyId, yardOrderId, randomUUID(), actor.userId, JSON.stringify({ source: "driver_return", runId: run.id })],
+      [actor.companyId, yardOrderId, randomUUID(), actor.userId, JSON.stringify({ source: "driver_return", runId: run.id, returnedAssetIds: assetIds, discrepancyAssetIds })],
     );
   }
-  return { assetIds, yardOrderId, yardId };
+  return { assetIds, discrepancyAssetIds, yardOrderId, yardId };
 }

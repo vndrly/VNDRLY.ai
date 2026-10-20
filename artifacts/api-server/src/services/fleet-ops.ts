@@ -1597,7 +1597,13 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             if ((await readFleetReviewPacket(client, run)).missingRequiredCount)
               throw new FleetError("fleet.evidence_required", 400);
             if (run.resourceAssignment?.returnPolicy === "return_required" || run.routePlan?.returnPolicy === "return_required")
-              returnHandoff = await recordFleetReturn(client, actor, run, body.notes ?? "");
+              returnHandoff = await recordFleetReturn(
+                client,
+                actor,
+                run,
+                body.notes ?? "",
+                body.capturedAt ?? new Date().toISOString(),
+              );
             run.status = "submitted_for_review";
             run.phase = null;
           } else if (body.action === "review") {
