@@ -183,7 +183,7 @@ export async function executeFleetWorkCommand(
       if (p.billing.billingSiteId === null || p.billing.serviceId === null)
         throw new FleetError("fleet.price_context_unresolved");
       const grant = state.grants.find(g => g.userId === actor.userId);
-      const ownUnplanned=snapshot.detail.driverUserId===actor.userId&&!!grant?.roles.includes("driver");
+      const ownUnplanned=snapshot.detail.driverUserId===actor.userId&&!!grant?.roles.includes("driver")&&(actor.fleetCapabilities===undefined||actor.fleetCapabilities.has("self_dispatch"));
       const groups = state.fleets.filter(group =>
         (!p.accessGroupId||group.id===p.accessGroupId)&&grant?.fleetIds.includes(group.id) &&
         snapshot.detail.accessGroupIds.includes(group.id) &&

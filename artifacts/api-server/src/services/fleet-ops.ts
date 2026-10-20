@@ -173,7 +173,7 @@ function allowed(
     return [];
   const result: FleetRun["allowedActions"] = [];
   if(run.recoveredWork)return result;
-  if(run.workOrigin==="driver_unplanned"&&run.driverUserId===actor.userId&&companyGrantFor(state,actor)?.roles.includes("driver")&&["draft","dispatched","acknowledged"].includes(run.status)){result.push("cancel");if(run.status==="draft")result.push("dispatch");}
+  if(run.workOrigin==="driver_unplanned"&&run.driverUserId===actor.userId&&companyGrantFor(state,actor)?.roles.includes("driver")&&(actor.fleetCapabilities===undefined||actor.fleetCapabilities.has("self_dispatch"))&&["draft","dispatched","acknowledged"].includes(run.status)){result.push("cancel");if(run.status==="draft")result.push("dispatch");}
   if (
     actor.currentRunsById &&
     actor.currentRunsById.get(run.id)?.version !== run.version
@@ -472,7 +472,16 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           ? await readFleetDriverAssignmentSites(client, actor, companyGrant.fleetIds)
           : [];
         const ownCaptureSites=options.billingV2Create?.ownUnplanned&&companyGrant?.roles.includes("driver")&&options.billingV2Create.intent.billingSiteId?[options.billingV2Create.intent.billingSiteId]:[];
-        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...assignedSites,...retainedAssignedSites,...ownCaptureSites])];
+        // Office has no projected legacy role. Retain only sites in the
+        // existing grant's Fleet groups; billing still checks financeRead and
+        // the current relationship before returning any ticket details.
+        const officeGrant = state.enabled && actor.fleetCapabilities?.has("office")
+          ? state.grants.find(grant => grant.userId === actor.userId)
+          : undefined;
+        const officeSites = officeGrant?.siteIds.filter(siteId =>
+          officeGrant.fleetIds.some(fleetId =>
+            state.fleets.some(fleet => fleet.id === fleetId && fleet.siteIds.includes(siteId)))) ?? [];
+        const siteIds = [...new Set([...(companyGrant?.siteIds ?? []),...officeSites,...assignedSites,...retainedAssignedSites,...ownCaptureSites])];
         const sites = await readFleetAuthoritySites(client, actor.companyId, {
           siteIds,
         });
@@ -975,7 +984,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           const grant = ownUnplanned?companyGrantFor(state,actor):grantFor(state, actor);
           if (
             !fleet ||
-            !(ownUnplanned&&grant?.roles.includes("driver")&&grant.fleetIds.includes(body.fleetId))&&!mayPerformFleetAction(
+            !(ownUnplanned&&(actor.fleetCapabilities===undefined||actor.fleetCapabilities.has("self_dispatch"))&&grant?.roles.includes("driver")&&grant.fleetIds.includes(body.fleetId))&&!mayPerformFleetAction(
               actor.userId,
               grant,
               { companyId: actor.companyId, fleetId: body.fleetId },
