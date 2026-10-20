@@ -1,71 +1,139 @@
 import { expect, test } from "@playwright/test";
-import { fileURLToPath } from "node:url";
+import { stableCompanyGoUuid } from "../../../artifacts/api-server/scripts/seed-companygo-fleet-workflows";
 
-const root = fileURLToPath(new URL("../../../", import.meta.url)).replaceAll("\\", "/");
-
-const roles = [
-  { name: "Admin", capabilities: ["admin", "office", "dispatch", "yard", "driver", "self_dispatch"] },
-  { name: "Office", capabilities: ["office"] },
-  { name: "Dispatch", capabilities: ["dispatch"] },
-  { name: "Yard", capabilities: ["yard"] },
-  { name: "Driver", capabilities: ["driver"] },
-  { name: "Driver + Yard", capabilities: ["driver", "yard"] },
-  { name: "Driver + Self-Dispatch", capabilities: ["driver", "self_dispatch"] },
-  { name: "Independent", capabilities: ["admin", "office", "dispatch", "yard", "driver", "self_dispatch"] },
+const accounts = [
+  { login: "vendor_admin@fleetgo.com", modules: ["summary", "office", "dispatch", "yard", "driver"] },
+  { login: "vendor_office@fleetgo.com", modules: ["summary", "office"] },
+  { login: "vendor_fleet_dispatch@fleetgo.com", modules: ["summary", "dispatch"] },
+  { login: "vendor_fleet_driver@fleetgo.com", modules: ["summary", "yard", "driver"] },
 ] as const;
 
-for (const viewport of [{ name: "phone", width: 390, height: 844 }, { name: "iPad", width: 1024, height: 1366 }]) {
-  test(`${viewport.name} accepts every Fleet capability composition without hiding ticket flow`, async ({ page }) => {
-    await page.setViewportSize(viewport);
-    await page.goto("/");
-    const result = await page.evaluate(async ({ moduleUrl, roles }) => {
-      const api = await import(moduleUrl);
-      return roles.map((role: { name: string; capabilities: string[] }, index: number) => {
-        const projection = api.FleetHomeProjectionSchema.parse({
-          companyId: 1114,
-          userId: index + 1,
-          mode: role.name === "Independent" ? "my_fleet_day" : "coordinated",
-          capabilities: role.capabilities,
-          nextAction: { kind: role.capabilities.includes("yard") ? "report_yard_order" : "start_run", label: "Continue ticket work", runId: "11111111-1111-4111-8111-111111111111", ...(role.capabilities.includes("yard") ? { yardOrderId: "22222222-2222-4222-8222-222222222222" } : {}) },
-          priorities: [],
-          warnings: [{ id: "33333333-3333-4333-8333-333333333333", message: "Insurance evidence needs review" }],
-          moduleStates: [
-            { module: "dispatch", state: "ready" }, { module: "yard", state: "ready" },
-            { module: "assets", state: "ready" }, { module: "map", state: "ready" },
-            { module: "history", state: "ready" }, { module: "compliance", state: "unavailable" },
-          ],
-        });
-        return { name: role.name, next: projection.nextAction?.label, compliance: projection.moduleStates.find((item: { module: string }) => item.module === "compliance")?.state, dispatch: projection.moduleStates.find((item: { module: string }) => item.module === "dispatch")?.state };
-      });
-    }, { moduleUrl: `/@fs/${root}lib/api-zod/src/fleet-mobile-workflows.ts`, roles });
-    expect(result).toHaveLength(roles.length);
-    for (const row of result) {
-      expect(row.next).toBe("Continue ticket work");
-      expect(row.compliance).toBe("unavailable");
-      expect(row.dispatch).toBe("ready");
-    }
-  });
+async function signIn(page: import("@playwright/test").Page, login: string) {
+  await page.goto("/login");
+  await page.getByTestId("input-username").fill(login);
+  await page.getByTestId("input-password").fill("companygo");
+  await page.getByTestId("button-login").click();
+  await expect(page).not.toHaveURL(/\/login(?:\?|$)/);
 }
 
-test("browser recovery keeps the original Fleet operation and Partner score advisory", async ({ page }) => {
-  await page.goto("/");
-  const result = await page.evaluate(async ({ offlineUrl, schemaUrl }) => {
-    const offline = await import(offlineUrl);
-    const api = await import(schemaUrl);
-    const memory = new Map<string, string>();
-    const store = offline.createFleetOfflineStore({
-      getItem: async (key: string) => memory.get(key) ?? null,
-      setItem: async (key: string, value: string) => { memory.set(key, value); },
-      removeItem: async (key: string) => { memory.delete(key); },
+async function sessionScope(page: import("@playwright/test").Page) {
+  const response = await page.request.get("/api/auth/me");
+  expect(response.ok()).toBe(true);
+  const session = await response.json();
+  return {
+    owner: { type: "vendor", id: session.vendorId },
+    userId: session.userId,
+    membershipId: session.activeMembershipId,
+    sessionVersion: session.sv,
+  };
+}
+
+for (const viewport of [{ name: "phone", width: 390, height: 844 }, { name: "iPad", width: 1024, height: 1366 }]) {
+  for (const account of accounts) {
+    test(`${viewport.name} ${account.login} completes the real Fleet portal entry and role-scoped API`, async ({ page }) => {
+      const pageErrors: string[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error.stack ?? error.message));
+      await page.setViewportSize(viewport);
+      await signIn(page, account.login);
+      const overview = await page.request.get("/api/fleet/overview?limit=50");
+      expect(overview.ok(), `${account.login} overview: ${await overview.text()}`).toBe(true);
+      for (const module of account.modules) {
+        const response = await page.request.get(`/api/fleet/home?module=${module}`);
+        expect(response.ok(), `${account.login} ${module}: ${await response.text()}`).toBe(true);
+        const projection = await response.json();
+        expect(projection).toMatchObject({ module });
+        expect(["ready", "empty", "warning"], `${account.login} ${module}: ${JSON.stringify(projection)}`).toContain(projection.state);
+        if (module === "summary") {
+          expect(projection.data.companyId).toBeTruthy();
+          expect(projection.data.moduleStates).toBeInstanceOf(Array);
+        }
+      }
+      const tickets = await page.request.get("/api/tickets?limit=50");
+      expect(tickets.ok()).toBe(true);
+      await page.goto(account.login.includes("_office@") ? "/fleet/review" : "/fleet");
+      await expect(page.locator("main.fleet-workspace"), pageErrors.join("\n")).toBeVisible();
+      await expect(page.getByText("Fleet records could not be loaded. Refresh to try again.")).toHaveCount(0);
     });
-    const scope = { userId: 4, companyId: 1114, membershipId: 9, sessionVersion: 3 };
-    const runId = "11111111-1111-4111-8111-111111111111";
-    const operationId = "22222222-2222-4222-8222-222222222222";
-    const assetId = "33333333-3333-4333-8333-333333333333";
-    await store.enqueue(scope, { sessionVersion: 3, membershipId: 9, runId, base: { runId, companyId: 1114, driverUserId: 4, vehicleAssetId: assetId, trailerAssetId: null, version: 1 }, input: { action: "acknowledge", operationId, expectedVersion: 1, capturedAt: "2026-10-20T12:00:00.000Z" }, capturedAt: "2026-10-20T12:00:00.000Z", state: "unsynced" });
-    const recovered = await store.read(scope);
-    const score = api.FleetComplianceScoreSchema.parse({ companyId: 1114, score: 68, status: "red", advisoryOnly: true, evaluatedAt: "2026-10-20T12:05:00.000Z", categories: [{ category: "insurance", score: 68 }], deductions: [{ id: "44444444-4444-4444-8444-444444444444", category: "insurance", points: 32, reason: "Evidence needs review", reasonCode: "requires_review", urgency: "soon", estimatedImprovement: 32, remediation: "Review current insurance evidence", remediationCode: "review_insurance", evidenceDestination: "Compliance records", responsibleCapability: "office", dueAt: null }], history: [], partnerPreview: { score: 68, status: "red", advisoryOnly: true, evaluatedAt: "2026-10-20T12:05:00.000Z", categories: [{ category: "insurance", score: 68 }], reasons: [{ category: "insurance", reason: "Evidence needs review", reasonCode: "requires_review" }] } });
-    return { operationId: recovered.actions[0]?.input.operationId, state: recovered.actions[0]?.state, advisoryOnly: score.partnerPreview?.advisoryOnly, score: score.partnerPreview?.score };
-  }, { offlineUrl: `/@fs/${root}artifacts/vndrly-mobile/lib/fleet-offline.ts`, schemaUrl: `/@fs/${root}lib/api-zod/src/fleet-mobile-workflows.ts` });
-  expect(result).toEqual({ operationId: "22222222-2222-4222-8222-222222222222", state: "unsynced", advisoryOnly: true, score: 68 });
+  }
+}
+
+test("CompanyGo Driver completes and persists Yard and custody transitions", async ({ page }) => {
+  await signIn(page, "vendor_fleet_driver@fleetgo.com");
+  const scope = await sessionScope(page);
+  const orderId = stableCompanyGoUuid("yard-order:assigned");
+  const startOperation = stableCompanyGoUuid("e2e:yard:start");
+  const reportOperation = stableCompanyGoUuid("e2e:yard:report");
+  const started = await page.request.post(`/api/fleet/yard-orders/${orderId}/actions`, {
+    data: { kind: "start", operationId: startOperation, expectedVersion: 1, scope, orderId },
+  });
+  expect(started.ok(), await started.text()).toBe(true);
+  expect(await started.json()).toMatchObject({ status: "in_progress", version: 2 });
+  const reported = await page.request.post(`/api/fleet/yard-orders/${orderId}/actions`, {
+    data: { kind: "report", operationId: reportOperation, expectedVersion: 2, scope, orderId, outcome: "ready", notes: "CompanyGo isolated acceptance complete" },
+  });
+  expect(reported.ok(), await reported.text()).toBe(true);
+  expect(await reported.json()).toMatchObject({ status: "reported", outcome: "ready", version: 3 });
+  const yardReceipt = await page.request.get(`/api/fleet/yard-orders/operations/${reportOperation}`);
+  expect(yardReceipt.ok(), await yardReceipt.text()).toBe(true);
+  expect(await yardReceipt.json()).toMatchObject({ operationId: reportOperation, result: { id: orderId, status: "reported" } });
+
+  const custodyPage = await page.request.get("/api/fleet/custody");
+  expect(custodyPage.ok(), await custodyPage.text()).toBe(true);
+  const custodyRows = (await custodyPage.json()).custody;
+  expect(custodyRows.length).toBeGreaterThan(0);
+  const current = custodyRows[0];
+  const custodyOperation = stableCompanyGoUuid("e2e:custody:return");
+  const custody = await page.request.post("/api/fleet/custody/operations", {
+    data: {
+      operationId: custodyOperation,
+      expectedVersion: current.version,
+      scope,
+      observation: {
+        companyId: scope.owner.id,
+        assetId: current.observation.assetId,
+        state: "returned",
+        method: "driver_app",
+        observedAt: "2026-10-20T18:00:00.000Z",
+        observedByUserId: scope.userId,
+        yardId: stableCompanyGoUuid("yard:home"),
+        runId: stableCompanyGoUuid("run:active"),
+        detailId: null,
+        latitude: null,
+        longitude: null,
+        notes: "CompanyGo isolated custody acceptance",
+      },
+    },
+  });
+  expect(custody.ok(), await custody.text()).toBe(true);
+  expect(await custody.json()).toMatchObject({ operationId: custodyOperation, version: current.version + 1, observation: { state: "returned" } });
+  const custodyReceipt = await page.request.get(`/api/fleet/custody/operations/${custodyOperation}`);
+  expect(custodyReceipt.ok(), await custodyReceipt.text()).toBe(true);
+  expect(await custodyReceipt.json()).toMatchObject({ operationId: custodyOperation, result: { observation: { state: "returned" } } });
+});
+
+test("CompanyGo Dispatch can manage Yard work but cannot report physical custody", async ({ page }) => {
+  await signIn(page, "vendor_fleet_dispatch@fleetgo.com");
+  const scope = await sessionScope(page);
+  const custodyPage = await page.request.get("/api/fleet/custody");
+  expect(custodyPage.ok()).toBe(true);
+  const current = (await custodyPage.json()).custody[0];
+  const denied = await page.request.post("/api/fleet/custody/operations", {
+    data: {
+      operationId: stableCompanyGoUuid("e2e:dispatch:custody-denied"), expectedVersion: current.version, scope,
+      observation: { ...current.observation, id: undefined, observedByUserId: scope.userId, observedAt: "2026-10-20T19:00:00.000Z", method: "manual" },
+    },
+  });
+  expect(denied.status()).toBe(403);
+  expect(await denied.json()).toMatchObject({ code: "fleet.permission_denied" });
+});
+
+test("Compliance module outage stays isolated from current ticket work", async ({ page }) => {
+  await signIn(page, "vendor_fleet_driver@fleetgo.com");
+  await page.route("**/api/fleet/compliance-score", route => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "isolated test outage" }) }));
+  const home = await page.request.get("/api/fleet/home?module=driver");
+  expect(home.ok()).toBe(true);
+  const orders = await page.request.get("/api/fleet/yard-orders?limit=20");
+  expect(orders.ok()).toBe(true);
+  await page.goto("/fleet");
+  await expect(page.locator("h1").first()).toBeVisible();
 });

@@ -1,6 +1,6 @@
-# VNDRLY plugin 1.20.0
+# VNDRLY plugin 1.21.0
 
-Adds permission-scoped Fleet Home, Yard Order, custody, and canonical compliance-score reads plus confirmed Yard and custody actions. Company, actor, membership, session, and operation identity remain server-bound; permitted Driver Yard/self-dispatch capability is rechecked by the API. Compliance deductions remain advisory and ticket flow remains available. Preserve the existing plugin/app identity, linked accounts, and grants: the new actions require separate `fleet:yard` consent, and existing `fleet:dispatch` or `fleet:run` grants do not expand. Completion requires exact operation recovery and independent canonical readback.
+Adds exact, permission-scoped `query_fleet_yard_operation` and `query_fleet_custody_operation` recovery reads for the original operation ID. Company, actor, membership, session, and operation identity remain server-bound, and the canonical original receipt is returned only while the underlying record remains in scope. Yard assignment/start/report uses `fleet:yard`; physical custody reporting now requires the distinct `fleet:custody` consent and current Yard or Driver/self-dispatch capability. Dispatch authority alone can assign Yard work but cannot report a physical custody observation. Existing grants are preserved without silent widening. Compliance deductions remain advisory and ticket flow remains available.
 
 # VNDRLY plugin 1.19.0
 

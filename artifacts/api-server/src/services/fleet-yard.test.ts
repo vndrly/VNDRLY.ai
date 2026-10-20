@@ -555,6 +555,15 @@ describe("Yard and custody authorization regressions", () => {
     await expect(api.observeCustody(actor(["driver"]), custodyInput(dolly, runId))).rejects.toMatchObject({ code: "fleet.permission_denied" });
   });
 
+  it("does not let Dispatch authority report a physical custody observation", async () => {
+    await expect(
+      service(state()).observeCustody(
+        actor(["dispatch"]),
+        custodyInput(dolly, runId),
+      ),
+    ).rejects.toMatchObject({ code: "fleet.permission_denied" });
+  });
+
   it("does not infer attached location from a mutable Detail without an immutable attachment event", async () => {
     const fixture = state();
     const attached = { id: id(), company_id: 7, asset_id: dolly, state: "attached", method: "manual", observed_at: new Date(), observed_by_user_id: 12, yard_id: null, run_id: null, detail_id: id(), latitude: null, longitude: null, notes: "", version: 1 };
@@ -571,15 +580,17 @@ describe("Yard and custody authorization regressions", () => {
 
   it("uses the attachment event's truck after the Detail is revised or archived", async () => {
     const fixture = state(), detailId = id(), yard = id();
+    let attachmentSql = "";
     const attached = { id: id(), company_id: 7, asset_id: dolly, state: "attached", method: "manual", observed_at: new Date(), observed_by_user_id: 12, yard_id: null, run_id: null, detail_id: detailId, latitude: null, longitude: null, notes: "", version: 2 };
     const truck = { ...attached, id: id(), asset_id: truckA, state: "at_yard", detail_id: null, yard_id: yard };
     const api = createFleetYardOperations({ transaction: async (_c: number, _u: number, work: any) => work(fixture, { query: async (sql: string) => {
       if (sql.includes("FROM fleet_asset_custody c")) return { rows: [attached, truck] };
-      if (sql.includes("FROM fleet_asset_custody_events e JOIN")) return { rows: [{ asset_id: dolly, asset_version: 2, tool_output: { attachment: { truckAssetId: truckA, componentAssetId: dolly, detailId, detailVersion: 1, rigPackageId: id(), rigPackageVersion: 1 } } }] };
+      if (sql.includes("FROM fleet_asset_custody_events e JOIN")) { attachmentSql = sql; return { rows: [{ asset_id: dolly, asset_version: 2, tool_output: { attachment: { truckAssetId: truckA, componentAssetId: dolly, detailId, detailVersion: 1, rigPackageId: id(), rigPackageVersion: 1 } } }] }; }
       if (sql.includes("FROM vendors WHERE")) throw new Error("Current Detail must not be consulted");
       return { rows: [] };
     } } as unknown as PoolClient) } as any);
     expect((await api.custody(actor(["yard"]))).custody.find((r: any) => r.observation.assetId === dolly)?.location).toMatchObject({ yardId: yard, inheritedFromAssetId: truckA });
+    expect(attachmentSql).toContain("a.target_id=e.operation_id::text");
   });
 
   it("lets self-dispatch act on its own Run's Yard Order but not another Fleet's or an unassigned order", async () => {

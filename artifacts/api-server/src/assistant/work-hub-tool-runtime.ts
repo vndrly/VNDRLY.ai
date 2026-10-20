@@ -1193,7 +1193,7 @@ export function resolveExecutableWorkHubToolRequest(
       error: "Please confirm the exact Work Hub action first.",
       requiresConfirmation: true,
     };
-  if (["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_compliance_score"].includes(name)) {
+  if (["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_yard_operation", "query_fleet_custody_operation", "query_fleet_compliance_score"].includes(name)) {
     if (name === "query_fleet_home") {
       const parsed = z.object({ module: z.enum(["summary", "dispatch", "yard", "driver", "office", "assets", "map", "history", "compliance"]).optional() }).strict().safeParse(input);
       return parsed.success ? request("GET", `/fleet/home?module=${parsed.data.module ?? "summary"}`) : { error: "Select a supported Fleet home module." };
@@ -1208,6 +1208,12 @@ export function resolveExecutableWorkHubToolRequest(
       if (!parsed.success) return { error: "Use an exact asset ID and page limit from 1 to 50." };
       const query = new URLSearchParams(); if (parsed.data.assetId) query.set("assetId", parsed.data.assetId); if (parsed.data.limit) query.set("limit", String(parsed.data.limit));
       return request("GET", `/fleet/custody${query.size ? `?${query}` : ""}`);
+    }
+    if (name === "query_fleet_yard_operation" || name === "query_fleet_custody_operation") {
+      const parsed = z.object({ operationId: z.uuid() }).strict().safeParse(input);
+      if (!parsed.success) return { error: "Use the exact original Fleet operation identity." };
+      const resource = name === "query_fleet_yard_operation" ? "yard-orders" : "custody";
+      return request("GET", `/fleet/${resource}/operations/${parsed.data.operationId}`);
     }
     return Object.keys(input).length === 0 ? request("GET", "/fleet/compliance-score") : { error: "Fleet compliance score accepts no model-supplied scope." };
   }
@@ -1256,7 +1262,7 @@ export function bindWorkHubToolScope(
   if (FLEET_COMMERCIAL_TOOLS.some(row=>row.name===toolName)||FLEET_COMMERCIAL_READ_TOOLS.some(row=>row.name===toolName))return input;
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;
   if (NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === toolName) || ["save_fleet_ticket_plan", "save_fleet_destination", "finalize_fleet_ticket", "query_fleet_billing_options"].includes(toolName ?? "")) return input;
-  if (["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_compliance_score", "manage_fleet_yard_order", "record_fleet_custody"].includes(toolName ?? "")) return input;
+  if (["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_yard_operation", "query_fleet_custody_operation", "query_fleet_compliance_score", "manage_fleet_yard_order", "record_fleet_custody"].includes(toolName ?? "")) return input;
   if (["query_my_workday","manage_my_workday","query_work_hub_availability","manage_work_hub_availability","query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any

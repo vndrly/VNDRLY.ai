@@ -1172,7 +1172,7 @@ export function createFleetYardOperations(
         // The attachment is fixed by its custody event, never by today's editable Detail.
         const attached = observations.filter((row) => row.observation.state === "attached");
         const attachmentRows = attached.length ? await client.query(
-          "SELECT e.asset_id,e.asset_version,a.tool_output FROM fleet_asset_custody_events e JOIN assistant_action_audit a ON a.vendor_id=e.company_id AND a.target_type='fleet-custody-operation' AND a.target_id=e.operation_id WHERE e.company_id=$1 AND e.asset_id=ANY($2::uuid[]) ORDER BY e.asset_version DESC",
+          "SELECT e.asset_id,e.asset_version,a.tool_output FROM fleet_asset_custody_events e JOIN assistant_action_audit a ON a.vendor_id=e.company_id AND a.target_type='fleet-custody-operation' AND a.target_id=e.operation_id::text WHERE e.company_id=$1 AND e.asset_id=ANY($2::uuid[]) ORDER BY e.asset_version DESC",
           [actor.companyId, attached.map((row) => row.observation.assetId)],
         ) : { rows: [] };
         const links = attachmentRows.rows.flatMap((event) => {
@@ -1256,7 +1256,7 @@ export function createFleetYardOperations(
         const grant = permission(
           state,
           actor,
-          ["admin", "dispatch", "yard", "driver"],
+          ["yard", "driver"],
           true,
         );
         if (

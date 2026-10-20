@@ -322,7 +322,8 @@ function FleetWorkspace({
       data.capabilities.canDrive ||
       data.capabilities.canManageResources ||
       data.capabilities.canDispatch ||
-      data.capabilities.canManage
+      data.capabilities.canManage ||
+      data.capabilities.canReview
     )
   )
     return (
@@ -366,7 +367,7 @@ function FleetWorkspace({
     );
   const mine =
     location.includes("my-day") ||
-    (!data.capabilities.canManage && !data.capabilities.canDispatch);
+    (!data.capabilities.canManage && !data.capabilities.canDispatch && !data.capabilities.canReview);
   const filteredRuns = fleetVisibleRuns(
     {...data,runs:[...(work.localRuns??[]),...data.runs]},
     userId,

@@ -4,7 +4,9 @@ import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLE
 describe("CompanyGo Fleet workflow fixture plan", () => {
   it("is additive, repeatable, and scoped by stable natural keys", () => {
     const sql = COMPANYGO_FLEET_SEED_SQL.join("\n").toLowerCase();
-    expect(sql).not.toMatch(/\b(delete|truncate|drop|update)\b/);
+    expect(sql).not.toMatch(/\b(delete|truncate|drop)\b/);
+    expect(sql.match(/\bupdate\b/g)).toHaveLength(1);
+    expect(sql).toContain("current.capabilities || resolved.capabilities");
     expect(sql).toContain("on conflict");
     expect(sql).toContain("lower(name) = 'fleetgo'");
     expect(sql).toMatch(/lower\(coalesce\([^)]*email[^)]*username[^)]*\)\)/);
@@ -28,6 +30,17 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
     expect(sql).toContain("ticket_line_items");
     expect(sql).toContain("assistant_action_audit");
     expect(sql).not.toMatch(/\b(insert|update|delete|truncate|drop)\b/);
+  });
+
+  it("backfills missing history, schedule, billing, run snapshots, and capability unions", () => {
+    const sql = COMPANYGO_FLEET_SEED_SQL.join("\n").toLowerCase();
+    expect(sql).toContain("generate_series(0,29)");
+    expect(sql).toContain("generate_series(0,6)");
+    expect(sql).toContain("insert into tickets");
+    expect(sql).toContain("insert into ticket_line_items");
+    expect(sql).toContain("insert into assistant_action_audit");
+    expect(sql).toContain("on conflict(id) do nothing");
+    expect(sql).not.toContain("password_hash=");
   });
 
   it("derives stable UUIDs without reusing identities", () => {

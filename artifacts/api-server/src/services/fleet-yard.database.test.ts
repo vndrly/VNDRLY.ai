@@ -151,14 +151,14 @@ it("persists multi-yard intake, assignment, substitution, version conflicts, rep
   ) => ({
     operationId: id(),
     expectedVersion: 0,
-    scope: scope(dispatcher),
+    scope: scope(yardWorker),
     observation: {
       companyId: company,
       assetId,
       state: "intake" as const,
       method,
       observedAt,
-      observedByUserId: dispatcher.userId,
+      observedByUserId: yardWorker.userId,
       yardId,
       runId: null,
       detailId: null,
@@ -168,26 +168,26 @@ it("persists multi-yard intake, assignment, substitution, version conflicts, rep
     },
   });
   const gate = intake(assets[0], north.id, "gate_scan");
-  const firstReceipt = await service.observeCustody(dispatcher, gate);
-  expect(await service.observeCustody(dispatcher, gate)).toEqual(firstReceipt);
+  const firstReceipt = await service.observeCustody(yardWorker, gate);
+  expect(await service.observeCustody(yardWorker, gate)).toEqual(firstReceipt);
   await expect(
-    service.observeCustody(dispatcher, {
+    service.observeCustody(yardWorker, {
       ...gate,
       observation: { ...gate.observation, notes: "Changed replay" },
     }),
   ).rejects.toMatchObject({ code: "fleet.operation_conflict" });
   await service.observeCustody(
-    dispatcher,
+    yardWorker,
     intake(assets[1], south.id, "gps_geofence"),
   );
   await service.observeCustody(
-    dispatcher,
+    yardWorker,
     intake(assets[2], north.id, "manual"),
   );
   const move = { ...intake(assets[1], north.id, "manual"), expectedVersion: 1 };
-  expect((await service.observeCustody(dispatcher, move)).version).toBe(2);
+  expect((await service.observeCustody(yardWorker, move)).version).toBe(2);
   await expect(
-    service.observeCustody(dispatcher, { ...move, operationId: id() }),
+    service.observeCustody(yardWorker, { ...move, operationId: id() }),
   ).rejects.toMatchObject({ code: "fleet.version_conflict" });
   const orderId = id();
   const request = {
@@ -267,7 +267,7 @@ it("persists multi-yard intake, assignment, substitution, version conflicts, rep
     status: 403,
   });
   await expect(
-    service.observeCustody(dispatcher, {
+    service.observeCustody(yardWorker, {
       ...intake(assets[0], north.id, "manual"),
       observation: {
         ...gate.observation,

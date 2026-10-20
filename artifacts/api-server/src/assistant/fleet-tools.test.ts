@@ -17,13 +17,15 @@ describe("Fleet assistant canonical action boundary", () => {
   });
 
   it("exposes scoped Fleet workflow reads and confirmation-bound actions without model authority fields", () => {
-    for (const name of ["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_compliance_score"])
+    for (const name of ["query_fleet_home", "query_fleet_yard_orders", "query_fleet_custody", "query_fleet_yard_operation", "query_fleet_custody_operation", "query_fleet_compliance_score"])
       expect(CHATGPT_READ_CAPABILITIES["fleet:read"].tools).toContain(name);
 
     const previousActions = chatGptActionTools(session, ["fleet:dispatch", "fleet:run"]).map((tool) => tool.name);
     expect(previousActions).not.toEqual(expect.arrayContaining(["manage_fleet_yard_order", "record_fleet_custody"]));
     const actions = chatGptActionTools(session, ["fleet:yard"]).map((tool) => tool.name);
-    expect(actions).toEqual(expect.arrayContaining(["manage_fleet_yard_order", "record_fleet_custody"]));
+    expect(actions).toContain("manage_fleet_yard_order");
+    expect(actions).not.toContain("record_fleet_custody");
+    expect(chatGptActionTools(session, ["fleet:custody"]).map((tool) => tool.name)).toContain("record_fleet_custody");
     expect(sanitizeChatGptActionInput("record_fleet_custody", {
       assetId: runId,
       companyId: 99,
@@ -39,6 +41,9 @@ describe("Fleet assistant canonical action boundary", () => {
     expect(resolveExecutableWorkHubToolRequest("query_fleet_yard_orders", { limit: 20 }, false, fleetSession)).toEqual({ method: "GET", path: "/fleet/yard-orders?limit=20", body: {} });
     expect(resolveExecutableWorkHubToolRequest("query_fleet_custody", { assetId: runId, limit: 10 }, false, fleetSession)).toEqual({ method: "GET", path: `/fleet/custody?assetId=${runId}&limit=10`, body: {} });
     expect(resolveExecutableWorkHubToolRequest("query_fleet_compliance_score", {}, false, fleetSession)).toEqual({ method: "GET", path: "/fleet/compliance-score", body: {} });
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_yard_operation", { operationId }, false, fleetSession)).toEqual({ method: "GET", path: `/fleet/yard-orders/operations/${operationId}`, body: {} });
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_custody_operation", { operationId }, false, fleetSession)).toEqual({ method: "GET", path: `/fleet/custody/operations/${operationId}`, body: {} });
+    expect(resolveExecutableWorkHubToolRequest("query_fleet_custody_operation", { operationId, companyId: 99 }, false, fleetSession)).toHaveProperty("error");
     expect(resolveExecutableWorkHubToolRequest("query_fleet_compliance_score", { companyId: 99 }, false, fleetSession)).toHaveProperty("error");
   });
 

@@ -366,6 +366,18 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
     { assetId: id, limit: page.limit },
   ),
   read(
+    "query_fleet_yard_operation",
+    "Read the exact canonical receipt for one previously prepared Yard operation by its original operation identity. This is recovery/readback only and never retries or changes the order.",
+    { operationId: id },
+    ["operationId"],
+  ),
+  read(
+    "query_fleet_custody_operation",
+    "Read the exact canonical receipt for one previously prepared custody observation by its original operation identity. This is recovery/readback only and never records a new observation.",
+    { operationId: id },
+    ["operationId"],
+  ),
+  read(
     "query_fleet_compliance_score",
     "Read the current canonical VNDRLY Fleet compliance score, coded deductions, remediation guidance and privacy-safe Partner preview. Deficiencies are advisory and never block ticket flow.",
   ),

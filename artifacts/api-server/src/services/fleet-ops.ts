@@ -770,6 +770,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
                 roles.includes("fleet_manager") || roles.includes("dispatcher"),
               canManage: roles.includes("fleet_manager"),
               canDrive: roles.includes("driver"),
+              canReview: actor.fleetCapabilities?.has("office") === true,
               canMaintain: poolGrant?.roles.includes("fleet_manager") === true,
               canReportDefect:
                 poolGrant?.roles.some(role=>["fleet_manager","driver"].includes(role)) === true,

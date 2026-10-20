@@ -47,14 +47,21 @@ describe("Fleet consent discovery", () => {
   it("offers Yard actions through a separate explicit scope without changing existing run consent", () => {
     const scopes = ["fleet:run"];
     const result = fleetConsentUpgradeTools(session, scopes, overview);
-    expect(result.filter(item => item.scope === "fleet:yard").map(item => item.tool.name)).toEqual(["manage_fleet_yard_order", "record_fleet_custody"]);
+    expect(result.filter(item => item.scope === "fleet:yard").map(item => item.tool.name)).toEqual(["manage_fleet_yard_order"]);
+    expect(result.filter(item => item.scope === "fleet:custody").map(item => item.tool.name)).toEqual(["record_fleet_custody"]);
     expect(scopes).toEqual(["fleet:run"]);
     expect(fleetToolSecuritySchemes("manage_fleet_yard_order")).toEqual([{ type: "oauth2", scopes: ["fleet:yard"] }]);
+  });
+  it("never offers physical custody consent from Dispatch authority alone", () => {
+    const dispatch = { ...overview, roles: ["dispatcher"] as FleetOverview["roles"], capabilities: { ...overview.capabilities, canDrive: false, canDispatch: true } };
+    const result = fleetConsentUpgradeTools({ ...session, role: "vendor", membershipRole: "office" } as SessionPayload, [], dispatch);
+    expect(result.some(item => item.scope === "fleet:yard" && item.tool.name === "manage_fleet_yard_order")).toBe(true);
+    expect(result.some(item => item.scope === "fleet:custody" || item.tool.name === "record_fleet_custody")).toBe(false);
   });
   it("denies foreign company, absent authority and already consented hints", () => {
     expect(fleetConsentUpgradeTools(session, [], {...overview, companyId: 21})).toEqual([]);
     expect(fleetConsentUpgradeTools(session, [], null)).toEqual([]);
-    expect(fleetConsentUpgradeTools(session, ["fleet:read", "fleet:run", "fleet:yard"], overview)).toEqual([]);
+    expect(fleetConsentUpgradeTools(session, ["fleet:read", "fleet:run", "fleet:yard", "fleet:custody"], overview)).toEqual([]);
   });
   it("does not derive Fleet privileges from a title alone", () => {
     expect(fleetConsentUpgradeTools({...session, vendorRole: "foreman"}, [], {...overview, roles: [], capabilities: {...overview.capabilities, canDrive: false}})).toEqual([]);
@@ -73,6 +80,7 @@ describe("Fleet consent discovery", () => {
   });
   it("declares the exact required Fleet scope for already-consented descriptors", () => {
     expect(fleetToolSecuritySchemes("transition_fleet_run")).toEqual([{type: "oauth2", scopes: ["fleet:run"]}]);
+    expect(fleetToolSecuritySchemes("record_fleet_custody")).toEqual([{type: "oauth2", scopes: ["fleet:custody"]}]);
     expect(fleetToolSecuritySchemes("query_fleet_runs")).toEqual([{type: "oauth2", scopes: ["fleet:read"]}]);
     expect(fleetToolSecuritySchemes("record_ticket_payment")).toBeUndefined();
     expect(fleetToolSecuritySchemes("set_fleet_preferences", ["fleet:run"])).toEqual([{type: "oauth2", scopes: ["fleet:run"]}]);

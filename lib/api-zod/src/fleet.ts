@@ -372,6 +372,7 @@ export type FleetOverview = {
     canDispatch: boolean;
     canManage: boolean;
     canDrive: boolean;
+    canReview?: boolean;
     canMaintain?: boolean;
     canReportDefect?: boolean;
     canReleaseHold?: boolean;
