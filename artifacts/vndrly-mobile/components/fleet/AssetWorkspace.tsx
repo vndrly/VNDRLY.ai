@@ -11,7 +11,7 @@ import TogglePillButton from "@/components/TogglePillButton";
 import FleetChoiceField from "@/components/FleetChoiceField";
 import FleetInventory from "@/components/FleetInventory";
 import FleetDetailsLibrary from "@/components/FleetDetailsLibrary";
-import { readFleetYardActor, yardScope, type FleetYardActor } from "./yard-client";
+import { readFleetYardActor, yardFeedback, yardScope, type FleetYardActor } from "./yard-client";
 
 type Custody = { version: number; observation: FleetCustodyObservation; location: FleetCustodyObservation & { inheritedFromAssetId?: string | null } };
 type Attempt = ReturnType<typeof FleetCustodyObservationInputSchema.parse>;
@@ -56,12 +56,12 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
     const value = FleetDetailPageSchema.parse(await read(`/api/fleet/yard-assembly-targets?assetId=${encodeURIComponent(id)}`));
     if (current() && selectedAssetRef.current === id) setDetails(value.details);
   }
-  async function openAsset(id: string) { if (pending.current) { setError(copy("Recover the pending asset action before changing assets.")); return; } selectedAssetRef.current = id; setSelectedId(id); setOperation(null); setDetails([]); try { await loadExactCustody(id); if (canManage && selectedAssetRef.current === id) await loadAssemblyTargets(id); } catch (cause) { if (current() && selectedAssetRef.current === id) setError(copy(cause instanceof Error ? cause.message : "Custody unavailable.")); } }
+  async function openAsset(id: string) { if (pending.current) { setError(copy("Recover the pending asset action before changing assets.")); return; } selectedAssetRef.current = id; setSelectedId(id); setOperation(null); setDetails([]); try { await loadExactCustody(id); if (canManage && selectedAssetRef.current === id) await loadAssemblyTargets(id); } catch (cause) { if (current() && selectedAssetRef.current === id) setError(yardFeedback(cause, copy, "Custody unavailable.", "custody")); } }
   async function loadMore() {
     if (!inventory?.nextCursor) return;
     try { const page = FleetInventorySchema.parse(await read(`/api/fleet/yard-assets?after=${encodeURIComponent(inventory.nextCursor)}`));
       if (current()) setInventory(prior => prior ? { ...page, assets: [...new Map([...prior.assets, ...page.assets].map(asset => [asset.id, asset])).values()] } : page);
-    } catch (cause) { if (current()) setError(copy(cause instanceof Error ? cause.message : "Assets unavailable.")); }
+    } catch (cause) { if (current()) setError(yardFeedback(cause, copy, "Assets unavailable.", "asset")); }
   }
   async function load() {
     try {
@@ -93,7 +93,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
       setError("");
     } catch (cause) { if (current()) {
       if ([401, 403, 404].includes((cause as { status?: number }).status ?? 0)) { setActor(null); setInventory(null); setYards([]); setCustody([]); setDetails([]); setOperation(null); setAdvanced(null); pending.current = null; }
-      setError(copy(cause instanceof Error ? cause.message : "Assets unavailable."));
+      setError(yardFeedback(cause, copy, "Assets unavailable.", "asset"));
     } }
   }
   useEffect(() => { alive.current = true; void load(); return () => { alive.current = false; }; }, []);
@@ -123,7 +123,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
       if (page.assets[0]?.id !== saved.assetId) throw Error(copy("Asset readback mismatch. Retry the same request."));
       intakePending.current = null; setAdvanced(null); setInventory(prior => prior ? { ...prior, assets: [page.assets[0], ...prior.assets] } : page);
       await openAsset(saved.assetId); setNotice(copy("Asset received in the selected Fleet group."));
-    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) intakePending.current = null; setError(copy(cause instanceof Error ? cause.message : "Asset intake needs recovery.")); } }
+    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) intakePending.current = null; setError(yardFeedback(cause, copy, "Asset intake needs recovery.", "asset")); } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   async function save() {
@@ -138,7 +138,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
         yardId: operation === "attached" ? null : yardId, runId: initialRunId ?? null, detailId: operation === "attached" ? detailId : null,
         latitude: null, longitude: null, notes: note,
       } });
-    } catch (cause) { setError(cause instanceof Error ? cause.message : copy("Custody request is incomplete.")); return; }
+    } catch (cause) { setError(yardFeedback(cause, copy, "Custody request is incomplete.", "custody")); return; }
     const exact = pending.current;
     lock.current = true; setBusy(true); setError("");
     let posting = false;
@@ -160,7 +160,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
       if (!current() || observation.companyId !== actor.companyId) throw Error("Custody account changed.");
       setCustody(prior => [verified, ...prior.filter(row => row.observation.assetId !== asset.id)]);
       pending.current = null; attemptedOperationId.current = null; setOperation(null); setNotice(copy("Custody recorded. Current location refreshed."));
-    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) { pending.current = null; attemptedOperationId.current = null; if (status === 409) { try { await loadExactCustody(asset.id); } catch { /* Retain form for review. */ } setError(copy("Custody changed. Review the current observation and reapply.")); } else setError(copy(cause instanceof Error ? cause.message : "Custody action was rejected.")); } else setError(copy(cause instanceof Error ? cause.message : "Custody result unknown. Retry the exact request.")); } }
+    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) { pending.current = null; attemptedOperationId.current = null; if (status === 409) { try { await loadExactCustody(asset.id); } catch { /* Retain form for review. */ } setError(copy("Custody changed. Review the current observation and reapply.")); } else setError(yardFeedback(cause, copy, "Custody action was rejected.", "custody")); } else setError(yardFeedback(cause, copy, "Custody result unknown. Retry the exact request.", "custody")); } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   const card = { backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 2, borderRadius: 16, padding: 16, gap: 10 } as const;
@@ -195,7 +195,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
       <Text style={{ color: colors.mutedForeground }}>{copy(asset.category)} · {custodyReady ? copy(currentCustody?.observation.state.replaceAll("_", " ") ?? "No custody recorded") : copy("Loading custody")}</Text>
       <Text style={{ color: colors.text }}>{locationLabel}</Text>
       {!!currentCustody?.location?.inheritedFromAssetId && <Text style={{ color: colors.mutedForeground }}>{copy("Location inherited from attached truck")} {currentCustody.location.inheritedFromAssetId}</Text>}
-      {!!currentCustody && <View style={{ gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{copy("Latest custody observation")}</Text><Text style={{ color: colors.mutedForeground }}>{copy(currentCustody.observation.method.replaceAll("_", " "))} · {new Date(currentCustody.observation.observedAt).toLocaleString()}</Text><Text style={{ color: colors.text }}>{currentCustody.observation.notes}</Text></View>}
+      {!!currentCustody && <View style={{ gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{copy(({ gate_scan: "Gate scan", gps_geofence: "GPS geofence", manual: "Manual entry", driver_app: "Driver app" })[currentCustody.observation.method])} · {new Date(currentCustody.observation.observedAt).toLocaleString()}</Text><Text style={{ color: colors.text }}>{currentCustody.observation.notes}</Text></View>}
       {!operation && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {canManage && custodyReady && !currentCustody && <TogglePillButton color="blue" onPress={() => begin("intake")}>{copy("Record intake")}</TogglePillButton>}
         {canManage && <TogglePillButton color="blue" onPress={() => begin("at_yard")}>{copy("Assign Yard")}</TogglePillButton>}

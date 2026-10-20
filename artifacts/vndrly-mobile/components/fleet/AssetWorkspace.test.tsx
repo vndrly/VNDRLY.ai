@@ -275,6 +275,79 @@ it("translates a custody receipt error and driver-app evidence in Spanish", asyn
   expect(await screen.findByRole("alert")).toHaveProperty("textContent", expect.stringContaining("La lectura de custodia no coincide"));
 });
 
+it("shows localized asset-intake guidance instead of raw validation JSON", async () => {
+  env.language = "es";
+  network({ capabilities: ["yard"] });
+  render(<AssetWorkspace />);
+  fireEvent.click(await screen.findByRole("button", { name: "Recibir activo nuevo" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar recepción del activo" }));
+  expect(await screen.findByRole("alert")).toHaveProperty("textContent", "Ingrese el nombre, propietario legal y etiqueta del activo.");
+  expect(env.api.mock.calls.some(([path, init]) => path === "/api/fleet/yard-assets" && init?.method === "POST")).toBe(false);
+});
+
+it("shows localized custody-note length guidance instead of raw validation JSON", async () => {
+  env.language = "es";
+  network({ capabilities: ["yard"] });
+  render(<AssetWorkspace initialAssetId={assetId} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Trasladar activo" }));
+  fireEvent.click(screen.getByRole("button", { name: "South Yard" }));
+  fireEvent.change(screen.getByLabelText("Motivo de custodia"), { target: { value: "x".repeat(2001) } });
+  fireEvent.click(screen.getByRole("button", { name: "Confirmar traslado" }));
+  expect(await screen.findByRole("alert")).toHaveProperty("textContent", "Limite el motivo de custodia a 2.000 caracteres.");
+  expect(env.api.mock.calls.some(([path, init]) => path === "/api/fleet/custody/operations" && init?.method === "POST")).toBe(false);
+});
+
+it("uses a structured Fleet permission code for Spanish custody rejection", async () => {
+  env.language = "es";
+  network({ capabilities: ["yard"] });
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === "/api/fleet/custody/operations" && init?.method === "POST"
+    ? Promise.reject(Object.assign(Error("HTTP 403"), { status: 403, code: "fleet.permission_denied", data: { code: "fleet.permission_denied" } }))
+    : baseApi(path, init));
+  render(<AssetWorkspace initialAssetId={assetId} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Trasladar activo" }));
+  fireEvent.click(screen.getByRole("button", { name: "South Yard" }));
+  fireEvent.click(screen.getByRole("button", { name: "Confirmar traslado" }));
+  expect(await screen.findByRole("alert")).toHaveProperty("textContent", "No tiene permiso para esta acción de flota.");
+});
+
+it("uses server validation issues and Fleet code for Spanish asset-intake guidance", async () => {
+  env.language = "es";
+  network({ capabilities: ["yard"] });
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === "/api/fleet/yard-assets" && init?.method === "POST"
+    ? Promise.reject(Object.assign(Error("HTTP 400"), { status: 400, code: "fleet.invalid_request", data: { code: "fleet.invalid_request", details: [{ code: "too_small", path: ["name"], message: "Too small" }] } }))
+    : baseApi(path, init));
+  render(<AssetWorkspace />);
+  fireEvent.click(await screen.findByRole("button", { name: "Recibir activo nuevo" }));
+  fireEvent.change(screen.getByLabelText("Nombre del activo"), { target: { value: "New pump" } });
+  fireEvent.change(screen.getByLabelText("Propietario legal"), { target: { value: "Example" } });
+  fireEvent.change(screen.getByLabelText("Etiqueta del activo"), { target: { value: "P-99" } });
+  fireEvent.click(screen.getByRole("button", { name: "Guardar recepción del activo" }));
+  expect(await screen.findByRole("alert")).toHaveProperty("textContent", "Ingrese el nombre del activo.");
+});
+
+it.each([["gate_scan", "lectura en la entrada"], ["gps_geofence", "geocerca GPS"]])("localizes %s custody evidence in Spanish", async (method, expected) => {
+  env.language = "es";
+  network({ capabilities: ["yard"] });
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === `/api/fleet/custody?assetId=${assetId}`
+    ? Promise.resolve(baseApi(path, init)).then((value: any) => ({ custody: value.custody.map((row: any) => ({ ...row, observation: { ...row.observation, method } })) }))
+    : baseApi(path, init));
+  render(<AssetWorkspace initialAssetId={assetId} />);
+  expect(await screen.findByText(new RegExp(`${expected} ·`))).toBeTruthy();
+});
+
+it.each([["gate_scan", "Gate scan"], ["gps_geofence", "GPS geofence"]])("names %s custody evidence in English", async (method, expected) => {
+  network({ capabilities: ["yard"] });
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === `/api/fleet/custody?assetId=${assetId}`
+    ? Promise.resolve(baseApi(path, init)).then((value: any) => ({ custody: value.custody.map((row: any) => ({ ...row, observation: { ...row.observation, method } })) }))
+    : baseApi(path, init));
+  render(<AssetWorkspace initialAssetId={assetId} />);
+  expect(await screen.findByText(new RegExp(`${expected} ·`))).toBeTruthy();
+});
+
 it("lets a Yard-only worker receive an asset into a granted Fleet group", async () => {
   network({ capabilities: ["yard"] });
   const baseApi = env.api.getMockImplementation()!;

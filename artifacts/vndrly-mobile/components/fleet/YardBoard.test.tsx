@@ -206,6 +206,31 @@ it("translates Yard assignment, recorded history, and recovery in Spanish", asyn
   expect(screen.getByRole("button", { name: "Recuperar acción de la orden del patio" })).toBeTruthy();
 });
 
+it("uses the structured Fleet error code rather than HTTP text for a Spanish Yard rejection", async () => {
+  env.language = "es";
+  network(["dispatch"]);
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST"
+    ? Promise.reject(Object.assign(Error("HTTP 403"), { status: 403, code: "fleet.permission_denied", data: { code: "fleet.permission_denied" } }))
+    : baseApi(path, init));
+  render(<YardBoard initialYardOrderId={orderId} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Asignarme" }));
+  await waitFor(() => expect(screen.getAllByRole("alert").some(element => element.textContent === "No tiene permiso para esta acción de flota.")).toBe(true));
+});
+
+it("shows Spanish recovery guidance for a coded internal error without losing the Yard action", async () => {
+  env.language = "es";
+  network(["dispatch"]);
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === `/api/fleet/yard-orders/${orderId}/actions` && init?.method === "POST"
+    ? Promise.reject(Object.assign(Error("HTTP 500"), { status: 500, code: "fleet.internal_error", data: { code: "fleet.internal_error" } }))
+    : baseApi(path, init));
+  render(<YardBoard initialYardOrderId={orderId} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Asignarme" }));
+  await waitFor(() => expect(screen.getAllByRole("alert").some(element => element.textContent === "La acción del patio necesita recuperación. Reintente la misma solicitud.")).toBe(true));
+  expect(screen.getByRole("button", { name: "Recuperar acción de la orden del patio" })).toBeTruthy();
+});
+
 it("guides invalid scheduled time and Run ID, then saves the corrected Yard request", async () => {
   network(["dispatch"]);
   const baseApi = env.api.getMockImplementation()!;

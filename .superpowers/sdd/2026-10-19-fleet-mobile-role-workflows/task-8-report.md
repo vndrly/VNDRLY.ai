@@ -39,3 +39,10 @@ Status: implemented and committed locally. No online release was requested or at
 - Translated assignment fields, Yard event types, custody evidence methods, recovery controls, and known workflow errors into Spanish. User-authored notes are displayed unchanged.
 - Strengthened 409 rebase tests to prove the second action's canonical saved state, not just its POST input. Added 5xx and post-success GET-failure regressions for each mutation flow.
 - Focused verification: mobile Yard/Asset suites **2 files, 38 tests passed**; Yard service suite **1 file, 39 tests passed** with an inert loopback database URL and no live database query. Mobile and API package typechecks passed. Broad gates remain with the parent batch; no online release or external state change was made.
+
+## Review round 3 (2026-10-20)
+
+- Yard and Assets now read the API's structured Fleet error code before choosing user-facing guidance. Permission denials, missing scoped resources, conflicts, malformed requests, and uncertain server outcomes no longer surface bare `HTTP 403`/`HTTP 500` text. The exact operation-retention and 409-rebase rules remain unchanged.
+- Local and server-supplied schema issues produce localized asset-intake and custody-field guidance instead of raw Zod JSON. Empty name/owner/tag and an overlong custody note have Spanish screen regressions, alongside a server `fleet.invalid_request` issue response.
+- The latest custody evidence now names `gate_scan` and `gps_geofence` in English and Spanish; existing manual and Driver-app methods use human-readable labels. User-authored notes remain verbatim.
+- Focused verification: mobile Yard/Asset suites **2 files, 48 tests passed** and mobile package typecheck passed. Existing React Native Web test-harness text-node warnings persist in the same asset-card fixtures; no test failed. Broad gates remain with the parent batch. No production or external state was changed.

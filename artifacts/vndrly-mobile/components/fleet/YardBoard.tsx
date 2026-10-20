@@ -9,7 +9,7 @@ import { useColors } from "@/hooks/useColors";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import TogglePillButton from "@/components/TogglePillButton";
 import FleetChoiceField from "@/components/FleetChoiceField";
-import { readFleetYardActor, yardScope, type FleetYardActor } from "./yard-client";
+import { readFleetYardActor, yardFeedback, yardScope, type FleetYardActor } from "./yard-client";
 
 type OrderDetail = { order: FleetYardOrder; events: { id: string; type: string; at: string; detail: unknown }[] };
 type Attempt = { id: string; input: FleetYardOrderAction } | { input: ReturnType<typeof FleetYardOrderInputSchema.parse> };
@@ -63,7 +63,7 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
       setError("");
     } catch (cause) { if (current()) {
       if ([401, 403, 404].includes((cause as { status?: number }).status ?? 0)) { setActor(null); setYards([]); setOrders([]); setDetail(null); setShowCreate(false); pending.current = null; }
-      setError(copy(cause instanceof Error ? cause.message : "Yard Board unavailable."));
+      setError(yardFeedback(cause, copy, "Yard Board unavailable.", "yard"));
     } }
   }
   async function loadOrder(id: string, minimumVersion = 0, preserveDraft = false) {
@@ -106,8 +106,8 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
       if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) {
         pending.current = null;
         if (status === 409) { setReviewAction(exact.input.kind); try { await loadOrder(exact.id, 0, true); } catch { /* Keep the draft and allow refresh. */ } setError(copy("Yard Order changed. Review your findings, then reapply.")); }
-        else setError(copy(cause instanceof Error ? cause.message : "Yard action was rejected. Review and correct it."));
-      } else setError(copy(cause instanceof Error ? cause.message : "Yard action needs recovery. Retry the same request."));
+        else setError(yardFeedback(cause, copy, "Yard action was rejected. Review and correct it.", "yard"));
+      } else setError(yardFeedback(cause, copy, "Yard action needs recovery. Retry the same request.", "yard"));
     } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
@@ -126,7 +126,7 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
     try {
       const value = await read<{ candidates: { assetId: string; available: boolean; reasons: string[] }[] }>(`/api/fleet/yards/${encodeURIComponent(order.yardId)}/suggestions?${query}`);
       if (current()) setAlternatives(value.candidates.filter(candidate => !order.requestedAssetIds.includes(candidate.assetId)));
-    } catch (cause) { if (current()) setError(copy(cause instanceof Error ? cause.message : "Alternatives unavailable.")); }
+    } catch (cause) { if (current()) setError(yardFeedback(cause, copy, "Alternatives unavailable.", "yard")); }
   }
   async function createOrder() {
     if (!actor || lock.current) return;
@@ -154,7 +154,7 @@ function YardBoardContent({ identity, initialYardOrderId, initialRunId }: { iden
       if (saved.id !== exact.input.order.id) throw Error("Yard Order receipt mismatch.");
       await loadOrder(saved.id);
       pending.current = null; setShowCreate(false); setNotice(copy("Yard Order requested."));
-    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) pending.current = null; setError(copy(cause instanceof Error ? cause.message : "Yard Order needs recovery. Retry the same request.")); } }
+    } catch (cause) { if (current()) { const status = (cause as { status?: number }).status; if (posting && status && status >= 400 && status < 500 && ![408, 429].includes(status)) pending.current = null; setError(yardFeedback(cause, copy, "Yard Order needs recovery. Retry the same request.", "yard")); } }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   async function openCreate() {
