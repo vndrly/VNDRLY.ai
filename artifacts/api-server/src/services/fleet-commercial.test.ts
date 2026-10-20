@@ -372,6 +372,12 @@ describe("Fleet commercial ticket contracts", () => {
       code: "fleet.finance_required",
     });
     expect((await f.ops.ticketPlan(actor, 10)).plan?.rateCents).toBe(12345);
+    manager.currentSiteIds = [9];
+    f.state.grants[0].roles = [];
+    const office = { ...manager, fleetCapabilities: new Set(["office" as const]) };
+    expect((await f.ops.ticketPlan(office, 10)).charges.total).toBe("123.45");
+    f.state.grants[0].financeRead = false;
+    await expect(f.ops.ticketPlan(office, 10)).rejects.toMatchObject({ code: "fleet.finance_required" });
   });
   it("manual close checks version, closes new-run admission, and still bills an existing run", async () => {
     const f = fixture(),

@@ -11,6 +11,15 @@ export type FleetGrant = {
 };
 export type FleetTarget = { companyId: number; fleetId: string; siteId?: number; driverUserId?: number };
 
+/** Stored capabilities replace legacy operational roles without granting unrelated authority. */
+export function rolesForFleetCapabilities(capabilities: readonly string[]): FleetRole[] {
+  const roles: FleetRole[] = [];
+  if (capabilities.includes("admin")) roles.push("fleet_manager");
+  else if (capabilities.includes("dispatch")) roles.push("dispatcher");
+  if (capabilities.includes("driver")) roles.push("driver");
+  return roles;
+}
+
 /** Shared outer boundary for legacy roles and composable mobile capabilities. */
 export function hasFleetGrantScope(userId: number, grant: FleetGrant | null, target: Pick<FleetTarget, "companyId" | "fleetId" | "siteId">): grant is FleetGrant {
   return Number.isSafeInteger(userId) && userId > 0 && !!grant && grant.companyId === target.companyId && grant.fleetIds.includes(target.fleetId) && (target.siteId === undefined || grant.siteIds.includes(target.siteId));

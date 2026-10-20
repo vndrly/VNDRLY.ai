@@ -62,6 +62,18 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("Fleet capabil
     expect((await request(app).get("/fleet/capabilities").set("Cookie", driverCookie)).body).toMatchObject({ source: "stored", version: 1, capabilities: ["driver", "yard", "self_dispatch"] });
     expect((await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send({ ...input, operationId: randomUUID() })).status).toBe(409);
     expect((await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send({ ...input, operationId: randomUUID(), assignment: { ...input.assignment, companyId: other.id } })).status).toBe(403);
+    const myDay = { expectedVersion: 1, defaultWorkspace: "fleet_my_day", selectedFleetId: fleetId };
+    expect((await request(app).post("/fleet/preferences").set("Cookie", driverCookie).send(myDay)).status).toBe(200);
+    const revoked = { ...input, operationId: randomUUID(), expectedVersion: 1, assignment: { ...input.assignment, version: 2, capabilities: [] } };
+    expect((await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send(revoked)).status).toBe(200);
+    expect((await request(app).post("/fleet/preferences").set("Cookie", driverCookie).send({ ...myDay, expectedVersion: 2 })).status).toBe(403);
+    const dispatch = { ...input, operationId: randomUUID(), expectedVersion: 2, assignment: { ...input.assignment, version: 3, capabilities: ["dispatch"] } };
+    expect((await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send(dispatch)).status).toBe(200);
+    expect((await request(app).post("/fleet/preferences").set("Cookie", driverCookie).send({ expectedVersion: 2, defaultWorkspace: "fleet_desk", selectedFleetId: fleetId })).status).toBe(200);
+    expect((await request(app).post("/fleet/preferences").set("Cookie", driverCookie).send({ ...myDay, expectedVersion: 3 })).status).toBe(403);
+    const office = { ...input, operationId: randomUUID(), expectedVersion: 3, assignment: { ...input.assignment, version: 4, capabilities: ["office"] } };
+    expect((await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send(office)).status).toBe(200);
+    expect((await request(app).post("/fleet/preferences").set("Cookie", driverCookie).send({ expectedVersion: 3, defaultWorkspace: "fleet_desk", selectedFleetId: fleetId })).status).toBe(403);
     await db.delete(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.id, driverMember.id));
     expect((await request(app).get("/fleet/capabilities").set("Cookie", driverCookie)).status).toBe(403);
   }, 30000);

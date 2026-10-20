@@ -668,16 +668,7 @@ export function createFleetCommercialOperations(
       }),
     ticketPlan: (a: FleetActor, ticketId: number) =>
       transaction(a, async (state, c) => {
-        if (
-          !managing(state, a) ||
-          (a.membershipRole !== "admin" &&
-            !state.grants.some(
-              (g) =>
-                g.userId === a.userId &&
-                g.financeRead &&
-                g.roles.includes("fleet_manager"),
-            ))
-        )
+        if (!canOfficeFinalize(state, a))
           throw new FleetError("fleet.finance_required", 403);
         const ticket = await readFleetTicketPlan(c, a, state, ticketId);
         if(ticket.fleet_plan?.billingVersion===2){

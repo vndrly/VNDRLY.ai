@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mayPerformFleetAction, type FleetGrant } from "./fleet-permissions";
+import { mayPerformFleetAction, rolesForFleetCapabilities, type FleetGrant } from "./fleet-permissions";
 
 const target = { companyId: 7, fleetId: "fleet-a", siteId: 9, driverUserId: 91 };
 const grant: FleetGrant = { companyId: 7, fleetIds: ["fleet-a"], siteIds: [9], roles: ["fleet_manager"], safetyRelease: false, financeRead: false };
@@ -34,5 +34,12 @@ describe("Fleet role and assignment permissions", () => {
     expect(mayPerformFleetAction(12, grant, target, "view_finance")).toBe(false);
     expect(mayPerformFleetAction(12, { ...grant, safetyRelease: true }, target, "release_safety")).toBe(true);
     expect(mayPerformFleetAction(12, { ...grant, financeRead: true }, target, "view_finance")).toBe(true);
+  });
+  it("projects stored capabilities into only their corresponding legacy operational roles", () => {
+    expect(rolesForFleetCapabilities([])).toEqual([]);
+    expect(rolesForFleetCapabilities(["office"])).toEqual([]);
+    expect(rolesForFleetCapabilities(["dispatch"])).toEqual(["dispatcher"]);
+    expect(rolesForFleetCapabilities(["driver", "yard", "self_dispatch"])).toEqual(["driver"]);
+    expect(rolesForFleetCapabilities(["admin", "office", "dispatch", "yard", "driver", "self_dispatch"])).toEqual(["fleet_manager", "driver"]);
   });
 });

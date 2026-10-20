@@ -6,14 +6,19 @@ import { hasFleetGrantScope, type FleetGrant } from "./fleet-permissions";
 
 export type FleetMobileAction = "configure" | "office_review" | "dispatch" | "yard_work" | "perform_run" | "self_dispatch" | "view_live_map" | "view_compliance";
 export type FleetMobileTarget = { companyId: number; fleetId: string; siteId?: number; driverUserId?: number; assignedToUserId?: number };
-export type FleetMobileActor = { userId: number; companyId: number; capabilities: ReadonlySet<FleetCapability>; grant: FleetGrant | null };
+export type FleetMobileActor = { userId: number; companyId: number; capabilities: ReadonlySet<FleetCapability>; grant: FleetGrant | null; currentSiteIds?: readonly number[] };
 
 const actions: readonly FleetMobileAction[] = ["configure", "office_review", "dispatch", "yard_work", "perform_run", "self_dispatch", "view_live_map", "view_compliance"];
 
 /** Capability checks compose inside the existing company, Fleet, and site grant boundary. */
 export function mayPerformFleetMobileAction(actor: FleetMobileActor, target: FleetMobileTarget, action: FleetMobileAction): boolean {
   const { grant, capabilities: c } = actor;
-  if (actor.companyId !== target.companyId || !hasFleetGrantScope(actor.userId, grant, target)) return false;
+  if (actor.companyId !== target.companyId || !hasFleetGrantScope(actor.userId, grant, { companyId: target.companyId, fleetId: target.fleetId })) return false;
+  if (target.siteId !== undefined && !grant.siteIds.includes(target.siteId)) {
+    const assignedWork = (action === "perform_run" || action === "self_dispatch") && target.driverUserId === actor.userId
+      || action === "yard_work" && target.assignedToUserId === actor.userId;
+    if (!assignedWork || !actor.currentSiteIds?.includes(target.siteId)) return false;
+  }
   const admin = c.has("admin");
   switch (action) {
     case "configure": return admin;
@@ -41,8 +46,8 @@ export function legacyFleetCapabilities(roles: readonly string[]): ReadonlySet<F
   return capabilities;
 }
 
-/** Resolves only the active, current vendor membership; a stored row replaces legacy roles for this company. */
-export async function resolveFleetCapabilities(actor: FleetActor, companyId: number): Promise<ReadonlySet<FleetCapability>> {
+/** A single capability row supplies both values and version for canonical reads. */
+async function loadOwnFleetCapabilityProjection(actor: FleetActor, companyId: number) {
   if (actor.companyId !== companyId || !Number.isSafeInteger(actor.userId) || !Number.isSafeInteger(actor.activeMembershipId) || !Number.isSafeInteger(actor.sv) || !["vendor", "field_employee"].includes(actor.role ?? ""))
     throw new FleetError("fleet.membership_required", 403);
   const member = await pool.query(
@@ -59,15 +64,22 @@ export async function resolveFleetCapabilities(actor: FleetActor, companyId: num
   if (!vendor.rows.length) throw new FleetError("fleet.not_found", 404);
   const state = FleetStateSchema.parse(vendor.rows[0].fleet_ops_state ?? emptyFleetState());
   const grant = state.enabled ? state.grants.find(g => g.userId === actor.userId && g.roles.length && g.fleetIds.some(id => state.fleets.some(f => f.id === id))) : null;
-  if (!grant) return new Set();
-  const stored = await pool.query("SELECT capabilities FROM fleet_person_capabilities WHERE company_id=$1 AND user_id=$2", [companyId, actor.userId]);
-  return stored.rows.length ? new Set(FleetCapabilitySchema.array().parse(stored.rows[0].capabilities)) : legacyFleetCapabilities(grant.roles);
+  const stored = await pool.query("SELECT version,capabilities FROM fleet_person_capabilities WHERE company_id=$1 AND user_id=$2", [companyId, actor.userId]);
+  const capabilities = grant
+    ? stored.rows.length ? new Set(FleetCapabilitySchema.array().parse(stored.rows[0].capabilities)) : legacyFleetCapabilities(grant.roles)
+    : new Set<FleetCapability>();
+  return { companyId, userId: actor.userId, capabilities, version: stored.rows[0]?.version ?? 0, source: stored.rows.length ? "stored" : "legacy" };
+}
+
+/** Resolves only the active, current vendor membership; stored values replace legacy roles for this company. */
+export async function resolveFleetCapabilities(actor: FleetActor, companyId: number): Promise<ReadonlySet<FleetCapability>> {
+  return (await loadOwnFleetCapabilityProjection(actor, companyId)).capabilities;
 }
 
 export async function readFleetCapabilities(actor: FleetActor, targetUserId = actor.userId) {
-  const own = await resolveFleetCapabilities(actor, actor.companyId);
+  const own = await loadOwnFleetCapabilityProjection(actor, actor.companyId);
   if (targetUserId !== actor.userId) {
-    if (actor.role !== "vendor" || actor.membershipRole !== "admin" || !own.has("admin")) throw new FleetError("fleet.permission_denied", 403);
+    if (actor.role !== "vendor" || actor.membershipRole !== "admin" || !own.capabilities.has("admin")) throw new FleetError("fleet.permission_denied", 403);
     const vendor = await pool.query("SELECT fleet_ops_state FROM vendors WHERE id=$1", [actor.companyId]);
     const state = FleetStateSchema.parse(vendor.rows[0]?.fleet_ops_state ?? emptyFleetState());
     if (!state.enabled || !state.grants.some(g => g.userId === actor.userId && g.roles.includes("fleet_manager") && g.fleetIds.some(id => state.fleets.some(f => f.id === id)))) throw new FleetError("fleet.permission_denied", 403);
@@ -77,8 +89,7 @@ export async function readFleetCapabilities(actor: FleetActor, targetUserId = ac
     const grant = state.grants.find(g => g.userId === targetUserId && g.roles.length && g.fleetIds.some(id => state.fleets.some(f => f.id === id)));
     return { companyId: actor.companyId, userId: targetUserId, capabilities: grant ? [...(stored.rows.length ? new Set(FleetCapabilitySchema.array().parse(stored.rows[0].capabilities)) : legacyFleetCapabilities(grant.roles))] : [], version: stored.rows[0]?.version ?? 0, source: stored.rows.length ? "stored" : "legacy" };
   }
-  const current = await pool.query("SELECT version FROM fleet_person_capabilities WHERE company_id=$1 AND user_id=$2", [actor.companyId, actor.userId]);
-  return { companyId: actor.companyId, userId: actor.userId, capabilities: [...own], version: current.rows[0]?.version ?? 0, source: current.rows.length ? "stored" : "legacy" };
+  return { ...own, capabilities: [...own.capabilities] };
 }
 
 /** Versioned Admin assignment; the vendor row lock serializes concurrent first grants. */
@@ -102,7 +113,7 @@ export async function saveFleetCapabilities(actor: FleetActor, targetUserId: num
     if (actorStored.rows.length && !FleetCapabilitySchema.array().parse(actorStored.rows[0].capabilities).includes("admin")) throw new FleetError("fleet.permission_denied", 403);
     const target = await client.query("SELECT m.id FROM user_org_memberships m JOIN users u ON u.id=m.user_id WHERE m.user_id=$1 AND m.vendor_id=$2 AND m.org_type='vendor' AND u.suspended_at IS NULL FOR SHARE OF m,u", [targetUserId, actor.companyId]);
     if (!target.rows.length) throw new FleetError("fleet.membership_required", 403);
-    const fingerprint = JSON.stringify({ expectedVersion: input.expectedVersion, assignment: input.assignment });
+    const fingerprint = JSON.stringify({ scope: input.scope, expectedVersion: input.expectedVersion, assignment: input.assignment });
     const replay = await client.query("SELECT user_id,tool_input,tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-capability-operation' AND target_id=$2 ORDER BY id DESC LIMIT 1", [actor.companyId, input.operationId]);
     if (replay.rows.length) {
       if (replay.rows[0].user_id !== actor.userId || replay.rows[0].tool_input?.fingerprint !== fingerprint) throw new FleetError("fleet.operation_conflict", 409);

@@ -9,6 +9,7 @@ import {
   assertFleetTicketFinalizable,
   attachFleetBilling,
   canFinalizeFleetRuns,
+  canOfficeFinalize,
   createFleetBillingOperations,
   recordFleetBillingCharge,
 } from "./fleet-billing";
@@ -182,6 +183,19 @@ function fixture() {
   };
 }
 describe("explicit Fleet billing", () => {
+  it("lets a stored Office capability finalize only within legacy finance, fleet, and site scope", () => {
+    const f = fixture();
+    f.state.grants[0]!.roles = [];
+    const office = { ...actor, membershipRole: "member", fleetCapabilities: new Set(["office" as const]) };
+    expect(canOfficeFinalize(f.state, office)).toBe(true);
+    expect(canFinalizeFleetRuns(f.state, office, [f.run()])).toBe(true);
+    f.state.grants[0]!.financeRead = false;
+    expect(canOfficeFinalize(f.state, office)).toBe(false);
+    expect(canFinalizeFleetRuns(f.state, office, [f.run()])).toBe(false);
+    f.state.grants[0]!.financeRead = true;
+    f.state.grants[0]!.fleetIds = [];
+    expect(canOfficeFinalize(f.state, office)).toBe(false);
+  });
   it("rejects new runs without an explicit billing choice, AFE and work date", () => {
     expect(CreateFleetRunSchema.safeParse(create).success).toBe(false);
     expect(

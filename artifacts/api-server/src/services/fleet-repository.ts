@@ -6,9 +6,11 @@ import {
   FleetRunSchema,
   FleetWorkspacePreferenceSchema,
   FleetSetupInputSchema,
+  FleetCapabilitySchema,
 } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import type { PoolClient } from "pg";
+import { rolesForFleetCapabilities } from "./fleet-permissions";
 export const FleetStateSchema = z
   .object({
     version: z.number().int().positive(),
@@ -63,6 +65,8 @@ export type FleetSessionAuthority = {
   operationId?: string;
   schedulingRunId?: string;
   schedulingDriverUserIds?: number[];
+  /** Current stored override, populated only by the trusted repository transaction. */
+  fleetCapabilities?: ReadonlySet<import("@workspace/api-zod").FleetCapability>;
 };
 export interface FleetRepository {
   transaction<T>(
@@ -157,7 +161,32 @@ const boundedFleetRepository: FleetRepository = {
           ];
       }
       const previousOperations = new Set(state.operations.map((o) => o.id));
-      const result = await operation(state, client);
+      const storedCapabilities = await client.query(
+        "SELECT capabilities FROM fleet_person_capabilities WHERE company_id=$1 AND user_id=$2",
+        [companyId, actorUserId],
+      );
+      const actorGrant = state.grants.find((grant) => grant.userId === actorUserId);
+      const originalRoles = actorGrant?.roles;
+      const originalMembershipRole = authority.membershipRole;
+      if (storedCapabilities.rows.length) {
+        const capabilities = FleetCapabilitySchema.array().parse(storedCapabilities.rows[0].capabilities);
+        authority.fleetCapabilities = new Set(capabilities);
+        if (!capabilities.length) throw new FleetError("fleet.permission_denied", 403);
+        if (actorGrant) actorGrant.roles = rolesForFleetCapabilities(capabilities);
+        if (!capabilities.includes("admin") && authority.membershipRole === "admin")
+          authority.membershipRole = "member";
+      } else authority.fleetCapabilities = undefined;
+      const result = await (async () => {
+        try {
+          return await operation(state, client);
+        } finally {
+          // Only the temporary authorization view is restored. Setup may replace
+          // grants intentionally; that replacement must still be persisted.
+          if (actorGrant && originalRoles && state.grants.includes(actorGrant))
+            actorGrant.roles = originalRoles;
+          authority.membershipRole = originalMembershipRole;
+        }
+      })();
       FleetStateSchema.parse(state);
       for (const op of state.operations.filter(
         (o) => !previousOperations.has(o.id),

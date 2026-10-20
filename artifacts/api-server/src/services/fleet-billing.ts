@@ -64,15 +64,21 @@ export function assertFleetTicketFinalizable(
     throw new FleetError("fleet.no_reviewed_runs", 409);
 }
 export function canOfficeFinalize(state: FleetState, a: FleetActor) {
+  const configured = a.fleetCapabilities;
   return (
     state.enabled &&
-    (a.membershipRole === "admin" ||
+    ((a.membershipRole === "admin" && (!configured || configured.has("admin") || configured.has("office"))) ||
       state.grants.some(
         (g) =>
           g.userId === a.userId &&
-          g.roles.includes("fleet_manager") &&
+          (g.roles.includes("fleet_manager") || configured?.has("office")) &&
           g.financeRead &&
-          g.siteIds.some((id) => a.currentSiteIds?.includes(id)),
+          g.siteIds.some((id) => a.currentSiteIds?.includes(id)) &&
+          g.fleetIds.some((id) => state.fleets.some((fleet) =>
+            fleet.id === id && fleet.siteIds.some((siteId) =>
+              g.siteIds.includes(siteId) && a.currentSiteIds?.includes(siteId)
+            )
+          )),
       ))
   );
 }
@@ -96,7 +102,8 @@ function canAccessFleetRuns(
           f.id === run.fleetId &&
           run.siteIds.every((id) => f.siteIds.includes(id)),
       ) &&
-      (a.membershipRole === "admin" ||
+      (a.membershipRole === "admin" && (!a.fleetCapabilities || a.fleetCapabilities.has("admin") || a.fleetCapabilities.has(action === "dispatch" ? "dispatch" : "office")) ||
+        (action === "view_finance" && a.fleetCapabilities?.has("office") && grant?.financeRead) ||
         mayPerformFleetAction(
           a.userId,
           grant ? { ...grant, companyId: a.companyId } : null,
