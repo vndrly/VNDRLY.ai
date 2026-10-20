@@ -35,6 +35,20 @@ describe("dispatch plans", () => {
     expect((await f.service.dispatchPlans(f.actor)).plans[0].state).toBe("waiting_on_yard");
   });
 
+  it("does not let a ready plan lose its dispatch assignment on a partial update", async () => {
+    const f = fixture(), plan = await f.service.saveDispatchPlan(f.actor, input());
+    const ready = await f.service.updateDispatchPlan(f.actor, plan.id, {
+      operationId: id(20), expectedVersion: plan.version, state: "ready_to_dispatch",
+      detailId: id(21), driverUserId: 22,
+    });
+    await expect(f.service.updateDispatchPlan(f.actor, plan.id, {
+      operationId: id(23), expectedVersion: ready.version, detailId: null,
+    })).rejects.toMatchObject({ code: "fleet.dispatch_assignment_required" });
+    expect((await f.service.dispatchPlans(f.actor)).plans[0]).toMatchObject({
+      state: "ready_to_dispatch", detailId: id(21), driverUserId: 22, version: ready.version,
+    });
+  });
+
   it("refuses to link another company's Yard Order while preserving the waiting plan", async () => {
     const f = fixture(), plan = await f.service.saveDispatchPlan(f.actor, input());
     f.query.mockImplementation(async (sql: string) => ({ rows: sql.includes("SELECT status,outcome,detail_id FROM fleet_yard_orders") ? [] : [] }));

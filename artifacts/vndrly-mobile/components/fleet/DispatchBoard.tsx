@@ -54,20 +54,36 @@ function DispatchBoardContent() {
     if (!current()) throw Error("Fleet account changed. Reload Dispatch.");
     return result;
   }
+  async function readAllDetails(): Promise<FleetDetail[]> {
+    const all: FleetDetail[] = [];
+    let after: string | null = null;
+    for (let pageNumber = 0; pageNumber < 20; pageNumber += 1) {
+      const page = FleetDetailPageSchema.parse(await read(after ? `/api/fleet/details?after=${encodeURIComponent(after)}` : "/api/fleet/details"));
+      all.push(...page.details);
+      if (!page.nextCursor) return all;
+      if (page.nextCursor === after) throw Error("Detail list could not advance. Refresh Dispatch Board.");
+      after = page.nextCursor;
+    }
+    throw Error("Detail list is too large to load safely. Refine Fleet access and retry.");
+  }
   async function load() {
     try {
       const [overview, resources, plans, commercial, yardPage, yardOrders, details] = await Promise.all([
         read<FleetOverview>("/api/fleet/overview"), read<FleetResources>("/api/fleet/resources"),
         read<{ plans: FleetDispatchPlan[] }>("/api/fleet/dispatch-plans"),
         read<{ destinations: FleetDestination[] }>("/api/fleet/commercial"), read<{ yards: Yard[] }>("/api/fleet/yards"),
-        read<{ orders: FleetYardOrder[] }>("/api/fleet/yard-orders"), read<unknown>("/api/fleet/details"),
+        read<{ orders: FleetYardOrder[] }>("/api/fleet/yard-orders"), readAllDetails(),
       ]);
       if (!current()) return;
       if (!overview.capabilities.canDispatch || plans.plans.some(plan => plan.companyId !== overview.companyId) || yardPage.yards.some(yard => yard.companyId !== overview.companyId))
         throw Error("Dispatch permission or company scope changed.");
       const parsed = plans.plans.map(plan => FleetDispatchPlanSchema.parse(plan));
-      const detailPage = FleetDetailPageSchema.parse(details);
-      setData({ overview, resources, places: commercial.destinations, yards: yardPage.yards, yardOrders: yardOrders.orders.filter(order => order.companyId === overview.companyId), details: detailPage.details, plans: parsed });
+      const visibleOrders = yardOrders.orders.filter(order => order.companyId === overview.companyId);
+      const visibleOrderIds = new Set(visibleOrders.map(order => order.id));
+      const missingOrderIds = [...new Set(parsed.map(plan => plan.yardOrderId).filter((id): id is string => !!id && !visibleOrderIds.has(id)))];
+      const linkedOrders = await Promise.all(missingOrderIds.map(async id => FleetYardOrderSchema.parse(await read(`/api/fleet/yard-orders/${id}`))));
+      if (!current() || linkedOrders.some(order => order.companyId !== overview.companyId)) throw Error("Dispatch permission or company scope changed.");
+      setData({ overview, resources, places: commercial.destinations, yards: yardPage.yards, yardOrders: [...visibleOrders, ...linkedOrders], details, plans: parsed });
       setFleetId(prior => prior || overview.fleets[0]?.id || "");
       setBillingSiteId(prior => prior || overview.fleets[0]?.siteIds[0] || 0);
       setJobId(prior => prior || commercial.destinations.find(place => !yardPage.yards.some(yard => yard.destinationId === place.id))?.id || "");
@@ -81,6 +97,7 @@ function DispatchBoardContent() {
   const group = data?.overview.fleets.find(item => item.id === fleetId);
   const selected = data?.plans.find(plan => plan.id === selectedId);
   const selectedRun = data?.overview.runs.find(run => run.id === selected?.runId);
+  const selectedAssignmentComplete = !!selected?.detailId && !!selected.driverUserId && !!data?.details.some(detail => detail.id === selected.detailId && detail.accessGroupIds.includes(selected.fleetId) && !detail.archivedAt);
   async function save() {
     if (lock.current || !route || !ticket || !group || !billingSiteId) return;
     const exact = pendingCreate.current ?? FleetDispatchPlanInputSchema.parse({ operationId: Crypto.randomUUID(), fleetId, title, billingSiteId, routePlan: route, ticket, detailId: null, driverUserId: null, ...(selectedRunOrder ? { runOrderSelection: selectedRunOrder } : {}) });
@@ -229,7 +246,7 @@ function DispatchBoardContent() {
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   const text = { color: colors.text }, card = { backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 2, borderRadius: 12, padding: 14, gap: 10 } as const;
-  if (!data) return <View style={card}><Text style={text}>{copy("Loading Dispatch Board")}</Text>{!!error && <Text accessibilityRole="alert" style={text}>{error}</Text>}<TogglePillButton onPress={() => void load()}>{copy("Retry Dispatch Board")}</TogglePillButton></View>;
+  if (!data) return <View style={card}><Text style={text}>{copy("Loading Dispatch Board")}</Text>{!!error && <Text accessibilityRole="alert" style={text}>{copy(error)}</Text>}<TogglePillButton onPress={() => void load()}>{copy("Retry Dispatch Board")}</TogglePillButton></View>;
   return <View style={{ gap: 12 }}>
     <View style={card}><Text style={{ ...text, fontWeight: "700" }}>{copy("Dispatch Board")}</Text>
       <Text style={text}>{copy("Authorized work → route and return → Yard Detail → driver → review and release")}</Text>
@@ -246,7 +263,9 @@ function DispatchBoardContent() {
         {selected.state === "waiting_on_yard" && <TogglePillButton disabled={busy || !(selectedDetailId || selected.detailId) || !home || !data.overview.accountScope} onPress={() => void requestYardDetail()}>{copy(pendingYard.current ? "Verify and retry exact Yard request" : "Request Yard Detail")}</TogglePillButton>}
         {selected.state === "waiting_on_yard" && <TogglePillButton disabled={busy || !(selectedDriverId || selected.driverUserId) || !(selectedDetailId || selected.detailId)} onPress={() => void prepare()}>{copy(pendingUpdate.current ? "Verify and retry exact readiness" : "Review ready Detail and driver")}</TogglePillButton>}
         {selected.ticket.kind === "office_review_draft" && <Text style={text}>{copy("Office must attach an authorized ticket before this non-billable draft can be released.")}</Text>}
-        {selected.state === "ready_to_dispatch" && selected.ticket.kind === "authorized" && <><FleetRunBilling siteId={selected.billingSiteId} fleetId={selected.fleetId} authorizedTicketId={selected.ticket.ticketId} onChange={setBilling} disabled={busy} /><TogglePillButton disabled={busy || billing?.mode !== "existing_ticket" || billing.ticketId !== selected.ticket.ticketId} onPress={() => void release()}>{copy(releaseAttempt.current ? "Verify and retry exact release" : "Release to driver")}</TogglePillButton></>}
+        {selected.state === "ready_to_dispatch" && selected.ticket.kind === "authorized" && <><FleetRunBilling siteId={selected.billingSiteId} fleetId={selected.fleetId} authorizedTicketId={selected.ticket.ticketId} onChange={setBilling} disabled={busy} />
+          {!selectedAssignmentComplete && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy("Choose an available Detail and driver, then review readiness before release.")}</Text>}
+          <TogglePillButton disabled={busy || !selectedAssignmentComplete || billing?.mode !== "existing_ticket" || billing.ticketId !== selected.ticket.ticketId} onPress={() => void release()}>{copy(releaseAttempt.current ? "Verify and retry exact release" : "Release to driver")}</TogglePillButton></>}
       </View>}
       {selectedRun && selected?.state === "released" && <View style={{ gap: 8 }}>
         <Text style={text}>{copy("Run in progress")} · {copy(selectedRun.status)} · Ticket #{selectedRun.linkedTicketId}</Text>
@@ -268,7 +287,7 @@ function DispatchBoardContent() {
       <FleetRouteFields key={routeEditorKey} value={route} destinations={data.places} onChange={value => { setSelectedRunOrder(null); setRoute(value); }} disabled={busy} />
       {group && <FleetRunOrderChoice companyId={data.overview.companyId} groupId={group.id} disabled={busy} onChange={order => { if (order) { setSelectedRunOrder({ id: order.id, version: order.version }); setRoute(fleetRunOrderRoute(order, Crypto.randomUUID)); setRouteEditorKey(value => value + 1); } }} />}
       <TogglePillButton disabled={busy || !route || !ticket || !title.trim() || !billingSiteId} onPress={() => void save()}>{copy(pendingCreate.current ? "Verify and retry exact plan" : "Save waiting plan")}</TogglePillButton>
-      {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
+      {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(error)}</Text>}
     </View>
   </View>;
 }

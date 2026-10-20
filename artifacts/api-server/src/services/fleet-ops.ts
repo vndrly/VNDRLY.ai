@@ -698,14 +698,14 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
         const ticket = await client.query("SELECT id FROM tickets WHERE id=$1 AND vendor_id=$2 AND site_location_id=$3 AND status IN ('initiated','in_progress','pending_review','kicked_back','completed')", [input.ticket.ticketId, actor.companyId, plan.billingSiteId]);
         if (ticket.rows.length !== 1) throw new FleetError("fleet.ticket_not_authorized", 409);
       }
-      if (next.yardOrderId && (input.yardOrderId !== undefined || input.detailId !== undefined || input.state === "ready_to_dispatch")) {
+      if (next.yardOrderId && (input.yardOrderId !== undefined || input.detailId !== undefined || next.state === "ready_to_dispatch")) {
         const yard = await client.query("SELECT status,outcome,detail_id FROM fleet_yard_orders WHERE id=$1 AND company_id=$2", [next.yardOrderId, actor.companyId]);
         if (yard.rows.length !== 1) throw new FleetError("fleet.yard_not_found", 404);
         if (!next.detailId || yard.rows[0].detail_id !== next.detailId) throw new FleetError("fleet.yard_detail_mismatch", 409);
-        if (input.state === "ready_to_dispatch" && (yard.rows[0].status !== "reported" || yard.rows[0].outcome !== "ready"))
+        if (next.state === "ready_to_dispatch" && (yard.rows[0].status !== "reported" || yard.rows[0].outcome !== "ready"))
           throw new FleetError("fleet.yard_not_ready", 409);
       }
-      if (input.state === "ready_to_dispatch" && (!next.detailId || !next.driverUserId))
+      if (next.state === "ready_to_dispatch" && (!next.detailId || !next.driverUserId))
         throw new FleetError("fleet.dispatch_assignment_required", 409);
       if (input.state === "released") {
         if (plan.state !== "ready_to_dispatch" || !input.runId || !next.detailId || !next.driverUserId || next.ticket.kind !== "authorized")
