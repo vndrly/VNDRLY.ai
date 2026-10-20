@@ -67,6 +67,25 @@ describe("Fleet compliance score", () => {
     expect(recorded).toHaveLength(1);
   });
 
+  it("uses the same canonical company projection served to Partners", async () => {
+    const canonical = projectFleetComplianceScore(3, [expired], "2026-10-20T00:00:00.000Z");
+    let registerReads = 0;
+    const register = {
+      assertFleetComplianceScoreAccess: async () => {},
+      readFleetComplianceScoreProjection: async () => canonical,
+      readFleetComplianceRegister: async () => {
+        registerReads++;
+        return { entries: [], nextCursor: null };
+      },
+    };
+    await expect(readFleetComplianceScore(
+      { userId: 7, companyId: 3 } as never,
+      register as never,
+      async () => new Set<FleetCapability>(["office"]),
+    )).resolves.toEqual(canonical);
+    expect(registerReads).toBe(0);
+  });
+
   it("retains a capped category total across 26 failing records without invalid zero-point deductions", () => {
     const records = Array.from({ length: 26 }, (_, index) => ({ ...expired, id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}` }));
     const result = projectFleetComplianceScore(3, records, "2026-10-20T00:00:00.000Z");

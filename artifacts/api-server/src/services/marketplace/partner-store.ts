@@ -22,6 +22,7 @@ import {
   type VendorPartnerServiceOffer,
 } from "@workspace/db/schema";
 import { FleetComplianceConfigurationSchema } from "@workspace/api-zod";
+import { projectFleetComplianceConfigurationScore } from "../fleet-compliance-score";
 import type { SessionPayload } from "../../lib/session";
 import { missingVendorApprovalFields } from "../../lib/vendor-approval-readiness";
 import { calculateSafetyEventScore } from "../../lib/safety-score";
@@ -465,7 +466,7 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
               validRatings.length
             : null,
           reviewCount: validRatings.length,
-          safety: marketplaceComplianceSummary(vendor.fleetComplianceConfiguration),
+          safety: marketplaceComplianceSummary(vendor.fleetComplianceConfiguration, vendorId, now),
           completedJobs: relevant.length,
           priorPartnerJobs: history.length,
           onTimeRate: scheduled.length
@@ -480,10 +481,14 @@ export function createPostgresPartnerMarketplaceStore(connection?: Pick<typeof i
   };
 }
 
-/** Public Partner projection uses the same persisted preview returned to the vendor helper. */
-export function marketplaceComplianceSummary(raw: unknown): RankingCandidate["safety"] {
+/** Public Partner projection uses the same current, privacy-safe company score as Fleet. */
+export function marketplaceComplianceSummary(raw: unknown, vendorId = 1, at = new Date()): RankingCandidate["safety"] {
   const parsed = FleetComplianceConfigurationSchema.safeParse(raw ?? {});
-  const preview = parsed.success ? parsed.data.partnerScorePreview : null;
+  const preview = parsed.success
+    ? parsed.data.entries.length
+      ? projectFleetComplianceConfigurationScore(vendorId, parsed.data, at.toISOString()).partnerPreview
+      : parsed.data.partnerScorePreview
+    : null;
   if (!preview) return null;
   return {
     score: preview.score,

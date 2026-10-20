@@ -386,6 +386,48 @@ describe("partner marketplace persistence boundary", () => {
       safetyStatus: "not_yet_rated",
     });
   });
+  it("reprojects Partner compliance from current evidence without a vendor page visit", () => {
+    const configuration = {
+      version: 2,
+      reviewerUserIds: [],
+      requirements: [],
+      facts: [],
+      scoreHistory: [{ at: "2026-10-01T00:00:00.000Z", score: 85 }],
+      entries: [{
+        id: "11111111-1111-4111-8111-111111111111",
+        revision: 2,
+        subject: { kind: "carrier", id: 3 },
+        requirementId: "insurance",
+        requirementVersion: 1,
+        status: "verified",
+        validFrom: "2026-01-01T00:00:00.000Z",
+        validUntil: "2026-10-19T00:00:00.000Z",
+        verifiedAt: "2026-01-01T00:00:00.000Z",
+        verifiedByUserId: 7,
+        attributeKind: "insurance",
+        objectPath: "/objects/fleet-compliance-private/3/11111111-1111-4111-8111-111111111111/2/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        updatedAt: "2026-10-19T00:00:00.000Z",
+      }],
+      partnerScorePreview: {
+        score: 85,
+        status: "green",
+        advisoryOnly: true,
+        evaluatedAt: "2026-10-01T00:00:00.000Z",
+        categories: [],
+        reasons: [],
+      },
+    };
+    expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"))).toMatchObject({
+      score: 0,
+      refreshedAt: "2026-10-20T00:00:00.000Z",
+      reasons: expect.arrayContaining(["expired_record"]),
+    });
+    configuration.entries[0].validUntil = "2027-10-19T00:00:00.000Z";
+    configuration.entries[0].status = "revoked";
+    expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"))?.reasons).toContain("revoked_record");
+    configuration.entries[0].status = "verified";
+    expect(marketplaceComplianceSummary(configuration, 3, new Date("2026-10-20T00:00:00.000Z"))?.reasons).not.toContain("revoked_record");
+  });
   it("uses the saved safety source refresh date and caps the existing event formula", () => {
     expect(marketplaceSafetySummary([], now)).toBeNull();
     expect(

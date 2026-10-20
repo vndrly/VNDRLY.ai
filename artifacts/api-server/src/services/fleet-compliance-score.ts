@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { FleetComplianceScoreSchema, type FleetComplianceOperationalEntry, type FleetComplianceScore } from "@workspace/api-zod";
+import { FleetComplianceConfigurationSchema, FleetComplianceScoreSchema, type FleetComplianceOperationalEntry, type FleetComplianceScore } from "@workspace/api-zod";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError } from "./fleet-repository";
 import { resolveFleetCapabilities } from "./fleet-mobile-permissions";
@@ -84,13 +84,50 @@ export function projectFleetComplianceScore(companyId: number, entries: readonly
   });
 }
 
-type Register = { assertFleetComplianceScoreAccess: (actor: FleetActor) => Promise<void>; readFleetComplianceRegister: (actor: FleetActor, query: unknown) => Promise<{ entries: FleetComplianceOperationalEntry[]; nextCursor: string | null }>; recordFleetComplianceScoreSnapshot?: (actor: FleetActor, preview: NonNullable<FleetComplianceScore["partnerPreview"]>) => Promise<FleetComplianceScore["history"]> };
+/** Company-wide, privacy-safe projection shared by Fleet and Partner surfaces. */
+export function projectFleetComplianceConfigurationScore(
+  companyId: number,
+  raw: unknown,
+  evaluatedAt = new Date().toISOString(),
+) {
+  const configuration = FleetComplianceConfigurationSchema.parse(raw);
+  const entries = configuration.entries.map((entry) => {
+    const expired = !!entry.validUntil && Date.parse(entry.validUntil) <= Date.parse(evaluatedAt);
+    const status = !expired && entry.status === "verified"
+      ? "green" as const
+      : "red" as const;
+    const reasons: FleetComplianceOperationalEntry["reasons"] = expired
+      ? ["expired"]
+      : status === "green"
+        ? []
+        : entry.status === "revoked"
+          ? ["revoked"]
+          : entry.status === "failed"
+            ? ["failed"]
+            : ["unverified"];
+    return {
+      id: entry.id,
+      subject: entry.subject,
+      kind: entry.attributeKind,
+      verification: entry.status,
+      status,
+      reasons,
+      validUntil: entry.validUntil,
+      evaluatedAt,
+    };
+  });
+  return projectFleetComplianceScore(companyId, entries, evaluatedAt);
+}
+
+type Register = { assertFleetComplianceScoreAccess: (actor: FleetActor) => Promise<void>; readFleetComplianceScoreProjection?: (actor: FleetActor) => Promise<FleetComplianceScore>; readFleetComplianceRegister: (actor: FleetActor, query: unknown) => Promise<{ entries: FleetComplianceOperationalEntry[]; nextCursor: string | null }>; recordFleetComplianceScoreSnapshot?: (actor: FleetActor, preview: NonNullable<FleetComplianceScore["partnerPreview"]>) => Promise<FleetComplianceScore["history"]> };
 /** Reuses canonical register authorization and its current facts/evidence assessment. */
 export async function readFleetComplianceScore(actor: FleetActor, register: Register, capabilities = resolveFleetCapabilities) {
   const current = await capabilities(actor, actor.companyId);
   if (!["admin", "office", "dispatch"].some((capability) => current.has(capability as "admin" | "office" | "dispatch")))
     throw new FleetError("fleet.permission_denied", 403);
   await register.assertFleetComplianceScoreAccess(actor);
+  if (register.readFleetComplianceScoreProjection)
+    return register.readFleetComplianceScoreProjection(actor);
   const entries: FleetComplianceOperationalEntry[] = [];
   let after: string | null = null;
   do {
