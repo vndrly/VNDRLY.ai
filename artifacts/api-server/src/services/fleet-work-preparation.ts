@@ -6,7 +6,7 @@ import {createFleetWorkCanonicalService} from "./fleet-work-canonical";
 import {readFleetAuthoritySites,resolveFleetCommercialAuthority} from "./fleet-commercial-authority";
 import {isFleetBillingV2TicketOpen} from "./fleet-billing-v2";
 import {FleetError} from "./fleet-repository";
-const inputSchema=z.object({detailId:z.uuid(),billingSiteId:z.number().int().positive(),ticketId:z.number().int().positive().nullable()}).strict();
+const inputSchema=z.object({detailId:z.uuid(),driverUserId:z.number().int().positive(),billingSiteId:z.number().int().positive(),ticketId:z.number().int().positive().nullable()}).strict();
 export async function readFleetWorkBillingChoices(context:FleetWorkExecutionContext,raw:unknown){
  const input=z.object({fleetId:z.uuid(),siteId:z.number().int().positive(),afeNumber:z.string().trim().max(200),workDate:z.iso.date()}).strict().parse(raw),{actor,state,client}=context,grant=state.grants.find(row=>row.userId===actor.userId);
  const own=!!grant?.roles.includes("driver")&&!grant.roles.some(role=>role==="fleet_manager"||role==="dispatcher");
@@ -23,7 +23,7 @@ export async function readFleetWorkBillingChoices(context:FleetWorkExecutionCont
  * rechecks the actual Detail, commercial authority, ticket and rate at sync. */
 export async function prepareFleetWorkCreation(context:FleetWorkExecutionContext,raw:unknown){
  const body=inputSchema.parse(raw),{actor,state,client}=context;
- const snapshot=await createFleetWorkCanonicalService(context).fleetDetailSnapshot({...actor},body.detailId),grant=state.grants.find(row=>row.userId===actor.userId);
+ const snapshot=await createFleetWorkCanonicalService(context).fleetDetailSnapshot({...actor},body.detailId,body.driverUserId),grant=state.grants.find(row=>row.userId===actor.userId);
  const ownDriver=snapshot.detail.driverUserId===actor.userId&&grant?.roles.includes("driver");
  if(!state.enabled||!grant||!snapshot.detail.accessGroupIds.some(id=>grant.fleetIds.includes(id))||!ownDriver&&(!grant.roles.some(role=>["fleet_manager","dispatcher"].includes(role))||!grant.siteIds.includes(body.billingSiteId)))throw new FleetError("fleet.work_preparation_forbidden",403);
  const site=(await readFleetAuthoritySites(client,actor.companyId,{siteIds:[body.billingSiteId],activeOnly:true}))[0];if(!site)throw new FleetError("fleet.ticket_site_forbidden",403);

@@ -210,7 +210,7 @@ export default function FleetRunPlan({
     if (!expected) return;
     try {
       const value = FleetDetailSnapshotSchema.parse(
-        workSession?await workSession.recoveryDetail(id):await apiFetch<unknown>(`/api/fleet/details/${id}${driverUserId ? `?driverUserId=${driverUserId}` : ""}`, {}, scope.current),
+        workSession?await workSession.recoveryDetail(id,driverUserId!):await apiFetch<unknown>(`/api/fleet/details/${id}${driverUserId ? `?driverUserId=${driverUserId}` : ""}`, {}, scope.current),
       );
       if (!current() || request !== detailRequest.current) return;
       if (
@@ -266,7 +266,7 @@ export default function FleetRunPlan({
       if (current()) setLoading(false);
     }
   }
-  useEffect(()=>{if(workSession&&snapshot&&Number(billingSite)>0)void workSession.prepareSelection(snapshot.detail.id,Number(billingSite),null).catch(()=>undefined);},[workSession,snapshot,billingSite]);
+  useEffect(()=>{if(workSession&&snapshot&&Number(billingSite)>0)void workSession.prepareSelection(snapshot.detail.id,snapshot.detail.driverUserId,Number(billingSite),null).catch(()=>undefined);},[workSession,snapshot,billingSite]);
   const now = Date.now(),
     options =
       details?.details

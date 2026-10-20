@@ -161,7 +161,14 @@ export async function executeFleetWorkCommand(
         throw new FleetError("fleet.invalid_request", 400);
       // Resolve current permission/resource records without trusting cached
       // display labels or the time at which a client read its snapshot.
-      const snapshot = await service.fleetDetailSnapshot({ ...actor }, detailRef.id);
+      let snapshot;
+      try {
+        snapshot = await service.fleetDetailSnapshot({ ...actor }, detailRef.id, p.detailSnapshot.detail.driverUserId);
+      } catch (error) {
+        if (error instanceof FleetError && ["fleet.driver_grant_required", "fleet.detail_revision_conflict"].includes(error.code))
+          throw new FleetError("fleet.work_assignment_changed");
+        throw error;
+      }
       if (
         snapshot.detail.version !== detailRef.version ||
         !fleetDetailSnapshotIdentityMatches(snapshot, {

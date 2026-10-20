@@ -137,7 +137,7 @@ async function fixture(options: { rig?: boolean } = {}) {
         vehicleAssetId: truck.id,
         rigPackageId: rig?.id ?? null,
         rigPackageVersion: rig?.version ?? null,
-        driverUserId: driver.id,
+        driverUserId: null,
         accessGroupIds: [group],
         effectiveFrom: "2026-01-01T00:00:00Z",
         effectiveUntil: null,
@@ -185,7 +185,7 @@ async function fixture(options: { rig?: boolean } = {}) {
       },
     },
   );
-  const snapshot = await service.fleetDetailSnapshot({ ...actor }, detail.id);
+  const snapshot = await service.fleetDetailSnapshot({ ...actor }, detail.id, driver.id);
   const [device] = await db
     .insert(workHubDevicesTable)
     .values({

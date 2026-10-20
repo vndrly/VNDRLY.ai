@@ -103,7 +103,7 @@ export function createFleetDetailsOperations(
     const grant = scope(state, actor);
     const dispatcher = grant.roles.some((role) => ["fleet_manager", "dispatcher"].includes(role));
     const selfDispatch = grant.roles.includes("driver") &&
-      actor.fleetCapabilities?.has("driver") && actor.fleetCapabilities.has("self_dispatch") &&
+      (actor.fleetCapabilities === undefined || actor.fleetCapabilities.has("self_dispatch")) &&
       detail.driverUserId === null;
     if (
       detail.companyId !== actor.companyId ||

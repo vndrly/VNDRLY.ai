@@ -30,7 +30,7 @@ export async function applyFleetAssistantIntent(actor:FleetActor,raw:unknown){
   let value:unknown;
   if(kind==="activity.create"){
    const {dispatch,...fields}=input;const create=CreateFleetRunSchema.parse({...fields,operationId});if(!create.detailSelection)throw new FleetError("fleet.detail_required",400);
-   const preparation=await prepareFleetWorkCreation(context,{detailId:create.detailSelection.detailId,billingSiteId:create.stops[0].siteId,ticketId:create.billing.mode==="existing_ticket"?create.billing.ticketId:null});
+   const preparation=await prepareFleetWorkCreation(context,{detailId:create.detailSelection.detailId,driverUserId:create.driverUserId,billingSiteId:create.stops[0].siteId,ticketId:create.billing.mode==="existing_ticket"?create.billing.ticketId:null});
    const created=buildFleetCreateIntent({scope:provision.scope,input:create,preparation,now:()=>now,uuid:randomUUID});created.payload.dispatchAfterCreate=dispatch===true;value=created;
   }else if(kind==="activity.action"||kind==="activity.edit"||kind==="quantity.record"||["quantity.review","price.resolve","charge.review","charge.adjust"].includes(kind)){
    const runId=z.uuid().parse(input.runId);

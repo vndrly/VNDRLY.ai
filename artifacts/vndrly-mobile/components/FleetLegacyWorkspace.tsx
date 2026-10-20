@@ -337,7 +337,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
             setError(e instanceof Error ? e.message : "Action unavailable.");
         }
     }
-    useEffect(()=>{if(work.session&&nativePlan&&billing)void work.session.prepareSelection(nativePlan.detail.detail.id,nativePlan.billingSiteId,billing.mode==="existing_ticket"?billing.ticketId:null).catch(()=>undefined);},[work.session,nativePlan,billing]);
+    useEffect(()=>{if(work.session&&nativePlan&&billing)void work.session.prepareSelection(nativePlan.detail.detail.id,nativePlan.detail.detail.driverUserId,nativePlan.billingSiteId,billing.mode==="existing_ticket"?billing.ticketId:null).catch(()=>undefined);},[work.session,nativePlan,billing]);
     function createRun() {
         if (!billing) { setError(copy("Choose new ticket or an eligible open ticket, AFE and work date.")); return; }
         if(useSavedPlan){

@@ -303,7 +303,7 @@ function FleetWorkspace({
         setFleetId(preferred);
     }
   }, [overview.data]);
-  useEffect(()=>{if(work.session&&selectedDetailId&&Number(pickup)>0)void work.session.prepareSelection(selectedDetailId,Number(pickup),billing.mode==="existing_ticket"?Number(billing.ticketId):null).catch(()=>undefined);},[work.session,selectedDetailId,pickup,billing]);
+  useEffect(()=>{if(work.session&&selectedDetailId&&Number(driver)>0&&Number(pickup)>0)void work.session.prepareSelection(selectedDetailId,Number(driver),Number(pickup),billing.mode==="existing_ticket"?Number(billing.ticketId):null).catch(()=>undefined);},[work.session,selectedDetailId,driver,pickup,billing]);
   const [reason, setReason] = useState("");
   if (overview.isPending) return <p className="p-6">{c.loading}</p>;
   if (overview.isError)

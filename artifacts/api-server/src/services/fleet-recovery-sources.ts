@@ -28,7 +28,8 @@ async function recoveryContext(context:FleetWorkExecutionContext,caseId:string){
   snapshot=original.command.payload.detailSnapshot;
   const detail=FleetDetailSchema.parse(await readFleetResourceRecord(client,actor.companyId,"fleet-detail",snapshot.detail.id,snapshot.detail.version));
   const rig=snapshot.rigPackage?FleetRigPackageSchema.parse(await readFleetResourceRecord(client,actor.companyId,"fleet-rig-package",snapshot.rigPackage.id,snapshot.rigPackage.version)):null;
-  if(!isDeepStrictEqual(detail,snapshot.detail)||!isDeepStrictEqual(rig,snapshot.rigPackage)||detail.companyId!==actor.companyId)throw new FleetError("fleet.original_assignment_unverified",409);
+  const savedAssignment={...snapshot,detail:{...detail,driverUserId:snapshot.detail.driverUserId},rigPackage:rig};
+  if(!fleetDetailSnapshotIdentityMatches(savedAssignment,snapshot)||detail.companyId!==actor.companyId)throw new FleetError("fleet.original_assignment_unverified",409);
  }else{
   if(reference.type!=="canonical")throw new FleetError("fleet.original_assignment_unverified",409);
   const saved=(await client.query("SELECT tool_output FROM assistant_action_audit WHERE vendor_id=$1 AND target_type='fleet-run' AND target_id=$2 AND tool_output->>'version'=$3 ORDER BY id DESC LIMIT 1",[actor.companyId,reference.id,String(reference.version)])).rows[0];
