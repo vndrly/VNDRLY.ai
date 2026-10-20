@@ -1,3 +1,3 @@
 import React from "react";
-import FleetWorkspace from "@/components/FleetWorkspace";
-export default function FleetPage(){return <FleetWorkspace initialMode="map"/>;}
+import { Redirect } from "expo-router";
+export default function FleetMapRedirect() { return <Redirect href="/(tabs)/fleet?module=map" />; }

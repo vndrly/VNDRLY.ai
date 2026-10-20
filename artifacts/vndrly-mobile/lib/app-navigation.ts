@@ -169,31 +169,6 @@ export function buildAppNavigation({
         ),
       );
     }
-    const fleetIndex = navigation.findIndex((entry) => entry.key === "fleet");
-    if (fleetIndex >= 0)
-      navigation.splice(
-        fleetIndex + 1,
-        0,
-        item(
-          "fleet-log",
-          "/(tabs)/fleet-log",
-          labels.fleetLog ?? "Fleet Log",
-          "list",
-        ),
-        item(
-          "fleet-map",
-          "/(tabs)/fleet-map",
-          labels.fleetMap ?? "Fleet Map",
-          "map-pin",
-        ),
-        item(
-          "fleet-locations",
-          "/(tabs)/fleet-locations",
-          labels.fleetLocations ?? "Origins and Destinations",
-          "map-pin",
-        ),
-        item("fleet-compliance","/(tabs)/fleet-compliance",labels.fleetCompliance??"Compliance","shield"),
-      );
     return navigation;
   }
   if (isGatekeeperUser(user)) {
@@ -326,6 +301,7 @@ export function activeNavigationKey(pathname: string): string {
     .filter((segment) => segment !== "(tabs)");
   if (segments[0] === "work-hub") return "work-hub";
   if (segments.includes("fleet-run")) return "fleet";
+  if (["fleet-log", "fleet-map", "fleet-locations", "fleet-compliance"].includes(segments[0] ?? "")) return "fleet";
   if (!segments.length || segments[0] === "index") return "index";
   return segments.at(-1) ?? "index";
 }

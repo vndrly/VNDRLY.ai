@@ -1,5 +1,3 @@
 import React from "react";
-import FleetWorkspace from "@/components/FleetWorkspace";
-export default function FleetCompliancePage() {
-  return <FleetWorkspace initialMode="compliance" />;
-}
+import { Redirect } from "expo-router";
+export default function FleetComplianceRedirect() { return <Redirect href="/(tabs)/fleet?module=compliance" />; }

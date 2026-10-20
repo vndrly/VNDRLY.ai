@@ -139,10 +139,6 @@ export default function TabLayout() {
     () => ({
       askv: t("tabs.askv"),
       fleet: fleetCopy("Fleet Ops"),
-      fleetLog: fleetCopy("Fleet Log"),
-      fleetMap: fleetCopy("Fleet Map"),
-      fleetLocations: fleetCopy("Origins and Destinations"),
-      fleetCompliance: fleetCopy("Compliance"),
       fleetSiteActivity: fleetCopy("Fleet site activity"),
       fleetSupport: fleetCopy("Fleet support"),
       comms: t("tabs.comms"),

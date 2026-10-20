@@ -61,7 +61,7 @@ const user = (role: string, vendorRole?: string): StoredUser => ({
 });
 
 describe("buildAppNavigation", () => {
-  it("offers Origins and Destinations only within the authorized Fleet workspace", () => {
+  it("keeps Fleet modules behind one authorized navigation entry", () => {
     const navigation = buildAppNavigation({
       user: user("vendor", "admin"),
       labels,
@@ -69,12 +69,9 @@ describe("buildAppNavigation", () => {
       companyOperationsCategories: ["fleet"],
       fleetEnabled: true,
     });
-    expect(
-      navigation.find((item) => item.key === "fleet-locations"),
-    ).toMatchObject({
-      label: "Origins and Destinations",
-      href: "/(tabs)/fleet-locations",
-    });
+    expect(navigation.filter((item) => item.key.startsWith("fleet"))).toEqual([
+      expect.objectContaining({ key: "fleet", href: "/(tabs)/fleet" }),
+    ]);
     expect(
       buildAppNavigation({
         user: user("vendor", "admin"),
@@ -82,7 +79,7 @@ describe("buildAppNavigation", () => {
         badges,
         companyOperationsCategories: ["field"],
         fleetEnabled: true,
-      }).some((item) => item.key === "fleet-locations"),
+      }).some((item) => item.key === "fleet"),
     ).toBe(false);
   });
   it("keeps Fleet companies out of Field and Gate workspaces even for office staff", () => {
@@ -96,10 +93,6 @@ describe("buildAppNavigation", () => {
     expect(keys).toEqual([
       "askv",
       "fleet",
-      "fleet-log",
-      "fleet-map",
-      "fleet-locations",
-      "fleet-compliance",
       "work-hub",
       "profile",
     ]);
