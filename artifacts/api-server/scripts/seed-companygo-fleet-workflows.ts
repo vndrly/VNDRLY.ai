@@ -1,8 +1,23 @@
 import bcrypt from "bcryptjs";
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
+import {
+  FleetComplianceConfigurationSchema,
+  FleetComplianceRecordSchema,
+  FleetResourcesRegistrySchema,
+  FleetRunSchema,
+} from "@workspace/api-zod";
+import { z } from "zod/v4";
+
+const CompanyGoFleetStateSchema = z.object({
+  version: z.number().int().positive(), enabled: z.boolean(), fleets: z.array(z.any()), grants: z.array(z.any()),
+  supportGrants: z.array(z.any()).default([]), runs: z.array(FleetRunSchema).max(1000),
+  dispatchPlans: z.array(z.any()).default([]), dispatchPlanReceipts: z.array(z.any()).default([]),
+  preferences: z.array(z.any()).default([]), operations: z.array(z.any()),
+}).strict();
+const emptyCompanyGoFleetState = () => ({ version: 1, enabled: false, fleets: [], grants: [], supportGrants: [], runs: [], dispatchPlans: [], dispatchPlanReceipts: [], preferences: [], operations: [] });
 
 type DbClient = { query(text: string, values?: unknown[]): Promise<{ rows: any[]; rowCount: number | null }> };
 
@@ -12,6 +27,161 @@ export const COMPANYGO_FLEET_ACCOUNTS = [
   { login: "vendor_fleet_dispatch@fleetgo.com", capabilities: ["dispatch"] },
   { login: "vendor_fleet_driver@fleetgo.com", capabilities: ["yard", "driver", "self_dispatch"] },
 ] as const;
+
+type CompanyGoFleetContext = {
+  companyId: number; siteId: number; driverUserId: number; dispatcherUserId: number;
+  accountUserIds: number[];
+  vehicleAssetId: string; trailerAssetId: string;
+  fleetOpsState: unknown; fleetResources: unknown; compliance: unknown;
+};
+
+const fleetId = stableCompanyGoUuid("fleet:stanton");
+const rigPackageId = stableCompanyGoUuid("rig-package:standard");
+const detailId = stableCompanyGoUuid("detail:standard");
+
+function isoDay(offset: number, hour: number): string {
+  const value = new Date();
+  value.setUTCHours(hour, 0, 0, 0);
+  value.setUTCDate(value.getUTCDate() + offset);
+  return value.toISOString();
+}
+
+function buildCompanyGoRun(context: CompanyGoFleetContext, ordinal: number, future: boolean) {
+  const runKey = future ? `schedule:${ordinal}` : `history:${ordinal}`;
+  const runId = stableCompanyGoUuid(`run:${runKey}`);
+  const stopId = stableCompanyGoUuid(`run:${runKey}:stop`);
+  const startOffset = future ? ordinal : -ordinal;
+  const startedAt = isoDay(startOffset, 14);
+  const finishedAt = isoDay(startOffset, 22);
+  const snapshotDetail = {
+    id: detailId, companyId: context.companyId, version: 1,
+    name: "FleetGo Standard Detail", vehicleAssetId: context.vehicleAssetId,
+    rigPackageId, rigPackageVersion: 1, driverUserId: context.driverUserId,
+    accessGroupIds: [fleetId], effectiveFrom: isoDay(-60, 12), effectiveUntil: null, archivedAt: null,
+  };
+  const rigPackage = {
+    id: rigPackageId, companyId: context.companyId, version: 1, name: "FleetGo Standard Rigging",
+    components: [{ assetId: context.trailerAssetId, role: "trailer" as const, sequence: 0 }],
+    effectiveFrom: isoDay(-60, 12), effectiveUntil: null, archivedAt: null,
+  };
+  const reservation = {
+    id: stableCompanyGoUuid(`reservation:${runKey}`), runId, detailId, detailVersion: 1,
+    driverUserId: context.driverUserId, assetIds: [context.vehicleAssetId, context.trailerAssetId],
+    startAt: startedAt, plannedEndAt: finishedAt, timeZone: "America/Chicago",
+    state: future ? "reserved" as const : "released" as const,
+    actualReleasedAt: future ? null : finishedAt,
+    releaseReason: future ? null : "Completed CompanyGo fixture run", version: 1,
+  };
+  return FleetRunSchema.parse({
+    id: runId, fleetId, companyId: context.companyId,
+    title: future ? `GasGo scheduled Fleet run day ${ordinal + 1}` : `GasGo completed Fleet run day ${ordinal + 1}`,
+    driverUserId: context.driverUserId, vehicleAssetId: context.vehicleAssetId,
+    trailerAssetId: context.trailerAssetId, siteIds: [context.siteId],
+    status: future ? "dispatched" : "completed", phase: future ? "dispatch" : null,
+    pausedFromPhase: null, records: [], version: 1,
+    stops: [{ id: stopId, siteId: context.siteId, kind: "delivery", sequence: 0 }],
+    loads: [], inspections: [], currentStopId: future ? stopId : null,
+    visitedStopIds: future ? [] : [stopId], events: [],
+    linkedTicketId: historyTicketBase + (future ? 100 + ordinal : ordinal),
+    allowedActions: future ? ["acknowledge"] : [],
+    schedule: { plannedStartAt: startedAt, plannedEndAt: finishedAt, timezone: "America/Chicago" },
+    resourceAssignment: {
+      version: 2, snapshot: {
+        detail: snapshotDetail, rigPackage,
+        labels: { truck: "FleetGo Truck 1", rigPackage: "FleetGo Standard Rigging", driver: "FleetGo Driver", components: [{ assetId: context.trailerAssetId, label: "FleetGo Trailer 1" }] },
+        carrierOfRecordId: context.companyId, snapshottedAt: startedAt,
+      }, reservation, returnPolicy: "return_required",
+    },
+    labels: { driverName: "FleetGo Driver", vehicleName: "FleetGo Truck 1", trailerName: "FleetGo Trailer 1", sites: [{ siteId: context.siteId, name: "GasGo Test Site" }] },
+    assignmentRecordedAt: startedAt,
+  });
+}
+
+async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
+  const result = await client.query(`
+    SELECT v.id company_id,v.fleet_ops_state,v.fleet_resources,v.fleet_compliance_configuration compliance,
+      (SELECT s.id FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) site_id,
+      (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_driver@fleetgo.com' LIMIT 1) driver_user_id,
+      (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_dispatch@fleetgo.com' LIMIT 1) dispatcher_user_id,
+      (SELECT array_agg(u.id ORDER BY lower(coalesce(u.email,u.username))) FROM users u WHERE lower(coalesce(u.email,u.username))=ANY($1::text[])) account_user_ids,
+      (SELECT a.id FROM assets a WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=v.id AND a.retired_at IS NULL ORDER BY a.id LIMIT 1) vehicle_asset_id,
+      (SELECT a.id FROM assets a WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=v.id AND a.retired_at IS NULL ORDER BY a.id OFFSET 1 LIMIT 1) trailer_asset_id
+    FROM vendors v WHERE lower(v.name)='fleetgo' FOR UPDATE`, [COMPANYGO_FLEET_ACCOUNTS.map(account => account.login)]);
+  const row = result.rows[0];
+  if (!row?.site_id || !row?.driver_user_id || !row?.dispatcher_user_id || !row?.vehicle_asset_id || !row?.trailer_asset_id)
+    throw new Error("CompanyGo authoritative Fleet prerequisites are incomplete.");
+  const context: CompanyGoFleetContext = {
+    companyId: Number(row.company_id), siteId: Number(row.site_id), driverUserId: Number(row.driver_user_id), dispatcherUserId: Number(row.dispatcher_user_id),
+    accountUserIds: row.account_user_ids.map(Number),
+    vehicleAssetId: row.vehicle_asset_id, trailerAssetId: row.trailer_asset_id,
+    fleetOpsState: row.fleet_ops_state, fleetResources: row.fleet_resources, compliance: row.compliance,
+  };
+  const originalState = CompanyGoFleetStateSchema.parse(context.fleetOpsState ?? emptyCompanyGoFleetState());
+  const fixtureRuns = [...Array.from({ length: 30 }, (_, n) => buildCompanyGoRun(context, n, false)), ...Array.from({ length: 7 }, (_, n) => buildCompanyGoRun(context, n, true))];
+  const existingRunIds = new Set(originalState.runs.map(run => run.id));
+  const grantByUser = new Map(originalState.grants.map(grant => [grant.userId, grant]));
+  const fixtureGrants = context.accountUserIds.map(userId => {
+    const current = grantByUser.get(userId);
+    if (current) return { ...current, fleetIds: current.fleetIds.includes(fleetId) ? current.fleetIds : [...current.fleetIds, fleetId], siteIds: current.siteIds.includes(context.siteId) ? current.siteIds : [...current.siteIds, context.siteId] };
+    const roles = userId === context.driverUserId ? ["driver" as const] : userId === context.dispatcherUserId ? ["dispatcher" as const] : ["fleet_manager" as const];
+    return { userId, fleetIds: [fleetId], siteIds: [context.siteId], roles, safetyRelease: false, financeRead: userId !== context.driverUserId };
+  });
+  const fixtureUserIds = new Set(context.accountUserIds);
+  const state = CompanyGoFleetStateSchema.parse({
+    ...originalState, enabled: true,
+    fleets: originalState.fleets.some(fleet => fleet.id === fleetId) ? originalState.fleets : [...originalState.fleets, { id: fleetId, name: "FleetGo Stanton Fleet", siteIds: [context.siteId], equipmentAssetIds: [context.vehicleAssetId, context.trailerAssetId], requiredCertifications: [] }],
+    grants: [...originalState.grants.filter(grant => !fixtureUserIds.has(grant.userId)), ...fixtureGrants],
+    runs: [...originalState.runs, ...fixtureRuns.filter(run => !existingRunIds.has(run.id))],
+  });
+  const originalResources = FleetResourcesRegistrySchema.parse(context.fleetResources ?? { version: 1, rigPackages: [], details: [], reservations: [] });
+  const packageRecord = fixtureRuns[0]!.resourceAssignment!.snapshot.rigPackage!;
+  const reusableDetail = { ...fixtureRuns[0]!.resourceAssignment!.snapshot.detail, driverUserId: null };
+  const reservationIds = new Set(originalResources.reservations.map(item => item.id));
+  const resources = FleetResourcesRegistrySchema.parse({
+    ...originalResources,
+    rigPackages: originalResources.rigPackages.some(item => item.id === rigPackageId) ? originalResources.rigPackages : [...originalResources.rigPackages, packageRecord],
+    details: originalResources.details.some(item => item.id === detailId) ? originalResources.details : [...originalResources.details, reusableDetail],
+    reservations: [...originalResources.reservations, ...fixtureRuns.map(run => run.resourceAssignment!.reservation).filter(item => !reservationIds.has(item.id))],
+  });
+  await client.query("UPDATE vendors SET fleet_ops_state=$2::jsonb,fleet_resources=$3::jsonb WHERE id=$1", [context.companyId, JSON.stringify(state), JSON.stringify(resources)]);
+  await mergeCompanyGoCompliance(client, context);
+}
+
+async function mergeCompanyGoCompliance(client: DbClient, context: CompanyGoFleetContext): Promise<void> {
+  const existing = FleetComplianceConfigurationSchema.parse(context.compliance ?? { version: 1, reviewerUserIds: [], entries: [] });
+  const recordId = stableCompanyGoUuid("compliance:driver-license");
+  if (existing.entries.some(entry => entry.id === recordId)) return;
+  const at = isoDay(-1, 16), until = isoDay(365, 16);
+  const record = FleetComplianceRecordSchema.parse({
+    evidence: { id: recordId, revision: 1, subject: { kind: "driver", id: context.driverUserId }, requirementId: "companygo-driver-license", requirementVersion: 1, status: "reviewed", validFrom: isoDay(-365, 16), validUntil: until, verifiedAt: at, verifiedByUserId: context.dispatcherUserId, source: "CompanyGo synthetic qualification record", privateDocumentRef: null, restrictions: {} },
+    attributes: { kind: "driver_license", issuingState: "OK", licenseNumber: "COMPANYGO-SYNTHETIC", licenseClass: "A", endorsements: ["N"], restrictions: [], licenseStatus: "active", sourceRecordId: null },
+    retentionClass: "qualification", retainUntil: null, legalHold: false,
+  });
+  const secret = process.env.SESSION_SECRET ?? "dev-session-secret";
+  const digest = createHmac("sha256", secret).update(JSON.stringify(record)).digest("hex");
+  const objectPath = `/objects/fleet-compliance-private/${context.companyId}/${recordId}/1/${digest}`;
+  const objectStoreModulePath: string = "../src/lib/objectStore";
+  const { getObjectStore } = await import(objectStoreModulePath) as { getObjectStore: () => { putObject(path: string, contentType: string, body: Buffer, acl: { owner: string; visibility: "private"; purpose: "fleet-compliance-private" }): Promise<void> } };
+  await getObjectStore().putObject(objectPath, "application/json", Buffer.from(JSON.stringify(record)), { owner: `fleet-compliance:${context.companyId}`, visibility: "private", purpose: "fleet-compliance-private" });
+  const entry = { id: recordId, revision: 1, subject: record.evidence.subject, requirementId: record.evidence.requirementId, requirementVersion: 1, status: record.evidence.status, validFrom: record.evidence.validFrom, validUntil: record.evidence.validUntil, verifiedAt: record.evidence.verifiedAt, verifiedByUserId: record.evidence.verifiedByUserId, attributeKind: record.attributes.kind, objectPath, updatedAt: at };
+  const categories = [
+    { category: "vehicle", score: 0 }, { category: "driver_license", score: 100 },
+    { category: "insurance", score: 0 }, { category: "company_records", score: 0 },
+  ];
+  const preview = { score: 25, status: "red", advisoryOnly: true as const, evaluatedAt: at, categories, reasons: [
+    { category: "vehicle", reason: "Add current vehicle evidence.", reasonCode: "missing_evidence" },
+    { category: "insurance", reason: "Add current insurance evidence.", reasonCode: "missing_evidence" },
+    { category: "company_records", reason: "Add current company records.", reasonCode: "missing_evidence" },
+  ] };
+  const configuration = FleetComplianceConfigurationSchema.parse({
+    ...existing, version: existing.version + 1,
+    reviewerUserIds: existing.reviewerUserIds.includes(context.dispatcherUserId) ? existing.reviewerUserIds : [...existing.reviewerUserIds, context.dispatcherUserId],
+    entries: [...existing.entries, entry],
+    facts: [...existing.facts, { subject: record.evidence.subject, version: 1, facts: { cdlRequired: true, medicalRequired: true, testingRequired: true, state: "OK", carrierId: context.companyId, vehicleAssetId: context.vehicleAssetId }, reviewedAt: at, reviewedByUserId: context.dispatcherUserId, sourceKind: "employer_record", sourceObjectPath: objectPath }],
+    scoreHistory: [...existing.scoreHistory.filter(item => item.at.slice(0, 10) !== at.slice(0, 10)), { at, score: 25 }].slice(-365), partnerScorePreview: preview,
+  });
+  await client.query("UPDATE vendors SET fleet_compliance_configuration=$2::jsonb WHERE id=$1", [context.companyId, JSON.stringify(configuration)]);
+}
 
 export function stableCompanyGoUuid(value: string): string {
   const bytes = Buffer.from(createHash("sha256").update(`companygo:fleet-mobile:${value}`).digest().subarray(0, 16));
@@ -116,26 +286,19 @@ export const COMPANYGO_FLEET_SEED_SQL = [
    SELECT ${historyTicketBase}+100+d.n,s.id,f.id,e.id,w.id,'initiated','partner_self_service','CompanyGo scheduled Fleet run day '||(d.n+1),'Stable additive seven-day Fleet schedule fixture','pending_arrival',current_date+d.n+interval '08:00',480,c.id,now(),now() FROM days d CROSS JOIN fleetgo f CROSS JOIN site s CROSS JOIN work w CROSS JOIN employee e CROSS JOIN creator c ON CONFLICT(id) DO NOTHING`,
   `INSERT INTO ticket_line_items(ticket_id,type,description,quantity,unit_price,fleet_billing_metadata)
    SELECT t.id,'labor','CompanyGo Fleet day rate',1,1250,jsonb_build_object('fixture','companygo-fleet-mobile','billingMode','per_day') FROM tickets t WHERE t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 AND NOT EXISTS(SELECT 1 FROM ticket_line_items li WHERE li.ticket_id=t.id AND li.description='CompanyGo Fleet day rate')`,
-  `WITH fleetgo AS (SELECT id FROM vendors WHERE lower(name)='fleetgo' LIMIT 1), actor AS (SELECT id FROM users WHERE lower(coalesce(email,username))='vendor_fleet_dispatch@fleetgo.com' LIMIT 1), driver AS (SELECT id FROM users WHERE lower(coalesce(email,username))='vendor_fleet_driver@fleetgo.com' LIMIT 1), site AS (SELECT s.id FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1), vehicle AS (SELECT a.id FROM assets a JOIN fleetgo f ON a.responsible_org_type='vendor' AND a.responsible_org_id=f.id WHERE a.retired_at IS NULL ORDER BY a.id LIMIT 1), days(n,run_id,stop_id) AS (VALUES
-   ${Array.from({ length: 30 }, (_, n) => `(${n},'${stableCompanyGoUuid(`run:history:${n}`)}'::uuid,'${stableCompanyGoUuid(`run:history:${n}:stop`)}'::uuid)`).join(",\n   ")})
-   INSERT INTO assistant_action_audit(user_id,vendor_id,actor_role,actor_membership_role,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,tool_output,result_status,created_at)
-   SELECT a.id,f.id,'vendor','office','fleet','fixture','canonical','fleet_run','fleet-run-snapshot','fleet-run',d.run_id::text,jsonb_build_object('fixture','companygo-fleet-mobile'),jsonb_build_object(
-     'id',d.run_id::text,'fleetId','6fefab43-28cc-4e90-967c-347c28c48a13','companyId',f.id,'title','CompanyGo completed Fleet run day '||(d.n+1),
-     'driverUserId',u.id,'vehicleAssetId',v.id,'trailerAssetId',NULL,'siteIds',jsonb_build_array(s.id),'status','completed','phase',NULL,'version',1,
-     'stops',jsonb_build_array(jsonb_build_object('id',d.stop_id::text,'siteId',s.id,'kind','delivery','sequence',0)),'loads','[]'::jsonb,'inspections','[]'::jsonb,
-     'currentStopId',NULL,'visitedStopIds',jsonb_build_array(d.stop_id::text),'events','[]'::jsonb,'linkedTicketId',${historyTicketBase}+d.n,'allowedActions','[]'::jsonb
-   ),'completed',current_date-d.n+interval '17:00' FROM days d CROSS JOIN fleetgo f CROSS JOIN actor a CROSS JOIN driver u CROSS JOIN site s CROSS JOIN vehicle v WHERE NOT EXISTS(SELECT 1 FROM assistant_action_audit prior WHERE prior.vendor_id=f.id AND prior.target_type='fleet-run' AND prior.target_id=d.run_id::text)`,
 ] as const;
 
 export const COMPANYGO_FLEET_ACCEPTANCE_SQL = `
 WITH fleetgo AS (SELECT id FROM vendors WHERE lower(name) = 'fleetgo' LIMIT 1),
 gasgo AS (SELECT id FROM partners WHERE lower(name) = 'gasgo' LIMIT 1)
 SELECT
- (SELECT count(DISTINCT t.check_in_time::date) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE t.check_in_time::date BETWEEN current_date - 29 AND current_date) history_days,
- (SELECT count(DISTINCT t.scheduled_start_at::date) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE t.scheduled_start_at::date BETWEEN current_date AND current_date + 6) scheduled_days,
- (SELECT count(*) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id) ticket_count,
- (SELECT count(*) FROM ticket_line_items li JOIN tickets t ON t.id=li.ticket_id JOIN fleetgo f ON t.vendor_id=f.id) billing_line_count,
- (SELECT count(*) FROM assistant_action_audit a JOIN fleetgo f ON a.vendor_id=f.id WHERE a.tool_name='fleet_run') run_snapshot_count,
+ (SELECT count(DISTINCT t.check_in_time::date) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 AND t.check_in_time::date BETWEEN current_date - 29 AND current_date) history_days,
+ (SELECT count(DISTINCT t.scheduled_start_at::date) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE t.id BETWEEN ${historyTicketBase}+100 AND ${historyTicketBase}+106 AND t.scheduled_start_at::date BETWEEN current_date AND current_date + 6) scheduled_days,
+ (SELECT count(*) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE (t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 OR t.id BETWEEN ${historyTicketBase}+100 AND ${historyTicketBase}+106)) ticket_count,
+ (SELECT count(*) FROM ticket_line_items li JOIN tickets t ON t.id=li.ticket_id JOIN fleetgo f ON t.vendor_id=f.id WHERE t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 AND li.description='CompanyGo Fleet day rate') billing_line_count,
+ (SELECT jsonb_array_length(coalesce(v.fleet_ops_state->'runs','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) run_count,
+ (SELECT jsonb_array_length(coalesce(v.fleet_resources->'details','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) detail_count,
+ (SELECT jsonb_array_length(coalesce(v.fleet_compliance_configuration->'entries','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) compliance_entry_count,
  (SELECT count(*) FROM users u WHERE lower(coalesce(u.email,u.username))=ANY($1::text[])) account_count,
  (SELECT count(*) FROM fleet_person_capabilities c JOIN fleetgo f ON c.company_id=f.id JOIN users u ON u.id=c.user_id JOIN (VALUES
 ${COMPANYGO_FLEET_ACCOUNTS.map((row) => `('${row.login}',ARRAY[${row.capabilities.map((c) => `'${c}'`).join(",")}]::text[])`).join(",\n")}
@@ -145,9 +308,31 @@ ${COMPANYGO_FLEET_ACCOUNTS.map((row) => `('${row.login}',ARRAY[${row.capabilitie
 export async function verifyCompanyGoFleetCoverage(client: DbClient): Promise<Record<string, number>> {
   const result = await client.query(COMPANYGO_FLEET_ACCEPTANCE_SQL, [COMPANYGO_FLEET_ACCOUNTS.map((row) => row.login)]);
   const counts = Object.fromEntries(Object.entries(result.rows[0] ?? {}).map(([key, value]) => [key, Number(value)]));
-  const required: Array<[string, number]> = [["history_days", 30], ["scheduled_days", 7], ["ticket_count", 37], ["billing_line_count", 30], ["run_snapshot_count", 30], ["account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["capability_account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["gasgo_count", 1]];
+  const required: Array<[string, number]> = [["history_days", 30], ["scheduled_days", 7], ["ticket_count", 37], ["billing_line_count", 30], ["run_count", 37], ["detail_count", 1], ["compliance_entry_count", 1], ["account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["capability_account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["gasgo_count", 1]];
   for (const [key, minimum] of required) if ((counts[key] ?? 0) < minimum) throw new Error(`CompanyGo Fleet acceptance requires ${key} >= ${minimum}; found ${counts[key] ?? 0}.`);
+  const canonical = await client.query("SELECT fleet_ops_state,fleet_resources,fleet_compliance_configuration FROM vendors WHERE lower(name)='fleetgo' LIMIT 1");
+  const state = CompanyGoFleetStateSchema.parse(canonical.rows[0]?.fleet_ops_state);
+  const resources = FleetResourcesRegistrySchema.parse(canonical.rows[0]?.fleet_resources);
+  const compliance = FleetComplianceConfigurationSchema.parse(canonical.rows[0]?.fleet_compliance_configuration);
+  const fixtureRuns = state.runs.filter(run => run.id === stableCompanyGoUuid("run:history:0") || run.title.startsWith("GasGo completed Fleet run day") || run.title.startsWith("GasGo scheduled Fleet run day"));
+  if (new Set(fixtureRuns.filter(run => run.status === "completed").map(run => run.schedule?.plannedStartAt.slice(0, 10))).size < 30) throw new Error("CompanyGo Fleet acceptance requires 30 distinct canonical historical run days.");
+  if (new Set(fixtureRuns.filter(run => run.status === "dispatched").map(run => run.schedule?.plannedStartAt.slice(0, 10))).size < 7) throw new Error("CompanyGo Fleet acceptance requires seven canonical future schedule days.");
+  if (!fixtureRuns.every(run => run.linkedTicketId && run.siteIds.length && run.resourceAssignment?.snapshot.detail.driverUserId === run.driverUserId)) throw new Error("CompanyGo Fleet runs must retain canonical ticket, site, and Detail snapshots.");
+  const relationships = await client.query(`SELECT count(*) relationship_count FROM tickets t JOIN vendors v ON v.id=t.vendor_id JOIN site_locations s ON s.id=t.site_location_id JOIN partners p ON p.id=s.partner_id WHERE lower(v.name)='fleetgo' AND lower(p.name)='gasgo' AND (t.id BETWEEN $1 AND $2 OR t.id BETWEEN $3 AND $4)`, [historyTicketBase, historyTicketBase + 29, historyTicketBase + 100, historyTicketBase + 106]);
+  if (Number(relationships.rows[0]?.relationship_count) !== 37) throw new Error("CompanyGo Fleet acceptance requires all 37 fixture tickets to retain the FleetGo/GasGo relationship.");
+  if (!resources.details.some(detail => detail.id === detailId && detail.driverUserId === null) || resources.reservations.length < 37) throw new Error("CompanyGo Fleet acceptance requires a reusable driver-free Detail and reservation history.");
+  if (!compliance.entries.length || !compliance.facts.length || !compliance.scoreHistory.length || !compliance.partnerScorePreview) throw new Error("CompanyGo Fleet acceptance requires canonical evidence, facts, score history, and Partner preview.");
   return counts;
+}
+
+export async function readCompanyGoFleetFixtureFingerprint(client: DbClient): Promise<string> {
+  const result = await client.query(`SELECT v.fleet_ops_state,v.fleet_resources,v.fleet_compliance_configuration,
+    (SELECT count(*) FROM fleet_yard_orders o WHERE o.company_id=v.id) yard_orders,
+    (SELECT count(*) FROM fleet_asset_custody c WHERE c.company_id=v.id) custody,
+    (SELECT count(*) FROM tickets t WHERE t.vendor_id=v.id AND (t.id BETWEEN $1 AND $2 OR t.id BETWEEN $3 AND $4)) tickets,
+    (SELECT count(*) FROM ticket_line_items li WHERE li.ticket_id BETWEEN $1 AND $2 AND li.description='CompanyGo Fleet day rate') billing
+    FROM vendors v WHERE lower(v.name)='fleetgo'`, [historyTicketBase, historyTicketBase + 29, historyTicketBase + 100, historyTicketBase + 106]);
+  return createHash("sha256").update(JSON.stringify(result.rows[0] ?? null)).digest("hex");
 }
 
 export async function seedCompanyGoFleetWorkflows(client: DbClient): Promise<void> {
@@ -162,6 +347,7 @@ export async function seedCompanyGoFleetWorkflows(client: DbClient): Promise<voi
   if (Number(prerequisite.vendor_count) !== 1 || Number(prerequisite.partner_count) !== 1 || Number(prerequisite.asset_count) < 3) throw new Error(`CompanyGo Fleet prerequisites are incomplete: ${JSON.stringify(prerequisite)}.`);
   await client.query("SELECT pg_advisory_xact_lock(hashtext('companygo_fleet_mobile_fixtures'))");
   for (const statement of COMPANYGO_FLEET_SEED_SQL) await client.query(statement);
+  await mergeCompanyGoFleetState(client);
 }
 
 export function isCompanyGoFleetSeedMain(moduleUrl: string, argvPath: string | undefined, platform: NodeJS.Platform = process.platform): boolean {

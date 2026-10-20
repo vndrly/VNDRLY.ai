@@ -57,6 +57,39 @@ for (const viewport of [{ name: "phone", width: 390, height: 844 }, { name: "iPa
   }
 }
 
+test("CompanyGo authoritative Fleet history, reusable Details, and compliance are visible through real APIs", async ({ page }) => {
+  await signIn(page, "vendor_admin@fleetgo.com");
+  const runs: any[] = [];
+  let cursor: string | null = null;
+  do {
+    const response = await page.request.get(`/api/fleet/overview?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
+    expect(response.ok(), await response.text()).toBe(true);
+    const body = await response.json();
+    runs.push(...body.runs);
+    cursor = body.page?.nextCursor ?? null;
+  } while (cursor);
+  const history = runs.filter(run => run.title.startsWith("GasGo completed Fleet run day"));
+  const schedule = runs.filter(run => run.title.startsWith("GasGo scheduled Fleet run day"));
+  expect(new Set(history.map(run => run.schedule.plannedStartAt.slice(0, 10))).size).toBeGreaterThanOrEqual(30);
+  expect(new Set(schedule.map(run => run.schedule.plannedStartAt.slice(0, 10))).size).toBeGreaterThanOrEqual(7);
+  expect([...history, ...schedule].every(run => run.linkedTicketId && run.resourceAssignment?.snapshot?.detail?.driverUserId === run.driverUserId)).toBe(true);
+
+  const detailsResponse = await page.request.get("/api/fleet/details?limit=50");
+  expect(detailsResponse.ok(), await detailsResponse.text()).toBe(true);
+  const details = (await detailsResponse.json()).details;
+  expect(details).toEqual(expect.arrayContaining([expect.objectContaining({ id: stableCompanyGoUuid("detail:standard"), driverUserId: null })]));
+
+  const complianceResponse = await page.request.get("/api/fleet/compliance-score");
+  expect(complianceResponse.ok(), await complianceResponse.text()).toBe(true);
+  const compliance = await complianceResponse.json();
+  expect(compliance).toMatchObject({ advisoryOnly: true, partnerPreview: { advisoryOnly: true } });
+  expect(compliance.history.length).toBeGreaterThan(0);
+
+  await page.goto("/fleet/history");
+  await expect(page.getByRole("heading", { name: "Runs (30)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /GasGo completed Fleet run day/ }).first()).toBeVisible();
+});
+
 test("CompanyGo Driver completes and persists Yard and custody transitions", async ({ page }) => {
   await signIn(page, "vendor_fleet_driver@fleetgo.com");
   const scope = await sessionScope(page);

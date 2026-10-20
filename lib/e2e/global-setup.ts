@@ -5,7 +5,7 @@ import {
 } from "../../scripts/e2e-isolation.mjs";
 import { Pool } from "pg";
 import bcrypt from "bcryptjs";
-import { seedCompanyGoFleetWorkflows, stableCompanyGoUuid, verifyCompanyGoFleetCoverage } from "../../artifacts/api-server/scripts/seed-companygo-fleet-workflows";
+import { readCompanyGoFleetFixtureFingerprint, seedCompanyGoFleetWorkflows, stableCompanyGoUuid, verifyCompanyGoFleetCoverage } from "../../artifacts/api-server/scripts/seed-companygo-fleet-workflows";
 import { emptyFleetState } from "../../artifacts/api-server/src/services/fleet-repository";
 
 async function seedIsolatedCompanyGoPrerequisites(client: import("pg").PoolClient): Promise<void> {
@@ -139,8 +139,10 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
     await client.query("BEGIN");
     await seedIsolatedCompanyGoPrerequisites(client);
     await seedCompanyGoFleetWorkflows(client);
-    // Replay in the same transaction proves every additive fixture is idempotent.
+    const beforeReplay = await readCompanyGoFleetFixtureFingerprint(client);
     await seedCompanyGoFleetWorkflows(client);
+    const afterReplay = await readCompanyGoFleetFixtureFingerprint(client);
+    if (afterReplay !== beforeReplay) throw new Error("CompanyGo Fleet fixture replay changed authoritative state or row counts.");
     await verifyCompanyGoFleetCoverage(client);
     await client.query("COMMIT");
   } catch (error) {

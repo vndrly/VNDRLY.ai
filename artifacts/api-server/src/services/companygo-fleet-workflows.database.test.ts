@@ -23,22 +23,25 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
     ]);
   });
 
-  it("read-only acceptance checks the surrounding 30-day and seven-day operational history", () => {
+  it("read-only acceptance checks authoritative Fleet state, Details, and compliance", () => {
     const sql = COMPANYGO_FLEET_ACCEPTANCE_SQL.toLowerCase();
     expect(sql).toContain("current_date - 29");
     expect(sql).toContain("current_date + 6");
     expect(sql).toContain("ticket_line_items");
-    expect(sql).toContain("assistant_action_audit");
+    expect(sql).toContain("fleet_ops_state");
+    expect(sql).toContain("fleet_resources");
+    expect(sql).toContain("fleet_compliance_configuration");
+    expect(sql).not.toContain("assistant_action_audit");
     expect(sql).not.toMatch(/\b(insert|update|delete|truncate|drop)\b/);
   });
 
-  it("backfills missing history, schedule, billing, run snapshots, and capability unions", () => {
+  it("backfills ticket and billing rows without manufacturing audit stand-ins", () => {
     const sql = COMPANYGO_FLEET_SEED_SQL.join("\n").toLowerCase();
     expect(sql).toContain("generate_series(0,29)");
     expect(sql).toContain("generate_series(0,6)");
     expect(sql).toContain("insert into tickets");
     expect(sql).toContain("insert into ticket_line_items");
-    expect(sql).toContain("insert into assistant_action_audit");
+    expect(sql).not.toContain("assistant_action_audit");
     expect(sql).toContain("on conflict(id) do nothing");
     expect(sql).not.toContain("password_hash=");
   });
