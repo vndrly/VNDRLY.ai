@@ -11,11 +11,14 @@ export type FleetGrant = {
 };
 export type FleetTarget = { companyId: number; fleetId: string; siteId?: number; driverUserId?: number };
 
+/** Shared outer boundary for legacy roles and composable mobile capabilities. */
+export function hasFleetGrantScope(userId: number, grant: FleetGrant | null, target: Pick<FleetTarget, "companyId" | "fleetId" | "siteId">): grant is FleetGrant {
+  return Number.isSafeInteger(userId) && userId > 0 && !!grant && grant.companyId === target.companyId && grant.fleetIds.includes(target.fleetId) && (target.siteId === undefined || grant.siteIds.includes(target.siteId));
+}
+
 /** A missing grant or assignment denies access, including same-company access. */
 export function mayPerformFleetAction(userId: number, grant: FleetGrant | null, target: FleetTarget, action: FleetAction): boolean {
-  if (!Number.isSafeInteger(userId) || userId <= 0 || !grant || grant.companyId !== target.companyId) return false;
-  if (!grant.fleetIds.includes(target.fleetId)) return false;
-  if (target.siteId !== undefined && !grant.siteIds.includes(target.siteId)) return false;
+  if (!hasFleetGrantScope(userId, grant, target)) return false;
   const manager = grant.roles.includes("fleet_manager");
   const dispatcher = grant.roles.includes("dispatcher");
   const ownRun = grant.roles.includes("driver") && target.driverUserId === userId;

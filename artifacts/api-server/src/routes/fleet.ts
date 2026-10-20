@@ -14,6 +14,7 @@ import {
   FleetError,
 } from "../services/fleet-repository";
 import { createFleetService, type FleetActor } from "../services/fleet-ops";
+import { readFleetCapabilities, saveFleetCapabilities } from "../services/fleet-mobile-permissions";
 import {
   createFleetSiteActivityService,
   type FleetSiteActor,
@@ -24,6 +25,8 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/capabilities", endpoint(req => readFleetCapabilities(actor(req), req.query.userId === undefined ? undefined : z.coerce.number().int().positive().parse(req.query.userId))));
+router.put("/fleet/capabilities/:userId", endpoint(req => saveFleetCapabilities(actor(req), z.coerce.number().int().positive().parse(req.params.userId), req.body)));
 router.use(createFleetComplianceRouter(service, actor));
 router.use(createFleetWorkRouter({actor}));
 const policyBinding=(req:import("express").Request)=>({partnerId:z.number().int().positive().parse(getSessionFromRequest(req)?.partnerId),vendorId:z.coerce.number().int().positive().parse(req.params.vendorId)});

@@ -27,6 +27,46 @@ import { buildTestCookie } from "../test-utils/session";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
 import router from "./fleet";
 
+describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("Fleet capability routes", () => {
+  it("maps legacy roles, updates one employee with a version, and rejects stale or revoked authority", async () => {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    const tag = randomUUID();
+    const [vendor, other] = await db.insert(vendorsTable).values([0, 1].map(i => ({ name: `Fleet capability ${i} ${tag}`, contactName: "Synthetic", contactEmail: `${i}-${tag}@example.invalid` }))).returning();
+    const [manager, driver] = await db.insert(usersTable).values(["vendor", "field_employee"].map((role, i) => ({ username: `fleet-cap-${i}-${tag}`, displayName: "Synthetic", passwordHash: "unused-isolated-fixture", role }))).returning();
+    const [person] = await db.insert(vendorPeopleTable).values({ vendorId: vendor.id, userId: driver.id, firstName: "Synthetic", email: `cap-${tag}@example.invalid`, vendorRole: "field" }).returning();
+    const [managerMember, driverMember] = await db.insert(userOrgMembershipsTable).values([
+      { userId: manager.id, orgType: "vendor", vendorId: vendor.id, role: "admin" },
+      { userId: driver.id, orgType: "vendor", vendorId: vendor.id, role: "field_employee", vendorPeopleId: person.id },
+    ]).returning();
+    const fleetId = randomUUID();
+    await pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1", [vendor.id, JSON.stringify({ version: 1, enabled: true, fleets: [{ id: fleetId, name: "Synthetic", siteIds: [], requiredCertifications: [], equipmentAssetIds: [] }], grants: [
+      { userId: manager.id, fleetIds: [fleetId], siteIds: [], roles: ["fleet_manager"], safetyRelease: false, financeRead: false },
+      { userId: driver.id, fleetIds: [fleetId], siteIds: [], roles: ["driver"], safetyRelease: false, financeRead: false },
+    ], supportGrants: [], runs: [], preferences: [], operations: [] })]);
+    const app = express().use(express.json()).use(cookieParser()).use(router);
+    const managerCookie = buildTestCookie({ userId: manager.id, role: "vendor", vendorId: vendor.id, membershipRole: "admin", activeMembershipId: managerMember.id, sv: manager.sessionVersion });
+    const driverCookie = buildTestCookie({ userId: driver.id, role: "field_employee", vendorId: vendor.id, membershipRole: "field_employee", activeMembershipId: driverMember.id, vendorPeopleId: person.id, sv: driver.sessionVersion });
+    const managerRead = await request(app).get("/fleet/capabilities").set("Cookie", managerCookie);
+    expect(managerRead.status).toBe(200);
+    expect(managerRead.body).toMatchObject({ companyId: vendor.id, capabilities: ["admin", "dispatch"], source: "legacy" });
+    expect((await request(app).get("/fleet/capabilities").set("Cookie", driverCookie)).body.capabilities).toEqual(["driver"]);
+    const input = { operationId: randomUUID(), expectedVersion: 0, scope: { owner: { type: "vendor", id: vendor.id }, userId: manager.id, membershipId: managerMember.id, sessionVersion: manager.sessionVersion }, assignment: { companyId: vendor.id, userId: driver.id, version: 1, capabilities: ["driver", "yard", "self_dispatch"] } };
+    const saved = await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send(input);
+    expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject({ userId: driver.id, version: 1, capabilities: ["driver", "yard", "self_dispatch"] });
+    expect((await request(app).get(`/fleet/capabilities?userId=${driver.id}`).set("Cookie", managerCookie)).body).toMatchObject({ userId: driver.id, version: 1, capabilities: ["driver", "yard", "self_dispatch"] });
+    expect((await request(app).get(`/fleet/capabilities?userId=${manager.id}`).set("Cookie", driverCookie)).status).toBe(403);
+    const replay = await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send(input);
+    expect(replay.status).toBe(200);
+    expect(replay.body).toEqual(saved.body);
+    expect((await request(app).get("/fleet/capabilities").set("Cookie", driverCookie)).body).toMatchObject({ source: "stored", version: 1, capabilities: ["driver", "yard", "self_dispatch"] });
+    expect((await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send({ ...input, operationId: randomUUID() })).status).toBe(409);
+    expect((await request(app).put(`/fleet/capabilities/${driver.id}`).set("Cookie", managerCookie).send({ ...input, operationId: randomUUID(), assignment: { ...input.assignment, companyId: other.id } })).status).toBe(403);
+    await db.delete(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.id, driverMember.id));
+    expect((await request(app).get("/fleet/capabilities").set("Cookie", driverCookie)).status).toBe(403);
+  }, 30000);
+});
+
 describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
   "Fleet canonical routes on isolated records",
   () => {
