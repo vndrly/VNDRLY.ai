@@ -51,8 +51,16 @@ export const FleetYardInputSchema = z.object({
   operationId: FleetCanonicalIdSchema,
   expectedVersion,
   scope: WorkdayScopeSchema,
+  yardId: FleetCanonicalIdSchema.optional(),
   yard: z.object(yardFields).strict(),
-}).strict();
+}).strict().superRefine((value, ctx) => {
+  if (value.expectedVersion === 0 && value.yardId !== undefined)
+    ctx.addIssue({ code: "custom", path: ["yardId"], message: "A new yard has no existing identity" });
+  if (value.expectedVersion > 0 && value.yardId === undefined)
+    ctx.addIssue({ code: "custom", path: ["yardId"], message: "An existing yard update needs its identity" });
+  if (value.yardId === value.operationId)
+    ctx.addIssue({ code: "custom", path: ["yardId"], message: "Yard and operation identities must differ" });
+});
 
 export const FleetYardOrderStatusSchema = z.enum(["requested", "assigned", "in_progress", "reported"]);
 export const FleetYardOrderOutcomeSchema = z.enum(["ready", "needs_attention", "unable_to_complete"]);
@@ -81,7 +89,9 @@ export const FleetYardOrderSchema = z.object({
   findings: z.array(conditionFinding).max(100),
   notes: note,
 }).strict().superRefine((value, ctx) => {
-  if ((value.status === "reported") !== (value.outcome !== null && value.reportedAt !== null))
+  if (value.status === "reported"
+    ? value.outcome === null || value.reportedAt === null
+    : value.outcome !== null || value.reportedAt !== null)
     ctx.addIssue({ code: "custom", path: ["outcome"], message: "Reported orders require an outcome and report time" });
   for (const key of ["requestedAssetIds", "actualAssetIds"] as const)
     if (new Set(value[key]).size !== value[key].length)
@@ -130,19 +140,20 @@ const custodyFields = {
   longitude: z.number().finite().min(-180).max(180).nullable(),
   notes: note,
 };
-export const FleetCustodyObservationSchema = z.object({
-  id: FleetCanonicalIdSchema,
-  ...custodyFields,
-}).strict().superRefine((value, ctx) => {
+function validateCustodyCoordinates(value: { latitude: number | null; longitude: number | null }, ctx: z.RefinementCtx) {
   if ((value.latitude === null) !== (value.longitude === null))
     ctx.addIssue({ code: "custom", path: ["longitude"], message: "Coordinates must be supplied together" });
-});
+}
+const custodyBody = z.object(custodyFields).strict();
+export const FleetCustodyObservationSchema = custodyBody.extend({
+  id: FleetCanonicalIdSchema,
+}).superRefine(validateCustodyCoordinates);
 export type FleetCustodyObservation = z.infer<typeof FleetCustodyObservationSchema>;
 export const FleetCustodyObservationInputSchema = z.object({
   operationId: FleetCanonicalIdSchema,
   expectedVersion,
   scope: WorkdayScopeSchema,
-  observation: z.object(custodyFields).strict(),
+  observation: custodyBody.superRefine(validateCustodyCoordinates),
 }).strict();
 
 const homeAction = z.object({

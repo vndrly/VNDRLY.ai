@@ -101,6 +101,71 @@ describe("Fleet mobile workflow contracts", () => {
     }).success).toBe(true);
   });
 
+  it("identifies an existing yard on update and keeps create identity separate", () => {
+    const input = schema("FleetYardInputSchema");
+    const yard = {
+      companyId: 11, name: "North Yard", timeZone: "America/Chicago",
+      destinationId: otherId, isHomeBase: false, active: true,
+    };
+    const create = { operationId: otherId, expectedVersion: 0, scope, yard };
+    const update = { operationId: otherId, expectedVersion: 1, scope, yardId: id, yard: { ...yard, name: "North Yard 2" } };
+    expect(input.safeParse(create).success).toBe(true);
+    expect(input.parse(update).yardId).toBe(id);
+    expect(input.safeParse({ ...update, yardId: undefined }).success).toBe(false);
+    expect(input.safeParse({ ...create, yardId: id }).success).toBe(false);
+    expect(input.safeParse({ ...update, operationId: id }).success).toBe(false);
+  });
+
+  it("rejects half-coordinate custody observations at input and readback", () => {
+    const observation = {
+      companyId: 11, assetId: otherId, state: "at_yard", method: "manual",
+      observedAt: at, observedByUserId: 42, yardId: id, runId: null,
+      detailId: null, latitude: 35.5, longitude: -97.5, notes: "Received",
+    };
+    const input = schema("FleetCustodyObservationInputSchema");
+    const readback = schema("FleetCustodyObservationSchema");
+    for (const coordinates of [
+      { latitude: 35.5, longitude: null },
+      { latitude: null, longitude: -97.5 },
+    ]) {
+      const partial = { ...observation, ...coordinates };
+      expect(input.safeParse({ operationId: id, expectedVersion: 1, scope, observation: partial }).success).toBe(false);
+      expect(readback.safeParse({ id, ...partial }).success).toBe(false);
+    }
+    for (const coordinates of [
+      { latitude: 35.5, longitude: -97.5 },
+      { latitude: null, longitude: null },
+    ]) {
+      const complete = { ...observation, ...coordinates };
+      expect(input.safeParse({ operationId: id, expectedVersion: 1, scope, observation: complete }).success).toBe(true);
+      expect(readback.safeParse({ id, ...complete }).success).toBe(true);
+    }
+  });
+
+  it("requires complete report metadata only for reported Yard Orders", () => {
+    const order = schema("FleetYardOrderSchema");
+    const input = schema("FleetYardOrderInputSchema");
+    const base = {
+      id, companyId: 11, version: 1, yardId: otherId, detailId: null, runId: null,
+      status: "requested", outcome: null, requestedByUserId: 42,
+      assignedToUserId: null, requestedAt: at, scheduledAt: null,
+      startedAt: null, reportedAt: null, requestedAssetIds: [],
+      actualAssetIds: [], findings: [], notes: "",
+    };
+    for (const status of ["requested", "assigned", "in_progress", "reported"])
+      for (const metadata of [
+        { outcome: null, reportedAt: null },
+        { outcome: "ready", reportedAt: null },
+        { outcome: null, reportedAt: at },
+        { outcome: "ready", reportedAt: at },
+      ]) {
+        const value = { ...base, status, ...metadata };
+        const valid = status === "reported" ? metadata.outcome !== null && metadata.reportedAt !== null : metadata.outcome === null && metadata.reportedAt === null;
+        expect(order.safeParse(value).success, `${status}: ${JSON.stringify(metadata)}`).toBe(valid);
+        expect(input.safeParse({ operationId: otherId, expectedVersion: 1, scope, order: value }).success, `${status} input: ${JSON.stringify(metadata)}`).toBe(valid);
+      }
+  });
+
   it("projects a role-aware home action without making optional setup mandatory", () => {
     const home = schema("FleetHomeProjectionSchema");
     const input = {
