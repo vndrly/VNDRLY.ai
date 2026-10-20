@@ -124,6 +124,19 @@ afterEach(() => {
   mocks.api.mockReset();
   mocks.current = true;
 });
+it("requests the selected run driver when reading a reusable driver-free Detail", async () => {
+  const change = vi.fn();
+  mocks.api.mockImplementation(async (path: string) => path === "/api/fleet/details"
+    ? { details: [{ ...detail, driverUserId: null }], nextCursor: null, canManage: true }
+    : path === `/api/fleet/details/${detailId}?driverUserId=10`
+      ? { ...snapshot, detail: { ...detail, driverUserId: 10 }, labels: { ...snapshot.labels, driver: "Selected Driver" } }
+      : { version: 1, defaultMode: "batch", destinations: [origin, drop], canManage: true, sitePolicy: null, sites: [{ siteId: 41, name: "Billing lease" }] });
+  render(<FleetRunPlan groupId={group} companyId={7} siteIds={[41]} driverUserId={10} disabled={false} onChange={change} />);
+  await screen.findByRole("option", { name: "Bob and Truck 12" });
+  fireEvent.change(screen.getByLabelText("Saved Detail"), { target: { value: detailId } });
+  expect(await screen.findByText(/Selected Driver/)).toBeTruthy();
+  expect(mocks.api).toHaveBeenCalledWith(`/api/fleet/details/${detailId}?driverUserId=10`, {}, expect.anything());
+});
 it("matches a saved Run to the selected Detail and creates a separate ticket-bound activity", async () => {
   const change = vi.fn();
   mocks.api.mockImplementation(async (path: string) =>

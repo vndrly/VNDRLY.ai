@@ -137,7 +137,7 @@ async function fixture(options: { rig?: boolean } = {}) {
         vehicleAssetId: truck.id,
         rigPackageId: rig?.id ?? null,
         rigPackageVersion: rig?.version ?? null,
-        driverUserId: driver.id,
+        driverUserId: null,
         accessGroupIds: [group],
         effectiveFrom: "2026-01-01T00:00:00Z",
         effectiveUntil: null,
@@ -185,7 +185,7 @@ async function fixture(options: { rig?: boolean } = {}) {
       },
     },
   );
-  const snapshot = await service.fleetDetailSnapshot({ ...actor }, detail.id);
+  const snapshot = await service.fleetDetailSnapshot({ ...actor }, detail.id, driver.id);
   const [device] = await db
     .insert(workHubDevicesTable)
     .values({
@@ -1556,4 +1556,23 @@ it("recovers an unresolved office price intent from actual saved authority witho
 it("recovers an own-driver assistant creation with an independently read safe parent and no finance grant",async()=>{
  const f=await fixture();if(f.command.kind!=="activity.create")throw Error("Expected create");const {fleetRouteOperationalStops}=await import("@workspace/api-zod"),p=f.command.payload,actor={...f.actor,userId:f.driver.id,role:"field_employee",membershipRole:"field_employee",vendorPeopleId:f.driverPerson.id,sv:f.driver.sessionVersion,activeMembershipId:f.driverMembership.id},assistant=await import("./fleet-work-assistant"),input={kind:"activity.create",operationId:randomUUID(),fleetId:p.detailSnapshot.detail.accessGroupIds[0],title:p.title,driverUserId:f.driver.id,vehicleAssetId:p.detailSnapshot.detail.vehicleAssetId,trailerAssetId:null,stops:fleetRouteOperationalStops(p.route,p.billing.billingSiteId!,randomUUID()),schedule:null,routePlan:p.route,detailSelection:{version:2,detailId:p.detailSnapshot.detail.id,detailVersion:p.detailSnapshot.detail.version,timeZone:f.command.timeZone,returnPolicy:"delivery_only"},billing:{mode:"new_ticket",workTypeId:p.billing.serviceId,afeNumber:p.billing.afeNumber,workDate:p.billing.workDate}};
  const created=await assistant.applyFleetAssistantIntent(actor,input);expect(created.receipt.status).toBe("applied");const result=await assistant.readFleetAssistantResult(actor,input);expect(result).toMatchObject({verified:true,canonicalApplied:true,resources:expect.arrayContaining([expect.objectContaining({kind:"activity",value:expect.objectContaining({driverUserId:actor.userId})}),expect.objectContaining({kind:"ticket"})])});expect(JSON.stringify(result)).not.toContain("rateCard");expect(JSON.stringify(result)).not.toContain("provisioningId");
+});
+
+it("persists a driver-free Yard waiting plan once without creating a billable ticket", async () => {
+  const f = await fixture();
+  if (f.command.kind !== "activity.create") throw Error("Expected creation fixture");
+  const service = createFleetService(databaseFleetRepository);
+  const input = {
+    operationId: randomUUID(), fleetId: f.command.payload.detailSnapshot.detail.accessGroupIds[0],
+    title: "Synthetic waiting haul", billingSiteId: f.site,
+    routePlan: f.command.payload.route,
+    ticket: { kind: "office_review_draft" as const, billable: false as const },
+    detailId: null, driverUserId: null,
+  };
+  const first = await service.saveDispatchPlan({ ...f.actor }, input);
+  const second = await service.saveDispatchPlan({ ...f.actor }, input);
+  expect(second).toEqual(first);
+  expect(first).toMatchObject({ companyId: f.vendor, state: "waiting_on_yard", runId: null, driverUserId: null, ticket: input.ticket });
+  expect((await service.dispatchPlans({ ...f.actor })).plans).toContainEqual(first);
+  expect((await pool.query("SELECT id FROM tickets WHERE vendor_id=$1", [f.vendor])).rows).toHaveLength(0);
 });

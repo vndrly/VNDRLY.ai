@@ -95,6 +95,8 @@ function fixture() {
     grants: [],
     supportGrants: [],
     runs: [],
+    dispatchPlans: [],
+    dispatchPlanReceipts: [],
     operations: [],
     preferences: [],
   };

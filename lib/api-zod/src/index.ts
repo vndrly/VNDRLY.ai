@@ -51,6 +51,7 @@ export * from "./safety-readiness";
 export * from "./fleet-details";
 export * from "./fleet-mobile-workflows";
 export * from "./fleet-route";
+export * from "./fleet-dispatch-plan";
 export * from "./fleet-run-order";
 export * from "./fleet-time";
 export * from "./fleet-compliance";

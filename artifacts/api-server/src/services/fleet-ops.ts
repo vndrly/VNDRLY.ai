@@ -72,6 +72,9 @@ import {
   FleetGrantSchema,
   FleetSetupInputSchema,
   FleetWorkspacePreferenceInputSchema,
+  FleetDispatchPlanInputSchema,
+  FleetDispatchPlanSchema,
+  FleetDispatchPlanUpdateSchema,
   type FleetSetup,
   type FleetRun,
   type FleetOverview,
@@ -627,6 +630,99 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
       return {...pool,siteIds,fleetIds:pool.fleetIds.filter(id=>state.fleets.some(group=>group.id===id&&group.siteIds.some(site=>siteIds.includes(site)))),financeRead:false};
     }),
     ...createFleetGateOperations(transaction, permitted),
+    dispatchPlans: (actor: FleetActor) => transaction(actor, async state => {
+      const grant = state.grants.find(item => item.userId === actor.userId);
+      const dispatcher = grant?.roles.some(role => role === "fleet_manager" || role === "dispatcher");
+      const office = actor.fleetCapabilities?.has("office") && grant?.financeRead;
+      if (!state.enabled || !grant || (!dispatcher && !office))
+        throw new FleetError("fleet.dispatch_required", 403);
+      return { plans: state.dispatchPlans.filter(plan => grant.fleetIds.includes(plan.fleetId) && grant.siteIds.includes(plan.billingSiteId) && actor.currentSiteIds?.includes(plan.billingSiteId)) };
+    }),
+    dispatchPlanTickets: (actor: FleetActor, siteId: number) => transaction(actor, async (state, client) => {
+      const grant = state.grants.find(item => item.userId === actor.userId);
+      const dispatcher = grant?.roles.some(role => role === "fleet_manager" || role === "dispatcher");
+      const office = actor.fleetCapabilities?.has("office") && grant?.financeRead;
+      if (!state.enabled || !grant || (!dispatcher && !office) || !grant.siteIds.includes(siteId) || !actor.activeSiteIds?.includes(siteId) || !state.fleets.some(fleet => grant.fleetIds.includes(fleet.id) && fleet.siteIds.includes(siteId)))
+        throw new FleetError("fleet.not_found", 404);
+      const rows = await client.query("SELECT id FROM tickets WHERE vendor_id=$1 AND site_location_id=$2 AND status IN ('initiated','in_progress','pending_review','kicked_back','completed') ORDER BY id DESC LIMIT 200", [actor.companyId, siteId]);
+      return { tickets: rows.rows.map(row => ({ id: Number(row.id) })) };
+    }),
+    saveDispatchPlan: (actor: FleetActor, raw: unknown) => transaction(actor, async (state, client) => {
+      const input = FleetDispatchPlanInputSchema.parse(raw);
+      const grant = companyGrantFor(state, actor);
+      const fleet = state.fleets.find(item => item.id === input.fleetId);
+      if (actor.readOnly || !state.enabled || !grant?.roles.some(role => role === "fleet_manager" || role === "dispatcher") ||
+          !grant.fleetIds.includes(input.fleetId) || !grant.siteIds.includes(input.billingSiteId) ||
+          !actor.activeSiteIds?.includes(input.billingSiteId) || !fleet?.siteIds.includes(input.billingSiteId))
+        throw new FleetError("fleet.dispatch_required", 403);
+      const fingerprint = createHash("sha256").update(JSON.stringify(input)).digest("hex");
+      const replay = state.dispatchPlanReceipts.find(item => item.operationId === input.operationId);
+      if (replay) {
+        if (replay.actorUserId !== actor.userId || replay.fingerprint !== fingerprint) throw new FleetError("fleet.operation_conflict", 409);
+        return replay.result;
+      }
+      if (state.dispatchPlans.length >= 1000 || state.dispatchPlanReceipts.length >= 2000) throw new FleetError("fleet.store_capacity_reached", 409);
+      if (input.ticket.kind === "authorized") {
+        const ticket = await client.query("SELECT id FROM tickets WHERE id=$1 AND vendor_id=$2 AND site_location_id=$3 AND status IN ('initiated','in_progress','pending_review','kicked_back','completed')", [input.ticket.ticketId, actor.companyId, input.billingSiteId]);
+        if (ticket.rows.length !== 1) throw new FleetError("fleet.ticket_not_authorized", 409);
+      }
+      const plan = FleetDispatchPlanSchema.parse({ ...input, id: randomUUID(), companyId: actor.companyId, version: 1,
+        state: "waiting_on_yard", runId: null, createdByUserId: actor.userId, createdAt: new Date().toISOString() });
+      state.dispatchPlans.push(plan);
+      state.dispatchPlanReceipts.push({ operationId: input.operationId, actorUserId: actor.userId, fingerprint, result: structuredClone(plan) });
+      await client.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','dispatch_plan','dispatch_plan_created','fleet-dispatch-plan',$3,$4::jsonb,$5::jsonb,'completed')", [actor.userId, actor.companyId, plan.id, JSON.stringify(input), JSON.stringify(plan)]);
+      return plan;
+    }),
+    updateDispatchPlan: (actor: FleetActor, planId: string, raw: unknown) => transaction(actor, async (state, client) => {
+      const input = FleetDispatchPlanUpdateSchema.parse(raw);
+      const plan = state.dispatchPlans.find(item => item.id === planId && item.companyId === actor.companyId);
+      const grant = state.grants.find(item => item.userId === actor.userId);
+      const dispatcher = grant?.roles.some(role => role === "fleet_manager" || role === "dispatcher");
+      const office = actor.fleetCapabilities?.has("office") && grant?.financeRead;
+      if (!plan || actor.readOnly || !state.enabled || !grant || (!dispatcher && !office) || !grant.fleetIds.includes(plan.fleetId) || !grant.siteIds.includes(plan.billingSiteId) || !actor.activeSiteIds?.includes(plan.billingSiteId))
+        throw new FleetError("fleet.not_found", 404);
+      if (!dispatcher && (input.ticket === undefined || input.state !== undefined || input.detailId !== undefined || input.driverUserId !== undefined || input.yardOrderId !== undefined || input.runId !== undefined))
+        throw new FleetError("fleet.dispatch_required", 403);
+      const fingerprint = createHash("sha256").update(JSON.stringify([planId, input])).digest("hex");
+      const replay = state.dispatchPlanReceipts.find(item => item.operationId === input.operationId);
+      if (replay) {
+        if (replay.actorUserId !== actor.userId || replay.fingerprint !== fingerprint) throw new FleetError("fleet.operation_conflict", 409);
+        return replay.result;
+      }
+      if (plan.version !== input.expectedVersion || plan.state === "released") throw new FleetError("fleet.version_conflict", 409);
+      if (plan.ticket.kind === "authorized" && input.ticket && JSON.stringify(input.ticket) !== JSON.stringify(plan.ticket))
+        throw new FleetError("fleet.ticket_link_locked", 409);
+      const { expectedVersion: _expectedVersion, operationId: _updateOperationId, ...changes } = input;
+      const next = { ...plan, ...changes, version: plan.version + 1 };
+      if (input.ticket?.kind === "authorized") {
+        const ticket = await client.query("SELECT id FROM tickets WHERE id=$1 AND vendor_id=$2 AND site_location_id=$3 AND status IN ('initiated','in_progress','pending_review','kicked_back','completed')", [input.ticket.ticketId, actor.companyId, plan.billingSiteId]);
+        if (ticket.rows.length !== 1) throw new FleetError("fleet.ticket_not_authorized", 409);
+      }
+      if (next.yardOrderId && (input.yardOrderId !== undefined || input.detailId !== undefined || input.state === "ready_to_dispatch")) {
+        const yard = await client.query("SELECT status,outcome,detail_id FROM fleet_yard_orders WHERE id=$1 AND company_id=$2", [next.yardOrderId, actor.companyId]);
+        if (yard.rows.length !== 1) throw new FleetError("fleet.yard_not_found", 404);
+        if (!next.detailId || yard.rows[0].detail_id !== next.detailId) throw new FleetError("fleet.yard_detail_mismatch", 409);
+        if (input.state === "ready_to_dispatch" && (yard.rows[0].status !== "reported" || yard.rows[0].outcome !== "ready"))
+          throw new FleetError("fleet.yard_not_ready", 409);
+      }
+      if (input.state === "ready_to_dispatch" && (!next.detailId || !next.driverUserId))
+        throw new FleetError("fleet.dispatch_assignment_required", 409);
+      if (input.state === "released") {
+        if (plan.state !== "ready_to_dispatch" || !input.runId || !next.detailId || !next.driverUserId || next.ticket.kind !== "authorized")
+          throw new FleetError("fleet.dispatch_assignment_required", 409);
+        const run = state.runs.find(item => item.id === input.runId);
+        if (!run || run.companyId !== actor.companyId || run.fleetId !== plan.fleetId || run.status !== "dispatched" ||
+            run.driverUserId !== next.driverUserId || run.resourceAssignment?.snapshot.detail.id !== next.detailId ||
+            run.linkedTicketId !== next.ticket.ticketId || run.stops[0]?.siteId !== plan.billingSiteId ||
+            JSON.stringify(run.routePlan) !== JSON.stringify(plan.routePlan))
+          throw new FleetError("fleet.dispatch_run_mismatch", 409);
+      } else if (input.runId) throw new FleetError("fleet.dispatch_run_mismatch", 409);
+      const saved = FleetDispatchPlanSchema.parse(next);
+      state.dispatchPlans[state.dispatchPlans.indexOf(plan)] = saved;
+      state.dispatchPlanReceipts.push({ operationId: input.operationId, actorUserId: actor.userId, fingerprint, result: structuredClone(saved) });
+      await client.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,tool_output,result_status) VALUES($1,$2,'fleet','typed','canonical','dispatch_plan','dispatch_plan_updated','fleet-dispatch-plan',$3,$4::jsonb,$5::jsonb,'completed')", [actor.userId, actor.companyId, plan.id, JSON.stringify(input), JSON.stringify(saved)]);
+      return saved;
+    }),
     overview: (actor: FleetActor): Promise<FleetOverview> =>
       transaction(
         Object.assign(actor, { runPage: actor.runPage ?? { limit: 50 } }),

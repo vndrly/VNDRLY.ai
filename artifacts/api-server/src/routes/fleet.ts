@@ -28,6 +28,10 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/dispatch-plans", endpoint(req => service.dispatchPlans(actor(req))));
+router.get("/fleet/dispatch-plans/tickets", endpoint(req => service.dispatchPlanTickets(actor(req), z.coerce.number().int().positive().parse(req.query.siteId))));
+router.post("/fleet/dispatch-plans", endpoint(req => service.saveDispatchPlan(actor(req), req.body)));
+router.patch("/fleet/dispatch-plans/:id", endpoint(req => service.updateDispatchPlan(actor(req), z.uuid().parse(req.params.id), req.body)));
 const yardService = createFleetYardOperations(databaseFleetRepository);
 router.get("/fleet/yard-assembly-targets", endpoint(req => yardService.yardAssemblyTargets(actor(req), req.query)));
 router.get("/fleet/yard-assets", endpoint(req => yardService.yardAssets(actor(req), req.query)));

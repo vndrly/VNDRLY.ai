@@ -7,7 +7,7 @@ import {createFleetLocationOperations} from "./fleet-location";
 const id=(n:number)=>`11111111-1111-4111-8111-${String(n).padStart(12,"0")}`;
 function fixture(){
  const run=FleetRunSchema.parse({id:id(1),fleetId:id(2),companyId:7,title:"Synthetic route",driverUserId:2,vehicleAssetId:id(3),trailerAssetId:null,siteIds:[9],status:"in_progress",phase:"en_route",version:1,stops:[{id:id(4),siteId:9,kind:"pickup",sequence:0}],loads:[],inspections:[],currentStopId:null,visitedStopIds:[],events:[],linkedTicketId:null,allowedActions:[]});
- const state:FleetState={version:1,enabled:true,fleets:[],grants:[],supportGrants:[],runs:[run],operations:[],preferences:[]},actor={userId:1,companyId:7,currentSiteIds:[9]};
+ const state:FleetState={version:1,enabled:true,fleets:[],grants:[],supportGrants:[],runs:[run],dispatchPlans:[],dispatchPlanReceipts:[],operations:[],preferences:[]},actor={userId:1,companyId:7,currentSiteIds:[9]};
  type Saved={vendorId:number;targetId:string;deviceId:string;assignment:string;observation:unknown};
  const records:Saved[]=[],consents=new Set(["2:synthetic-device"]);let permitted=true;
  const assignment=()=>JSON.stringify([run.id,run.companyId,run.driverUserId,run.vehicleAssetId,run.trailerAssetId]);

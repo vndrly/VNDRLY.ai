@@ -66,6 +66,7 @@ export function createFleetRunFromPlan(input: {
       detail.rigPackage?.components.find((row) => row.role === "trailer")
         ?.assetId ?? null,
     billing: input.billing,
+    ...(route.plannedWindow ? { schedule: { plannedStartAt: route.plannedWindow.startAt, plannedEndAt: route.plannedWindow.endAt, timezone: route.plannedWindow.timeZone } } : {}),
     ...(order
       ? { runOrderSelection: { id: order.id, version: order.version } }
       : {}),
@@ -84,6 +85,7 @@ export default function FleetRunPlan({
   groupId,
   companyId,
   siteIds,
+  driverUserId,
   disabled,
   onChange,
   workSession,
@@ -92,6 +94,7 @@ export default function FleetRunPlan({
   groupId: string;
   companyId: number;
   siteIds: readonly number[];
+  driverUserId?: number;
   disabled: boolean;
   onChange: (value: FleetRunPlan | null) => void;
 }) {
@@ -119,6 +122,7 @@ export default function FleetRunPlan({
   useEffect(() => {
     setRunOrder(null);
   }, [groupId, companyId, refresh]);
+  useEffect(() => { setSnapshot(null); setSelected(""); detailRequest.current++; }, [driverUserId]);
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   useEffect(() => {
     alive.current = true;
@@ -206,14 +210,15 @@ export default function FleetRunPlan({
     if (!expected) return;
     try {
       const value = FleetDetailSnapshotSchema.parse(
-        workSession?await workSession.recoveryDetail(id):await apiFetch<unknown>(`/api/fleet/details/${id}`, {}, scope.current),
+        workSession?await workSession.recoveryDetail(id):await apiFetch<unknown>(`/api/fleet/details/${id}${driverUserId ? `?driverUserId=${driverUserId}` : ""}`, {}, scope.current),
       );
       if (!current() || request !== detailRequest.current) return;
       if (
         value.detail.companyId !== companyId ||
         value.detail.id !== id ||
         value.detail.version !== expected.version ||
-        !value.detail.accessGroupIds.includes(groupId)
+        !value.detail.accessGroupIds.includes(groupId) ||
+        (driverUserId !== undefined && value.detail.driverUserId !== driverUserId)
       )
         throw new Error("Detail changed.");
       setSnapshot(value);

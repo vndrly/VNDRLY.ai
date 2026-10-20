@@ -46,12 +46,15 @@ export default function FleetRunBilling({
   onChange,
   disabled,
   workSession,
+  authorizedTicketId,
 }: {
   siteId?: number;
   fleetId?: string;
   onChange: (choice: FleetBillingChoice | null) => void;
   disabled: boolean;
   workSession?:FleetWorkSession|null;
+  /** Dispatch release is bound to the ticket authorized in its saved plan. */
+  authorizedTicketId?: number;
 }) {
   const colors = useColors(),
     copy = useFleetCopy(),
@@ -68,12 +71,12 @@ export default function FleetRunBilling({
     [error, setError] = useState("");
   useEffect(() => {
     setWorkType(null);
-    setMode(null);
-  }, [siteId, workDate, fleetId]);
+    setMode(authorizedTicketId ? "existing_ticket" : null);
+  }, [siteId, workDate, fleetId, authorizedTicketId]);
   useEffect(() => {
     let alive = true;
     setOptions(null);
-    setTicketId(null);
+    setTicketId(authorizedTicketId ?? null);
     setError("");
     onChange(null);
     if (siteId && /^\d{4}-\d{2}-\d{2}$/.test(workDate)) {
@@ -118,11 +121,11 @@ export default function FleetRunBilling({
       });
     else if (
       mode === "existing_ticket" &&
-      options.tickets.some((t) => t.id === ticketId)&&(!workSession||options.workTypes.some(w=>w.id===workType&&w.afeNumber===afe.trim()))
+      options.tickets.some((t) => t.id === ticketId) && (!authorizedTicketId || ticketId === authorizedTicketId) && (!workSession||options.workTypes.some(w=>w.id===workType&&w.afeNumber===afe.trim()))
     )
       onChange({ mode, ticketId: ticketId!, ...(workSession?{workTypeId:workType!}:{}),afeNumber: afe.trim(), workDate });
     else onChange(null);
-  }, [mode, workType, ticketId, options, afe, workDate]);
+  }, [mode, workType, ticketId, options, afe, workDate, authorizedTicketId]);
   const style = {
     color: colors.text,
     borderColor: colors.border,
@@ -153,7 +156,7 @@ export default function FleetRunBilling({
         onChangeText={setWorkDate}
         style={style}
       />
-      {(["new_ticket", "existing_ticket"] as const).map((value) => (
+      {(authorizedTicketId ? ["existing_ticket"] as const : ["new_ticket", "existing_ticket"] as const).map((value) => (
         <TogglePillButton
           key={value}
           disabled={disabled || !options}
@@ -194,7 +197,7 @@ export default function FleetRunBilling({
           </TogglePillButton>
         ))}
       {options?.referenceFreshness==="cached_unverified"&&<Text style={{color:colors.text}}>{copy("Downloaded choices are unverified; authority is checked again when work synchronizes.")}</Text>}{mode === "existing_ticket" &&
-        options?.tickets.map((item) => (
+        options?.tickets.filter(item => !authorizedTicketId || item.id === authorizedTicketId).map((item) => (
           <TogglePillButton
             key={item.id}
             disabled={disabled}

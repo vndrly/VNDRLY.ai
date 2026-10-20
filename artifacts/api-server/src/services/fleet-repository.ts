@@ -7,6 +7,7 @@ import {
   FleetWorkspacePreferenceSchema,
   FleetSetupInputSchema,
   FleetCapabilitySchema,
+  FleetDispatchPlanSchema,
 } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import type { PoolClient } from "pg";
@@ -21,6 +22,8 @@ export const FleetStateSchema = z
       .unwrap()
       .default([]),
     runs: z.array(FleetRunSchema).max(1000),
+    dispatchPlans: z.array(FleetDispatchPlanSchema).max(1000).default([]),
+    dispatchPlanReceipts: z.array(z.object({ operationId: z.uuid(), actorUserId: z.number().int().positive(), fingerprint: z.string(), result: FleetDispatchPlanSchema }).strict()).max(2000).default([]),
     preferences: z.array(FleetWorkspacePreferenceSchema).max(500).default([]),
     operations: z
       .array(
@@ -51,6 +54,8 @@ export const emptyFleetState = (): FleetState => ({
   grants: [],
   supportGrants: [],
   runs: [],
+  dispatchPlans: [],
+  dispatchPlanReceipts: [],
   operations: [],
   preferences: [],
 });

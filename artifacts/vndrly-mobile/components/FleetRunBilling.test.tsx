@@ -8,6 +8,13 @@ vi.mock('@/hooks/useColors',()=>({useColors:()=>({text:'black',border:'gray',des
 vi.mock('@/components/TogglePillButton',()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
 import FleetRunBilling from './FleetRunBilling';
 afterEach(()=>{cleanup();mocks.api.mockReset();});
+it('offers only the linked authorized ticket when Dispatch releases a planned Run',async()=>{
+ mocks.api.mockResolvedValue({workTypes:[],tickets:[{id:88,ticketNumber:'88',siteId:4,afeNumber:'AFE',workDate:'2026-10-20',planVersion:1},{id:99,ticketNumber:'99',siteId:4,afeNumber:'AFE',workDate:'2026-10-20',planVersion:1}],afeRequired:false,siteAfe:'AFE'});
+ render(<FleetRunBilling siteId={4} authorizedTicketId={88} onChange={()=>{}} disabled={false}/>);
+ expect(await screen.findByRole('button',{name:/Ticket #88/})).toBeTruthy();
+ expect(screen.queryByRole('button',{name:'Run as new ticket'})).toBeNull();
+ expect(screen.queryByRole('button',{name:/Ticket #99/})).toBeNull();
+});
 it('uses the real catalog service AFE override and invalidates it when origin changes',async()=>{
  const change=vi.fn();mocks.api.mockResolvedValue({workTypes:[{id:8,name:'Catalog hauling',rateCents:12500,afeNumber:'SERVICE-AFE'}],tickets:[],afeRequired:true,siteAfe:'SITE-AFE'});
  const view=render(<FleetRunBilling siteId={4} onChange={change} disabled={false}/>);

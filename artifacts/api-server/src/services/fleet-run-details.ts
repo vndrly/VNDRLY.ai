@@ -31,7 +31,7 @@ export async function resolveFleetRunDetailSnapshot(
     (state, current) =>
       state.grants.find((grant) => grant.userId === current.userId) ?? null,
   );
-  const snapshot = await reader.fleetDetailSnapshot(actor, selection.detailId);
+  const snapshot = await reader.fleetDetailSnapshot(actor, selection.detailId, run.driverUserId);
   const trailer =
     snapshot.rigPackage?.components.find(
       (component) => component.role === "trailer",

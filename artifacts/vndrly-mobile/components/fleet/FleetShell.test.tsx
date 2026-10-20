@@ -34,10 +34,19 @@ vi.mock("@/components/FleetSetup", () => ({ default: () => { const [draft, setDr
 vi.mock("@/components/FleetLegacyWorkspace", () => ({ default: ({ initialMode, initialAssetId, initialRunId, initialYardOrderId }: { initialMode: string; initialAssetId?: string; initialRunId?: string; initialYardOrderId?: string }) => <Text>{`${initialMode}:${initialAssetId ?? "none"}:${initialRunId ?? "none"}:${initialYardOrderId ?? "none"}`}</Text> }));
 vi.mock("./YardBoard", () => ({ default: ({ initialYardOrderId, initialRunId }: { initialYardOrderId?: string; initialRunId?: string }) => <Text>{`Yard Board:${initialRunId ?? "none"}:${initialYardOrderId ?? "none"}`}</Text> }));
 vi.mock("./AssetWorkspace", () => ({ default: ({ initialAssetId }: { initialAssetId?: string }) => <Text>{`Asset Workspace:${initialAssetId ?? "none"}`}</Text> }));
+vi.mock("./DispatchBoard", () => ({ default: () => <Text>Dispatch Board card</Text> }));
+vi.mock("./FleetOfficeBoard", () => ({ default: () => <Text>Fleet Office card</Text> }));
+vi.mock("@/components/FleetRunOrders", () => ({ default: () => <Text>Saved Runs card</Text> }));
 
 afterEach(() => { cleanup(); nav.push.mockReset(); nav.retry.mockReset(); nav.width = 390; nav.brand = "#137c49"; nav.params = {}; nav.home = null; nav.companyId = 3; nav.membershipId = 9; });
 
 describe("FleetShell", () => {
+  it("opens Work Hub cards for Dispatch, Office, and saved Runs", async () => {
+    render(<FleetShell module="home" visibleModules={["dispatch", "office", "runs"]} />);
+    expect(await screen.findByText("Dispatch Board card")).toBeTruthy();
+    expect(await screen.findByText("Fleet Office card")).toBeTruthy();
+    expect(await screen.findByText("Saved Runs card")).toBeTruthy();
+  });
   it("renders the capability-scoped Home and opens the selected next run", () => {
     nav.home = { companyId: 3, userId: 7, mode: "my_fleet_day", capabilities: ["driver", "self_dispatch"], nextAction: { kind: "start_run", label: "Start run", runId: "11111111-1111-4111-8111-111111111111" }, priorities: [], warnings: [], moduleStates: [] };
     render(<FleetShell module="home" />);
