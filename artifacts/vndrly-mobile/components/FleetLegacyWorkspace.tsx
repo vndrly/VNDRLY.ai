@@ -53,6 +53,8 @@ import { FLEET_OFFLINE_MAX_ACTIONS, fleetQueueBase, fleetQueueAssignmentMatches,
 export default function FleetWorkspace({ initialRunId, initialAssetId, initialMode = "desk", embedded = false }: {
     initialRunId?: string;
     initialAssetId?: string;
+    /** Preserved by Fleet routing for the focused Yard module. */
+    initialYardOrderId?: string;
     initialMode?: "desk" | "my-day" | "log" | "map" | "inventory" | "locations" | "orders" | "compliance";
     /** The Fleet shell supplies the page title, safe area, and scrolling. */
     embedded?: boolean;

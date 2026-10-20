@@ -10,7 +10,7 @@ import FleetMapRedirect from "@/app/(tabs)/fleet-map";
 import FleetLocationsRedirect from "@/app/(tabs)/fleet-locations";
 import FleetComplianceRedirect from "@/app/(tabs)/fleet-compliance";
 
-const nav = vi.hoisted(() => ({ push: vi.fn(), width: 390, brand: "#137c49", params: {} as Record<string, string>, home: null as any }));
+const nav = vi.hoisted(() => ({ push: vi.fn(), retry: vi.fn(), width: 390, brand: "#137c49", params: {} as Record<string, string>, home: null as any, companyId: 3, membershipId: 9 }));
 vi.mock("@expo/vector-icons", () => ({ Feather: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} /> }));
 vi.mock("expo-router", () => ({
   router: { push: nav.push },
@@ -25,13 +25,15 @@ vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({ card: "#222", text: "white", mutedForeground: "#aaa", border: "#555", primary: nav.brand, destructive: "#f33" }),
 }));
 vi.mock("@/lib/fleet-copy", () => ({ useFleetCopy: () => (value: string) => value }));
-vi.mock("@/hooks/use-fleet-home", () => ({ useFleetHome: () => ({ projection: nav.home, state: nav.home ? "ready" : "unavailable", error: null, visibility: {}, retry: vi.fn() }) }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 7, vendorId: nav.companyId }, activeMembershipId: nav.membershipId, activeMembership: { orgId: nav.companyId } }) }));
+vi.mock("@/hooks/use-fleet-home", () => ({ useFleetHome: () => ({ projection: nav.home, state: nav.home ? "ready" : "unavailable", error: null, visibility: {}, retry: nav.retry }) }));
 vi.mock("@/components/ScreenSafeArea", () => ({ default: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
 vi.mock("@/components/WorkHubPageTitle", () => ({ default: ({ title }: { title: string }) => <h1>{title}</h1> }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress }: { children: React.ReactNode; onPress?: () => void }) => <button onClick={onPress}>{children}</button> }));
-vi.mock("@/components/FleetLegacyWorkspace", () => ({ default: ({ initialMode, initialAssetId, initialRunId }: { initialMode: string; initialAssetId?: string; initialRunId?: string }) => <Text>{`${initialMode}:${initialAssetId ?? "none"}:${initialRunId ?? "none"}`}</Text> }));
+vi.mock("@/components/FleetSetup", () => ({ default: () => { const [draft, setDraft] = React.useState("new"); return <button aria-label="Edit Setup draft" onClick={() => setDraft("edited")}>{draft}</button>; } }));
+vi.mock("@/components/FleetLegacyWorkspace", () => ({ default: ({ initialMode, initialAssetId, initialRunId, initialYardOrderId }: { initialMode: string; initialAssetId?: string; initialRunId?: string; initialYardOrderId?: string }) => <Text>{`${initialMode}:${initialAssetId ?? "none"}:${initialRunId ?? "none"}:${initialYardOrderId ?? "none"}`}</Text> }));
 
-afterEach(() => { cleanup(); nav.push.mockReset(); nav.width = 390; nav.brand = "#137c49"; nav.params = {}; nav.home = null; });
+afterEach(() => { cleanup(); nav.push.mockReset(); nav.retry.mockReset(); nav.width = 390; nav.brand = "#137c49"; nav.params = {}; nav.home = null; nav.companyId = 3; nav.membershipId = 9; });
 
 describe("FleetShell", () => {
   it("renders the capability-scoped Home and opens the selected next run", () => {
@@ -46,6 +48,22 @@ describe("FleetShell", () => {
     render(<FleetShell module="home" />);
     fireEvent.click(screen.getByRole("button", { name: "Open Fleet Setup" }));
     expect(nav.push).toHaveBeenCalledWith("/(tabs)/fleet?module=setup");
+  });
+  it("remounts Setup when the authenticated company and membership change", () => {
+    const view = render(<FleetShell module="setup" />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit Setup draft" }));
+    expect(screen.getByText("edited")).toBeTruthy();
+    nav.companyId = 4; nav.membershipId = 10;
+    view.rerender(<FleetShell module="setup" />);
+    expect(screen.getByText("new")).toBeTruthy();
+    expect(screen.queryByText("edited")).toBeNull();
+  });
+
+  it("keeps the exact Yard Order in a Home action URL", () => {
+    nav.home = { companyId: 3, userId: 7, mode: "my_fleet_day", capabilities: ["driver", "yard"], nextAction: { kind: "report_yard_order", label: "Report Yard Order", yardOrderId: "22222222-2222-4222-8222-222222222222" }, priorities: [], warnings: [], moduleStates: [] };
+    render(<FleetShell module="home" />);
+    fireEvent.click(screen.getByRole("button", { name: "Report Yard Order" }));
+    expect(nav.push).toHaveBeenCalledWith("/(tabs)/fleet?module=yard&yardOrderId=22222222-2222-4222-8222-222222222222");
   });
   it.each([390, 1024])("uses one Fleet workspace and module links at width %i", (width) => {
     nav.width = width;
@@ -79,13 +97,19 @@ describe("FleetShell", () => {
   it("keeps a saved inventory asset selected through the legacy view link", async () => {
     nav.params = { view: "inventory", assetId: "asset-42" };
     render(<FleetScreen />);
-    expect(await screen.findByText("inventory:asset-42:none")).toBeTruthy();
+    expect(await screen.findByText("inventory:asset-42:none:none")).toBeTruthy();
   });
 
   it("opens the exact run from a Home action deep link", async () => {
     nav.params = { module: "driver", runId: "11111111-1111-4111-8111-111111111111" };
     render(<FleetScreen />);
-    expect(await screen.findByText("my-day:none:11111111-1111-4111-8111-111111111111")).toBeTruthy();
+    expect(await screen.findByText("my-day:none:11111111-1111-4111-8111-111111111111:none")).toBeTruthy();
+  });
+
+  it("retains a Yard Order deep-link parameter for the Yard module", async () => {
+    nav.params = { module: "yard", yardOrderId: "22222222-2222-4222-8222-222222222222" };
+    render(<FleetScreen />);
+    expect(await screen.findByText("inventory:none:none:22222222-2222-4222-8222-222222222222")).toBeTruthy();
   });
 
   it.each([

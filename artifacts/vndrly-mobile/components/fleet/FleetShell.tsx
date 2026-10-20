@@ -8,6 +8,7 @@ import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import { useColors } from "@/hooks/useColors";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import { useFleetHome } from "@/hooks/use-fleet-home";
+import { useAuth } from "@/hooks/use-auth";
 import FleetHome from "./FleetHome";
 import FleetSetup from "@/components/FleetSetup";
 import FleetModuleBoundary, { type FleetModuleBoundaryProps } from "./FleetModuleBoundary";
@@ -38,24 +39,27 @@ const legacyModes = {
   runs: "orders", map: "map", history: "log", locations: "locations", compliance: "compliance",
 } as const;
 
-export default function FleetShell({ module = "home", modules = {}, visibleModules, initialAssetId, initialRunId }: {
+export default function FleetShell({ module = "home", modules = {}, visibleModules, initialAssetId, initialRunId, initialYardOrderId }: {
   module?: FleetModuleId;
   modules?: FleetModuleRegistry;
   visibleModules?: readonly FleetModuleId[];
   initialAssetId?: string;
   initialRunId?: string;
+  initialYardOrderId?: string;
 }) {
   const colors = useColors();
   const copy = useFleetCopy();
   const { width } = useWindowDimensions();
   const wide = width >= 768;
+  const { user, activeMembershipId, activeMembership } = useAuth();
+  const setupIdentity = JSON.stringify([user?.id ?? null, activeMembershipId ?? user?.activeMembershipId ?? null, activeMembership?.orgType ?? null, activeMembership?.orgId ?? user?.vendorId ?? user?.partnerId ?? null]);
   const home = useFleetHome(module === "home");
   const selected = visibleModules ?? (module === "home" ? [] : [module]);
-  const open = (next: FleetModuleId, runId?: string) => router.push(`/(tabs)/fleet?module=${next}${runId ? `&runId=${encodeURIComponent(runId)}` : ""}` as never);
+  const open = (next: FleetModuleId, runId?: string, yardOrderId?: string) => router.push(`/(tabs)/fleet?module=${next}${runId ? `&runId=${encodeURIComponent(runId)}` : ""}${yardOrderId ? `&yardOrderId=${encodeURIComponent(yardOrderId)}` : ""}` as never);
   const renderModule = (id: FleetModuleId) => {
     const entry = modules[id];
-    const fallback: ReactNode = id === "home" ? null : id === "setup" ? <FleetSetup onSaved={home.retry} /> : <Suspense fallback={<Text>{copy(`Loading ${moduleLabels[id]}`)}</Text>}>
-      <FleetLegacyWorkspace embedded initialMode={legacyModes[id as keyof typeof legacyModes]} initialAssetId={id === "assets" ? initialAssetId : undefined} initialRunId={initialRunId} />
+    const fallback: ReactNode = id === "home" ? null : id === "setup" ? <FleetSetup key={setupIdentity} onSaved={home.retry} /> : <Suspense fallback={<Text>{copy(`Loading ${moduleLabels[id]}`)}</Text>}>
+      <FleetLegacyWorkspace embedded initialMode={legacyModes[id as keyof typeof legacyModes]} initialAssetId={id === "assets" ? initialAssetId : undefined} initialRunId={initialRunId} initialYardOrderId={initialYardOrderId} />
     </Suspense>;
     return <View key={id} style={{ width: wide && module === "home" ? "48%" : "100%", minWidth: 0 }}>
       <FleetModuleBoundary module={id} title={copy(moduleLabels[id])} state={entry?.state} error={entry?.error} onRetry={entry?.onRetry} onReview={entry?.onReview}>
@@ -67,7 +71,7 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
   return <ScreenSafeArea><ScrollView testID="fleet-shell-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}>
     <WorkHubPageTitle title={copy(moduleLabels[module])} onBack={module === "home" ? undefined : () => open("home")} />
     {module !== "home" && <TogglePillButton color="blue" compactOnTablet onPress={() => open("home")}>{copy("All Fleet modules")}</TogglePillButton>}
-    {module === "home" && !selected.length && home.projection && <FleetHome projection={home.projection} visibility={home.visibility} onOpen={open} />}
+    {module === "home" && !selected.length && home.projection && <FleetHome projection={home.projection} visibility={home.visibility} onOpen={open} onRetry={home.retry} />}
     {module === "home" && !selected.length && !home.projection && <View style={{ gap: 12 }}>
       <Text accessibilityRole={home.state === "unavailable" ? "alert" : undefined} style={{ color: colors.text }}>{copy(home.error ?? "Loading Fleet Home")}</Text>
       {home.state === "unavailable" && <TogglePillButton color="blue" onPress={home.retry}>{copy("Retry Fleet Home")}</TogglePillButton>}

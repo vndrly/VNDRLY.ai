@@ -11,10 +11,11 @@ type ModuleState = FleetHomeProjection["moduleStates"][number]["state"];
 type Card = { id: string; label: string; helper: string; icon: string; module: FleetModuleId; state?: ModuleState };
 export type FleetHomeVisibility = Partial<Record<FleetModuleId, boolean>>;
 
-export default function FleetHome({ projection, onOpen, visibility = {} }: {
+export default function FleetHome({ projection, onOpen, visibility = {}, onRetry }: {
   projection: FleetHomeProjection;
-  onOpen: (module: FleetModuleId, runId?: string) => void;
+  onOpen: (module: FleetModuleId, runId?: string, yardOrderId?: string) => void;
   visibility?: FleetHomeVisibility;
+  onRetry?: () => void;
 }) {
   const colors = useColors();
   const copy = useFleetCopy();
@@ -28,10 +29,7 @@ export default function FleetHome({ projection, onOpen, visibility = {} }: {
   const driver = capabilities.has("driver");
   const state = (module: string) => projection.moduleStates.find(item => item.module === module)?.state;
   const independent = projection.mode === "my_fleet_day";
-  const cards: Card[] = independent ? [
-    { id: "route", label: "Route and return", helper: "Open your assigned run and next stop", icon: "navigation", module: "driver" },
-    { id: "ticket", label: "Ticket state", helper: "Review the linked work and closeout", icon: "file-text", module: "driver" },
-  ] : [
+  const coordinatedCards: Card[] = [
     ...(office ? [{ id: "attention", label: "Needs Attention", helper: "Review exceptions and closeouts", icon: "bell", module: "office" as const, state: state("compliance") }] : []),
     ...(dispatch ? [{ id: "dispatch", label: "Dispatch Board", helper: "Plan Details and release runs", icon: "truck", module: "dispatch" as const, state: state("dispatch") }] : []),
     ...(yard ? [{ id: "yard", label: "Yard Board", helper: "Assigned orders and Detail readiness", icon: "package", module: "yard" as const, state: state("yard") }] : []),
@@ -42,8 +40,14 @@ export default function FleetHome({ projection, onOpen, visibility = {} }: {
     ...(admin || office || dispatch ? [{ id: "compliance", label: "Compliance", helper: "Advisory score and improvements", icon: "shield", module: "compliance" as const, state: state("compliance") }] : []),
     ...(admin || dispatch ? [{ id: "map", label: "Fleet Map", helper: "Live operational locations", icon: "map", module: "map" as const, state: state("map") }] : []),
   ];
+  const cards: Card[] = independent ? [
+    { id: "route", label: "Route and return", helper: "Open your assigned run and next stop", icon: "navigation", module: "driver", state: state("history") },
+    { id: "ticket", label: "Ticket state", helper: "Review the linked work and closeout", icon: "file-text", module: "driver", state: state("history") },
+    ...coordinatedCards.filter(card => card.id === "setup" || admin && ["dispatch", "yard", "runs", "map", "compliance"].includes(card.id) && visibility[card.module] === true),
+  ] : coordinatedCards;
   const shown = cards.filter(card => visibility[card.module] !== false || card.id === "setup");
   const primary = projection.nextAction;
+  const unavailable = projection.moduleStates.some(item => item.state === "unavailable");
   const actionModule = primary?.kind === "report_yard_order" ? "yard" : primary?.kind === "review_closeout" || primary?.kind === "review_ticket" || primary?.kind === "finalize_ticket" ? "office" : primary?.kind === "prepare_detail" ? "dispatch" : "driver";
 
   return <View style={{ gap: 16 }}>
@@ -51,9 +55,13 @@ export default function FleetHome({ projection, onOpen, visibility = {} }: {
       <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{copy(independent ? "My Fleet Day" : "Operations")}</Text>
       <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{copy(independent ? "Your next job, route, and return" : "Your Fleet priorities and workspaces")}</Text>
     </View>
+    {unavailable && <View style={{ gap: 8 }}>
+      <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy("Some Fleet information is unavailable. Open a card for its current records.")}</Text>
+      {onRetry && <TogglePillButton color="blue" accessibilityLabel={copy("Retry Fleet Home")} onPress={onRetry}>{copy("Retry Fleet Home")}</TogglePillButton>}
+    </View>}
     {primary && <View testID="fleet-home-next" style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 16, borderWidth: 2, gap: 10, padding: 16 }}>
       <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>{copy("Next action")}</Text>
-      <TogglePillButton solid accessibilityLabel={copy(primary.label)} onPress={() => onOpen(actionModule, primary.runId ?? undefined)}>{copy(primary.label)}</TogglePillButton>
+      <TogglePillButton solid accessibilityLabel={copy(primary.label)} onPress={() => primary.yardOrderId ? onOpen(actionModule, primary.runId ?? undefined, primary.yardOrderId) : onOpen(actionModule, primary.runId ?? undefined)}>{copy(primary.label)}</TogglePillButton>
     </View>}
     {projection.warnings.map(warning => <Text key={warning.id} accessibilityRole="alert" style={{ color: colors.destructive }}>{copy(warning.message)}</Text>)}
     <View testID="fleet-home-cards" style={{ flexDirection: wide ? "row" : "column", flexWrap: "wrap", gap: 12 }}>

@@ -49,6 +49,47 @@ describe("Fleet Home", () => {
     expect(screen.queryByRole("button", { name: "Report Yard Order" })).toBeNull();
     expect(screen.getByText("My Fleet Day")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Open Yard Board" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Open Fleet Setup" })).toBeTruthy();
+  });
+
+  it("lets an independent Admin explicitly expose eligible advanced cards while keeping one next action", () => {
+    const projection = home(["admin", "office", "dispatch", "yard", "driver", "self_dispatch"], "my_fleet_day");
+    render(<FleetHome projection={projection} visibility={{ dispatch: true, yard: true, map: true }} onOpen={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Open Dispatch Board" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open Yard Board" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open Fleet Map" })).toBeTruthy();
+    expect(screen.getAllByText("Next action")).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Start run" })).toHaveLength(1);
+  });
+
+  it.each([
+    [{ kind: "report_yard_order", label: "Report Yard Order", yardOrderId: "22222222-2222-4222-8222-222222222222" }, undefined],
+    [{ kind: "report_yard_order", label: "Report Yard Order", yardOrderId: "33333333-3333-4333-8333-333333333333", runId: action.runId }, action.runId],
+    [{ kind: "report_yard_order", label: "Report Yard Order", yardOrderId: "44444444-4444-4444-8444-444444444444", runId: action.runId }, action.runId],
+  ] as const)("passes the exact assigned Yard Order to navigation", (next, runId) => {
+    const projection = home(["driver", "yard"], "my_fleet_day");
+    projection.nextAction = next;
+    const onOpen = vi.fn();
+    render(<FleetHome projection={projection} onOpen={onOpen} />);
+    fireEvent.click(screen.getByRole("button", { name: "Report Yard Order" }));
+    expect(onOpen).toHaveBeenCalledWith("yard", runId, next.yardOrderId);
+  });
+
+  it("surfaces an unavailable independent source with one Home retry and usable links", () => {
+    const projection = home(["driver", "self_dispatch"], "my_fleet_day");
+    projection.nextAction = null;
+    projection.priorities = [];
+    projection.moduleStates = projection.moduleStates.map(item => item.module === "history" ? { ...item, state: "unavailable" } : item);
+    const onOpen = vi.fn();
+    const onRetry = vi.fn();
+    render(<FleetHome projection={projection} onOpen={onOpen} onRetry={onRetry} />);
+    expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
+    expect(screen.getByText("Route and return unavailable")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Retry Fleet Home" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Open Ticket state" }));
+    expect(onOpen).toHaveBeenCalledWith("driver");
+    expect(screen.queryByRole("button", { name: "Start run" })).toBeNull();
   });
 
   it("supports an independent operator without a yard", () => {

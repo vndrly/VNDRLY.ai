@@ -1,9 +1,9 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ api: vi.fn(), stored: vi.fn(), saveVisibility: vi.fn(), role: "admin" }));
+const mocks = vi.hoisted(() => ({ api: vi.fn(), stored: vi.fn(), saveVisibility: vi.fn(), role: "admin", companyId: 3, membershipId: 9 }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 7, role: mocks.role }, activeMembershipId: 9, activeMembership: { orgId: 3, role: mocks.role } }) }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 7, role: mocks.role }, activeMembershipId: mocks.membershipId, activeMembership: { orgId: mocks.companyId, role: mocks.role } }) }));
 vi.mock("@react-native-async-storage/async-storage", () => ({ default: { getItem: mocks.stored, setItem: mocks.saveVisibility } }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ text: "black", border: "gray", destructive: "red" }) }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => "30000000-0000-4000-8000-000000000001" }));
@@ -11,21 +11,67 @@ vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress,
 import FleetSetup from "./FleetSetup";
 const fleetId = "10000000-0000-4000-8000-000000000001";
 const configuration = { expectedVersion: 5, enabled: true, fleets: [{ id: fleetId, name: "North Fleet", siteIds: [392], requiredCertifications: ["CDL"] }], grants: [{ userId: 1069, fleetIds: [fleetId], siteIds: [392], roles: ["driver"], financeRead: true, safetyRelease: false }], members: [{ userId: 1069, name: "Synthetic Reviewer" }], sites: [{ siteId: 392, name: "Fictional site" }] };
-afterEach(() => { cleanup(); mocks.api.mockReset(); mocks.stored.mockReset(); mocks.saveVisibility.mockReset(); mocks.role = "admin"; });
+const southConfiguration = { ...configuration, expectedVersion: 6, fleets: [{ ...configuration.fleets[0], name: "South Fleet" }] };
+function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; }
+afterEach(() => { cleanup(); mocks.api.mockReset(); mocks.stored.mockReset(); mocks.saveVisibility.mockReset(); mocks.role = "admin"; mocks.companyId = 3; mocks.membershipId = 9; });
 describe("mobile Fleet setup", () => {
+  it("clears a loaded draft and reloads Setup when company membership changes", async () => {
+    mocks.api.mockResolvedValueOnce(configuration).mockResolvedValueOnce(southConfiguration).mockResolvedValue({ version: 7 });
+    const view = render(<FleetSetup onSaved={vi.fn()} />);
+    fireEvent.click(await screen.findByText("North Fleet · sites 392"));
+    fireEvent.change(screen.getByLabelText("Resource pool name"), { target: { value: "Old draft" } });
+    mocks.companyId = 4; mocks.membershipId = 10;
+    view.rerender(<FleetSetup onSaved={vi.fn()} />);
+    expect(await screen.findByText("South Fleet · sites 392")).toBeTruthy();
+    expect(screen.queryByDisplayValue("Old draft")).toBeNull();
+    fireEvent.click(screen.getByText("Save Fleet access settings"));
+    await waitFor(() => expect(mocks.api).toHaveBeenCalledTimes(3));
+    expect(JSON.parse(mocks.api.mock.calls[2][1].body).expectedVersion).toBe(6);
+  });
+
+  it("ignores an old company's read when it resolves after the new context", async () => {
+    const oldRead = deferred<typeof configuration>();
+    mocks.api.mockImplementationOnce(() => oldRead.promise).mockResolvedValueOnce(southConfiguration);
+    const view = render(<FleetSetup onSaved={vi.fn()} />);
+    mocks.companyId = 4; mocks.membershipId = 10;
+    view.rerender(<FleetSetup onSaved={vi.fn()} />);
+    expect(await screen.findByText("South Fleet · sites 392")).toBeTruthy();
+    await act(async () => oldRead.resolve(configuration));
+    expect(screen.queryByText("North Fleet · sites 392")).toBeNull();
+  });
+
+  it("does not report a stale save as complete after an account switch", async () => {
+    const oldSave = deferred<{ version: number }>();
+    mocks.api.mockResolvedValueOnce(configuration).mockImplementationOnce(() => oldSave.promise).mockResolvedValueOnce(southConfiguration);
+    const onSaved = vi.fn();
+    const view = render(<FleetSetup onSaved={onSaved} />);
+    fireEvent.click(await screen.findByText("Save Fleet access settings"));
+    mocks.companyId = 4; mocks.membershipId = 10;
+    view.rerender(<FleetSetup onSaved={onSaved} />);
+    await act(async () => oldSave.resolve({ version: 6 }));
+    expect(await screen.findByText("South Fleet · sites 392")).toBeTruthy();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
   it("lets an Admin hide an eligible Home module on this device", async () => {
     mocks.api.mockResolvedValue(configuration);
     mocks.stored.mockResolvedValue(null);
     render(<FleetSetup onSaved={vi.fn()} />);
-    fireEvent.click(await screen.findByRole("checkbox", { name: "Show Fleet Map on Home" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Hide Fleet Map on Home" }));
     await waitFor(() => expect(mocks.saveVisibility).toHaveBeenCalledWith("fleet-home-visibility:3:7:9", expect.stringContaining('"map":false')));
+  });
+  it("lets an independent Admin explicitly expose Dispatch in one action", async () => {
+    mocks.api.mockResolvedValue(configuration);
+    mocks.stored.mockResolvedValue(null);
+    render(<FleetSetup onSaved={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Show Dispatch Board on Home" }));
+    await waitFor(() => expect(mocks.saveVisibility).toHaveBeenCalledWith("fleet-home-visibility:3:7:9", expect.stringContaining('"dispatch":true')));
   });
   it("does not offer Home visibility controls to an Office user", async () => {
     mocks.role = "office";
     mocks.api.mockResolvedValue(configuration);
     render(<FleetSetup onSaved={vi.fn()} />);
     expect(await screen.findByText("Save Fleet access settings")).toBeTruthy();
-    expect(screen.queryByRole("checkbox", { name: "Show Fleet Map on Home" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Show Fleet Map on Home" })).toBeNull();
   });
   it("drops obsolete pure-driver sites while preserving mixed office authority",async()=>{
     mocks.api.mockResolvedValueOnce({...configuration,grants:[...configuration.grants,{...configuration.grants[0],userId:1070,roles:["driver","dispatcher"]}]}).mockResolvedValue({version:6});
