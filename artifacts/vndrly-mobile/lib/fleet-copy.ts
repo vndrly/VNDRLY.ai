@@ -3,6 +3,14 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 const spanish: Record<string, string> = {
+"One next step from assigned work through return and closeout.":"Un siguiente paso desde el trabajo asignado hasta el regreso y cierre.",
+"You can prepare and run your own work without a separate Yard or Dispatch handoff.":"Puede preparar y realizar su propio trabajo sin una entrega separada de Patio o Despacho.",
+"Complete the Yard hookup yourself, then return here to start the run.":"Complete usted mismo la conexión en el patio y luego regrese aquí para iniciar el recorrido.",
+"Open assigned Yard Order":"Abrir la orden del patio asignada",
+"Warnings affect the Fleet score but do not stop ticket work.":"Las advertencias afectan la puntuación de flota, pero no detienen el trabajo del ticket.",
+"Driver Fleet Day is unavailable.":"La jornada de flota del conductor no está disponible.",
+"Retry Driver Fleet Day":"Reintentar jornada de flota del conductor",
+"Return the truck and attached rigging, report any condition issue, then close the run. A reported issue affects the Fleet score but does not block ticket flow.":"Devuelva el camión y el aparejo conectado, informe cualquier problema de condición y luego cierre el recorrido. Un problema informado afecta la puntuación de flota, pero no bloquea el flujo del ticket.",
 "Dispatch Board":"Panel de despacho",
 "Loading Dispatch Board":"Cargando panel de despacho",
 "Retry Dispatch Board":"Reintentar panel de despacho",

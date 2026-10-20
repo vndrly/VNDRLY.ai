@@ -7,7 +7,7 @@ import { z } from "zod/v4";
 
 export type FleetOfflineScope = { userId: number; companyId: number; membershipId: number | null; sessionVersion?: number };
 export type FleetQueueBase = { runId: string; companyId: number; driverUserId: number; vehicleAssetId: string; trailerAssetId: string | null; version: number };
-export type FleetQueuedAction = { sessionVersion?: number; runId: string; base: FleetQueueBase; input: FleetActionInput; capturedAt: string; state: "unsynced" | "conflict" | "revoked"; message?: string };
+export type FleetQueuedAction = { sessionVersion?: number; membershipId?: number | null; runId: string; base: FleetQueueBase; input: FleetActionInput; capturedAt: string; state: "unsynced" | "conflict" | "revoked"; message?: string };
 export function fleetQueueBase(run: Pick<import("@workspace/api-zod").FleetRun, "id" | "companyId" | "driverUserId" | "vehicleAssetId" | "trailerAssetId" | "version">): FleetQueueBase { return { runId: run.id, companyId: run.companyId, driverUserId: run.driverUserId, vehicleAssetId: run.vehicleAssetId, trailerAssetId: run.trailerAssetId, version: run.version }; }
 export function fleetQueueAssignmentMatches(base: FleetQueueBase, run: Pick<import("@workspace/api-zod").FleetRun, "id" | "companyId" | "driverUserId" | "vehicleAssetId" | "trailerAssetId">) { return base.runId === run.id && base.companyId === run.companyId && base.driverUserId === run.driverUserId && base.vehicleAssetId === run.vehicleAssetId && base.trailerAssetId === run.trailerAssetId; }
 export async function replayFleetSequence(actions: FleetQueuedAction[], transport: {
@@ -19,7 +19,7 @@ export async function replayFleetSequence(actions: FleetQueuedAction[], transpor
   for (const item of actions) {
     if (item.state !== "unsynced") return;
     try {
-      if (transport.scope && (!Number.isInteger(transport.scope.sessionVersion) || item.sessionVersion !== transport.scope.sessionVersion)) { await transport.resolve(item.input.operationId, "revoked", "The verified account session changed. This offline sequence was not submitted."); return; }
+      if (transport.scope && (item.base.driverUserId !== transport.scope.userId || item.base.companyId !== transport.scope.companyId || item.membershipId !== transport.scope.membershipId || !Number.isInteger(transport.scope.sessionVersion) || item.sessionVersion !== transport.scope.sessionVersion)) { await transport.resolve(item.input.operationId, "revoked", "The verified account, company, membership, or session changed. This offline sequence was not submitted."); return; }
       const saved = await transport.readRun(item.runId);
       if (!fleetQueueAssignmentMatches(item.base, saved)) { await transport.resolve(item.input.operationId, "conflict", "Fleet assignment changed. The offline sequence was not rebased."); return; }
       if (saved.events.some(event => event.operationId === item.input.operationId)) { await transport.resolve(item.input.operationId, "accepted"); continue; }
@@ -57,6 +57,7 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
   function validateBase(scope: FleetOfflineScope, action: FleetQueuedAction) {
     if (!["acknowledge", "inspect", "start", "pause", "resume", "arrive_stop", "depart_stop", "record_load", "record_delivery", "record_fuel", "record_meter", "submit_closeout"].includes(action.input.action)) throw new Error("Only assigned driver facts can be stored offline.");
     if (action.sessionVersion !== undefined) z.number().int().nonnegative().parse(action.sessionVersion);
+    if (action.membershipId !== undefined && action.membershipId !== null) z.number().int().positive().parse(action.membershipId);
     if (action.input.capturedAt && action.input.capturedAt !== action.capturedAt) throw new Error("Fleet original capture time changed.");
     const base = z.object({ runId: z.uuid(), companyId: z.number().int().positive(), driverUserId: z.number().int().positive(), vehicleAssetId: z.uuid(), trailerAssetId: z.uuid().nullable(), version: z.number().int().positive() }).strict().parse(action.base);
     if (base.companyId !== scope.companyId || base.driverUserId !== scope.userId || base.runId !== action.runId) throw new Error("Fleet offline assignment does not match this account.");
@@ -83,7 +84,7 @@ export function createFleetOfflineStore(store: FleetOfflineStore) {
     async enqueue(scope: FleetOfflineScope, action: FleetQueuedAction) {
       z.uuid().parse(action.runId); FleetActionInputSchema.parse(action.input); z.iso.datetime().parse(action.capturedAt);
       validateBase(scope, action);
-      action = { ...action, ...(scope.sessionVersion !== undefined ? {sessionVersion:scope.sessionVersion} : {}) };
+      action = { ...action, membershipId: scope.membershipId, ...(scope.sessionVersion !== undefined ? {sessionVersion:scope.sessionVersion} : {}) };
       const value = await read(scope);
       if (scope.sessionVersion !== undefined && value.scope.sessionVersion !== scope.sessionVersion) throw new Error("Fresh account verification is required before synchronization.");
       const existing = value.actions.find(item => item.input.operationId === action.input.operationId);

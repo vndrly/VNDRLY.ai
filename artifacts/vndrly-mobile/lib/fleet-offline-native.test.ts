@@ -13,7 +13,7 @@ describe("Fleet encrypted chunk storage", () => {
     await nativeFleetOffline.enqueue(scope, first);
     failure.suffix = ".1.1";
     await expect(nativeFleetOffline.enqueue(scope, { ...first, runId: "20000000-0000-4000-8000-000000000002", base: { ...first.base, runId: "20000000-0000-4000-8000-000000000002" }, input: { ...first.input, operationId: "10000000-0000-4000-8000-000000000002", notes: "New report".repeat(100) } })).rejects.toThrow("Interrupted");
-    expect((await nativeFleetOffline.read(scope)).actions).toEqual([{ ...first, sessionVersion: 7 }]);
+    expect((await nativeFleetOffline.read(scope)).actions).toEqual([{ ...first, membershipId: 3, sessionVersion: 7 }]);
     failure.suffix = "";
     await clearFleetOfflineOnSignOut();
     expect((await nativeFleetOffline.read(scope)).actions.length).toBeGreaterThan(0);

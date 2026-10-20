@@ -85,4 +85,15 @@ describe("Fleet Home modules", () => {
     expect(data.nextAction).toMatchObject({ kind: "continue_run", runId });
     expect(data.priorities).toContainEqual(expect.objectContaining({ kind: "report_yard_order", runId, yardOrderId: orderId }));
   });
+
+  it("lets an independent self-dispatching Driver complete assigned Yard work without Yard staff", async () => {
+    const orderId = "33333333-3333-4333-8333-333333333333";
+    const read = createFleetHomeReader({
+      ...source(["driver", "self_dispatch"], []),
+      yardOrders: async () => ({ orders: [{ id: orderId, status: "assigned", assignedToUserId: 7, runId: null }] }),
+    });
+    const data = (await read(actor, "summary")).data as FleetHomeProjection;
+    expect(data.mode).toBe("my_fleet_day");
+    expect(data.nextAction).toMatchObject({ kind: "report_yard_order", yardOrderId: orderId });
+  });
 });

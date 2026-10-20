@@ -69,7 +69,7 @@ function actions(actor: FleetActor, c: ReadonlySet<FleetCapability>, runs: reado
       result.push({ kind: "review_closeout", label: "Review closeout", runId: run.id });
     }
   }
-  for (const order of orders) if (c.has("yard") && order.assignedToUserId === actor.userId && ["assigned", "in_progress"].includes(order.status))
+  for (const order of orders) if ((c.has("yard") || c.has("self_dispatch") || c.has("admin")) && order.assignedToUserId === actor.userId && ["assigned", "in_progress"].includes(order.status))
     result.push({ kind: "report_yard_order", label: "Report Yard Order", yardOrderId: order.id, ...(order.runId ? { runId: order.runId } : {}) });
   // Keep the active run first. A Yard follow-up for that run remains separately actionable.
   return [...new Map(result.map((item) => [item.yardOrderId ?? `${item.kind}:${item.runId}`, item])).values()].slice(0, 50);

@@ -83,3 +83,13 @@ it("binds and preserves canonical initial session version zero",async()=>{
  await queue.enqueue(initial,{base,runId:base.runId,input:{action:"acknowledge",operationId:"10000000-0000-4000-8000-000000000001",expectedVersion:7} as FleetActionInput,capturedAt:"2026-10-07T12:00:00Z",state:"unsynced"});
  expect((await queue.read(initial)).actions[0].sessionVersion).toBe(0);
 });
+it("refuses an original operation before readback when the membership or company changes",async()=>{
+ const queue=fixture(),original={...scope,sessionVersion:3};await queue.bindAccount(original);
+ await queue.enqueue(original,{base,runId:base.runId,input:{action:"acknowledge",operationId:"10000000-0000-4000-8000-000000000001",expectedVersion:7} as FleetActionInput,capturedAt:"2026-10-07T12:00:00Z",state:"unsynced"});
+ const item=(await queue.read(original)).actions[0];
+ for(const changed of [{...original,membershipId:2},{...original,companyId:610}]){
+  let reads=0;const outcomes:string[]=[];
+  await replayFleetSequence([item],{scope:changed,readRun:async()=>{reads++;throw Error("unexpected");},submit:async()=>{throw Error("unexpected");},resolve:async(_,state)=>{outcomes.push(state);}});
+  expect(reads).toBe(0);expect(outcomes).toEqual(["revoked"]);
+ }
+});
