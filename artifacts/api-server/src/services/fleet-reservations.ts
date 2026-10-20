@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   FleetDetailSchema,
+  normalizeFleetDetail,
   FleetDetailSnapshotSchema,
   FleetRigPackageSchema,
   FleetReservationSchema,
@@ -38,6 +39,12 @@ export function fleetReservationConflicts(
           : Date.parse(row.plannedEndAt)) &&
       Date.parse(row.startAt) < end,
   );
+}
+/** A Run snapshot owns its selected driver; reusable Detail identity does not. */
+export function fleetReservableDetailMatches(saved: unknown, snapshot: unknown): boolean {
+  const left = FleetDetailSchema.safeParse(saved), right = FleetDetailSchema.safeParse(snapshot);
+  return left.success && right.success && right.data.driverUserId !== null &&
+    JSON.stringify(normalizeFleetDetail(left.data)) === JSON.stringify(normalizeFleetDetail(right.data));
 }
 export function fleetOperationalReleaseReady(value: {
   closed: boolean;
@@ -79,8 +86,7 @@ export async function reserveFleetDetail(
     : registry.details.find((row) => row.id === snapshot.detail.id);
   if (
     !detail ||
-    JSON.stringify(FleetDetailSchema.parse(detail)) !==
-      JSON.stringify(snapshot.detail) ||
+    !fleetReservableDetailMatches(detail, snapshot.detail) ||
     detail.archivedAt ||
     (detail.effectiveUntil &&
       (Date.parse(input.startAt) >= Date.parse(detail.effectiveUntil) ||
@@ -90,8 +96,9 @@ export async function reserveFleetDetail(
     Date.parse(input.startAt) < Date.parse(detail.effectiveFrom)
   )
     throw new FleetError("fleet.detail_revision_conflict");
+  const selectedDriverUserId = snapshot.detail.driverUserId;
   const grant = tx.state.grants.find((row) => row.userId === actor.userId),
-    driver = tx.state.grants.find((row) => row.userId === detail.driverUserId);
+    driver = tx.state.grants.find((row) => row.userId === selectedDriverUserId);
   if (
     !tx.state.enabled ||
     !grant ||
@@ -99,7 +106,7 @@ export async function reserveFleetDetail(
       (role) => role === "fleet_manager" || role === "dispatcher",
     ) &&
       !(
-        grant.roles.includes("driver") && actor.userId === detail.driverUserId
+        grant.roles.includes("driver") && actor.userId === selectedDriverUserId
       )) ||
     !detail.accessGroupIds.some((id) => grant.fleetIds.includes(id)) ||
     !driver?.roles.includes("driver") ||
@@ -126,7 +133,7 @@ export async function reserveFleetDetail(
   }
   const person = await tx.client.query(
     "SELECT u.id FROM users u JOIN vendor_people vp ON vp.user_id=u.id JOIN user_org_memberships m ON m.user_id=u.id AND m.vendor_id=vp.vendor_id AND m.org_type='vendor' WHERE u.id=$1 AND vp.vendor_id=$2 AND vp.is_active=true AND vp.deleted_at IS NULL AND u.suspended_at IS NULL",
-    [detail.driverUserId, actor.companyId],
+    [selectedDriverUserId, actor.companyId],
   );
   if (!person.rows.length) throw new FleetError("fleet.driver_unavailable");
   const assetIds = [
@@ -145,7 +152,7 @@ export async function reserveFleetDetail(
     assets.some(
       (row) =>
         row.status === "checked_out" &&
-        row.current_holder_user_id !== detail.driverUserId,
+        row.current_holder_user_id !== selectedDriverUserId,
     )
   )
     throw new FleetError("fleet.equipment_custody_conflict");
@@ -156,14 +163,14 @@ export async function reserveFleetDetail(
   if (held.rows.length) throw new FleetError("fleet.equipment_on_hold");
   await tx.client.query(
     "SELECT pg_advisory_xact_lock(hashtextextended($1,0))",
-    [`fleet-detail-driver:${detail.driverUserId}`],
+    [`fleet-detail-driver:${selectedDriverUserId}`],
   );
   const candidate = FleetReservationSchema.parse({
     id: randomUUID(),
     runId: input.runId,
     detailId: detail.id,
     detailVersion: detail.version,
-    driverUserId: detail.driverUserId,
+    driverUserId: selectedDriverUserId,
     assetIds,
     startAt: input.startAt,
     plannedEndAt: input.plannedEndAt,
@@ -175,7 +182,7 @@ export async function reserveFleetDetail(
   });
   const existing = await tx.client.query(
     "SELECT tool_output FROM (SELECT DISTINCT ON(target_id) target_id,id,tool_output FROM assistant_action_audit WHERE target_type='fleet-reservation' ORDER BY target_id,id DESC) latest WHERE tool_output->>'state' IN ('reserved','active') AND (tool_output->>'driverUserId'=$1::text OR tool_output->'assetIds' ?| $2::text[])",
-    [detail.driverUserId, assetIds],
+    [selectedDriverUserId, assetIds],
   );
   const reservations = existing.rows.map((row) =>
     FleetReservationSchema.parse(row.tool_output),
@@ -192,7 +199,7 @@ export async function reserveFleetDetail(
     SELECT tool_output AS run FROM (SELECT DISTINCT ON(target_id) target_id,tool_output,id FROM assistant_action_audit
       WHERE target_type='fleet-run' ORDER BY target_id,id DESC) latest
     ) records WHERE run->>'driverUserId'=$1::text OR run->>'vehicleAssetId'=ANY($2::text[]) OR run->>'trailerAssetId'=ANY($2::text[])`,
-    [detail.driverUserId, assetIds],
+    [selectedDriverUserId, assetIds],
   );
   const latest = new Map<
     string,

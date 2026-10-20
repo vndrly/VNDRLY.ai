@@ -98,6 +98,7 @@ export function createFleetDetailsOperations(
     client: PoolClient,
     actor: FleetActor,
     detail: FleetDetail,
+    selectedDriverUserId?: number,
   ): Promise<FleetDetailSnapshot> {
     const grant = scope(state, actor);
     if (
@@ -109,6 +110,19 @@ export function createFleetDetailsOperations(
         detail.driverUserId !== actor.userId)
     )
       throw new FleetError("fleet.detail_not_found", 404);
+    const driverUserId = detail.driverUserId ?? selectedDriverUserId;
+    if (driverUserId === undefined)
+      throw new FleetError("fleet.driver_selection_required", 409);
+    if (detail.driverUserId !== null && selectedDriverUserId !== undefined && detail.driverUserId !== selectedDriverUserId)
+      throw new FleetError("fleet.detail_revision_conflict", 409);
+    if (detail.driverUserId === null) {
+      if (!grant.roles.some(role => ["fleet_manager", "dispatcher"].includes(role)))
+        throw new FleetError("fleet.dispatch_required", 403);
+      const driverGrant = state.grants.find(row => row.userId === driverUserId);
+      if (!driverGrant?.roles.includes("driver") ||
+        !detail.accessGroupIds.some(id => driverGrant.fleetIds.includes(id)))
+        throw new FleetError("fleet.driver_grant_required", 403);
+    }
     const registry = await readFleetResourceRegistry(client, actor.companyId);
     const rigPackage = detail.rigPackageId
       ? await currentPackage(
@@ -130,12 +144,14 @@ export function createFleetDetailsOperations(
       true,
     );
     const driver = await client.query(
-      "SELECT id,display_name FROM users WHERE id=$1",
-      [detail.driverUserId],
+      detail.driverUserId === null
+        ? "SELECT u.id,u.display_name FROM users u JOIN vendor_people vp ON vp.user_id=u.id JOIN user_org_memberships m ON m.user_id=u.id AND m.vendor_id=vp.vendor_id AND m.org_type='vendor' WHERE u.id=$1 AND vp.vendor_id=$2 AND vp.is_active=true AND vp.deleted_at IS NULL AND u.suspended_at IS NULL"
+        : "SELECT id,display_name FROM users WHERE id=$1",
+      detail.driverUserId === null ? [driverUserId, actor.companyId] : [driverUserId],
     );
     if (!driver.rows.length) throw new FleetError("fleet.driver_unavailable");
     return FleetDetailSnapshotSchema.parse({
-      detail,
+      detail: { ...detail, driverUserId },
       rigPackage,
       labels: {
         truck: assets.find((row) => row.id === detail.vehicleAssetId)!.name,
@@ -227,8 +243,13 @@ export function createFleetDetailsOperations(
         const body = FleetResourceReceiptSchema.parse(
           found.rows[0].tool_output,
         );
-        if ("driverUserId" in body.result)
-          await snapshot(state, client, actor, body.result);
+        if ("driverUserId" in body.result) {
+          const detail = FleetDetailSchema.parse(body.result);
+          if (detail.companyId !== actor.companyId ||
+            !detail.accessGroupIds.some(id => grant.fleetIds.includes(id)))
+            throw new FleetError("fleet.detail_not_found", 404);
+          if (detail.driverUserId !== null) await snapshot(state, client, actor, detail);
+        }
         else
           writableAssets(
             state,
@@ -263,13 +284,13 @@ export function createFleetDetailsOperations(
           id,
         );
         if (!current) throw new FleetError("fleet.detail_not_found", 404);
-        if (type === "detail")
-          await snapshot(
-            state,
-            client,
-            actor,
-            FleetDetailSchema.parse(current),
-          );
+        if (type === "detail") {
+          const detail = FleetDetailSchema.parse(current);
+          if (detail.companyId !== actor.companyId ||
+            !detail.accessGroupIds.some(id => grant.fleetIds.includes(id)))
+            throw new FleetError("fleet.detail_not_found", 404);
+          if (detail.driverUserId !== null) await snapshot(state, client, actor, detail);
+        }
         else {
           if (
             !grant.roles.some((role) =>
@@ -393,7 +414,7 @@ export function createFleetDetailsOperations(
         );
         return value;
       }),
-    fleetDetailSnapshot: (actor: FleetActor, id: string) =>
+    fleetDetailSnapshot: (actor: FleetActor, id: string, driverUserId?: number) =>
       transaction(actor, async (state, client) => {
         id=FleetCanonicalIdSchema.parse(id);
         const registry = await readFleetResourceRegistry(
@@ -409,7 +430,7 @@ export function createFleetDetailsOperations(
             id,
           ));
         if (!value) throw new FleetError("fleet.detail_not_found", 404);
-        return snapshot(state, client, actor, FleetDetailSchema.parse(value));
+        return snapshot(state, client, actor, FleetDetailSchema.parse(value), driverUserId);
       }),
     saveFleetRigPackage: (actor: FleetActor, raw: unknown) =>
       transaction(actor, async (state, client) => {
@@ -516,7 +537,7 @@ export function createFleetDetailsOperations(
             );
           if (priorReceipt) {
             const saved = FleetDetailSchema.parse(priorReceipt);
-            await snapshot(state, client, actor, saved);
+            if (saved.driverUserId !== null) await snapshot(state, client, actor, saved);
             return saved;
           }
           const registry = await readFleetResourceRegistry(
@@ -569,23 +590,8 @@ export function createFleetDetailsOperations(
             )
           )
             throw new FleetError("fleet.equipment_kind_required", 400);
-          const driverGrant = state.grants.find(
-            (row) => row.userId === value.driverUserId,
-          );
-          if (
-            !driverGrant?.roles.includes("driver") ||
-            !value.accessGroupIds.some((id) =>
-              driverGrant.fleetIds.includes(id),
-            )
-          )
-            throw new FleetError("fleet.driver_grant_required", 403);
-          const driver = await client.query(
-            "SELECT u.id FROM users u JOIN vendor_people vp ON vp.user_id=u.id JOIN user_org_memberships m ON m.user_id=u.id AND m.vendor_id=vp.vendor_id AND m.org_type='vendor' WHERE u.id=$1 AND vp.vendor_id=$2 AND vp.is_active=true AND vp.deleted_at IS NULL AND u.suspended_at IS NULL",
-            [value.driverUserId, actor.companyId],
-          );
-          if (!driver.rows.length)
-            throw new FleetError("fleet.driver_unavailable");
-          await snapshot(state, client, actor, value);
+          // The reusable Detail is transport equipment only. A historical
+          // snapshot retains its captured driver; new saves bind one at Run time.
           registry.details = registry.details.filter(
             (row) => row.id !== value.id,
           );

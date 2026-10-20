@@ -99,3 +99,34 @@ it("releases delivery-only closure without waiting for office review, but requir
     }),
   ).toBe(true);
 });
+
+it("compares a driver-free saved Detail with a run snapshot that binds its driver", async () => {
+  const module = await api();
+  const detail = {
+    id: first.detailId,
+    companyId: 7,
+    version: 1,
+    name: "Truck and rig",
+    vehicleAssetId: truck,
+    rigPackageId: null,
+    rigPackageVersion: null,
+    driverUserId: null,
+    accessGroupIds: [dolly],
+    effectiveFrom: "2026-10-16T00:00:00Z",
+    effectiveUntil: null,
+    archivedAt: null,
+  };
+  expect(
+    module.fleetReservableDetailMatches(detail, {
+      ...detail,
+      driverUserId: 42,
+    }),
+  ).toBe(true);
+  expect(
+    module.fleetReservableDetailMatches(detail, {
+      ...detail,
+      vehicleAssetId: dolly,
+      driverUserId: 42,
+    }),
+  ).toBe(false);
+});
