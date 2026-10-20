@@ -35,6 +35,34 @@ type CompanyGoFleetContext = {
   fleetOpsState: unknown; fleetResources: unknown; compliance: unknown;
 };
 
+type CompanyGoAssetCandidate = { id: string; name: string; category: string };
+
+export function selectCompanyGoAssetRoles(candidates: CompanyGoAssetCandidate[]): { vehicleAssetId: string; trailerAssetId: string } {
+  const select = (categories: string[], preferredName: string, label: string) => {
+    const categoryPriority = new Map(categories.map((category, index) => [category, index]));
+    const matches = candidates
+      .filter((asset) => categoryPriority.has(asset.category.toLowerCase()))
+      .sort((left, right) => {
+        const leftName = left.name.trim().toLowerCase();
+        const rightName = right.name.trim().toLowerCase();
+        const leftPreferred = leftName === preferredName ? 0 : 1;
+        const rightPreferred = rightName === preferredName ? 0 : 1;
+        return leftPreferred - rightPreferred
+          || categoryPriority.get(left.category.toLowerCase())! - categoryPriority.get(right.category.toLowerCase())!
+          || leftName.localeCompare(rightName);
+      });
+    if (!matches[0]) throw new Error(`CompanyGo authoritative Fleet prerequisites require a ${label} asset.`);
+    if (matches[1] && matches[0].category.toLowerCase() === matches[1].category.toLowerCase() && matches[0].name.trim().toLowerCase() === matches[1].name.trim().toLowerCase())
+      throw new Error(`CompanyGo authoritative Fleet prerequisites contain an ambiguous duplicate ${label} natural key.`);
+    return matches[0].id;
+  };
+
+  return {
+    vehicleAssetId: select(["truck", "vehicle"], "fleetgo truck 1", "vehicle/truck"),
+    trailerAssetId: select(["trailer", "rigging"], "fleetgo trailer 1", "trailer/rigging"),
+  };
+}
+
 const fleetId = stableCompanyGoUuid("fleet:stanton");
 const rigPackageId = stableCompanyGoUuid("rig-package:standard");
 const detailId = stableCompanyGoUuid("detail:standard");
@@ -104,21 +132,22 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_driver@fleetgo.com' LIMIT 1) driver_user_id,
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_dispatch@fleetgo.com' LIMIT 1) dispatcher_user_id,
       (SELECT array_agg(u.id ORDER BY lower(coalesce(u.email,u.username))) FROM users u WHERE lower(coalesce(u.email,u.username))=ANY($1::text[])) account_user_ids,
-      (SELECT a.id FROM assets a WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=v.id AND a.retired_at IS NULL ORDER BY a.id LIMIT 1) vehicle_asset_id,
-      (SELECT a.id FROM assets a WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=v.id AND a.retired_at IS NULL ORDER BY a.id OFFSET 1 LIMIT 1) trailer_asset_id
+      (SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.id,'name',a.name,'category',a.category) ORDER BY lower(a.name),a.id),'[]'::jsonb)
+       FROM assets a WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=v.id AND a.retired_at IS NULL) asset_candidates
     FROM vendors v WHERE lower(v.name)='fleetgo' FOR UPDATE`, [COMPANYGO_FLEET_ACCOUNTS.map(account => account.login)]);
   const row = result.rows[0];
-  if (!row?.site_id || !row?.driver_user_id || !row?.dispatcher_user_id || !row?.vehicle_asset_id || !row?.trailer_asset_id)
+  if (!row?.site_id || !row?.driver_user_id || !row?.dispatcher_user_id)
     throw new Error("CompanyGo authoritative Fleet prerequisites are incomplete.");
+  const assetRoles = selectCompanyGoAssetRoles(z.array(z.object({ id: z.string().uuid(), name: z.string(), category: z.string() })).parse(row.asset_candidates));
   const context: CompanyGoFleetContext = {
     companyId: Number(row.company_id), siteId: Number(row.site_id), driverUserId: Number(row.driver_user_id), dispatcherUserId: Number(row.dispatcher_user_id),
     accountUserIds: row.account_user_ids.map(Number),
-    vehicleAssetId: row.vehicle_asset_id, trailerAssetId: row.trailer_asset_id,
+    vehicleAssetId: assetRoles.vehicleAssetId, trailerAssetId: assetRoles.trailerAssetId,
     fleetOpsState: row.fleet_ops_state, fleetResources: row.fleet_resources, compliance: row.compliance,
   };
   const originalState = CompanyGoFleetStateSchema.parse(context.fleetOpsState ?? emptyCompanyGoFleetState());
   const fixtureRuns = [...Array.from({ length: 30 }, (_, n) => buildCompanyGoRun(context, n, false)), ...Array.from({ length: 7 }, (_, n) => buildCompanyGoRun(context, n, true))];
-  const existingRunIds = new Set(originalState.runs.map(run => run.id));
+  const fixtureRunIds = new Set(fixtureRuns.map(run => run.id));
   const grantByUser = new Map(originalState.grants.map(grant => [grant.userId, grant]));
   const fixtureGrants = context.accountUserIds.map(userId => {
     const current = grantByUser.get(userId);
@@ -129,19 +158,18 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
   const fixtureUserIds = new Set(context.accountUserIds);
   const state = CompanyGoFleetStateSchema.parse({
     ...originalState, enabled: true,
-    fleets: originalState.fleets.some(fleet => fleet.id === fleetId) ? originalState.fleets : [...originalState.fleets, { id: fleetId, name: "FleetGo Stanton Fleet", siteIds: [context.siteId], equipmentAssetIds: [context.vehicleAssetId, context.trailerAssetId], requiredCertifications: [] }],
+    fleets: [...originalState.fleets.filter(fleet => fleet.id !== fleetId), { id: fleetId, name: "FleetGo Stanton Fleet", siteIds: [context.siteId], equipmentAssetIds: [context.vehicleAssetId, context.trailerAssetId], requiredCertifications: [] }],
     grants: [...originalState.grants.filter(grant => !fixtureUserIds.has(grant.userId)), ...fixtureGrants],
-    runs: [...originalState.runs, ...fixtureRuns.filter(run => !existingRunIds.has(run.id))],
+    runs: [...originalState.runs.filter(run => !fixtureRunIds.has(run.id)), ...fixtureRuns],
   });
   const originalResources = FleetResourcesRegistrySchema.parse(context.fleetResources ?? { version: 1, rigPackages: [], details: [], reservations: [] });
   const packageRecord = fixtureRuns[0]!.resourceAssignment!.snapshot.rigPackage!;
   const reusableDetail = { ...fixtureRuns[0]!.resourceAssignment!.snapshot.detail, driverUserId: null };
-  const reservationIds = new Set(originalResources.reservations.map(item => item.id));
   const resources = FleetResourcesRegistrySchema.parse({
     ...originalResources,
-    rigPackages: originalResources.rigPackages.some(item => item.id === rigPackageId) ? originalResources.rigPackages : [...originalResources.rigPackages, packageRecord],
-    details: originalResources.details.some(item => item.id === detailId) ? originalResources.details : [...originalResources.details, reusableDetail],
-    reservations: [...originalResources.reservations, ...fixtureRuns.map(run => run.resourceAssignment!.reservation).filter(item => !reservationIds.has(item.id))],
+    rigPackages: [...originalResources.rigPackages.filter(item => item.id !== rigPackageId), packageRecord],
+    details: [...originalResources.details.filter(item => item.id !== detailId), reusableDetail],
+    reservations: [...originalResources.reservations.filter(item => !fixtureRunIds.has(item.runId)), ...fixtureRuns.map(run => run.resourceAssignment!.reservation)],
   });
   await client.query("UPDATE vendors SET fleet_ops_state=$2::jsonb,fleet_resources=$3::jsonb WHERE id=$1", [context.companyId, JSON.stringify(state), JSON.stringify(resources)]);
   await mergeCompanyGoCompliance(client, context);
@@ -314,13 +342,38 @@ export async function verifyCompanyGoFleetCoverage(client: DbClient): Promise<Re
   const state = CompanyGoFleetStateSchema.parse(canonical.rows[0]?.fleet_ops_state);
   const resources = FleetResourcesRegistrySchema.parse(canonical.rows[0]?.fleet_resources);
   const compliance = FleetComplianceConfigurationSchema.parse(canonical.rows[0]?.fleet_compliance_configuration);
-  const fixtureRuns = state.runs.filter(run => run.id === stableCompanyGoUuid("run:history:0") || run.title.startsWith("GasGo completed Fleet run day") || run.title.startsWith("GasGo scheduled Fleet run day"));
+  const canonicalRunIds = new Set([...Array.from({ length: 30 }, (_, ordinal) => stableCompanyGoUuid(`run:history:${ordinal}`)), ...Array.from({ length: 7 }, (_, ordinal) => stableCompanyGoUuid(`run:schedule:${ordinal}`))]);
+  const fixtureRuns = state.runs.filter(run => canonicalRunIds.has(run.id));
+  if (fixtureRuns.length !== 37) throw new Error(`CompanyGo Fleet acceptance requires exactly 37 canonical runs; found ${fixtureRuns.length}.`);
   if (new Set(fixtureRuns.filter(run => run.status === "completed").map(run => run.schedule?.plannedStartAt.slice(0, 10))).size < 30) throw new Error("CompanyGo Fleet acceptance requires 30 distinct canonical historical run days.");
   if (new Set(fixtureRuns.filter(run => run.status === "dispatched").map(run => run.schedule?.plannedStartAt.slice(0, 10))).size < 7) throw new Error("CompanyGo Fleet acceptance requires seven canonical future schedule days.");
   if (!fixtureRuns.every(run => run.linkedTicketId && run.siteIds.length && run.resourceAssignment?.snapshot.detail.driverUserId === run.driverUserId)) throw new Error("CompanyGo Fleet runs must retain canonical ticket, site, and Detail snapshots.");
+  const assetIds = [...new Set(fixtureRuns.flatMap(run => [run.vehicleAssetId, run.trailerAssetId, ...(run.resourceAssignment?.reservation.assetIds ?? []), ...(run.resourceAssignment?.snapshot.rigPackage?.components.map(component => component.assetId) ?? [])]).filter((id): id is string => Boolean(id)))];
+  const assetResult = await client.query("SELECT id,lower(category) category FROM assets WHERE id=ANY($1::uuid[])", [assetIds]);
+  const assetCategories = new Map(assetResult.rows.map(row => [String(row.id), String(row.category)]));
+  const validVehicle = (id: string | null | undefined) => Boolean(id && ["vehicle", "truck"].includes(assetCategories.get(id) ?? ""));
+  const validRigging = (id: string | null | undefined) => Boolean(id && ["trailer", "rigging"].includes(assetCategories.get(id) ?? ""));
+  if (!fixtureRuns.every(run => validVehicle(run.vehicleAssetId) && validRigging(run.trailerAssetId))) throw new Error("CompanyGo Fleet runs must use canonical vehicle/truck and trailer/rigging asset roles.");
+  if (!fixtureRuns.every(run => {
+    const assignment = run.resourceAssignment;
+    const riggingIds = assignment?.snapshot.rigPackage?.components.map(component => component.assetId) ?? [];
+    return assignment?.snapshot.detail.vehicleAssetId === run.vehicleAssetId
+      && assignment.snapshot.detail.rigPackageId === rigPackageId
+      && riggingIds.length > 0 && riggingIds.every(validRigging)
+      && assignment.reservation.assetIds.includes(run.vehicleAssetId)
+      && Boolean(run.trailerAssetId && assignment.reservation.assetIds.includes(run.trailerAssetId));
+  })) throw new Error("CompanyGo Fleet snapshots and reservations must retain canonical asset linkage.");
   const relationships = await client.query(`SELECT count(*) relationship_count FROM tickets t JOIN vendors v ON v.id=t.vendor_id JOIN site_locations s ON s.id=t.site_location_id JOIN partners p ON p.id=s.partner_id WHERE lower(v.name)='fleetgo' AND lower(p.name)='gasgo' AND (t.id BETWEEN $1 AND $2 OR t.id BETWEEN $3 AND $4)`, [historyTicketBase, historyTicketBase + 29, historyTicketBase + 100, historyTicketBase + 106]);
   if (Number(relationships.rows[0]?.relationship_count) !== 37) throw new Error("CompanyGo Fleet acceptance requires all 37 fixture tickets to retain the FleetGo/GasGo relationship.");
-  if (!resources.details.some(detail => detail.id === detailId && detail.driverUserId === null) || resources.reservations.length < 37) throw new Error("CompanyGo Fleet acceptance requires a reusable driver-free Detail and reservation history.");
+  const canonicalDetail = resources.details.find(detail => detail.id === detailId);
+  const canonicalRigPackage = resources.rigPackages.find(item => item.id === rigPackageId);
+  const fixtureRunIds = new Set(fixtureRuns.map(run => run.id));
+  const fixtureReservations = resources.reservations.filter(item => fixtureRunIds.has(item.runId));
+  if (!canonicalDetail || canonicalDetail.driverUserId !== null || !validVehicle(canonicalDetail.vehicleAssetId)
+    || !canonicalRigPackage || !canonicalRigPackage.components.length || !canonicalRigPackage.components.every(component => validRigging(component.assetId))
+    || fixtureReservations.length !== 37
+    || !fixtureReservations.every(item => item.assetIds.some(validVehicle) && item.assetIds.some(validRigging)))
+    throw new Error("CompanyGo Fleet acceptance requires valid reusable Detail, rig package, and reservation asset roles.");
   if (!compliance.entries.length || !compliance.facts.length || !compliance.scoreHistory.length || !compliance.partnerScorePreview) throw new Error("CompanyGo Fleet acceptance requires canonical evidence, facts, score history, and Partner preview.");
   return counts;
 }
@@ -342,9 +395,10 @@ export async function seedCompanyGoFleetWorkflows(client: DbClient): Promise<voi
     if (!actual) throw new Error(`Missing CompanyGo Fleet account: ${expected.login}`);
     if (!bcrypt.compareSync("companygo", actual.password_hash)) throw new Error(`CompanyGo password hash drifted for ${expected.login}; run the canonical account backfill instead of rotating it here.`);
   }
-  const prerequisites = await client.query(`SELECT (SELECT count(*) FROM vendors WHERE lower(name)='fleetgo') vendor_count,(SELECT count(*) FROM partners WHERE lower(name)='gasgo') partner_count,(SELECT count(*) FROM assets a JOIN vendors v ON a.responsible_org_type='vendor' AND a.responsible_org_id=v.id WHERE lower(v.name)='fleetgo' AND a.retired_at IS NULL) asset_count`);
+  const prerequisites = await client.query(`SELECT (SELECT count(*) FROM vendors WHERE lower(name)='fleetgo') vendor_count,(SELECT count(*) FROM partners WHERE lower(name)='gasgo') partner_count,(SELECT count(*) FROM assets a JOIN vendors v ON a.responsible_org_type='vendor' AND a.responsible_org_id=v.id WHERE lower(v.name)='fleetgo' AND a.retired_at IS NULL) asset_count,(SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.id,'name',a.name,'category',a.category) ORDER BY lower(a.name),lower(a.category)),'[]'::jsonb) FROM assets a JOIN vendors v ON a.responsible_org_type='vendor' AND a.responsible_org_id=v.id WHERE lower(v.name)='fleetgo' AND a.retired_at IS NULL) asset_candidates`);
   const prerequisite = prerequisites.rows[0] ?? {};
   if (Number(prerequisite.vendor_count) !== 1 || Number(prerequisite.partner_count) !== 1 || Number(prerequisite.asset_count) < 3) throw new Error(`CompanyGo Fleet prerequisites are incomplete: ${JSON.stringify(prerequisite)}.`);
+  selectCompanyGoAssetRoles(z.array(z.object({ id: z.string().uuid(), name: z.string(), category: z.string() })).parse(prerequisite.asset_candidates));
   await client.query("SELECT pg_advisory_xact_lock(hashtext('companygo_fleet_mobile_fixtures'))");
   for (const statement of COMPANYGO_FLEET_SEED_SQL) await client.query(statement);
   await mergeCompanyGoFleetState(client);
