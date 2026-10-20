@@ -47,7 +47,7 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <div data-testid="fleet-safe-area">{children}</div>,
 }));
 vi.mock("@/components/WorkHubPageTitle", () => ({
-  default: ({ title, beforeTitle }: any) => <><div>{beforeTitle}</div><h1>{title}</h1></>,
+  default: ({ title, beforeTitle }: any) => <><div>{beforeTitle}</div><button data-testid="fleet-page-back">Back</button><h1>{title}</h1></>,
 }));
 vi.mock("@/components/MapboxNativeMap", () => ({
   default: () => <div>Fleet location map</div>,
@@ -91,6 +91,7 @@ describe("mobile Fleet authorization", () => {
     render(<FleetShell module="compliance" />);
     expect(await screen.findByText(/No evidence recorded/)).toBeTruthy();
     expect(screen.getAllByRole("heading", { name: "Compliance" })).toHaveLength(1);
+    expect(screen.getAllByTestId("fleet-page-back")).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-safe-area")).toHaveLength(1);
     expect(screen.getAllByTestId("fleet-shell-scroll")).toHaveLength(1);
     expect(screen.queryByTestId("fleet-legacy-scroll")).toBeNull();
