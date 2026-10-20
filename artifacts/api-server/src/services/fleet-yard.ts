@@ -4,6 +4,7 @@ import {
   FleetCanonicalIdSchema,
   FleetCustodyObservationInputSchema,
   FleetCustodyObservationSchema,
+  FleetDetailSchema,
   FleetCommercialSettingsSchema,
   FleetYardInputSchema,
   FleetYardOrderActionSchema,
@@ -25,6 +26,7 @@ import {
 import { legacyFleetCapabilities } from "./fleet-mobile-permissions";
 import {
   readFleetResourceAssets,
+  readFleetResourceRecord,
   readFleetResourceRegistry,
 } from "./fleet-resource-store";
 import { readFleetAuthoritySites } from "./fleet-commercial-authority";
@@ -261,6 +263,61 @@ function activeDriverRunForAsset(state: FleetState, userId: number, runId: strin
     (!other.resourceAssignment || ["reserved", "active"].includes(other.resourceAssignment.reservation.state)) &&
     fleetRunAssetIds(other).includes(assetId))) return null;
   return run;
+}
+const retainedAttachmentSchema = z.object({
+  truckAssetId: FleetCanonicalIdSchema,
+  componentAssetId: FleetCanonicalIdSchema,
+  detailId: FleetCanonicalIdSchema,
+  detailVersion: z.number().int().positive(),
+  rigPackageId: FleetCanonicalIdSchema,
+  rigPackageVersion: z.number().int().positive(),
+  detailAccessGroupIds: z.array(FleetCanonicalIdSchema).optional(),
+}).strict();
+async function assertRetainedAttachmentAuthority(
+  client: PoolClient,
+  state: FleetState,
+  actor: FleetActor,
+  grant: { fleetIds: readonly string[] },
+  result: unknown,
+  currentSiteIds: readonly number[],
+) {
+  const body = z.object({ observation: FleetCustodyObservationSchema, attachment: retainedAttachmentSchema.nullable().optional() }).passthrough().parse(result);
+  const observation = body.observation;
+  if (observation.state !== "attached") return;
+  const attachment = body.attachment;
+  if (!attachment || attachment.componentAssetId !== observation.assetId || attachment.detailId !== observation.detailId)
+    throw new FleetError("fleet.detail_attachment_required", 409);
+  const caps = capabilities(state, actor);
+  const driverOnly = caps.has("driver") && !["admin", "dispatch", "yard"].some((cap) => caps.has(cap as never));
+  const run = observation.runId ? state.runs.find((row) => row.id === observation.runId) : null;
+  const snapshot = run?.resourceAssignment?.snapshot ?? run?.recoveredWork?.snapshot;
+  const snapshotRig = snapshot?.rigPackage;
+  if (snapshot && (snapshot.detail.id !== attachment.detailId || snapshot.detail.version !== attachment.detailVersion ||
+    snapshot.detail.vehicleAssetId !== attachment.truckAssetId || !snapshotRig || snapshotRig.id !== attachment.rigPackageId ||
+    snapshotRig.version !== attachment.rigPackageVersion ||
+    !snapshotRig.components.some((part) => part.assetId === observation.assetId)))
+    throw new FleetError("fleet.detail_attachment_required", 409);
+  const historical = !snapshot && !attachment.detailAccessGroupIds
+    ? await readFleetResourceRecord(client, actor.companyId, "fleet-detail", attachment.detailId, attachment.detailVersion)
+    : null;
+  const detailGroups = snapshot?.detail.accessGroupIds ?? attachment.detailAccessGroupIds ??
+    (historical ? FleetDetailSchema.parse(historical).accessGroupIds : []);
+  const scoped = state.fleets.some((fleet) => detailGroups.includes(fleet.id) &&
+    fleet.equipmentAssetIds.includes(observation.assetId) && fleet.equipmentAssetIds.includes(attachment.truckAssetId) &&
+    (caps.has("admin") || grant.fleetIds.includes(fleet.id)) && (!run || run.fleetId === fleet.id));
+  if (!scoped || (run && (run.vehicleAssetId !== attachment.truckAssetId || !fleetRunAssetIds(run).includes(observation.assetId))) ||
+    (driverOnly && !activeDriverRunForAsset(state, actor.userId, observation.runId, attachment.truckAssetId, currentSiteIds)))
+    throw new FleetError("fleet.detail_attachment_required", 409);
+  const [truck] = await readFleetResourceAssets(client, actor, state, [attachment.truckAssetId], true);
+  const holder = truck.current_holder_user_id;
+  if ((driverOnly && holder !== null && holder !== actor.userId) ||
+    (!driverOnly && holder !== null && holder !== actor.userId && holder !== run?.driverUserId))
+    throw new FleetError("fleet.detail_attachment_required", 409);
+  const custody = await client.query("SELECT run_id,state FROM fleet_asset_custody WHERE company_id=$1 AND asset_id=$2 FOR UPDATE",
+    [actor.companyId, attachment.truckAssetId]);
+  if (custody.rows.some((row) => (row.run_id && row.run_id !== observation.runId) ||
+    (!run && row.state === "in_transit")))
+    throw new FleetError("fleet.detail_attachment_required", 409);
 }
 async function assertYard(
   client: PoolClient,
@@ -775,7 +832,7 @@ export function createFleetYardOperations(
           targetIds.push(...fleetRunAssetIds(run));
         }
         const targeted = FleetYardOrderSchema.parse({ ...value, requestedAssetIds: [...new Set(targetIds)] });
-        if (detailFleetIds && !yardTargetFleets(state, targeted).some((id) =>
+        if (detailFleetIds && !yardTargetFleets(state, targeted, detailFleetIds).some((id) =>
           detailFleetIds!.includes(id) && (capabilities(state, actor).has("admin") || grant.fleetIds.includes(id))))
           throw new FleetError("fleet.detail_not_found", 404);
         assertYardOrderScope(state, actor, targeted, false, detailFleetIds);
@@ -1086,13 +1143,15 @@ export function createFleetYardOperations(
         const observation = FleetCustodyObservationSchema.parse(result.observation);
         requireAssetScope(state, grant, [observation.assetId]);
         const caps = capabilities(state, actor);
+        let currentSiteIds: readonly number[] = [];
         if (caps.has("driver") && !["admin", "dispatch", "yard", "office"].some((cap) => caps.has(cap as never))) {
-          const currentSiteIds = await currentAssignedDriverSites(client, state, actor);
+          currentSiteIds = await currentAssignedDriverSites(client, state, actor);
           const [asset] = await readFleetResourceAssets(client, actor, state, [observation.assetId], true);
           if (!activeDriverRunForAsset(state, actor.userId, observation.runId, observation.assetId, currentSiteIds) ||
             (asset.current_holder_user_id !== null && asset.current_holder_user_id !== actor.userId))
             throw new FleetError("fleet.permission_denied", 403);
         }
+        await assertRetainedAttachmentAuthority(client, state, actor, grant, result, currentSiteIds);
         return { operationId, result };
       }),
     observeCustody: (actor: FleetActor, raw: unknown) =>
@@ -1137,9 +1196,10 @@ export function createFleetYardOperations(
           );
           if (!prior.rows.length || prior.rows[0].user_id !== actor.userId || prior.rows[0].tool_input?.fingerprint !== hash)
             throw new FleetError("fleet.operation_conflict", 409);
+          await assertRetainedAttachmentAuthority(client, state, actor, grant, prior.rows[0].tool_output, currentSiteIds);
           return prior.rows[0].tool_output;
         }
-        let attachment: { truckAssetId: string; componentAssetId: string; detailId: string; detailVersion: number; rigPackageId: string; rigPackageVersion: number } | null = null;
+        let attachment: { truckAssetId: string; componentAssetId: string; detailId: string; detailVersion: number; rigPackageId: string; rigPackageVersion: number; detailAccessGroupIds: string[] } | null = null;
         if (value.state === "attached") {
           const registry = await readFleetResourceRegistry(
             client,
@@ -1179,7 +1239,8 @@ export function createFleetYardOperations(
             (!run && row.state === "in_transit")))
             throw new FleetError("fleet.detail_attachment_required", 409);
           attachment = { truckAssetId: detail.vehicleAssetId, componentAssetId: value.assetId,
-            detailId: detail.id, detailVersion: detail.version, rigPackageId: rig.id, rigPackageVersion: rig.version };
+            detailId: detail.id, detailVersion: detail.version, rigPackageId: rig.id, rigPackageVersion: rig.version,
+            detailAccessGroupIds: detail.accessGroupIds };
         }
         const prior = await client.query(
           "SELECT * FROM fleet_asset_custody WHERE company_id=$1 AND asset_id=$2 FOR UPDATE",
