@@ -397,7 +397,7 @@ export type FleetOverview = {
 };
 export type FleetResources = {
   tickets?: { id: number; siteId: number; status: string }[];
-  drivers: { userId: number; name: string; fleetIds: string[] }[];
+  drivers: { userId: number; name: string; fleetIds: string[]; employeeId?: number | null; cdlRecorded?: boolean; cdlExpirationDate?: string | null }[];
   equipment: {
     id: string;
     name: string;

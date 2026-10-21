@@ -6,6 +6,9 @@ import {
   FleetDestinationDirectorySchema,
   FleetRunOrderHistorySchema,
   FleetRunOrderLocationsSchema,
+  FleetRunOrderReceiptSchema,
+  FleetRunOrderSaveSchema,
+  FleetRunOrderSchema,
   fleetRunOrderWithReviewedLocations,
   fleetRunOrderRoute,
   type FleetRunOrder,
@@ -24,7 +27,7 @@ import FleetRouteFields from "./FleetRouteFields";
 import FleetChoiceField from "./FleetChoiceField";
 import TogglePillButton from "./TogglePillButton";
 
-export default function FleetRunOrders({ companyId }: { companyId: number }) {
+export default function FleetRunOrders({ companyId, initialRunOrderId }: { companyId: number; initialRunOrderId?: string }) {
   const colors = useColors(),
     copy = useFleetCopy(),
     scope = useRef(captureAuthScope()),
@@ -39,6 +42,7 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
     [group, setGroup] = useState(""),
     [selected, setSelected] = useState<FleetRunOrder | null>(null),
     [editing, setEditing] = useState(false),
+    [confirmArchive, setConfirmArchive] = useState(false),
     [route, setRoute] = useState<FleetRoutePlan | null>(null),
     [zone, setZone] = useState(
       Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -56,6 +60,7 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
     > | null>(null),
     [reviewedPlaces, setReviewedPlaces] = useState<FleetDestination[]>([]),
     [error, setError] = useState("");
+  const archiveRequest = useRef<z.infer<typeof FleetRunOrderSaveSchema> | null>(null);
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   useEffect(() => {
     alive.current = true;
@@ -96,10 +101,21 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
       contextGeneration.current++;
     };
   }, [companyId, contextRefresh]);
+  useEffect(() => {
+    if (!initialRunOrderId) return;
+    const request = ++generation.current;
+    void apiFetch<unknown>(`/api/fleet/run-orders/${encodeURIComponent(initialRunOrderId)}`, {}, scope.current).then(raw => {
+      const order = FleetRunOrderSchema.parse(raw);
+      if (!current() || request !== generation.current || order.companyId !== companyId) return;
+      setSelected(order); setEditing(false); setRoute(null); setHistory(null); setLocationReview(null); setZone(order.timeZone);
+    }).catch(() => { if (current() && request === generation.current) setError(copy("Runs unavailable. Reload to check access.")); });
+  }, [companyId, initialRunOrderId]);
   function choose(order: FleetRunOrder | null) {
     generation.current++;
     setSelected(order);
     setEditing(false);
+    setConfirmArchive(false);
+    archiveRequest.current = null;
     setRoute(null);
     setHistory(null);
     setLocationReview(null);
@@ -110,6 +126,18 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
     setZone(
       order?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
     );
+  }
+  async function archiveSelected() {
+    if (!selected || pending || !canManage || !current()) return;
+    const body = archiveRequest.current ?? FleetRunOrderSaveSchema.parse({ operationId: Crypto.randomUUID(), expectedVersion: selected.version, order: { ...selected, version: selected.version + 1, archivedAt: new Date().toISOString() } });
+    archiveRequest.current = body; setPending(true); setError("");
+    try {
+      await apiFetch("/api/fleet/run-orders", { method: "POST", body: JSON.stringify(body) }, scope.current);
+      const receipt = FleetRunOrderReceiptSchema.parse(await apiFetch(`/api/fleet/run-orders/operations/${body.operationId}`, {}, scope.current));
+      if (!current() || receipt.operationId !== body.operationId || receipt.order.id !== selected.id || !receipt.order.archivedAt) throw Error("Archive readback changed.");
+      archiveRequest.current = null; choose(null); setRefresh(value => value + 1);
+    } catch { if (current()) setError(copy("Run archive needs verification. Retry the same request.")); }
+    finally { if (current()) setPending(false); }
   }
   async function loadHistory(more = false) {
     if (!selected || loadingHistory || !current()) return;
@@ -254,19 +282,8 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
               {selected && !editing && (
                 <View style={{ gap: 8 }}>
                   {canManage && (
-                    <TogglePillButton
-                      disabled={pending}
-                      onPress={() => {
-                        setRoute(
-                          fleetRunOrderRoute(selected, Crypto.randomUUID),
-                        );
-                        setZone(selected.timeZone);
-                        setEditing(true);
-                        setHistory(null);
-                      }}
-                    >
-                      {copy("Edit selected Run")}
-                    </TogglePillButton>
+                    <><TogglePillButton disabled={pending} onPress={() => { setRoute(fleetRunOrderRoute(selected, Crypto.randomUUID)); setZone(selected.timeZone); setEditing(true); setHistory(null); }}>{copy("Edit selected Run")}</TogglePillButton>
+                    {!confirmArchive ? <TogglePillButton color="red" disabled={pending} onPress={() => setConfirmArchive(true)}>{copy("Archive selected Run")}</TogglePillButton> : <View style={{ gap: 6 }}><Text style={{ color: colors.destructive }}>{copy("Archive this saved Run? Existing tickets and completed activity stay unchanged.")}</Text><TogglePillButton color="red" disabled={pending} onPress={() => void archiveSelected()}>{copy(archiveRequest.current ? "Verify and retry Run archive" : "Confirm archive")}</TogglePillButton><TogglePillButton disabled={pending} onPress={() => setConfirmArchive(false)}>{copy("Keep Run")}</TogglePillButton></View>}</>
                   )}
                   <TogglePillButton
                     disabled={pending || loadingHistory}

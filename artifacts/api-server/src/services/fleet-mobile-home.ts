@@ -13,12 +13,12 @@ export type FleetModuleResult = {
   error?: { code: string; status: number; recovery: { module: FleetHomeModule; reloadCanonical: boolean; retainedWork: "unknown"; retryPath: string } };
 };
 
-type Run = Pick<FleetOverview["runs"][number], "id" | "status" | "driverUserId">;
+type Run = Pick<FleetOverview["runs"][number], "id" | "status" | "driverUserId"> & Partial<Pick<FleetOverview["runs"][number], "title" | "linkedTicketId" | "stops" | "labels">>;
 type Overview = Pick<FleetOverview, "companyId" | "enabled" | "fleets" | "generatedAt"> & { runs: Run[] };
 type Source = {
   capabilities(actor: FleetActor): Promise<ReadonlySet<FleetCapability>>;
   overview(actor: FleetActor): Promise<Overview>;
-  yardOrders(actor: FleetActor): Promise<{ orders: Array<{ id: string; status: string; assignedToUserId: number | null; runId: string | null }> }>;
+  yardOrders(actor: FleetActor): Promise<{ orders: Array<{ id: string; status: string; assignedToUserId: number | null; runId: string | null; outcome?: string | null; notes?: string; requestedAssetIds?: string[] }> }>;
   resources(actor: FleetActor): Promise<Pick<FleetResources, "drivers" | "equipment"> | { custody: unknown[] }>;
   map(actor: FleetActor): Promise<unknown>;
   complianceSummary(actor: FleetActor): Promise<{ status?: string; score?: number }>;
@@ -99,13 +99,46 @@ export function createFleetHomeReader(source: Source = canonical) {
       const resourceData = assets.status === "fulfilled" && assets.value && "drivers" in assets.value ? assets.value : null;
       const assignedDriverIds = new Set(runs.filter((run) => !["completed", "cancelled"].includes(run.status)).map((run) => run.driverUserId));
       const complianceData = compliance.status === "fulfilled" ? compliance.value : null;
+      const orderFor = (runId: string) => orders.find(order => order.runId === runId);
+      const runTitle = (run: Run) => run.linkedTicketId ? `Ticket #${run.linkedTicketId} · ${run.title ?? "Fleet Run"}` : run.title ?? `Fleet Run ${run.id.slice(0, 8)}`;
+      const runRoute = (run: Run) => {
+        const stops = run.stops ?? [], label = (index: number) => stops[index]?.destination?.name ?? run.labels?.sites.find(site => site.siteId === stops[index]?.siteId)?.name ?? (stops[index]?.siteId ? `Site ${stops[index]?.siteId}` : "Route pending");
+        return `${label(0)} → ${label(Math.max(0, stops.length - 1))}`;
+      };
+      const driverState = (run: Run) => run.status === "draft" ? "Assigned" : run.status === "dispatched" ? "Awaiting driver" : run.status === "acknowledged" ? "Driver ready" : run.status === "in_progress" ? "In progress" : run.status.replaceAll("_", " ");
+      const historyRuns = runs.filter(run => ["submitted_for_review", "completed", "cancelled"].includes(run.status)).slice(0, 50);
+      const driverCompliance = (driver: NonNullable<typeof resourceData>["drivers"][number]) => {
+        if (!driver.cdlRecorded) return { status: "red" as const, label: "CDL record missing" };
+        if (!driver.cdlExpirationDate) return { status: "amber" as const, label: "CDL expiration not recorded" };
+        const days = (new Date(`${driver.cdlExpirationDate}T23:59:59Z`).getTime() - Date.now()) / 86400000;
+        return days < 0 ? { status: "red" as const, label: `CDL expired ${driver.cdlExpirationDate}` } : days <= 60 ? { status: "amber" as const, label: `CDL expires ${driver.cdlExpirationDate}` } : { status: "green" as const, label: `CDL current through ${driver.cdlExpirationDate}` };
+      };
+      const previews: FleetHomeProjection["previews"] = {
+        yard: orders.filter(order => !["completed", "cancelled"].includes(order.status) && (order.status !== "reported" || order.outcome !== "ready")).slice(0, 50).map(order => ({ id: order.id, runId: order.runId, title: order.notes || `Yard Order ${order.id.slice(0, 8)}`, detail: `${order.requestedAssetIds?.length ?? 0} components · ${order.status.replaceAll("_", " ")}`, status: order.outcome?.replaceAll("_", " ") ?? (order.assignedToUserId ? "Yard assigned" : "Awaiting assignment"), danger: order.outcome === "unable_to_complete" || order.outcome === "needs_attention" })),
+        ready: runs.filter(run => run.status === "draft" && (!orderFor(run.id) || orderFor(run.id)?.outcome === "ready")).slice(0, 50).map(run => ({ id: run.id, title: runTitle(run), detail: `${runRoute(run)} · Yard: ${orderFor(run.id)?.outcome?.replaceAll("_", " ") ?? "No Yard order"}`, status: `Driver: ${driverState(run)}` })),
+        active: runs.filter(run => ["dispatched", "acknowledged", "in_progress"].includes(run.status)).slice(0, 50).map(run => ({ id: run.id, title: runTitle(run), detail: runRoute(run), status: driverState(run) })),
+        history: historyRuns.map(run => ({ id: run.id, title: runTitle(run), detail: runRoute(run), status: run.status.replaceAll("_", " ") })),
+        drivers: (resourceData?.drivers ?? []).slice(0, 100).map(driver => ({ userId: driver.userId, title: driver.name, detail: driverCompliance(driver).label, status: assignedDriverIds.has(driver.userId) ? "unavailable" as const : "available" as const, compliance: driverCompliance(driver).status })),
+        equipment: [...(resourceData?.equipment ?? [])].sort((left, right) => {
+          const rank = (asset: (NonNullable<typeof resourceData>["equipment"])[number]) => asset.status === "checked_out" ? 0 : asset.dispatchable ? 1 : 2;
+          return rank(left) - rank(right) || left.name.localeCompare(right.name);
+        }).slice(0, 200).map(asset => ({ id: asset.id, title: asset.name, detail: `${asset.category} · ${asset.status.replaceAll("_", " ")}`, status: asset.status === "checked_out" ? "in_use" as const : asset.dispatchable ? "available" as const : "unavailable" as const })),
+        compliance: [
+          ...(resourceData?.drivers ?? []).map(driver => ({ driver, compliance: driverCompliance(driver) })).filter(item => item.compliance.status !== "green").map(item => ({ id: `driver-${item.driver.userId}`, title: item.driver.name, detail: item.compliance.label, status: item.compliance.status as "amber" | "red", target: "driver" as const, targetId: String(item.driver.userId) })),
+          ...(resourceData?.equipment ?? []).filter(asset => !asset.dispatchable).map(asset => ({ id: `equipment-${asset.id}`, title: asset.name, detail: `${asset.category} · ${asset.status.replaceAll("_", " ")} · review tag, insurance, and safety records`, status: "amber" as const, target: "equipment" as const, targetId: asset.id })),
+        ].slice(0, 100),
+        historyCapped: historyRuns.length === 50,
+      };
       const metrics: FleetHomeProjection["metrics"] = {
-        yardOrders: yardOrders.status === "fulfilled" ? orders.filter((order) => !["completed", "cancelled"].includes(order.status)).length : null,
-        awaitingDispatch: overview.status === "fulfilled" ? runs.filter((run) => run.status === "draft").length : null,
+        yardOrders: yardOrders.status === "fulfilled" ? orders.filter((order) => !["completed", "cancelled"].includes(order.status) && (order.status !== "reported" || (order as { outcome?: string | null }).outcome !== "ready")).length : null,
+        awaitingDispatch: overview.status === "fulfilled" ? runs.filter((run) => run.status === "draft" && (() => { const order = orders.find(item => item.runId === run.id) as ({ outcome?: string | null } | undefined); return !order || order.outcome === "ready"; })()).length : null,
         activeRuns: overview.status === "fulfilled" ? runs.filter((run) => ["dispatched", "acknowledged", "in_progress"].includes(run.status)).length : null,
         runHistory: overview.status === "fulfilled" ? runs.filter((run) => ["submitted_for_review", "completed", "cancelled"].includes(run.status)).length : null,
         availableDrivers: resourceData ? resourceData.drivers.filter((driver) => !assignedDriverIds.has(driver.userId)).length : null,
         yardInventory: resourceData ? resourceData.equipment.filter((asset) => asset.dispatchable).length : null,
+        equipmentInUse: resourceData ? resourceData.equipment.filter((asset) => asset.status === "checked_out").length : null,
+        equipmentAvailable: resourceData ? resourceData.equipment.filter((asset) => asset.status !== "checked_out" && asset.dispatchable).length : null,
+        equipmentUnavailable: resourceData ? resourceData.equipment.filter((asset) => asset.status !== "checked_out" && !asset.dispatchable).length : null,
         complianceScore: typeof complianceData?.score === "number" ? complianceData.score : null,
         complianceStatus: complianceData?.status === "red" || complianceData?.status === "amber" || complianceData?.status === "green" ? complianceData.status : null,
       };
@@ -117,7 +150,7 @@ export function createFleetHomeReader(source: Source = canonical) {
         { module: "history", state: overview.status === "rejected" ? "unavailable" : runs.length ? "ready" : "empty" },
         { module: "compliance", state: permitted(capabilities, "compliance") ? compliance.status === "rejected" ? "unavailable" : (compliance.value as { status?: string } | null)?.status === "red" ? "warning" : "ready" : "empty" },
       ];
-      const data = FleetHomeProjectionSchema.parse({ companyId: actor.companyId, userId: actor.userId, mode: independent ? "my_fleet_day" : "coordinated", capabilities: [...capabilities], nextAction: priorities[0] ?? null, priorities, warnings: [], metrics, moduleStates });
+      const data = FleetHomeProjectionSchema.parse({ companyId: actor.companyId, userId: actor.userId, mode: independent ? "my_fleet_day" : "coordinated", capabilities: [...capabilities], nextAction: priorities[0] ?? null, priorities, warnings: [], metrics, previews, moduleStates });
       return { module, state: moduleStates.some((item) => item.state === "unavailable" || item.state === "warning") ? "warning" : priorities.length ? "ready" : "empty", data };
     }
     try {

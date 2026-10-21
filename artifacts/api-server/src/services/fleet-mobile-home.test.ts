@@ -83,6 +83,9 @@ describe("Fleet Home modules", () => {
       runHistory: 1,
       availableDrivers: 1,
       yardInventory: 1,
+      equipmentInUse: 0,
+      equipmentAvailable: 1,
+      equipmentUnavailable: 1,
       complianceScore: 82,
       complianceStatus: "amber",
     });

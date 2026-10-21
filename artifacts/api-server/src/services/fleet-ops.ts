@@ -840,7 +840,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           )
           .map((g) => g.userId);
         const people = await client.query(
-          "SELECT DISTINCT u.id,u.display_name FROM users u JOIN vendor_people vp ON vp.user_id=u.id JOIN user_org_memberships m ON m.user_id=u.id AND m.vendor_id=vp.vendor_id WHERE vp.vendor_id=$1 AND u.id=ANY($2::int[]) AND vp.is_active=true AND vp.deleted_at IS NULL AND u.suspended_at IS NULL",
+          "SELECT DISTINCT u.id,u.display_name,vp.id AS employee_id,cdl.expiration_date AS cdl_expiration_date,(cdl.employee_id IS NOT NULL) AS cdl_recorded FROM users u JOIN vendor_people vp ON vp.user_id=u.id JOIN user_org_memberships m ON m.user_id=u.id AND m.vendor_id=vp.vendor_id LEFT JOIN LATERAL (SELECT ec.employee_id,ec.expiration_date FROM employee_certifications ec WHERE ec.employee_id=vp.id AND ec.deleted_at IS NULL AND (ec.name ILIKE '%CDL%' OR ec.name ILIKE '%commercial driver%') ORDER BY ec.expiration_date DESC NULLS LAST,ec.id DESC LIMIT 1) cdl ON true WHERE vp.vendor_id=$1 AND u.id=ANY($2::int[]) AND vp.is_active=true AND vp.deleted_at IS NULL AND u.suspended_at IS NULL",
           [actor.companyId, userIds],
         );
         const assets = await client.query(
@@ -871,6 +871,9 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           drivers: people.rows.map((row) => ({
             userId: row.id,
             name: row.display_name,
+            employeeId: row.employee_id,
+            cdlRecorded: row.cdl_recorded,
+            cdlExpirationDate: row.cdl_expiration_date ? String(row.cdl_expiration_date) : null,
             fleetIds: state.grants
               .find((g) => g.userId === row.id)!
               .fleetIds.filter((id) => grant.fleetIds.includes(id)),

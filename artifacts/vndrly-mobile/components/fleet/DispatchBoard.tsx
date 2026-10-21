@@ -27,13 +27,13 @@ export function defaultFleetDispatchRoute(yard: FleetDestination, job: FleetDest
   ], base: origin, returnPolicy: "return_required", plannedWindow: null });
 }
 
-export default function DispatchBoard() {
+export default function DispatchBoard({ initialRunId }: { initialRunId?: string }) {
   const { user, activeMembershipId, activeMembership } = useAuth();
   const identity = `${user?.id ?? 0}:${activeMembershipId ?? 0}:${activeMembership?.orgId ?? user?.vendorId ?? 0}`;
-  return <DispatchBoardContent key={identity} />;
+  return <DispatchBoardContent key={identity} initialRunId={initialRunId} />;
 }
 
-function DispatchBoardContent() {
+function DispatchBoardContent({ initialRunId }: { initialRunId?: string }) {
   const colors = useColors(), copy = useFleetCopy();
   const scope = useRef(captureAuthScope()), alive = useRef(true), lock = useRef(false);
   const pendingCreate = useRef<ReturnType<typeof FleetDispatchPlanInputSchema.parse> | null>(null);
@@ -87,13 +87,14 @@ function DispatchBoardContent() {
       }));
       if (!current() || linkedOrders.some(order => order.companyId !== overview.companyId)) throw Error("Dispatch permission or company scope changed.");
       setData({ overview, resources, places: commercial.destinations, yards: yardPage.yards, yardOrders: [...visibleOrders, ...linkedOrders], details, plans: parsed });
+      if (initialRunId) setSelectedId(parsed.find(plan => plan.runId === initialRunId)?.id ?? "");
       setFleetId(prior => prior || overview.fleets[0]?.id || "");
       setBillingSiteId(prior => prior || overview.fleets[0]?.siteIds[0] || 0);
       setJobId(prior => prior || commercial.destinations.find(place => !yardPage.yards.some(yard => yard.destinationId === place.id))?.id || "");
       setError("");
     } catch (cause) { if (current()) setError(cause instanceof Error ? cause.message : "Dispatch Board unavailable."); }
   }
-  useEffect(() => { alive.current = true; void load(); return () => { alive.current = false; }; }, []);
+  useEffect(() => { alive.current = true; void load(); return () => { alive.current = false; }; }, [initialRunId]);
   const home = data?.yards.find(yard => yard.active && yard.isHomeBase && yard.destinationId);
   const homePlace = data?.places.find(place => place.id === home?.destinationId);
   const jobPlace = data?.places.find(place => place.id === jobId);

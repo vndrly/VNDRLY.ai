@@ -34,7 +34,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
   const [search, setSearch] = useState(""), [intakeFleetId, setIntakeFleetId] = useState(""), [newName, setNewName] = useState(""), [newOwner, setNewOwner] = useState(""), [newCategory, setNewCategory] = useState("truck"), [newIdentifier, setNewIdentifier] = useState("");
   const intakePending = useRef<{ scope: ReturnType<typeof yardScope>; fleetId: string; asset: ReturnType<typeof FleetAssetCreateSchema.parse> } | null>(null);
   const [operation, setOperation] = useState<"intake" | "at_yard" | "attached" | "returned" | "transferred" | null>(null);
-  const [advanced, setAdvanced] = useState<"intake" | "details" | "history" | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState("");
+  const [advanced, setAdvanced] = useState<"intake" | "details" | "history" | null>(initialAssetId ? "history" : null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState("");
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   const read = async <T,>(path: string): Promise<T> => {
     const value = await apiFetch<T>(path, {}, scope.current);
