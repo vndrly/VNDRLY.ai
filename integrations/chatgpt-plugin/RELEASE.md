@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.21.1
+
+Matches the Fleet Readiness release: compact driver, equipment, Yard safety, compliance, and recent-work drilldowns use the same permission-scoped Fleet records and exact deep links as iOS. Existing plugin identity, linked accounts, grants, five service skills, and server-owned action confirmation remain unchanged.
+
 # VNDRLY plugin 1.21.0
 
 Adds exact, permission-scoped `query_fleet_yard_operation` and `query_fleet_custody_operation` recovery reads for the original operation ID. Company, actor, membership, session, and operation identity remain server-bound, and the canonical original receipt is returned only while the underlying record remains in scope. Yard assignment/start/report uses `fleet:yard`; physical custody reporting now requires the distinct `fleet:custody` consent and current Yard or Driver/self-dispatch capability. Dispatch authority alone can assign Yard work but cannot report a physical custody observation. Existing grants are preserved without silent widening. Compliance deductions remain advisory and ticket flow remains available.
