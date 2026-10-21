@@ -85,7 +85,7 @@
     "migrate:vendor-person-access": "tsx scripts/migrate-vendor-person-access.ts",
     "migrate:fleet-ops": "tsx scripts/migrate-fleet-ops.ts",
     "migrate:fleet-mobile-workflows": "tsx scripts/migrate-fleet-mobile-workflows.ts",
-    "seed:companygo-fleet-workflows": "tsx scripts/seed-companygo-fleet-workflows.ts --apply",
+    "seed:companygo-fleet-workflows": "node --env-file-if-exists=../../.env.production --import tsx scripts/seed-companygo-fleet-workflows.ts --apply",
     "migrate:form-campaigns": "node scripts/apply-form-campaigns-migration.mjs",
     "migrate:work-hub-library": "node scripts/apply-work-hub-library-migration.mjs"
   },

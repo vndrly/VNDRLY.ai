@@ -16,6 +16,7 @@ import {
   partnerVendorRelationshipsTable,
   assetsTable,
   workTypesTable,
+  ticketsTable,
   vendorWorkTypesTable,
   partnerVendorWorkTypeApprovalsTable,
   siteWorkAssignmentsTable,
@@ -206,6 +207,22 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
           })),
         });
       expect(setup.status).toBe(200);
+      // A realistic month of settled work must not disable the equipment picker.
+      await db.insert(ticketsTable).values(Array.from({ length: 201 }, () => ({
+        vendorId: vendor.id, siteLocationId: site.id,
+        workTypeId: workType.id, status: "approved", lifecycleState: "off_site",
+        createdById: users[0].id, description: "Synthetic settled history",
+      })));
+      const [openTicket] = await db.insert(ticketsTable).values({
+        vendorId: vendor.id, siteLocationId: site.id,
+        workTypeId: workType.id, status: "initiated", lifecycleState: "pending_arrival",
+        createdById: users[0].id, description: "Synthetic dispatch candidate",
+      }).returning();
+      const resourcePicker = await request(app).get("/fleet/resources").set("Cookie", cookies[0]);
+      expect(resourcePicker.status).toBe(200);
+      expect(resourcePicker.body.tickets).toEqual([{ id: openTicket.id, siteId: site.id, status: "initiated" }]);
+      expect(resourcePicker.body.equipment).toHaveLength(1);
+
       const stops = ["pickup", "delivery", "pickup", "delivery"].map(
         (kind, sequence) => ({
           id: randomUUID(),

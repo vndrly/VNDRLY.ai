@@ -10,6 +10,7 @@ import {
   FleetRunSchema,
 } from "@workspace/api-zod";
 import { z } from "zod/v4";
+import { repairCompanyGoComplianceSource } from "./companygo-compliance-repair";
 
 const CompanyGoFleetStateSchema = z.object({
   version: z.number().int().positive(), enabled: z.boolean(), fleets: z.array(z.any()), grants: z.array(z.any()),
@@ -189,19 +190,39 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
 async function mergeCompanyGoCompliance(client: DbClient, context: CompanyGoFleetContext): Promise<void> {
   const existing = FleetComplianceConfigurationSchema.parse(context.compliance ?? { version: 1, reviewerUserIds: [], entries: [] });
   const recordId = stableCompanyGoUuid("compliance:driver-license");
-  if (existing.entries.some(entry => entry.id === recordId)) return;
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) throw new Error("SESSION_SECRET required for CompanyGo compliance storage");
+  const objectStoreModulePath: string = "../src/lib/objectStore";
+  const { getObjectStore } = await import(objectStoreModulePath) as typeof import("../src/lib/objectStore");
+  const store = getObjectStore();
+  const previous = existing.entries.find(entry => entry.id === recordId);
+  if (previous) {
+    const { localGetObject } = await import("../src/lib/localObjectStorage");
+    const objectPath = await repairCompanyGoComplianceSource(context.companyId, previous, store, async path => {
+      const local = await localGetObject(path);
+      if (!local) return null;
+      const { readFile } = await import("node:fs/promises");
+      return { ...local, body: await readFile(local.filePath) };
+    }, secret);
+    if (objectPath !== previous.objectPath) {
+      const configuration = FleetComplianceConfigurationSchema.parse({
+        ...existing, version: existing.version + 1,
+        entries: existing.entries.map(entry => entry.id === recordId ? { ...entry, objectPath } : entry),
+        facts: existing.facts.map(fact => fact.sourceObjectPath === previous.objectPath ? { ...fact, sourceObjectPath: objectPath } : fact),
+      });
+      await client.query("UPDATE vendors SET fleet_compliance_configuration=$2::jsonb WHERE id=$1", [context.companyId, JSON.stringify(configuration)]);
+    }
+    return;
+  }
   const at = isoDay(-1, 16), until = isoDay(365, 16);
   const record = FleetComplianceRecordSchema.parse({
     evidence: { id: recordId, revision: 1, subject: { kind: "driver", id: context.driverUserId }, requirementId: "companygo-driver-license", requirementVersion: 1, status: "reviewed", validFrom: isoDay(-365, 16), validUntil: until, verifiedAt: at, verifiedByUserId: context.dispatcherUserId, source: "CompanyGo synthetic qualification record", privateDocumentRef: null, restrictions: {} },
     attributes: { kind: "driver_license", issuingState: "OK", licenseNumber: "COMPANYGO-SYNTHETIC", licenseClass: "A", endorsements: ["N"], restrictions: [], licenseStatus: "active", sourceRecordId: null },
     retentionClass: "qualification", retainUntil: null, legalHold: false,
   });
-  const secret = process.env.SESSION_SECRET ?? "dev-session-secret";
   const digest = createHmac("sha256", secret).update(JSON.stringify(record)).digest("hex");
   const objectPath = `/objects/fleet-compliance-private/${context.companyId}/${recordId}/1/${digest}`;
-  const objectStoreModulePath: string = "../src/lib/objectStore";
-  const { getObjectStore } = await import(objectStoreModulePath) as { getObjectStore: () => { putObject(path: string, contentType: string, body: Buffer, acl: { owner: string; visibility: "private"; purpose: "fleet-compliance-private" }): Promise<void> } };
-  await getObjectStore().putObject(objectPath, "application/json", Buffer.from(JSON.stringify(record)), { owner: `fleet-compliance:${context.companyId}`, visibility: "private", purpose: "fleet-compliance-private" });
+  await store.putObject(objectPath, "application/json", Buffer.from(JSON.stringify(record)), { owner: `fleet-compliance:${context.companyId}`, visibility: "private", purpose: "fleet-compliance-private" });
   const entry = { id: recordId, revision: 1, subject: record.evidence.subject, requirementId: record.evidence.requirementId, requirementVersion: 1, status: record.evidence.status, validFrom: record.evidence.validFrom, validUntil: record.evidence.validUntil, verifiedAt: record.evidence.verifiedAt, verifiedByUserId: record.evidence.verifiedByUserId, attributeKind: record.attributes.kind, objectPath, updatedAt: at };
   const categories = [
     { category: "vehicle", score: 0 }, { category: "driver_license", score: 100 },
@@ -349,7 +370,7 @@ export async function verifyCompanyGoFleetCoverage(client: DbClient): Promise<Re
   const counts = Object.fromEntries(Object.entries(result.rows[0] ?? {}).map(([key, value]) => [key, Number(value)]));
   const required: Array<[string, number]> = [["history_days", 30], ["scheduled_days", 7], ["ticket_count", 37], ["billing_line_count", 30], ["run_count", 37], ["detail_count", 1], ["compliance_entry_count", 1], ["account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["capability_account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["gasgo_count", 1]];
   for (const [key, minimum] of required) if ((counts[key] ?? 0) < minimum) throw new Error(`CompanyGo Fleet acceptance requires ${key} >= ${minimum}; found ${counts[key] ?? 0}.`);
-  const canonical = await client.query("SELECT fleet_ops_state,fleet_resources,fleet_compliance_configuration FROM vendors WHERE lower(name)='fleetgo' LIMIT 1");
+  const canonical = await client.query("SELECT id,fleet_ops_state,fleet_resources,fleet_compliance_configuration FROM vendors WHERE lower(name)='fleetgo' LIMIT 1");
   const state = CompanyGoFleetStateSchema.parse(canonical.rows[0]?.fleet_ops_state);
   const resources = FleetResourcesRegistrySchema.parse(canonical.rows[0]?.fleet_resources);
   const compliance = FleetComplianceConfigurationSchema.parse(canonical.rows[0]?.fleet_compliance_configuration);
@@ -386,6 +407,11 @@ export async function verifyCompanyGoFleetCoverage(client: DbClient): Promise<Re
     || !fixtureReservations.every(item => item.assetIds.some(validVehicle) && item.assetIds.some(validRigging)))
     throw new Error("CompanyGo Fleet acceptance requires valid reusable Detail, rig package, and reservation asset roles.");
   if (!compliance.entries.length || !compliance.facts.length || !compliance.scoreHistory.length || !compliance.partnerScorePreview) throw new Error("CompanyGo Fleet acceptance requires canonical evidence, facts, score history, and Partner preview.");
+  const fixtureEntry = compliance.entries.find(entry => entry.id === stableCompanyGoUuid("compliance:driver-license"));
+  if (!fixtureEntry || !process.env.SESSION_SECRET) throw new Error("CompanyGo private evidence verification requires fixture and SESSION_SECRET");
+  const { readFleetPrivateComplianceSource } = await import("../src/services/fleet-compliance-source");
+  const { getObjectStore } = await import("../src/lib/objectStore");
+  await readFleetPrivateComplianceSource(fixtureEntry, Number(canonical.rows[0].id), getObjectStore, value => createHmac("sha256", process.env.SESSION_SECRET!).update(JSON.stringify(value)).digest("hex"));
   return counts;
 }
 

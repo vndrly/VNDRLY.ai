@@ -26,7 +26,7 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
 
   it("repairs the CompanyGo Fleet persona fixtures during every API deployment", () => {
     const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
-    expect(pkg.scripts["seed:companygo-fleet-workflows"]).toBe("tsx scripts/seed-companygo-fleet-workflows.ts --apply");
+    expect(pkg.scripts["seed:companygo-fleet-workflows"]).toBe("node --env-file-if-exists=../../.env.production --import tsx scripts/seed-companygo-fleet-workflows.ts --apply");
 
     const workflow = readFileSync(new URL("../../../../.github/workflows/deploy-api.yml", import.meta.url), "utf8");
     const migration = workflow.indexOf("run migrate:fleet-mobile-workflows");
