@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLEET_SEED_SQL, selectCompanyGoAssetRoles, stableCompanyGoUuid } from "../../scripts/seed-companygo-fleet-workflows";
 
 describe("CompanyGo Fleet workflow fixture plan", () => {
@@ -21,6 +22,17 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
       { login: "vendor_fleet_dispatch@fleetgo.com", capabilities: ["dispatch"] },
       { login: "vendor_fleet_driver@fleetgo.com", capabilities: ["yard", "driver", "self_dispatch"] },
     ]);
+  });
+
+  it("repairs the CompanyGo Fleet persona fixtures during every API deployment", () => {
+    const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+    expect(pkg.scripts["seed:companygo-fleet-workflows"]).toBe("tsx scripts/seed-companygo-fleet-workflows.ts --apply");
+
+    const workflow = readFileSync(new URL("../../../../.github/workflows/deploy-api.yml", import.meta.url), "utf8");
+    const migration = workflow.indexOf("run migrate:fleet-mobile-workflows");
+    const fixtures = workflow.indexOf("run seed:companygo-fleet-workflows");
+    expect(migration).toBeGreaterThan(-1);
+    expect(fixtures).toBeGreaterThan(migration);
   });
 
   it("read-only acceptance checks authoritative Fleet state, Details, and compliance", () => {
@@ -65,6 +77,25 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
       vehicleAssetId: "00000000-0000-4000-8000-000000000004",
       trailerAssetId: "00000000-0000-4000-8000-000000000002",
     });
+  });
+
+  it("reuses an existing run's Fleet assets when canonical fixture names are absent", () => {
+    const truck = "00000000-0000-4000-8000-000000000004";
+    const trailer = "00000000-0000-4000-8000-000000000002";
+    const existingState = {
+      runs: [
+        { vehicleAssetId: truck, trailerAssetId: trailer },
+        { vehicleAssetId: truck, trailerAssetId: trailer },
+        { vehicleAssetId: "00000000-0000-4000-8000-000000000003", trailerAssetId: "00000000-0000-4000-8000-000000000001" },
+      ],
+    };
+
+    expect(selectCompanyGoAssetRoles([
+      { id: "00000000-0000-4000-8000-000000000003", name: "Unit 101", category: "truck" },
+      { id: truck, name: "Unit 102", category: "truck" },
+      { id: "00000000-0000-4000-8000-000000000001", name: "Trailer T-11", category: "trailer" },
+      { id: trailer, name: "Trailer T-12", category: "trailer" },
+    ], existingState)).toEqual({ vehicleAssetId: truck, trailerAssetId: trailer });
   });
 
   it("fails safely when FleetGo lacks a canonical truck or trailer/rigging asset", () => {

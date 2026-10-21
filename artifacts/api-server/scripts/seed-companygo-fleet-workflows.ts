@@ -37,7 +37,15 @@ type CompanyGoFleetContext = {
 
 type CompanyGoAssetCandidate = { id: string; name: string; category: string };
 
-export function selectCompanyGoAssetRoles(candidates: CompanyGoAssetCandidate[]): { vehicleAssetId: string; trailerAssetId: string } {
+export function selectCompanyGoAssetRoles(candidates: CompanyGoAssetCandidate[], existingState?: { runs?: Array<{ vehicleAssetId?: string | null; trailerAssetId?: string | null }> }): { vehicleAssetId: string; trailerAssetId: string } {
+  const usage = new Map<string, number>();
+  const referenceOrder: string[] = [];
+  for (const run of existingState?.runs ?? []) {
+    for (const assetId of [run.vehicleAssetId, run.trailerAssetId]) if (assetId) {
+      usage.set(assetId, (usage.get(assetId) ?? 0) + 1);
+      if (!referenceOrder.includes(assetId)) referenceOrder.push(assetId);
+    }
+  }
   const select = (categories: string[], preferredName: string, label: string) => {
     const categoryPriority = new Map(categories.map((category, index) => [category, index]));
     const matches = candidates.filter((asset) => categoryPriority.has(asset.category.trim().toLowerCase()));
@@ -50,6 +58,11 @@ export function selectCompanyGoAssetRoles(candidates: CompanyGoAssetCandidate[])
 
     const bestPriority = Math.min(...matches.map((asset) => categoryPriority.get(asset.category.trim().toLowerCase())!));
     const bestMatches = matches.filter((asset) => categoryPriority.get(asset.category.trim().toLowerCase()) === bestPriority);
+    const highestUsage = Math.max(...bestMatches.map((asset) => usage.get(asset.id) ?? 0));
+    const mostUsed = bestMatches.filter((asset) => (usage.get(asset.id) ?? 0) === highestUsage);
+    if (highestUsage > 0 && mostUsed.length === 1) return mostUsed[0].id;
+    const firstReferenced = referenceOrder.find((assetId) => bestMatches.some((asset) => asset.id === assetId));
+    if (highestUsage > 0 && firstReferenced) return firstReferenced;
     if (bestMatches.length !== 1)
       throw new Error(`CompanyGo authoritative Fleet prerequisites contain ambiguous ${label} assets without a unique preferred natural key.`);
     return bestMatches[0].id;
@@ -136,7 +149,7 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
   const row = result.rows[0];
   if (!row?.site_id || !row?.driver_user_id || !row?.dispatcher_user_id)
     throw new Error("CompanyGo authoritative Fleet prerequisites are incomplete.");
-  const assetRoles = selectCompanyGoAssetRoles(z.array(z.object({ id: z.string().uuid(), name: z.string(), category: z.string() })).parse(row.asset_candidates));
+  const assetRoles = selectCompanyGoAssetRoles(z.array(z.object({ id: z.string().uuid(), name: z.string(), category: z.string() })).parse(row.asset_candidates), row.fleet_ops_state ?? undefined);
   const context: CompanyGoFleetContext = {
     companyId: Number(row.company_id), siteId: Number(row.site_id), driverUserId: Number(row.driver_user_id), dispatcherUserId: Number(row.dispatcher_user_id),
     accountUserIds: row.account_user_ids.map(Number),
@@ -393,10 +406,10 @@ export async function seedCompanyGoFleetWorkflows(client: DbClient): Promise<voi
     if (!actual) throw new Error(`Missing CompanyGo Fleet account: ${expected.login}`);
     if (!bcrypt.compareSync("companygo", actual.password_hash)) throw new Error(`CompanyGo password hash drifted for ${expected.login}; run the canonical account backfill instead of rotating it here.`);
   }
-  const prerequisites = await client.query(`SELECT (SELECT count(*) FROM vendors WHERE lower(name)='fleetgo') vendor_count,(SELECT count(*) FROM partners WHERE lower(name)='gasgo') partner_count,(SELECT count(*) FROM assets a JOIN vendors v ON a.responsible_org_type='vendor' AND a.responsible_org_id=v.id WHERE lower(v.name)='fleetgo' AND a.retired_at IS NULL) asset_count,(SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.id,'name',a.name,'category',a.category) ORDER BY lower(a.name),lower(a.category)),'[]'::jsonb) FROM assets a JOIN vendors v ON a.responsible_org_type='vendor' AND a.responsible_org_id=v.id WHERE lower(v.name)='fleetgo' AND a.retired_at IS NULL) asset_candidates`);
+  const prerequisites = await client.query(`SELECT (SELECT count(*) FROM vendors WHERE lower(name)='fleetgo') vendor_count,(SELECT count(*) FROM partners WHERE lower(name)='gasgo') partner_count,(SELECT count(*) FROM assets a JOIN vendors v ON a.responsible_org_type='vendor' AND a.responsible_org_id=v.id WHERE lower(v.name)='fleetgo' AND a.retired_at IS NULL) asset_count,(SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.id,'name',a.name,'category',a.category) ORDER BY lower(a.name),lower(a.category)),'[]'::jsonb) FROM assets a JOIN vendors v ON a.responsible_org_type='vendor' AND a.responsible_org_id=v.id WHERE lower(v.name)='fleetgo' AND a.retired_at IS NULL) asset_candidates,(SELECT fleet_ops_state FROM vendors WHERE lower(name)='fleetgo' LIMIT 1) fleet_ops_state`);
   const prerequisite = prerequisites.rows[0] ?? {};
   if (Number(prerequisite.vendor_count) !== 1 || Number(prerequisite.partner_count) !== 1 || Number(prerequisite.asset_count) < 3) throw new Error(`CompanyGo Fleet prerequisites are incomplete: ${JSON.stringify(prerequisite)}.`);
-  selectCompanyGoAssetRoles(z.array(z.object({ id: z.string().uuid(), name: z.string(), category: z.string() })).parse(prerequisite.asset_candidates));
+  selectCompanyGoAssetRoles(z.array(z.object({ id: z.string().uuid(), name: z.string(), category: z.string() })).parse(prerequisite.asset_candidates), prerequisite.fleet_ops_state ?? undefined);
   await client.query("SELECT pg_advisory_xact_lock(hashtext('companygo_fleet_mobile_fixtures'))");
   for (const statement of COMPANYGO_FLEET_SEED_SQL) await client.query(statement);
   await mergeCompanyGoFleetState(client);
