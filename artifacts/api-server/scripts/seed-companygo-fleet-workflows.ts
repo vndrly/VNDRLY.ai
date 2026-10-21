@@ -376,6 +376,19 @@ export const COMPANYGO_FLEET_SEED_SQL = [
      'closure','manual','closesAt',NULL,'destinations','[]'::jsonb,'closedAt',CASE WHEN t.closed_at IS NULL THEN NULL ELSE to_jsonb(to_char(t.closed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')) END,
      'createdByUserId',t.created_by_id,'createdAt',to_char(t.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),'operations','[]'::jsonb)
    FROM site_locations s WHERE s.id=t.site_location_id AND (t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 OR t.id BETWEEN ${historyTicketBase}+100 AND ${historyTicketBase}+106)`,
+  `WITH fleetgo AS (SELECT id FROM vendors WHERE lower(name)='fleetgo' LIMIT 1), latest AS (
+     SELECT DISTINCT ON (a.target_id) a.* FROM assistant_action_audit a JOIN fleetgo f ON a.vendor_id=f.id
+     WHERE a.target_type='fleet-run' ORDER BY a.target_id,a.id DESC
+   ), repaired AS (
+     SELECT a.*,li.id billed_line_id,(a.tool_output->>'linkedTicketId')::int linked_ticket_id
+     FROM latest a JOIN ticket_line_items li ON li.ticket_id=(a.tool_output->>'linkedTicketId')::int
+     WHERE a.tool_output->>'status'='completed' AND (a.tool_output->>'linkedTicketId')::int BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29
+       AND li.description='CompanyGo Fleet day rate' AND coalesce((a.tool_output->'billing'->>'billedLineId')::int,0)<>li.id
+   )
+   INSERT INTO assistant_action_audit(user_id,actor_role,actor_membership_role,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,tool_output,result_status)
+   SELECT user_id,actor_role,actor_membership_role,vendor_id,client_surface,input_mode,provider,'seed_companygo_fleet_workflows','fixture_repair',target_type,target_id,tool_input,
+     jsonb_set(tool_output,'{billing}',jsonb_build_object('afeNumber','GASGO-SYNTHETIC','workDate',to_char((tool_output->'schedule'->>'plannedStartAt')::timestamptz AT TIME ZONE 'UTC','YYYY-MM-DD'),'unit','per_day','quantity',1,'billedLineId',billed_line_id),true),'completed'
+   FROM repaired`,
 ] as const;
 
 export const COMPANYGO_FLEET_ACCEPTANCE_SQL = `

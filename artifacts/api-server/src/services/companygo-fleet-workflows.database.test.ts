@@ -100,13 +100,15 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
     expect(orders.map(order => order.name)).toEqual(expect.arrayContaining([expect.stringMatching(/GasGo/), expect.stringMatching(/SWD/)]));
   });
 
-  it("backfills ticket and billing rows without manufacturing audit stand-ins", () => {
+  it("backfills canonical tickets and appends billing reconciliation without rewriting audit history", () => {
     const sql = COMPANYGO_FLEET_SEED_SQL.join("\n").toLowerCase();
     expect(sql).toContain("generate_series(0,29)");
     expect(sql).toContain("generate_series(0,6)");
     expect(sql).toContain("insert into tickets");
     expect(sql).toContain("insert into ticket_line_items");
-    expect(sql).not.toContain("assistant_action_audit");
+    expect(sql).toContain("insert into assistant_action_audit");
+    expect(sql).toContain("'fixture_repair'");
+    expect(sql).not.toContain("update assistant_action_audit");
     expect(sql).toContain("on conflict(id) do nothing");
     expect(sql).not.toContain("password_hash=");
   });
