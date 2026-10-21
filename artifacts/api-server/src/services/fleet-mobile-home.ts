@@ -79,14 +79,15 @@ function actions(actor: FleetActor, c: ReadonlySet<FleetCapability>, runs: reado
 export function createFleetHomeReader(source: Source = canonical) {
   return async function readFleetHomeModule(actor: FleetActor, module: FleetHomeModule): Promise<FleetModuleResult> {
     const capabilities = await source.capabilities(actor);
+    const projectionActor: FleetActor = { ...actor, repositoryAccess: "read" };
     if (!permitted(capabilities, module)) throw new FleetError("fleet.permission_denied", 403);
     if (module === "summary") {
       const [overview, yardOrders, compliance, assets, map] = await Promise.allSettled([
-        source.overview(actor),
-        permitted(capabilities, "yard") ? source.yardOrders(actor) : Promise.resolve({ orders: [] }),
+        source.overview(projectionActor),
+        permitted(capabilities, "yard") ? source.yardOrders(projectionActor) : Promise.resolve({ orders: [] }),
         permitted(capabilities, "compliance") ? source.compliance(actor) : Promise.resolve(null),
-        permitted(capabilities, "assets") ? source.resources(actor) : Promise.resolve(null),
-        permitted(capabilities, "map") ? source.map(actor) : Promise.resolve(null),
+        permitted(capabilities, "assets") ? source.resources(projectionActor) : Promise.resolve(null),
+        permitted(capabilities, "map") ? source.map(projectionActor) : Promise.resolve(null),
       ]);
       const runs = overview.status === "fulfilled" ? overview.value.runs.filter((run) => capabilities.has("admin") || capabilities.has("dispatch") || capabilities.has("office") || run.driverUserId === actor.userId) : [];
       const orders = yardOrders.status === "fulfilled" ? yardOrders.value.orders : [];
@@ -105,11 +106,11 @@ export function createFleetHomeReader(source: Source = canonical) {
       return { module, state: moduleStates.some((item) => item.state === "unavailable" || item.state === "warning") ? "warning" : priorities.length ? "ready" : "empty", data };
     }
     try {
-      if (module === "yard") { const data = await source.yardOrders(actor); return { module, state: data.orders.length ? "ready" : "empty", data }; }
-      if (module === "assets") { const data = await source.resources(actor); return { module, state: ("equipment" in data ? data.equipment.length : data.custody.length) ? "ready" : "empty", data }; }
-      if (module === "map") return { module, state: "ready", data: await source.map(actor) };
+      if (module === "yard") { const data = await source.yardOrders(projectionActor); return { module, state: data.orders.length ? "ready" : "empty", data }; }
+      if (module === "assets") { const data = await source.resources(projectionActor); return { module, state: ("equipment" in data ? data.equipment.length : data.custody.length) ? "ready" : "empty", data }; }
+      if (module === "map") return { module, state: "ready", data: await source.map(projectionActor) };
       if (module === "compliance") { const data = await source.compliance(actor); return { module, state: (data as { status?: string }).status === "red" ? "warning" : "ready", data }; }
-      const overview = await source.overview(actor);
+      const overview = await source.overview(projectionActor);
       const runs = module === "driver" || capabilities.has("self_dispatch") && !capabilities.has("dispatch") && !capabilities.has("admin") ? overview.runs.filter((run) => run.driverUserId === actor.userId) : overview.runs;
       const selected = module === "office" ? runs.filter((run) => run.status === "submitted_for_review") : module === "dispatch" ? runs.filter((run) => run.status !== "completed" && run.status !== "cancelled") : runs;
       return { module, state: selected.length ? "ready" : "empty", data: { runs: selected, generatedAt: overview.generatedAt } };

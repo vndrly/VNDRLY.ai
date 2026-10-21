@@ -55,6 +55,21 @@ describe("Fleet repository current session and atomic persistence", () => {
     );
     expect(mocks.query).toHaveBeenCalledWith("COMMIT");
   });
+  it("uses a non-locking read-only transaction for concurrent Fleet projections", async () => {
+    await databaseFleetRepository.transaction(
+      7,
+      1,
+      async () => "read",
+      { ...authority, repositoryAccess: "read" },
+    );
+    expect(mocks.query).toHaveBeenCalledWith("BEGIN READ ONLY");
+    expect(mocks.query).toHaveBeenCalledWith(
+      "SELECT fleet_ops_state FROM vendors WHERE id=$1",
+      [7],
+    );
+    expect(mocks.query.mock.calls.some(([sql]) => String(sql).includes("FOR UPDATE"))).toBe(false);
+    expect(mocks.query.mock.calls.some(([sql]) => String(sql).startsWith("UPDATE vendors SET fleet_ops_state"))).toBe(false);
+  });
   it("applies a stored capability override during legacy operations without persisting projected roles", async () => {
     const fleetId = "e81f62e2-9600-4be4-8f56-41140c0139ea";
     const state = { ...emptyFleetState(), enabled: true, fleets: [{ id: fleetId, name: "Synthetic", siteIds: [], requiredCertifications: [], equipmentAssetIds: [] }], grants: [{ userId: 1, fleetIds: [fleetId], siteIds: [], roles: ["dispatcher"], safetyRelease: false, financeRead: false }] };

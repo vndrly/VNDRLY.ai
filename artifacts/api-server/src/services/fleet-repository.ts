@@ -70,6 +70,8 @@ export type FleetSessionAuthority = {
   operationId?: string;
   schedulingRunId?: string;
   schedulingDriverUserIds?: number[];
+  /** Internal query hint: canonical projections do not serialize behind Fleet writes. */
+  repositoryAccess?: "read";
   /** Current stored override, populated only by the trusted repository transaction. */
   fleetCapabilities?: ReadonlySet<import("@workspace/api-zod").FleetCapability>;
 };
@@ -85,8 +87,9 @@ export interface FleetRepository {
 const boundedFleetRepository: FleetRepository = {
   async transaction(companyId, actorUserId, operation, authority) {
     const client = await pool.connect();
+    const readOnlyProjection = authority?.repositoryAccess === "read";
     try {
-      await client.query("BEGIN");
+      await client.query(readOnlyProjection ? "BEGIN READ ONLY" : "BEGIN");
       let schedulingDriver: number | undefined;
       if (authority?.schedulingRunId || authority?.schedulingDriverUserIds) {
         if (authority.schedulingRunId) {
@@ -113,7 +116,7 @@ const boundedFleetRepository: FleetRepository = {
       )
         throw new FleetError("fleet.current_session_required", 403);
       const member = await client.query(
-        "SELECT m.id FROM user_org_memberships m JOIN users u ON u.id=m.user_id WHERE m.user_id=$1 AND m.org_type='vendor' AND m.vendor_id=$2 AND m.id=$3 AND m.role=$4 AND u.session_version=$5 AND u.suspended_at IS NULL FOR SHARE OF m,u",
+        `SELECT m.id FROM user_org_memberships m JOIN users u ON u.id=m.user_id WHERE m.user_id=$1 AND m.org_type='vendor' AND m.vendor_id=$2 AND m.id=$3 AND m.role=$4 AND u.session_version=$5 AND u.suspended_at IS NULL${readOnlyProjection ? "" : " FOR SHARE OF m,u"}`,
         [
           actorUserId,
           companyId,
@@ -126,7 +129,7 @@ const boundedFleetRepository: FleetRepository = {
         throw new FleetError("fleet.membership_required", 403);
       if (authority.role === "field_employee") {
         const person = await client.query(
-          "SELECT id FROM vendor_people WHERE id=$1 AND user_id=$2 AND vendor_id=$3 AND is_active=true AND deleted_at IS NULL FOR SHARE",
+          `SELECT id FROM vendor_people WHERE id=$1 AND user_id=$2 AND vendor_id=$3 AND is_active=true AND deleted_at IS NULL${readOnlyProjection ? "" : " FOR SHARE"}`,
           [authority.vendorPeopleId, actorUserId, companyId],
         );
         if (
@@ -137,7 +140,7 @@ const boundedFleetRepository: FleetRepository = {
       } else if (!["admin", "member"].includes(authority.membershipRole ?? ""))
         throw new FleetError("fleet.current_session_required", 403);
       const vendor = await client.query(
-        "SELECT fleet_ops_state FROM vendors WHERE id=$1 FOR UPDATE",
+        `SELECT fleet_ops_state FROM vendors WHERE id=$1${readOnlyProjection ? "" : " FOR UPDATE"}`,
         [companyId],
       );
       if (!vendor.rows.length) throw new FleetError("fleet.not_found", 404);
@@ -193,7 +196,7 @@ const boundedFleetRepository: FleetRepository = {
         }
       })();
       FleetStateSchema.parse(state);
-      for (const op of state.operations.filter(
+      for (const op of readOnlyProjection ? [] : state.operations.filter(
         (o) => !previousOperations.has(o.id),
       )) {
         await client.query(
@@ -212,7 +215,7 @@ const boundedFleetRepository: FleetRepository = {
       const serialized = JSON.stringify({ ...state, operations: [] });
       if (Buffer.byteLength(serialized) > 4_000_000)
         throw new FleetError("fleet.store_capacity_reached");
-      if (serialized !== previous)
+      if (!readOnlyProjection && serialized !== previous)
         await client.query(
           "UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",
           [companyId, serialized],

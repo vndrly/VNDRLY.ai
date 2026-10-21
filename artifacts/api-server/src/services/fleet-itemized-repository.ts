@@ -32,6 +32,7 @@ export function createItemizedFleetRepository(
   return {
     transaction(companyId, actorUserId, operation, rawAuthority) {
       const authority = rawAuthority as FleetItemizedAuthority | undefined;
+      const readOnlyProjection = authority?.repositoryAccess === "read";
       return base.transaction(
         companyId,
         actorUserId,
@@ -41,7 +42,7 @@ export function createItemizedFleetRepository(
           );
           // Additive transition: preserve every legacy aggregate record before
           // removing any terminal copy from the bounded operational aggregate.
-          for (const run of original.values()) {
+          for (const run of readOnlyProjection ? [] : original.values()) {
             const prior = await client.query(
               "SELECT id FROM assistant_action_audit WHERE target_type='fleet-run' AND target_id=$1 AND vendor_id=$2 AND tool_output->>'version'=$3 LIMIT 1",
               [run.id, companyId, String(run.version)],
@@ -85,6 +86,10 @@ export function createItemizedFleetRepository(
             state.runs.map((run) => [run.id, JSON.stringify(storedRun(run))]),
           );
           const result = await operation(state, client);
+          if (readOnlyProjection) {
+            state.runs = [...original.values()];
+            return result;
+          }
           for (const run of state.runs) {
             const record = storedRun(run);
             if (loadedBefore.get(run.id) !== JSON.stringify(record)) {

@@ -251,6 +251,19 @@ describe("itemized Fleet retained history", () => {
     expect(loaded.id).toBe(ids[0]);
     expect(f.state().runs).toEqual([]);
   });
+  it("does not archive or rewrite legacy history during a read-only projection", async () => {
+    const f = fixture(3);
+    const original = structuredClone(f.state().runs);
+    const result = await f.repository.transaction(
+      7,
+      1,
+      async (state) => state.runs.length,
+      { repositoryAccess: "read" },
+    );
+    expect(result).toBe(3);
+    expect(f.audit).toEqual([]);
+    expect(f.state().runs).toEqual(original);
+  });
   it("persists an updated terminal snapshot atomically before removing its open copy", async () => {
     const f = fixture(1);
     f.state().runs[0].status = "in_progress";

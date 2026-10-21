@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { FleetCapability, FleetHomeProjection } from "@workspace/api-zod";
 import { createFleetHomeReader } from "./fleet-mobile-home";
+import type { FleetActor } from "./fleet-ops";
 
-const actor = { userId: 7, companyId: 3, role: "field_employee", membershipRole: "field_employee", activeMembershipId: 8, sv: 1 };
+const actor: FleetActor = { userId: 7, companyId: 3, role: "field_employee", membershipRole: "field_employee", activeMembershipId: 8, sv: 1 };
 const run = (id: string, status: "draft" | "dispatched" | "acknowledged" | "in_progress" | "submitted_for_review" | "completed" | "cancelled", driverUserId = 7) => ({ id, status, driverUserId });
 const source = (capabilities: FleetCapability[], runs = [run("11111111-1111-4111-8111-111111111111", "draft")]) => ({
   capabilities: async () => new Set(capabilities),
@@ -14,6 +15,20 @@ const source = (capabilities: FleetCapability[], runs = [run("11111111-1111-4111
 });
 
 describe("Fleet Home modules", () => {
+  it("marks independent summary projections as read-only while leaving Compliance snapshot writes enabled", async () => {
+    const access = new Map<string, unknown>();
+    const read = createFleetHomeReader({
+      ...source(["admin", "dispatch", "office", "yard"]),
+      overview: async (current) => { access.set("overview", current.repositoryAccess); return source([]).overview(); },
+      yardOrders: async (current) => { access.set("yard", current.repositoryAccess); return { orders: [] }; },
+      resources: async (current) => { access.set("assets", current.repositoryAccess); return { drivers: [], equipment: [] }; },
+      map: async (current) => { access.set("map", current.repositoryAccess); return {}; },
+      compliance: async (current) => { access.set("compliance", current.repositoryAccess); return { status: "green" }; },
+    });
+    await read(actor, "summary");
+    expect(Object.fromEntries(access)).toEqual({ overview: "read", yard: "read", assets: "read", map: "read", compliance: undefined });
+    expect(actor.repositoryAccess).toBeUndefined();
+  });
   it("shows the Driver's own next run without Dispatch authority", async () => {
     const read = createFleetHomeReader(source(["driver"], [run("11111111-1111-4111-8111-111111111111", "dispatched", 7), run("22222222-2222-4222-8222-222222222222", "draft", 9)]));
     const result = await read(actor, "summary");
