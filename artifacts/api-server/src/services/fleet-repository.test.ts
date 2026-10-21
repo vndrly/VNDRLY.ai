@@ -62,7 +62,7 @@ describe("Fleet repository current session and atomic persistence", () => {
       async () => "read",
       { ...authority, repositoryAccess: "read" },
     );
-    expect(mocks.query).toHaveBeenCalledWith("BEGIN READ ONLY");
+    expect(mocks.query).toHaveBeenCalledWith("BEGIN");
     expect(mocks.query).toHaveBeenCalledWith(
       "SELECT fleet_ops_state FROM vendors WHERE id=$1",
       [7],

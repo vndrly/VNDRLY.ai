@@ -89,7 +89,7 @@ const boundedFleetRepository: FleetRepository = {
     const client = await pool.connect();
     const readOnlyProjection = authority?.repositoryAccess === "read";
     try {
-      await client.query(readOnlyProjection ? "BEGIN READ ONLY" : "BEGIN");
+      await client.query("BEGIN");
       let schedulingDriver: number | undefined;
       if (authority?.schedulingRunId || authority?.schedulingDriverUserIds) {
         if (authority.schedulingRunId) {
