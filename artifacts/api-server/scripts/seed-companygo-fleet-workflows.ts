@@ -37,6 +37,7 @@ export type CompanyGoFleetContext = {
   companyId: number; siteId: number; driverUserId: number; dispatcherUserId: number;
   accountUserIds: number[];
   vehicleAssetId: string; trailerAssetId: string;
+  billingLineIds: Record<number, number>;
   fleetOpsState: unknown; fleetResources: unknown; compliance: unknown;
 };
 
@@ -166,6 +167,7 @@ function buildCompanyGoRun(context: CompanyGoFleetContext, ordinal: number, futu
     },
     labels: { driverName: "FleetGo Driver", vehicleName: "FleetGo Truck 1", trailerName: "FleetGo Trailer 1", sites: [{ siteId: context.siteId, name: "GasGo Test Site" }] },
     assignmentRecordedAt: startedAt,
+    ...(!future ? { billing: { afeNumber: "GASGO-SYNTHETIC", workDate: startedAt.slice(0, 10), unit: "per_day" as const, quantity: 1, billedLineId: context.billingLineIds[historyTicketBase + ordinal] } } : {}),
   });
 }
 
@@ -177,6 +179,7 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_driver@fleetgo.com' LIMIT 1) driver_user_id,
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_dispatch@fleetgo.com' LIMIT 1) dispatcher_user_id,
       (SELECT array_agg(u.id ORDER BY lower(coalesce(u.email,u.username))) FROM users u WHERE lower(coalesce(u.email,u.username))=ANY($1::text[])) account_user_ids,
+      (SELECT coalesce(jsonb_object_agg(li.ticket_id::text,li.id),'{}'::jsonb) FROM ticket_line_items li WHERE li.ticket_id BETWEEN ${historyTicketBase} AND ${historyTicketBase + 29} AND li.description='CompanyGo Fleet day rate') billing_line_ids,
       (SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.id,'name',a.name,'category',a.category) ORDER BY lower(a.name),a.id),'[]'::jsonb)
        FROM assets a WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=v.id AND a.retired_at IS NULL) asset_candidates
     FROM vendors v WHERE lower(v.name)='fleetgo' FOR UPDATE`, [COMPANYGO_FLEET_ACCOUNTS.map(account => account.login)]);
@@ -188,6 +191,7 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
     companyId: Number(row.company_id), siteId: Number(row.site_id), driverUserId: Number(row.driver_user_id), dispatcherUserId: Number(row.dispatcher_user_id),
     accountUserIds: row.account_user_ids.map(Number),
     vehicleAssetId: assetRoles.vehicleAssetId, trailerAssetId: assetRoles.trailerAssetId,
+    billingLineIds: Object.fromEntries(Object.entries(row.billing_line_ids ?? {}).map(([ticketId, lineId]) => [Number(ticketId), Number(lineId)])),
     fleetOpsState: row.fleet_ops_state, fleetResources: row.fleet_resources, compliance: row.compliance,
   };
   const originalState = CompanyGoFleetStateSchema.parse(context.fleetOpsState ?? emptyCompanyGoFleetState());
@@ -364,7 +368,14 @@ export const COMPANYGO_FLEET_SEED_SQL = [
    INSERT INTO tickets(id,site_location_id,vendor_id,field_employee_id,work_type_id,status,intake_channel,description,notes,lifecycle_state,scheduled_start_at,scheduled_duration_minutes,created_by_id,created_at,updated_at)
    SELECT ${historyTicketBase}+100+d.n,s.id,f.id,e.id,w.id,'initiated','partner_self_service','CompanyGo scheduled Fleet run day '||(d.n+1),'Stable additive seven-day Fleet schedule fixture','pending_arrival',current_date+d.n+interval '08:00',480,c.id,now(),now() FROM days d CROSS JOIN fleetgo f CROSS JOIN site s CROSS JOIN work w CROSS JOIN employee e CROSS JOIN creator c ON CONFLICT(id) DO NOTHING`,
   `INSERT INTO ticket_line_items(ticket_id,type,description,quantity,unit_price,fleet_billing_metadata)
-   SELECT t.id,'labor','CompanyGo Fleet day rate',1,1250,jsonb_build_object('fixture','companygo-fleet-mobile','billingMode','per_day') FROM tickets t WHERE t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 AND NOT EXISTS(SELECT 1 FROM ticket_line_items li WHERE li.ticket_id=t.id AND li.description='CompanyGo Fleet day rate')`,
+   SELECT t.id,'other','CompanyGo Fleet day rate',1,1250,jsonb_build_object('fixture','companygo-fleet-mobile','billingMode','per_day') FROM tickets t WHERE t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 AND NOT EXISTS(SELECT 1 FROM ticket_line_items li WHERE li.ticket_id=t.id AND li.description='CompanyGo Fleet day rate')`,
+  `UPDATE ticket_line_items SET type='other' WHERE ticket_id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 AND description='CompanyGo Fleet day rate' AND type<>'other'`,
+  `UPDATE tickets t SET fleet_plan=jsonb_build_object(
+     'billingWorkflow',true,'billingUnit','per_day','afeNumber','GASGO-SYNTHETIC','workDate',to_char(t.scheduled_start_at AT TIME ZONE 'UTC','YYYY-MM-DD'),
+     'version',1,'siteId',t.site_location_id,'vendorId',t.vendor_id,'partnerId',s.partner_id,'mode','singles','rateCents',125000,'currency','USD',
+     'closure','manual','closesAt',NULL,'destinations','[]'::jsonb,'closedAt',CASE WHEN t.closed_at IS NULL THEN NULL ELSE to_jsonb(to_char(t.closed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')) END,
+     'createdByUserId',t.created_by_id,'createdAt',to_char(t.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),'operations','[]'::jsonb)
+   FROM site_locations s WHERE s.id=t.site_location_id AND (t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 OR t.id BETWEEN ${historyTicketBase}+100 AND ${historyTicketBase}+106)`,
 ] as const;
 
 export const COMPANYGO_FLEET_ACCEPTANCE_SQL = `
@@ -375,6 +386,7 @@ SELECT
  (SELECT count(DISTINCT t.scheduled_start_at::date) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE t.id BETWEEN ${historyTicketBase}+100 AND ${historyTicketBase}+106 AND t.scheduled_start_at::date BETWEEN current_date AND current_date + 6) scheduled_days,
  (SELECT count(*) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE (t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 OR t.id BETWEEN ${historyTicketBase}+100 AND ${historyTicketBase}+106)) ticket_count,
  (SELECT count(*) FROM ticket_line_items li JOIN tickets t ON t.id=li.ticket_id JOIN fleetgo f ON t.vendor_id=f.id WHERE t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 AND li.description='CompanyGo Fleet day rate') billing_line_count,
+ (SELECT count(*) FROM tickets t JOIN fleetgo f ON t.vendor_id=f.id WHERE (t.id BETWEEN ${historyTicketBase} AND ${historyTicketBase}+29 OR t.id BETWEEN ${historyTicketBase}+100 AND ${historyTicketBase}+106) AND (t.fleet_plan->>'siteId')::int=t.site_location_id) fleet_plan_count,
  (SELECT jsonb_array_length(coalesce(v.fleet_ops_state->'runs','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) run_count,
  (SELECT jsonb_array_length(coalesce(v.fleet_resources->'details','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) detail_count,
  (SELECT jsonb_array_length(coalesce(v.fleet_compliance_configuration->'entries','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) compliance_entry_count,
@@ -388,7 +400,7 @@ ${COMPANYGO_FLEET_ACCOUNTS.map((row) => `('${row.login}',ARRAY[${row.capabilitie
 export async function verifyCompanyGoFleetCoverage(client: DbClient): Promise<Record<string, number>> {
   const result = await client.query(COMPANYGO_FLEET_ACCEPTANCE_SQL, [COMPANYGO_FLEET_ACCOUNTS.map((row) => row.login)]);
   const counts = Object.fromEntries(Object.entries(result.rows[0] ?? {}).map(([key, value]) => [key, Number(value)]));
-  const required: Array<[string, number]> = [["history_days", 30], ["scheduled_days", 7], ["ticket_count", 37], ["billing_line_count", 30], ["run_count", 37], ["detail_count", 1], ["compliance_entry_count", 1], ["run_order_count", 3], ["account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["capability_account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["gasgo_count", 1]];
+  const required: Array<[string, number]> = [["history_days", 30], ["scheduled_days", 7], ["ticket_count", 37], ["billing_line_count", 30], ["fleet_plan_count", 37], ["run_count", 37], ["detail_count", 1], ["compliance_entry_count", 1], ["run_order_count", 3], ["account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["capability_account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["gasgo_count", 1]];
   for (const [key, minimum] of required) if ((counts[key] ?? 0) < minimum) throw new Error(`CompanyGo Fleet acceptance requires ${key} >= ${minimum}; found ${counts[key] ?? 0}.`);
   const canonical = await client.query("SELECT fleet_ops_state,fleet_resources,fleet_compliance_configuration FROM vendors WHERE lower(name)='fleetgo' LIMIT 1");
   const state = CompanyGoFleetStateSchema.parse(canonical.rows[0]?.fleet_ops_state);
@@ -400,6 +412,7 @@ export async function verifyCompanyGoFleetCoverage(client: DbClient): Promise<Re
   if (new Set(fixtureRuns.filter(run => run.status === "completed").map(run => run.schedule?.plannedStartAt.slice(0, 10))).size < 30) throw new Error("CompanyGo Fleet acceptance requires 30 distinct canonical historical run days.");
   if (new Set(fixtureRuns.filter(run => run.status === "dispatched").map(run => run.schedule?.plannedStartAt.slice(0, 10))).size < 7) throw new Error("CompanyGo Fleet acceptance requires seven canonical future schedule days.");
   if (!fixtureRuns.every(run => run.linkedTicketId && run.siteIds.length && run.resourceAssignment?.snapshot.detail.driverUserId === run.driverUserId)) throw new Error("CompanyGo Fleet runs must retain canonical ticket, site, and Detail snapshots.");
+  if (!fixtureRuns.filter(run => run.status === "completed").every(run => run.billing?.billedLineId)) throw new Error("CompanyGo completed Fleet runs must retain canonical billing-line linkage.");
   const assetIds = [...new Set(fixtureRuns.flatMap(run => [run.vehicleAssetId, run.trailerAssetId, ...(run.resourceAssignment?.reservation.assetIds ?? []), ...(run.resourceAssignment?.snapshot.rigPackage?.components.map(component => component.assetId) ?? [])]).filter((id): id is string => Boolean(id)))];
   const assetResult = await client.query("SELECT id,lower(category) category FROM assets WHERE id=ANY($1::uuid[])", [assetIds]);
   const assetCategories = new Map(assetResult.rows.map(row => [String(row.id), String(row.category)]));

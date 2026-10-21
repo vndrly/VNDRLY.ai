@@ -9,7 +9,9 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
   it("is additive, repeatable, and scoped by stable natural keys", () => {
     const sql = COMPANYGO_FLEET_SEED_SQL.join("\n").toLowerCase();
     expect(sql).not.toMatch(/\b(delete|truncate|drop)\b/);
-    expect(sql.match(/\bupdate\b/g)).toHaveLength(1);
+    expect(sql.match(/\bupdate\b/g)).toHaveLength(3);
+    expect(sql).toContain("update ticket_line_items set type='other'");
+    expect(sql).toContain("update tickets t set fleet_plan=");
     expect(sql).toContain("current.capabilities || resolved.capabilities");
     expect(sql).toContain("on conflict");
     expect(sql).toContain("lower(name) = 'fleetgo'");
@@ -51,6 +53,7 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
       accountUserIds: [1129, 1130, 1132, 1135],
       vehicleAssetId: "00000000-0000-4000-8000-000000000004",
       trailerAssetId: "00000000-0000-4000-8000-000000000002",
+      billingLineIds: {},
       fleetOpsState: {},
       fleetResources: {},
       compliance: {
