@@ -21,7 +21,7 @@ type Source = {
   yardOrders(actor: FleetActor): Promise<{ orders: Array<{ id: string; status: string; assignedToUserId: number | null; runId: string | null }> }>;
   resources(actor: FleetActor): Promise<Pick<FleetResources, "drivers" | "equipment"> | { custody: unknown[] }>;
   map(actor: FleetActor): Promise<unknown>;
-  complianceSummary(actor: FleetActor): Promise<{ status?: string }>;
+  complianceSummary(actor: FleetActor): Promise<{ status?: string; score?: number }>;
   compliance(actor: FleetActor): Promise<unknown>;
 };
 
@@ -96,6 +96,19 @@ export function createFleetHomeReader(source: Source = canonical) {
       const ownedDrivers = new Set(runs.map((run) => run.driverUserId));
       const independent = capabilities.has("driver") && (capabilities.has("admin") || capabilities.has("dispatch") || capabilities.has("self_dispatch")) && [...ownedDrivers].every((id) => id === actor.userId);
       const priorities = actions(actor, capabilities, runs, orders);
+      const resourceData = assets.status === "fulfilled" && assets.value && "drivers" in assets.value ? assets.value : null;
+      const assignedDriverIds = new Set(runs.filter((run) => !["completed", "cancelled"].includes(run.status)).map((run) => run.driverUserId));
+      const complianceData = compliance.status === "fulfilled" ? compliance.value : null;
+      const metrics: FleetHomeProjection["metrics"] = {
+        yardOrders: yardOrders.status === "fulfilled" ? orders.filter((order) => !["completed", "cancelled"].includes(order.status)).length : null,
+        awaitingDispatch: overview.status === "fulfilled" ? runs.filter((run) => run.status === "draft").length : null,
+        activeRuns: overview.status === "fulfilled" ? runs.filter((run) => ["dispatched", "acknowledged", "in_progress"].includes(run.status)).length : null,
+        runHistory: overview.status === "fulfilled" ? runs.filter((run) => ["submitted_for_review", "completed", "cancelled"].includes(run.status)).length : null,
+        availableDrivers: resourceData ? resourceData.drivers.filter((driver) => !assignedDriverIds.has(driver.userId)).length : null,
+        yardInventory: resourceData ? resourceData.equipment.filter((asset) => asset.dispatchable).length : null,
+        complianceScore: typeof complianceData?.score === "number" ? complianceData.score : null,
+        complianceStatus: complianceData?.status === "red" || complianceData?.status === "amber" || complianceData?.status === "green" ? complianceData.status : null,
+      };
       const moduleStates: FleetHomeProjection["moduleStates"] = [
         { module: "dispatch", state: permitted(capabilities, "dispatch") ? overview.status === "rejected" ? "unavailable" : runs.length ? "ready" : "empty" : "empty" },
         { module: "yard", state: permitted(capabilities, "yard") ? yardOrders.status === "rejected" ? "unavailable" : orders.length ? "ready" : "empty" : "empty" },
@@ -104,7 +117,7 @@ export function createFleetHomeReader(source: Source = canonical) {
         { module: "history", state: overview.status === "rejected" ? "unavailable" : runs.length ? "ready" : "empty" },
         { module: "compliance", state: permitted(capabilities, "compliance") ? compliance.status === "rejected" ? "unavailable" : (compliance.value as { status?: string } | null)?.status === "red" ? "warning" : "ready" : "empty" },
       ];
-      const data = FleetHomeProjectionSchema.parse({ companyId: actor.companyId, userId: actor.userId, mode: independent ? "my_fleet_day" : "coordinated", capabilities: [...capabilities], nextAction: priorities[0] ?? null, priorities, warnings: [], moduleStates });
+      const data = FleetHomeProjectionSchema.parse({ companyId: actor.companyId, userId: actor.userId, mode: independent ? "my_fleet_day" : "coordinated", capabilities: [...capabilities], nextAction: priorities[0] ?? null, priorities, warnings: [], metrics, moduleStates });
       return { module, state: moduleStates.some((item) => item.state === "unavailable" || item.state === "warning") ? "warning" : priorities.length ? "ready" : "empty", data };
     }
     try {

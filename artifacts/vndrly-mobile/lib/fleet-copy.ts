@@ -3,6 +3,22 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 const spanish: Record<string, string> = {
+"Dispatch work and confirm Fleet readiness":"Despache el trabajo y confirme la preparación de la flota",
+"Plan, release, track, and review runs":"Planifique, despache, siga y revise recorridos",
+"Your yard work and active runs":"Su trabajo de patio y recorridos activos",
+"Yard Orders":"Órdenes del patio",
+"Ready for Dispatch":"Listo para despacho",
+"Active Runs":"Recorridos activos",
+"Run History":"Historial de recorridos",
+"Fleet Readiness":"Preparación de la flota",
+"People, equipment, compliance, and safety":"Personal, equipo, cumplimiento y seguridad",
+"Available Drivers":"Conductores disponibles",
+"Equipment & Yard Inventory":"Equipo e inventario del patio",
+"Compliance & Safety":"Cumplimiento y seguridad",
+"Office Review":"Revisión de oficina",
+"More tools":"Más herramientas",
+"Some Fleet information is unavailable. Open a row for its current records.":"Parte de la información de flota no está disponible. Abra una fila para ver sus registros actuales.",
+"open":"abiertas", "active":"activos", "runs":"recorridos", "Unscored":"Sin puntuación",
 "One next step from assigned work through return and closeout.":"Un siguiente paso desde el trabajo asignado hasta el regreso y cierre.",
 "You can prepare and run your own work without a separate Yard or Dispatch handoff.":"Puede preparar y realizar su propio trabajo sin una entrega separada de Patio o Despacho.",
 "Complete the Yard hookup yourself, then return here to start the run.":"Complete usted mismo la conexión en el patio y luego regrese aquí para iniciar el recorrido.",

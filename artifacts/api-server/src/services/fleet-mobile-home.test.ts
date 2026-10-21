@@ -50,6 +50,44 @@ describe("Fleet Home modules", () => {
     expect(data.nextAction).toEqual(data.priorities[0]);
   });
 
+  it("summarizes Dispatch and Fleet Readiness without additional home requests", async () => {
+    const read = createFleetHomeReader({
+      ...source(["admin", "office", "dispatch", "yard"], [
+        run("11111111-1111-4111-8111-111111111111", "draft", 7),
+        run("22222222-2222-4222-8222-222222222222", "dispatched", 8),
+        run("33333333-3333-4333-8333-333333333333", "in_progress", 9),
+        run("44444444-4444-4444-8444-444444444444", "completed", 8),
+      ]),
+      yardOrders: async () => ({ orders: [
+        { id: "55555555-5555-4555-8555-555555555555", status: "assigned", assignedToUserId: 7, runId: null },
+        { id: "66666666-6666-4666-8666-666666666666", status: "completed", assignedToUserId: 7, runId: null },
+      ] }),
+      resources: async () => ({
+        drivers: [
+          { userId: 10, name: "Available Driver", fleetIds: [] },
+          { userId: 8, name: "Assigned Driver", fleetIds: [] },
+          { userId: 9, name: "Active Driver", fleetIds: [] },
+        ],
+        equipment: [
+          { id: "77777777-7777-4777-8777-777777777777", name: "Ready Truck", category: "truck", status: "available", dispatchable: true },
+          { id: "88888888-8888-4888-8888-888888888888", name: "Held Truck", category: "truck", status: "hold", dispatchable: false },
+        ],
+      }),
+      complianceSummary: async () => ({ status: "amber", score: 82 }),
+    });
+    const data = (await read(actor, "summary")).data as FleetHomeProjection;
+    expect(data.metrics).toEqual({
+      yardOrders: 1,
+      awaitingDispatch: 1,
+      activeRuns: 2,
+      runHistory: 1,
+      availableDrivers: 1,
+      yardInventory: 1,
+      complianceScore: 82,
+      complianceStatus: "amber",
+    });
+  });
+
   it("keeps Dispatch ready when Compliance fails and provides scoped conflict recovery", async () => {
     const read = createFleetHomeReader({
       ...source(["dispatch"]),

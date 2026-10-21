@@ -103,6 +103,50 @@ export function buildCompanyGoRunOrders(companyId: number, rawDestinations: unkn
   ];
 }
 
+export function buildCompanyGoPartnerDestination(partnerId: number, site: { id: number; name: string; address: string; latitude: number; longitude: number }): FleetDestination {
+  return FleetDestinationSchema.parse({
+    id: stableCompanyGoUuid(`partner-destination:${partnerId}:${site.id}`),
+    revision: 1,
+    name: `GasGo — ${site.name}`,
+    kind: "delivery",
+    address: site.address,
+    latitude: site.latitude,
+    longitude: site.longitude,
+    materials: [],
+    hours: "24/7",
+    instructions: "Confirm current site access requirements before dispatch.",
+    active: true,
+    ownerType: "partner",
+    ownerId: partnerId,
+    roles: ["partner_site"],
+    timeZone: "America/Chicago",
+  });
+}
+
+export function buildCompanyGoVendorDestinations(companyId: number): FleetDestination[] {
+  const destination = (key: string, name: string, kind: "yard" | "disposal", address: string, latitude: number, longitude: number, roles: Array<"base" | "disposal">) => FleetDestinationSchema.parse({
+    id: stableCompanyGoUuid(`vendor-destination:${companyId}:${key}`),
+    revision: 1,
+    name,
+    kind,
+    address,
+    latitude,
+    longitude,
+    materials: kind === "disposal" ? ["produced water"] : [],
+    hours: "24/7",
+    instructions: "Synthetic CompanyGo workflow location.",
+    active: true,
+    ownerType: "vendor",
+    ownerId: companyId,
+    roles,
+    timeZone: "America/Chicago",
+  });
+  return [
+    destination("stanton-yard", "FleetGo Stanton Yard", "yard", "1200 Industrial Road, Stanton, TX", 32.1293, -101.7885, ["base"]),
+    destination("lone-mesa-swd", "Lone Mesa SWD", "disposal", "2400 County Road, Martin County, TX", 32.1645, -101.7211, ["disposal"]),
+  ];
+}
+
 async function mergeCompanyGoRunOrders(client: DbClient, companyId: number, dispatcherUserId: number, destinations: FleetDestination[]): Promise<void> {
   for (const order of buildCompanyGoRunOrders(companyId, destinations)) {
     await client.query(`INSERT INTO assistant_action_audit(user_id,actor_role,actor_membership_role,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,tool_output,result_status)
@@ -176,6 +220,11 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
     SELECT v.id company_id,v.fleet_ops_state,v.fleet_resources,v.fleet_compliance_configuration compliance,v.fleet_commercial_settings commercial,
       (SELECT p.fleet_commercial_settings FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) partner_commercial,
       (SELECT s.id FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) site_id,
+      (SELECT p.id FROM partners p WHERE lower(p.name)='gasgo' LIMIT 1) partner_id,
+      (SELECT s.name FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) site_name,
+      (SELECT s.address FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) site_address,
+      (SELECT s.latitude FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) site_latitude,
+      (SELECT s.longitude FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) site_longitude,
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_driver@fleetgo.com' LIMIT 1) driver_user_id,
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_dispatch@fleetgo.com' LIMIT 1) dispatcher_user_id,
       (SELECT array_agg(u.id ORDER BY lower(coalesce(u.email,u.username))) FROM users u WHERE lower(coalesce(u.email,u.username))=ANY($1::text[])) account_user_ids,
@@ -222,8 +271,32 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
   });
   await client.query("UPDATE vendors SET fleet_ops_state=$2::jsonb,fleet_resources=$3::jsonb WHERE id=$1", [context.companyId, JSON.stringify(state), JSON.stringify(resources)]);
   const vendorDirectory = FleetCommercialSettingsSchema.parse(row.commercial ?? {});
+  const requiredVendorDestinations = buildCompanyGoVendorDestinations(context.companyId);
+  const missingVendorDestinations = requiredVendorDestinations.filter(required => !vendorDirectory.destinations.some(destination =>
+    destination.active && destination.ownerType === "vendor" && destination.ownerId === context.companyId && destination.kind === required.kind));
+  const effectiveVendorDirectory = missingVendorDestinations.length === 0 ? vendorDirectory : FleetCommercialSettingsSchema.parse({
+    ...vendorDirectory,
+    version: vendorDirectory.version + 1,
+    destinations: [...vendorDirectory.destinations, ...missingVendorDestinations],
+  });
+  if (missingVendorDestinations.length > 0)
+    await client.query("UPDATE vendors SET fleet_commercial_settings=$2::jsonb WHERE id=$1", [context.companyId, JSON.stringify(effectiveVendorDirectory)]);
   const partnerDirectory = FleetCommercialSettingsSchema.parse(row.partner_commercial ?? {});
-  await mergeCompanyGoRunOrders(client, context.companyId, context.dispatcherUserId, [...vendorDirectory.destinations, ...partnerDirectory.destinations]);
+  const hasPartnerDestination = partnerDirectory.destinations.some(destination => destination.active && destination.ownerType === "partner");
+  const effectivePartnerDirectory = hasPartnerDestination ? partnerDirectory : FleetCommercialSettingsSchema.parse({
+    ...partnerDirectory,
+    version: partnerDirectory.version + 1,
+    destinations: [...partnerDirectory.destinations, buildCompanyGoPartnerDestination(Number(row.partner_id), {
+      id: Number(row.site_id),
+      name: String(row.site_name),
+      address: String(row.site_address),
+      latitude: Number(row.site_latitude),
+      longitude: Number(row.site_longitude),
+    })],
+  });
+  if (!hasPartnerDestination)
+    await client.query("UPDATE partners SET fleet_commercial_settings=$2::jsonb WHERE id=$1", [Number(row.partner_id), JSON.stringify(effectivePartnerDirectory)]);
+  await mergeCompanyGoRunOrders(client, context.companyId, context.dispatcherUserId, [...effectiveVendorDirectory.destinations, ...effectivePartnerDirectory.destinations]);
   await mergeCompanyGoCompliance(client, context);
 }
 
@@ -255,13 +328,27 @@ export async function mergeCompanyGoCompliance(client: DbClient, context: Compan
   const fact = { subject: record.evidence.subject, version: 1, facts: { cdlRequired: true, medicalRequired: true, testingRequired: true, state: "OK", carrierId: context.companyId, vehicleAssetId: context.vehicleAssetId }, reviewedAt: at, reviewedByUserId: context.dispatcherUserId, sourceKind: "employer_record" as const, sourceObjectPath: objectPath };
   const hadEntry = existing.entries.some(item => item.id === recordId);
   const hadFact = existing.facts.some(item => item.sourceObjectPath.includes(`/${recordId}/`));
+  const reviewerUserIds = existing.reviewerUserIds.includes(context.dispatcherUserId) ? existing.reviewerUserIds : [...existing.reviewerUserIds, context.dispatcherUserId];
+  const entries = hadEntry ? existing.entries.map(item => item.id === recordId ? entry : item) : [...existing.entries, entry];
+  const facts = hadFact ? existing.facts.map(item => item.sourceObjectPath.includes(`/${recordId}/`) ? fact : item) : [...existing.facts, fact];
+  const scoreHistory = existing.scoreHistory.some(item => item.at.slice(0, 10) === at.slice(0, 10))
+    ? existing.scoreHistory
+    : [...existing.scoreHistory, { at, score: 25 }].slice(-365);
+  const changed = JSON.stringify({ reviewerUserIds, entries, facts, scoreHistory, partnerScorePreview: preview }) !== JSON.stringify({
+    reviewerUserIds: existing.reviewerUserIds,
+    entries: existing.entries,
+    facts: existing.facts,
+    scoreHistory: existing.scoreHistory,
+    partnerScorePreview: existing.partnerScorePreview,
+  });
   const configuration = FleetComplianceConfigurationSchema.parse({
-    ...existing, version: existing.version + 1,
-    reviewerUserIds: existing.reviewerUserIds.includes(context.dispatcherUserId) ? existing.reviewerUserIds : [...existing.reviewerUserIds, context.dispatcherUserId],
-    entries: hadEntry ? existing.entries.map(item => item.id === recordId ? entry : item) : [...existing.entries, entry],
-    facts: hadFact ? existing.facts.map(item => item.sourceObjectPath.includes(`/${recordId}/`) ? fact : item) : [...existing.facts, fact],
-    scoreHistory: hadEntry ? existing.scoreHistory : [...existing.scoreHistory.filter(item => item.at.slice(0, 10) !== at.slice(0, 10)), { at, score: 25 }].slice(-365),
-    partnerScorePreview: hadEntry ? existing.partnerScorePreview : preview,
+    ...existing,
+    version: changed ? existing.version + 1 : existing.version,
+    reviewerUserIds,
+    entries,
+    facts,
+    scoreHistory,
+    partnerScorePreview: preview,
   });
   await client.query("UPDATE vendors SET fleet_compliance_configuration=$2::jsonb WHERE id=$1", [context.companyId, JSON.stringify(configuration)]);
 }

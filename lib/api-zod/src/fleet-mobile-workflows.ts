@@ -170,6 +170,16 @@ export const FleetHomeProjectionSchema = z.object({
   nextAction: homeAction.nullable(),
   priorities: z.array(homeAction).max(50),
   warnings: z.array(z.object({ id: FleetCanonicalIdSchema, message: z.string().min(1).max(500) }).strict()).max(50),
+  metrics: z.object({
+    yardOrders: z.number().int().nonnegative().nullable(),
+    awaitingDispatch: z.number().int().nonnegative().nullable(),
+    activeRuns: z.number().int().nonnegative().nullable(),
+    runHistory: z.number().int().nonnegative().nullable(),
+    availableDrivers: z.number().int().nonnegative().nullable(),
+    yardInventory: z.number().int().nonnegative().nullable(),
+    complianceScore: z.number().int().min(0).max(100).nullable(),
+    complianceStatus: z.enum(["red", "amber", "green"]).nullable(),
+  }).strict().optional(),
   moduleStates: z.array(z.object({ module: z.enum(["dispatch", "yard", "assets", "map", "history", "compliance", "maintenance"]), state: z.enum(["ready", "empty", "warning", "unavailable"]) }).strict()).max(7),
 }).strict();
 export type FleetHomeProjection = z.infer<typeof FleetHomeProjectionSchema>;

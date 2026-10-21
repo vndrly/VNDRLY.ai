@@ -81,16 +81,16 @@ describe("FleetShell", () => {
     nav.home = { companyId: 3, userId: 7, mode: "coordinated", capabilities: ["admin"], nextAction: null, priorities: [], warnings: [], moduleStates: [] };
     render(<FleetShell module="home" />);
     expect(screen.getByRole("heading", { name: "Fleet Ops" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Open Dispatch Board" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open Ready for Dispatch" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Open Fleet Map" }));
     expect(nav.push).toHaveBeenCalledWith("/(tabs)/fleet?module=map");
     expect(screen.getByTestId("fleet-home-cards").style.flexDirection).toBe(width >= 768 ? "row" : "column");
-    const card = screen.getByTestId("fleet-home-map");
+    const card = screen.getByTestId("fleet-home-dispatch");
     expect(card.style.borderTopWidth).toBe("2px");
     expect(card.style.borderTopColor).toBe("rgb(19, 124, 73)");
-    expect(card.style.width).toBe(width >= 768 ? "48%" : "100%");
-    expect(screen.getByTestId("icon-map")).toBeTruthy();
-    expect(screen.getByText("Live operational locations")).toBeTruthy();
+    if (width >= 768) expect(card.style.flex).toBe("1 1 0%"); else expect(card.style.width).toBe("100%");
+    expect(screen.getAllByTestId("icon-truck").length).toBeGreaterThan(0);
+    expect(screen.getByText("Plan, release, track, and review runs")).toBeTruthy();
   });
 
   it("keeps Dispatch and Map mounted when Compliance reports a 409", () => {

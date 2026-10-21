@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
-import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLEET_SEED_SQL, buildCompanyGoRunOrders, mergeCompanyGoCompliance, selectCompanyGoAssetRoles, stableCompanyGoUuid } from "../../scripts/seed-companygo-fleet-workflows";
+import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLEET_SEED_SQL, buildCompanyGoPartnerDestination, buildCompanyGoRunOrders, buildCompanyGoVendorDestinations, mergeCompanyGoCompliance, selectCompanyGoAssetRoles, stableCompanyGoUuid } from "../../scripts/seed-companygo-fleet-workflows";
 
 const objectStore = vi.hoisted(() => ({ putObject: vi.fn(async () => undefined) }));
 vi.mock("../lib/objectStore", () => ({ getObjectStore: () => objectStore }));
@@ -98,6 +98,38 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
     expect(orders).toHaveLength(3);
     expect(orders.every(order => order.accessGroupIds.includes(stableCompanyGoUuid("fleet:stanton")))).toBe(true);
     expect(orders.map(order => order.name)).toEqual(expect.arrayContaining([expect.stringMatching(/GasGo/), expect.stringMatching(/SWD/)]));
+  });
+
+  it("materializes a stable GasGo destination when a fresh fixture has no partner directory entry", () => {
+    const destination = buildCompanyGoPartnerDestination(614, {
+      id: 399,
+      name: "Antelope Draw",
+      address: "1200 County Road, Stanton, TX",
+      latitude: 32.1,
+      longitude: -101.9,
+    });
+
+    expect(destination).toMatchObject({
+      name: "GasGo — Antelope Draw",
+      kind: "delivery",
+      ownerType: "partner",
+      ownerId: 614,
+      roles: ["partner_site"],
+      active: true,
+    });
+    expect(destination.id).toBe(stableCompanyGoUuid("partner-destination:614:399"));
+  });
+
+  it("materializes the FleetGo yard and disposal directory required by saved Runs", () => {
+    const destinations = buildCompanyGoVendorDestinations(1114);
+
+    expect(destinations).toHaveLength(2);
+    expect(destinations.map(destination => destination.kind)).toEqual(["yard", "disposal"]);
+    expect(destinations.every(destination => destination.ownerType === "vendor" && destination.ownerId === 1114)).toBe(true);
+    expect(destinations.map(destination => destination.id)).toEqual([
+      stableCompanyGoUuid("vendor-destination:1114:stanton-yard"),
+      stableCompanyGoUuid("vendor-destination:1114:lone-mesa-swd"),
+    ]);
   });
 
   it("backfills canonical tickets and appends billing reconciliation without rewriting audit history", () => {
