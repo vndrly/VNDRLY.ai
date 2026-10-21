@@ -873,7 +873,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
             name: row.display_name,
             employeeId: row.employee_id,
             cdlRecorded: row.cdl_recorded,
-            cdlExpirationDate: row.cdl_expiration_date ? String(row.cdl_expiration_date) : null,
+            cdlExpirationDate: row.cdl_expiration_date ? new Date(row.cdl_expiration_date as string | Date).toISOString().slice(0, 10) : null,
             fleetIds: state.grants
               .find((g) => g.userId === row.id)!
               .fleetIds.filter((id) => grant.fleetIds.includes(id)),
