@@ -28,7 +28,7 @@ export const COMPANYGO_FLEET_ACCOUNTS = [
   { login: "vendor_fleet_driver@fleetgo.com", capabilities: ["yard", "driver", "self_dispatch"] },
 ] as const;
 
-type CompanyGoFleetContext = {
+export type CompanyGoFleetContext = {
   companyId: number; siteId: number; driverUserId: number; dispatcherUserId: number;
   accountUserIds: number[];
   vehicleAssetId: string; trailerAssetId: string;
@@ -186,10 +186,9 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
   await mergeCompanyGoCompliance(client, context);
 }
 
-async function mergeCompanyGoCompliance(client: DbClient, context: CompanyGoFleetContext): Promise<void> {
+export async function mergeCompanyGoCompliance(client: DbClient, context: CompanyGoFleetContext): Promise<void> {
   const existing = FleetComplianceConfigurationSchema.parse(context.compliance ?? { version: 1, reviewerUserIds: [], entries: [] });
   const recordId = stableCompanyGoUuid("compliance:driver-license");
-  if (existing.entries.some(entry => entry.id === recordId)) return;
   const at = isoDay(-1, 16), until = isoDay(365, 16);
   const record = FleetComplianceRecordSchema.parse({
     evidence: { id: recordId, revision: 1, subject: { kind: "driver", id: context.driverUserId }, requirementId: "companygo-driver-license", requirementVersion: 1, status: "reviewed", validFrom: isoDay(-365, 16), validUntil: until, verifiedAt: at, verifiedByUserId: context.dispatcherUserId, source: "CompanyGo synthetic qualification record", privateDocumentRef: null, restrictions: {} },
@@ -212,12 +211,16 @@ async function mergeCompanyGoCompliance(client: DbClient, context: CompanyGoFlee
     { category: "insurance", reason: "Add current insurance evidence.", reasonCode: "missing_evidence" },
     { category: "company_records", reason: "Add current company records.", reasonCode: "missing_evidence" },
   ] };
+  const fact = { subject: record.evidence.subject, version: 1, facts: { cdlRequired: true, medicalRequired: true, testingRequired: true, state: "OK", carrierId: context.companyId, vehicleAssetId: context.vehicleAssetId }, reviewedAt: at, reviewedByUserId: context.dispatcherUserId, sourceKind: "employer_record" as const, sourceObjectPath: objectPath };
+  const hadEntry = existing.entries.some(item => item.id === recordId);
+  const hadFact = existing.facts.some(item => item.sourceObjectPath.includes(`/${recordId}/`));
   const configuration = FleetComplianceConfigurationSchema.parse({
     ...existing, version: existing.version + 1,
     reviewerUserIds: existing.reviewerUserIds.includes(context.dispatcherUserId) ? existing.reviewerUserIds : [...existing.reviewerUserIds, context.dispatcherUserId],
-    entries: [...existing.entries, entry],
-    facts: [...existing.facts, { subject: record.evidence.subject, version: 1, facts: { cdlRequired: true, medicalRequired: true, testingRequired: true, state: "OK", carrierId: context.companyId, vehicleAssetId: context.vehicleAssetId }, reviewedAt: at, reviewedByUserId: context.dispatcherUserId, sourceKind: "employer_record", sourceObjectPath: objectPath }],
-    scoreHistory: [...existing.scoreHistory.filter(item => item.at.slice(0, 10) !== at.slice(0, 10)), { at, score: 25 }].slice(-365), partnerScorePreview: preview,
+    entries: hadEntry ? existing.entries.map(item => item.id === recordId ? entry : item) : [...existing.entries, entry],
+    facts: hadFact ? existing.facts.map(item => item.sourceObjectPath.includes(`/${recordId}/`) ? fact : item) : [...existing.facts, fact],
+    scoreHistory: hadEntry ? existing.scoreHistory : [...existing.scoreHistory.filter(item => item.at.slice(0, 10) !== at.slice(0, 10)), { at, score: 25 }].slice(-365),
+    partnerScorePreview: hadEntry ? existing.partnerScorePreview : preview,
   });
   await client.query("UPDATE vendors SET fleet_compliance_configuration=$2::jsonb WHERE id=$1", [context.companyId, JSON.stringify(configuration)]);
 }

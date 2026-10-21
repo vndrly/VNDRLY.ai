@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
-import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLEET_SEED_SQL, selectCompanyGoAssetRoles, stableCompanyGoUuid } from "../../scripts/seed-companygo-fleet-workflows";
+import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLEET_SEED_SQL, mergeCompanyGoCompliance, selectCompanyGoAssetRoles, stableCompanyGoUuid } from "../../scripts/seed-companygo-fleet-workflows";
+
+const objectStore = vi.hoisted(() => ({ putObject: vi.fn(async () => undefined) }));
+vi.mock("../lib/objectStore", () => ({ getObjectStore: () => objectStore }));
 
 describe("CompanyGo Fleet workflow fixture plan", () => {
   it("is additive, repeatable, and scoped by stable natural keys", () => {
@@ -33,6 +36,36 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
     const fixtures = workflow.indexOf("run seed:companygo-fleet-workflows");
     expect(migration).toBeGreaterThan(-1);
     expect(fixtures).toBeGreaterThan(migration);
+  });
+
+  it("rematerializes canonical private compliance evidence when its index entry already exists", async () => {
+    objectStore.putObject.mockClear();
+    const recordId = stableCompanyGoUuid("compliance:driver-license");
+    const at = "2026-10-20T16:00:00.000Z";
+    const context = {
+      companyId: 1114,
+      siteId: 399,
+      driverUserId: 1135,
+      dispatcherUserId: 1132,
+      accountUserIds: [1129, 1130, 1132, 1135],
+      vehicleAssetId: "00000000-0000-4000-8000-000000000004",
+      trailerAssetId: "00000000-0000-4000-8000-000000000002",
+      fleetOpsState: {},
+      fleetResources: {},
+      compliance: {
+        version: 1,
+        reviewerUserIds: [1132],
+        entries: [{ id: recordId, revision: 1, subject: { kind: "driver", id: 1135 }, requirementId: "companygo-driver-license", requirementVersion: 1, status: "reviewed", validFrom: at, validUntil: "2027-10-20T16:00:00.000Z", verifiedAt: at, verifiedByUserId: 1132, attributeKind: "driver_license", objectPath: `/objects/fleet-compliance-private/1114/${recordId}/1/${"a".repeat(64)}`, updatedAt: at }],
+        requirements: [], facts: [], scoreHistory: [], partnerScorePreview: null,
+      },
+    };
+    const updates: unknown[][] = [];
+    const client = { query: vi.fn(async (sql: string, values?: unknown[]) => { if (sql.startsWith("UPDATE vendors")) updates.push(values ?? []); return { rows: [], rowCount: 0 }; }) };
+
+    await mergeCompanyGoCompliance(client, context);
+
+    expect(objectStore.putObject).toHaveBeenCalledOnce();
+    expect(updates).toHaveLength(1);
   });
 
   it("read-only acceptance checks authoritative Fleet state, Details, and compliance", () => {
