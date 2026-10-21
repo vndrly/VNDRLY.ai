@@ -6,8 +6,13 @@ import { Pool } from "pg";
 import {
   FleetComplianceConfigurationSchema,
   FleetComplianceRecordSchema,
+  FleetCommercialSettingsSchema,
+  FleetDestinationSchema,
   FleetResourcesRegistrySchema,
+  FleetRunOrderSchema,
   FleetRunSchema,
+  type FleetDestination,
+  type FleetRunOrder,
 } from "@workspace/api-zod";
 import { z } from "zod/v4";
 
@@ -78,6 +83,34 @@ const fleetId = stableCompanyGoUuid("fleet:stanton");
 const rigPackageId = stableCompanyGoUuid("rig-package:standard");
 const detailId = stableCompanyGoUuid("detail:standard");
 
+export function buildCompanyGoRunOrders(companyId: number, rawDestinations: unknown[]): FleetRunOrder[] {
+  const destinations = rawDestinations.map(value => FleetDestinationSchema.parse(value)).filter(value => value.active);
+  const yard = destinations.find(value => value.ownerType === "vendor" && value.ownerId === companyId && value.kind === "yard");
+  const disposal = destinations.find(value => value.ownerType === "vendor" && value.ownerId === companyId && value.kind === "disposal");
+  const partner = destinations.find(value => value.ownerType === "partner");
+  if (!yard || !disposal || !partner) throw new Error("CompanyGo saved Runs require a FleetGo yard, FleetGo disposal destination, and GasGo destination.");
+  const order = (key: string, name: string, origin: FleetDestination, destination: FleetDestination, returnPolicy: "delivery_only" | "return_required") => FleetRunOrderSchema.parse({
+    id: stableCompanyGoUuid(`run-order:${key}`), companyId, version: 1, name, accessGroupIds: [fleetId],
+    origin, destination, base: returnPolicy === "return_required" ? yard : null, returnPolicy,
+    instructions: "Synthetic CompanyGo workflow route. Confirm current site access before dispatch.",
+    timeZone: "America/Chicago", archivedAt: null,
+  });
+  return [
+    order("gasgo-delivery", `FleetGo Yard to GasGo — ${partner.name}`, yard, partner, "return_required"),
+    order("gasgo-swd", `GasGo to SWD — ${disposal.name}`, partner, disposal, "return_required"),
+    order("yard-swd", `FleetGo Yard to SWD — ${disposal.name}`, yard, disposal, "delivery_only"),
+  ];
+}
+
+async function mergeCompanyGoRunOrders(client: DbClient, companyId: number, dispatcherUserId: number, destinations: FleetDestination[]): Promise<void> {
+  for (const order of buildCompanyGoRunOrders(companyId, destinations)) {
+    await client.query(`INSERT INTO assistant_action_audit(user_id,actor_role,actor_membership_role,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,tool_output,result_status)
+      SELECT $1,'vendor','member',$2,'fleet','typed','canonical','seed_companygo_fleet_workflows','fixture_seed','fleet-run-order',$3,'{}'::jsonb,$4::jsonb,'completed'
+      WHERE NOT EXISTS(SELECT 1 FROM assistant_action_audit WHERE vendor_id=$2 AND target_type='fleet-run-order' AND target_id=$3)`,
+      [dispatcherUserId, companyId, order.id, JSON.stringify(order)]);
+  }
+}
+
 function isoDay(offset: number, hour: number): string {
   const value = new Date();
   value.setUTCHours(hour, 0, 0, 0);
@@ -138,7 +171,8 @@ function buildCompanyGoRun(context: CompanyGoFleetContext, ordinal: number, futu
 
 async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
   const result = await client.query(`
-    SELECT v.id company_id,v.fleet_ops_state,v.fleet_resources,v.fleet_compliance_configuration compliance,
+    SELECT v.id company_id,v.fleet_ops_state,v.fleet_resources,v.fleet_compliance_configuration compliance,v.fleet_commercial_settings commercial,
+      (SELECT p.fleet_commercial_settings FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) partner_commercial,
       (SELECT s.id FROM site_locations s JOIN partners p ON p.id=s.partner_id WHERE lower(p.name)='gasgo' ORDER BY s.id LIMIT 1) site_id,
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_driver@fleetgo.com' LIMIT 1) driver_user_id,
       (SELECT u.id FROM users u WHERE lower(coalesce(u.email,u.username))='vendor_fleet_dispatch@fleetgo.com' LIMIT 1) dispatcher_user_id,
@@ -183,6 +217,9 @@ async function mergeCompanyGoFleetState(client: DbClient): Promise<void> {
     reservations: [...originalResources.reservations.filter(item => !fixtureRunIds.has(item.runId)), ...fixtureRuns.map(run => run.resourceAssignment!.reservation)],
   });
   await client.query("UPDATE vendors SET fleet_ops_state=$2::jsonb,fleet_resources=$3::jsonb WHERE id=$1", [context.companyId, JSON.stringify(state), JSON.stringify(resources)]);
+  const vendorDirectory = FleetCommercialSettingsSchema.parse(row.commercial ?? {});
+  const partnerDirectory = FleetCommercialSettingsSchema.parse(row.partner_commercial ?? {});
+  await mergeCompanyGoRunOrders(client, context.companyId, context.dispatcherUserId, [...vendorDirectory.destinations, ...partnerDirectory.destinations]);
   await mergeCompanyGoCompliance(client, context);
 }
 
@@ -341,6 +378,7 @@ SELECT
  (SELECT jsonb_array_length(coalesce(v.fleet_ops_state->'runs','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) run_count,
  (SELECT jsonb_array_length(coalesce(v.fleet_resources->'details','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) detail_count,
  (SELECT jsonb_array_length(coalesce(v.fleet_compliance_configuration->'entries','[]'::jsonb)) FROM vendors v JOIN fleetgo f ON v.id=f.id) compliance_entry_count,
+ (SELECT count(DISTINCT a.target_id) FROM assistant_action_audit a JOIN fleetgo f ON a.vendor_id=f.id WHERE a.target_type='fleet-run-order' AND a.tool_output->>'archivedAt' IS NULL) run_order_count,
  (SELECT count(*) FROM users u WHERE lower(coalesce(u.email,u.username))=ANY($1::text[])) account_count,
  (SELECT count(*) FROM fleet_person_capabilities c JOIN fleetgo f ON c.company_id=f.id JOIN users u ON u.id=c.user_id JOIN (VALUES
 ${COMPANYGO_FLEET_ACCOUNTS.map((row) => `('${row.login}',ARRAY[${row.capabilities.map((c) => `'${c}'`).join(",")}]::text[])`).join(",\n")}
@@ -350,7 +388,7 @@ ${COMPANYGO_FLEET_ACCOUNTS.map((row) => `('${row.login}',ARRAY[${row.capabilitie
 export async function verifyCompanyGoFleetCoverage(client: DbClient): Promise<Record<string, number>> {
   const result = await client.query(COMPANYGO_FLEET_ACCEPTANCE_SQL, [COMPANYGO_FLEET_ACCOUNTS.map((row) => row.login)]);
   const counts = Object.fromEntries(Object.entries(result.rows[0] ?? {}).map(([key, value]) => [key, Number(value)]));
-  const required: Array<[string, number]> = [["history_days", 30], ["scheduled_days", 7], ["ticket_count", 37], ["billing_line_count", 30], ["run_count", 37], ["detail_count", 1], ["compliance_entry_count", 1], ["account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["capability_account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["gasgo_count", 1]];
+  const required: Array<[string, number]> = [["history_days", 30], ["scheduled_days", 7], ["ticket_count", 37], ["billing_line_count", 30], ["run_count", 37], ["detail_count", 1], ["compliance_entry_count", 1], ["run_order_count", 3], ["account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["capability_account_count", COMPANYGO_FLEET_ACCOUNTS.length], ["gasgo_count", 1]];
   for (const [key, minimum] of required) if ((counts[key] ?? 0) < minimum) throw new Error(`CompanyGo Fleet acceptance requires ${key} >= ${minimum}; found ${counts[key] ?? 0}.`);
   const canonical = await client.query("SELECT fleet_ops_state,fleet_resources,fleet_compliance_configuration FROM vendors WHERE lower(name)='fleetgo' LIMIT 1");
   const state = CompanyGoFleetStateSchema.parse(canonical.rows[0]?.fleet_ops_state);

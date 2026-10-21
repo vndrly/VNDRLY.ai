@@ -87,7 +87,7 @@ it("prepares and revises reusable Runs in the company library with canonical his
   let current = original,
     body: any;
   mocks.api.mockImplementation(async (path: string, options: any) => {
-    if (path === "/api/fleet")
+    if (path === "/api/fleet/overview")
       return {
         companyId: 7,
         enabled: true,
@@ -127,6 +127,7 @@ it("prepares and revises reusable Runs in the company library with canonical his
     return current;
   });
   render(<Library companyId={7} />);
+  await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/fleet/overview", {}, {}));
   await screen.findByRole("option", { name: /Original Run/ });
   fireEvent.change(screen.getByLabelText("Saved Run"), {
     target: { value: original.id },

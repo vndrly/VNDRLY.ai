@@ -850,13 +850,14 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
         if (assets.rows.length > 200)
           throw new FleetError("fleet.resource_limit_reached");
         const tickets = await client.query(
-          "SELECT t.id,t.site_location_id,t.status FROM tickets t WHERE t.vendor_id=$1 AND t.site_location_id=ANY($2::int[]) AND ($3::boolean OR t.field_employee_id=$4 OR t.foreman_user_id=$5 OR t.acting_foreman_user_id=$5 OR EXISTS(SELECT 1 FROM ticket_crew tc WHERE tc.ticket_id=t.id AND tc.employee_id=$4 AND tc.removed_at IS NULL)) ORDER BY t.id DESC LIMIT 201",
+          "SELECT t.id,t.site_location_id,t.status FROM tickets t WHERE t.vendor_id=$1 AND t.site_location_id=ANY($2::int[]) AND ($3::boolean OR t.field_employee_id=$4 OR t.foreman_user_id=$5 OR t.acting_foreman_user_id=$5 OR EXISTS(SELECT 1 FROM ticket_crew tc WHERE tc.ticket_id=t.id AND tc.employee_id=$4 AND tc.removed_at IS NULL)) AND t.status=ANY($6::text[]) ORDER BY t.id DESC LIMIT 201",
           [
             actor.companyId,
             grantFor(state, actor)?.siteIds ?? [],
             actor.role === "vendor",
             actor.vendorPeopleId ?? null,
             actor.userId,
+            ["initiated", "in_progress", "pending_review", "kicked_back", "completed"],
           ],
         );
         if (tickets.rows.length > 200)

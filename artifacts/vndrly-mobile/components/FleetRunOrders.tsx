@@ -62,7 +62,7 @@ export default function FleetRunOrders({ companyId }: { companyId: number }) {
     const request = ++contextGeneration.current;
     setError("");
     void Promise.all([
-      apiFetch<FleetOverview>("/api/fleet", {}, scope.current),
+      apiFetch<FleetOverview>("/api/fleet/overview", {}, scope.current),
       apiFetch<unknown>("/api/fleet/commercial", {}, scope.current),
     ])
       .then(([overview, rawDirectory]) => {

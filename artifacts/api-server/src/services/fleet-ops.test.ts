@@ -21,7 +21,7 @@ const fleetId = "11111111-1111-4111-8111-111111111111",
 const manager = { userId: 1, companyId: 7 },
   driver = { userId: 2, companyId: 7 },
   stranger = { userId: 3, companyId: 7 };
-function fixture(options?:{afterCommit?:(effect:()=>Promise<unknown>)=>void}) {
+function fixture(options?:{afterCommit?:(effect:()=>Promise<unknown>)=>void; resourceTickets?:Array<{id:number;site_location_id:number;status:string}>}) {
   let state: FleetState = {
     ...emptyFleetState(),
     enabled: true,
@@ -105,6 +105,10 @@ function fixture(options?:{afterCommit?:(effect:()=>Promise<unknown>)=>void}) {
         };
         billingTickets.push(ticket);
         return { rows: [ticket] };
+      }
+      if (sql.includes("SELECT t.id,t.site_location_id,t.status FROM tickets")) {
+        const rows = options?.resourceTickets ?? [];
+        return { rows: sql.includes("t.status=ANY") ? rows.filter(row => (params[5] as string[]).includes(row.status)) : rows };
       }
       if (sql.includes("FROM tickets"))
         return { rows: billingTickets.filter((t) => t.id === params[0]) };
@@ -297,6 +301,15 @@ describe("Fleet durable service authority contract", () => {
     ).toContain(vehicle);
     expect(f.state().fleets[0].equipmentAssetIds).toEqual([]);
     expect((await f.service.resources(manager)).equipment).toEqual([]);
+  });
+  it("keeps dispatch resources usable when financial ticket history exceeds the bounded active-ticket directory", async () => {
+    const historical = Array.from({ length: 201 }, (_, index) => ({ id: 1000 + index, site_location_id: 9, status: "awaiting_payment" }));
+    const active = { id: 50, site_location_id: 9, status: "initiated" };
+    const f = fixture({ resourceTickets: [...historical, active] });
+
+    await expect(f.service.resources(manager)).resolves.toMatchObject({
+      tickets: [{ id: active.id, siteId: active.site_location_id, status: active.status }],
+    });
   });
   it("retains an expired dispatch assessment when a certificate is later renewed", async () => {
     const f = fixture();

@@ -141,7 +141,7 @@ describe("mobile Fleet authorization", () => {
     expect(screen.queryByRole("heading",{name:"Details"})).toBeNull();
   });
   it("opens the saved Run library independently of the bounded dispatch resources endpoint",async()=>{
-    mocks.api.mockImplementation(async(path:string)=>path==="/api/fleet"?{...overview,fleets:[]}:{version:1,destinations:[],canManage:true,defaultMode:"batch",sitePolicy:null,sites:[]});
+    mocks.api.mockImplementation(async(path:string)=>path==="/api/fleet/overview"?{...overview,fleets:[]}:{version:1,destinations:[],canManage:true,defaultMode:"batch",sitePolicy:null,sites:[]});
     render(<FleetWorkspace initialMode="orders"/>);expect(await screen.findByRole("heading",{name:"Runs"})).toBeTruthy();await screen.findByText("Set up company resource access to prepare Runs.");expect(mocks.api.mock.calls.some(call=>call[0]==="/api/fleet/resources")).toBe(false);
   });
   it("opens Origins and Destinations as its own scoped page", async () => {

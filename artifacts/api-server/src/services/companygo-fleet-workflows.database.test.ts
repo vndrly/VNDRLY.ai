@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
-import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLEET_SEED_SQL, mergeCompanyGoCompliance, selectCompanyGoAssetRoles, stableCompanyGoUuid } from "../../scripts/seed-companygo-fleet-workflows";
+import { COMPANYGO_FLEET_ACCEPTANCE_SQL, COMPANYGO_FLEET_ACCOUNTS, COMPANYGO_FLEET_SEED_SQL, buildCompanyGoRunOrders, mergeCompanyGoCompliance, selectCompanyGoAssetRoles, stableCompanyGoUuid } from "../../scripts/seed-companygo-fleet-workflows";
 
 const objectStore = vi.hoisted(() => ({ putObject: vi.fn(async () => undefined) }));
 vi.mock("../lib/objectStore", () => ({ getObjectStore: () => objectStore }));
@@ -77,8 +77,24 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
     expect(sql).toContain("fleet_ops_state");
     expect(sql).toContain("fleet_resources");
     expect(sql).toContain("fleet_compliance_configuration");
-    expect(sql).not.toContain("assistant_action_audit");
+    expect(sql).toContain("assistant_action_audit");
+    expect(sql).toContain("fleet-run-order");
     expect(sql).not.toMatch(/\b(insert|update|delete|truncate|drop)\b/);
+  });
+
+  it("builds reusable saved Runs from FleetGo's real destination directory", () => {
+    const destination = (id: string, name: string, kind: "yard" | "delivery" | "disposal", ownerType: "vendor" | "partner", ownerId: number) => ({
+      id, revision: 1, name, kind, address: `${name}, synthetic`, latitude: 32.1, longitude: -101.9,
+      materials: [], hours: "24/7", instructions: "Synthetic testing only.", active: true, ownerType, ownerId,
+    });
+    const orders = buildCompanyGoRunOrders(1114, [
+      destination("00000000-0000-4000-8000-000000000001", "FleetGo Stanton Yard", "yard", "vendor", 1114),
+      destination("00000000-0000-4000-8000-000000000002", "Lone Mesa SWD", "disposal", "vendor", 1114),
+      destination("00000000-0000-4000-8000-000000000003", "GasGo Antelope Draw", "delivery", "partner", 614),
+    ]);
+    expect(orders).toHaveLength(3);
+    expect(orders.every(order => order.accessGroupIds.includes(stableCompanyGoUuid("fleet:stanton")))).toBe(true);
+    expect(orders.map(order => order.name)).toEqual(expect.arrayContaining([expect.stringMatching(/GasGo/), expect.stringMatching(/SWD/)]));
   });
 
   it("backfills ticket and billing rows without manufacturing audit stand-ins", () => {
