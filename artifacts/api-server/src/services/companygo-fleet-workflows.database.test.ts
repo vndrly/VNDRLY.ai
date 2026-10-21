@@ -33,7 +33,8 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
 
     const workflow = readFileSync(new URL("../../../../.github/workflows/deploy-api.yml", import.meta.url), "utf8");
     const migration = workflow.indexOf("run migrate:fleet-mobile-workflows");
-    const fixtures = workflow.indexOf("run seed:companygo-fleet-workflows");
+    const productionSeed = "node --env-file=/var/www/vndrly/.env.production --import tsx artifacts/api-server/scripts/seed-companygo-fleet-workflows.ts --apply";
+    const fixtures = workflow.indexOf(productionSeed);
     expect(migration).toBeGreaterThan(-1);
     expect(fixtures).toBeGreaterThan(migration);
   });
