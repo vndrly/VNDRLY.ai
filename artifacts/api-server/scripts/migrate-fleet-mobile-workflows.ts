@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -193,26 +193,48 @@ const checkRepairs = [
   ["fleet_asset_custody_events", "fleet_asset_custody_events_coordinates_pair_check", "(latitude IS NULL) = (longitude IS NULL)"],
 ] as const;
 
+type MigrationPool = { connect(): Promise<PoolClient> };
+
+export async function runFleetMobileWorkflowsMigration(
+  pool: MigrationPool,
+  pause: (milliseconds: number) => Promise<void> = (milliseconds) =>
+    new Promise((resolve) => setTimeout(resolve, milliseconds)),
+): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    const client = await pool.connect();
+    let committing = false;
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtext('fleet_mobile_workflows_migration'))");
+      for (const statement of fleetMobileWorkflowsMigration) await client.query(statement);
+      for (const [table, name, definition] of checkRepairs) {
+        await client.query(`DO $$ BEGIN IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('${table}') AND conname = '${name}'
+        ) THEN ALTER TABLE ${table} ADD CONSTRAINT ${name} CHECK (${definition}); END IF; END $$`);
+      }
+      committing = true;
+      await client.query("COMMIT");
+      return;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      if (
+        committing || attempt >= 2 || !error || typeof error !== "object" ||
+        !("code" in error) || error.code !== "40P01"
+      ) throw error;
+    } finally {
+      client.release();
+    }
+    await pause(25 * (attempt + 1));
+  }
+}
+
 async function main(): Promise<void> {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL required");
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const client = await pool.connect();
   try {
-    await client.query("BEGIN");
-    await client.query("SELECT pg_advisory_xact_lock(hashtext('fleet_mobile_workflows_migration'))");
-    for (const statement of fleetMobileWorkflowsMigration) await client.query(statement);
-    for (const [table, name, definition] of checkRepairs) {
-      await client.query(`DO $$ BEGIN IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('${table}') AND conname = '${name}'
-      ) THEN ALTER TABLE ${table} ADD CONSTRAINT ${name} CHECK (${definition}); END IF; END $$`);
-    }
-    await client.query("COMMIT");
+    await runFleetMobileWorkflowsMigration(pool);
     console.log("Fleet mobile workflow tables ready");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
   } finally {
-    client.release();
     await pool.end();
   }
 }
