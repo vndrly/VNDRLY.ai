@@ -281,6 +281,13 @@ describe("stored Fleet capabilities through the repository and service", () => {
     await expect(readFleetComplianceScore(actor(), valid, async () => new Set(["office", "driver"] as const))).resolves.toMatchObject({ advisoryOnly: true });
   });
 
+  it("reads the saved Compliance summary without recomputing private evidence", async () => {
+    const preview = { score: 76, status: "amber", advisoryOnly: true, evaluatedAt: "2026-10-20T00:00:00.000Z", categories: [], reasons: [] };
+    const service = arrange({ capabilities: ["dispatch"], complianceConfiguration: { version: 1, reviewerUserIds: [], entries: [], partnerScorePreview: preview } });
+    await expect(service.readFleetComplianceScorePreview({ ...actor(), repositoryAccess: "read" })).resolves.toEqual(preview);
+    expect(mocks.query.mock.calls.filter(([sql]) => String(sql).includes("fleet_compliance_configuration")).every(([sql]) => !String(sql).includes("FOR UPDATE"))).toBe(true);
+  });
+
   it("includes current Office compliance records without granting out-of-scope records", async () => {
     const record = FleetComplianceRecordSchema.parse({
       evidence: { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", revision: 1, subject: { kind: "driver", id: 1 }, requirementId: "driver_license", requirementVersion: 1, status: "document_received", validFrom: "2026-01-01T00:00:00Z", validUntil: "2027-01-01T00:00:00Z", verifiedAt: null, verifiedByUserId: null, source: "Synthetic upload", privateDocumentRef: null, restrictions: {} },

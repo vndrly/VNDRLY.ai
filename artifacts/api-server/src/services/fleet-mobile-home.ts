@@ -21,6 +21,7 @@ type Source = {
   yardOrders(actor: FleetActor): Promise<{ orders: Array<{ id: string; status: string; assignedToUserId: number | null; runId: string | null }> }>;
   resources(actor: FleetActor): Promise<Pick<FleetResources, "drivers" | "equipment"> | { custody: unknown[] }>;
   map(actor: FleetActor): Promise<unknown>;
+  complianceSummary(actor: FleetActor): Promise<{ status?: string }>;
   compliance(actor: FleetActor): Promise<unknown>;
 };
 
@@ -35,6 +36,7 @@ const canonical: Source = {
     return capabilities.has("admin") || capabilities.has("dispatch") ? fleet.resources(actor) : yard.custody(actor);
   },
   map: (actor) => fleet.mapContext(actor),
+  complianceSummary: (actor) => fleet.readFleetComplianceScorePreview(actor),
   compliance: (actor) => readFleetComplianceScore(actor, fleet),
 };
 
@@ -85,7 +87,7 @@ export function createFleetHomeReader(source: Source = canonical) {
       const [overview, yardOrders, compliance, assets, map] = await Promise.allSettled([
         source.overview(projectionActor),
         permitted(capabilities, "yard") ? source.yardOrders(projectionActor) : Promise.resolve({ orders: [] }),
-        permitted(capabilities, "compliance") ? source.compliance(actor) : Promise.resolve(null),
+        permitted(capabilities, "compliance") ? source.complianceSummary(projectionActor) : Promise.resolve(null),
         permitted(capabilities, "assets") ? source.resources(projectionActor) : Promise.resolve(null),
         permitted(capabilities, "map") ? source.map(projectionActor) : Promise.resolve(null),
       ]);

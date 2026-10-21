@@ -11,6 +11,7 @@ const source = (capabilities: FleetCapability[], runs = [run("11111111-1111-4111
   yardOrders: async () => ({ orders: [] }),
   resources: async () => ({ drivers: [], equipment: [] }),
   map: async () => ({ observations: [] }),
+  complianceSummary: async () => ({ status: "red" }),
   compliance: async () => ({ score: 30, status: "red", deductions: [] }),
 });
 
@@ -23,10 +24,11 @@ describe("Fleet Home modules", () => {
       yardOrders: async (current) => { access.set("yard", current.repositoryAccess); return { orders: [] }; },
       resources: async (current) => { access.set("assets", current.repositoryAccess); return { drivers: [], equipment: [] }; },
       map: async (current) => { access.set("map", current.repositoryAccess); return {}; },
+      complianceSummary: async (current) => { access.set("complianceSummary", current.repositoryAccess); return { status: "green" }; },
       compliance: async (current) => { access.set("compliance", current.repositoryAccess); return { status: "green" }; },
     });
     await read(actor, "summary");
-    expect(Object.fromEntries(access)).toEqual({ overview: "read", yard: "read", assets: "read", map: "read", compliance: undefined });
+    expect(Object.fromEntries(access)).toEqual({ overview: "read", yard: "read", assets: "read", map: "read", complianceSummary: "read" });
     expect(actor.repositoryAccess).toBeUndefined();
   });
   it("shows the Driver's own next run without Dispatch authority", async () => {
@@ -51,6 +53,7 @@ describe("Fleet Home modules", () => {
   it("keeps Dispatch ready when Compliance fails and provides scoped conflict recovery", async () => {
     const read = createFleetHomeReader({
       ...source(["dispatch"]),
+      complianceSummary: async () => { throw { status: 409, code: "fleet.version_conflict" }; },
       compliance: async () => { throw { status: 409, code: "fleet.version_conflict" }; },
     });
     const result = await read(actor, "summary");

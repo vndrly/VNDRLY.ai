@@ -87,9 +87,9 @@ export function createFleetComplianceOperations(
       .update(JSON.stringify(value))
       .digest("hex");
   };
-  const readConfig = async (client: PoolClient, actor: FleetActor) => {
+  const readConfig = async (client: PoolClient, actor: FleetActor, lock = true) => {
     const result = await client.query(
-      "SELECT fleet_compliance_configuration FROM vendors WHERE id=$1 FOR UPDATE",
+      `SELECT fleet_compliance_configuration FROM vendors WHERE id=$1${lock ? " FOR UPDATE" : ""}`,
       [actor.companyId],
     );
     if (!result.rows.length) throw new FleetError("fleet.not_found", 404);
@@ -366,6 +366,13 @@ export function createFleetComplianceOperations(
       const scoreHistory = mergeFleetComplianceScoreHistory(config.scoreHistory, projected.evaluatedAt, projected.score);
       await writeConfig(client, actor, { ...config, scoreHistory, partnerScorePreview: projected.partnerPreview ?? null }, true);
       return { ...projected, history: scoreHistory };
+    }),
+    readFleetComplianceScorePreview: (actor: FleetActor) => transaction(actor, async (state, client) => {
+      const grant = access(state, actor);
+      if (!(actor.role === "vendor" && actor.membershipRole === "admin") && !managementFleetIds(grant).length)
+        throw new FleetError("fleet.finance_required", 403);
+      const config = await readConfig(client, actor, false);
+      return config.partnerScorePreview ?? { status: "red" as const };
     }),
     recordFleetComplianceScoreSnapshot: (actor: FleetActor, preview: { score: number; status: "red" | "amber" | "green"; advisoryOnly: true; evaluatedAt: string; categories: Array<{ category: "vehicle" | "driver_license" | "insurance" | "company_records"; score: number }>; reasons: Array<{ category: "vehicle" | "driver_license" | "insurance" | "company_records"; reason: string; reasonCode: "missing_evidence" | "expired_record" | "revoked_record" | "failed_record" | "unverified_record" | "excluded_record" | "requires_review" }> }) => transaction(actor, async (state, client) => {
       const grant = access(state, actor);
