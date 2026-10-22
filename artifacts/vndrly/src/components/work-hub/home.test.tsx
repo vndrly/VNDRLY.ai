@@ -15,19 +15,38 @@ describe("Work Hub home", () => {
     mocks.user = { userId: 7, role: "field_employee", vendorId: 1, activeMembershipId: 3, vendorRole: "gatekeeper" };
     mocks.request.mockReset(); mocks.fetch.mockReset();
     mocks.request.mockImplementation(async (path: string) => {
-      if (path.startsWith("/home")) return { tasks: [{ id: "t1", title: "Inspect gate camera", status: "open" }, { id: "done", title: "Finished", status: "completed" }], shifts: [], meetings: [{ occurrence: { startsAt: "2099-01-01" } }], announcements: [], capabilities: { canViewExports: false, allowedExportDatasets: [] } };
+      if (path.startsWith("/home")) return { tasks: [{ id: "t1", title: "Inspect gate camera", status: "open", assigneeUserId: 7, createdAt: "2026-10-22T00:00:00Z", updatedAt: "2026-10-22T01:00:00Z" }, { id: "done", title: "Finished", status: "completed", assigneeUserId: 7, createdAt: "2026-10-21T22:00:00Z", updatedAt: "2026-10-22T00:00:00Z" }], shifts: [], meetings: [{ occurrence: { startsAt: "2099-01-01" } }], announcements: [], capabilities: { canViewExports: false, allowedExportDatasets: [] } };
       if (path === "/channels") return [{ id: "c1", unreadCount: 4 }];
       return [];
     });
     mocks.fetch.mockImplementation(async (path: string) => ({ ok: true, json: async () => {
       if (path === "/api/company-operations") return { categories: mocks.categories };
       if (path === "/api/gate-change-over/sites") return { sites: [{ id: 9, name: "North Gate" }] };
+      if (path === "/api/gate-change-over/coverage-map") return { staff: [{ userId: 8, name: "Alex Gate", onDuty: true, assignment: "North Gate" }], duties: [] };
+      if (path === "/api/implementation-a/workforce/coverage") return { coverage: [{ id: "gap-1", shiftId: "11111111-1111-4111-8111-111111111111", shiftTitle: "North Gate AM", startsAt: "2099-01-01T12:00:00Z", assignedCount: 1, requiredCount: 2, state: "gap" }] };
+      if (path.startsWith("/api/work-hub/shifts/") && path.endsWith("/staffing-candidates")) return { candidates: [{ userId: 22, name: "Jordan Relief", availability: "recorded_available", eligibility: { allowed: true } }] };
       if (path.startsWith("/api/visits?")) return [{ id: 10, admissionStatus: "pending", vehiclePlate: "ABC123" }];
       if (path.startsWith("/api/safety/events")) return { data: [] };
       if (path.startsWith("/api/notifications")) return [];
       return {};
     }}));
     vi.stubGlobal("fetch", mocks.fetch);
+  });
+  it("places workforce and assigned-task multi-panel cards with the primary cards", async () => {
+    mount();
+    expect(await screen.findByRole("heading", { name: "Workforce" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Tasks" })).toBeTruthy();
+    expect(screen.getByText("A task is an unticketed work assignment")).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: /Coverage Gaps.*1 open/ }));
+    const gap = await screen.findByRole("region", { name: "Coverage gap details" });
+    expect(within(gap).getByText("North Gate AM")).toBeTruthy();
+    expect(within(gap).getByRole("link", { name: "Assign" }).getAttribute("href")).toContain("action=assign");
+    expect(within(gap).getByRole("link", { name: "Offer" }).getAttribute("href")).toContain("action=offer");
+    expect(await within(gap).findByText(/Available: Jordan Relief/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /On Shift Now.*1 people/ }));
+    expect(await screen.findByRole("link", { name: /Alex Gate.*North Gate/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /New.*1/ }));
+    expect(await screen.findByRole("link", { name: /Inspect gate camera.*open.*1.0 h/ })).toBeTruthy();
   });
   afterEach(() => vi.unstubAllGlobals());
   it("shows the iOS groups and opens real assigned gate work without exposing Fleet", async () => {

@@ -12,6 +12,16 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-card-icon svg { width: 21px; height: 21px; }
 .hub-home-row { width: 100%; min-height: 52px; border-top: 1px solid #3a3a3a; display: flex; align-items: center; gap: 11px; padding: 13px 0; text-align: left; color: #ececec; transition: background-color .15s; }
 .hub-home-row:hover, .hub-home-row[aria-expanded=true] { background: color-mix(in srgb, var(--brand-primary) 8%, transparent); }
+.hub-inline-panel { border-top: 1px solid #3a3a3a; padding: 4px 0 10px 30px; }
+.hub-inline-panel > p { padding: 10px 0; color: #a3a3a3; font-size: 12px; }
+.hub-mini-record { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid #343434; padding: 9px 0; color: #ececec; }
+.hub-mini-record strong, .hub-mini-record small { display: block; }
+.hub-mini-record strong { font-size: 13px; }
+.hub-mini-record small { color: #a3a3a3; font-size: 11px; margin-top: 2px; }
+.hub-mini-record > svg { width: 16px; height: 16px; flex-shrink: 0; color: #a3a3a3; }
+.hub-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.hub-row-actions a { border: 1px solid var(--brand-primary); border-radius: 999px; padding: 5px 9px; color: #ececec; font-size: 11px; font-weight: 700; }
+.hub-row-actions a:hover { background: color-mix(in srgb, var(--brand-primary) 22%, transparent); }
 .hub-row-icon { width: 19px; height: 19px; color: var(--brand-primary); flex-shrink: 0; }
 .hub-row-label { flex: 1; min-width: 0; font-weight: 600; font-size: 15px; }
 .hub-row-value { color: #b3b3b3; font-size: 13px; max-width: 45%; overflow-wrap: anywhere; text-align: right; }
@@ -41,4 +51,4 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-web-extras .text-muted-foreground { color: #b3b3b3; }
 .hub-web-extras [aria-label="Work Hub snapshot"] { margin-bottom: 12px; }
 .hub-account-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0 22px; }
-@media (max-width: 767px) { .hub-home-columns, .hub-gate-rows { grid-template-columns: minmax(0, 1fr); gap: 12px; } .hub-gate-rows { gap: 0; } main:has(.work-hub-home) { padding: 16px; } }
+@media (max-width: 767px) { .hub-home-columns, .hub-gate-rows { grid-template-columns: minmax(0, 1fr); gap: 12px; } .hub-gate-rows { gap: 0; } .hub-inline-panel { padding-left: 0; } main:has(.work-hub-home) { padding: 16px; } }
