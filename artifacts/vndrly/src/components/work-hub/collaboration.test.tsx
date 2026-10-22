@@ -195,39 +195,19 @@ describe("Work Hub conversations", () => {
     expect(screen.getByRole("button", { name: "Delete group" })).toBeTruthy();
   });});
 
-describe("Work Hub activity chrome", () => {
-  it("places the shadow-free heading above a full-width card with one branded white search field", async () => {
-    mocks.request.mockImplementation(async (path: string) => path === "/home" ? { announcements: [], tasks: [], shifts: [], meetings: [] } : []);
-    render(
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        <ActivityWorkspace />
-      </QueryClientProvider>,
-    );
-    const workspace = screen.getByTestId("work-hub-activity");
-    const heading = screen.getByRole("heading", { name: "Activity" });
-    const card = screen.getByTestId("activity-primary-card");
-    const icon = heading.closest("header")?.querySelector('[data-work-hub-heading-icon="activity"]');
-    expect(icon).toBeTruthy();
-    expect(icon?.getAttribute("class")).not.toContain("shadow");
-    expect(card.contains(heading)).toBe(false);
-    expect(workspace.className).not.toContain("max-w-6xl");
-    const search = screen.getByLabelText("Filter activity");
-    expect(search.className).toContain("rounded-lg");
-    expect(search.className).toContain("border-[color:var(--brand-primary)]");
-    expect(search.className).toContain("bg-white");
-    expect(screen.getByRole("search", { name: "Search activity" }).hasAttribute("data-work-hub-card")).toBe(false);
-
-    const calendar = screen.getByRole("region", { name: "Upcoming calendar" });
-    const review = screen.getByRole("region", { name: "Documents needing review" });
-    expect(calendar.className).toContain("bg-white");
-    expect(calendar.className).not.toContain("bg-background");
-    expect(review.className).toContain("bg-white");
-    expect(review.className).not.toContain("bg-background");
-
-    const feed = screen.getByTestId("activity-feed");
-    expect(feed.className).toContain("border-2");
-    expect(feed.className).toContain("border-border");
-    expect(feed.hasAttribute("data-work-hub-card")).toBe(false);
+describe("Work Hub home chrome", () => {
+  it("places the iOS cards before retained web-only information", async () => {
+    mocks.request.mockImplementation(async (path: string) => path.startsWith("/home") ? { announcements: [], tasks: [], shifts: [], meetings: [] } : []);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ActivityWorkspace /></QueryClientProvider>);
+    expect(screen.getByRole("heading", { name: "Work Hub" })).toBeTruthy();
+    const today = screen.getByRole("region", { name: "Today" });
+    const communications = screen.getByRole("region", { name: "Communications" });
+    const extras = screen.getByRole("region", { name: "More from Work Hub" });
+    expect(today.compareDocumentPosition(communications) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(communications.compareDocumentPosition(extras) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(extras.contains(screen.getByRole("region", { name: "Upcoming calendar" }))).toBe(true);
+    expect(extras.contains(screen.getByRole("region", { name: "Documents needing review" }))).toBe(true);
+    expect(extras.contains(screen.getByRole("search", { name: "Search activity" }))).toBe(true);
   });
 });
 
@@ -285,11 +265,11 @@ describe("Work Hub recipient announcements", () => {
       return [];
     });
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ActivityWorkspace /></QueryClientProvider>);
-    const activityCard = screen.getByRole("region", { name: "Activity workspace" });
+    const activityCard = screen.getByRole("region", { name: "Work Hub workspace" });
     const searchRegion = screen.getByRole("search", { name: "Search activity" });
-    const primaryCard = screen.getByTestId("activity-primary-card");
+    const primaryCard = screen.getByRole("region", { name: "More from Work Hub" });
     expect(activityCard.contains(searchRegion)).toBe(true);
-    expect(primaryCard.className).toContain("rounded-xl");
+    expect(primaryCard.contains(searchRegion)).toBe(true);
     expect(searchRegion.hasAttribute("data-work-hub-card")).toBe(false);
     expect(await screen.findByText("Safety briefing")).toBeTruthy();
     expect(screen.getByText("Urgent")).toBeTruthy();

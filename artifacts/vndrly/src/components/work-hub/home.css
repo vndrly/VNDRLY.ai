@@ -1,0 +1,43 @@
+/* iOS Work Hub palette, scoped to the home page so existing module forms keep their chrome. */
+main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !important; color: #ececec; }
+.work-hub-home { color: #ececec; max-width: 1280px; margin: 0 auto; display: grid; gap: 18px; color-scheme: dark; }
+.work-hub-home h1, .work-hub-home h2, .work-hub-home h3 { color: #ececec !important; font-weight: 700; }
+.work-hub-home h2 { font-size: 19px; }
+.work-hub-home h3 { font-size: 15px; margin-top: 20px; }
+.hub-home-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.hub-home-card { min-width: 0; background: #242426; border: 2px solid var(--brand-primary); border-radius: 16px; padding: 16px 16px 0; }
+.hub-card-heading { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; }
+.hub-card-heading p { color: #a3a3a3; font-size: 12px; margin-top: 2px; }
+.hub-card-icon { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: color-mix(in srgb, var(--brand-primary) 14%, transparent); color: var(--brand-primary); }
+.hub-card-icon svg { width: 21px; height: 21px; }
+.hub-home-row { width: 100%; min-height: 52px; border-top: 1px solid #3a3a3a; display: flex; align-items: center; gap: 11px; padding: 13px 0; text-align: left; color: #ececec; transition: background-color .15s; }
+.hub-home-row:hover, .hub-home-row[aria-expanded=true] { background: color-mix(in srgb, var(--brand-primary) 8%, transparent); }
+.hub-row-icon { width: 19px; height: 19px; color: var(--brand-primary); flex-shrink: 0; }
+.hub-row-label { flex: 1; min-width: 0; font-weight: 600; font-size: 15px; }
+.hub-row-value { color: #b3b3b3; font-size: 13px; max-width: 45%; overflow-wrap: anywhere; text-align: right; }
+.hub-chevron { width: 18px; height: 18px; color: #a3a3a3; flex-shrink: 0; }
+.hub-gate-rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.hub-home-tools { display: flex; flex-wrap: wrap; gap: 10px; }
+.work-hub-home .hub-tools-title { font-size: 17px; margin-bottom: 10px; }
+.hub-tool { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 2px solid var(--brand-primary); border-radius: 14px; background: #242426; padding: 10px 14px; font-size: 14px; font-weight: 600; }
+.hub-tool svg { width: 18px; height: 18px; color: var(--brand-primary); }
+.hub-tool:hover { background: #303034; }
+.hub-home-row:focus-visible, .hub-tool:focus-visible, .hub-record:focus-visible, .hub-text-link:focus-visible { outline: 3px solid var(--brand-primary); outline-offset: 3px; }
+.hub-detail { padding-bottom: 16px; scroll-margin-top: 20px; }
+.hub-detail > h2 { margin-bottom: 12px; }
+.hub-detail p { color: #b3b3b3; font-size: 14px; }
+.hub-record { display: flex; align-items: center; gap: 10px; min-height: 48px; border-top: 1px solid #3a3a3a; padding: 12px 0; overflow-wrap: anywhere; }
+.hub-record > svg { height: 18px; width: 18px; color: var(--brand-primary); flex-shrink: 0; }
+.hub-record > svg:last-child { margin-left: auto; }
+.hub-record small { display: block; color: #a3a3a3; font-size: 12px; }
+.hub-text-link { display: inline-block; padding: 12px 0; color: var(--brand-primary); font-size: 14px; }
+.hub-search { width: 100%; border: 2px solid var(--brand-primary); border-radius: 12px; background: #242426; color: #ececec; min-height: 44px; padding: 8px 12px; margin-bottom: 12px; }
+.hub-detail [aria-label="Top five priorities"], .hub-detail [aria-label="Top five priorities"] li { background: #242426; color: #ececec; }
+.hub-detail [aria-label="Top five priorities"] .text-black { color: #ececec; }
+.hub-detail [aria-label="Top five priorities"] .text-muted-foreground { color: #b3b3b3; }
+.hub-web-extras { display: grid; gap: 18px; margin-top: 14px; padding-top: 24px; border-top: 1px solid #57595e; }
+.hub-web-extras .bg-white { background-color: #242426; }
+.hub-web-extras .text-black { color: #ececec; }
+.hub-web-extras .text-muted-foreground { color: #b3b3b3; }
+.hub-web-extras [aria-label="Work Hub snapshot"] { margin-bottom: 12px; }
+@media (max-width: 767px) { .hub-home-columns, .hub-gate-rows { grid-template-columns: minmax(0, 1fr); gap: 12px; } .hub-gate-rows { gap: 0; } main:has(.work-hub-home) { padding: 16px; } }

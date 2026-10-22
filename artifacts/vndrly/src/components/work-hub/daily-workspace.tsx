@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { WORK_HUB_SUBCARD_CLASS } from "./chrome";
+import { workHubRequest } from "@/lib/work-hub-client";
 
 type SafetyEvent = { id: number; title: string; status: string };
 type WorkItem = { id: string; title: string; href: string; status: string; assignedAt?: string; kind: "task" | "ticket" | "run" | "shift" };
@@ -10,14 +11,13 @@ async function read(path: string) {
   if (!response.ok) throw new Error("Daily source unavailable");
   return response.json();
 }
-export function DailyWorkspace() {
+export function useDailyWork() {
   const { user } = useAuth();
-  const { t } = useTranslation();
   const work = useQuery({
     queryKey: ["daily-my-work", user?.userId, user?.activeMembershipId], enabled: !!user, refetchInterval: 30000,
     queryFn: async () => {
       const categories = user?.vendorId ? (await read("/api/company-operations")).categories as string[] : [];
-      const jobs: [string, Promise<any>][] = [["tasks", read("/api/work-hub/home?workOrder=assigned")]];
+      const jobs: [string, Promise<any>][] = [["tasks", workHubRequest("/home?workOrder=assigned")]];
       if (categories.includes("field")) jobs.push(["tickets", read("/api/field/open-tickets?assignedToMe=1")]);
       if (categories.includes("fleet")) jobs.push(["runs", (async () => {
         const page = await read("/api/fleet/overview"), runs = [...(page.runs ?? [])], seen = new Set<string>();
@@ -52,6 +52,11 @@ export function DailyWorkspace() {
     },
   });
   const pending = safety.data?.data.filter(row => !["resolved", "closed", "cancelled", "draft"].includes(row.status)) ?? [];
+  return { work, safety, pending };
+}
+export function DailyWorkspace() {
+  const { t } = useTranslation();
+  const { work, safety, pending } = useDailyWork();
   return <section aria-label="Daily workspace" className="mb-5 space-y-3">
     <div className="grid gap-3 sm:grid-cols-4">
       {[ ["Calendar", "/work-hub/calendar"], ["My Work", "#daily-my-work"], ["Needs Attention", "/notifications"], ["Safety", "/safety"] ].map(([label, href]) => <a key={label} href={href} className={`${WORK_HUB_SUBCARD_CLASS} p-4 font-semibold`}>{label}</a>)}
