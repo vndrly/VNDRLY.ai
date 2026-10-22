@@ -161,7 +161,7 @@ export function WorkHubHome() {
     </HomeCard>}
     <div className="hub-home-tools"><Link className="hub-tool" href="/work-hub/channels"><Users aria-hidden="true" />{brand.name} {c("Groups", "Grupos")}</Link><Link className="hub-tool" href="/work-hub/native-work"><Smartphone aria-hidden="true" />{c("Work phone & on-call", "Teléfono y guardia")}</Link></div>
     <section id="hub-home-attention" className="hub-home-card hub-detail" aria-label="Needs Attention"><h2>{c("Needs Attention", "Requiere atención")}</h2>
-      <ActivityDashboard home={home.isSuccess ? home.data : undefined} channels={channels.isSuccess ? channels.data : undefined} onAcknowledge={id => acknowledge.mutate(id)} acknowledging={acknowledge.isPending} />
+      <ActivityDashboard home={home.isSuccess ? home.data : undefined} onAcknowledge={id => acknowledge.mutate(id)} acknowledging={acknowledge.isPending} />
       {acknowledge.isError && <p role="alert">{c("Acknowledgement could not be saved. Please retry.", "No se pudo guardar la confirmación. Inténtelo de nuevo.")}</p>}
       {attentionNotices?.map(row => <Link key={row.id} href={row.link?.startsWith("/") && !row.link.startsWith("//") ? row.link : "/notifications"} className="hub-record"><Bell aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>)}
       {pending.map(row => <Link key={`safety:${row.id}`} href={`/safety/${row.id}`} className="hub-record"><Shield aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>)}

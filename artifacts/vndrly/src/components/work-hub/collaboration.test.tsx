@@ -205,6 +205,7 @@ describe("Work Hub home chrome", () => {
     const extras = screen.getByRole("region", { name: "More from Work Hub" });
     expect(today.compareDocumentPosition(communications) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(communications.compareDocumentPosition(extras) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Work Hub snapshot" })).toBeNull();
     expect(extras.contains(screen.getByRole("region", { name: "Upcoming calendar" }))).toBe(true);
     expect(extras.contains(screen.getByRole("region", { name: "Documents needing review" }))).toBe(true);
     expect(extras.contains(screen.getByRole("search", { name: "Search activity" }))).toBe(true);
