@@ -6290,10 +6290,7 @@
   "watch": {
     "assume": "Asumir vigilancia",
     "handover": "Entregar vigilancia",
-    "ready": "Relevo guardado. El siguiente trabajador inicia su propia sesión, revisa estas notas y asume la vigilancia.",
-    "waiting": "Esperando que el operador actual prepare el relevo.",
-    "independent": "Iniciar o cerrar sesión no inicia ni termina su turno o vigilancia.",
-    "recover": "Recuperar acción de guardia"
+    "waiting": "Esperando que el operador actual prepare el relevo."
   },
   "handoffDesk": {
     "title": "Entrega de turno",

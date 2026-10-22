@@ -6290,10 +6290,7 @@
   "watch": {
     "assume": "Assume Watch",
     "handover": "Handover Watch",
-    "ready": "Handover saved. The next worker signs in separately, reviews these notes, and assumes the watch.",
-    "waiting": "Waiting for the current operator to prepare the handover.",
-    "independent": "Signing in or out does not start or end your shift or watch.",
-    "recover": "Recover watch action"
+    "waiting": "Waiting for the current operator to prepare the handover."
   },
   "handoffDesk": {
     "title": "Shift handoff",
