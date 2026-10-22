@@ -314,6 +314,18 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
           AND scheduled_shift.ends_at >= now()
           AND coalesce(scheduled_shift.site_location_id,scheduled_station.site_id)=s.id
       )
+      OR EXISTS (
+        SELECT 1 FROM user_org_memberships membership
+        JOIN vendor_person_site_access site_access
+          ON site_access.vendor_people_id=membership.vendor_people_id
+         AND site_access.site_location_id=s.id AND site_access.is_active=true
+        JOIN vendor_person_operational_roles gate_role
+          ON gate_role.vendor_people_id=membership.vendor_people_id
+         AND gate_role.is_active=true
+         AND gate_role.role IN ('gatekeeper','gate_supervisor')
+        WHERE membership.user_id=$4 AND membership.vendor_id=$3
+          AND membership.org_type='vendor'
+      )
     )
     ORDER BY s.name LIMIT 2000`,
       [
@@ -385,6 +397,18 @@ export async function listChangeOverStations(
                AND scheduled_shift.ends_at >= now()
                AND scheduled_shift.gate_station_id=station.id
            )
+           OR EXISTS (
+             SELECT 1 FROM user_org_memberships membership
+             JOIN vendor_person_site_access site_access
+               ON site_access.vendor_people_id=membership.vendor_people_id
+              AND site_access.site_location_id=station.site_id AND site_access.is_active=true
+             JOIN vendor_person_operational_roles gate_role
+               ON gate_role.vendor_people_id=membership.vendor_people_id
+              AND gate_role.is_active=true
+              AND gate_role.role IN ('gatekeeper','gate_supervisor')
+             WHERE membership.user_id=$3 AND membership.vendor_id=$5
+               AND membership.org_type='vendor'
+           )
          )
        ORDER BY station.created_at, station.id`,
       [
@@ -392,6 +416,7 @@ export async function listChangeOverStations(
         session.role,
         session.userId ?? null,
         session.role === "vendor" && session.membershipRole === "admin",
+        session.vendorId ?? null,
       ],
     )
   ).rows;
