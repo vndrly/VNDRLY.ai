@@ -17,6 +17,8 @@ describe("Work Hub home", () => {
     mocks.request.mockReset(); mocks.fetch.mockReset();
     mocks.request.mockImplementation(async (path: string) => {
       if (path.startsWith("/home")) return { tasks: [{ id: "t1", title: "Inspect gate camera", status: "open", assigneeUserId: 7, createdAt: "2026-10-22T00:00:00Z", updatedAt: "2026-10-22T01:00:00Z" }, { id: "done", title: "Finished", status: "completed", assigneeUserId: 7, createdAt: "2026-10-21T22:00:00Z", updatedAt: "2026-10-22T00:00:00Z" }], shifts: [], meetings: [{ occurrence: { startsAt: "2099-01-01" } }], announcements: [], capabilities: { canViewExports: false, allowedExportDatasets: [] } };
+      if (path === "/workforce/roster") return { owner: { type: "vendor", id: 1 }, observedAt: "2026-10-22T12:00:00Z", scope: "self", canManageOffers: false, employees: [{ userId: 8, vendorPeopleId: 108, name: "Alex Gate", onCall: "active", onShift: true, shiftStartedAt: null, assignment: "North Gate", profileHref: null, canMessage: true }] };
+      if (path === "/workforce/offers") return { offers: [] };
       if (path === "/channels") return [{ id: "c1", unreadCount: 4 }];
       return [];
     });
@@ -41,11 +43,10 @@ describe("Work Hub home", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Coverage Gaps.*1 open/ }));
     const gap = await screen.findByRole("region", { name: "Coverage gap details" });
     expect(within(gap).getByText("North Gate AM")).toBeTruthy();
-    expect(within(gap).getByRole("link", { name: "Assign" }).getAttribute("href")).toContain("action=assign");
-    expect(within(gap).getByRole("link", { name: "Offer" }).getAttribute("href")).toContain("action=offer");
-    expect(await within(gap).findByText(/Available: Jordan Relief/)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /On Shift Now.*1 people/ }));
-    expect(await screen.findByRole("link", { name: /Alex Gate.*North Gate/ })).toBeTruthy();
+    fireEvent.click(within(gap).getByText("North Gate AM"));
+    expect(await within(gap).findByRole("link", { name: "Open shift" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /On Shift Now.*1 on shift/ }));
+    expect(await screen.findByRole("button", { name: /Alex Gate.*North Gate/ })).toBeTruthy();
 
   });
   it("opens assigned Dashboard tasks without counting task age as worked hours", async () => {

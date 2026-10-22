@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
+import { expectedWorkforceContext } from "../lib/workforce-context";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
 import { WorkHubAccessError } from "../work-hub/context-access";
 import { listOwnedWorkHubChannels } from "../work-hub/queries";
@@ -760,7 +761,7 @@ router.get("/work-hub/invitations", async (_req, res) => {
       .limit(100),
   );
 });
-router.post("/work-hub/chats", async (req, res) => {
+router.post("/work-hub/chats", expectedWorkforceContext, async (req, res) => {
   const a = res.locals.collaborationActor as Actor;
   const p = z
     .object({

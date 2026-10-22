@@ -1,6 +1,6 @@
 # VNDRLY plugin 1.22.1
 
-Matches the calendar navigation and compact summary refinements across web and iOS, grey/green shift and on-call sliders, explicit watch-key handover actions, plus origin-wide locking for encrypted browser offline work. Existing MCP tools, embedded views, five service skills, branding, account identity and grants are unchanged. This package does not establish physical device or provider acceptance.
+Matches the calendar navigation and compact summary refinements across web and iOS, grey/green shift and on-call sliders, explicit watch-key handover actions, plus origin-wide locking for encrypted browser offline work. The web Workforce card adds current company/site-scoped paid-shift and On Call rosters, employee work profiles and conversation entry, plus persisted Gate shift offers with employee acceptance/decline and exact operation recovery. Offers do not assign anyone until acceptance; assigned counts never prove physical attendance. Existing MCP tools and embedded views retain their current permissions and advertised actions; the five service skills document the Work Hub interface for offers. Branding, account identity and grants are unchanged. This package does not establish physical device or provider acceptance.
 
 # VNDRLY plugin 1.22.0
 

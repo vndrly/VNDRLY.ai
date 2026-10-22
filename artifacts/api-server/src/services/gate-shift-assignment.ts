@@ -48,7 +48,7 @@ export async function lockShiftSchedulingRows(client: Client, actorUserId: numbe
   if(conflicts.rows.some(row=>row.shift_id&&!seen.has(row.shift_id)))throw new GateShiftAssignmentError("work_hub.version_conflict");
 }
 
-async function currentGateShift(client: Client, session: SessionPayload, shiftId: string, supervisor = true) {
+export async function currentGateShift(client: Client, session: SessionPayload, shiftId: string, supervisor = true) {
   if (!session.userId || !session.vendorId || !session.activeMembershipId || !["vendor", "field_employee"].includes(session.role ?? "")) {
     throw new GateShiftAssignmentError("work_hub.not_found", 404);
   }

@@ -1,9 +1,10 @@
 import WorkdayControls from "@/components/workday-controls";
+import WorkforcePanel from "./workforce-panel";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Bell, CalendarDays, Car, CheckCircle2, CheckSquare2, ChevronRight, Clock3, Download, Folder, MapPin, MessageCircle, MessageSquare, Phone, Search, Shield, Sun, UserCheck, Users, ClipboardList, Smartphone } from "lucide-react";
+import { Bell, CalendarDays, Car, CheckCircle2, CheckSquare2, ChevronRight, Clock3, Download, Folder, MapPin, MessageCircle, MessageSquare, Phone, Search, Shield, Sun, Users, ClipboardList, Smartphone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -28,7 +29,7 @@ export function WorkHubHome() {
   const es = i18n.language.startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   const qc = useQueryClient();
   const identity = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
-  const [panel, setPanel] = useState<"work" | "safety" | "coverage" | "on-shift" | null>(null);
+  const [panel, setPanel] = useState<"work" | "safety" | null>(null);
   const [search, setSearch] = useState("");
   const home = useQuery<Row>({ queryKey: ["work-hub", "home", ...identity], queryFn: () => workHubRequest("/home"), enabled: !!user, refetchInterval: 15000 });
   const channels = useQuery<Row[]>({ queryKey: ["work-hub", "/channels", ...identity], queryFn: () => workHubRequest("/channels"), enabled: !!user, refetchInterval: 15000 });
@@ -36,8 +37,6 @@ export function WorkHubHome() {
   const gate = canUseGateWorkspace(user, operations.data?.categories ?? []);
   const sites = useQuery({ queryKey: ["work-hub-home-gates", ...identity], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites"), enabled: gate, retry: false, refetchInterval: 30000 });
   const visits = useQuery({ queryKey: ["work-hub-home-visits", ...identity], queryFn: () => visitsApi.list({ activeOnly: true, limit: 100 }), enabled: gate, retry: false, refetchInterval: 15000 });
-  const coverage = useQuery({ queryKey: ["work-hub-home-coverage", ...identity], queryFn: () => read<{ coverage: Row[] }>("/api/implementation-a/workforce/coverage"), enabled: gate, retry: false, refetchInterval: 30000 });
-  const gateCoverage = useQuery({ queryKey: ["work-hub-home-gate-coverage", ...identity], queryFn: () => changeOverRequest<{ staff: Row[]; duties: Row[] }>("/coverage-map"), enabled: gate, retry: false, refetchInterval: 15000 });
   const notices = useQuery({ queryKey: ["work-hub-home-notices", ...identity], queryFn: () => read<Row[] | { items: Row[]; nextCursor?: string }>("/api/notifications?limit=100"), enabled: !!user, refetchInterval: 30000 });
   const { work, safety, pending } = useDailyWork();
   const acknowledge = useMutationAcknowledgement(qc);
@@ -53,14 +52,6 @@ export function WorkHubHome() {
 
   const now = Date.now(), tasks: Row[] | undefined = home.data?.tasks;
   const activeTasks = tasks?.filter(row => !["completed", "cancelled", "archived"].includes(row.status));
-  const coverageGaps = coverage.data?.coverage.filter(row => row.state !== "covered" && Number(row.assignedCount ?? 0) < Number(row.requiredCount ?? 0)) ?? [];
-  const staffingCandidates = useQuery({
-    queryKey: ["work-hub-home-staffing-candidates", ...identity, ...coverageGaps.map(row => row.shiftId)],
-    queryFn: async (): Promise<Row[]> => Promise.all(coverageGaps.map(async gap => ({ ...(await read<Row>(`/api/work-hub/shifts/${encodeURIComponent(gap.shiftId)}/staffing-candidates`)), shiftId: gap.shiftId }))),
-    enabled: gate && panel === "coverage" && coverageGaps.length > 0,
-    retry: false,
-  });
-  const onShift = gateCoverage.data?.staff.filter(row => row.onDuty && row.assignment && row.assignment !== "No active assignment recorded") ?? [];
   const calendar = home.data ? [
     ...(home.data.shifts ?? []).filter(({ shift, assignment }: Row) => !["cancelled", "completed"].includes(shift.milestoneStatus) && !["cancelled", "declined"].includes(assignment?.status)).map(({ shift }: Row) => ({ id: `shift-${shift.id}`, title: shift.title ?? c("Scheduled shift", "Turno programado"), at: shift.startsAt, end: shift.endsAt, href: "/work-hub/calendar" })),
     ...(home.data.meetings ?? []).filter(({ occurrence }: Row) => occurrence.status !== "cancelled").map(({ meeting, occurrence }: Row) => ({ id: `meeting-${occurrence.id}`, title: meeting?.title ?? c("Meeting", "Reunión"), at: occurrence.startsAt, end: occurrence.endsAt, href: `/work-hub/meetings?meeting=${encodeURIComponent(occurrence.id)}` })),
@@ -99,20 +90,7 @@ export function WorkHubHome() {
         <HomeRow icon={Phone} label={c("Calls", "Llamadas")} value={c("Recent", "Recientes")} href="/work-hub/calls" />
         <HomeRow icon={CalendarDays} label={c("Meetings", "Reuniones")} value={count(home.data?.meetings?.filter(({ occurrence }: Row) => occurrence.status !== "cancelled" && Date.parse(occurrence.endsAt ?? occurrence.startsAt) >= now).length, c("upcoming", "próximas"))} href="/work-hub/meetings" />
       </HomeCard>
-      {gate && <HomeCard title={c("Workforce", "Personal")} subtitle={c("Coverage, availability, and gate duty", "Cobertura, disponibilidad y servicio de acceso")} icon={Users}>
-        <HomeRow icon={AlertTriangle} label={c("Coverage Gaps", "Brechas de cobertura")} value={coverage.isSuccess ? count(coverageGaps.length, c("open", "abiertas")) : unavailable} onClick={() => toggle("coverage")} expanded={panel === "coverage"} />
-        {panel === "coverage" && <div className="hub-inline-panel" role="region" aria-label={c("Coverage gap details", "Detalles de brechas de cobertura")}>
-          {coverageGaps.map(gap => { const evidence = staffingCandidates.data?.find(row => row.shiftId === gap.shiftId); const available = evidence?.candidates?.filter((person: Row) => person.availability === "recorded_available" && person.eligibility?.allowed) ?? []; return <div className="hub-mini-record" key={gap.id}><div><strong>{gap.shiftTitle ?? c("Gate shift", "Turno de acceso")}</strong><small>{Number(gap.assignedCount ?? 0)} / {Number(gap.requiredCount ?? 0)} {c("assigned", "asignados")} · {new Date(gap.startsAt).toLocaleString()}</small><small>{evidence ? available.length ? `${c("Available", "Disponibles")}: ${available.map((person: Row) => person.name).join(", ")}` : c("No employees have recorded availability", "Ningún empleado tiene disponibilidad registrada") : c("Checking available employees…", "Consultando empleados disponibles…")}</small></div><div className="hub-row-actions"><Link href={`/work-hub/calendar?shift=${encodeURIComponent(gap.shiftId)}&action=assign`}>{c("Assign", "Asignar")}</Link><Link href={`/work-hub/calendar?shift=${encodeURIComponent(gap.shiftId)}&action=offer`}>{c("Offer", "Ofrecer")}</Link></div></div>; })}
-          {coverage.isSuccess && !coverageGaps.length && <p>{c("No recorded coverage gaps.", "No hay brechas de cobertura registradas.")}</p>}
-          {coverage.isError && <p role="status">{unavailable}</p>}
-        </div>}
-        <HomeRow icon={UserCheck} label={c("On Shift Now", "En turno ahora")} value={gateCoverage.isSuccess ? count(onShift.length, c("people", "personas")) : unavailable} onClick={() => toggle("on-shift")} expanded={panel === "on-shift"} />
-        {panel === "on-shift" && <div className="hub-inline-panel" role="region" aria-label={c("People on gate duty", "Personal en servicio de acceso")}>
-          {onShift.map(person => <Link className="hub-mini-record" href="/gate/change-over" key={person.userId}><div><strong>{person.name}</strong><small>{person.assignment}</small></div><ChevronRight aria-hidden="true" /></Link>)}
-          {gateCoverage.isSuccess && !onShift.length && <p>{c("No one is currently recorded on gate duty.", "Nadie está registrado actualmente en servicio de acceso.")}</p>}
-          {gateCoverage.isError && <p role="status">{unavailable}</p>}
-        </div>}
-      </HomeCard>}
+      {gate && <WorkforcePanel />}
 
     </div>
     <section aria-label={c("More tools", "Más herramientas")}><h2 className="hub-tools-title">{c("More tools", "Más herramientas")}</h2><div className="hub-home-tools">{utilities.map(({ label, icon: Icon, href }) => <Link className="hub-tool" href={href} key={href}><Icon aria-hidden="true" />{label}</Link>)}</div></section>

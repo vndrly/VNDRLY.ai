@@ -2,11 +2,12 @@ import { Router } from "express";
 import { z } from "zod/v4";
 import { getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
+import { expectedWorkforceContext } from "../lib/workforce-context";
 import { ChangeOverError } from "../services/gate-change-over";
 import { executeGateShiftAssignment, GateShiftAssignmentError, readGateShiftAssignment, readGateShiftCandidates, readShiftCreationOperation } from "../services/gate-shift-assignment";
 
 const router = Router();
-router.get("/work-hub/shifts/operations/:operationId", async (req, res) => {
+router.get("/work-hub/shifts/operations/:operationId", expectedWorkforceContext, async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   const session = getSessionFromRequest(req);
   if (!session?.userId) return sendApiError(res, 401, "auth.unauthenticated", "Sign in to continue");
@@ -23,7 +24,7 @@ for (const [method, path, action] of [
   ["get", "/work-hub/shifts/:id/assignments/operations/:operationId", "readback"],
   ["get", "/work-hub/shifts/:id/claim/operations/:operationId", "claim_readback"],
 ] as const) {
-  router[method](path, async (req, res) => {
+  router[method](path, expectedWorkforceContext, async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     const session = getSessionFromRequest(req);
     if (!session?.userId) return sendApiError(res, 401, "auth.unauthenticated", "Sign in to continue");

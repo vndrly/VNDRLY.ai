@@ -104,3 +104,4 @@ export * from "./gate-billing-period";
 export * from "./gate-daily-billing";
 export * from "./gate-daily-billing-client";
 export * from "./gate-daily-billing-copy";
+export * from "./workforce-roster";

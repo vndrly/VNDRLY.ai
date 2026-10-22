@@ -19,6 +19,7 @@ import {
   workHubShiftsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
+import { expectedWorkforceContext } from "../lib/workforce-context";
 import { authorizeCapability, type AuthorityRole } from "../lib/authority-matrix";
 import {
   acknowledgeAssignment,
@@ -107,7 +108,7 @@ router.get("/implementation-a/workforce/ticket-assignment-candidates", async (re
   } catch (error) { return sendError(res, error); }
 });
 
-router.get("/implementation-a/workforce/coverage", async (req, res) => {
+router.get("/implementation-a/workforce/coverage", expectedWorkforceContext, async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   try {
     const session = getSessionFromRequest(req);

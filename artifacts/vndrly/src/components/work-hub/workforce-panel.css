@@ -1,0 +1,22 @@
+.workforce-filters { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.workforce-filters button { min-height: 40px; font-size: 12px; font-weight: 600; color: #b3b3b3; text-align: left; }
+.workforce-filters button:last-child { text-align: right; margin-left: auto; }
+.workforce-filters button[aria-pressed=true], .workforce-unknown[aria-pressed=true] { color: var(--brand-primary); text-decoration: underline; text-underline-offset: 5px; }
+.workforce-person { width: 100%; min-width: 0; text-align: left; color: inherit; }
+.workforce-person small { display: block; font-size: 11px; color: #b3b3b3; }
+.workforce-unknown { min-height: 34px; font-size: 11px; color: #b3b3b3; }
+.workforce-gap { border-bottom: 1px solid #3a3a3a; padding: 8px 0; }
+.workforce-gap summary { cursor: pointer; min-height: 44px; font-size: 13px; }
+.workforce-gap summary span { display: inline-block; vertical-align: top; max-width: calc(100% - 22px); }
+.workforce-gap summary small { display: block; margin-top: 3px; font-size: 11px; color: #b3b3b3; }
+.workforce-gap p { padding: 8px 0; font-size: 12px; color: #b3b3b3; }
+.workforce-offer { flex-wrap: wrap; }
+.workforce-offer > .workforce-person { flex: 1 1 120px; }
+.workforce-action, .workforce-actions button, .workforce-actions a { color: var(--brand-primary); min-height: 40px; font-size: 12px; font-weight: 600; padding: 6px 0; text-align: left; }
+.workforce-actions { display: flex; flex-wrap: wrap; gap: 16px; }
+.workforce-action:disabled, .workforce-actions button:disabled { color: #999; opacity: .65; cursor: not-allowed; }
+.workforce-offer-status { color: #b3b3b3; font-size: 12px; }
+.workforce-scope, .workforce-notice { font-size: 11px; color: #b3b3b3; padding: 8px 0 12px; }
+.workforce-profile { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 0; font-size: 14px; }
+.workforce-profile dt { color: #a3a3a3; }
+.workforce-person:focus-visible, .workforce-action:focus-visible, .workforce-filters button:focus-visible, .workforce-gap summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
