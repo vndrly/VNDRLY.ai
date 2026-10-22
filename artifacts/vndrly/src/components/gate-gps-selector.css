@@ -1,0 +1,7 @@
+.gate-gps-control { display: block; min-width: 0; padding-right: 12px; }
+.gate-gps-selector { display: block; position: relative; }
+.gate-gps-arc { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); width: 32px; height: 52px; pointer-events: none; color: #f1f5f9; overflow: visible; }
+.gate-entry-location-selectors { align-items: start; }
+.gate-entry-location-selectors > label { min-width: 0; width: 10rem; }
+.gate-entry-location-selectors .gate-dashboard-location-select { min-width: 0; }
+@media (max-width: 600px) { .gate-entry-location-selectors { width: 100%; gap: 8px; } .gate-entry-location-selectors > label { width: min(10rem, 45vw); } }

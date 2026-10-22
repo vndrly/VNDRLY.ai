@@ -1,5 +1,6 @@
 import WorkdayControls from "@/components/workday-controls";
 import "@/components/gate-dashboard.css";
+import GateGpsSelector from "@/components/gate-gps-selector";
 import GateWatchLink from "@/components/gate-watch-link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
@@ -66,7 +67,6 @@ import {
 import {
   pickDefaultGateHostKey,
   groupAssignedGateSitesByPartner,
-  pickNearestAssignedGateSite,
   resolveAssignedGateSites,
   shouldApplyDefaultGateSite,
 } from "@/lib/gate-default-site";
@@ -117,7 +117,6 @@ import {
 } from "@/lib/visits-api";
 import {
   evaluateGpsFence,
-  formatFenceMilesSentence,
   GATE_DURATION_CHIPS,
   minutesForDurationChip,
   onSiteDwell,
@@ -792,7 +791,6 @@ export default function GatekeeperPage() {
   ]);
   const assignedSites = assigned.data?.sites ?? [];
   const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
-  const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
   useEffect(() => {
     if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
     const resolvedSite = assignedSites.find((row) => row.id === resolvedPrefillSiteId);
@@ -803,14 +801,7 @@ export default function GatekeeperPage() {
     }
     setResolvedPrefillSiteId(null);
   }, [assignedSites, resolvedPrefillSiteId]);
-  const locationResolved = origin !== null || gps === "denied" || gps === "unavailable";
-  const defaultSiteCode = locationResolved ? (nearestSite ?? assigned.data?.defaultSite)?.siteCode : undefined;
-  const selectedAssignedSite = assignedSites.find((row) => row.siteCode === confirmedCode) ?? nearestSite ?? assigned.data?.defaultSite ?? null;
-  const [selectedPartnerId, setSelectedPartnerId] = useState<string>("");
-  useEffect(() => {
-    if (selectedPartnerId || !selectedAssignedSite) return;
-    setSelectedPartnerId(String(selectedAssignedSite.partnerId));
-  }, [selectedAssignedSite, selectedPartnerId]);
+  const defaultSiteCode = assigned.data?.defaultSite?.siteCode ?? assignedSites[0]?.siteCode;
   const showPreviousBanner = Boolean(
     previousPlateVisit &&
     (!firstName.trim() ||
@@ -857,7 +848,7 @@ export default function GatekeeperPage() {
       },
       (error) => {
         setOrigin(null);
-        setGps(error.code === error.PERMISSION_DENIED ? "denied" : "searching");
+        setGps(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable");
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
     );
@@ -875,7 +866,15 @@ export default function GatekeeperPage() {
         }
       : null,
   });
-  const fenceCopy = formatFenceMilesSentence(fence);
+  const gpsStatus = fence.milesToSite == null ? "unavailable" : fence.insideFence ? "verified" : "mismatch";
+  const gpsLabel = !selectedGateLocation ? t("gatekeeper.selectGateLocation")
+    : gpsStatus === "verified" ? t("gatekeeper.gpsAtSelectedLocation")
+    : gpsStatus === "mismatch" ? t("gatekeeper.gpsOutsideGeofence")
+    : gps === "searching" ? t("gatekeeper.gpsSearching") : t("gatekeeper.gpsUnavailable");
+  const gpsDetail = gps === "locked" && selectedGateLocation && fence.milesToSite == null
+    ? t("gatekeeper.gpsGateUnconfigured")
+    : fence.milesToSite != null ? t("gatekeeper.gpsDistanceEvidence", { miles: fence.milesToSite.toFixed(1), radius: fence.radiusMiles?.toFixed(1) })
+    : t("gatekeeper.gpsRequiredToSubmit");
   const pendingVisits = activeVisits.filter(
     (visit) => visit.admissionStatus === "pending",
   );
@@ -1222,7 +1221,7 @@ export default function GatekeeperPage() {
       </div>
 
       <WorkdayControls watchControl={
-        <div className="gate-dashboard-location-selectors">
+        <div className="gate-dashboard-location-selectors gate-entry-location-selectors">
           <label className="min-w-36 space-y-1 text-sm font-medium">
             {t("changeOver.site")}
             <BrandedSelect className="gate-dashboard-location-select" aria-label={t("gatekeeper.selectSite")}
@@ -1235,16 +1234,20 @@ export default function GatekeeperPage() {
                 setHostKey("");
               }}>
               <option value="">{t("gatekeeper.selectSite")}</option>
-              {assignedSites.map(row => <option key={row.siteCode} value={row.siteCode}>{siteDisplayName(row)}</option>)}
+              {assignedPartners.map(partner => <optgroup key={partner.partnerId} label={partner.partnerName}>
+                {partner.sites.map(row => <option key={row.siteCode} value={row.siteCode}>{siteDisplayName(row)}</option>)}
+              </optgroup>)}
             </BrandedSelect>
           </label>
           <label className="min-w-36 space-y-1 text-sm font-medium">
             {t("changeOver.gate")}
-            <BrandedSelect className="gate-dashboard-location-select" aria-label={t("gatekeeper.gateLocation")}
-              value={selectedGateLocation?.id ?? ""} onChange={event => setGateLocationId(event.target.value)}>
-              <option value="">{t("gatekeeper.selectGateLocation")}</option>
-              {gateLocations.data?.stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}
-            </BrandedSelect>
+            <GateGpsSelector status={gpsStatus} label={gpsLabel} detail={gpsDetail}>
+              <BrandedSelect className="gate-dashboard-location-select" aria-label={t("gatekeeper.gateLocation")}
+                value={selectedGateLocation?.id ?? ""} onChange={event => setGateLocationId(event.target.value)}>
+                <option value="">{t("gatekeeper.selectGateLocation")}</option>
+                {gateLocations.data?.stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}
+              </BrandedSelect>
+            </GateGpsSelector>
           </label>
         </div>
       } />
@@ -1741,55 +1744,6 @@ export default function GatekeeperPage() {
                 )}
               </p>
             ) : null}
-            <div
-              className={`${CARD_INNER_TILE_CLASS} space-y-3 !border-[color:var(--brand-primary)]`}
-              data-testid="gate-selected-location"
-              data-brand-outline="true"
-              style={{ borderColor: brand.primary }}
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("gatekeeper.selectedLocation")}
-              </p>
-              {assignedSites.length > 0 ? (
-                <div className="grid min-w-0 gap-3">
-                <div className={WORK_HUB_BRANDED_FIELD_CLASS} data-testid="gate-locked-partner" aria-readonly="true">
-                  {selectedAssignedSite?.partnerName ?? t("gatekeeper.selectCompany")}
-                </div>
-
-                </div>
-              ) : null}
-
-              {site.data && (
-                <div className="space-y-1">
-                  <p className="text-base font-bold leading-tight text-foreground">
-                    {siteDisplayName(site.data.site)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {site.data.site.address}
-                  </p>
-                </div>
-              )}
-              <p
-                className="text-sm font-semibold"
-                data-testid="gate-gps-pill"
-                data-gps={gps}
-              >
-                {gps === "locked"
-                  ? t("gatekeeper.gpsLocked")
-                  : gps === "denied"
-                    ? t("gatekeeper.gpsDenied")
-                    : gps === "unavailable"
-                      ? t("gatekeeper.gpsUnavailable")
-                      : t("gatekeeper.gpsSearching")}
-                {fenceCopy.kind === "inside" && site.data
-                  ? ` · ${t("gatekeeper.gpsMilesInside", { miles: fenceCopy.miles, site: siteDisplayName(site.data.site), radius: fenceCopy.radius })}`
-                  : fenceCopy.kind === "tooFar" && site.data
-                    ? ` · ${t("gatekeeper.gpsMilesTooFar", { miles: fenceCopy.miles, site: siteDisplayName(site.data.site), radius: fenceCopy.radius })}`
-                    : fenceCopy.kind === "noSite"
-                      ? ` · ${t("gatekeeper.gpsNoSite")}`
-                      : ""}
-              </p>
-            </div>
             {site.isLoading && (
               <Loader2 className="animate-spin text-muted-foreground" />
             )}
@@ -1888,9 +1842,6 @@ export default function GatekeeperPage() {
             >
               {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}
             </AmberButton>
-            <p className="text-center text-xs text-muted-foreground">
-              {t("gatekeeper.gpsRequiredToSubmit")}
-            </p>
           </CardContent>
         </Card>
       </div>

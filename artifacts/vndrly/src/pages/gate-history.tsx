@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { History, Loader2, Search } from "lucide-react";
+import { AlertTriangle, History, Loader2, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import ContentPaneBackLink from "@/components/content-pane-back-link";
@@ -9,6 +9,7 @@ import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
 import { Card, CardContent, CARD_INNER_TILE_CLASS, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest } from "@/lib/change-over-api";
+import { formatMetersAsMiles } from "@workspace/map-utils";
 import { formatPlateForDisplay } from "@/lib/plate-display";
 
 type GateHistoryRow = {
@@ -78,8 +79,9 @@ export default function GateHistoryPage() {
           </div>
           {rows.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : rows.isError ? <p className="text-sm text-destructive">{t("gatekeeper.historyLoadFailed")}</p> : !rows.data?.length ? <p className="text-sm text-muted-foreground">{t("gatekeeper.historyEmpty")}</p> : rows.data.map((visit) => (
             <div key={visit.id} className={`${CARD_INNER_TILE_CLASS} transition-colors hover:bg-gray-50`} data-testid="gate-history-row">
-              {(["checkInGpsEvidence", "checkOutGpsEvidence"] as const).map(key => visit[key] && <p key={key} className="text-xs font-semibold" data-testid={`gps-${key}`}>
-                {key === "checkInGpsEvidence" ? t("gatekeeper.gpsEntry") : t("gatekeeper.gpsExit")}: {t(`gatekeeper.gpsEvidence.${visit[key]!.status}`, { defaultValue: t("gatekeeper.gpsEvidence.unavailable") })}{visit[key]!.gateName ? ` · ${visit[key]!.gateName}` : ""}{visit[key]!.distanceMeters != null ? ` · ${visit[key]!.distanceMeters} m` : ""}
+              {(["checkInGpsEvidence", "checkOutGpsEvidence"] as const).map(key => visit[key] && <p key={key} className={`flex flex-wrap items-center gap-1 text-xs font-semibold ${visit[key]!.status === "verified" ? "text-green-700 dark:text-green-400" : "border-l-2 border-amber-500 pl-2 text-amber-700 dark:text-amber-400"}`} data-testid={`gps-${key}`} data-location-flagged={visit[key]!.status !== "verified"}>
+                {visit[key]!.status !== "verified" && <><AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" /><span>{t("gatekeeper.gpsLogFlagged")} · </span></>}
+                {key === "checkInGpsEvidence" ? t("gatekeeper.gpsEntry") : t("gatekeeper.gpsExit")}: {t(`gatekeeper.gpsEvidence.${visit[key]!.status}`, { defaultValue: t("gatekeeper.gpsEvidence.unavailable") })}{visit[key]!.gateName ? ` · ${visit[key]!.gateName}` : ""}{visit[key]!.distanceMeters != null ? ` · ${formatMetersAsMiles(visit[key]!.distanceMeters!)} mi` : ""}
               </p>)}
               <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold text-foreground">{visit.name || "Gate record"}</p><p className="truncate text-xs text-muted-foreground">{[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}</p><p className="text-xs text-muted-foreground">{visit.checkInTime ? new Date(visit.checkInTime).toLocaleString() : ""}{visit.checkOutTime ? ` → ${new Date(visit.checkOutTime).toLocaleString()}` : ""}</p></div><span className="shrink-0 text-xs font-semibold text-muted-foreground">{visit.reconciliationState === "needs_review" ? "Needs review" : visit.checkOutTime ? t("gatekeeper.historyCheckedOut") : t("gatekeeper.historyOnSite")}</span></div>
             </div>

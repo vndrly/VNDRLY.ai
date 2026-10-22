@@ -249,7 +249,7 @@ describe("GatekeeperPage plate state", () => {
   it("locks the GPS-determined company and localizes the current-location selector", async () => {
     locale.spanish = true;
     renderPage();
-    expect((await screen.findByTestId("gate-locked-partner")).getAttribute("aria-readonly")).toBe("true");
+    expect(screen.queryByTestId("gate-locked-partner")).toBeNull();
     expect(screen.queryByRole("combobox", { name: "Seleccionar empresa" })).toBeNull();
     expect(screen.getByRole("combobox", { name: "Seleccione el sitio asignado" })).toBeTruthy();
   });
@@ -260,7 +260,7 @@ describe("GatekeeperPage plate state", () => {
     expect(screen.getByRole("combobox", { name: /gatekeeper\.firstName/ }).getAttribute("aria-required")).toBe("true");
     expect(screen.getByRole("combobox", { name: /gatekeeper\.lastName/ }).getAttribute("aria-required")).toBe("true");
     expect(screen.getByRole("combobox", { name: "gatekeeper.company" })).toBeTruthy();
-    expect((await screen.findByTestId("gate-locked-partner")).getAttribute("aria-readonly")).toBe("true");
+    expect(screen.queryByTestId("gate-locked-partner")).toBeNull();
     expect(screen.queryByRole("combobox", { name: /gatekeeper\.host/ })).toBeNull();
     expect(screen.getByRole("textbox", { name: "gatekeeper.purpose" })).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "gatekeeper.notes" })).toBeTruthy();
@@ -719,14 +719,12 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(icon.getAttribute("class")).toContain("text-[var(--brand-primary)]");
     expect(icon.getAttribute("class")).not.toContain("card-icon-drop-shadow");
   });
-  it("keeps the selected site details in one compact branded location card", async () => {
+  it("uses the top selectors and a GPS gauge without a selected-location card", async () => {
     renderPage();
-
-    const location = await screen.findByTestId("gate-selected-location");
-    expect(location.getAttribute("data-brand-outline")).toBe("true");
-    expect(await within(location).findByText("123 Main St")).toBeTruthy();
-    expect(screen.getAllByText("123 Main St")).toHaveLength(1);
-    expect(screen.queryByTestId("gate-selected-location-duplicate")).toBeNull();
+    expect(await screen.findByTestId("select-gate-current-location")).toBeTruthy();
+    expect(screen.getByTestId("gate-gps-indicator")).toBeTruthy();
+    expect(screen.queryByTestId("gate-selected-location")).toBeNull();
+    expect(screen.queryByText("123 Main St")).toBeNull();
   });
 
   it("uses successful plate and state OCR to fill the newest exact authorized history match", async () => {
@@ -902,11 +900,7 @@ describe("GatekeeperPage compact branded workspace", () => {
       expect(control.className).not.toContain("text-lg");
     }
 
-    const lockedPartner = await screen.findByTestId("gate-locked-partner");
-    expect(lockedPartner.className).toContain("h-9");
-    expect(lockedPartner.className).toContain("rounded-full");
-    expect(lockedPartner.className).toContain("border-2");
-    expect(lockedPartner.getAttribute("aria-readonly")).toBe("true");
+    expect(screen.queryByTestId("gate-locked-partner")).toBeNull();
 
     for (const id of ["input-gate-purpose", "input-gate-notes"]) {
       const control = await screen.findByTestId(id);
