@@ -517,19 +517,24 @@ export default function GateChangeOverPage({
                   </>
                 )}
                 {ownShift && (
-                  <div className="space-y-3 border-t border-[#3a3a3a] pt-3">
-                    <label className="block font-bold">
-                      {t("changeOver.outgoingNotes")}
-                      <textarea
-                        className={`mt-2 min-h-28 font-normal ${BRANDED_NOTES_CLASS}`}
-                        value={notes}
-                        maxLength={8000}
-                        onChange={(e) => {
-                          setNotes(e.target.value);
-                          resetReview();
-                        }}
-                      />
-                    </label>
+                  <section aria-label={t("changeOver.outgoingNotes")} className="space-y-3 border-t border-[#3a3a3a] pt-3">
+                    <div className="flex items-start gap-3">
+                      <span className="hub-card-icon"><NotebookPen aria-hidden="true" /></span>
+                      <div>
+                        <h3 className="font-bold">{t("changeOver.outgoingNotes")}</h3>
+                        <p className="text-xs text-muted-foreground">{t("watch.independent")}</p>
+                      </div>
+                    </div>
+                    <textarea
+                      aria-label={t("changeOver.outgoingNotes")}
+                      className={`min-h-28 font-normal ${BRANDED_NOTES_CLASS}`}
+                      value={notes}
+                      maxLength={8000}
+                      onChange={(e) => {
+                        setNotes(e.target.value);
+                        resetReview();
+                      }}
+                    />
                     <BrandPillButton
                       disabled={busy || !online}
                       hoverSrc={brandImagePillSrc(brand.primary, brand.name)}
@@ -539,7 +544,7 @@ export default function GateChangeOverPage({
                         prep ? "changeOver.refreshHandoff" : "changeOver.prepare",
                       )}
                     </BrandPillButton>
-                  </div>
+                  </section>
                 )}
               </div>
             </WorkspacePanel>

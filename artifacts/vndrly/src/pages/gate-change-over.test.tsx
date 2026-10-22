@@ -143,9 +143,11 @@ it("shows open carry-forward items separately from resolved history", async () =
 it("combines outgoing notes with Shift follow-ups and places Incoming shift review beside it", async () => {
   mount();
   const followUps = await screen.findByRole("region", { name: "changeOver.shiftFollowUps" });
-  const notes = screen.getByText("changeOver.outgoingNotes");
-  expect(followUps.contains(notes)).toBe(true);
-  expect(screen.queryByRole("region", { name: "changeOver.outgoingNotes" })).toBeNull();
+  const notesPanel = screen.getByRole("region", { name: "changeOver.outgoingNotes" });
+  expect(followUps.contains(notesPanel)).toBe(true);
+  expect(within(notesPanel).getByRole("heading", { level: 3, name: "changeOver.outgoingNotes" })).not.toBeNull();
+  expect(within(notesPanel).getByText("watch.independent")).not.toBeNull();
+  expect(within(notesPanel).getByRole("textbox", { name: "changeOver.outgoingNotes" })).not.toBeNull();
   const incoming = screen.getByRole("region", { name: "changeOver.review" });
   expect(incoming.previousElementSibling).toBe(followUps);
 });
