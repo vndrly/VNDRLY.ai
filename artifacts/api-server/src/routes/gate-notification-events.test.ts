@@ -126,8 +126,9 @@ beforeEach(async () => {
     else if (sql.includes("FROM site_work_assignments") || sql.includes("FROM user_org_memberships")) rows = [{ id: 1 }];
     else if (sql.startsWith("SELECT vendor_role")) rows = state.revoked.has(values[0]) ? [] : [{ vendor_role: values[0] === 1 ? "gate_supervisor" : "gatekeeper" }];
     else if (sql.startsWith("SELECT s.*, u.display_name")) rows = [{ id: shiftId, operator_id: 1, station_id: stationId, preparation_id: preparationId, started_at: "2026-09-24T08:00:00.000Z" }];
+    else if (sql.startsWith("SELECT h.*, s.station_id")) rows = state.handovers.filter(row => row.id === values[0]).map(row => ({...row, station_id:stationId, original_preparation_id:preparationId}));
     else if (sql.startsWith("SELECT * FROM gate_handovers")) rows = state.handovers.filter(row => row.id === values[0]);
-    else if (sql.startsWith("SELECT * FROM gate_preparations")) rows = [{ id: preparationId, shift_id: shiftId, snapshot, created_at: new Date() }];
+    else if (sql.startsWith("SELECT * FROM gate_preparations")) rows = [{ id: preparationId, shift_id: shiftId, prepared_by: 1, notes: "Original barrier note", snapshot, created_at: new Date() }];
     else if (sql.startsWith("INSERT INTO gate_shifts")) rows = [{ id: "80000000-0000-4000-8000-000000000001" }];
     else if (sql.trimStart().startsWith("INSERT INTO gate_handovers")) { const row = { id: values[0], preparation_id: values[1], incoming_user_id: values[3] }; state.handovers.push(row); rows = [row]; }
     else if (sql.includes("SELECT") && sql.includes("FROM gate_coverage_status")) rows = state.coverage ? [state.coverage] : [];
@@ -140,6 +141,42 @@ beforeEach(async () => {
 });
 const post = (path: string, body: any) => request(app).post(path).set("Cookie", cookie).send(body);
 describe("real Work Hub notification producers", () => {
+  it("assumes a reviewed watch from the incoming account without switching authentication or paid shifts", async () => {
+    const { assumeGateWatch } = await import("../services/gate-change-over");
+    const { recordGateWorkday } = await import("../services/gate-workday");
+    vi.mocked(recordGateWorkday).mockClear();
+    const { assembleShiftSnapshot } = await import("../services/gate-change-over-snapshot");
+    const input = { stationId, preparationId, operationId: handoffId, acknowledged: true, source: "ios" as const, reviewedRevision: assembleShiftSnapshot([], [], "2026-09-24T08:00:00.000Z").revision };
+    const session = { userId: 2, role: "vendor", vendorId: 11, sv: 1 };
+    const result = await assumeGateWatch(session, input);
+    expect(result).toMatchObject({ id: handoffId, incoming_user_id: 2, preparation_id: handoffId });
+    expect(recordGateWorkday).not.toHaveBeenCalled();
+    expect(state.pg.mock.calls.some(([sql]) => sql.includes("UPDATE users") || sql.includes("session_version=session_version+1"))).toBe(false);
+    await assumeGateWatch(session, input);
+    expect(state.handovers).toHaveLength(1);
+  });
+  it("requires acknowledged prepared notes and a current site revision before changing watch custody", async () => {
+    const { assumeGateWatch } = await import("../services/gate-change-over");
+    const session = { userId: 2, role: "vendor", vendorId: 11, sv: 1 };
+    await expect(assumeGateWatch(session, { stationId, operationId: handoffId, source: "web" })).rejects.toMatchObject({ code: "change_over.acknowledgment_required" });
+    await expect(assumeGateWatch(session, { stationId, preparationId, operationId: handoffId, source: "web", acknowledged: true, reviewedRevision: "outdated" })).rejects.toMatchObject({ code: "change_over.stale" });
+    expect(state.handovers).toHaveLength(0);
+    expect(state.pg.mock.calls.some(([sql]) => sql.startsWith("UPDATE gate_shifts"))).toBe(false);
+  });
+  it("preserves prepared notes across a sign-out gap while checking the incoming operator's live access", async () => {
+    const { assumeGateWatch } = await import("../services/gate-change-over");
+    const { assembleShiftSnapshot } = await import("../services/gate-change-over-snapshot");
+    const original = state.pg.getMockImplementation()!;
+    state.pg.mockImplementation(async (sql, values) => {
+      const result = await original(sql, values);
+      if (sql.startsWith("SELECT * FROM gate_preparations")) result.rows[0].created_at = new Date(0);
+      return result;
+    });
+    const input = { stationId, preparationId, operationId: handoffId, source: "web" as const, acknowledged: true, reviewedRevision: assembleShiftSnapshot([], [], "2026-09-24T08:00:00.000Z").revision };
+    await expect(assumeGateWatch({ userId: 2, role: "vendor", vendorId: 11, sv: 1 }, input)).resolves.toMatchObject({ incoming_user_id: 2 });
+    state.revoked.add(2);
+    await expect(assumeGateWatch({ userId: 2, role: "vendor", vendorId: 11, sv: 1 }, input)).rejects.toMatchObject({ code: "change_over.forbidden" });
+  });
   it("blocks safety reporting and notification when the vendor relationship is unapproved", async () => {
     state.tables.partner_vendor_relationships[0].status = "pending";
     const response = await post("/safety/events", { eventType: "near_miss", title: "Synthetic stop work", siteLocationId: 3, isStopWork: true });

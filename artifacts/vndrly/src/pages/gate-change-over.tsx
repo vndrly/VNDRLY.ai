@@ -1,12 +1,16 @@
+import WorkdayStatusText from "@/components/workday-status-text";
+import WorkdayControls from "@/components/workday-controls";
+import DashboardTasks from "@/components/work-hub/dashboard-tasks";
+import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
+import "@/components/gate-dashboard.css";
+import GateWatchSummary from "@/components/gate-watch-summary";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ClipboardList, LayoutDashboard } from "lucide-react";
+import { ClipboardList, LayoutDashboard, LogIn, LogOut, Users, UserCheck, Car, Clock3, AlertTriangle, NotebookPen, Shield } from "lucide-react";
 import {
-  mayTransferHandoff,
   type ChangeOverState,
   type ChangeOverSnapshot,
-  type IncomingHandoffAuth,
   type ShiftNotesResponse,
 } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,7 +34,8 @@ export function ShiftSnapshotView({
   snapshot: ChangeOverSnapshot;
   historyBaseHref?: string;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   const metricRecordType: Record<string, string> = {
     checkIns: "check_ins",
     checkOuts: "check_outs",
@@ -39,6 +44,19 @@ export function ShiftSnapshotView({
     onSiteVehicles: "vehicles_on_site",
     pendingAdmission: "pending",
   };
+  if (historyBaseHref) {
+    const metric = (key: keyof ChangeOverSnapshot["metrics"], icon: typeof LogIn) => <WorkspaceRow key={key} icon={icon} label={t(`changeOver.${key}`)} value={String(snapshot.metrics[key])} href={`${historyBaseHref}&recordType=${metricRecordType[key]}`} testId={`dashboard-metric-${key}`} />;
+    return <>
+      <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={`${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}`} icon={LogIn}>
+        {metric("checkIns", LogIn)}{metric("checkOuts", LogOut)}{metric("pendingAdmission", Clock3)}
+        <details className="gate-panel-disclosure"><summary><AlertTriangle aria-hidden="true" /><span>{t("changeOver.exceptions")}</span><small>{snapshot.exceptions.length}</small></summary><div className="gate-panel-detail">{snapshot.exceptions.length ? snapshot.exceptions.map(e => <p key={`${e.sourceId}:${e.code}`}>{e.text}</p>) : <p>{t("changeOver.none")}</p>}</div></details>
+      </WorkspacePanel>
+      <WorkspacePanel title={c("On site", "En el sitio")} subtitle={c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
+        {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
+        <details className="gate-panel-disclosure"><summary><ClipboardList aria-hidden="true" /><span>{t("changeOver.outstanding")}</span><small>{snapshot.outstanding.length}</small></summary><div className="gate-panel-detail">{snapshot.outstanding.length ? snapshot.outstanding.map(row => <div key={row.id}><strong>{row.name || row.id}</strong><p>{row.company} · {row.plate} · {new Date(row.checkIn).toLocaleString()}</p>{row.notes && <p className="whitespace-pre-wrap">{row.notes}</p>}</div>) : <p>{t("changeOver.none")}</p>}<p>{t("changeOver.coverage")}</p></div></details>
+      </WorkspacePanel>
+    </>;
+  }
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
@@ -117,10 +135,6 @@ export default function GateChangeOverPage({
   const [reason, setReason] = useState("");
   const [itemView, setItemView] = useState<"open" | "resolved">("open");
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [auth, setAuth] = useState<IncomingHandoffAuth | null>(null);
-  const [reviewedRevision, setReviewedRevision] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -170,21 +184,17 @@ export default function GateChangeOverPage({
   const prep = current?.preparation;
   const revision = current?.snapshot?.revision ?? "";
   const ownShift = current?.shift?.operator_id === user?.userId;
-  const resetReview = () => {
-    setAuth(null);
-    setAcknowledged(false);
-    setReviewedRevision("");
-    setPassword("");
-  };
+  const resetReview = () => { setAcknowledged(false); };
   useEffect(() => {
     resetReview();
+    setPendingWatch(null);
     setNotes("");
     setError("");
     setBefore("");
   }, [stationId, user?.userId]);
   useEffect(() => {
     resetReview();
-  }, [revision, prep?.id, current?.stale]);
+  }, [revision, prep?.id, current?.stale, state.isError]);
   useEffect(() => {
     if (prep) setNotes(prep.notes);
   }, [prep?.id]);
@@ -226,14 +236,32 @@ export default function GateChangeOverPage({
     resetReview();
     await state.refetch();
   };
-  const canTransfer = mayTransferHandoff({
-    online: online && !state.isError,
-    acknowledged,
-    proof: auth?.proof ?? "",
-    reviewedRevision,
-    currentRevision: revision,
-    stale: current?.stale ?? true,
-  });
+  const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios"; preparationId?:string; reviewedRevision?:string; acknowledged?:boolean}} | null>(null);
+  const assumeWatch = async () => {
+    const command = pendingWatch ?? { stationId, body: { operationId: crypto.randomUUID(), source: "web" as const, ...(current?.shift && !ownShift ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged } : {}) } };
+    setPendingWatch(command);
+    try { await request(`/${command.stationId}/watch/assume`, command.body); }
+    catch (error) {
+      const status = (error as {status?:number}).status;
+      if (status && status >= 400 && status < 500) { setPendingWatch(null); resetReview(); void state.refetch(); }
+      throw error;
+    }
+    await watchSaved();
+  };
+  const watchSaved = async () => {
+    setPendingWatch(null); resetReview();
+    await cache.invalidateQueries({ queryKey: ["gate-watch-own-duty"] });
+    await cache.invalidateQueries({ queryKey: ["gate-watch-previous-notes"] });
+    await state.refetch();
+  };
+  useEffect(() => {
+    if (!pendingWatch || !online) return;
+    let active = true;
+    void request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`).then(result => {
+      if (active && result.receipt) void watchSaved();
+    }).catch(() => { /* Retain the immutable original command for explicit retry. */ });
+    return () => { active = false; };
+  }, [pendingWatch, online, state.dataUpdatedAt]);
   const loading =
     sites.isLoading ||
     stations.isLoading ||
@@ -241,7 +269,7 @@ export default function GateChangeOverPage({
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
   return (
-    <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5`}>
+    <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5 ${history ? "" : "gate-dashboard"}`}>
       <div className="flex items-center gap-3">
         <ContentPaneBackLink href={history ? "/gate/change-over" : "/gate"} ariaLabel={t("changeOver.title")} testId="button-back" />
         {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
@@ -253,6 +281,8 @@ export default function GateChangeOverPage({
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
       </div>
+      {!history && <WorkdayControls watchControl={<WorkdayStatusText active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onClick={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) document.getElementById("watch-review")?.scrollIntoView({ behavior: "smooth" }); else void act(assumeWatch); }} />} />}
+      {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
       <div
         className={history
           ? `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`
@@ -395,38 +425,12 @@ export default function GateChangeOverPage({
       ) : null}
       </div>
       {!history && current && (
-          <>
-            <Card>
-              <CardContent className="space-y-4 p-5">
-                {current.shift ? (
-                  <>
-                    <h2 className="font-bold">
-                      {current.shift.operator_name} ·{" "}
-                      {new Date(current.shift.started_at).toLocaleString()}
-                    </h2>
-                    {current.snapshot && (
-                      <ShiftSnapshotView
-                        snapshot={current.snapshot}
-                        historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: "current_shift" })}`}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p>{t("changeOver.noShift")}</p>
-                    <BrandPillButton
-                      disabled={busy || !online}
-                      onClick={() => void act(() => mutate("start", {}))}
-                    >
-                      {t("changeOver.start")}
-                    </BrandPillButton>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="space-y-3 p-5">
-                <h2 className="font-bold">{t("changeOver.shiftFollowUps")}</h2>
+          <div className="gate-dashboard-panels">
+            <GateWatchSummary stationId={stationId} current={current} />
+            <DashboardTasks />
+            {current.shift && current.snapshot ? <ShiftSnapshotView snapshot={current.snapshot} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: "current_shift" })}`} /> : <WorkspacePanel title={t("changeOver.title")} subtitle={t("changeOver.noShift")} icon={LayoutDashboard}><div className="gate-panel-body"><BrandPillButton disabled={busy || !online} onClick={() => void act(assumeWatch)}>{t("watch.assume")}</BrandPillButton></div></WorkspacePanel>}
+            <WorkspacePanel title={t("changeOver.shiftFollowUps")} subtitle={t("changeOver.carryForward")} icon={ClipboardList}>
+              <div className="gate-panel-body space-y-3">
                 <div role="tablist" aria-label={t("changeOver.shiftFollowUps")} className="flex flex-wrap gap-2">
                   <PngPillButton
                     role="tab"
@@ -508,11 +512,11 @@ export default function GateChangeOverPage({
                     </BrandPillButton>
                   </>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </WorkspacePanel>
             {ownShift && (
-              <Card>
-                <CardContent className="space-y-4 p-5">
+              <WorkspacePanel title={t("changeOver.outgoingNotes")} subtitle={t("watch.independent")} icon={NotebookPen}>
+                <div className="gate-panel-body space-y-3">
                   <label className="block font-bold">
                     {t("changeOver.outgoingNotes")}
                     <textarea
@@ -534,13 +538,12 @@ export default function GateChangeOverPage({
                       prep ? "changeOver.refreshHandoff" : "changeOver.prepare",
                     )}
                   </BrandPillButton>
-                </CardContent>
-              </Card>
+                </div>
+              </WorkspacePanel>
             )}
             {prep && (
-              <Card>
-                <CardContent className="space-y-4 p-5">
-                  <h2 className="font-bold">{t("changeOver.review")}</h2>
+              <WorkspacePanel title={t("changeOver.review")} subtitle={t("changeOver.factualSummary")} icon={NotebookPen}>
+                <div className="gate-panel-body space-y-3">
                   <p>
                     {t(
                       prep.summary.source === "ai_selected_facts"
@@ -559,100 +562,12 @@ export default function GateChangeOverPage({
                       {t("changeOver.carryForward")}: {i.text}
                     </p>
                   ))}
-                  {current.stale && <p role="alert">{t("changeOver.stale")}</p>}
-                  {ownShift && !current.stale && notes === prep.notes && (
-                    <>
-                      {!auth ? (
-                        <form
-                          className="space-y-3"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            void act(async () => {
-                              const result = await request<IncomingHandoffAuth>(
-                                `/${stationId}/authenticate`,
-                                {
-                                  username,
-                                  password,
-                                  preparationId: prep.id,
-                                  revision: prep.snapshot.revision,
-                                },
-                              );
-                              setPassword("");
-                              setAuth(result);
-                              setReviewedRevision(prep.snapshot.revision);
-                            });
-                          }}
-                        >
-                          <h3 className="font-bold">
-                            {t("changeOver.incomingLogin")}
-                          </h3>
-                          <BrandedInput
-                            aria-label={t("changeOver.username")}
-                            autoComplete="off"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder={t("changeOver.username")}
-                          />
-                          <BrandedInput
-                            aria-label={t("changeOver.password")}
-                            autoComplete="new-password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={t("changeOver.password")}
-                          />
-                          <BrandPillButton
-                            type="submit"
-                            disabled={busy || !online || !username || !password}
-                          >
-                            {t("changeOver.authenticate")}
-                          </BrandPillButton>
-                        </form>
-                      ) : (
-                        <>
-                          <p>
-                            {t("changeOver.incoming")}:{" "}
-                            <strong>{auth.incoming.displayName}</strong>
-                          </p>
-                          <label className="flex gap-2">
-                            <input
-                              type="checkbox"
-                              checked={acknowledged}
-                              onChange={(e) =>
-                                setAcknowledged(e.target.checked)
-                              }
-                            />
-                            {t("changeOver.acknowledge")}
-                          </label>
-                          {acknowledged && (
-                            <BrandPillButton
-                              tone="brand"
-                              disabled={busy || !canTransfer}
-                              onClick={() =>
-                                void act(async () => {
-                                  await request(`/${stationId}/transfer`, {
-                                    proof: auth.proof,
-                                    acknowledged: true,
-                                    operationId: crypto.randomUUID(),
-                                  });
-                                  await cache.cancelQueries();
-                                  cache.clear();
-                                  window.location.assign(
-                                    `${import.meta.env.BASE_URL.replace(/\/$/, "")}/gate/shift-notes?${new URLSearchParams({ siteId, stationId })}`,
-                                  );
-                                })
-                              }
-                            >
-                              {t("changeOver.switchUser")}
-                            </BrandPillButton>
-                          )}
-                        </>
-                      )}
-                      <p className="text-sm text-muted-foreground">
-                        {t("changeOver.recovery")}
-                      </p>
-                    </>
-                  )}
+
+                  {ownShift ? <p role="status">{t("watch.ready")}</p> : <div id="watch-review" className="space-y-3 scroll-mt-6">
+                    <label className="flex gap-2"><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} />{t("changeOver.acknowledge")}</label>
+                    <BrandPillButton disabled={busy || !online || !acknowledged || state.isError} onClick={() => void act(assumeWatch)}>{t("watch.assume")}</BrandPillButton>
+                  </div>}
+                  <p className="text-sm text-muted-foreground">{t("watch.independent")}</p>
                   {(ownShift || current.supervisor) && (
                     <>
                       <BrandedInput
@@ -669,13 +584,12 @@ export default function GateChangeOverPage({
                       </BrandPillButton>
                     </>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </WorkspacePanel>
             )}
             {current.supervisor && (
-              <Card>
-                <CardContent className="space-y-3 p-5">
-                  <h2 className="font-bold">{t("changeOver.supervisor")}</h2>
+              <WorkspacePanel title={t("changeOver.supervisor")} subtitle={t("changeOver.gate")} icon={Shield}>
+                <div className="gate-panel-body space-y-3">
                   {current.shift && !ownShift && (
                     <>
                       <p>{t("changeOver.recoverExplanation")}</p>
@@ -722,10 +636,10 @@ export default function GateChangeOverPage({
                   >
                     {t("changeOver.addGate")}
                   </BrandPillButton>
-                </CardContent>
-              </Card>
+                </div>
+              </WorkspacePanel>
             )}
-          </>
+          </div>
       )}
     </div>
   );

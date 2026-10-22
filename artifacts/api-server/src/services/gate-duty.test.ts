@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import {workdayService} from "./workday";
-import {startGateShift,prepareGateHandoff,transferGateShift,getShiftNotes} from "./gate-change-over";
+import {startGateShift,prepareGateHandoff,transferGateShift,getShiftNotes,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
 import {
   assumeGateDuty,
   endGateDuty,
@@ -103,6 +103,32 @@ async function fixture(policy: "on_site" | "paid_travel" = "on_site") {
 const key = () => randomUUID();
 
 describe("Gate duty teams", () => {
+  it("keeps paid clocks and sessions unchanged while saving the exact acknowledged watch facts and original notes", async () => {
+    const f = await fixture(), outgoing=f.workers[0]!, incoming=f.workers[1]!;
+    await assumeGateWatch(outgoing,{stationId:f.stationId,source:"web",operationId:key()});
+    expect((await workdayService.current(outgoing)).workday).toBeNull();
+    const prep=await prepareGateHandoff(outgoing,f.stationId,"Original durable notes",async facts=>({source:"facts",facts}));
+    await actOnShiftItem(outgoing,f.stationId,key(),"open","Activity after preparation");
+    const current=await getChangeOverState(incoming,f.stationId);
+    expect(current.snapshot!.revision).not.toBe(prep.snapshot.revision);
+    const input={stationId:f.stationId,source:"ios" as const,operationId:key(),preparationId:prep.id,reviewedRevision:current.snapshot!.revision,acknowledged:true};
+    const saved=await assumeGateWatch(incoming,input);
+    expect((await assumeGateWatch(incoming,input)).id).toBe(saved.id);
+    expect((await getGateWatchOperation(incoming,f.stationId,input.operationId)).receipt.id).toBe(saved.id);
+    const notes=await getShiftNotes(incoming,{stationId:f.stationId});
+    expect(notes.rows[0].notes).toBe("Original durable notes");
+    expect(notes.rows[0].snapshot.revision).toBe(current.snapshot!.revision);
+    expect(JSON.stringify(notes.rows[0].snapshot)).toContain("Activity after preparation");
+    const original=(await pool.query("SELECT snapshot FROM gate_preparations WHERE id=$1",[prep.id])).rows[0];
+    expect(original.snapshot.revision).toBe(prep.snapshot.revision);
+    expect((await workdayService.current(outgoing)).workday).toBeNull();
+    expect((await workdayService.current(incoming)).workday).toBeNull();
+    expect(await getGateRoster(incoming,f.stationId)).toMatchObject([{userId:incoming.userId}]);
+    const versions=(await pool.query("SELECT session_version FROM users WHERE id=ANY($1::int[])",[[outgoing.userId,incoming.userId]])).rows;
+    expect(versions.map(row=>row.session_version)).toEqual([1,1]);
+    const other=(await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,$2) RETURNING id",[f.site,key()])).rows[0].id;
+    await expect(getGateWatchOperation(incoming,other,input.operationId)).rejects.toMatchObject({code:"change_over.operation_conflict"});
+  });
   it("hands notes to the incoming watch and atomically switches both workers' shared clocks only after acknowledgement",async()=>{
     const f=await fixture(),outgoing=f.workers[0]!,incoming=f.workers[1]!;
     await startGateShift(outgoing,f.stationId);expect((await workdayService.current(outgoing)).workday).not.toBeNull();

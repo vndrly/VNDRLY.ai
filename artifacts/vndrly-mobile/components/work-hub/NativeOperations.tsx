@@ -1,10 +1,10 @@
+import WorkdayControls from "@/components/WorkdayControls";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Image, Platform, Text, TextInput, View } from "react-native";
 
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import ShiftPill from "@/components/ShiftPill";
 import { useBrand } from "@/hooks/use-brand";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,7 +12,7 @@ import { useColors } from "@/hooks/useColors";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { getDeviceId } from "@/lib/deviceId";
-import { changeNativeDuty, changeNativeOnCall, designateNativeWorkPhone, readNativeOperations, readNativeRequest, respondNativeRequest, selectNativePrimaryTask, updateNativeConsent } from "@/lib/native-operations";
+import { changeNativeDuty, designateNativeWorkPhone, readNativeOperations, readNativeRequest, respondNativeRequest, selectNativePrimaryTask, updateNativeConsent } from "@/lib/native-operations";
 import { requestIsActionable, type NativeDeviceRequest, type NativeOperationsStatus } from "@/lib/native-operations-policy";
 import { beginRequestedPhoto, requestedPhotoBackgroundAvailable, resumeRequestedPhoto, saveRequestedPhotoForeground } from "@/lib/requested-photo-upload";
 import PendingRequestedPhotos from "./PendingRequestedPhotos";
@@ -23,7 +23,11 @@ import { scanWorkTextDraft } from "@/lib/native-work-capture";
 
 import NativeSystem from "../../modules/vndrly-system-surfaces/src/VndrlySystemSurfacesModule";
 
-export default function NativeOperations({ requestId, action, systemRequestId, compact = false, settingsOnly = false }: { compact?: boolean; settingsOnly?: boolean; requestId?: string; action?: string; systemRequestId?: string }) {
+export default function NativeOperations(props: { compact?: boolean; settingsOnly?: boolean; requestId?: string; action?: string; systemRequestId?: string }) {
+  if (props.compact) return <WorkdayControls />;
+  return <NativeOperationsPanel {...props} />;
+}
+function NativeOperationsPanel({ requestId, action, systemRequestId, compact = false, settingsOnly = false }: { compact?: boolean; settingsOnly?: boolean; requestId?: string; action?: string; systemRequestId?: string }) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const colors = useColors();
@@ -149,11 +153,7 @@ export default function NativeOperations({ requestId, action, systemRequestId, c
   const textStyle = { color: colors.text, fontSize: 15 };
   const button = (label: string, onPress: () => void) => <TogglePillButton accessibilityLabel={label} onPress={onPress} disabled={busy}>{label}</TogglePillButton>;
   if (!user) return null;
-  const onCall = status?.onCallActive === true || status?.onCallWindows?.some(window => Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now()) === true;
-  const controls = <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
-
-    <ShiftPill active={onCall} disabled={busy || !status} label={t("nativeOperations.onCallOn")} onPress={() => { void run(() => changeNativeOnCall(!onCall, status?.duty?.active === true)); }} />
-  </View>;
+  const controls = <WorkdayControls />;
   if (compact) return <View style={{ backgroundColor: colors.card, borderColor: brand.primary, borderWidth: 1, borderRadius: 12, padding: 12 }}>{status ? controls : <ActivityIndicator accessibilityLabel={t("nativeOperations.loading")} />}{error ? <Text accessibilityRole="alert" style={textStyle}>{error}</Text> : null}</View>;
   if (settingsOnly) return <View style={{ gap: 10 }}>{status ? <>
     <Text style={textStyle}>{t(status.designatedDeviceId === deviceId ? "nativeOperations.workPhone" : "nativeOperations.viewer")}</Text>

@@ -6,6 +6,12 @@ import { describe, expect, it, vi } from "vitest";
 import ProjectTimeline from "./project-timeline";
 
 describe("ProjectTimeline", () => {
+  it("retains the timeline without reporting an empty project schedule when its source fails", () => {
+    render(<ProjectTimeline canManage={false} onCreate={vi.fn()} items={[]} unavailable />);
+    expect(screen.getByRole("status").textContent).toContain("Project schedule unavailable");
+    expect(screen.queryByText("No shared project milestones in this range.")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Create Project" })).toBeNull();
+  });
   it("shows actionable milestone context and permission-filtered finance details", async () => {
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <ProjectTimeline

@@ -52,7 +52,17 @@
     "sitesError": "No se pudieron cargar los sitios guardados.",
     "retrySites": "Reintentar cargar sitios",
     "sortLabel": "Ordenar proveedores",
-    "sort": { "recommended": "Recomendados", "price": "Precio", "rating": "Calificación", "safety": "Seguridad", "history": "Historial de trabajo", "onTime": "Puntualidad", "distance": "Distancia", "availability": "Disponibilidad declarada", "priorExperience": "Experiencia previa con el socio" },
+    "sort": {
+      "recommended": "Recomendados",
+      "price": "Precio",
+      "rating": "Calificación",
+      "safety": "Seguridad",
+      "history": "Historial de trabajo",
+      "onTime": "Puntualidad",
+      "distance": "Distancia",
+      "availability": "Disponibilidad declarada",
+      "priorExperience": "Experiencia previa con el socio"
+    },
     "eligibleOnly": "Solo proveedores elegibles",
     "loading": "Verificando proveedores…",
     "searchError": "No se pudo verificar la elegibilidad. Inténtelo de nuevo.",
@@ -73,7 +83,15 @@
     "vndrlySafety": "Puntuación de cumplimiento de VNDRLY",
     "complianceUnavailable": "La puntuación de cumplimiento de VNDRLY no está disponible temporalmente. La demás información del proveedor sigue disponible.",
     "scoreValue": "Puntuación de cumplimiento de VNDRLY: {{score}} de 100",
-    "scoreReasons": { "missing_evidence": "Falta evidencia vigente", "expired_record": "Un registro obligatorio está vencido", "revoked_record": "Se revocó un registro obligatorio", "failed_record": "Un registro obligatorio no aprobó la revisión", "unverified_record": "Un registro obligatorio no está verificado", "excluded_record": "Un registro obligatorio está fuera del alcance actual", "requires_review": "La evidencia actual requiere revisión" },
+    "scoreReasons": {
+      "missing_evidence": "Falta evidencia vigente",
+      "expired_record": "Un registro obligatorio está vencido",
+      "revoked_record": "Se revocó un registro obligatorio",
+      "failed_record": "Un registro obligatorio no aprobó la revisión",
+      "unverified_record": "Un registro obligatorio no está verificado",
+      "excluded_record": "Un registro obligatorio está fuera del alcance actual",
+      "requires_review": "La evidencia actual requiere revisión"
+    },
     "advisoryHiring": "Información solo orientativa. VNDRLY no bloquea tickets; su empresa decide a quién contratar.",
     "distance": "Distancia y cobertura",
     "distanceValue": "{{distance}} millas · radio {{radius}} millas",
@@ -4174,7 +4192,9 @@
       "invalid_input": "Revise los campos solicitados.",
       "busy": "La entrada está ocupada. Actualice e intente de nuevo; no se transfirió ningún turno.",
       "rate_limited": "Espere antes de intentar de nuevo.",
-      "auth_rate_limited": "Demasiados intentos de inicio de sesión. Espere cinco minutos."
+      "auth_rate_limited": "Demasiados intentos de inicio de sesión. Espere cinco minutos.",
+      "station_inactive": "Este acceso está inactivo.",
+      "duty_employer_changed": "Vuelva a la empresa original antes de cambiar esta guardia."
     },
     "public_askv": {
       "rate_limited": "AskV está recibiendo demasiadas solicitudes. Inténtalo de nuevo en breve.",
@@ -5710,7 +5730,7 @@
     "snapshot": "Ver datos registrados",
     "older": "Notas anteriores",
     "audit": "Historial operativo",
-    "noShift": "No hay un turno activo. Inicie uno para establecer su período de informe.",
+    "noShift": "No hay una guardia activa. Seleccione Asumir guardia para comenzar.",
     "start": "Iniciar mi turno",
     "reason": "Motivo de resolución o cancelación",
     "newItem": "Acción para el siguiente turno",
@@ -6266,5 +6286,13 @@
   },
   "fleet": {
     "agreementEditor": "Acuerdo de transporte"
+  },
+  "watch": {
+    "assume": "Asumir vigilancia",
+    "handover": "Entregar vigilancia",
+    "ready": "Relevo guardado. El siguiente trabajador inicia su propia sesión, revisa estas notas y asume la vigilancia.",
+    "waiting": "Esperando que el operador actual prepare el relevo.",
+    "independent": "Iniciar o cerrar sesión no inicia ni termina su turno o vigilancia.",
+    "recover": "Recuperar acción de guardia"
   }
 }

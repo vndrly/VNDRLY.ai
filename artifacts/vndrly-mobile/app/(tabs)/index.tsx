@@ -718,7 +718,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={{ paddingTop: Math.max(0, topPadding - 20) }}>
-        <PortalPageHeader beforeTitle={<WorkdayControls />} title={t(homeTabTitleKey(me))} testIdPrefix="field-portal" notificationHref="/notifications" fallbackHref="/work-hub" backBehavior="history" />
+        <PortalPageHeader afterTitle={<WorkdayControls />} title={t(homeTabTitleKey(me))} testIdPrefix="field-portal" notificationHref="/notifications" fallbackHref="/work-hub" backBehavior="history" />
         {orgName && (!isForemanEmployee || canSwitchOrg) ? (
           <View style={{ paddingHorizontal: 20, marginBottom: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
             {canSwitchOrg ? (

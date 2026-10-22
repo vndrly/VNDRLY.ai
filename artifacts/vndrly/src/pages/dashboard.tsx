@@ -1,3 +1,5 @@
+import DashboardTasks from "@/components/work-hub/dashboard-tasks";
+import WorkdayControls from "@/components/workday-controls";
 import {
   useGetDashboardSummary,
   useGetRecentActivity,
@@ -647,6 +649,9 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-sm mt-1">{t("dashboard.subtitle")}</p>
         </div>
       </div>
+
+      <WorkdayControls />
+      <div className="max-w-2xl"><DashboardTasks /></div>
 
       {rateLimited && (
         <div

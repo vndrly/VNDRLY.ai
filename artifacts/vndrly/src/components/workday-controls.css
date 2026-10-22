@@ -1,0 +1,11 @@
+.shift-card { border: 2px solid var(--brand-primary); border-radius: 12px; padding: 8px 12px; background: #373b40; color: #f8fafc; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px 12px; min-width: 0; }
+.shift-card-left { justify-self: start; }
+.shift-card-center { justify-self: center; text-align: center; }
+.shift-card-on-call { justify-self: end; display: grid; gap: 4px; text-align: right; }
+.shift-card-on-call small { font-size: 11px; max-width: 180px; }
+.shift-card-feedback { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.workday-status-text { appearance: none; border: 0; border-radius: 0; background: none; background-image: none; box-shadow: none; color: #9ca3af; font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 4px 0; cursor: pointer; white-space: nowrap; }
+.workday-status-text.is-active { color: #22c55e; }
+.workday-status-text:disabled { cursor: default; }
+.workday-status-text:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 4px; }
+@media (max-width: 600px) { .shift-card { padding: 8px; gap: 8px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .shift-card-center { grid-column: 1 / -1; grid-row: 2; } .shift-card-on-call { grid-column: 2; grid-row: 1; } .shift-card button { min-width: 110px; } }

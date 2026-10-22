@@ -1,3 +1,4 @@
+import WorkdayStatusText from "@/components/WorkdayStatusText";
 import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
@@ -17,10 +18,8 @@ import * as Sharing from "expo-sharing";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
-  mayTransferHandoff,
   type ChangeOverState,
   type ChangeOverSnapshot,
-  type IncomingHandoffAuth,
   type ShiftNotesResponse,
 } from "@workspace/gate-booth";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
@@ -33,10 +32,10 @@ import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch, apiFetchRaw } from "@/lib/api";
-import type { StoredUser } from "@/lib/auth";
+
 import {
   changeOverRequest as request,
-  acceptChangeOverSession,
+
 } from "@/lib/change-over-api";
 import {
   isVisibleGateReportRecipient,
@@ -134,10 +133,6 @@ export default function GateChangeOver({
   const [itemView, setItemView] = useState<"open" | "resolved">("open");
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [reason, setReason] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [auth, setAuth] = useState<IncomingHandoffAuth | null>(null);
-  const [reviewedRevision, setReviewedRevision] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -235,14 +230,10 @@ export default function GateChangeOver({
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
   const online = !loadError;
-  const resetReview = () => {
-    setAuth(null);
-    setAcknowledged(false);
-    setReviewedRevision("");
-    setPassword("");
-  };
+  const resetReview = () => { setAcknowledged(false); };
   useEffect(() => {
     resetReview();
+    setPendingWatch(null);
     setNotes("");
     setError("");
     setVisibleNoteCount(10);
@@ -357,22 +348,35 @@ export default function GateChangeOver({
     await apiFetch("/api/gate-report/email", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format: reportFormat, recipientUserIds: reportRecipientIds, filters: reportFilters }) });
     setError(t("gateHistory.emailed"));
   };
-  const canTransfer = mayTransferHandoff({
-    online,
-    acknowledged,
-    proof: auth?.proof ?? "",
-    reviewedRevision,
-    currentRevision: revision,
-    stale: current?.stale ?? true,
-  });
+  const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios"; preparationId?:string; reviewedRevision?:string; acknowledged?:boolean}} | null>(null);
+  const assumeWatch = async () => {
+    const command = pendingWatch ?? { stationId, body: { operationId: Crypto.randomUUID(), source: "ios" as const, ...(current?.shift && !ownShift ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged } : {}) } };
+    setPendingWatch(command);
+    try { await request(`/${command.stationId}/watch/assume`, command.body); }
+    catch (error) {
+      const status = (error as {status?:number}).status;
+      if (status && status >= 400 && status < 500) { setPendingWatch(null); resetReview(); void state.refetch(); }
+      throw error;
+    }
+    setPendingWatch(null); resetReview();
+    await state.refetch();
+  };
+  useEffect(() => {
+    if (!pendingWatch || !online) return;
+    let active = true;
+    void request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`).then(result => {
+      if (active && result.receipt) { setPendingWatch(null); resetReview(); void state.refetch(); }
+    }).catch(() => { /* Retain the immutable original command for explicit retry. */ });
+    return () => { active = false; };
+  }, [pendingWatch, online, state.dataUpdatedAt]);
+  const scroll = useRef<ScrollView>(null), reviewY = useRef(0);
   return (
     <ScreenSafeArea>
-      <ScrollView
+      <ScrollView ref={scroll}
         contentContainerStyle={{ padding: 20, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
         <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
-        {!history && <WorkdayControls />}
         <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
           <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
             <SphereBackButton
@@ -389,6 +393,7 @@ export default function GateChangeOver({
           </View>
           <AskVVoiceIndicator inline />
         </View>
+        {!history && <WorkdayControls watchControl={<WorkdayStatusText active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onPress={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) scroll.current?.scrollTo({ y: reviewY.current, animated: true }); else void act(assumeWatch); }} />} />}
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
         {params.gateMode === "1" && (
           <TogglePillButton compactOnTablet onPress={() => router.replace("/(tabs)" as never)}>
@@ -476,6 +481,7 @@ export default function GateChangeOver({
             </View>
           </ScrollView>
         </View> : null}
+        {!history && current?.shift && !ownShift && !prep && label(t("watch.waiting"))}
         {sites.isLoading && label(t("changeOver.loading"))}
         {sites.data?.sites.length === 0 && label(t("changeOver.noSites"))}
         {Boolean(loadError) && (
@@ -499,9 +505,9 @@ export default function GateChangeOver({
         }, false, true)}
         {!history && stationId ? (
           <GateDutyCard
+            readOnly
             stationId={stationId}
             workHubShiftId={params.workHubShiftId}
-            onStartShift={current && !current.shift ? () => void mutate("start", {}) : undefined}
             startShiftDisabled={!online}
           />
         ) : null}
@@ -698,7 +704,7 @@ export default function GateChangeOver({
                 </View>
               )}
               {prep && (
-                <View style={cardStyle}>
+                <View onLayout={event => { reviewY.current = event.nativeEvent.layout.y; }} style={cardStyle}>
                   {label(t("changeOver.review"))}
                   {label(
                     t(
@@ -718,99 +724,12 @@ export default function GateChangeOver({
                       {t("changeOver.carryForward")}: {i.text}
                     </Text>
                   ))}
-                  {current.stale && label(t("changeOver.stale"))}
-                  {ownShift && !current.stale && notes === prep.notes && (
-                    <>
-                      {!auth ? (
-                        <>
-                          {label(t("changeOver.incomingLogin"))}
-                          <TextInput
-                            accessibilityLabel={t("changeOver.username")}
-                            placeholder={t("changeOver.username")}
-                            placeholderTextColor={colors.mutedForeground}
-                            style={fieldStyle}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            value={username}
-                            onChangeText={setUsername}
-                          />
-                          <TextInput
-                            accessibilityLabel={t("changeOver.password")}
-                            placeholder={t("changeOver.password")}
-                            placeholderTextColor={colors.mutedForeground}
-                            style={fieldStyle}
-                            secureTextEntry
-                            autoComplete="off"
-                            value={password}
-                            onChangeText={setPassword}
-                          />
-                          {button(
-                            t("changeOver.authenticate"),
-                            async () => {
-                              const result = await request<IncomingHandoffAuth>(
-                                `/${stationId}/authenticate`,
-                                {
-                                  username,
-                                  password,
-                                  preparationId: prep.id,
-                                  revision: prep.snapshot.revision,
-                                },
-                              );
-                              setPassword("");
-                              setAuth(result);
-                              setReviewedRevision(prep.snapshot.revision);
-                            },
-                            !online || !username || !password,
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          {label(
-                            `${t("changeOver.incoming")}: ${auth.incoming.displayName}`,
-                          )}
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: 8,
-                            }}
-                          >
-                            <Switch
-                              accessibilityLabel={t("changeOver.acknowledge")}
-                              value={acknowledged}
-                              onValueChange={setAcknowledged}
-                            />
-                            <Text style={{ color: colors.foreground, flex: 1 }}>
-                              {t("changeOver.acknowledge")}
-                            </Text>
-                          </View>
-                          {acknowledged &&
-                            button(
-                              t("changeOver.switchUser"),
-                              async () => {
-                                const result = await request<{
-                                  token: string;
-                                  user: StoredUser;
-                                }>(`/${stationId}/transfer`, {
-                                  proof: auth.proof,
-                                  operationId: Crypto.randomUUID(),
-                                  acknowledged: true,
-                                });
-                                await cache.cancelQueries();
-                                cache.clear();
-                                await acceptChangeOverSession(result);
-                                router.replace({
-                                  pathname: "/(tabs)/shift-notes",
-                                  params: { siteId: String(siteId), stationId },
-                                } as never);
-                              },
-                              !canTransfer,
-                            )}
-                        </>
-                      )}
-                      {label(t("changeOver.recovery"))}
-                    </>
-                  )}
+
+                  {ownShift ? label(t("watch.ready")) : <View style={{gap:10}}>
+                    <View style={{flexDirection:"row",alignItems:"center",gap:8}}><Switch accessibilityLabel={t("changeOver.acknowledge")} value={acknowledged} onValueChange={setAcknowledged}/><Text style={{color:colors.foreground,flex:1}}>{t("changeOver.acknowledge")}</Text></View>
+                    {button(t("watch.assume"), assumeWatch, !online || !acknowledged || state.isError)}
+                  </View>}
+                  {label(t("watch.independent"))}
                   {(ownShift || current.supervisor) &&
                     <>
                       <TextInput

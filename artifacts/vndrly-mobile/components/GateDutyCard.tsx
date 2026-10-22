@@ -16,11 +16,13 @@ export default function GateDutyCard({
   workHubShiftId,
   onStartShift,
   startShiftDisabled,
+  readOnly = false,
 }: {
   stationId: string;
   workHubShiftId?: string;
   onStartShift?: () => void;
   startShiftDisabled?: boolean;
+  readOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const colors = useColors();
@@ -55,7 +57,7 @@ export default function GateDutyCard({
         </View>
       : roster.data?.roster.map((entry) => <Text key={entry.id} style={{ color: colors.foreground }}>{entry.userName} · {new Date(entry.startedAt).toLocaleTimeString()}</Text>)}
     {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
-    {!own ? <>
+    {!readOnly && (!own ? <>
       <View style={{ flexDirection: "row", gap: 8 }}>
         {onStartShift ? <TogglePillButton compactOnTablet solid disabled={busy || startShiftDisabled} style={{ flex: 1 }} onPress={onStartShift}>{t("changeOver.start")}</TogglePillButton> : null}
         <TogglePillButton compactOnTablet disabled={busy} style={{ flex: 1 }} onPress={() => void run(() => post("duty/assume", { workHubShiftId, source: "manual", idempotencyKey: Crypto.randomUUID() }))}>{t("gateDuty.assume")}</TogglePillButton>
@@ -64,6 +66,6 @@ export default function GateDutyCard({
     </> : <>
       <TextInput accessibilityLabel={t("gateDuty.signOffReason")} placeholder={t("gateDuty.signOffReason")} placeholderTextColor={colors.mutedForeground} value={reason} onChangeText={setReason} style={{ backgroundColor: colors.background, borderColor: colors.border, borderRadius: 18, borderWidth: 1, color: colors.foreground, paddingHorizontal: 12, paddingVertical: 10 }} />
       <TogglePillButton compactOnTablet inactive askVInactiveStyle disabled={busy || !reason.trim()} onPress={() => void run(() => post(`duty/${own.id}/end`, { reason: reason.trim(), handoffCompleted: (roster.data?.roster.length ?? 0) > 1 }))}>{t("gateDuty.signOff")}</TogglePillButton>
-    </>}
+    </>)}
   </View>;
 }

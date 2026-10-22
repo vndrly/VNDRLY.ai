@@ -22,7 +22,7 @@ test("Gate Dashboard opens an exact current-shift History query", async ({ page 
 
     await loginAsVendor(page, operator);
     await page.goto(`/gate/change-over?siteId=${site.id}&stationId=${stationId}`, { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: "Start my shift", exact: true }).click();
+    await page.getByRole("button", { name: "Assume Watch", exact: true }).last().click();
     await expect(page.getByTestId("dashboard-metric-checkIns")).toBeVisible();
     await page.getByTestId("dashboard-metric-checkIns").click();
     await expect(page).toHaveURL(new RegExp(`gate/history.*siteId=${site.id}.*stationId=${stationId}.*range=current_shift.*recordType=check_ins`));

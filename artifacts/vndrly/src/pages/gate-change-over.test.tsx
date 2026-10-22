@@ -8,7 +8,8 @@ import {
   cleanup,
   within,
 } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
+vi.mock("@/components/workday-controls", () => ({ default: ({watchControl}: {watchControl?: React.ReactNode}) => <div>{watchControl}</div> }));
 const api = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: api }));
 vi.mock("@/hooks/use-auth", () => ({
@@ -63,6 +64,7 @@ beforeEach(() => {
     value: true,
     configurable: true,
   });
+  onlineManager.setOnline(true);
   api.mockImplementation(async (path: string) =>
     path.startsWith("/sites")
       ? { sites: [{ id: 1, name: "Site" }] }
@@ -77,7 +79,8 @@ beforeEach(() => {
             : {},
   );
 });
-afterEach(cleanup);
+const caches: QueryClient[] = [];
+afterEach(() => { cleanup(); for (const cache of caches.splice(0)) cache.clear(); });
 it("keeps the coverage map off the Dashboard", () => {
   mount(false);
   expect(screen.queryByRole("region", { name: "Gate coverage map" })).toBeNull();
@@ -91,6 +94,7 @@ function mount(history = false) {
   const cache = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
+  caches.push(cache);
   render(
     <QueryClientProvider client={cache}>
       <GateChangeOverPage history={history} />
@@ -176,7 +180,9 @@ it("outlines each live snapshot counter in the organization brand", async () => 
   await screen.findByText("changeOver.checkIns");
   for (const metric of Object.keys(snapshot.metrics)) {
     const label = screen.getByText(`changeOver.${metric}`);
-    expect(label.parentElement?.className).toContain("border-[color:var(--brand-primary)]");
+    const row = screen.getByTestId(`dashboard-metric-${metric}`);
+    expect(row.contains(label)).toBe(true);
+    expect(row.getAttribute("href")).toContain("range=current_shift");
   }
 });
 it("limits Shift Notes to one year and uses branded compact fields", async () => {
@@ -203,71 +209,59 @@ it("limits Shift Notes to one year and uses branded compact fields", async () =>
     expect(field.className).toContain("bg-white");
   }
 });
-async function authenticate() {
-  fireEvent.change(await screen.findByLabelText("changeOver.username"), {
-    target: { value: "incoming" },
-  });
-  fireEvent.change(screen.getByLabelText("changeOver.password"), {
-    target: { value: "secret" },
-  });
-  fireEvent.click(screen.getByText("changeOver.authenticate"));
-}
-it("authenticates separately and only reveals Switch User after acknowledgment", async () => {
-  mount();
-  await authenticate();
-  await screen.findByText("Incoming");
-  expect(screen.queryByText("changeOver.switchUser")).toBeNull();
-  expect(screen.queryByLabelText("changeOver.password")).toBeNull();
-  fireEvent.click(screen.getByRole("checkbox"));
-  expect(
-    (screen.getByRole("button", { name: "changeOver.switchUser" }) as HTMLButtonElement).disabled,
-  ).toBe(false);
-  expect(api.mock.calls.some(([path]) => path.endsWith("/transfer"))).toBe(
-    false,
-  );
-});
-it("keeps the outgoing page after failed incoming credentials and clears password", async () => {
+
+function incomingState() { return { ...state(), shift: { ...state().shift, operator_id: 2 } }; }
+function useIncoming() {
   const base = api.getMockImplementation()!;
-  api.mockImplementation((path, body) =>
-    path.endsWith("/authenticate")
-      ? Promise.reject(new Error("Invalid credentials"))
-      : base(path, body),
-  );
-  mount();
-  await authenticate();
-  expect((await screen.findByRole("alert")).textContent).toContain(
-    "Invalid credentials",
-  );
-  expect(
-    (screen.getByLabelText("changeOver.password") as HTMLInputElement).value,
-  ).toBe("");
-  expect(screen.queryByText("changeOver.switchUser")).toBeNull();
+  api.mockImplementation((path, body) => path.endsWith('/state') ? incomingState() : base(path, body));
+}
+it('assumes a reviewed watch using the signed-in account without credentials or a session switch', async () => {
+  useIncoming(); mount();
+  const review = await screen.findByLabelText('changeOver.acknowledge');
+  const confirm = () => within(document.getElementById('watch-review')!).getByRole('button', { name: 'watch.assume' }) as HTMLButtonElement;
+  expect(confirm().disabled).toBe(true);
+  expect(screen.queryByLabelText('changeOver.password')).toBeNull();
+  fireEvent.click(review); fireEvent.click(confirm());
+  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source: 'web', preparationId: 'prep', reviewedRevision: 'a', acknowledged: true, operationId: expect.any(String) })));
+  expect(api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);
 });
-it("invalidates authenticated review when fresh activity arrives", async () => {
-  const cache = mount();
-  await authenticate();
-  await screen.findByText("Incoming");
-  fireEvent.click(screen.getByRole("checkbox"));
-  cache.setQueryData(["change-over-state", 1, "gate"], {
-    ...state(),
-    stale: true,
-    snapshot: { ...snapshot, revision: "b" },
-  });
-  await waitFor(() =>
-    expect(screen.queryByText("changeOver.switchUser")).toBeNull(),
-  );
-  expect(screen.getByText("changeOver.stale")).not.toBeNull();
+it('requires another acknowledgment when current watch activity changes', async () => {
+  useIncoming(); const cache = mount();
+  fireEvent.click(await screen.findByLabelText('changeOver.acknowledge'));
+  cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), snapshot: { ...snapshot, revision: 'b' } });
+  await waitFor(() => expect((screen.getByLabelText('changeOver.acknowledge') as HTMLInputElement).checked).toBe(false));
 });
-it("clears incoming review on loss of connectivity", async () => {
-  mount();
-  await authenticate();
-  await screen.findByText("Incoming");
-  fireEvent.click(screen.getByRole("checkbox"));
-  Object.defineProperty(navigator, "onLine", {
-    value: false,
-    configurable: true,
+it('clears review and disables watch assumption when offline', async () => {
+  useIncoming(); mount();
+  fireEvent.click(await screen.findByLabelText('changeOver.acknowledge'));
+  Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+  fireEvent(window, new Event('offline'));
+  await screen.findByText('changeOver.offline');
+  expect((screen.getByLabelText('changeOver.acknowledge') as HTMLInputElement).checked).toBe(false);
+  for (const button of screen.getAllByRole('button', { name: 'watch.assume' })) expect((button as HTMLButtonElement).disabled).toBe(true);
+});
+it('prepares outgoing watch notes without ending a shift or changing accounts', async () => {
+  mount(); fireEvent.click(await screen.findByRole('button', { name: 'watch.handover' }));
+  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/prepare', { notes: 'Barrier note' }));
+  expect(api.mock.calls.some(([path]) => /\/(transfer|logout|end|start)$/.test(path))).toBe(false);
+});
+
+it('retains the exact original watch command when the response is lost and displayed custody changes', async () => {
+  const base=api.getMockImplementation()!;
+  let current=incomingState(), attempts=0;
+  api.mockImplementation(async (path,body) => {
+    if(path.endsWith('/state')) return current;
+    if(path.includes('/watch/operations/')) return {receipt:null};
+    if(path.endsWith('/watch/assume')) { attempts++; if(attempts===1) { current={...incomingState(),preparation:{...state().preparation,id:'later-prep'},snapshot:{...snapshot,revision:'later'}}; throw new Error('Lost response'); } return {id:'original'}; }
+    return base(path,body);
   });
-  fireEvent(window, new Event("offline"));
-  await screen.findByText("changeOver.offline");
-  expect(screen.queryByText("changeOver.switchUser")).toBeNull();
+  const cache=mount();
+  fireEvent.click(await screen.findByLabelText('changeOver.acknowledge'));
+  fireEvent.click(within(document.getElementById('watch-review')!).getByRole('button',{name:'watch.assume'}));
+  await screen.findByText('Lost response');
+  await cache.invalidateQueries({queryKey:['change-over-state']});
+  fireEvent.click(await screen.findByRole('button',{name:'watch.recover'}));
+  await waitFor(()=>expect(attempts).toBe(2));
+  const writes=api.mock.calls.filter(([path])=>path.endsWith('/watch/assume'));
+  expect(writes[1][1]).toEqual(writes[0][1]);
 });

@@ -64,7 +64,15 @@
     "rating": "Rating",
     "vndrlySafety": "VNDRLY compliance score",
     "scoreValue": "VNDRLY compliance score {{score}} out of 100",
-    "scoreReasons": { "missing_evidence": "Current evidence is missing", "expired_record": "A required record is expired", "revoked_record": "A required record was revoked", "failed_record": "A required record did not pass review", "unverified_record": "A required record is not verified", "excluded_record": "A required record is outside the current scope", "requires_review": "Current evidence requires review" },
+    "scoreReasons": {
+      "missing_evidence": "Current evidence is missing",
+      "expired_record": "A required record is expired",
+      "revoked_record": "A required record was revoked",
+      "failed_record": "A required record did not pass review",
+      "unverified_record": "A required record is not verified",
+      "excluded_record": "A required record is outside the current scope",
+      "requires_review": "Current evidence requires review"
+    },
     "advisoryHiring": "Advisory information only. VNDRLY does not block tickets; your company decides whom to hire.",
     "notRated": "Not yet rated",
     "complianceUnavailable": "VNDRLY compliance score is temporarily unavailable. Other vendor information remains available.",
@@ -142,7 +150,9 @@
       "RELATIONSHIP_RESTRICTED": "The partner must deliberately reopen this restricted relationship before accepting new work"
     }
   },
-  "workHubExports": { "noAccess": "No exports available for this role." },
+  "workHubExports": {
+    "noAccess": "No exports available for this role."
+  },
   "workHubSearch": {
     "unknownStatus": "Status unavailable",
     "statuses": {
@@ -966,7 +976,9 @@
       "invalid_input": "Check the requested fields",
       "busy": "Gate activity is busy. Refresh and try again; no shift was transferred.",
       "rate_limited": "Please wait before trying again",
-      "auth_rate_limited": "Too many sign-in attempts. Wait five minutes."
+      "auth_rate_limited": "Too many sign-in attempts. Wait five minutes.",
+      "station_inactive": "This gate is inactive.",
+      "duty_employer_changed": "Return to the original employer before changing this watch."
     },
     "public_askv": {
       "rate_limited": "AskV is receiving too many requests. Please try again shortly.",
@@ -2938,7 +2950,7 @@
     "snapshot": "View recorded snapshot",
     "older": "Older notes",
     "audit": "Operational history",
-    "noShift": "No active shift. Start a shift to establish its reporting window.",
+    "noShift": "No active watch. Select Assume Watch to begin.",
     "start": "Start my shift",
     "reason": "Resolution or cancellation reason",
     "newItem": "Action for the next shift",
@@ -3885,5 +3897,13 @@
   },
   "fleet": {
     "agreementEditor": "Transport agreement"
+  },
+  "watch": {
+    "assume": "Assume Watch",
+    "handover": "Handover Watch",
+    "ready": "Handover saved. The next worker signs in separately, reviews these notes, and assumes the watch.",
+    "waiting": "Waiting for the current operator to prepare the handover.",
+    "independent": "Signing in or out does not start or end your shift or watch.",
+    "recover": "Recover watch action"
   }
 }

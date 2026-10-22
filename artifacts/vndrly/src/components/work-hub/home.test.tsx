@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import DashboardTasks from "./dashboard-tasks";
 import { ActivityWorkspace } from "./collaboration";
 
 const mocks = vi.hoisted(() => ({ request: vi.fn(), fetch: vi.fn(), categories: ["gate"], user: { userId: 7, role: "field_employee", vendorId: 1, activeMembershipId: 3, vendorRole: "gatekeeper" } as Record<string, unknown> }));
@@ -32,11 +33,11 @@ describe("Work Hub home", () => {
     }}));
     vi.stubGlobal("fetch", mocks.fetch);
   });
-  it("places workforce and assigned-task multi-panel cards with the primary cards", async () => {
+  it("keeps workforce and Tasks & Forms in Work Hub without the Dashboard Tasks panel", async () => {
     mount();
     expect(await screen.findByRole("heading", { name: "Workforce" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Tasks" })).toBeTruthy();
-    expect(screen.getByText("A task is an unticketed work assignment")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Tasks" })).toBeNull();
+    expect(screen.getByRole("link", { name: /Tasks & Forms/ }).getAttribute("href")).toBe("/work-hub/tasks");
     fireEvent.click(await screen.findByRole("button", { name: /Coverage Gaps.*1 open/ }));
     const gap = await screen.findByRole("region", { name: "Coverage gap details" });
     expect(within(gap).getByText("North Gate AM")).toBeTruthy();
@@ -45,8 +46,27 @@ describe("Work Hub home", () => {
     expect(await within(gap).findByText(/Available: Jordan Relief/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /On Shift Now.*1 people/ }));
     expect(await screen.findByRole("link", { name: /Alex Gate.*North Gate/ })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /New.*1/ }));
-    expect(await screen.findByRole("link", { name: /Inspect gate camera.*open.*1.0 h/ })).toBeTruthy();
+
+  });
+  it("opens assigned Dashboard tasks without counting task age as worked hours", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><DashboardTasks /></QueryClientProvider>);
+    fireEvent.click(await screen.findByRole("button", { name: /New.*1/ }));
+    const task = await screen.findByRole("link", { name: /Inspect gate camera.*open/ });
+    expect(task.getAttribute("href")).toBe("/work-hub/tasks?task=t1");
+    expect(screen.getByRole("link", { name: /Hours.*Not recorded/ })).toBeTruthy();
+    expect(screen.queryByText(/1.0 h/)).toBeNull();
+  });
+  it("does not reuse a previous account's Dashboard task details after switching membership", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(<QueryClientProvider client={client}><DashboardTasks /></QueryClientProvider>);
+    fireEvent.click(await screen.findByRole("button", { name: /New.*1/ }));
+    await screen.findByRole("link", { name: /Inspect gate camera/ });
+    mocks.user = { ...mocks.user, userId: 8, activeMembershipId: 4 };
+    mocks.request.mockRejectedValue(new Error("Unavailable"));
+    view.rerender(<QueryClientProvider client={client}><DashboardTasks /></QueryClientProvider>);
+    await waitFor(() => expect(screen.queryByRole("link", { name: /Inspect gate camera/ })).toBeNull());
+    expect(screen.getByRole("button", { name: /New.*Unavailable/ })).toBeTruthy();
   });
   afterEach(() => vi.unstubAllGlobals());
   it("shows the iOS groups and opens real assigned gate work without exposing Fleet", async () => {

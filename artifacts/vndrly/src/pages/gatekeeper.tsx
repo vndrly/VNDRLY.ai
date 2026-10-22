@@ -1,3 +1,5 @@
+import WorkdayControls from "@/components/workday-controls";
+import GateWatchLink from "@/components/gate-watch-link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
 import { Link } from "wouter";
@@ -1217,6 +1219,8 @@ export default function GatekeeperPage() {
           {t("gatekeeper.history")}
         </Link>
       </div>
+
+      <WorkdayControls watchControl={<GateWatchLink stationId={selectedGateLocation?.id} siteId={site.data?.site.id} />} />
 
       {live.flash && (
         <div

@@ -48,7 +48,7 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <div data-testid="fleet-safe-area">{children}</div>,
 }));
 vi.mock("@/components/WorkHubPageTitle", () => ({
-  default: ({ title, beforeTitle, onBack }: any) => <><div>{beforeTitle}</div><button data-testid="fleet-page-back" onClick={onBack}>Back</button><h1>{title}</h1></>,
+  default: ({ title, beforeTitle, afterTitle, onBack }: any) => <><div>{beforeTitle}</div><button data-testid="fleet-page-back" onClick={onBack}>Back</button><h1>{title}</h1>{afterTitle}</>,
 }));
 vi.mock("@/components/MapboxNativeMap", () => ({
   default: () => <div>Fleet location map</div>,

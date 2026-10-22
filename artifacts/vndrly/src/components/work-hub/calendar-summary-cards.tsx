@@ -34,7 +34,7 @@ const timestamp = (value: unknown) => {
 };
 const taskUrgency = (item: Row) => item.urgent === true || ["urgent", "high"].includes(String(item.priority ?? "").toLowerCase());
 
-export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks = [], channels = [] }: { shifts?: Row[]; meetings?: Row[]; tasks?: Row[]; channels?: Row[] }) {
+export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks = [], channels = [], scheduleUnavailable = false, channelsUnavailable = false }: { shifts?: Row[]; meetings?: Row[]; tasks?: Row[]; channels?: Row[]; scheduleUnavailable?: boolean; channelsUnavailable?: boolean }) {
   const [open, setOpen] = useState<Summary | null>(null);
   const [ranges, setRanges] = useState<Record<string, Range>>({});
   const now = Date.now();
@@ -87,7 +87,7 @@ export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks
         <button type="button" className="w-full text-left" onClick={() => setOpen(summary)} aria-label={`Open ${summary.title}`}>
           <CardContent className="pt-5">
             <div className="flex items-center gap-2"><summary.icon className="h-5 w-5 text-[var(--brand-primary)]" /><p className="text-xs font-semibold uppercase text-muted-foreground">{summary.title}</p></div>
-            <p className="mt-2 font-semibold text-black">{summary.value}</p><p className="text-xs text-muted-foreground">{summary.detail}</p>
+            <p className="mt-2 font-semibold text-black">{(summary.key === "messages" ? channelsUnavailable : scheduleUnavailable) ? "Unavailable" : summary.value}</p><p className="text-xs text-muted-foreground">{(summary.key === "messages" ? channelsUnavailable : scheduleUnavailable) ? "Open to check this schedule source" : summary.detail}</p>
           </CardContent>
         </button>
       </Card>)}
@@ -101,7 +101,7 @@ export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks
         settings={settings}
         className="max-h-[86vh] sm:max-w-lg"
       >
-        {visibleItems.length ? <ul className="space-y-2">{visibleItems.map((item) => <li key={item.id} data-testid="calendar-summary-item"><a href={item.href} className="block rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3"><span className="block font-semibold text-black">{item.title}</span><span className="text-sm text-muted-foreground">{item.detail}</span></a></li>)}</ul> : <p className="text-sm text-muted-foreground">No matching records right now.</p>}
+        {(open?.key === "messages" ? channelsUnavailable : scheduleUnavailable) ? <p role="status" className="text-sm text-muted-foreground">This source could not load. Open the workspace to check current records.</p> : visibleItems.length ? <ul className="space-y-2">{visibleItems.map((item) => <li key={item.id} data-testid="calendar-summary-item"><a href={item.href} className="block rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3"><span className="block font-semibold text-black">{item.title}</span><span className="text-sm text-muted-foreground">{item.detail}</span></a></li>)}</ul> : <p className="text-sm text-muted-foreground">No matching records right now.</p>}
         {open && <a href={open.href} className="text-sm font-semibold text-[var(--brand-primary)] underline">View all</a>}
       </MiniCardDialogContent>
     </Dialog>

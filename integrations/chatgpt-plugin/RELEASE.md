@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.0
+
+Matches the shared branded Work Hub and calendar redesign and independent shift/watch controls across web and iOS. Gate watch preparation and explicit own-account assumption preserve paid clocks, device sessions, current grants and durable notes. Sign-in/sign-out never starts or ends a shift or watch. Existing MCP identity, embedded views, five service skills, branding, linked accounts and grants remain intact. Incoming assumption uses the trusted device review screen; no new conversational scope is introduced.
+
 # VNDRLY plugin 1.21.1
 
 Matches the Fleet Readiness release: compact driver, equipment, Yard safety, compliance, and recent-work drilldowns use the same permission-scoped Fleet records and exact deep links as iOS. Existing plugin identity, linked accounts, grants, five service skills, and server-owned action confirmation remain unchanged.

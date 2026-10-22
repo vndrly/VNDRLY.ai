@@ -14,6 +14,7 @@ type Props = {
   backBehavior?: "history" | "destination";
   notificationHref?: string;
   beforeTitle?: React.ReactNode;
+  afterTitle?: React.ReactNode;
 };
 
 /** Approved iOS portal header: company identity, then true Back + page title + Ask V. */
@@ -24,6 +25,7 @@ export default function PortalPageHeader({
   backBehavior = "destination",
   notificationHref,
   beforeTitle,
+  afterTitle,
 }: Props) {
   const colors = useColors();
 
@@ -65,6 +67,7 @@ export default function PortalPageHeader({
         </View>
         <AskVVoiceIndicator inline />
       </View>
+      {afterTitle}
     </View>
   );
 }

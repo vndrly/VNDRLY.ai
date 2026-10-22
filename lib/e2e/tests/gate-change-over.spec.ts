@@ -5,7 +5,7 @@ import { createVendorActor } from "../helpers/implementation-a";
 import { createPartner, createSiteLocation } from "../helpers/fixtures";
 import { loginAsVendor } from "../helpers/auth";
 
-test("gate handoff authenticates, acknowledges, transfers and opens the selected gate history", async ({
+test("gate watch survives sign-out and transfers only after the incoming account reviews and assumes it", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -67,10 +67,11 @@ test("gate handoff authenticates, acknowledges, transfers and opens the selected
       waitUntil: "domcontentloaded",
     });
     await page
-      .getByRole("button", { name: "Start my shift", exact: true })
-      .click();
+      .getByRole("button", { name: "Assume Watch", exact: true })
+      .last().click();
+    await expect(page.getByRole("button", {name:"Handover Watch",exact:true})).toBeVisible();
     await page
-      .getByLabel("Anything the next shift should know?")
+      .getByRole("textbox", { name: "Anything the next shift should know?", exact: true })
       .fill("Inspect the north barrier before admitting heavy loads.");
     await page
       .getByRole("button", { name: "Prepare handoff", exact: true })
@@ -78,22 +79,19 @@ test("gate handoff authenticates, acknowledges, transfers and opens the selected
     await expect(
       page.getByRole("heading", { name: "Incoming shift review" }),
     ).toBeVisible();
-    await page.getByLabel("Incoming username or email").fill(incoming.username);
-    await page
-      .getByLabel("Incoming password", { exact: true })
-      .fill(incoming.password);
-    await page
-      .getByRole("button", { name: "Authenticate incoming user" })
-      .click();
-    await page
-      .getByRole("checkbox", { name: /I have reviewed this handoff/ })
-      .check();
-    await page
-      .getByRole("button", { name: "Switch User", exact: true })
-      .click();
-    await expect(page).toHaveURL(
-      new RegExp(`/gate/shift-notes\\?siteId=${site.id}&stationId=${gate}`),
-    );
+
+    const logout=await page.request.post('/api/auth/logout');
+    expect(logout.ok()).toBe(true);
+    expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
+    await loginAsVendor(page,incoming);
+    await page.goto(`/gate/change-over?siteId=${site.id}&stationId=${gate}`,{waitUntil:'domcontentloaded'});
+    expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
+    await page.getByRole('checkbox',{name:/I have reviewed this handoff/}).check();
+    await page.locator('#watch-review').getByRole('button',{name:'Assume Watch',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Handover Watch',exact:true})).toBeVisible();
+    expect((await pool.query("SELECT session_version FROM users WHERE id=ANY($1::int[]) ORDER BY id",[[outgoing.userId,incoming.userId]])).rows.map(row=>row.session_version)).toEqual([1,1]);
+    expect((await pool.query("SELECT count(*)::int AS count FROM assistant_action_audit WHERE target_type='workday' AND user_id=ANY($1::int[])",[[outgoing.userId,incoming.userId]])).rows[0].count).toBe(0);
+    await page.goto(`/gate/shift-notes?siteId=${site.id}&stationId=${gate}`,{waitUntil:'domcontentloaded'});
     await expect(
       page.getByRole("heading", { name: "Shift Notes", exact: true }),
     ).toBeVisible();

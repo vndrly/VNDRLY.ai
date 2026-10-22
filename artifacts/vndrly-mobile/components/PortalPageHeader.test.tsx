@@ -19,6 +19,10 @@ vi.mock("react-i18next", async (original) => ({ ...await original<typeof import(
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 describe("responsive notification placement", () => {
+  it("places the thin shift card immediately after the page title when requested", () => {
+    const screen = render(<PortalPageHeader title="Dashboard" testIdPrefix="dashboard" afterTitle={<div data-testid="shift-card">Start Shift / Not on Call</div>} />);
+    expect(screen.getByText("Dashboard").compareDocumentPosition(screen.getByTestId("shift-card")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
   it("places landing-page shift controls after portal branding and before the page title", () => {
     const screen = render(<PortalPageHeader title="Field Ops" testIdPrefix="field" beforeTitle={<div data-testid="field-clock">Start Shift</div>} />);
     const clock = screen.getByTestId("field-clock");

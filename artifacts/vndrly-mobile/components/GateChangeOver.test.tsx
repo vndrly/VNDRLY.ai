@@ -314,7 +314,7 @@ it("places the canonical back button immediately before the Dashboard title", as
   const title = screen.getByRole("heading", { name: "changeOver.title" });
   const clock = screen.getByTestId("gate-start-clock");
   expect(screen.getByText("company-portal-header").compareDocumentPosition(clock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(clock.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(title.compareDocumentPosition(clock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(back.parentElement).toBe(title.parentElement);
   expect(Array.from(back.parentElement!.children).indexOf(back)).toBeLessThan(
     Array.from(title.parentElement!.children).indexOf(title),
@@ -323,23 +323,21 @@ it("places the canonical back button immediately before the Dashboard title", as
   fireEvent.click(back);
   expect(env.back).toHaveBeenCalledTimes(1);
 });
-async function authenticate() {
-  fireEvent.change(await screen.findByLabelText("changeOver.username"), {
-    target: { value: "incoming" },
-  });
-  fireEvent.change(screen.getByLabelText("changeOver.password"), {
-    target: { value: "secret" },
-  });
-  fireEvent.click(screen.getByText("changeOver.authenticate"));
+
+function useIncoming() {
+ const base = env.api.getMockImplementation()!;
+ env.api.mockImplementation((path, body) => path.endsWith('/state') ? { ...state(), shift: { ...state().shift, operator_id: 2 } } : base(path, body));
 }
-it("does not replace the active native session during incoming authentication", async () => {
-  mount();
-  await authenticate();
-  await screen.findByText("changeOver.incoming: Incoming");
-  expect(env.accept).not.toHaveBeenCalled();
-  expect(env.replace).not.toHaveBeenCalled();
-  expect(screen.queryByText("changeOver.switchUser")).toBeNull();
-  expect(screen.queryByLabelText("changeOver.password")).toBeNull();
+it('assumes the reviewed watch using the current native account without replacing the session', async () => {
+ useIncoming(); mount();
+ const acknowledge = await screen.findByLabelText('changeOver.acknowledge');
+ const confirm = await screen.findByRole('button', { name: 'watch.assume' });
+ expect(confirm.hasAttribute('disabled')).toBe(true);
+ fireEvent.click(acknowledge); fireEvent.click(confirm);
+ await waitFor(() => expect(env.api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source:'ios', preparationId:'prep', reviewedRevision:'a', acknowledged:true, operationId:'operation-id' })));
+ expect(env.accept).not.toHaveBeenCalled(); expect(env.replace).not.toHaveBeenCalled();
+ expect(env.api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);
+ expect(screen.queryByLabelText('changeOver.password')).toBeNull();
 });
 it("keeps eligible sites compact until the operator opens the selector", async () => {
   const base = env.api.getMockImplementation()!;
@@ -367,10 +365,10 @@ it("uses the static gray pill for the requested dashboard actions", async () => 
     expect(action.getAttribute("data-askv-inactive-style")).toBe("true");
   }
 });
-it("preserves cached shift facts on network failure but removes authentication and requires refresh", async () => {
+it("preserves cached watch facts on network failure but clears acknowledgment and requires refresh", async () => {
+  useIncoming();
   const cache = mount();
-  await authenticate();
-  await screen.findByText("changeOver.incoming: Incoming");
+  fireEvent.click(await screen.findByLabelText("changeOver.acknowledge"));
   const base = env.api.getMockImplementation()!;
   env.api.mockImplementation((path, body) =>
     path.endsWith("/state")
@@ -381,7 +379,7 @@ it("preserves cached shift facts on network failure but removes authentication a
   );
   await cache.invalidateQueries({ queryKey: ["change-over-state"] });
   await waitFor(() =>
-    expect(screen.queryByText("changeOver.incoming: Incoming")).toBeNull(),
+    expect(screen.getByRole("button", { name: "watch.assume" }).hasAttribute("disabled")).toBe(true),
   );
   expect(screen.getByText("changeOver.checkIns: 2")).not.toBeNull();
   expect(screen.getByText(/changeOver.offline/)).not.toBeNull();

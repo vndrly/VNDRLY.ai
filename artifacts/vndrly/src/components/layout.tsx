@@ -1,4 +1,3 @@
-import WorkdayControls from "@/components/workday-controls";
 import { fleetCopy } from "@/lib/fleet-copy";
 import { Link, useLocation } from "wouter";
 import { EnergyMarketTicker } from './energy-market-ticker';
@@ -543,7 +542,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
         >
           <OnboardingProgressBanner />
-          <WorkdayControls />
           {children}
         </main>
       </div>

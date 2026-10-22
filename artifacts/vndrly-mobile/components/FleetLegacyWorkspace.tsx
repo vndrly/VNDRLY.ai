@@ -435,7 +435,7 @@ export default function FleetWorkspace({ initialRunId, initialAssetId, initialMo
           </View>}
           {beforeTitle}{content}
         </View>
-      : <ScreenSafeArea><ScrollView testID="fleet-legacy-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}><WorkHubPageTitle title={title} onBack={onBack} beforeTitle={beforeTitle}/>{content}</ScrollView></ScreenSafeArea>;
+      : <ScreenSafeArea><ScrollView testID="fleet-legacy-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}><WorkHubPageTitle title={title} onBack={onBack} afterTitle={beforeTitle}/>{content}</ScrollView></ScreenSafeArea>;
     if(mode==="orders")return page(copy("Runs"), <FleetRunOrders key={identity} companyId={activeMembership?.orgId??user?.vendorId??0}/>, initialMode!=="orders"?()=>setMode(initialMode):undefined);
     if (mode === "locations") return page(copy("Origins and Destinations"), <FleetDestinationDirectory key={`locations:${identity}`}/>, initialMode !== "locations" ? () => setMode(initialMode) : undefined);
     if(mode==="compliance")return page(copy("Compliance"), <FleetComplianceRegister companyId={activeMembership?.orgId??user?.vendorId??undefined} key={`compliance:${identity}`}/>, initialMode!=="compliance"?()=>setMode(initialMode):undefined);

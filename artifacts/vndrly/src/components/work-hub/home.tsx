@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
+import WorkdayControls from "@/components/workday-controls";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Bell, CalendarDays, Car, CheckCircle2, CheckSquare2, ChevronRight, Clock3, Download, Folder, MapPin, MessageCircle, MessageSquare, Phone, PlayCircle, Search, Shield, Sun, UserCheck, Users, ClipboardList, Smartphone, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Bell, CalendarDays, Car, CheckCircle2, CheckSquare2, ChevronRight, Clock3, Download, Folder, MapPin, MessageCircle, MessageSquare, Phone, Search, Shield, Sun, UserCheck, Users, ClipboardList, Smartphone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -12,6 +13,7 @@ import { useDailyWork } from "./daily-workspace";
 import { WorkHubPageHeading } from "./chrome";
 import { ActivityDashboard } from "./activity-dashboard";
 import { AccountWorkspace, canUseGateWorkspace } from "./account-workspace";
+import { WorkspacePanel as HomeCard, WorkspaceRow as HomeRow } from "./workspace-panel";
 import "./home.css";
 
 type Row = Record<string, any>;
@@ -20,25 +22,13 @@ async function read<T>(path: string): Promise<T> {
   if (!response.ok) throw new Error("Work Hub source unavailable");
   return response.json();
 }
-function elapsedHours(row: Row) {
-  const started = Date.parse(row.createdAt ?? ""), ended = Date.parse(row.updatedAt ?? row.createdAt ?? "");
-  return Number.isFinite(started) && Number.isFinite(ended) ? Math.max(0, ended - started) / 3600000 : 0;
-}
-function HomeRow({ icon: Icon, label, value, href, onClick, expanded }: { icon: LucideIcon; label: string; value?: string; href?: string; onClick?: () => void; expanded?: boolean }) {
-  const contents = <><Icon aria-hidden="true" className="hub-row-icon" /><span className="hub-row-label">{label}</span>{value && <span className="hub-row-value">{value}</span>}<ChevronRight aria-hidden="true" className="hub-chevron" /></>;
-  return href ? <Link href={href} className="hub-home-row">{contents}</Link> : <button type="button" className="hub-home-row" onClick={onClick} aria-expanded={expanded}>{contents}</button>;
-}
-function HomeCard({ title, subtitle, icon: Icon, children }: { title: string; subtitle: string; icon: LucideIcon; children: ReactNode }) {
-  return <section className="hub-home-card" aria-label={title}><header className="hub-card-heading"><span className="hub-card-icon"><Icon aria-hidden="true" /></span><div><h2>{title}</h2><p>{subtitle}</p></div></header>{children}</section>;
-}
-
 /** Uses the same authenticated sources as the existing modules; no company-wide data is inferred. */
 export function WorkHubHome() {
   const { user } = useAuth(), brand = useBrand(), { i18n } = useTranslation();
   const es = i18n.language.startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   const qc = useQueryClient();
   const identity = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
-  const [panel, setPanel] = useState<"work" | "safety" | "coverage" | "on-shift" | "tasks-new" | "tasks-progress" | "tasks-completed" | null>(null);
+  const [panel, setPanel] = useState<"work" | "safety" | "coverage" | "on-shift" | null>(null);
   const [search, setSearch] = useState("");
   const home = useQuery<Row>({ queryKey: ["work-hub", "home", ...identity], queryFn: () => workHubRequest("/home"), enabled: !!user, refetchInterval: 15000 });
   const channels = useQuery<Row[]>({ queryKey: ["work-hub", "/channels", ...identity], queryFn: () => workHubRequest("/channels"), enabled: !!user, refetchInterval: 15000 });
@@ -63,13 +53,6 @@ export function WorkHubHome() {
 
   const now = Date.now(), tasks: Row[] | undefined = home.data?.tasks;
   const activeTasks = tasks?.filter(row => !["completed", "cancelled", "archived"].includes(row.status));
-  const assignedTasks = tasks?.filter(row => row.assigneeUserId === user?.userId) ?? [];
-  const taskGroups = {
-    new: assignedTasks.filter(row => ["new", "open", "assigned", "pending"].includes(row.status)),
-    progress: assignedTasks.filter(row => ["in_progress", "started", "active"].includes(row.status)),
-    completed: assignedTasks.filter(row => row.status === "completed"),
-  };
-  const taskHours = tasks ? assignedTasks.reduce((total, task) => total + elapsedHours(task), 0) : undefined;
   const coverageGaps = coverage.data?.coverage.filter(row => row.state !== "covered" && Number(row.assignedCount ?? 0) < Number(row.requiredCount ?? 0)) ?? [];
   const staffingCandidates = useQuery({
     queryKey: ["work-hub-home-staffing-candidates", ...identity, ...coverageGaps.map(row => row.shiftId)],
@@ -78,7 +61,6 @@ export function WorkHubHome() {
     retry: false,
   });
   const onShift = gateCoverage.data?.staff.filter(row => row.onDuty && row.assignment && row.assignment !== "No active assignment recorded") ?? [];
-  const selectedTasks = panel === "tasks-new" ? taskGroups.new : panel === "tasks-progress" ? taskGroups.progress : panel === "tasks-completed" ? taskGroups.completed : [];
   const calendar = home.data ? [
     ...(home.data.shifts ?? []).filter(({ shift, assignment }: Row) => !["cancelled", "completed"].includes(shift.milestoneStatus) && !["cancelled", "declined"].includes(assignment?.status)).map(({ shift }: Row) => ({ id: `shift-${shift.id}`, title: shift.title ?? c("Scheduled shift", "Turno programado"), at: shift.startsAt, end: shift.endsAt, href: "/work-hub/calendar" })),
     ...(home.data.meetings ?? []).filter(({ occurrence }: Row) => occurrence.status !== "cancelled").map(({ meeting, occurrence }: Row) => ({ id: `meeting-${occurrence.id}`, title: meeting?.title ?? c("Meeting", "Reunión"), at: occurrence.startsAt, end: occurrence.endsAt, href: `/work-hub/meetings?meeting=${encodeURIComponent(occurrence.id)}` })),
@@ -101,6 +83,7 @@ export function WorkHubHome() {
 
   return <section className="work-hub-home" aria-label="Work Hub workspace" data-testid="work-hub-activity">
     <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact />
+    <WorkdayControls />
     {home.isPending && <p role="status">{c("Loading Work Hub…", "Cargando Work Hub…")}</p>}
     {home.isError && <p role="alert">{c("Work Hub summaries are unavailable. Open a row to check its records.", "Los resúmenes no están disponibles. Abra una fila para consultar sus registros.")}</p>}
     <div className="hub-home-columns">
@@ -130,16 +113,7 @@ export function WorkHubHome() {
           {gateCoverage.isError && <p role="status">{unavailable}</p>}
         </div>}
       </HomeCard>}
-      <HomeCard title={c("Tasks", "Tareas")} subtitle={c("A task is an unticketed work assignment", "Una tarea es una asignación de trabajo sin ticket")} icon={CheckSquare2}>
-        <HomeRow icon={Bell} label={c("New", "Nuevas")} value={tasks ? String(taskGroups.new.length) : unavailable} onClick={() => toggle("tasks-new")} expanded={panel === "tasks-new"} />
-        <HomeRow icon={PlayCircle} label={c("In Progress", "En curso")} value={tasks ? String(taskGroups.progress.length) : unavailable} onClick={() => toggle("tasks-progress")} expanded={panel === "tasks-progress"} />
-        <HomeRow icon={CheckCircle2} label={c("Completed", "Completadas")} value={tasks ? String(taskGroups.completed.length) : unavailable} onClick={() => toggle("tasks-completed")} expanded={panel === "tasks-completed"} />
-        <HomeRow icon={Clock3} label={c("Hours", "Horas")} value={taskHours === undefined ? unavailable : `${taskHours.toFixed(1)} h`} href="/work-hub/tasks" />
-        {panel?.startsWith("tasks-") && <div className="hub-inline-panel" role="region" aria-label={c("Assigned task details", "Detalles de tareas asignadas")}>
-          {selectedTasks.map(task => <Link className="hub-mini-record" href={`/work-hub/tasks?task=${encodeURIComponent(task.id)}`} key={task.id}><div><strong>{task.title}</strong><small>{String(task.status).replaceAll("_", " ")} · {elapsedHours(task).toFixed(1)} h</small></div><ChevronRight aria-hidden="true" /></Link>)}
-          {!selectedTasks.length && <p>{c("No assigned tasks in this status.", "No hay tareas asignadas con este estado.")}</p>}
-        </div>}
-      </HomeCard>
+
     </div>
     <section aria-label={c("More tools", "Más herramientas")}><h2 className="hub-tools-title">{c("More tools", "Más herramientas")}</h2><div className="hub-home-tools">{utilities.map(({ label, icon: Icon, href }) => <Link className="hub-tool" href={href} key={href}><Icon aria-hidden="true" />{label}</Link>)}</div></section>
     {panel === "work" && <section className="hub-home-card hub-detail" aria-label={c("My Work", "Mi trabajo")}><h2>{c("My Work", "Mi trabajo")}</h2>

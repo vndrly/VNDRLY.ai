@@ -7,7 +7,7 @@ import BrandTitleRow from "@/components/BrandTitleRow";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 
-export default function WorkHubPageTitle({ title, onBack, beforeTitle }: { title: string; onBack?: () => void; beforeTitle?: React.ReactNode }) {
+export default function WorkHubPageTitle({ title, onBack, beforeTitle, afterTitle }: { title: string; onBack?: () => void; beforeTitle?: React.ReactNode; afterTitle?: React.ReactNode }) {
   const colors = useColors();
   return (
     <View style={{ gap: 12 }}>
@@ -26,6 +26,7 @@ export default function WorkHubPageTitle({ title, onBack, beforeTitle }: { title
         </View>
         <AskVVoiceIndicator inline />
       </View>
+      {afterTitle}
     </View>
   );
 }

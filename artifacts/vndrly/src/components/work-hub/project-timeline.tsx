@@ -10,7 +10,7 @@ type Row = Record<string, any>;
 const displayDate = (value: unknown) => value ? new Date(String(value)).toLocaleString() : "No date";
 const displayMoney = (value: unknown) => value == null ? null : new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(Number(value));
 
-export default function ProjectTimeline({ items, canManage, onCreate }: { items: Row[]; canManage: boolean; onCreate: () => void }) {
+export default function ProjectTimeline({ items, canManage, onCreate, unavailable = false }: { items: Row[]; canManage: boolean; onCreate: () => void; unavailable?: boolean }) {
   const [days, setDays] = useState("90");
   const [preview, setPreview] = useState<Row | null>(null);
   const projects = useMemo(() => {
@@ -40,7 +40,8 @@ export default function ProjectTimeline({ items, canManage, onCreate }: { items:
             <p className="mt-1 text-muted-foreground">Click for the full milestone.</p>
           </div>
         </button>)}
-        {!projects.length && <p className="py-6 text-center text-sm text-muted-foreground">No shared project milestones in this range.</p>}
+        {unavailable && <p role="status" className="py-6 text-center text-sm text-muted-foreground">Project schedule unavailable. Try again when connected.</p>}
+        {!unavailable && !projects.length && <p className="py-6 text-center text-sm text-muted-foreground">No shared project milestones in this range.</p>}
       </CardContent>
     </Card>
     <Dialog open={Boolean(preview)} onOpenChange={(open) => { if (!open) setPreview(null); }}>

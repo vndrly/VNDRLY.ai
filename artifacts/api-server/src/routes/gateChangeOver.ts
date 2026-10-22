@@ -27,6 +27,8 @@ import {
   actOnShiftItem,
   requireChangeOverAccess,
   transferGateShift,
+  assumeGateWatch,
+  getGateWatchOperation,
   getShiftNotes,
 } from "../services/gate-change-over";
 import {
@@ -74,6 +76,13 @@ router.use("/gate-change-over", async (req, res, next) => {
 });
 const sessionFor = (req: Parameters<typeof getSessionFromRequest>[0]) =>
   getSessionFromRequest(req)!;
+router.get("/gate-change-over/:stationId/watch/operations/:operationId", async (req, res) => {
+  res.json(await getGateWatchOperation(sessionFor(req), uuid.parse(req.params.stationId), uuid.parse(req.params.operationId)));
+});
+router.post("/gate-change-over/:stationId/watch/assume", async (req, res) => {
+  const input = z.object({ operationId: uuid, source: z.enum(["web", "ios"]), preparationId: uuid.nullable().optional(), reviewedRevision: z.string().length(64).optional(), acknowledged: z.boolean().optional() }).strict().parse(req.body);
+  res.json(await assumeGateWatch(sessionFor(req), { ...input, stationId: uuid.parse(req.params.stationId) }));
+});
 router.get("/gate-change-over/sites", async (req, res) => {
   res.json({ sites: await listChangeOverSites(sessionFor(req), discoveryMode.parse(req.query.mode)) });
 });
