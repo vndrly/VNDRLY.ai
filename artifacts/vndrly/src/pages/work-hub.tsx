@@ -22,7 +22,8 @@ import { MeetingParticipants } from "@/components/work-hub/meeting-participants"
 import { useTranslation } from "react-i18next";
 import { WorkHubAwaySettings } from "@/components/work-hub/away-settings";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
-import { CalendarTimeGrid, localDateKey } from "@/components/work-hub/calendar-views";
+import WorkCalendar, { monthCalendarDays } from "@/components/work-hub/work-calendar";
+import { localDateKey } from "@/components/work-hub/calendar-views";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
@@ -579,8 +580,9 @@ function Channels() {
 function CalendarModule() {
   const { user } = useAuth();
   const canManage = isWorkHubScheduler(user);
+  const context = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
   const hoursCompanies = useQuery<{ items: { id: string; name: string }[] }>({
-    queryKey: ["managed-subcontractor-hours-access", user?.vendorId],
+    queryKey: ["managed-subcontractor-hours-access", ...context],
     enabled: Boolean(user?.vendorId),
     queryFn: async () => {
       const response = await fetch(`/api/vendors/${user!.vendorId}/managed-subcontractors/hours-access`, { credentials: "include" });
@@ -591,10 +593,12 @@ function CalendarModule() {
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()));
   const [agendaOpen, setAgendaOpen] = useState(false);
-  const start = new Date(month.getFullYear(), month.getMonth(), -6);
-  const end = new Date(month.getFullYear(), month.getMonth() + 1, 8);
+  const [scheduling, setScheduling] = useState(false);
+  const visibleDays = monthCalendarDays(month);
+  const start = visibleDays[0];
+  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 42);
   const calendar = useQuery<Row>({
-    queryKey: ["work-hub", "calendar", start.toISOString(), end.toISOString()],
+    queryKey: ["work-hub", "calendar", ...context, start.toISOString(), end.toISOString()],
     queryFn: () =>
       workHubRequest(
         `/calendar?start=${start.toISOString()}&end=${end.toISOString()}`,
@@ -602,7 +606,7 @@ function CalendarModule() {
   });
   const operations = useOperationalCalendar(start.toISOString(), end.toISOString());
   const channelSummary = useQuery<Row[]>({
-    queryKey: ["work-hub", "channels"],
+    queryKey: ["work-hub", "channels", ...context],
     queryFn: () => workHubRequest("/channels"),
   });
   const { owner, command } = useCommand("/shifts", ["work-hub", "calendar"]);
@@ -676,22 +680,19 @@ function CalendarModule() {
   }, [calendarFilters, items]);
   const calendarSites = Array.from(new Set(items.map((item) => String(item.siteName ?? item.locationName ?? "")).filter(Boolean))).sort();
   const calendarStatuses = Array.from(new Set(items.map((item) => String(item.milestoneStatus ?? item.status ?? "")).filter(Boolean))).sort();
-  const firstWeekday = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
-  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  const calendarDays = Array.from({ length: firstWeekday + daysInMonth }, (_, index) => index < firstWeekday ? null : index - firstWeekday + 1);
   const dateKey = (value: unknown) => value ? localDateKey(new Date(String(value))) : "";
   const selectedItems = filteredItems.filter((item) => dateKey(item.startsAt) === selectedDay);
   return (
     <Shell module="calendar">
-      {(operations.isError || operations.data?.unavailable.length) ? <p role="status" className="mb-4 text-amber-700">Some field or fleet schedule sources are unavailable. Displayed work is partial.</p> : null}
-      <WorkHubAvailability />
-      <ShiftOpening shifts={calendar.data?.shifts ?? []} onSaved={() => calendar.refetch()} />
-      <div className="mb-4">
-        <CalendarSummaryCards shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
-      </div>
-      <CalendarTimeGrid selectedDay={selectedDay} items={filteredItems} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
-      {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <div className="mb-4"><ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} /></div>}
-      <Card className="mb-4 border-2 bg-white" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
+      <div className="hub-calendar-page">
+        <WorkCalendar month={month} selectedDay={selectedDay} items={filteredItems}
+          onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}
+          onOpenDay={() => setAgendaOpen(true)}
+          onSchedule={canManage ? () => setScheduling(current => !current) : undefined}
+          scheduling={scheduling} loading={calendar.isPending || (Boolean(user?.vendorId) && operations.isPending)}
+          unavailable={calendar.isError || operations.isError || Boolean(operations.data?.unavailable.length)}
+          filters={<>
+      <Card className="border-0 bg-white shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
           <BrandedInput aria-label="Filter employees, crews, or subcontractors" placeholder="Employee, crew, or subcontractor" value={calendarFilters.search} onChange={(event) => setCalendarFilters({ ...calendarFilters, search: event.target.value })} />
           <BrandedSelect aria-label="Filter by site" value={calendarFilters.site} onChange={(event) => setCalendarFilters({ ...calendarFilters, site: event.target.value })}>
@@ -710,111 +711,11 @@ function CalendarModule() {
           </BrandedSelect>
         </CardContent>
       </Card>
-      <div className="grid gap-4">
-        <div
-          className="grid gap-4"
-          data-testid="work-hub-calendar-layout"
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <CardTitle><WorkHubCardTitle icon={CalendarDays}>
-                  {month.toLocaleDateString(undefined, {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </WorkHubCardTitle></CardTitle>
-                <div className="flex gap-2">
-                  <BrandPillButton
-                    tone="brand"
-                    onClick={() =>
-                      setMonth(
-                        new Date(month.getFullYear(), month.getMonth() - 1, 1),
-                      )
-                    }
-                  >
-                    Previous
-                  </BrandPillButton>
-                  <BrandPillButton
-                    tone="brand"
-                    onClick={() =>
-                      setMonth(
-                        new Date(month.getFullYear(), month.getMonth() + 1, 1),
-                      )
-                    }
-                  >
-                    Next
-                  </BrandPillButton>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="grid gap-2">
-              <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-muted-foreground">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                  (day) => (
-                    <div key={day} className="py-2">
-                      {day}
-                    </div>
-                  ),
-                )}
-                {calendarDays.map((day, index) => {
-                  if (!day) return <div key={`blank-${index}`} />;
-                  const key = new Date(
-                    month.getFullYear(),
-                    month.getMonth(),
-                    day,
-                  ).toLocaleDateString("en-CA");
-                  const count = filteredItems.filter(
-                    (item) => dateKey(item.startsAt) === key,
-                  ).length;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => { setSelectedDay(key); setAgendaOpen(true); }}
-                      className={`min-h-20 rounded-lg border-2 p-2 text-left transition-colors ${count > 0 ? "border-[color:var(--brand-primary)]" : "border-gray-300"} ${selectedDay === key ? "bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)]" : "bg-white"}`}
-                    >
-                      <span className="font-semibold">{day}</span>
-                      {count > 0 && (
-                        <span className="mt-2 block text-xs text-[var(--brand-primary)]">
-                          {count} {count === 1 ? "event" : "events"}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <h2 className="mt-4 font-semibold">
-                {new Date(`${selectedDay}T12:00:00`).toLocaleDateString(
-                  undefined,
-                  { weekday: "long", month: "long", day: "numeric" },
-                )}
-              </h2>
-              {selectedItems.map((i) => (
-                <article
-                  key={`${i.kind}-${i.id}`}
-                  className="flex justify-between rounded-lg border-2 border-[color:var(--brand-primary)] bg-white p-4"
-                >
-                  <div>
-                    <span className="text-xs uppercase text-muted-foreground">
-                      {i.kind}
-                    </span>
-                    <h2 className="font-semibold">{i.route ? <a className="underline" href={i.route}>{i.title}</a> : i.title}</h2>
-                    {i.kind === "Fleet Run" && <p className="text-sm">
-                      {i.employeeName ? `${i.employeeName} · ` : ""}
-                      {i.linkedTicketId ? `Ticket #${i.linkedTicketId} · ` : ""}
-                      {i.timeBasis === "dispatch_recorded" ? "Dispatch recorded · no planned time" : "Planned run time"}
-                    </p>}
-                  </div>
-                  <time className="text-sm">{displayDate(i.startsAt)}</time>
-                </article>
-              ))}
-              {!selectedItems.length && (
-                <Empty>No scheduled work for this day.</Empty>
-              )}
-            </CardContent>
-          </Card>
-          {false && canManage && (
+          </>}
+        />
+        <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
+        <div className="grid gap-4" data-testid="work-hub-calendar-layout">
+          {scheduling && form.calendarType === "project" && canManage && (
             <Card id="create-shift-card" className="border-2 border-[color:var(--brand-primary)] bg-white">
               <CardHeader>
                 <CardTitle><WorkHubCardTitle icon={CalendarDays}>Create shift</WorkHubCardTitle></CardTitle>
@@ -1016,10 +917,15 @@ function CalendarModule() {
               </CardContent>
             </Card>
           )}
-          {canManage && <CalendarCreateCards owner={owner} />}
+          {scheduling && canManage && <CalendarCreateCards owner={owner} />}
         </div>
         <DayAgendaDialog open={agendaOpen} onOpenChange={setAgendaOpen} day={selectedDay} items={selectedItems} />
-        <ProjectTimeline items={filteredItems} canManage={canManage} onCreate={() => { setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />
+        <ProjectTimeline unavailable={calendar.isError || calendar.isPending} items={filteredItems} canManage={canManage} onCreate={() => { setScheduling(true); setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />
+        <div className="hub-calendar-extras">
+          <WorkHubAvailability />
+          <ShiftOpening shifts={calendar.data?.shifts ?? []} onSaved={() => calendar.refetch()} />
+          {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} />}
+        </div>
       </div>
     </Shell>
   );

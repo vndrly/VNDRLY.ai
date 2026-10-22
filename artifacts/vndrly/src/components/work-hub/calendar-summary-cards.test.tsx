@@ -22,6 +22,13 @@ function renderCards(props: React.ComponentProps<typeof CalendarSummaryCards> = 
 }
 
 describe("CalendarSummaryCards flyouts", () => {
+  it("keeps all four cards while distinguishing failed sources from empty schedules", () => {
+    renderCards({ scheduleUnavailable: true, channelsUnavailable: true });
+    expect(screen.getAllByText("Unavailable")).toHaveLength(4);
+    fireEvent.click(screen.getByRole("button", { name: "Open My next shift" }));
+    expect(screen.getByRole("status").textContent).toContain("This source could not load");
+    expect(screen.queryByText("No matching records right now.")).toBeNull();
+  });
   it.each([
     "My next shift",
     "Next meeting",
