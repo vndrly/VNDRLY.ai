@@ -56,10 +56,11 @@ it.each(["offline", "readError", "stale", "mismatchedRevision", "pending", "busy
   expect(callbacks.onAssumeReviewed).not.toHaveBeenCalled();
 });
 
-it("marks changed outgoing notes unsaved and saves without assuming watch", () => {
+it("saves changed outgoing notes without an update badge or assuming watch", () => {
   const callbacks = props({ ownWatch: true, notes: "Updated notes" });
   render(<GateHandoffDesk {...callbacks} />);
-  expect(screen.getByText("handoffDesk.needsSave")).toBeTruthy();
+  expect(screen.queryByText("handoffDesk.needsSave")).toBeNull();
+  expect(screen.queryByText("handoffDesk.ready")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "handoffDesk.save" }));
   expect(callbacks.onSave).toHaveBeenCalledTimes(1);
   expect(callbacks.onAssumeReviewed).not.toHaveBeenCalled();

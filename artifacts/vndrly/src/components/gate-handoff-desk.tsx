@@ -122,7 +122,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     <header className="handoff-heading">
       <span className="hub-card-icon"><ClipboardCheck aria-hidden="true" /></span>
       <div><h2>{t("handoffDesk.title")}</h2><p>{t(ownWatch ? "handoffDesk.outgoingIntro" : "handoffDesk.incomingIntro")}</p></div>
-      {preparation && <div className="handoff-status" role="status"><ImagePill color={ready ? "green" : "amber"}>{t(ready ? "handoffDesk.ready" : "handoffDesk.needsSave")}</ImagePill></div>}
+      {preparation && ready && <div className="handoff-status" role="status"><ImagePill color="green">{t("handoffDesk.ready")}</ImagePill></div>}
     </header>
 
     {(!online || readError || (preparation && !freshSaved)) && <p className="handoff-notice" role="status">
