@@ -2334,7 +2334,7 @@ function WorkHubContent() {
     const channel = new URLSearchParams(window.location.search).get("channel");
     if (channel) navigate(`/work-hub/chat?channel=${encodeURIComponent(channel)}`, { replace: true });
   }, [moduleName, navigate]);
-  if (!module) return <><div className="px-4 pt-4"><a className="underline" href="/work-hub/native-work">{i18n.language.startsWith("es") ? "Teléfono de trabajo y solicitudes" : "Work phone and device requests"}</a></div><ActivityWorkspace /></>;
+  if (!module || moduleName === "activity") return <ActivityWorkspace />;
   if (moduleName === "native-work") return <NativeOperations />;
   if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
   if (moduleName === "managed-crews") return <ManagedCrews />;

@@ -1,5 +1,4 @@
 import {
-  Bell,
   MessageSquare,
   Users,
   CalendarDays,
@@ -19,10 +18,11 @@ import {
   ShieldAlert,
   CreditCard,
   Activity,
+  BriefcaseBusiness,
 } from "lucide-react";
 export type WorkHubNavItem = { key: string; label: string; href: string };
 const ITEMS: WorkHubNavItem[] = [
-  { key: "activity", label: "Activity", href: "/work-hub" },
+  { key: "activity", label: "Work Hub", href: "/work-hub" },
   { key: "calendar", label: "Calendar", href: "/work-hub/calendar" },
   { key: "channels", label: "Groups", href: "/work-hub/channels" },
   { key: "chat", label: "Company Chat", href: "/work-hub/chat" },
@@ -48,7 +48,7 @@ const ITEMS: WorkHubNavItem[] = [
   { key: "search", label: "Search", href: "/work-hub/search" },
 ];
 export const workHubIcons = {
-  activity: Bell,
+  activity: BriefcaseBusiness,
   chat: MessageSquare,
   channels: Users,
   managedCrews: UsersRound,

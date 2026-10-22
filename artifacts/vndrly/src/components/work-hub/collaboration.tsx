@@ -1,4 +1,3 @@
-import { DailyWorkspace } from "./daily-workspace";
 import { MessageReactions } from "./message-reactions";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -25,7 +24,6 @@ import {
   WORK_HUB_CARD_CLASS,
   WORK_HUB_SUBCARD_CLASS,
 } from "./chrome";
-import { ActivityDashboard } from "./activity-dashboard";
 
 type Row = Record<string, any>;
 export function displayMentionText(body: string, people: Row[]) {
@@ -88,87 +86,7 @@ export function PeoplePicker({
   );
 }
 
-export function ActivityWorkspace() {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-  const home = useQuery<Row>({
-    queryKey: ["work-hub", "home", user?.userId, user?.activeMembershipId],
-    queryFn: () => workHubRequest("/home"),
-    refetchInterval: 15000,
-  });
-  const acknowledge = useMutation({
-    mutationFn: (id: string) => workHubRequest(`/announcements/${id}/acknowledge`, { method: "POST", body: "{}" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "home"] }),
-  });
-  const activity = useRows("/activity");
-  const people = useRows("/people");
-  const channels = useRows("/channels");
-  const [search, setSearch] = useState("");
-  useEffect(() => {
-    if (typeof EventSource === "undefined") return;
-    const source = new EventSource("/api/work-hub/events", { withCredentials: true });
-    source.onmessage = () => {
-      void qc.invalidateQueries({ queryKey: ["work-hub", "home"] });
-      void qc.invalidateQueries({ queryKey: ["work-hub", "/activity"] });
-    };
-    return () => source.close();
-  }, [qc]);
-
-  const now = Date.now();
-  const announcements = home.data?.announcements ?? [];
-  const tasks = home.data?.tasks ?? [];
-  const timeSensitive = announcements.filter(({ announcement }: Row) => announcement.urgency === "urgent");
-  const important = announcements.filter(({ announcement, recipient }: Row) => announcement.urgency !== "urgent" && announcement.acknowledgementRequired && !recipient.acknowledgedAt);
-  const stale = tasks.filter((task: Row) => task.status !== "completed" && new Date(task.updatedAt ?? task.createdAt ?? task.dueAt).getTime() < now - 30 * 86_400_000);
-  const calendar = [
-    ...(home.data?.shifts ?? []).map(({ shift }: Row) => ({ id: `shift-${shift.id}`, title: shift.title ?? "Scheduled shift", at: shift.startsAt, href: "/work-hub/calendar" })),
-    ...(home.data?.meetings ?? []).map(({ meeting, occurrence }: Row) => ({ id: `meeting-${occurrence.id}`, title: meeting.title ?? "Meeting", at: occurrence.startsAt, href: `/work-hub/meetings?meeting=${occurrence.id}` })),
-    ...tasks.filter((task: Row) => task.dueAt).map((task: Row) => ({ id: `task-${task.id}`, title: task.title ?? "Task due", at: task.dueAt, href: `/work-hub/tasks?task=${task.id}` })),
-  ].filter((entry) => new Date(entry.at).getTime() >= now).sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime()).slice(0, 5);
-  const reviewItems = home.data?.reviewItems ?? [];
-
-  const announcementCard = ({ announcement, recipient }: Row) => (
-    <article key={announcement.id} data-work-hub-card className={`${WORK_HUB_SUBCARD_CLASS} p-4`}>
-      {announcement.urgency === "urgent" && <p className="font-semibold text-red-600">Urgent</p>}
-      <h3 className="font-semibold">{announcement.title}</h3>
-      <p className="whitespace-pre-wrap text-sm">{announcement.body}</p>
-      {announcement.deepLink && <a className="mt-2 inline-block text-sm underline" href={announcement.deepLink}>Open item</a>}
-      {announcement.acknowledgementRequired && (recipient.acknowledgedAt
-        ? <p className="mt-2 text-sm">Acknowledged</p>
-        : <BrandPillButton className="mt-2" tone="brand" disabled={acknowledge.isPending} onClick={() => acknowledge.mutate(announcement.id)}>Acknowledge</BrandPillButton>)}
-    </article>
-  );
-
-  return (
-    <section aria-label="Activity workspace" data-testid="work-hub-activity" className="w-full space-y-5 bg-background p-4 md:p-6">
-      <WorkHubPageHeading module="activity" title="Activity" description="Recent conversations across your company and shared Crews." backFallbackHref="/" />
-      <div data-testid="activity-primary-card" data-work-hub-card className={`w-full p-5 md:p-6 ${WORK_HUB_CARD_CLASS}`}>
-        <HubError error={home.error ?? acknowledge.error} />
-        <DailyWorkspace />
-        <ActivityDashboard home={home.data} channels={channels.data} onAcknowledge={(id) => acknowledge.mutate(id)} acknowledging={acknowledge.isPending} />
-        {!!stale.length && <section aria-label="Activity inactive for thirty days" className="mb-5 grid gap-3"><h2 className="text-lg font-semibold">No action for 30 days</h2>{stale.map((task: Row) => <a key={task.id} href={`/work-hub/tasks?task=${task.id}`} className={`${WORK_HUB_SUBCARD_CLASS} p-4 text-sm`}>{task.title}</a>)}</section>}
-        <div className="mb-5 grid gap-5 lg:grid-cols-2">
-          <section aria-label="Upcoming calendar" className={`${WORK_HUB_SUBCARD_CLASS} p-4`}><h2 className="font-semibold">Next on your calendar</h2>{calendar.length ? <ol className="mt-3 grid gap-2">{calendar.map((entry) => <li key={entry.id}><a href={entry.href} className="text-sm underline">{entry.title} · {new Date(entry.at).toLocaleString()}</a></li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground">No upcoming items.</p>}</section>
-          <section aria-label="Documents needing review" className={`${WORK_HUB_SUBCARD_CLASS} p-4`}><h2 className="font-semibold">Needs review</h2>{reviewItems.length ? <ul className="mt-3 grid gap-2">{reviewItems.map((item: Row) => <li key={item.id}><a href={item.deepLink ?? "/work-hub/files"} className="text-sm underline">{item.title ?? item.fileName}</a></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No documents need review.</p>}</section>
-        </div>
-        <div role="search" aria-label="Search activity" className="my-5">
-          <Input className="rounded-lg border-2 border-[color:var(--brand-primary)] bg-white shadow-none focus-visible:ring-[color:var(--brand-primary)]" aria-label="Filter activity" placeholder="Search activity" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <HubError error={activity.error} />
-        {activity.isLoading && <p role="status">Loading activity…</p>}
-        <div data-testid="activity-feed" className="divide-y rounded-xl border-2 border-border bg-card">
-          {activity.data?.filter((x) => `${displayMentionText(x.body, people.data ?? [])} ${x.channelName}`.toLowerCase().includes(search.toLowerCase())).map((x) => (
-            <a key={x.id} href={`/work-hub/chat?channel=${x.channelId}`} className="flex gap-4 p-5 hover:bg-muted">
-              <MessageSquare className="mt-1 h-5 w-5 text-[var(--brand-primary)]" />
-              <div><h2 className="font-semibold">{x.channelName}</h2><p className="line-clamp-2 text-sm">{displayMentionText(x.body, people.data ?? [])}</p><time className="text-xs text-muted-foreground">{new Date(x.createdAt).toLocaleString()}</time></div>
-            </a>
-          ))}
-        </div>
-        {!activity.isLoading && !activity.data?.length && <p className="py-12 text-center text-muted-foreground">Your activity will appear here as your team collaborates.</p>}
-      </div>
-    </section>
-  );
-}
+export { WorkHubHome as ActivityWorkspace } from "./home";
 
 export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const { user } = useAuth();

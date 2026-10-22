@@ -4,7 +4,7 @@ import { WORK_HUB_SUBCARD_CLASS } from "./chrome";
 
 type Row = Record<string, any>;
 
-export function ActivityDashboard({ home, channels = [], onAcknowledge, acknowledging = false }: { home?: Row; channels?: Row[]; onAcknowledge?: (id: string) => void; acknowledging?: boolean }) {
+export function ActivityDashboard({ home, channels, onAcknowledge, acknowledging = false }: { home?: Row; channels?: Row[]; onAcknowledge?: (id: string) => void; acknowledging?: boolean }) {
   const now = Date.now();
   const tasks: Row[] = home?.tasks ?? [];
   const announcements: Row[] = home?.announcements ?? [];
@@ -23,20 +23,20 @@ export function ActivityDashboard({ home, channels = [], onAcknowledge, acknowle
   ].sort((a, b) => a.rank - b.rank || a.label.localeCompare(b.label)).slice(0, 5);
   const onShiftNow = shifts.filter(({ shift }: Row) => new Date(shift.startsAt).getTime() <= now && new Date(shift.endsAt).getTime() >= now).length;
   const meetingsToday = meetings.filter(({ occurrence }: Row) => new Date(occurrence.startsAt).toDateString() === new Date(now).toDateString()).length;
-  const unreadMessages = channels.reduce((sum, channel) => sum + Number(channel.unreadCount ?? 0), 0);
+  const unreadMessages = channels?.reduce((sum, channel) => sum + Number(channel.unreadCount ?? 0), 0);
   const snapshotCards = [
-    { label: "On shift now", value: String(onShiftNow), detail: "Current assigned shifts", href: "/work-hub/calendar", icon: Users },
+    { label: "On shift now", value: home?.shifts ? String(onShiftNow) : "Unavailable", detail: "Current assigned shifts", href: "/work-hub/calendar", icon: Users },
     { label: "Coverage gaps", value: "—", detail: "Opens schedule coverage", href: "/work-hub/calendar", icon: AlertTriangle },
-    { label: "Tasks due", value: String(dueSoonTasks.length + overdueTasks.length), detail: `${overdueTasks.length} overdue`, href: "/work-hub/tasks", icon: CheckSquare2 },
-    { label: "Unread messages", value: String(unreadMessages), detail: "Company and group chats", href: "/work-hub/chat", icon: MessageSquare },
-    { label: "Meetings today", value: String(meetingsToday), detail: "Your schedule", href: "/work-hub/meetings", icon: CalendarDays },
-    { label: "Reviews waiting", value: String(reviewItems.length), detail: "Documents requiring review", href: "/work-hub/files", icon: Clock3 },
+    { label: "Tasks due", value: home?.tasks ? String(dueSoonTasks.length + overdueTasks.length) : "Unavailable", detail: home?.tasks ? `${overdueTasks.length} overdue` : "Open tasks to check", href: "/work-hub/tasks", icon: CheckSquare2 },
+    { label: "Unread messages", value: unreadMessages === undefined ? "Unavailable" : String(unreadMessages), detail: "Company and group chats", href: "/work-hub/chat", icon: MessageSquare },
+    { label: "Meetings today", value: home?.meetings ? String(meetingsToday) : "Unavailable", detail: "Your schedule", href: "/work-hub/meetings", icon: CalendarDays },
+    { label: "Reviews waiting", value: home?.reviewItems ? String(reviewItems.length) : "Unavailable", detail: "Documents requiring review", href: "/work-hub/files", icon: Clock3 },
   ];
 
   return <>
     <section aria-label="Top five priorities" className={`${WORK_HUB_SUBCARD_CLASS} mb-5 p-4`}>
       <div className="flex items-center gap-2"><BellRing className="h-5 w-5 text-[var(--brand-primary)]" /><h2 className="text-lg font-semibold text-black">Top five priorities</h2></div>
-      {priorityItems.length ? <ol className="mt-3 grid gap-2">{priorityItems.map((item, index) => <li key={item.id} className="flex items-start gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs font-bold text-white">{index + 1}</span><a href={item.href} className="min-w-0 flex-1"><span className="block text-xs font-semibold uppercase text-muted-foreground">{item.kind}</span><span className="block font-semibold text-black">{item.label}</span><span className="line-clamp-2 text-sm text-muted-foreground">{item.detail}</span></a>{item.acknowledged ? <span className="text-xs font-semibold text-muted-foreground">Acknowledged</span> : item.acknowledgeId && onAcknowledge ? <button type="button" className="rounded-full border-2 border-[var(--brand-primary)] bg-white px-3 py-1 text-xs font-semibold" disabled={acknowledging} onClick={() => onAcknowledge(item.acknowledgeId!)}>Acknowledge</button> : null}</li>)}</ol> : <p className="mt-3 text-sm text-muted-foreground">Nothing urgent needs your attention right now.</p>}
+      {priorityItems.length ? <ol className="mt-3 grid gap-2">{priorityItems.map((item, index) => <li key={item.id} className="flex items-start gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs font-bold text-white">{index + 1}</span><a href={item.href} className="min-w-0 flex-1"><span className="block text-xs font-semibold uppercase text-muted-foreground">{item.kind}</span><span className="block font-semibold text-black">{item.label}</span><span className="line-clamp-2 text-sm text-muted-foreground">{item.detail}</span></a>{item.acknowledged ? <span className="text-xs font-semibold text-muted-foreground">Acknowledged</span> : item.acknowledgeId && onAcknowledge ? <button type="button" className="rounded-full border-2 border-[var(--brand-primary)] bg-white px-3 py-1 text-xs font-semibold" disabled={acknowledging} onClick={() => onAcknowledge(item.acknowledgeId!)}>Acknowledge</button> : null}</li>)}</ol> : <p className="mt-3 text-sm text-muted-foreground">{home ? "Nothing urgent needs your attention right now." : "Priorities unavailable; open Tasks & Forms to check current work."}</p>}
     </section>
     <section aria-label="Work Hub snapshot" className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {snapshotCards.map((snapshot) => <a key={snapshot.label} href={snapshot.href} className={`${WORK_HUB_SUBCARD_CLASS} p-4 transition-colors hover:bg-muted/40`}>
