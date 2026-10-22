@@ -1,5 +1,5 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
-import {recordGateWorkday} from "./gate-workday";
+import {recordGateWorkday, endGateWorkdayForRecovery} from "./gate-workday";
 import {WorkdayError} from "./workday";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
@@ -539,89 +539,104 @@ export async function cancelGateHandoff(
     return { cancelled: true };
   });
 }
-/** A signed-in supervisor explicitly accepts responsibility for an abandoned shift. */
+type RecoveryOperator = { userId: number; membershipId: number; name: string; companyName: string; session: SessionPayload };
+async function recoveryOperators(client: Queryable, session: SessionPayload, stationId: string): Promise<RecoveryOperator[]> {
+  const access = await stationAccess(client, session, stationId);
+  if (!access.supervisor) return fail(403, "supervisor_required", "Supervisor access required");
+  const rows = (await client.query(
+    `SELECT m.id AS membership_id,m.user_id,m.vendor_id,m.vendor_people_id,m.role,
+      u.session_version,coalesce(u.display_name,u.username) AS name,v.name AS company_name
+     FROM user_org_memberships m JOIN users u ON u.id=m.user_id JOIN vendors v ON v.id=m.vendor_id
+     WHERE m.org_type='vendor' AND u.suspended_at IS NULL AND u.must_change_password IS DISTINCT FROM true
+       AND ($2::int IS NULL OR m.vendor_id=$2)
+       AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=m.vendor_id AND a.site_location_id=$1 AND a.is_gate_contractor=true)
+       AND (m.role='admin' OR EXISTS(SELECT 1 FROM vendor_people p WHERE p.id=m.vendor_people_id AND p.user_id=m.user_id AND p.vendor_id=m.vendor_id AND p.is_active=true AND p.deleted_at IS NULL))
+     ORDER BY name,m.id`, [access.station.site_id, session.vendorId ?? null],
+  )).rows;
+  const eligible: RecoveryOperator[] = [];
+  for (const row of rows) {
+    const candidate: SessionPayload = { userId: row.user_id, vendorId: row.vendor_id, activeMembershipId: row.membership_id,
+      membershipRole: row.role, role: row.role === "field_employee" ? "field_employee" : "vendor",
+      vendorPeopleId: row.vendor_people_id, sv: row.session_version };
+    try { await requireChangeOverAccess(client, candidate, access.station.site_id); }
+    catch (error) { if (error instanceof ChangeOverError && error.status === 403) continue; throw error; }
+    eligible.push({ userId: row.user_id, membershipId: row.membership_id, name: row.name, companyName: row.company_name, session: candidate });
+  }
+  return eligible;
+}
+export async function listGateRecoveryOperators(session: SessionPayload, stationId: string) {
+  return { operators: (await recoveryOperators(pool, session, stationId)).map(({ session: _session, ...operator }) => operator) };
+}
+/** Emergency recovery is separate from normal handover and ordinary sign-out.
+ * The supervisor acknowledges; an assigned employee is never recorded as having
+ * personally reviewed notes, signed in, or started their paid shift. */
 export async function recoverGateShift(
-  session: SessionPayload,
-  stationId: string,
-  expectedShiftId: string,
-  reason: string,
+  session: SessionPayload, stationId: string, expectedShiftId: string, reason: string, targetMembershipId?: number,
 ) {
   return changeOverTransaction(async (c) => {
-    await c.query(
-      "LOCK TABLE site_visits, ticket_check_ins, tickets, vendor_people, users, user_org_memberships, site_work_assignments, managed_subcontractor_worker_sponsorships, managed_subcontractor_role_grants IN SHARE ROW EXCLUSIVE MODE",
-    );
+    await c.query("LOCK TABLE site_visits, ticket_check_ins, tickets, vendor_people, users, user_org_memberships, site_work_assignments, vendor_person_operational_roles, vendor_person_site_access, managed_subcontractor_worker_sponsorships, managed_subcontractor_role_grants IN SHARE ROW EXCLUSIVE MODE");
     const access = await stationAccess(c, session, stationId);
-    if (!access.supervisor)
-      return fail(403, "supervisor_required", "Supervisor access required");
+    if (!access.supervisor) return fail(403, "supervisor_required", "Supervisor access required");
+    if (!reason.trim() || reason.trim().length > 2000) return fail(400, "reason_required", "Enter the reason or resolution");
+    if (session.realm === "demo" || session.publicDemo) return fail(403, "read_only", "Demo access is read only");
     await lockStation(c, stationId);
+    // Stable identity is the outgoing watch. A lost response cannot end another
+    // shift, invalidate sessions twice, or silently assume a later watch.
+    const prior = (await c.query(
+      `SELECT s.*,p.summary FROM gate_handovers h JOIN gate_preparations p ON p.id=h.preparation_id
+       JOIN gate_shifts s ON s.id=h.incoming_shift_id WHERE h.id=$1 AND s.station_id=$2`, [expectedShiftId, stationId],
+    )).rows[0];
+    if (prior) {
+      const recovery = prior.summary?.recovery;
+      if (!recovery || recovery.actorId !== session.userId || recovery.targetMembershipId !== (targetMembershipId ?? null) || recovery.reason !== reason.trim())
+        return fail(409, "operation_conflict", "This watch has already been recovered with different details");
+      const { summary: _summary, ...receipt } = prior;
+      return receipt;
+    }
     const shift = await activeShift(c, stationId);
-    if (
-      !shift ||
-      shift.id !== expectedShiftId ||
-      shift.operator_id === session.userId
-    )
-      return fail(
-        409,
-        "shift_changed",
-        "Shift changed; refresh before accepting responsibility",
-      );
-    const facts = await snapshot(
-      c,
-      access.station.site_id,
-      stationId,
-      shift.started_at,
-    );
-    const previous = shift.preparation_id
-      ? (
-          await c.query("SELECT notes FROM gate_preparations WHERE id=$1", [
-            shift.preparation_id,
-          ])
-        ).rows[0]?.notes
-      : "";
-    const notes = `Supervisor recovery: ${reason}${previous ? `\nPrevious outgoing notes: ${previous}` : ""}`;
-    const prep = (
-      await c.query(
-        "INSERT INTO gate_preparations(shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5) RETURNING id",
-        [
-          shift.id,
-          session.userId,
-          JSON.stringify(facts),
-          notes,
-          JSON.stringify({ source: "structured_facts", facts: facts.facts }),
-        ],
-      )
-    ).rows[0];
+    if (!shift || shift.id !== expectedShiftId || shift.operator_id === session.userId)
+      return fail(409, "shift_changed", "Shift changed; refresh before accepting responsibility");
+    if (access.station.active === false) return fail(409, "station_inactive", "This gate is inactive");
+    let incoming = session, incomingName = access.user.display_name ?? "Supervisor";
+    if (targetMembershipId !== undefined) {
+      const target = (await recoveryOperators(c, session, stationId)).find(operator => operator.membershipId === targetMembershipId);
+      if (!target || target.userId === shift.operator_id) return fail(403, "assignment_required", "Choose a currently authorized replacement operator for this Gate");
+      incoming = target.session;
+      incomingName = target.name;
+    }
+    if (incoming.userId && (incoming.vendorId || incoming.partnerId)) await assertRequiredWorkClear(c, incoming.userId,
+      incoming.partnerId ? { type: "partner", id: incoming.partnerId } : { type: "vendor", id: incoming.vendorId! });
+    const incomingDuty = (await c.query("SELECT post_coverage FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL FOR UPDATE", [stationId, incoming.userId])).rows[0];
+    if (incomingDuty?.post_coverage?.vendorId && incomingDuty.post_coverage.vendorId !== incoming.vendorId)
+      return fail(409, "duty_employer_changed", "Return to the original employer before changing this watch");
+    const facts = await snapshot(c, access.station.site_id, stationId, shift.started_at);
+    const previous = shift.preparation_id ? (await c.query("SELECT notes FROM gate_preparations WHERE id=$1", [shift.preparation_id])).rows[0]?.notes : "";
     const now = new Date();
-    await c.query(
-      "UPDATE gate_shifts SET ended_at=$1, preparation_id=$2 WHERE id=$3",
-      [now, prep.id, shift.id],
-    );
-    const next = (
-      await c.query(
-        "INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING *",
-        [stationId, session.userId, now],
-      )
-    ).rows[0];
-    await c.query(
-      "INSERT INTO gate_handovers(id,preparation_id,incoming_shift_id,incoming_user_id,outgoing_name,incoming_name,acknowledged_at) VALUES($1,$2,$3,$4,$5,$6,$7)",
-      [
-        randomUUID(),
-        prep.id,
-        next.id,
-        session.userId,
-        shift.operator_name ?? "Gatekeeper",
-        access.user.display_name ?? "Supervisor",
-        now,
-      ],
-    );
-    await c.query(
-      "INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'recovery',$4)",
-      [stationId, session.userId, shift.id, reason],
-    );
-    await c.query(
-      "UPDATE users SET session_version=session_version+1 WHERE id=$1",
-      [shift.operator_id],
-    );
+    const clockReceipt = await endGateWorkdayForRecovery(c, session, {
+      stationId, siteId: access.station.site_id, operatorId: shift.operator_id, watchId: shift.id, reason: reason.trim(), at: now,
+    });
+    const notes = `Supervisor recovery: ${reason.trim()}${previous ? `\nPrevious outgoing notes: ${previous}` : ""}`;
+    const prep = (await c.query(
+      "INSERT INTO gate_preparations(shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5) RETURNING id",
+      [shift.id, session.userId, JSON.stringify(facts), notes, JSON.stringify({ source: "structured_facts", facts: facts.facts,
+        recovery: { actorId: session.userId, targetMembershipId: targetMembershipId ?? null, assignedUserId: incoming.userId,
+          reason: reason.trim(), acknowledgedBy: session.userId, assigneeAcknowledged: false, clockReceipt } })],
+    )).rows[0];
+    await c.query("UPDATE gate_shifts SET ended_at=$1,preparation_id=$2 WHERE id=$3", [now, prep.id, shift.id]);
+    await c.query(`UPDATE gate_work_sessions w SET ended_at=$3,location_sharing_active=false,travel_status='ended'
+      WHERE w.user_id=$2 AND w.ended_at IS NULL AND (
+        EXISTS(SELECT 1 FROM gate_duty_sessions d WHERE d.work_session_id=w.id AND d.station_id=$1 AND d.user_id=$2 AND d.ended_at IS NULL)
+        OR EXISTS(SELECT 1 FROM work_hub_shifts s WHERE s.id=w.work_hub_shift_id AND s.gate_station_id=$1))`, [stationId, shift.operator_id, now]);
+    await c.query("UPDATE gate_duty_sessions SET ended_at=$3,ended_by_user_id=$4,end_reason=$5 WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL", [stationId, shift.operator_id, now, session.userId, reason.trim()]);
+    const next = (await c.query("INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING *", [stationId, incoming.userId, now])).rows[0];
+    await c.query(`INSERT INTO gate_duty_sessions(station_id,user_id,started_at,source,idempotency_key,post_coverage)
+      SELECT $1,$2,$3,'web',$4,$5::jsonb WHERE NOT EXISTS(SELECT 1 FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL)`,
+      [stationId, incoming.userId, now, expectedShiftId, JSON.stringify(incoming.vendorId ? { vendorId: incoming.vendorId } : incoming.partnerId ? { partnerId: incoming.partnerId } : {})]);
+    await c.query("INSERT INTO gate_handovers(id,preparation_id,incoming_shift_id,incoming_user_id,outgoing_name,incoming_name,acknowledged_at) VALUES($1,$2,$3,$4,$5,$6,$7)",
+      [expectedShiftId, prep.id, next.id, incoming.userId, shift.operator_name ?? "Gatekeeper", incomingName, now]);
+    await c.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'recovery',$4)",
+      [stationId, session.userId, shift.id, `${reason.trim()} — Watch assigned to ${incomingName}; outgoing watch and shift ended; outgoing account signed out.`]);
+    await c.query("UPDATE users SET session_version=session_version+1 WHERE id=$1", [shift.operator_id]);
     return next;
   });
 }

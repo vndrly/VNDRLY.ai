@@ -127,6 +127,9 @@ export default function GateChangeOverPage({
   const [notes, setNotes] = useState("");
   const [itemText, setItemText] = useState("");
   const [reason, setReason] = useState("");
+  const [recoveryReason, setRecoveryReason] = useState("");
+  const [recoveryTarget, setRecoveryTarget] = useState("self");
+  const [pendingRecovery, setPendingRecovery] = useState<{ stationId: string; body: { expectedShiftId: string; reason: string; acknowledged: true; targetMembershipId?: number } } | null>(null);
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -172,6 +175,12 @@ export default function GateChangeOverPage({
     networkMode: "always",
   });
   const current = state.data;
+  const replacements = useQuery({
+    queryKey: ["gate-recovery-operators", user?.userId, user?.activeMembershipId, stationId],
+    queryFn: () => request<{ operators: { userId: number; membershipId: number; name: string; companyName: string }[] }>(`/${stationId}/recovery-operators`),
+    enabled: Boolean(!history && current?.supervisor && current.shift && current.shift.operator_id !== user?.userId),
+    retry: false,
+  });
   const prep = current?.preparation;
   const revision = current?.snapshot?.revision ?? "";
   const ownShift = current?.shift?.operator_id === user?.userId;
@@ -181,6 +190,9 @@ export default function GateChangeOverPage({
     setItemText("");
     setItemNotes({});
     setReason("");
+    setRecoveryReason("");
+    setRecoveryTarget("self");
+    setPendingRecovery(null);
     setError("");
     setBefore("");
   }, [stationId, user?.userId]);
@@ -255,6 +267,25 @@ export default function GateChangeOverPage({
     }).catch(() => { /* Retain the immutable original command for explicit retry. */ });
     return () => { active = false; };
   }, [pendingWatch, online, state.dataUpdatedAt]);
+  const recoverAbandonedWatch = async () => {
+    if ((!current?.shift && !pendingRecovery) || pendingWatch) return;
+    const command = pendingRecovery ?? { stationId, body: {
+      expectedShiftId: current!.shift!.id, reason: recoveryReason.trim(), acknowledged: true as const,
+      ...(recoveryTarget !== "self" ? { targetMembershipId: Number(recoveryTarget) } : {}),
+    } };
+    setPendingRecovery(command);
+    try { await request(`/${command.stationId}/recover`, command.body); }
+    catch (error) {
+      const status = (error as { status?: number }).status;
+      if (status && status >= 400 && status < 500) { setPendingRecovery(null); void state.refetch(); }
+      throw error;
+    }
+    setPendingRecovery(null);
+    setRecoveryReason("");
+    setRecoveryTarget("self");
+    await watchSaved();
+    await cache.invalidateQueries({ queryKey: ["work-hub-workforce"] });
+  };
   const loading =
     sites.isLoading ||
     stations.isLoading ||
@@ -452,22 +483,27 @@ export default function GateChangeOverPage({
                       <BrandedInput
                         aria-label={t("changeOver.reason")}
                         placeholder={t("changeOver.reason")}
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
+                        maxLength={2000}
+                        value={recoveryReason}
+                        disabled={busy || Boolean(pendingRecovery)}
+                        onChange={(e) => setRecoveryReason(e.target.value)}
                       />
+                      <label className="block space-y-1">
+                        <span>{t("changeOver.recoveryReplacement")}</span>
+                        <BrandedSelect aria-label={t("changeOver.recoveryReplacement")} value={recoveryTarget}
+                          disabled={busy || Boolean(pendingRecovery)} onChange={e => setRecoveryTarget(e.target.value)}>
+                          <option value="self">{t("changeOver.recoverySelf")}</option>
+                          {replacements.data?.operators.filter(operator => operator.userId !== current.shift!.operator_id && operator.userId !== user?.userId).map(operator =>
+                            <option key={operator.membershipId} value={operator.membershipId}>{operator.name} · {operator.companyName}</option>)}
+                        </BrandedSelect>
+                      </label>
+                      {replacements.isError && <p role="status">{t("changeOver.recoveryRosterUnavailable")}</p>}
+                      <p>{t("changeOver.recoveryEffect")}</p>
+                      {pendingRecovery && <p role="status">{t("changeOver.recoveryUnconfirmed")}</p>}
                       <BrandPillButton
-                        disabled={busy || !online || !reason.trim()}
-                        onClick={() =>
-                          void act(() =>
-                            mutate("recover", {
-                              expectedShiftId: current.shift!.id,
-                              reason,
-                              acknowledged: true,
-                            }),
-                          )
-                        }
-                      >
-                        {t("changeOver.recover")}
+                        disabled={busy || !online || Boolean(pendingWatch) || (!pendingRecovery && (!recoveryReason.trim() || state.isError))}
+                        onClick={() => void act(recoverAbandonedWatch)}>
+                        {t(pendingRecovery ? "changeOver.recoveryRetry" : recoveryTarget === "self" ? "changeOver.recoveryAssume" : "changeOver.recoveryAssign")}
                       </BrandPillButton>
                     </>
                   )}

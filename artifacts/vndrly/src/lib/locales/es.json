@@ -5760,7 +5760,15 @@
     "addGate": "Agregar entrada",
     "refresh": "Actualizar conexión y registros",
     "recover": "Aceptar responsabilidad y recuperar turno",
-    "recoverExplanation": "Si el operador saliente no está disponible, revise los datos actuales e ingrese un motivo arriba. Esta acción registra su reconocimiento, le transfiere la responsabilidad y cierra la sesión del operador anterior."
+    "recoverExplanation": "Si el operador saliente deja de estar disponible o tiene que abandonar la guardia antes de tiempo, ingrese el motivo o la resolución abajo. Esta acción registra su reconocimiento, le transfiere la responsabilidad para asumir la guardia o asignarla a otra persona, finaliza la guardia y el turno del operador saliente y cierra su sesión de VNDRLY.",
+    "recoveryReplacement": "¿Quién asumirá la guardia?",
+    "recoverySelf": "Yo asumiré la guardia",
+    "recoveryRosterUnavailable": "No se pudieron cargar los operadores de reemplazo. Todavía puede asumir la guardia usted mismo.",
+    "recoveryEffect": "Finaliza la guardia y el turno pagado del operador saliente y cierra su sesión de VNDRLY. Su propia sesión permanece activa. Asignar un reemplazo no inicia su turno pagado ni reconoce la entrega en su nombre.",
+    "recoveryAssume": "Finalizar turno saliente y asumir guardia",
+    "recoveryAssign": "Finalizar turno saliente y asignar guardia",
+    "recoveryRetry": "Consultar resultado de recuperación",
+    "recoveryUnconfirmed": "El resultado no está confirmado. Consulte la solicitud de recuperación original antes de realizar otro cambio."
   },
   "marketplace": {
     "title": "Mercado de servicios",

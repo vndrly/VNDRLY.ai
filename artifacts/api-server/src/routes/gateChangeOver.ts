@@ -25,6 +25,7 @@ import {
   prepareGateHandoff,
   cancelGateHandoff,
   recoverGateShift,
+  listGateRecoveryOperators,
   actOnShiftItem,
   requireChangeOverAccess,
   transferGateShift,
@@ -260,12 +261,16 @@ router.post("/gate-change-over/:stationId/items", async (req, res) => {
     ),
   );
 });
+router.get("/gate-change-over/:stationId/recovery-operators", async (req, res) => {
+  res.json(await listGateRecoveryOperators(sessionFor(req), uuid.parse(req.params.stationId)));
+});
 router.post("/gate-change-over/:stationId/recover", async (req, res) => {
   const b = z
     .object({
       expectedShiftId: uuid,
       reason: text,
       acknowledged: z.literal(true),
+      targetMembershipId: z.number().int().positive().optional(),
     })
     .parse(req.body);
   res.json(
@@ -274,6 +279,7 @@ router.post("/gate-change-over/:stationId/recover", async (req, res) => {
       uuid.parse(req.params.stationId),
       b.expectedShiftId,
       b.reason,
+      b.targetMembershipId,
     ),
   );
 });
