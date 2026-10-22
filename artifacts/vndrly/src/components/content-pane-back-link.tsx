@@ -1,6 +1,7 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import SphereBackButton from "@/components/sphere-back-button";
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 
 interface ContentPaneBackLinkProps {
   href?: string;
@@ -11,7 +12,8 @@ interface ContentPaneBackLinkProps {
   ariaLabel?: string;
 }
 
-/** Glossy sphere back control for main / field-ops content pane page headers. */
+/** Back follows page history; href is only the safe direct-entry fallback.
+ * Explicit callbacks remain actions (for example closing an editor). */
 export default function ContentPaneBackLink({
   href = "/",
   onClick,
@@ -20,6 +22,7 @@ export default function ContentPaneBackLink({
   testId = "button-back",
   ariaLabel = "Back",
 }: ContentPaneBackLinkProps) {
+  const [, navigate] = useLocation();
   const wrapperClass = cn("group inline-flex items-center shrink-0", className);
 
   if (onClick) {
@@ -39,6 +42,11 @@ export default function ContentPaneBackLink({
   return (
     <Link
       href={href}
+      onClick={(event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        navigateBackInApp(navigate, href);
+      }}
       className={wrapperClass}
       aria-label={ariaLabel}
       data-testid={testId}

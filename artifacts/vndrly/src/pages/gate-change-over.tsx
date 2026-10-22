@@ -1,4 +1,5 @@
 import WorkdayControls from "@/components/workday-controls";
+import GateHandoffDesk from "@/components/gate-handoff-desk";
 import DashboardTasks from "@/components/work-hub/dashboard-tasks";
 import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
 import "@/components/gate-dashboard.css";
@@ -6,25 +7,20 @@ import GateWatchSummary from "@/components/gate-watch-summary";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ClipboardList, LayoutDashboard, LogIn, LogOut, Users, UserCheck, Car, Clock3, AlertTriangle, NotebookPen, Shield } from "lucide-react";
+import { ClipboardList, LayoutDashboard, LogIn, LogOut, Users, UserCheck, Car, Clock3, AlertTriangle, Shield } from "lucide-react";
 import {
   type ChangeOverState,
   type ChangeOverSnapshot,
   type ShiftNotesResponse,
 } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
-import { useBrand } from "@/hooks/use-brand";
 import BrandPillButton from "@/components/brand-pill-button";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
-import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
 import { GateReportToolbar, type GateReportRange } from "@/components/gate-report-toolbar";
 import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest as request } from "@/lib/change-over-api";
-
-const BRANDED_NOTES_CLASS =
-  "w-full rounded-lg border-2 border-[color:var(--brand-primary)] bg-white p-3 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25";
 
 export function ShiftSnapshotView({
   snapshot,
@@ -121,7 +117,6 @@ export default function GateChangeOverPage({
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const brand = useBrand();
   const cache = useQueryClient();
   const [selectedSite, setSelectedSite] = useState(
     () => new URLSearchParams(window.location.search).get("siteId") ?? "",
@@ -132,9 +127,7 @@ export default function GateChangeOverPage({
   const [notes, setNotes] = useState("");
   const [itemText, setItemText] = useState("");
   const [reason, setReason] = useState("");
-  const [itemView, setItemView] = useState<"open" | "resolved">("open");
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
-  const [acknowledged, setAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [online, setOnline] = useState(navigator.onLine);
@@ -183,24 +176,21 @@ export default function GateChangeOverPage({
   const prep = current?.preparation;
   const revision = current?.snapshot?.revision ?? "";
   const ownShift = current?.shift?.operator_id === user?.userId;
-  const resetReview = () => { setAcknowledged(false); };
   useEffect(() => {
-    resetReview();
     setPendingWatch(null);
     setNotes("");
+    setItemText("");
+    setItemNotes({});
+    setReason("");
     setError("");
     setBefore("");
   }, [stationId, user?.userId]);
   useEffect(() => {
-    resetReview();
-  }, [revision, prep?.id, current?.stale, state.isError]);
-  useEffect(() => {
-    if (prep) setNotes(prep.notes);
-  }, [prep?.id]);
+    setNotes(prep?.notes ?? "");
+  }, [prep?.id, current?.shift?.id]);
   useEffect(() => {
     const update = () => {
       setOnline(navigator.onLine);
-      resetReview();
       if (navigator.onLine)
         void cache.invalidateQueries({ queryKey: ["change-over-state"] });
     };
@@ -225,33 +215,38 @@ export default function GateChangeOverPage({
             : e.message
           : t("changeOver.failed"),
       );
-      resetReview();
     } finally {
       setBusy(false);
     }
   };
   const mutate = async (path: string, body: unknown) => {
     await request(`/${stationId}/${path}`, body);
-    resetReview();
     await state.refetch();
   };
   const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios"; preparationId?:string; reviewedRevision?:string; acknowledged?:boolean}} | null>(null);
-  const assumeWatch = async () => {
-    const command = pendingWatch ?? { stationId, body: { operationId: crypto.randomUUID(), source: "web" as const, ...(current?.shift && !ownShift ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged } : {}) } };
+  const assumeWatch = async (reviewed = false) => {
+    const command = pendingWatch ?? { stationId, body: { operationId: crypto.randomUUID(), source: "web" as const, ...(current?.shift && !ownShift ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged: reviewed } : {}) } };
     setPendingWatch(command);
     try { await request(`/${command.stationId}/watch/assume`, command.body); }
     catch (error) {
       const status = (error as {status?:number}).status;
-      if (status && status >= 400 && status < 500) { setPendingWatch(null); resetReview(); void state.refetch(); }
+      if (status && status >= 400 && status < 500) { setPendingWatch(null); void state.refetch(); }
       throw error;
     }
     await watchSaved();
   };
   const watchSaved = async () => {
-    setPendingWatch(null); resetReview();
+    setPendingWatch(null);
     await cache.invalidateQueries({ queryKey: ["gate-watch-own-duty"] });
     await cache.invalidateQueries({ queryKey: ["gate-watch-previous-notes"] });
     await state.refetch();
+  };
+  const recoverWatch = async () => {
+    if (!pendingWatch) return;
+    const result = await request<{ receipt: unknown }>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`);
+    if (result.receipt) await watchSaved();
+    else if (result.receipt === null) await assumeWatch();
+    else throw new Error(t("handoffDesk.outcomeUnknown"));
   };
   useEffect(() => {
     if (!pendingWatch || !online) return;
@@ -311,7 +306,7 @@ export default function GateChangeOverPage({
       <div className="flex items-center gap-3">
         {history
           ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />
-          : <ContentPaneBackLink onClick={() => window.history.back()} ariaLabel={t("changeOver.title")} testId="button-back" />}
+          : <ContentPaneBackLink href="/work-hub" ariaLabel={t("changeOver.title")} testId="button-back" />}
         {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         <div>
@@ -432,168 +427,23 @@ export default function GateChangeOverPage({
           <div className="gate-dashboard-panels">
             <GateWatchSummary stationId={stationId} current={current} />
             <DashboardTasks />
-            {current.shift && current.snapshot ? <ShiftSnapshotView snapshot={current.snapshot} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: "current_shift" })}`} /> : <WorkspacePanel title={t("changeOver.title")} subtitle={t("changeOver.noShift")} icon={LayoutDashboard}><div className="gate-panel-body"><BrandPillButton disabled={busy || !online} onClick={() => void act(assumeWatch)}>{t("watch.assume")}</BrandPillButton></div></WorkspacePanel>}
-            <WorkspacePanel title={t("changeOver.shiftFollowUps")} subtitle={t("changeOver.carryForward")} icon={ClipboardList}>
-              <div className="gate-panel-body space-y-3">
-                <div role="tablist" aria-label={t("changeOver.shiftFollowUps")} className="flex flex-wrap gap-2">
-                  <PngPillButton
-                    role="tab"
-                    aria-selected={itemView === "open"}
-                    color="brand"
-                    activeSrc={brandImagePillSrc(brand.primary, brand.name)}
-                    idleSrc={itemView === "open" ? brandImagePillSrc(brand.primary, brand.name) : undefined}
-                    onClick={() => setItemView("open")}
-                  >
-                    {t("changeOver.openItems")}
-                  </PngPillButton>
-                  <PngPillButton
-                    role="tab"
-                    aria-selected={itemView === "resolved"}
-                    color="brand"
-                    activeSrc={brandImagePillSrc(brand.primary, brand.name)}
-                    idleSrc={itemView === "resolved" ? brandImagePillSrc(brand.primary, brand.name) : undefined}
-                    onClick={() => setItemView("resolved")}
-                  >
-                    {t("changeOver.resolvedItems")}
-                  </PngPillButton>
-                </div>
-                {current.items.filter((item) => item.status === itemView).length === 0 && (
-                  <p>{t("changeOver.none")}</p>
-                )}
-                {current.items.filter((item) => item.status === itemView).map((i) => (
-                  <div key={i.id} data-testid={`carry-forward-item-${i.id}`} className="space-y-2 rounded-lg border-2 border-[color:var(--brand-primary)] bg-white p-3 text-gray-800">
-                    <p className="whitespace-pre-wrap">{i.text}</p>
-                    {(ownShift || current.supervisor) && (
-                      <>
-                        <BrandedInput
-                          aria-label={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
-                          placeholder={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
-                          value={itemNotes[i.id] ?? ""}
-                          onChange={(e) => setItemNotes((currentNotes) => ({ ...currentNotes, [i.id]: e.target.value }))}
-                        />
-                        <PngPillButton
-                          color="brand"
-                          disabled={!online || busy || !itemNotes[i.id]?.trim()}
-                          onClick={() => void act(async () => {
-                            await mutate("items", {
-                              itemId: i.id,
-                              kind: i.status === "open" ? "resolve" : "reopen",
-                              text: itemNotes[i.id].trim(),
-                            });
-                            setItemNotes((currentNotes) => ({ ...currentNotes, [i.id]: "" }));
-                          })}
-                        >
-                          {t(i.status === "open" ? "changeOver.markResolved" : "changeOver.reopen")}
-                        </PngPillButton>
-                      </>
-                    )}
-                  </div>
-                ))}
-                {itemView === "open" && (ownShift || current.supervisor) && (
-                  <>
-                    <textarea
-                      aria-label={t("changeOver.newItem")}
-                      placeholder={t("changeOver.newItem")}
-                      className={BRANDED_NOTES_CLASS}
-                      maxLength={2000}
-                      value={itemText}
-                      onChange={(e) => setItemText(e.target.value)}
-                    />
-                    <BrandPillButton
-                      disabled={busy || !online || !itemText.trim()}
-                      onClick={() =>
-                        void act(async () => {
-                          await mutate("items", {
-                            itemId: crypto.randomUUID(),
-                            kind: "open",
-                            text: itemText,
-                          });
-                          setItemText("");
-                        })
-                      }
-                    >
-                      {t("changeOver.addItem")}
-                    </BrandPillButton>
-                  </>
-                )}
-                {ownShift && (
-                  <section aria-label={t("changeOver.outgoingNotes")} className="space-y-3 border-t border-[#3a3a3a] pt-3">
-                    <div className="flex items-start gap-3">
-                      <span className="hub-card-icon"><NotebookPen aria-hidden="true" /></span>
-                      <div>
-                        <h3 className="font-bold">{t("changeOver.outgoingNotes")}</h3>
-                        <p className="text-xs text-muted-foreground">{t("watch.independent")}</p>
-                      </div>
-                    </div>
-                    <textarea
-                      aria-label={t("changeOver.outgoingNotes")}
-                      className={`min-h-28 font-normal ${BRANDED_NOTES_CLASS}`}
-                      value={notes}
-                      maxLength={8000}
-                      onChange={(e) => {
-                        setNotes(e.target.value);
-                        resetReview();
-                      }}
-                    />
-                    <BrandPillButton
-                      disabled={busy || !online}
-                      hoverSrc={brandImagePillSrc(brand.primary, brand.name)}
-                      onClick={() => void act(() => mutate("prepare", { notes }))}
-                    >
-                      {t(
-                        prep ? "changeOver.refreshHandoff" : "changeOver.prepare",
-                      )}
-                    </BrandPillButton>
-                  </section>
-                )}
-              </div>
-            </WorkspacePanel>
-            {prep && (
-              <WorkspacePanel title={t("changeOver.review")} subtitle={t("changeOver.factualSummary")} icon={NotebookPen}>
-                <div className="gate-panel-body space-y-3">
-                  <p>
-                    {t(
-                      prep.summary.source === "ai_selected_facts"
-                        ? "changeOver.aiFacts"
-                        : "changeOver.factualSummary",
-                    )}
-                  </p>
-                  <ul>
-                    {prep.summary.facts.map((f) => (
-                      <li key={f.id}>{f.text}</li>
-                    ))}
-                  </ul>
-                  <p className="whitespace-pre-wrap">{prep.notes}</p>
-                  {prep.snapshot.openItems.map((i) => (
-                    <p key={i.id}>
-                      {t("changeOver.carryForward")}: {i.text}
-                    </p>
-                  ))}
-
-                  {ownShift ? <p role="status">{t("watch.ready")}</p> : <div id="watch-review" className="space-y-3 scroll-mt-6">
-                    <label className="flex gap-2"><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} />{t("changeOver.acknowledge")}</label>
-                    <BrandPillButton disabled={busy || !online || !acknowledged || state.isError} onClick={() => void act(assumeWatch)}>{t("watch.assume")}</BrandPillButton>
-                  </div>}
-                  <p className="text-sm text-muted-foreground">{t("watch.independent")}</p>
-                  {(ownShift || current.supervisor) && (
-                    <>
-                      <BrandedInput
-                        aria-label={t("changeOver.reason")}
-                        placeholder={t("changeOver.reason")}
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                      />
-                      <BrandPillButton
-                        disabled={busy || !online || !reason.trim()}
-                        onClick={() => void act(() => mutate("cancel", { reason }))}
-                      >
-                        {t("changeOver.cancel")}
-                      </BrandPillButton>
-                    </>
-                  )}
-                </div>
-              </WorkspacePanel>
-            )}
+            {current.shift && current.snapshot ? <ShiftSnapshotView snapshot={current.snapshot} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: "current_shift" })}`} /> : <WorkspacePanel title={t("changeOver.title")} subtitle={t("changeOver.noShift")} icon={LayoutDashboard}><div className="gate-panel-body"><BrandPillButton disabled={busy || !online || Boolean(pendingWatch) || state.isError} onClick={() => void act(assumeWatch)}>{t("watch.assume")}</BrandPillButton></div></WorkspacePanel>}
+            <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} current={current} ownWatch={ownShift} busy={busy} online={online} readError={state.isError}
+              notes={notes} onNotesChange={setNotes} itemText={itemText} onItemTextChange={setItemText}
+              itemNotes={itemNotes} onItemNoteChange={(id, text) => setItemNotes(value => ({ ...value, [id]: text }))}
+              onItemAction={(itemId, kind) => void act(async () => {
+                await mutate("items", { itemId, kind, text: itemNotes[itemId]?.trim() ?? "" });
+                setItemNotes(value => ({ ...value, [itemId]: "" }));
+              })}
+              onAddItem={() => void act(async () => {
+                await mutate("items", { itemId: crypto.randomUUID(), kind: "open", text: itemText });
+                setItemText("");
+              })}
+              onSave={() => void act(() => mutate("prepare", { notes }))}
+              onAssumeReviewed={() => void act(() => assumeWatch(true))}
+              pendingWatch={Boolean(pendingWatch)} onRecoverWatch={() => void act(recoverWatch)}
+              reason={reason} onReasonChange={setReason} onWithdraw={() => void act(() => mutate("cancel", { reason }))}
+            />
             {current.supervisor && (
               <WorkspacePanel title={t("changeOver.supervisor")} subtitle={t("changeOver.gate")} icon={Shield}>
                 <div className="gate-panel-body space-y-3">

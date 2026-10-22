@@ -72,33 +72,40 @@ test("gate watch survives sign-out and transfers only after the incoming account
     await expect.poll(async () => (await pool.query(
       "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
     )).rows).toEqual([{ operator_id: outgoing.userId }]);
-    await expect(page.getByRole("button", { name: "Prepare handoff", exact: true })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Save handoff", exact: true })).toBeEnabled();
     await page
       .getByRole("textbox", { name: "Anything the next shift should know?", exact: true })
       .fill("Inspect the north barrier before admitting heavy loads.");
     await page
-      .getByRole("button", { name: "Prepare handoff", exact: true })
+      .getByRole("button", { name: "Save handoff", exact: true })
       .click();
     await expect(
-      page.getByRole("heading", { name: "Incoming shift review" }),
+      page.getByText("Ready for next watch", { exact: true }),
     ).toBeVisible();
 
+    await page.screenshot({path:'.local/releases/handoff-outgoing-desktop.png',fullPage:true});
     const logout=await page.request.post('/api/auth/logout');
     expect(logout.ok()).toBe(true);
     expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
     await loginAsVendor(page,incoming);
     await page.goto(`/gate/change-over?siteId=${site.id}&stationId=${gate}`,{waitUntil:'domcontentloaded'});
     expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
-    await page.getByRole('checkbox',{name:/I have reviewed this handoff/}).check();
-    await page.locator('#watch-review').getByRole('button',{name:'Assume Watch',exact:true}).click();
+    await expect(page.getByRole('region',{name:'Saved operator notes',exact:true})).toContainText('Inspect the north barrier');
+    await page.screenshot({path:'.local/releases/handoff-incoming-desktop.png',fullPage:true});
+    await page.setViewportSize({width:390,height:844});
+    await page.reload({waitUntil:'domcontentloaded'});
+    await expect(page.locator('#watch-review').getByRole('button',{name:'Reviewed — Assume Watch',exact:true})).toBeVisible();
+    await page.locator('#watch-review').scrollIntoViewIfNeeded();
+    await page.getByRole('region',{name:'Shift handoff',exact:true}).screenshot({path:'.local/releases/handoff-incoming-phone.png'});
+    await page.locator('#watch-review').getByRole('button',{name:'Reviewed — Assume Watch',exact:true}).click();
     await expect.poll(async () => (await pool.query(
       "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
     )).rows).toEqual([{ operator_id: incoming.userId }]);
     await expect(page.getByRole("textbox", { name: "Anything the next shift should know?", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Prepare handoff", exact: true })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Save handoff", exact: true })).toBeEnabled();
     expect((await pool.query("SELECT session_version FROM users WHERE id=ANY($1::int[]) ORDER BY id",[[outgoing.userId,incoming.userId]])).rows.map(row=>row.session_version)).toEqual([1,1]);
     expect((await pool.query("SELECT count(*)::int AS count FROM assistant_action_audit WHERE target_type='workday' AND user_id=ANY($1::int[])",[[outgoing.userId,incoming.userId]])).rows[0].count).toBe(0);
-    await page.goto(`/gate/shift-notes?siteId=${site.id}&stationId=${gate}`,{waitUntil:'domcontentloaded'});
+    await page.getByRole('link',{name:/Read shift notes/}).click();
     await expect(
       page.getByRole("heading", { name: "Shift Notes", exact: true }),
     ).toBeVisible();
@@ -108,6 +115,9 @@ test("gate watch survives sign-out and transfers only after the incoming account
         { exact: true },
       ),
     ).toBeVisible();
+    await page.getByTestId('button-back').click();
+    await expect(page).toHaveURL(new RegExp(`/gate/change-over\\?siteId=${site.id}&stationId=${gate}$`));
+    await expect(page.getByRole('heading',{name:'Gate Dashboard',exact:true})).toBeVisible();
     const active = (
       await pool.query(
         "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",

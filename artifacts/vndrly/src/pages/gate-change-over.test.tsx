@@ -7,6 +7,7 @@ import {
   waitFor,
   cleanup,
   within,
+  act,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
 vi.mock("@/components/workday-controls", () => ({ default: ({watchControl}: {watchControl?: React.ReactNode}) => <section aria-label="Workday"><button type="button" role="switch" aria-label="Shift" aria-checked="false" /><button type="button" role="switch" aria-label="On Call" aria-checked="false" />{watchControl}</section> }));
@@ -24,7 +25,9 @@ vi.mock("@/hooks/use-brand", () => ({
 import { PILL_BRAND, PILL_IDLE } from "@/lib/pill-palette-assets";
 import GateChangeOverPage from "./gate-change-over";
 const snapshot = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: "2026-10-22T12:00:00Z",
+  startedAt: "2026-10-22T06:00:00Z",
+  coverage: "recorded",
   revision: "a",
   metrics: {
     checkIns: 2,
@@ -40,16 +43,19 @@ const snapshot = {
   facts: [],
 };
 const state = () => ({
-  station: { id: "gate", name: "Main gate" },
+  station: { id: "gate", name: "Main gate", site_id: 1 },
   site: { id: 1, name: "Site" },
   supervisor: false,
   shift: {
+    id: "watch-outgoing",
     operator_id: 1,
     operator_name: "Outgoing",
-    started_at: new Date().toISOString(),
+    started_at: "2026-10-22T06:00:00Z",
+    preparation_id: "prep",
   },
   preparation: {
     id: "prep",
+    created_at: "2026-10-22T12:01:00Z",
     snapshot,
     notes: "Barrier note",
     summary: { source: "structured_facts", facts: [] },
@@ -108,13 +114,13 @@ it("shows the standard back control and branded Dashboard icon", () => {
   expect(screen.getByTestId("gate-dashboard-header-icon").getAttribute("class")).not.toContain("card-icon-drop-shadow");
   expect(screen.getByRole("heading", { level: 1, name: "changeOver.title" })).not.toBeNull();
 });
-it("keeps Prepare Handoff gray at rest and branded on hover without requiring notes", async () => {
+it("keeps Save handoff gray at rest and branded on hover without requiring notes", async () => {
   const base = api.getMockImplementation()!;
   api.mockImplementation((path, body) => path.endsWith("/state")
     ? { ...state(), preparation: null }
     : base(path, body));
   mount();
-  const button = await screen.findByRole("button", { name: "changeOver.prepare" });
+  const button = await screen.findByRole("button", { name: "handoffDesk.save" });
   expect((button as HTMLButtonElement).disabled).toBe(false);
   const sources = Array.from(button.querySelectorAll("img"), (image) => image.getAttribute("src"));
   expect(sources).toContain(PILL_IDLE);
@@ -132,7 +138,7 @@ it("shows open carry-forward items separately from resolved history", async () =
       }
     : base(path, body));
   mount();
-  expect(await screen.findByText("changeOver.shiftFollowUps")).not.toBeNull();
+  expect(await screen.findByRole("region", { name: "handoffDesk.title" })).not.toBeNull();
   expect(screen.getByRole("tab", { name: "changeOver.openItems" })).not.toBeNull();
   expect(await screen.findByText("Identify driver for OK ABC123")).not.toBeNull();
   expect(screen.queryByText("North barrier inspected")).toBeNull();
@@ -140,16 +146,19 @@ it("shows open carry-forward items separately from resolved history", async () =
   expect(screen.getByText("North barrier inspected")).not.toBeNull();
   expect(screen.queryByText("Identify driver for OK ABC123")).toBeNull();
 });
-it("combines outgoing notes with Shift follow-ups and places Incoming shift review beside it", async () => {
+it("combines outgoing actions and notes in one handoff card with an optional saved preview", async () => {
   mount();
-  const followUps = await screen.findByRole("region", { name: "changeOver.shiftFollowUps" });
+  const handoff = await screen.findByRole("region", { name: "handoffDesk.title" });
+  const actions = within(handoff).getByRole("region", { name: "changeOver.carryForward" });
   const notesPanel = screen.getByRole("region", { name: "changeOver.outgoingNotes" });
-  expect(followUps.contains(notesPanel)).toBe(true);
+  expect(handoff.contains(actions)).toBe(true);
+  expect(handoff.contains(notesPanel)).toBe(true);
   expect(within(notesPanel).getByRole("heading", { level: 3, name: "changeOver.outgoingNotes" })).not.toBeNull();
-  expect(within(notesPanel).getByText("watch.independent")).not.toBeNull();
   expect(within(notesPanel).getByRole("textbox", { name: "changeOver.outgoingNotes" })).not.toBeNull();
-  const incoming = screen.getByRole("region", { name: "changeOver.review" });
-  expect(incoming.previousElementSibling).toBe(followUps);
+  expect(within(handoff).getByText("handoffDesk.independent")).not.toBeNull();
+  expect(within(handoff).getByText("handoffDesk.previewSaved").parentElement?.tagName).toBe("DETAILS");
+  expect(screen.queryByRole("region", { name: "changeOver.review" })).toBeNull();
+  expect(screen.getAllByRole("region", { name: "handoffDesk.title" })).toHaveLength(1);
 });
 it("moves an item out of the open list only after a resolution note, and can reopen it", async () => {
   const base = api.getMockImplementation()!;
@@ -227,30 +236,55 @@ function useIncoming() {
   const base = api.getMockImplementation()!;
   api.mockImplementation((path, body) => path.endsWith('/state') ? incomingState() : base(path, body));
 }
+it('saves a concise handoff without assuming a watch or ending a paid shift', async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation((path, body) => path.endsWith('/state') ? { ...state(), preparation: null } : base(path, body));
+  mount();
+  fireEvent.change(await screen.findByRole('textbox', { name: 'changeOver.outgoingNotes' }), { target: { value: 'Barrier inspection due before the next delivery.' } });
+  fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.save' }));
+  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/prepare', { notes: 'Barrier inspection due before the next delivery.' }));
+  expect(api.mock.calls.some(([path]) => /\/(watch\/assume|transfer|logout|start|end)$/.test(path))).toBe(false);
+});
+it('uses one explicit reviewed-assumption action bound to the saved handoff and current revision', async () => {
+  useIncoming(); mount();
+  const assume = await screen.findByRole('button', { name: 'handoffDesk.assume' });
+  expect(screen.queryByRole('checkbox', { name: 'changeOver.acknowledge' })).toBeNull();
+  expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
+  fireEvent.click(assume);
+  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source: 'web', preparationId: 'prep', reviewedRevision: 'a', acknowledged: true, operationId: expect.any(String) })));
+});
+it('requires a fresh saved briefing after watch activity changes before one-click review', async () => {
+  useIncoming(); const cache = mount();
+  await screen.findByRole('button', { name: 'handoffDesk.assume' });
+  cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), stale: true, snapshot: { ...snapshot, revision: 'b' } });
+  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true));
+  expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
+});
 it('assumes a reviewed watch using the signed-in account without credentials or a session switch', async () => {
   useIncoming(); mount();
-  const review = await screen.findByLabelText('changeOver.acknowledge');
-  const confirm = () => within(document.getElementById('watch-review')!).getByRole('button', { name: 'watch.assume' }) as HTMLButtonElement;
-  expect(confirm().disabled).toBe(true);
+  const review = await screen.findByRole('button', { name: 'handoffDesk.assume' });
+  expect((review as HTMLButtonElement).disabled).toBe(false);
   expect(screen.queryByLabelText('changeOver.password')).toBeNull();
-  fireEvent.click(review); fireEvent.click(confirm());
+  expect(screen.queryByRole('checkbox')).toBeNull();
+  fireEvent.click(review);
   await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source: 'web', preparationId: 'prep', reviewedRevision: 'a', acknowledged: true, operationId: expect.any(String) })));
   expect(api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);
 });
-it('requires another acknowledgment when current watch activity changes', async () => {
+it('blocks review when the current revision differs from the saved handoff even without a stale flag', async () => {
   useIncoming(); const cache = mount();
-  fireEvent.click(await screen.findByLabelText('changeOver.acknowledge'));
-  cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), snapshot: { ...snapshot, revision: 'b' } });
-  await waitFor(() => expect((screen.getByLabelText('changeOver.acknowledge') as HTMLInputElement).checked).toBe(false));
+  await screen.findByRole('button', { name: 'handoffDesk.assume' });
+  await act(async () => { cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), snapshot: { ...snapshot, revision: 'b' } }); });
+  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true));
+  expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
 });
-it('clears review and disables watch assumption when offline', async () => {
+it('disables explicit reviewed watch assumption when offline', async () => {
   useIncoming(); mount();
-  fireEvent.click(await screen.findByLabelText('changeOver.acknowledge'));
+  await screen.findByRole('button', { name: 'handoffDesk.assume' });
   Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
   fireEvent(window, new Event('offline'));
-  await screen.findByText('changeOver.offline');
-  expect((screen.getByLabelText('changeOver.acknowledge') as HTMLInputElement).checked).toBe(false);
-  for (const button of screen.getAllByRole('button', { name: 'watch.assume' })) expect((button as HTMLButtonElement).disabled).toBe(true);
+  await waitFor(() => expect(screen.getAllByText('changeOver.offline').length).toBeGreaterThan(0));
+  expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true);
+  expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
 });
 it('keeps the top Workday card limited to shift and on-call controls', async () => {
   mount();
@@ -266,12 +300,9 @@ it('keeps the top Workday card limited to shift and on-call controls', async () 
   expect(screen.getAllByRole('combobox')).toHaveLength(2);
 });
 
-it('uses browser history for the Dashboard back button', async () => {
-  const back = vi.spyOn(window.history, 'back').mockImplementation(() => undefined);
+it('returns from the Dashboard to Work Hub through its back link', async () => {
   mount();
-  fireEvent.click(await screen.findByTestId('button-back'));
-  expect(back).toHaveBeenCalledOnce();
-  back.mockRestore();
+  expect((await screen.findByTestId('button-back')).getAttribute('href')).toBe('/work-hub');
 });
 
 it('does not duplicate the original watch command while canonical recovery is pending', async () => {
@@ -284,11 +315,112 @@ it('does not duplicate the original watch command while canonical recovery is pe
     return base(path,body);
   });
   const cache=mount();
-  fireEvent.click(await screen.findByLabelText('changeOver.acknowledge'));
-  fireEvent.click(within(document.getElementById('watch-review')!).getByRole('button',{name:'watch.assume'}));
+  fireEvent.click(await screen.findByRole('button',{name:'handoffDesk.assume'}));
   await screen.findByText('Lost response');
   await cache.invalidateQueries({queryKey:['change-over-state']});
   await waitFor(()=>expect(api.mock.calls.some(([path])=>path.includes('/watch/operations/'))).toBe(true));
   const writes=api.mock.calls.filter(([path])=>path.endsWith('/watch/assume'));
   expect(writes).toHaveLength(1);
+});
+
+it('retries the immutable original watch command only after an explicit null-receipt readback', async () => {
+  const base = api.getMockImplementation()!;
+  let current = incomingState();
+  let attempts = 0;
+  api.mockImplementation(async (path, body) => {
+    if (path.endsWith('/state')) return current;
+    if (path.includes('/watch/operations/')) return { receipt: null };
+    if (path.endsWith('/watch/assume')) {
+      attempts++;
+      if (attempts === 1) throw new Error('Lost original response');
+      return { id: 'original-watch-receipt' };
+    }
+    return base(path, body);
+  });
+  const cache = mount();
+  fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.assume' }));
+  await screen.findByText('Lost original response');
+  const original = structuredClone(api.mock.calls.find(([path]) => path.endsWith('/watch/assume'))!);
+  current = { ...incomingState(), preparation: { ...state().preparation, id: 'later-preparation', notes: 'Later notes' }, snapshot: { ...snapshot, revision: 'later-revision' }, stale: true };
+  await act(async () => { await cache.invalidateQueries({ queryKey: ['change-over-state'] }); });
+  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true));
+  expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
+  const beforeRetry = api.mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
+  await waitFor(() => expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(2));
+  const retries = api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'));
+  expect(retries[1]).toEqual(original);
+  expect(retries[1][1]).toEqual(expect.objectContaining({ preparationId: 'prep', reviewedRevision: 'a', acknowledged: true }));
+  expect(api.mock.calls.slice(beforeRetry)[0][0]).toBe(`/gate/watch/operations/${original[1].operationId}`);
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'handoffDesk.checkRequest' })).toBeNull());
+});
+
+it('does not resend an uncertain watch command when canonical readback fails', async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation(async (path, body) => {
+    if (path.endsWith('/state')) return incomingState();
+    if (path.includes('/watch/operations/')) throw new Error('Cannot read watch receipt');
+    if (path.endsWith('/watch/assume')) throw new Error('Lost response');
+    return base(path, body);
+  });
+  mount();
+  fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.assume' }));
+  await screen.findByText('Lost response');
+  const beforeCheck = api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length;
+  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
+  await screen.findByText('Cannot read watch receipt');
+  expect(api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length).toBeGreaterThan(beforeCheck);
+  expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
+  expect(screen.getByRole('button', { name: 'handoffDesk.checkRequest' })).toBeTruthy();
+  expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it('keeps initial no-watch assumption disabled after a lost response and failed receipt readback', async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation(async (path, body) => {
+    if (path.endsWith('/state')) return { ...state(), shift: null, preparation: null, snapshot: null };
+    if (path.includes('/watch/operations/')) throw new Error('Cannot verify initial watch request');
+    if (path.endsWith('/watch/assume')) throw new Error('Lost initial watch response');
+    return base(path, body);
+  });
+  mount();
+  const assume = await screen.findByRole('button', { name: 'watch.assume' }) as HTMLButtonElement;
+  expect(assume.disabled).toBe(false);
+  fireEvent.click(assume);
+  await screen.findByText('Lost initial watch response');
+  await waitFor(() => expect(assume.disabled).toBe(true));
+  const original = api.mock.calls.find(([path]) => path.endsWith('/watch/assume'))!;
+  expect(original[1]).toEqual({ operationId: expect.any(String), source: 'web' });
+  fireEvent.click(assume);
+  expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
+
+  const beforeCheck = api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length;
+  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
+  await screen.findByText('Cannot verify initial watch request');
+  expect(api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length).toBeGreaterThan(beforeCheck);
+  expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
+  expect(assume.disabled).toBe(true);
+  expect(screen.getByRole('button', { name: 'handoffDesk.checkRequest' })).toBeTruthy();
+});
+
+it('accepts an existing canonical receipt without resending the watch command', async () => {
+  const base = api.getMockImplementation()!;
+  let receipt: { id: string } | null = null;
+  api.mockImplementation(async (path, body) => {
+    if (path.endsWith('/state')) return incomingState();
+    if (path.includes('/watch/operations/')) return { receipt };
+    if (path.endsWith('/watch/assume')) throw new Error('Lost response');
+    return base(path, body);
+  });
+  mount();
+  fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.assume' }));
+  await screen.findByText('Lost response');
+  await waitFor(() => expect(api.mock.calls.some(([path]) => path.includes('/watch/operations/'))).toBe(true));
+  receipt = { id: 'saved-watch-receipt' };
+  const beforeCheck = api.mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'handoffDesk.checkRequest' })).toBeNull());
+  expect(api.mock.calls.slice(beforeCheck).some(([path]) => path.includes('/watch/operations/'))).toBe(true);
+  expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
+  expect(api.mock.calls.slice(beforeCheck).some(([path]) => path.endsWith('/state'))).toBe(true);
 });
