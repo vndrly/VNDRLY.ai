@@ -40,4 +40,5 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-web-extras .text-black { color: #ececec; }
 .hub-web-extras .text-muted-foreground { color: #b3b3b3; }
 .hub-web-extras [aria-label="Work Hub snapshot"] { margin-bottom: 12px; }
+.hub-account-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0 22px; }
 @media (max-width: 767px) { .hub-home-columns, .hub-gate-rows { grid-template-columns: minmax(0, 1fr); gap: 12px; } .hub-gate-rows { gap: 0; } main:has(.work-hub-home) { padding: 16px; } }
