@@ -125,7 +125,9 @@ jobs:
             test "$attempt" -lt 20
             sleep 0.25
           done
-          REDIS_TEST_URL=redis://127.0.0.1:56379/15 pnpm run test:api -- src/lib/bucket-store.redis.integration.test.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-redis-tests.log"
+          # Invoke the wrapper directly: nested `pnpm run ... -- <file>` adds
+          # another -- and Vitest ignores the intended file filter.
+          REDIS_TEST_URL=redis://127.0.0.1:56379/15 pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run --no-file-parallelism src/lib/bucket-store.redis.integration.test.ts 2>&1 | tee "$RUNNER_TEMP/vndrly-redis-tests.log"
 
       - name: Independent database-backed API gate
         id: api

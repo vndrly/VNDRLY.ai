@@ -202,9 +202,23 @@ test("release verification exercises the real Redis bucket store on loopback", (
   );
   assert.match(redis, /redis-server/);
   assert.match(redis, /REDIS_TEST_URL=redis:\/\/127\.0\.0\.1:56379\/15/);
-  assert.match(redis, /pnpm run test:api -- src\/lib\/bucket-store\.redis\.integration\.test\.ts/);
+  assert.match(redis, /exec tsx scripts\/run-with-test-db\.ts -- corepack pnpm exec vitest run --no-file-parallelism src\/lib\/bucket-store\.redis\.integration\.test\.ts/);
   assert.match(redis, /bucket-store\.redis\.integration\.test\.ts/);
   assert.doesNotMatch(redis, /secrets\.|continue-on-error|\|\|\s*true/);
+});
+
+test("the Redis command passes its single file as a real Vitest filter", () => {
+  const redis = namedStep("Real Redis integration");
+  const inner = redis.match(/exec vitest ([^\r\n]+?) 2>&1/)?.[1];
+  assert.ok(inner, "invoke the isolated wrapper directly so nested pnpm does not add an extra --");
+  const apiRequire = createRequire(new URL("../../artifacts/api-server/package.json", import.meta.url));
+  const vitestNode = pathToFileURL(apiRequire.resolve("vitest/node")).href;
+  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", `
+    import { parseCLI } from ${JSON.stringify(vitestNode)};
+    console.log(JSON.stringify(parseCLI(${JSON.stringify(["vitest", ...inner.trim().split(/\s+/)])}).filter));
+  `], { encoding: "utf8", windowsHide: true });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), ["src/lib/bucket-store.redis.integration.test.ts"]);
 });
 
 test("migration evidence upgrades the pinned previous schema before replaying the real commands", () => {
