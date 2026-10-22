@@ -69,7 +69,10 @@ test("gate watch survives sign-out and transfers only after the incoming account
     await page
       .getByRole("button", { name: "Assume Watch", exact: true })
       .last().click();
-    await expect(page.getByRole("button", {name:"Handover Watch",exact:true})).toBeVisible();
+    await expect.poll(async () => (await pool.query(
+      "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
+    )).rows).toEqual([{ operator_id: outgoing.userId }]);
+    await expect(page.getByRole("button", { name: "Prepare handoff", exact: true })).toBeEnabled();
     await page
       .getByRole("textbox", { name: "Anything the next shift should know?", exact: true })
       .fill("Inspect the north barrier before admitting heavy loads.");
@@ -88,7 +91,11 @@ test("gate watch survives sign-out and transfers only after the incoming account
     expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
     await page.getByRole('checkbox',{name:/I have reviewed this handoff/}).check();
     await page.locator('#watch-review').getByRole('button',{name:'Assume Watch',exact:true}).click();
-    await expect(page.getByRole('button',{name:'Handover Watch',exact:true})).toBeVisible();
+    await expect.poll(async () => (await pool.query(
+      "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
+    )).rows).toEqual([{ operator_id: incoming.userId }]);
+    await expect(page.getByRole("textbox", { name: "Anything the next shift should know?", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Prepare handoff", exact: true })).toBeEnabled();
     expect((await pool.query("SELECT session_version FROM users WHERE id=ANY($1::int[]) ORDER BY id",[[outgoing.userId,incoming.userId]])).rows.map(row=>row.session_version)).toEqual([1,1]);
     expect((await pool.query("SELECT count(*)::int AS count FROM assistant_action_audit WHERE target_type='workday' AND user_id=ANY($1::int[])",[[outgoing.userId,incoming.userId]])).rows[0].count).toBe(0);
     await page.goto(`/gate/shift-notes?siteId=${site.id}&stationId=${gate}`,{waitUntil:'domcontentloaded'});

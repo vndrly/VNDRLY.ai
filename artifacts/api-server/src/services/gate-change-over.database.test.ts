@@ -199,7 +199,7 @@ describe("Change Over database guarantees", () => {
       pool.query("DELETE FROM gate_stations WHERE id=$1", [f.station]),
     ).rejects.toThrow(/foreign key/);
   });
-  it("lists only an operator's current site and sites with an active or future assigned shift", async () => {
+  it("lists the company's authorized contracted sites and active gates without requiring an individual schedule", async () => {
     const f = await fixture();
     const scheduledSite = (
       await pool.query(
@@ -255,7 +255,7 @@ describe("Change Over database guarantees", () => {
       [scheduledSite],
     );
     const stations = await listChangeOverStations(f.outgoing, scheduledSite);
-    expect(stations.map((station) => station.name)).toEqual(["Scheduled gate", "Unassigned gate"]);
+    expect(stations.map((station) => station.name).sort()).toEqual(["Main gate", "Scheduled gate", "Unassigned gate"]);
   });
   it("grounds askV field answers in current state and refuses unrelated sites", async () => {
     const f = await fixture();
