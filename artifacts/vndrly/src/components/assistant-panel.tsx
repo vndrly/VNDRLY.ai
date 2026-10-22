@@ -320,8 +320,13 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
     if (tokenMode || signupMode || textOnly) return;
     speakAskV(text);
   }, [textOnly, tokenMode, signupMode]);
-  const legacyAssistant = useAssistant({ tokenMode, signupMode: effectiveSignupMode, pageContext, onAssistantReply: handleAssistantReply });
+  const legacyAssistant = useAssistant({ tokenMode, signupMode: effectiveSignupMode, pageContext, onAssistantReply: handleAssistantReply, liveUpdates: false });
   const sharedAssistant = !tokenMode && !signupMode ? voiceSession.assistant : undefined;
+  useEffect(() => {
+    if (tokenMode || signupMode) return;
+    voiceSession.setPanelOpen?.(open);
+    return () => voiceSession.setPanelOpen?.(false);
+  }, [open, signupMode, tokenMode, voiceSession.setPanelOpen]);
   const {
     messages,
     conversationId,

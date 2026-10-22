@@ -168,6 +168,8 @@ export interface AssistantOptions {
   signupMode?: { persona: "partner" | "vendor"; lang?: SignupAssistantLang };
   /** Called when a streamed assistant reply finishes. */
   onAssistantReply?: (text: string) => void;
+  /** Keep the cross-device event stream closed while no assistant UI is open. */
+  liveUpdates?: boolean;
 }
 
 /**
@@ -186,6 +188,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   // turn" behaviour, just hitting different endpoints. Collapsing
   // them into one flag here keeps the rest of the hook readable.
   const stateless = tokenMode !== null || signupMode !== null;
+  const liveUpdates = opts.liveUpdates ?? true;
 
   // Track the latest signup language hint in a ref so toggling EN/ES
   // in the panel header is picked up by the next `send` without
@@ -507,7 +510,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   // conversation instead of copying message text through the event stream,
   // and never replace a local in-flight turn.
   useEffect(() => {
-    if (stateless || streaming || typeof EventSource === "undefined") return;
+    if (!liveUpdates || stateless || streaming || typeof EventSource === "undefined") return;
     const source = new EventSource(`${BASE}/api/work-hub/events`, { withCredentials: true });
     let closed = false;
     const refresh = async (event: Event) => {
@@ -548,7 +551,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
       for (const eventName of eventNames) source.removeEventListener(eventName, refresh);
       source.close();
     };
-  }, [conversationId, stateless, streaming]);
+  }, [conversationId, liveUpdates, stateless, streaming]);
 
   // ── Pre-auth → post-auth hand-off ────────────────────────────
   // Whenever the panel runs in signupMode, mirror the visible chat

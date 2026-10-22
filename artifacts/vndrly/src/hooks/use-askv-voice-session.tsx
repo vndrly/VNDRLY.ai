@@ -24,6 +24,7 @@ interface AskVVoiceSessionValue {
   muted: boolean; acrossVndrly: boolean; wakeSupported: boolean; wakeReady: boolean;
   availabilityStatus: AskVVoiceAvailabilityStatus;
   assistant?: ReturnType<typeof useAssistant>;
+  setPanelOpen?: (open: boolean) => void;
   startConversation: (seed?: string, path?: string) => Promise<void>;
   closePanel: () => void; stop: () => void; setMuted: (muted: boolean) => void;
   sendText: (text: string) => Promise<void>;
@@ -44,6 +45,7 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   const [acrossVndrly, setAcross] = useState(() => userId != null && readAskVAcrossVndrly(userId));
   const [foreground, setForeground] = useState(() => document.visibilityState !== 'hidden');
   const [enabled, setEnabled] = useState(isAskVNaturalVoiceEnabled);
+  const [panelOpen, setPanelOpen] = useState(false);
   const browserAvailability = useMemo(currentBrowserVoiceAvailability, []);
   const [permissionAvailability, setPermissionAvailability] = useState<AskVVoiceAvailability>({ status: 'available', message: null });
   const [serverAvailability, setServerAvailability] = useState<AskVVoiceAvailability | null>(null);
@@ -64,7 +66,7 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   }, []);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [microphoneOwner, setMicrophoneOwner] = useState(askVMicrophone.owner);
-  const assistant = useAssistant({ pageContext: { path: location } });
+  const assistant = useAssistant({ pageContext: { path: location }, liveUpdates: panelOpen });
   const latestAssistant = useRef(assistant); latestAssistant.current = assistant;
   const saveQueue = useRef(new AskVTranscriptQueue()); const mounted = useRef(true);
   const voice = useAskVRealtime({ acrossVndrly,
@@ -191,11 +193,11 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AskVVoiceSessionValue>(() => ({ state: muted ? 'muted' : unavailable ? 'error' : voice.state,
     error: voice.error ?? wake.error ?? historyError ?? (unavailable ? clientAvailability.message : null), greeting: voice.greeting, muted, acrossVndrly,
     availabilityStatus: clientAvailability.status,
-    wakeSupported: wake.supported, wakeReady: wake.ready, assistant, startConversation, closePanel,
+    wakeSupported: wake.supported, wakeReady: wake.ready, assistant, setPanelOpen, startConversation, closePanel,
     stop, setMuted, sendText,
   }), [voice.state, voice.error, voice.greeting, stop, wake.error, wake.supported, wake.ready, historyError, unavailable, clientAvailability.message, clientAvailability.status, muted, acrossVndrly, assistant, startConversation, closePanel, setMuted, sendText]);
   return <AskVVoiceSessionContext.Provider value={value}>{children}</AskVVoiceSessionContext.Provider>;
 }
 const fallback: AskVVoiceSessionValue = { state: 'stopped', error: null, greeting: null, muted: false, acrossVndrly: false,
-  availabilityStatus: 'available', wakeSupported: false, wakeReady: false, startConversation: async () => {}, closePanel: () => {}, stop: () => {}, setMuted: () => {}, sendText: async () => {} };
+  availabilityStatus: 'available', wakeSupported: false, wakeReady: false, setPanelOpen: () => {}, startConversation: async () => {}, closePanel: () => {}, stop: () => {}, setMuted: () => {}, sendText: async () => {} };
 export function useAskVVoiceSession(): AskVVoiceSessionValue { return useContext(AskVVoiceSessionContext) ?? fallback; }
