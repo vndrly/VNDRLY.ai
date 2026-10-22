@@ -257,7 +257,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const portalNavItems = useNavItems(user);
   const siteFleetAccess = useQuery({ queryKey: ["fleet-site-choices", `${user?.userId}:${user?.activeMembershipId}:${user?.partnerId}`], queryFn: fleetClient.siteChoices, enabled: Boolean(user?.partnerId), retry: false, staleTime: 30_000 });
   const canReadFleetSites = !siteFleetAccess.isError && siteFleetAccess.data?.capabilities.canReadSiteActivity === true;
-  const canEnterFleet = Boolean(fleetAccess.data?.capabilities.canSetup || (fleetAccess.data?.enabled && (fleetAccess.data.capabilities.canDispatch || fleetAccess.data.capabilities.canDrive || fleetAccess.data.capabilities.canManage)));
+  const canEnterFleet = Boolean(fleetAccess.data?.enabled && (fleetAccess.data.capabilities.canSetup || fleetAccess.data.capabilities.canDispatch || fleetAccess.data.capabilities.canDrive || fleetAccess.data.capabilities.canManage));
   const supportFleetAccess = useQuery({queryKey:["fleet-support-choices", `${user?.userId}:${user?.activeMembershipId}`],queryFn:fleetClient.supportChoices,enabled:user?.role==="admin",retry:false,staleTime:30_000});
   const supportNav = !supportFleetAccess.isError && supportFleetAccess.data?.companies.length ? [{key:"fleet-support",href:"/fleet/support",label:fleetText.support,icon:Gauge}] : [];
   const standardNavItems = orderPortalNavigation(canEnterFleet ? [...portalNavItems, { key: "fleet", href: "/fleet", label: fleetText.workspace, icon: Gauge }] : canReadFleetSites ? [...portalNavItems, { key: "fleet-site-activity", href: "/fleet/site-activity", label: fleetText.siteActivity, icon: Gauge }] : [...portalNavItems, ...supportNav], user?.role);
