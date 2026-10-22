@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { changeNativeOnCall, readNativeOperations } from "@/lib/native-operations";
 import type { NativeOperationsStatus } from "@/lib/native-operations-policy";
-import WorkdayStatusText from "./WorkdayStatusText";
+import WorkdayStatusSwitch from "./WorkdayStatusSwitch";
 
 export default function OnCallPill({ shiftActive }: { shiftActive: boolean }) {
   const { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
@@ -26,5 +26,5 @@ export default function OnCallPill({ shiftActive }: { shiftActive: boolean }) {
     catch { if (current()) setError(es ? "No se pudo verificar el cambio." : "On-call change not verified."); }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
-  return <View style={{ alignItems: "flex-end", gap: 4 }}><WorkdayStatusText active={active} disabled={busy || !status || !status.policy.enabled} label={active ? (es ? "De guardia" : "On Call") : (es ? "Sin guardia" : "Not on Call")} onPress={() => void toggle()} />{error ? <Text accessibilityRole="alert" style={{ color: "#e2e8f0", fontSize: 11 }}>{error}</Text> : null}</View>;
+  return <View style={{ flexShrink: 1, alignItems: "flex-end", gap: 4 }}><WorkdayStatusSwitch accessibilityLabel={es ? "Guardia" : "On Call"} active={active} disabled={busy || !status || !status.policy.enabled} label={active ? (es ? "De guardia" : "On Call") : (es ? "Sin guardia" : "Not on Call")} onPress={() => void toggle()} />{error ? <Text accessibilityRole="alert" style={{ color: "#e2e8f0", fontSize: 11 }}>{error}</Text> : null}</View>;
 }

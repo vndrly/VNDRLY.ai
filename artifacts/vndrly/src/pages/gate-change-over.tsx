@@ -1,4 +1,4 @@
-import WorkdayStatusText from "@/components/workday-status-text";
+import WatchPassControl from "@/components/watch-pass-control";
 import WorkdayControls from "@/components/workday-controls";
 import DashboardTasks from "@/components/work-hub/dashboard-tasks";
 import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
@@ -281,7 +281,7 @@ export default function GateChangeOverPage({
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
       </div>
-      {!history && <WorkdayControls watchControl={<WorkdayStatusText active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onClick={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) document.getElementById("watch-review")?.scrollIntoView({ behavior: "smooth" }); else void act(assumeWatch); }} />} />}
+      {!history && <WorkdayControls watchControl={<WatchPassControl active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onClick={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) document.getElementById("watch-review")?.scrollIntoView({ behavior: "smooth" }); else void act(assumeWatch); }} />} />}
       {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
       <div
         className={history

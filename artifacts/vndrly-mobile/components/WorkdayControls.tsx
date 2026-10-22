@@ -8,7 +8,7 @@ import {openNativeFleetWorkStorage} from "@/lib/fleet-work-journal-native";
 import {changeNativeDuty} from "@/lib/native-operations";
 import * as Crypto from "expo-crypto";
 import ShiftPill from "@/components/ShiftPill";
-import WorkdayStatusText from "./WorkdayStatusText";
+import WorkdayStatusSwitch from "./WorkdayStatusSwitch";
 import OnCallPill from "./OnCallPill";
 type Controller=ReturnType<typeof createWorkdayController>;
 export default function WorkdayControls({watchControl}:{watchControl?:React.ReactNode}={}){const {user,activeMembership}=useAuth();if(!user||!activeMembership)return null;const identity=JSON.stringify([activeMembership.orgType,activeMembership.orgId,user.id,activeMembership.id]);return <Controls watchControl={watchControl} key={identity} identity={identity} userId={user.id} memberId={activeMembership.id} orgType={activeMembership.orgType} orgId={activeMembership.orgId}/>;}
@@ -33,8 +33,8 @@ function Controls({identity,userId,memberId,orgType,orgId,watchControl}:{watchCo
   if(orgType==="vendor")void changeNativeDuty(ending?"end":"start").then(()=>import("@/lib/duty-background-location")).then(module=>module.synchronizeDutyBackgroundLocation()).catch(()=>undefined);
   await refresh();
  }catch(error){if(current())setMessage(error instanceof Error?error.message:"Workday unavailable");}finally{if(current())setBusy(false);}}
- return <View accessibilityLabel={es?"Jornada laboral":"Workday"} style={{padding:8,borderWidth:2,borderColor:brand.primary,borderRadius:10,backgroundColor:"#373b40",gap:8}}>
- <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:8}}><WorkdayStatusText active={state?.onShift===true} disabled={busy||!state||state.held} label={state?.onShift?(es?"Finalizar turno":"End Shift"):(es?"Iniciar turno":"Start Shift")} onPress={()=>void record()}/>{wide&&watchControl?<View style={{flex:1,alignItems:"center"}}>{watchControl}</View>:null}<OnCallPill shiftActive={state?.onShift===true}/></View>
+ return <View accessibilityLabel={es?"Jornada laboral":"Workday"} style={{padding:8,borderWidth:2,borderColor:brand.primary,borderRadius:10,backgroundColor:"#242426",gap:8}}>
+ <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:8}}><WorkdayStatusSwitch accessibilityLabel={es?"Turno":"Shift"} active={state?.onShift===true} disabled={busy||!state||state.held} label={state?.onShift?(es?"Finalizar turno":"End Shift"):(es?"Iniciar turno":"Start Shift")} onPress={()=>void record()}/>{wide&&watchControl?<View style={{flex:1,alignItems:"center"}}>{watchControl}</View>:null}<OnCallPill shiftActive={state?.onShift===true}/></View>
  {watchControl&&!wide ? <View style={{alignItems:"center"}}>{watchControl}</View> : null}
  {state?.priorPending?<View><Text style={{color:"#ffffff"}}>{state.priorPending} {es?"originales de sesiones anteriores":"originals from earlier sign-ins"}</Text><TextInput accessibilityLabel={es?"Motivo de recuperación":"Recovery reason"} value={recoveryReason} onChangeText={setRecoveryReason} style={{color:"#ffffff"}}/><ShiftPill active={false} disabled={busy||!recoveryReason.trim()} label={es?"Recuperar originales":"Recover originals"} onPress={()=>void recover()}/></View>:null}
  {state?.pending?<Text style={{color:"#f8fafc"}}>{state.pending} {es?"pendientes de sincronizar":"pending sync"}</Text>:null}{state?.held?<Text accessibilityRole="alert" style={{color:"#ffffff"}}>{es?"Revisión necesaria; originales conservados":"Review needed; originals retained"}</Text>:null}{message&&!state?.pending?<Text style={{color:"#e2e8f0",fontSize:12}}>{message}</Text>:null}

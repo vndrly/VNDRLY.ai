@@ -1,4 +1,4 @@
-import WorkdayStatusText from "@/components/WorkdayStatusText";
+import WatchPassControl from "@/components/WatchPassControl";
 import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
@@ -393,7 +393,7 @@ export default function GateChangeOver({
           </View>
           <AskVVoiceIndicator inline />
         </View>
-        {!history && <WorkdayControls watchControl={<WorkdayStatusText active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onPress={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) scroll.current?.scrollTo({ y: reviewY.current, animated: true }); else void act(assumeWatch); }} />} />}
+        {!history && <WorkdayControls watchControl={<WatchPassControl active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onPress={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) scroll.current?.scrollTo({ y: reviewY.current, animated: true }); else void act(assumeWatch); }} />} />}
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
         {params.gateMode === "1" && (
           <TogglePillButton compactOnTablet onPress={() => router.replace("/(tabs)" as never)}>

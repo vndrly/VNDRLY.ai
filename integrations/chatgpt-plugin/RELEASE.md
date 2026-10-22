@@ -1,6 +1,6 @@
 # VNDRLY plugin 1.22.1
 
-Matches the calendar navigation and compact summary refinements across web and iOS, plus origin-wide locking for encrypted browser offline work. Existing MCP tools, embedded views, five service skills, branding, account identity and grants are unchanged. This package does not establish physical device or provider acceptance.
+Matches the calendar navigation and compact summary refinements across web and iOS, grey/green shift and on-call sliders, explicit watch-key handover actions, plus origin-wide locking for encrypted browser offline work. Existing MCP tools, embedded views, five service skills, branding, account identity and grants are unchanged. This package does not establish physical device or provider acceptance.
 
 # VNDRLY plugin 1.22.0
 

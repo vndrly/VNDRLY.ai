@@ -14,17 +14,17 @@ beforeEach(() => {
 });
 const mount = () => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><OnCallControl identity="worker:1:company:4" /></QueryClientProvider>);
 it("toggles the actual on-call declaration independently from the shift clock", async () => {
-  mount(); const off = screen.getByRole("button", { name: "Not on Call" });
+  mount(); const off = screen.getByRole("switch", { name: "On Call" });
   await waitFor(() => expect(off.hasAttribute("disabled")).toBe(false));
   fireEvent.click(off);
-  expect(await screen.findByRole("button", { name: "On Call" })).toBeTruthy();
+  await waitFor(() => expect(screen.getByRole("switch", { name: "On Call" }).getAttribute("aria-checked")).toBe("true"));
   expect(state.request).toHaveBeenCalledWith("/on-call", expect.objectContaining({ method: "PUT", body: JSON.stringify({ active: true, consent: true }) }));
   expect(state.request.mock.calls.some(([path]) => path.includes("workday") || path.includes("duty"))).toBe(false);
 });
 it("keeps unavailable on-call data disabled instead of guessing a state", async () => {
   state.request.mockRejectedValue(new Error("offline")); mount();
   expect(await screen.findByText("On-call unavailable")).toBeTruthy();
-  const control = screen.getByRole("button", { name: "Not on Call" });
+  const control = screen.getByRole("switch", { name: "On Call" });
   expect(control.hasAttribute("disabled")).toBe(true); fireEvent.click(control);
   expect(state.request.mock.calls.some(([path]) => path === "/on-call")).toBe(false);
 });
