@@ -14,6 +14,7 @@ import { WorkHubPageHeading } from "./chrome";
 import { ActivityDashboard } from "./activity-dashboard";
 import { AccountWorkspace, canUseGateWorkspace } from "./account-workspace";
 import { WorkspacePanel as HomeCard, WorkspaceRow as HomeRow } from "./workspace-panel";
+import DashboardTasks from "./dashboard-tasks";
 import "./home.css";
 
 type Row = Record<string, any>;
@@ -90,7 +91,7 @@ export function WorkHubHome() {
       <HomeCard title={c("Today", "Hoy")} subtitle={c("Your schedule, work, and priorities", "Su horario, trabajo y prioridades")} icon={Sun}>
         <HomeRow icon={CalendarDays} label={c("Calendar", "Calendario")} value={count(calendar?.length, c("upcoming", "próximos"))} href="/work-hub/calendar" />
         <HomeRow icon={Clock3} label={user?.managedSubcontractor ? c("My Hours", "Mis horas") : c("My Work", "Mi trabajo")} value={user?.managedSubcontractor ? c("Open", "Abrir") : count(workCount)} href={user?.managedSubcontractor ? "/work-hub/calendar" : undefined} onClick={() => toggle("work")} expanded={user?.managedSubcontractor ? undefined : panel === "work"} />
-        <HomeRow icon={Bell} label={c("Needs Attention", "Requiere atención")} value={count(attentionCount)} onClick={() => document.getElementById("hub-home-attention")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+        <HomeRow icon={Bell} label={c("Needs Attention", "Requiere atención")} value={count(attentionCount)} href="/notifications" />
         <HomeRow icon={Shield} label={c("Safety", "Seguridad")} value={count(safety.isSuccess ? pending.length : undefined)} onClick={() => toggle("safety")} expanded={panel === "safety"} />
         <HomeRow icon={CheckSquare2} label={c("Tasks & Forms", "Tareas y formularios")} value={count(activeTasks?.length)} href="/work-hub/tasks" />
       </HomeCard>
@@ -113,7 +114,7 @@ export function WorkHubHome() {
           {gateCoverage.isError && <p role="status">{unavailable}</p>}
         </div>}
       </HomeCard>}
-
+      <DashboardTasks />
     </div>
     <section aria-label={c("More tools", "Más herramientas")}><h2 className="hub-tools-title">{c("More tools", "Más herramientas")}</h2><div className="hub-home-tools">{utilities.map(({ label, icon: Icon, href }) => <Link className="hub-tool" href={href} key={href}><Icon aria-hidden="true" />{label}</Link>)}</div></section>
     {panel === "work" && <section className="hub-home-card hub-detail" aria-label={c("My Work", "Mi trabajo")}><h2>{c("My Work", "Mi trabajo")}</h2>
@@ -134,17 +135,6 @@ export function WorkHubHome() {
       </div>
     </HomeCard>}
     <div className="hub-home-tools"><Link className="hub-tool" href="/work-hub/channels"><Users aria-hidden="true" />{brand.name} {c("Groups", "Grupos")}</Link><Link className="hub-tool" href="/work-hub/native-work"><Smartphone aria-hidden="true" />{c("Work phone & on-call", "Teléfono y guardia")}</Link></div>
-    <section id="hub-home-attention" className="hub-home-card hub-detail" aria-label="Needs Attention"><h2>{c("Needs Attention", "Requiere atención")}</h2>
-      <ActivityDashboard home={home.isSuccess ? home.data : undefined} onAcknowledge={id => acknowledge.mutate(id)} acknowledging={acknowledge.isPending} />
-      {acknowledge.isError && <p role="alert">{c("Acknowledgement could not be saved. Please retry.", "No se pudo guardar la confirmación. Inténtelo de nuevo.")}</p>}
-      {attentionNotices?.map(row => <Link key={row.id} href={row.link?.startsWith("/") && !row.link.startsWith("//") ? row.link : "/notifications"} className="hub-record"><Bell aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>)}
-      {pending.map(row => <Link key={`safety:${row.id}`} href={`/safety/${row.id}`} className="hub-record"><Shield aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>)}
-      {activeTasks?.filter(task => Date.parse(task.updatedAt ?? task.createdAt ?? "") < now - 30 * 86400000).map(task => <Link key={task.id} href={`/work-hub/tasks?task=${encodeURIComponent(task.id)}`} className="hub-record">{task.title}<small>{c("No action for 30 days", "Sin actividad durante 30 días")}</small></Link>)}
-      <Link href="/notifications" className="hub-text-link">{c("Open all notifications", "Abrir todas las notificaciones")}</Link>
-      <section aria-label="Upcoming calendar"><h3>{c("Next on your calendar", "Próximo en su calendario")}</h3><ul>{calendar?.slice(0, 5).map(item => <li key={item.id}><Link className="hub-record" href={item.href}>{item.title} · {new Date(item.at).toLocaleString()}</Link></li>)}</ul>{calendar === undefined ? <p>{unavailable}</p> : !calendar.length && <p>{c("No upcoming items.", "No hay próximos elementos.")}</p>}</section>
-      <section aria-label="Documents needing review"><h3>{c("Needs review", "Por revisar")}</h3>{home.data?.reviewItems?.map((item: Row) => <Link className="hub-record" key={item.id} href={item.deepLink ?? "/work-hub/files"}>{item.title ?? item.fileName}</Link>)}{home.data?.reviewItems === undefined ? <Link href="/work-hub/files" className="hub-text-link">{c("Open Files & Notes to check reviews", "Abra Archivos y notas para consultar revisiones")}</Link> : !home.data.reviewItems.length && <p>{c("No documents need review.", "No hay documentos por revisar.")}</p>}</section>
-    </section>
-    <section className="hub-home-card hub-detail" aria-label="Recent activity"><h2>{c("Recent activity", "Actividad reciente")}</h2><div role="search" aria-label="Search activity"><input className="hub-search" aria-label="Filter activity" placeholder={c("Search activity", "Buscar actividad")} value={search} onChange={e => setSearch(e.target.value)} /></div>{activity.isError && <p role="alert">{unavailable}</p>}{activity.isPending && <p role="status">{c("Loading activity…", "Cargando actividad…")}</p>}{activity.data?.filter(row => `${row.body} ${row.channelName}`.toLowerCase().includes(search.toLowerCase())).map(row => <Link key={row.id} href={`/work-hub/chat?channel=${encodeURIComponent(row.channelId)}`} className="hub-record"><MessageSquare aria-hidden="true" /><span><strong>{row.channelName}</strong><small>{String(row.body).replace(/@\[(\d+)\]/g, (_, id) => `@${people.data?.find(person => String(person.userId ?? person.id) === id)?.displayName ?? c("teammate", "compañero")}`)}</small></span><ChevronRight aria-hidden="true" /></Link>)}{activity.isSuccess && !activity.data.length && <p>{c("Your activity will appear here as your team collaborates.", "Su actividad aparecerá aquí cuando su equipo colabore.")}</p>}</section>
     </section>
   </section>;
 }

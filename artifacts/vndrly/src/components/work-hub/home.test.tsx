@@ -33,10 +33,11 @@ describe("Work Hub home", () => {
     }}));
     vi.stubGlobal("fetch", mocks.fetch);
   });
-  it("keeps workforce and Tasks & Forms in Work Hub without the Dashboard Tasks panel", async () => {
+  it("places workforce and assigned-task multi-panel cards with the primary cards", async () => {
     mount();
     expect(await screen.findByRole("heading", { name: "Workforce" })).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "Tasks" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Tasks" })).toBeTruthy();
+    expect(screen.getByText("A task is an unticketed work assignment")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Tasks & Forms/ }).getAttribute("href")).toBe("/work-hub/tasks");
     fireEvent.click(await screen.findByRole("button", { name: /Coverage Gaps.*1 open/ }));
     const gap = await screen.findByRole("region", { name: "Coverage gap details" });
