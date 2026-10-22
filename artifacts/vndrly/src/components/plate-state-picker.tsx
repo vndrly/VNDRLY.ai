@@ -118,10 +118,15 @@ export function PlateStatePicker({
           className="w-[var(--radix-popover-trigger-width)] border-2 border-[color:var(--brand-primary)] bg-white p-2 text-gray-700"
           role="dialog"
         >
-          <Command label={t("plateStatePicker.search")} loop shouldFilter={false}>
+          <Command
+            className="bg-white text-gray-900"
+            label={t("plateStatePicker.search")}
+            loop
+            shouldFilter={false}
+          >
             <CommandInput
               aria-label={t("plateStatePicker.search")}
-              className="text-popover-foreground placeholder:text-popover-foreground/60"
+              className="text-gray-900 placeholder:text-gray-500"
               onValueChange={setQuery}
               placeholder={t("plateStatePicker.search")}
               value={query}
@@ -129,13 +134,16 @@ export function PlateStatePicker({
             <CommandList>
               <CommandEmpty>{t("plateStatePicker.noResults")}</CommandEmpty>
               {preferredOptions.length > 0 ? (
-                <CommandGroup heading={t("plateStatePicker.preferred")}>
+                <CommandGroup
+                  className="bg-white text-gray-900 [&_[cmdk-group-heading]]:text-gray-500"
+                  heading={t("plateStatePicker.preferred")}
+                >
                   {preferredOptions.map((state) => {
                     const isSelected = state.code === value;
                     return (
                       <CommandItem
                         aria-selected={isSelected}
-                        className="text-popover-foreground aria-selected:bg-[var(--brand-primary)] aria-selected:text-white data-[selected=true]:bg-[var(--brand-primary)] data-[selected=true]:text-white"
+                        className="bg-white text-gray-900 aria-selected:bg-[var(--brand-primary)] aria-selected:text-white data-[selected=true]:bg-[var(--brand-primary)] data-[selected=true]:text-white"
                         key={state.code}
                         onSelect={() => selectState(state.code)}
                         role="option"
@@ -152,13 +160,16 @@ export function PlateStatePicker({
                 </CommandGroup>
               ) : null}
               {remainingOptions.length > 0 ? (
-                <CommandGroup heading={t("plateStatePicker.all")}>
+                <CommandGroup
+                  className="bg-white text-gray-900 [&_[cmdk-group-heading]]:text-gray-500"
+                  heading={t("plateStatePicker.all")}
+                >
                   {remainingOptions.map((state) => {
                     const isSelected = state.code === value;
                     return (
                       <CommandItem
                         aria-selected={isSelected}
-                        className="text-popover-foreground aria-selected:bg-[var(--brand-primary)] aria-selected:text-white data-[selected=true]:bg-[var(--brand-primary)] data-[selected=true]:text-white"
+                        className="bg-white text-gray-900 aria-selected:bg-[var(--brand-primary)] aria-selected:text-white data-[selected=true]:bg-[var(--brand-primary)] data-[selected=true]:text-white"
                         key={state.code}
                         onSelect={() => selectState(state.code)}
                         role="option"

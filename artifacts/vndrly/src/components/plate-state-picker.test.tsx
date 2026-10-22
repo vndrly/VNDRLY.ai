@@ -102,11 +102,12 @@ describe("PlateStatePicker", () => {
     expect(dialog.className).toContain("bg-white");
     expect(dialog.className).toContain("border-[color:var(--brand-primary)]");
     const search = screen.getByRole("combobox", { name: "Search states" });
-    expect(search.className).toContain("text-popover-foreground");
-    expect(search.className).toContain("placeholder:text-popover-foreground/60");
+    expect(search.className).toContain("text-gray-900");
+    expect(search.className).toContain("placeholder:text-gray-500");
 
     for (const option of screen.getAllByRole("option")) {
-      expect(option.className).toContain("text-popover-foreground");
+      expect(option.className).toContain("bg-white");
+      expect(option.className).toContain("text-gray-900");
       expect(option.className).toContain("aria-selected:bg-[var(--brand-primary)]");
       expect(option.className).toContain("data-[selected=true]:bg-[var(--brand-primary)]");
     }
