@@ -11,18 +11,20 @@ import TogglePillButton from "@/components/TogglePillButton";
 import FleetChoiceField from "@/components/FleetChoiceField";
 import FleetInventory from "@/components/FleetInventory";
 import FleetDetailsLibrary from "@/components/FleetDetailsLibrary";
+import MapboxNativeMap from "@/components/MapboxNativeMap";
 import { readFleetYardActor, yardFeedback, yardScope, type FleetYardActor } from "./yard-client";
 
-type Custody = { version: number; observation: FleetCustodyObservation; location: FleetCustodyObservation & { inheritedFromAssetId?: string | null } };
+type Custody = { version: number; observation: FleetCustodyObservation; observedByName?: string | null; location: FleetCustodyObservation & { inheritedFromAssetId?: string | null } };
 type Attempt = ReturnType<typeof FleetCustodyObservationInputSchema.parse>;
 
 export default function AssetWorkspace({ initialAssetId, initialRunId }: { initialAssetId?: string; initialRunId?: string }) {
   const { user, activeMembership, activeMembershipId } = useAuth();
   const identity = { companyId: activeMembership?.orgId ?? user?.vendorId ?? 0, userId: user?.id ?? 0, membershipId: activeMembershipId ?? user?.activeMembershipId ?? 0 };
-  return <AssetWorkspaceContent key={`${identity.companyId}:${identity.userId}:${identity.membershipId}`} identity={identity} initialAssetId={initialAssetId} initialRunId={initialRunId} />;
+  const createNew = initialAssetId === "new";
+  return <AssetWorkspaceContent key={`${identity.companyId}:${identity.userId}:${identity.membershipId}`} identity={identity} initialAssetId={createNew ? undefined : initialAssetId} initialRunId={initialRunId} initialIntake={createNew} />;
 }
 
-function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { identity: { companyId: number; userId: number; membershipId: number }; initialAssetId?: string; initialRunId?: string }) {
+function AssetWorkspaceContent({ identity, initialAssetId, initialRunId, initialIntake = false }: { identity: { companyId: number; userId: number; membershipId: number }; initialAssetId?: string; initialRunId?: string; initialIntake?: boolean }) {
   const colors = useColors(), copy = useFleetCopy();
   const scope = useRef(captureAuthScope()), alive = useRef(true), lock = useRef(false), pending = useRef<Attempt | null>(null);
   const attemptedOperationId = useRef<string | null>(null);
@@ -34,7 +36,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
   const [search, setSearch] = useState(""), [intakeFleetId, setIntakeFleetId] = useState(""), [newName, setNewName] = useState(""), [newOwner, setNewOwner] = useState(""), [newCategory, setNewCategory] = useState("truck"), [newIdentifier, setNewIdentifier] = useState("");
   const intakePending = useRef<{ scope: ReturnType<typeof yardScope>; fleetId: string; asset: ReturnType<typeof FleetAssetCreateSchema.parse> } | null>(null);
   const [operation, setOperation] = useState<"intake" | "at_yard" | "attached" | "returned" | "transferred" | null>(null);
-  const [advanced, setAdvanced] = useState<"intake" | "details" | "history" | null>(initialAssetId ? "history" : null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState("");
+  const [advanced, setAdvanced] = useState<"intake" | "details" | "history" | null>(initialIntake ? "intake" : initialAssetId ? "history" : null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState("");
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
   const read = async <T,>(path: string): Promise<T> => {
     const value = await apiFetch<T>(path, {}, scope.current);
@@ -44,11 +46,11 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
   async function loadExactCustody(id: string) {
     const request = ++custodyRead.current;
     if (selectedAssetRef.current === id) setCustodyReady(false);
-    const value = await read<{ custody: { version: number; observation: unknown; location: unknown }[] }>(`/api/fleet/custody?assetId=${encodeURIComponent(id)}`);
+    const value = await read<{ custody: { version: number; observation: unknown; observedByName?: string | null; location: unknown }[] }>(`/api/fleet/custody?assetId=${encodeURIComponent(id)}`);
     const item = value.custody.find(row => (row.observation as FleetCustodyObservation).assetId === id);
     const observation = item ? FleetCustodyObservationSchema.parse(item.observation) : null;
     if (observation && observation.companyId !== identity.companyId) throw Error("Custody company scope mismatch.");
-    const exact = item && observation ? { version: item.version, observation, location: item.location as Custody["location"] } : null;
+    const exact = item && observation ? { version: item.version, observation, observedByName: item.observedByName ?? null, location: item.location as Custody["location"] } : null;
     if (current() && selectedAssetRef.current === id && custodyRead.current === request) { setSelectedCustody(exact); setCustodyReady(true); }
     return exact;
   }
@@ -68,7 +70,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
       const nextActor = await readFleetYardActor(identity, scope.current);
       const [inventoryRaw, yardsRaw, custodyRaw] = await Promise.all([
         read<unknown>("/api/fleet/yard-assets"), read<{ yards: unknown[] }>("/api/fleet/yards"),
-        read<{ custody: { version: number; observation: unknown; location: unknown }[] }>("/api/fleet/custody"),
+        read<{ custody: { version: number; observation: unknown; observedByName?: string | null; location: unknown }[] }>("/api/fleet/custody"),
       ]);
       const nextInventory = FleetInventorySchema.parse(inventoryRaw);
       const selectedAssetId = selectedAssetRef.current;
@@ -82,7 +84,7 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
       const nextCustody = custodyRaw.custody.map(value => {
         const observation = FleetCustodyObservationSchema.parse(value.observation);
         if (observation.companyId !== identity.companyId) throw Error("Custody company scope mismatch.");
-        return { version: value.version, observation, location: value.location as Custody["location"] };
+        return { version: value.version, observation, observedByName: value.observedByName ?? null, location: value.location as Custody["location"] };
       });
       if (!current()) return;
       setActor(nextActor); setInventory(nextInventory); setYards(nextYards); setCustody(nextCustody);
@@ -101,6 +103,14 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
   const currentCustody = custodyReady ? selectedCustody : null;
   const actualYard = currentCustody?.location?.yardId ?? currentCustody?.observation.yardId;
   const locationLabel = actualYard ? yards.find(yard => yard.id === actualYard)?.name ?? copy("Unknown Yard") : copy("No Yard location");
+  const location = currentCustody?.location;
+  const hasCoordinates = Number.isFinite(location?.latitude) && Number.isFinite(location?.longitude);
+  const verifiedLocation = currentCustody?.observation.method === "gate_scan" || currentCustody?.observation.method === "gps_geofence";
+  const custodyLabel = !currentCustody ? copy("Unknown") : verifiedLocation
+    ? `${currentCustody.observedByName ?? copy("Unknown")} (${copy("verified yard check-in")})`
+    : `${currentCustody.observedByName ?? copy("Unknown")} (${copy("last driver")})`;
+  const equipmentState = asset?.status === "checked_out" ? "in_use" : asset?.held || asset?.status !== "available" ? "unavailable" : "available";
+  const equipmentStateColor = equipmentState === "in_use" ? "#2563eb" : equipmentState === "available" ? "#16a34a" : "#64748b";
   const canManage = actor?.capabilities.some(value => ["admin", "dispatch", "yard"].includes(value));
   const canSelfCheckIn = actor?.capabilities.includes("driver") && !!initialRunId;
   function begin(next: typeof operation) { if (pending.current || !custodyReady) return; setOperation(next); setNote(""); setError(""); setYardId(next === "transferred" ? yards.find(yard => yard.id !== actualYard && yard.active)?.id ?? "" : actualYard ?? yards[0]?.id ?? ""); }
@@ -192,10 +202,20 @@ function AssetWorkspaceContent({ identity, initialAssetId, initialRunId }: { ide
     {!selectedId && inventory?.nextCursor && <TogglePillButton color="blue" disabled={busy} onPress={() => void loadMore()}>{copy("Load more assets")}</TogglePillButton>}
     {selectedId && asset && <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{asset.name}</Text>
+      <Text style={{ color: equipmentStateColor, fontWeight: "700" }}>{copy(equipmentState.replaceAll("_", " "))}</Text>
       <Text style={{ color: colors.mutedForeground }}>{copy(asset.category)} · {custodyReady ? copy(currentCustody?.observation.state.replaceAll("_", " ") ?? "No custody recorded") : copy("Loading custody")}</Text>
       <Text style={{ color: colors.text }}>{locationLabel}</Text>
+      <Text style={{ color: colors.text, fontWeight: "700" }}>{copy("Custody")}: {custodyLabel}</Text>
       {!!currentCustody?.location?.inheritedFromAssetId && <Text style={{ color: colors.mutedForeground }}>{copy("Location inherited from attached truck")} {currentCustody.location.inheritedFromAssetId}</Text>}
       {!!currentCustody && <View style={{ gap: 4 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{copy(({ gate_scan: "Gate scan", gps_geofence: "GPS geofence", manual: "Manual entry", driver_app: "Driver app" })[currentCustody.observation.method])} · {new Date(currentCustody.observation.observedAt).toLocaleString()}</Text><Text style={{ color: colors.text }}>{currentCustody.observation.notes}</Text></View>}
+      <View style={{ gap: 8 }}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>{copy("Equipment location")}</Text>
+        <View accessibilityLabel={copy(hasCoordinates ? verifiedLocation ? "Verified equipment location map" : "Last known equipment location map" : "Equipment location unavailable map")} style={{ opacity: hasCoordinates ? 1 : .34 }}>
+          <MapboxNativeMap height={240} controls={hasCoordinates} styleKind="street" viewKey={`asset-${asset.id}-${currentCustody?.observation.observedAt ?? "none"}`} points={hasCoordinates ? [{ id: asset.id, latitude: Number(location!.latitude), longitude: Number(location!.longitude), color: equipmentStateColor, label: asset.name, title: verifiedLocation ? copy("Verified equipment location") : copy("Last known equipment location") }] : []} center={hasCoordinates ? [Number(location!.longitude), Number(location!.latitude)] : undefined} />
+        </View>
+        <Text style={{ color: hasCoordinates ? equipmentStateColor : colors.mutedForeground, fontWeight: "700" }}>{copy(hasCoordinates ? verifiedLocation ? "Verified location" : "Last known location" : "Location coordinates unavailable")}</Text>
+        {!!currentCustody && <Text style={{ color: colors.mutedForeground }}>{copy("Recorded")} {new Date(currentCustody.observation.observedAt).toLocaleString()} · {copy(({ gate_scan: "Gate scan", gps_geofence: "GPS geofence", manual: "Manual entry", driver_app: "Driver app" })[currentCustody.observation.method])}</Text>}
+      </View>
       {!operation && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {canManage && custodyReady && !currentCustody && <TogglePillButton color="blue" onPress={() => begin("intake")}>{copy("Record intake")}</TogglePillButton>}
         {canManage && <TogglePillButton color="blue" onPress={() => begin("at_yard")}>{copy("Assign Yard")}</TogglePillButton>}

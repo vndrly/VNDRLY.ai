@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import type { FleetHomeProjection, FleetOverview } from "@workspace/api-zod";
+import type { FleetDriverLocation, FleetHomeProjection, FleetOverview } from "@workspace/api-zod";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import TogglePillButton from "@/components/TogglePillButton";
 import EmployeeCertificationsPanel from "@/components/EmployeeCertificationsPanel";
+import MapboxNativeMap from "@/components/MapboxNativeMap";
 
 type Employee = { id: number; vendorId: number; firstName: string; lastName: string; email: string; phone: string | null; jobTitle: string | null; userId?: number | null; isActive: boolean };
 type Cert = { id: number; name: string; expirationDate: string | null };
@@ -24,6 +25,7 @@ export default function FleetDrivers({ initialDriverUserId }: { initialDriverUse
   const colors = useColors(), copy = useFleetCopy(), { user, activeMembership } = useAuth();
   const companyId = activeMembership?.orgId ?? user?.vendorId ?? 0;
   const [rows, setRows] = useState<DriverRow[]>([]), [overview, setOverview] = useState<FleetOverview | null>(null), [selectedUserId, setSelectedUserId] = useState(initialDriverUserId ?? 0);
+  const [driverLocation, setDriverLocation] = useState<FleetDriverLocation | null>(null), [locationBusy, setLocationBusy] = useState(false), [locationError, setLocationError] = useState("");
   const [adding, setAdding] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [firstName, setFirstName] = useState(""), [lastName, setLastName] = useState(""), [email, setEmail] = useState(""), [phone, setPhone] = useState("");
   async function load() {
@@ -43,6 +45,17 @@ export default function FleetDrivers({ initialDriverUserId }: { initialDriverUse
     finally { setBusy(false); }
   }
   useEffect(() => { void load(); }, [companyId]);
+  useEffect(() => {
+    let active = true;
+    setDriverLocation(null); setLocationError("");
+    if (!selectedUserId) return () => { active = false; };
+    setLocationBusy(true);
+    void apiFetch<FleetDriverLocation>(`/api/fleet/drivers/${selectedUserId}/location`)
+      .then(value => { if (active) setDriverLocation(value); })
+      .catch(cause => { if (active) setLocationError(cause instanceof Error ? cause.message : copy("Driver location unavailable")); })
+      .finally(() => { if (active) setLocationBusy(false); });
+    return () => { active = false; };
+  }, [selectedUserId]);
   const selected = rows.find(row => row.userId === selectedUserId);
   const history = useMemo(() => overview?.runs.filter(run => run.driverUserId === selectedUserId).slice(0, 20) ?? [], [overview, selectedUserId]);
   async function addDriver() {
@@ -58,6 +71,24 @@ export default function FleetDrivers({ initialDriverUserId }: { initialDriverUse
   if (selected) return <View style={{ gap: 14 }}>
     <TogglePillButton color="blue" onPress={() => setSelectedUserId(0)}>{copy("All Drivers")}</TogglePillButton>
     <View style={card}><Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{selected.firstName} {selected.lastName}</Text><Text style={{ color: colors.mutedForeground }}>{selected.jobTitle ?? copy("Fleet Driver")} · {selected.email}{selected.phone ? ` · ${selected.phone}` : ""}</Text><Text style={{ color: selected.available ? "#16a34a" : colors.mutedForeground, fontWeight: "700" }}>{copy(selected.available ? "Available" : "Unavailable")}</Text><Text style={{ color: selected.cdl === "green" ? "#16a34a" : selected.cdl === "amber" ? "#d97706" : colors.destructive, fontWeight: "700" }}>{copy(selected.cdlLabel)}</Text></View>
+    <View style={card}>
+      <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>{copy("Driver location")}</Text>
+      {locationBusy ? <Text style={{ color: colors.mutedForeground }}>{copy("Loading driver location")}</Text> : locationError ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{copy("Driver location unavailable")}</Text> : <>
+        <View accessibilityLabel={copy(driverLocation?.onShift ? "Current driver location map" : "Off shift driver location map")} style={{ opacity: driverLocation?.onShift ? 1 : .34 }}>
+          <MapboxNativeMap
+            height={260}
+            controls={driverLocation?.onShift === true}
+            styleKind="street"
+            viewKey={`driver-${selectedUserId}-${driverLocation?.location?.recordedAt ?? "none"}`}
+            points={driverLocation?.location ? [{ id: `driver-${selectedUserId}`, latitude: driverLocation.location.latitude, longitude: driverLocation.location.longitude, color: driverLocation.onShift ? "#16a34a" : "#64748b", label: `${selected.firstName} ${selected.lastName}`, title: driverLocation.onShift ? copy("Current driver-phone location") : copy("Last recorded driver-phone location") }] : []}
+            center={driverLocation?.location ? [driverLocation.location.longitude, driverLocation.location.latitude] : undefined}
+          />
+        </View>
+        <Text style={{ color: driverLocation?.onShift ? "#16a34a" : colors.mutedForeground, fontWeight: "700" }}>{copy(driverLocation?.onShift ? "On Shift · current driver-phone location" : "Off Shift · live location is not shown")}</Text>
+        {driverLocation?.location && <Text style={{ color: colors.mutedForeground }}>{copy(driverLocation.onShift ? "Recorded" : "Last recorded")} {new Date(driverLocation.location.recordedAt).toLocaleString()} · {Math.round(driverLocation.location.accuracyMeters ?? 0)} m {copy("accuracy")}</Text>}
+        {!driverLocation?.location && <Text style={{ color: colors.mutedForeground }}>{copy("No consented driver-phone location is available.")}</Text>}
+      </>}
+    </View>
     <EmployeeCertificationsPanel employeeId={selected.id} defaultCertificationName="CDL" onChanged={() => void load()} />
     <View style={card}><Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>{copy("Recent work history")}</Text>{history.length ? history.map(run => <Text key={run.id} numberOfLines={2} style={{ color: colors.text }}>{run.linkedTicketId ? `Ticket #${run.linkedTicketId} · ` : ""}{run.title} · {copy(run.status.replaceAll("_", " "))}</Text>) : <Text style={{ color: colors.mutedForeground }}>{copy("No recent Fleet runs")}</Text>}</View>
   </View>;

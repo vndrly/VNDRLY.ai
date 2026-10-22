@@ -12,6 +12,7 @@ vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress,
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 7, vendorId: 3, activeMembershipId: 5 }, activeMembershipId: 5, activeMembership: { orgId: 3, orgType: "vendor" } }) }));
 vi.mock("@/components/FleetInventory", () => ({ default: () => <div>Inventory intake form</div> }));
 vi.mock("@/components/FleetDetailsLibrary", () => ({ default: () => <div>Reusable Details library</div> }));
+vi.mock("@/components/MapboxNativeMap", () => ({ default: ({ points }: { points: unknown[] }) => <div>Equipment map with {points.length} point</div> }));
 
 import AssetWorkspace from "./AssetWorkspace";
 const assetId = "30000000-0000-4000-8000-000000000001";
@@ -46,6 +47,24 @@ it("moves an asset between two authorized yards and reads the canonical location
   await waitFor(() => expect(screen.getByText("South Yard")).toBeTruthy());
   const body = JSON.parse(env.api.mock.calls.find(([path, init]) => path === "/api/fleet/custody/operations" && init?.method === "POST")![1].body);
   expect(body).toMatchObject({ expectedVersion: 1, observation: { assetId, state: "transferred", yardId: yardB, companyId: 3 } });
+});
+
+it("shows verified equipment coordinates and the green available state", async () => {
+  network();
+  const baseApi = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path: string, init?: any) => path === `/api/fleet/custody?assetId=${assetId}` ? Promise.resolve(baseApi(path, init)).then((value: any) => ({ custody: value.custody.map((row: any) => ({ ...row, observation: { ...row.observation, method: "gate_scan", latitude: 35.4, longitude: -97.5 }, location: { ...row.location, latitude: 35.4, longitude: -97.5 } })) })) : baseApi(path, init));
+  render(<AssetWorkspace initialAssetId={assetId} />);
+  expect(await screen.findByText("Equipment map with 1 point")).toBeTruthy();
+  expect(screen.getByText("Verified location")).toBeTruthy();
+  expect(screen.getByText("available").getAttribute("style")).toContain("color: rgb(22, 163, 74)");
+});
+
+it("greys equipment with no coordinates and calls manual custody last known", async () => {
+  network();
+  render(<AssetWorkspace initialAssetId={assetId} />);
+  expect((await screen.findByLabelText("Equipment location unavailable map")).getAttribute("style")).toContain("opacity: 0.34");
+  expect(screen.getByText("Location coordinates unavailable")).toBeTruthy();
+  expect(screen.queryByText("Verified location")).toBeNull();
 });
 
 it("shows inherited truck location and records a detach from the rig Detail", async () => {

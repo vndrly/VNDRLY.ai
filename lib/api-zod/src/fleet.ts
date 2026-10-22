@@ -404,6 +404,8 @@ export type FleetResources = {
     category: string;
     status: string;
     dispatchable: boolean;
+    currentHolderUserId?: number | null;
+    currentHolderName?: string | null;
   }[];
 };
 

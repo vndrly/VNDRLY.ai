@@ -22,7 +22,7 @@ function home(capabilities: FleetCapability[], mode: FleetHomeProjection["mode"]
   return {
     companyId: 3, userId: 7, mode, capabilities,
     nextAction: action, priorities: [action], warnings: [],
-    metrics: { yardOrders: 3, awaitingDispatch: 2, activeRuns: 4, runHistory: 18, availableDrivers: 5, yardInventory: 7, equipmentInUse: 2, equipmentAvailable: 4, equipmentUnavailable: 1, complianceScore: 82, complianceStatus: "amber" },
+    metrics: { yardOrders: 3, awaitingDispatch: 2, activeRuns: 4, runHistory: 18, availableDrivers: 5, yardInventory: 7, equipmentInUse: 2, equipmentAvailable: 4, equipmentUnavailable: 1, complianceExpiringSoon: 2, complianceExpiredOrMissing: 1, complianceScore: 82, complianceStatus: "amber" },
     moduleStates: ["dispatch", "yard", "assets", "map", "history", "compliance"].map(module => ({ module: module as FleetHomeProjection["moduleStates"][number]["module"], state: "ready" as const })),
   };
 }
@@ -44,6 +44,8 @@ describe("Fleet Home", () => {
     render(<FleetHome projection={home(["admin"])} onOpen={onOpen} />);
     expect(screen.getByText("Dispatch")).toBeTruthy();
     expect(screen.getByText("Fleet Readiness")).toBeTruthy();
+    expect(screen.getByText("Pair a cab/truck/tractor to an (optional) Rigging package")).toBeTruthy();
+    expect(screen.getByText("A Run is a predefined Origin and a Destination to use on a ticket")).toBeTruthy();
     for (const [label, value, module] of [
       ["Yard Orders", "3 open", "yard"],
       ["Ready for Dispatch", "2 ready", "dispatch"],
@@ -51,8 +53,8 @@ describe("Fleet Home", () => {
       ["Run Builder", "Saved Runs", "runs"],
       ["Run History", "18 runs", "history"],
       ["Available Drivers", "5 available", "drivers"],
-      ["Equipment & Yard Safety", "2 in use · 4 available · 1 unavailable", "assets"],
-      ["Compliance & Safety", "82 · Amber", "compliance"],
+      ["Yard Availability", "2 in use · 4 available · 1 unavailable", "assets"],
+      ["Compliance & Safety", "2 Expiring Soon · 1 Expired / Nothing Recorded", "compliance"],
     ] as const) {
       const button = screen.getByRole("button", { name: `Open ${label}` });
       expect(button.textContent).toContain(value);
@@ -62,6 +64,55 @@ describe("Fleet Home", () => {
       }
     }
     expect(screen.getByRole("button", { name: "Open Fleet Map" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Add Equipment" }));
+    expect(onOpen).toHaveBeenCalledWith("assets", undefined, undefined, undefined, undefined, "new");
+  });
+
+  it("provides ticket workflow shortcuts in the Action Panel", () => {
+    const onTicketAction = vi.fn();
+    render(<FleetHome projection={home(["admin"])} onOpen={vi.fn()} onTicketAction={onTicketAction} />);
+    expect(screen.getByText("Action Panel")).toBeTruthy();
+    for (const [label, action] of [["Start New Ticket", "new"], ["Continue Existing Ticket", "continue"], ["View Ticket History", "history"]] as const) {
+      fireEvent.click(screen.getByRole("button", { name: label }));
+      expect(onTicketAction).toHaveBeenLastCalledWith(action);
+    }
+  });
+
+  it("expands equipment with blue in-use, green available, and grey unavailable states", async () => {
+    const projection = home(["admin"]);
+    projection.previews = { yard: [], ready: [], active: [], history: [], drivers: [], compliance: [], historyCapped: false, equipment: [
+      { id: "30000000-0000-4000-8000-000000000001", title: "Truck 12", detail: "truck · in use · Verified: North Yard · Custody: Ray (verified yard check-in)", status: "in_use", group: "vehicle", locationStatus: "verified", custodyLabel: "Ray (verified yard check-in)" },
+      { id: "30000000-0000-4000-8000-000000000002", title: "Trailer 4", detail: "trailer · available · Last known: Active Run · Custody: Dana (last driver)", status: "available", group: "rigging", locationStatus: "last_known", custodyLabel: "Dana (last driver)" },
+      { id: "30000000-0000-4000-8000-000000000003", title: "Pump 7", detail: "pump · unavailable · No location available · Custody: Unknown", status: "unavailable", group: "rigging", locationStatus: "unavailable", custodyLabel: "Unknown" },
+    ] };
+    render(<FleetHome projection={projection} onOpen={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Open Yard Availability" }));
+    expect((await screen.findByRole("button", { name: "Open Truck 12" })).getAttribute("style")).toContain("border-left-color: rgb(37, 99, 235)");
+    expect(screen.getByText(/truck · in use · Verified: North Yard · Custody: Ray \(verified yard check-in\)/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Open Trailer 4" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Show Rigging Packages" }));
+    expect(screen.getByRole("button", { name: "Open Trailer 4" }).getAttribute("style")).toContain("border-left-color: rgb(22, 163, 74)");
+    expect(screen.getByRole("button", { name: "Open Pump 7" }).getAttribute("style")).toContain("border-left-color: rgb(100, 116, 139)");
+    expect(screen.getByText(/pump · unavailable · No location available · Custody: Unknown/)).toBeTruthy();
+  });
+
+  it("separates driver availability from CDL compliance and opens an active run", async () => {
+    const projection = home(["admin"]);
+    projection.previews = { yard: [], ready: [], active: [], history: [], equipment: [], compliance: [], historyCapped: false, drivers: [
+      { userId: 8, title: "Bobby Jenkins", detail: "CDL current through 2027-10-25", status: "unavailable", compliance: "green", operationalStatus: "on_run", operationalLabel: "On Run · Ticket #10959", runId: "22222222-2222-4222-8222-222222222222", ticketLabel: "Ticket #10959" },
+      { userId: 10, title: "Curtis Lyle", detail: "CDL record missing", status: "available", compliance: "red", operationalStatus: "available", operationalLabel: "Available" },
+      { userId: 12, title: "Ray Alvarado", detail: "CDL current through 2027-07-08", status: "unavailable", compliance: "green", operationalStatus: "off_shift", operationalLabel: "Off Shift" },
+    ] };
+    const onOpen = vi.fn();
+    render(<FleetHome projection={projection} onOpen={onOpen} />);
+    fireEvent.click(screen.getByRole("button", { name: "Open Available Drivers" }));
+    expect((await screen.findByText(/Bobby Jenkins/)).textContent).toContain("On Run · Ticket #10959");
+    expect(screen.getByText("CDL record missing").getAttribute("style")).toContain("color: rgb(255, 51, 51)");
+    expect(screen.getByText(/Ray Alvarado/).textContent).toContain("Off Shift");
+    fireEvent.click(screen.getByRole("button", { name: "Open Bobby Jenkins" }));
+    expect(onOpen).toHaveBeenCalledWith("dispatch", "22222222-2222-4222-8222-222222222222", undefined, undefined);
+    fireEvent.click(screen.getByRole("button", { name: "Open Curtis Lyle" }));
+    expect(onOpen).toHaveBeenCalledWith("drivers", undefined, undefined, undefined, 10, undefined);
   });
 
   it("shows independent operators a compact Dispatch card without requiring yard staff", () => {
@@ -72,12 +123,12 @@ describe("Fleet Home", () => {
     expect(screen.queryByText("Fleet Readiness")).toBeNull();
   });
   it.each([
-    [["admin"], ["Yard Orders", "Ready for Dispatch", "Active Ticket Runs", "Run Builder", "Run History", "Available Drivers", "Equipment & Yard Safety", "Compliance & Safety", "Fleet Setup"]],
+    [["admin"], ["Yard Orders", "Ready for Dispatch", "Active Ticket Runs", "Run Builder", "Run History", "Available Drivers", "Yard Availability", "Compliance & Safety", "Fleet Setup"]],
     [["office"], ["Active Ticket Runs", "Run Builder", "Run History", "Compliance & Safety", "Office Review"]],
-    [["dispatch"], ["Yard Orders", "Ready for Dispatch", "Active Ticket Runs", "Run Builder", "Run History", "Available Drivers", "Equipment & Yard Safety", "Compliance & Safety"]],
-    [["yard"], ["Yard Orders", "Equipment & Yard Safety"]],
+    [["dispatch"], ["Yard Orders", "Ready for Dispatch", "Active Ticket Runs", "Run Builder", "Run History", "Available Drivers", "Yard Availability", "Compliance & Safety"]],
+    [["yard"], ["Yard Orders", "Yard Availability"]],
     [["driver"], ["Active Ticket Runs", "Run History"]],
-    [["driver", "yard"], ["Yard Orders", "Active Ticket Runs", "Run History", "Equipment & Yard Safety"]],
+    [["driver", "yard"], ["Yard Orders", "Active Ticket Runs", "Run History", "Yard Availability"]],
   ] as [FleetCapability[], string[]][])("shows authorized cards for %j", (capabilities, expected) => {
     render(<FleetHome projection={home(capabilities)} onOpen={vi.fn()} />);
     for (const label of expected) expect(screen.getByRole("button", { name: `Open ${label}` })).toBeTruthy();
@@ -103,7 +154,7 @@ describe("Fleet Home", () => {
     render(<FleetHome projection={projection} visibility={{ dispatch: true, yard: true, map: true }} onOpen={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Open Yard Orders" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Open Fleet Map" })).toBeTruthy();
-    expect(screen.getAllByText("Next action")).toHaveLength(1);
+    expect(screen.getAllByText("Action Panel")).toHaveLength(1);
     expect(screen.getAllByRole("button", { name: "Start run" })).toHaveLength(1);
   });
 

@@ -10,6 +10,8 @@ const source = (capabilities: FleetCapability[], runs = [run("11111111-1111-4111
   overview: async () => ({ companyId: 3, enabled: true, runs, fleets: [], generatedAt: "2026-10-20T00:00:00.000Z" }),
   yardOrders: async () => ({ orders: [] }),
   resources: async () => ({ drivers: [], equipment: [] }),
+  custody: async () => ({ custody: [] }),
+  yards: async () => ({ yards: [] }),
   map: async () => ({ observations: [] }),
   complianceSummary: async () => ({ status: "red" }),
   compliance: async () => ({ score: 30, status: "red", deductions: [] }),
@@ -23,12 +25,14 @@ describe("Fleet Home modules", () => {
       overview: async (current) => { access.set("overview", current.repositoryAccess); return source([]).overview(); },
       yardOrders: async (current) => { access.set("yard", current.repositoryAccess); return { orders: [] }; },
       resources: async (current) => { access.set("assets", current.repositoryAccess); return { drivers: [], equipment: [] }; },
+      custody: async (current) => { access.set("custody", current.repositoryAccess); return { custody: [] }; },
+      yards: async (current) => { access.set("yards", current.repositoryAccess); return { yards: [] }; },
       map: async (current) => { access.set("map", current.repositoryAccess); return {}; },
       complianceSummary: async (current) => { access.set("complianceSummary", current.repositoryAccess); return { status: "green" }; },
       compliance: async (current) => { access.set("compliance", current.repositoryAccess); return { status: "green" }; },
     });
     await read(actor, "summary");
-    expect(Object.fromEntries(access)).toEqual({ overview: "read", yard: "read", assets: "read", map: "read", complianceSummary: "read" });
+    expect(Object.fromEntries(access)).toEqual({ overview: "read", yard: "read", assets: "read", map: "read", complianceSummary: "read", custody: "read", yards: "read" });
     expect(actor.repositoryAccess).toBeUndefined();
   });
   it("shows the Driver's own next run without Dispatch authority", async () => {
@@ -69,10 +73,17 @@ describe("Fleet Home modules", () => {
           { userId: 9, name: "Active Driver", fleetIds: [] },
         ],
         equipment: [
-          { id: "77777777-7777-4777-8777-777777777777", name: "Ready Truck", category: "truck", status: "available", dispatchable: true },
-          { id: "88888888-8888-4888-8888-888888888888", name: "Held Truck", category: "truck", status: "hold", dispatchable: false },
+          { id: "77777777-7777-4777-8777-777777777777", name: "Ready Truck", category: "truck", status: "available", dispatchable: true, currentHolderUserId: null, currentHolderName: null },
+          { id: "88888888-8888-4888-8888-888888888888", name: "Held Truck", category: "truck", status: "hold", dispatchable: false, currentHolderUserId: null, currentHolderName: null },
         ],
       }),
+      driverShiftStates: async () => new Map([[10, "on_shift"], [8, "off_shift"], [9, "on_shift"]] as const),
+      userNames: async () => new Map([[10, "Available Driver"]]),
+      custody: async () => ({ custody: [
+        { observation: { assetId: "77777777-7777-4777-8777-777777777777", method: "gate_scan", observedAt: "2026-10-20T12:00:00.000Z", observedByUserId: 10, yardId: "99999999-9999-4999-8999-999999999999", runId: null } },
+        { observation: { assetId: "88888888-8888-4888-8888-888888888888", method: "driver_app", observedAt: "2026-10-20T13:00:00.000Z", observedByUserId: 9, yardId: null, runId: "33333333-3333-4333-8333-333333333333" } },
+      ] }),
+      yards: async () => ({ yards: [{ id: "99999999-9999-4999-8999-999999999999", name: "North Yard" }] }),
       complianceSummary: async () => ({ status: "amber", score: 82 }),
     });
     const data = (await read(actor, "summary")).data as FleetHomeProjection;
@@ -86,9 +97,20 @@ describe("Fleet Home modules", () => {
       equipmentInUse: 0,
       equipmentAvailable: 1,
       equipmentUnavailable: 1,
+      complianceExpiringSoon: 1,
+      complianceExpiredOrMissing: 3,
       complianceScore: 82,
       complianceStatus: "amber",
     });
+    expect(data.previews?.equipment).toEqual(expect.arrayContaining([
+      expect.objectContaining({ title: "Ready Truck", detail: "truck · available · Verified: North Yard · Custody: Available Driver (verified yard check-in)", group: "vehicle", locationStatus: "verified", custodyLabel: "Available Driver (verified yard check-in)" }),
+      expect.objectContaining({ title: "Held Truck", detail: "truck · unavailable · Last known: Active Run · Custody: Active Driver (last driver)", group: "vehicle", locationStatus: "last_known", custodyLabel: "Active Driver (last driver)" }),
+    ]));
+    expect(data.previews?.drivers).toEqual([
+      expect.objectContaining({ userId: 9, operationalStatus: "on_run", operationalLabel: expect.stringContaining("On Run"), runId: "33333333-3333-4333-8333-333333333333" }),
+      expect.objectContaining({ userId: 8, operationalStatus: "on_run", operationalLabel: expect.stringContaining("On Run"), runId: "22222222-2222-4222-8222-222222222222" }),
+      expect.objectContaining({ userId: 10, operationalStatus: "available", operationalLabel: "Available" }),
+    ]);
   });
 
   it("keeps Dispatch ready when Compliance fails and provides scoped conflict recovery", async () => {

@@ -28,6 +28,17 @@ export const FleetLocationObservationSchema = z.object({
 }).strict();
 export type FleetLocationObservation = z.infer<typeof FleetLocationObservationSchema>;
 
+/** Privacy-scoped Driver detail projection. `location` is driver-phone data,
+ * never vehicle telemetry; clients must not present it as live while off shift. */
+export const FleetDriverLocationSchema = z.object({
+  driverUserId: z.number().int().positive(),
+  onShift: z.boolean(),
+  shiftState: z.enum(["on_shift", "on_break", "off_shift"]),
+  location: FleetLocationObservationSchema.nullable(),
+  generatedAt: z.iso.datetime(),
+}).strict();
+export type FleetDriverLocation = z.infer<typeof FleetDriverLocationSchema>;
+
 const locationCursor = z.string().regex(/^\d{1,10}:\d{1,10}$/);
 export const FleetLocationPageQuerySchema = z.object({
   cursor: locationCursor.optional(),

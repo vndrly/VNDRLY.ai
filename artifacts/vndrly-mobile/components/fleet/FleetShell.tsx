@@ -66,6 +66,7 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
   const home = useFleetHome(module === "home");
   const selected = visibleModules ?? (module === "home" ? [] : [module]);
   const open = (next: FleetModuleId, runId?: string, yardOrderId?: string, runOrderId?: string, driverUserId?: number, assetId?: string) => router.push(`/(tabs)/fleet?module=${next}${runId ? `&runId=${encodeURIComponent(runId)}` : ""}${yardOrderId ? `&yardOrderId=${encodeURIComponent(yardOrderId)}` : ""}${runOrderId ? `&runOrderId=${encodeURIComponent(runOrderId)}` : ""}${driverUserId ? `&driverUserId=${driverUserId}` : ""}${assetId ? `&assetId=${encodeURIComponent(assetId)}` : ""}` as never);
+  const openTicketAction = (action: "new" | "continue" | "history") => router.push((action === "new" ? "/new-ticket" : action === "history" ? "/history" : "/(tabs)") as never);
   const renderModule = (id: FleetModuleId) => {
     const entry = modules[id];
     const fallback: ReactNode = id === "home" ? null : id === "setup" ? <FleetSetup key={setupIdentity} onSaved={home.retry} /> : <Suspense fallback={<Text>{copy(`Loading ${moduleLabels[id]}`)}</Text>}>
@@ -81,7 +82,7 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
   return <ScreenSafeArea><ScrollView testID="fleet-shell-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}>
     <WorkHubPageTitle title={copy(moduleLabels[module])} onBack={module === "home" ? undefined : () => open("home")} />
     {module !== "home" && <TogglePillButton color="blue" compactOnTablet onPress={() => open("home")}>{copy("All Fleet modules")}</TogglePillButton>}
-    {module === "home" && !selected.length && home.projection && <FleetHome projection={home.projection} visibility={home.visibility} onOpen={open} onRetry={home.retry} />}
+    {module === "home" && !selected.length && home.projection && <FleetHome projection={home.projection} visibility={home.visibility} onOpen={open} onTicketAction={openTicketAction} onRetry={home.retry} />}
     {module === "home" && !selected.length && !home.projection && <View style={{ gap: 12 }}>
       <Text accessibilityRole={home.state === "unavailable" ? "alert" : undefined} style={{ color: colors.text }}>{copy(home.error ?? "Loading Fleet Home")}</Text>
       {home.state === "unavailable" && <TogglePillButton color="blue" onPress={home.retry}>{copy("Retry Fleet Home")}</TogglePillButton>}

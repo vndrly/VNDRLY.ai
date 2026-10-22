@@ -1169,6 +1169,12 @@ export function createFleetYardOperations(
           [actor.companyId, selectedIds, limit],
         );
         const observations = found.rows.map(custody);
+        const observerIds = [...new Set(observations.map(row => row.observation.observedByUserId))];
+        const observerRows = observerIds.length ? await client.query(
+          "SELECT DISTINCT u.id,u.display_name FROM users u JOIN user_org_memberships m ON m.user_id=u.id WHERE m.vendor_id=$1 AND m.org_type='vendor' AND u.id=ANY($2::int[]) AND u.suspended_at IS NULL",
+          [actor.companyId, observerIds],
+        ) : { rows: [] };
+        const observerNames = new Map(observerRows.rows.map(row => [Number(row.id), String(row.display_name)]));
         // The attachment is fixed by its custody event, never by today's editable Detail.
         const attached = observations.filter((row) => row.observation.state === "attached");
         const attachmentRows = attached.length ? await client.query(
@@ -1218,6 +1224,7 @@ export function createFleetYardOperations(
         return {
           custody: observations.map((row, index) => ({
             ...row,
+            observedByName: observerNames.get(row.observation.observedByUserId) ?? null,
             location: locations[index],
           })),
         };

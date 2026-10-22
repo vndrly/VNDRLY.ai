@@ -844,7 +844,7 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
           [actor.companyId, userIds],
         );
         const assets = await client.query(
-          "SELECT a.id,a.name,a.category,a.status,a.current_holder_user_id,EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=a.id AND l.attachment_type='fleet_inventory' AND l.attachment_id=$1::text) AS enrolled,EXISTS(SELECT 1 FROM asset_holds h WHERE h.asset_id=a.id AND h.released_at IS NULL) AS held FROM assets a WHERE responsible_org_type='vendor' AND responsible_org_id=$1::int AND retired_at IS NULL AND merged_into_id IS NULL AND provisional=false AND category IN ('vehicle','truck','trailer','dolly','tank','pump','accessory') ORDER BY name LIMIT 201",
+          "SELECT a.id,a.name,a.category,a.status,a.current_holder_user_id,holder.display_name AS current_holder_name,EXISTS(SELECT 1 FROM asset_attachment_links l WHERE l.asset_id=a.id AND l.attachment_type='fleet_inventory' AND l.attachment_id=$1::text) AS enrolled,EXISTS(SELECT 1 FROM asset_holds h WHERE h.asset_id=a.id AND h.released_at IS NULL) AS held FROM assets a LEFT JOIN users holder ON holder.id=a.current_holder_user_id WHERE a.responsible_org_type='vendor' AND a.responsible_org_id=$1::int AND a.retired_at IS NULL AND a.merged_into_id IS NULL AND a.provisional=false AND a.category IN ('vehicle','truck','trailer','dolly','tank','pump','accessory') ORDER BY a.name LIMIT 201",
           [actor.companyId],
         );
         if (assets.rows.length > 200)
@@ -895,6 +895,8 @@ export function createFleetService(repository: FleetRepository,options:FleetServ
               name: row.name,
               category: row.category,
               status: row.status,
+              currentHolderUserId: row.current_holder_user_id ?? null,
+              currentHolderName: row.current_holder_name ?? null,
               dispatchable:
                 !row.held &&
                 (row.status === "available" ||
