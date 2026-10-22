@@ -115,6 +115,9 @@ function useNavItems(user: {
     { href: "/partners", label: t("nav.partners"), icon: Handshake, key: "partners" },
     { href: "/vendors", label: t("nav.vendors"), icon: Users, key: "vendors" },
     { href: "/field-employees", label: t("nav.employees"), icon: UserCheck, key: "employees" },
+    ...(user?.role === "vendor" && gateViewer?.membershipRole === "admin"
+      ? [{ href: "/gate-locations", label: t("nav.gateLocations"), icon: MapIcon, key: "gate-locations" }]
+      : []),
     { href: "/site-locations", label: t("nav.siteLocations"), icon: MapPin, key: "site-locations" },
     { href: "/tickets", label: t("nav.tracking"), icon: FileText, key: "tracking" },
     { href: "/flagged", label: t("nav.flagged"), icon: Flag, key: "flagged" },

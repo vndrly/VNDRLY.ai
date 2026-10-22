@@ -421,6 +421,7 @@
     "vendor": "Proveedor",
     "employees": "Empleados",
     "siteLocations": "Ubicaciones",
+    "gateLocations": "Ubicaciones de acceso",
     "tracking": "Seguimiento",
     "flagged": "Marcados",
     "crewMap": "Mapa del equipo",

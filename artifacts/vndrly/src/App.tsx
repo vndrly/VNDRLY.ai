@@ -33,6 +33,7 @@ const VendorDetail = lazy(() => import("@/pages/vendor-detail"));
 const FieldEmployees = lazy(() => import("@/pages/field-employees"));
 const FieldEmployeeDetail = lazy(() => import("@/pages/field-employee-detail"));
 const SiteLocations = lazy(() => import("@/pages/site-locations"));
+const GateLocations = lazy(() => import("@/pages/gate-locations"));
 const SiteLocationDetail = lazy(() => import("@/pages/site-location-detail"));
 const CameraCenterPage = lazy(() => import("@/pages/camera-center"));
 const Tickets = lazy(() => import("@/pages/tickets"));
@@ -174,6 +175,7 @@ function AdminRoutes() {
         <Route path="/vendors/:id">{(params) => <VendorDetail id={parseInt(params.id)} />}</Route>
         <Route path="/field-employees" component={FieldEmployees} />
         <Route path="/field-employees/:id">{(params) => <FieldEmployeeDetail id={parseInt(params.id)} />}</Route>
+        <Route path="/gate-locations" component={GateLocations} />
         <Route path="/site-locations" component={SiteLocations} />
         <Route path="/site-locations/:id/cameras">{(params) => <CameraCenterPage siteId={parseInt(params.id)} />}</Route>
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
