@@ -336,14 +336,13 @@ describe("GatekeeperPage voice entry", () => {
     expect(screen.queryByTestId("gate-voice-checkin-confirmation")).toBeNull();
   });
 
-  it("leaves the legacy parser unused when AskV natural voice is on", async () => {
+  it("keeps Gate voice capture direct even when AskV natural voice is on", async () => {
     window.localStorage.setItem(ASKV_NATURAL_VOICE_FLAG, "1");
     renderPage();
     await screen.findByTestId("input-gate-first-name");
     act(() => requestGateVoiceEntry());
-    await new Promise((resolve) => window.setTimeout(resolve, 50));
-    expect(FakeMediaRecorder.instances).toHaveLength(0);
-    expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled();
+    await waitFor(() => expect(FakeMediaRecorder.instances).toHaveLength(1));
+    expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledTimes(1);
   });
 
   it("does not replay a persisted microphone request after a page refresh", async () => {

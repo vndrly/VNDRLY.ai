@@ -104,7 +104,6 @@ import {
   setGateVoiceListening,
   subscribeGateVoiceEntry,
 } from "@/lib/gate-voice-launch";
-import { isAskVNaturalVoiceEnabled } from "@/lib/askv-natural-voice";
 import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 import { formatPlateForDisplay } from "@/lib/plate-display";
 import {
@@ -615,7 +614,6 @@ export default function GatekeeperPage() {
   };
 
   useEffect(() => {
-    if (isAskVNaturalVoiceEnabled()) return;
     let disposed = false;
     let processing = false;
     const win = window as typeof window & {

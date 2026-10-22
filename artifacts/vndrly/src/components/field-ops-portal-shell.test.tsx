@@ -158,7 +158,7 @@ describe("FieldOpsPortalShell", () => {
 
     const button = screen.getByTestId("button-gate-voice");
     expect(button.tagName).toBe("BUTTON");
-    expect(button.getAttribute("aria-label")).toBe("Mute Ask V");
+    expect(button.getAttribute("aria-label")).toBe("Start gate voice entry");
     expect(screen.getAllByTestId("askv-waveform").some((wave) => wave.getAttribute("data-active") === "false")).toBe(true);
     expect(button.getAttribute("aria-pressed")).toBe("false");
     expect(button.getAttribute("data-state")).toBe("idle");
@@ -171,6 +171,16 @@ describe("FieldOpsPortalShell", () => {
     expect(screen.getByTestId("gate-voice-circle").className).toContain(
       "group-hover:scale-[1.04]",
     );
-    expect(button.textContent).toContain("Mute Ask V");
+    expect(button.textContent).toContain("Start gate voice entry");
+
+    const gateVoice = vi.fn();
+    const askVOpen = vi.fn();
+    window.addEventListener("vndrly:gate-voice", gateVoice);
+    window.addEventListener("askv:open-panel", askVOpen);
+    button.click();
+    expect(gateVoice).toHaveBeenCalledTimes(1);
+    expect(askVOpen).not.toHaveBeenCalled();
+    window.removeEventListener("vndrly:gate-voice", gateVoice);
+    window.removeEventListener("askv:open-panel", askVOpen);
   });
 });

@@ -42,7 +42,10 @@ const AssistantLauncher = lazy(() =>
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { EnergyMarketTicker } from './energy-market-ticker';
 import AskVWaveform from "@/components/askv-waveform";
-import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import {
+  requestGateVoiceEntry,
+  subscribeGateVoiceListening,
+} from "@/lib/gate-voice-launch";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -234,7 +237,7 @@ export function FieldOpsPortalShell({
             const isActive = tab.match(location);
             const Icon = tab.icon;
             if (tab.voiceEntry) {
-              return <AskVMuteCircle key={tab.href} testId={tab.testId} />;
+              return <GateVoiceEntryCircle key={tab.href} testId={tab.testId} />;
             }
             return (
               <Link key={tab.href} href={tab.href} onClick={() => setSidebarOpen(false)}>
@@ -381,21 +384,18 @@ export function FieldOpsPortalShell({
   );
 }
 
-function AskVMuteCircle({ testId }: { testId: string }) {
-  const { muted, state, setMuted } = useAskVVoiceSession();
-  const listening = !muted && (state === "listening" || state === "thinking" || state === "speaking");
+function GateVoiceEntryCircle({ testId }: { testId: string }) {
+  const [listening, setListening] = useState(false);
+  useEffect(() => subscribeGateVoiceListening(setListening), []);
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-3">
       <GateVoiceCircleButton
         active={listening}
-        onClick={() => {
-          window.dispatchEvent(new CustomEvent("askv:open-panel"));
-          setMuted(!muted);
-        }}
+        onClick={requestGateVoiceEntry}
         testId={testId}
-        label={muted ? "Unmute Ask V" : "Mute Ask V"}
+        label={listening ? "Stop gate voice entry" : "Start gate voice entry"}
       />
-      <AskVWaveform active={!muted && (state === "listening" || state === "speaking")} />
+      <AskVWaveform active={listening} />
     </div>
   );
 }
