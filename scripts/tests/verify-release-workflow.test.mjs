@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile, mkdtemp, unlink, rmdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -78,6 +80,24 @@ test("the workflow mirror rules cover legacy and deb822 sources while preserving
   const unrelated = "deb https://packages.microsoft.com/ubuntu/24.04/prod noble main\n";
   assert.equal(convert(unrelated), unrelated);
   assert.equal(convert(convert(legacy)), convert(legacy));
+});
+
+test("runner file-backed Ubuntu mirror lists are rewritten before apt uses them", async () => {
+  const browser = namedStep("Install the pinned test browser");
+  const command = browser.match(/sudo python3 - ([^\r\n]+) <<'PY'/)?.[1];
+  assert.ok(command?.includes("/etc/apt/apt-mirrors.txt"), "GitHub's mirror+file source must be included, not only ubuntu.sources");
+  const program = browser.match(/<<'PY'\r?\n([\s\S]*?)\r?\n          PY/)?.[1].replace(/^          /gm, "");
+  assert.ok(program);
+  const directory = await mkdtemp(join(tmpdir(), "vndrly-apt-mirrors-"));
+  const mirror = join(directory, "apt-mirrors.txt"), source = join(directory, "ubuntu.sources");
+  try {
+    await writeFile(mirror, "http://azure.archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://archive.ubuntu.com/ubuntu/\tpriority:2\nhttp://security.ubuntu.com/ubuntu/\tpriority:3\n");
+    await writeFile(source, "Types: deb\nURIs: mirror+file:/etc/apt/apt-mirrors.txt\nSuites: noble\n");
+    const result = spawnSync(process.platform === "win32" ? "python" : "python3", ["-", mirror, source], { input: program, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal((await readFile(mirror, "utf8")).replaceAll("\r\n", "\n"), "https://archive.ubuntu.com/ubuntu/\tpriority:1\nhttps://archive.ubuntu.com/ubuntu/\tpriority:2\nhttps://security.ubuntu.com/ubuntu/\tpriority:3\n");
+    assert.match(await readFile(source, "utf8"), /URIs: mirror\+file:\/etc\/apt\/apt-mirrors.txt/);
+  } finally { await unlink(mirror).catch(() => {}); await unlink(source).catch(() => {}); await rmdir(directory); }
 });
 
 test("release gates have unique stable step identities", () => {

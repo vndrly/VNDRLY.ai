@@ -46,8 +46,10 @@ jobs:
         run: |
           set -euo pipefail
           # Avoid the runner image's unreliable HTTP Azure Ubuntu mirror.
+          # Hosted Ubuntu also routes deb822 sources through file-backed mirror
+          # lists. Rewrite those targets too, before apt downloads dependencies.
           # Limit each apt acquisition; the step bound also covers provisioning.
-          sudo python3 - /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources <<'PY'
+          sudo python3 - /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources /etc/apt/apt-mirrors.txt /etc/apt/apt-mirrors-security.txt <<'PY'
           import pathlib, re, sys
           for name in sys.argv[1:]:
               source = pathlib.Path(name)
