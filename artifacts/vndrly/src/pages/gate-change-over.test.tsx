@@ -106,6 +106,7 @@ it("shows the standard back control and branded Dashboard icon", () => {
   mount();
   expect(screen.getByTestId("button-back")).not.toBeNull();
   expect(screen.getByTestId("gate-dashboard-header-icon").getAttribute("class")).not.toContain("card-icon-drop-shadow");
+  expect(screen.getByRole("heading", { level: 1, name: "changeOver.title" })).not.toBeNull();
 });
 it("keeps Prepare Handoff gray at rest and branded on hover without requiring notes", async () => {
   const base = api.getMockImplementation()!;
@@ -138,6 +139,15 @@ it("shows open carry-forward items separately from resolved history", async () =
   fireEvent.click(screen.getByRole("tab", { name: "changeOver.resolvedItems" }));
   expect(screen.getByText("North barrier inspected")).not.toBeNull();
   expect(screen.queryByText("Identify driver for OK ABC123")).toBeNull();
+});
+it("combines outgoing notes with Shift follow-ups and places Incoming shift review beside it", async () => {
+  mount();
+  const followUps = await screen.findByRole("region", { name: "changeOver.shiftFollowUps" });
+  const notes = screen.getByText("changeOver.outgoingNotes");
+  expect(followUps.contains(notes)).toBe(true);
+  expect(screen.queryByRole("region", { name: "changeOver.outgoingNotes" })).toBeNull();
+  const incoming = screen.getByRole("region", { name: "changeOver.review" });
+  expect(incoming.previousElementSibling).toBe(followUps);
 });
 it("moves an item out of the open list only after a resolution note, and can reopen it", async () => {
   const base = api.getMockImplementation()!;

@@ -67,13 +67,13 @@ it("discovers inactive gates for authorized history reads without adding them to
   expect(await listChangeOverStations(session, 22)).toEqual([]);
   expect(await listChangeOverStations(session, 22, "history")).toMatchObject([{ id: "gate" }]);
 });
-it("lets history find an authorized site with no current scheduled or active shift", async () => {
+it("lets operational navigation find an authorized site without a current scheduled or active shift", async () => {
   const base = state.query.getMockImplementation()!;
   state.query.mockImplementation(async (sql: string, p: any[] = []) => {
-    if (sql.startsWith("SELECT s.id, s.name")) return { rows: p[4] === true ? [{ id: 22, name: "Former gate site" }] : [], rowCount: p[4] ? 1 : 0 };
+    if (sql.startsWith("SELECT s.id, s.name")) return { rows: [{ id: 22, name: "Authorized gate site" }], rowCount: 1 };
     return base(sql, p);
   });
-  expect(await listChangeOverSites(session)).toEqual([]);
+  expect(await listChangeOverSites(session)).toMatchObject([{ id: 22 }]);
   expect(await listChangeOverSites(session, "history")).toMatchObject([{ id: 22 }]);
 });
 it("rejects a new legacy shift at an inactive gate", async () => {

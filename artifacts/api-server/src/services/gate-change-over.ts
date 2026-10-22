@@ -285,56 +285,11 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
     await pool.query(
       `SELECT s.id, s.name, s.latitude, s.longitude FROM site_locations s WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
     AND ($1='admin' OR ($1='partner' AND s.partner_id=$2) OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true))
-    AND (
-      $5::boolean OR $6::boolean OR $1 IN ('admin','partner')
-      OR EXISTS (
-        SELECT 1 FROM gate_shifts active_shift
-        JOIN gate_stations active_station ON active_station.id=active_shift.station_id
-        WHERE active_shift.operator_id=$4 AND active_shift.ended_at IS NULL AND active_station.site_id=s.id
-      )
-      OR EXISTS (
-        SELECT 1 FROM gate_duty_sessions duty
-        JOIN gate_stations duty_station ON duty_station.id=duty.station_id
-        WHERE duty.user_id=$4 AND duty.ended_at IS NULL AND duty_station.site_id=s.id
-      )
-      OR EXISTS (
-        SELECT 1 FROM gate_work_sessions work_session
-        JOIN work_hub_shifts work_shift ON work_shift.id=work_session.work_hub_shift_id
-        LEFT JOIN gate_stations work_station ON work_station.id=work_shift.gate_station_id
-        WHERE work_session.user_id=$4 AND work_session.ended_at IS NULL
-          AND coalesce(work_shift.site_location_id,work_station.site_id)=s.id
-      )
-      OR EXISTS (
-        SELECT 1 FROM work_hub_shift_assignments assignment
-        JOIN work_hub_shifts scheduled_shift ON scheduled_shift.id=assignment.shift_id
-        LEFT JOIN gate_stations scheduled_station ON scheduled_station.id=scheduled_shift.gate_station_id
-        WHERE assignment.user_id=$4
-          AND assignment.status NOT IN ('cancelled','declined')
-          AND scheduled_shift.milestone_status <> 'cancelled'
-          AND scheduled_shift.ends_at >= now()
-          AND coalesce(scheduled_shift.site_location_id,scheduled_station.site_id)=s.id
-      )
-      OR EXISTS (
-        SELECT 1 FROM user_org_memberships membership
-        JOIN vendor_person_site_access site_access
-          ON site_access.vendor_people_id=membership.vendor_people_id
-         AND site_access.site_location_id=s.id AND site_access.is_active=true
-        JOIN vendor_person_operational_roles gate_role
-          ON gate_role.vendor_people_id=membership.vendor_people_id
-         AND gate_role.is_active=true
-         AND gate_role.role IN ('gatekeeper','gate_supervisor')
-        WHERE membership.user_id=$4 AND membership.vendor_id=$3
-          AND membership.org_type='vendor'
-      )
-    )
     ORDER BY s.name LIMIT 2000`,
       [
         session.role,
         session.partnerId ?? null,
         session.vendorId ?? null,
-        session.userId ?? null,
-        mode === "history",
-        session.role === "vendor" && session.membershipRole === "admin",
       ],
     )
   ).rows;
@@ -370,53 +325,13 @@ export async function listChangeOverStations(
        FROM gate_stations station
        WHERE station.site_id=$1
          AND (station.active=true
-           OR EXISTS (SELECT 1 FROM gate_shifts finishing WHERE finishing.station_id=station.id AND finishing.operator_id=$3 AND finishing.ended_at IS NULL)
-           OR EXISTS (SELECT 1 FROM gate_duty_sessions finishing WHERE finishing.station_id=station.id AND finishing.user_id=$3 AND finishing.ended_at IS NULL)
-           OR EXISTS (SELECT 1 FROM gate_work_sessions finishing JOIN work_hub_shifts finishing_shift ON finishing_shift.id=finishing.work_hub_shift_id WHERE finishing_shift.gate_station_id=station.id AND finishing.user_id=$3 AND finishing.ended_at IS NULL))
-         AND (
-           $2 IN ('admin','partner') OR $4::boolean
-           OR EXISTS (
-             SELECT 1 FROM gate_shifts active_shift
-             WHERE active_shift.station_id=station.id AND active_shift.operator_id=$3 AND active_shift.ended_at IS NULL
-           )
-           OR EXISTS (
-             SELECT 1 FROM gate_duty_sessions duty
-             WHERE duty.station_id=station.id AND duty.user_id=$3 AND duty.ended_at IS NULL
-           )
-           OR EXISTS (
-             SELECT 1 FROM gate_work_sessions work_session
-             JOIN work_hub_shifts work_shift ON work_shift.id=work_session.work_hub_shift_id
-             WHERE work_shift.gate_station_id=station.id AND work_session.user_id=$3 AND work_session.ended_at IS NULL
-           )
-           OR EXISTS (
-             SELECT 1 FROM work_hub_shift_assignments assignment
-             JOIN work_hub_shifts scheduled_shift ON scheduled_shift.id=assignment.shift_id
-             WHERE assignment.user_id=$3
-               AND assignment.status NOT IN ('cancelled','declined')
-               AND scheduled_shift.milestone_status <> 'cancelled'
-               AND scheduled_shift.ends_at >= now()
-               AND scheduled_shift.gate_station_id=station.id
-           )
-           OR EXISTS (
-             SELECT 1 FROM user_org_memberships membership
-             JOIN vendor_person_site_access site_access
-               ON site_access.vendor_people_id=membership.vendor_people_id
-              AND site_access.site_location_id=station.site_id AND site_access.is_active=true
-             JOIN vendor_person_operational_roles gate_role
-               ON gate_role.vendor_people_id=membership.vendor_people_id
-              AND gate_role.is_active=true
-              AND gate_role.role IN ('gatekeeper','gate_supervisor')
-             WHERE membership.user_id=$3 AND membership.vendor_id=$5
-               AND membership.org_type='vendor'
-           )
-         )
+           OR EXISTS (SELECT 1 FROM gate_shifts finishing WHERE finishing.station_id=station.id AND finishing.operator_id=$2 AND finishing.ended_at IS NULL)
+           OR EXISTS (SELECT 1 FROM gate_duty_sessions finishing WHERE finishing.station_id=station.id AND finishing.user_id=$2 AND finishing.ended_at IS NULL)
+           OR EXISTS (SELECT 1 FROM gate_work_sessions finishing JOIN work_hub_shifts finishing_shift ON finishing_shift.id=finishing.work_hub_shift_id WHERE finishing_shift.gate_station_id=station.id AND finishing.user_id=$2 AND finishing.ended_at IS NULL))
        ORDER BY station.created_at, station.id`,
       [
         siteId,
-        session.role,
         session.userId ?? null,
-        session.role === "vendor" && session.membershipRole === "admin",
-        session.vendorId ?? null,
       ],
     )
   ).rows;

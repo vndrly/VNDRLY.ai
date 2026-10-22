@@ -248,15 +248,14 @@ describe("Change Over database guarantees", () => {
 
     const sites = await listChangeOverSites(f.outgoing);
     expect(sites.map((site) => site.id).sort((a, b) => a - b)).toEqual(
-      [f.site, scheduledSite].sort((a, b) => a - b),
+      [f.site, scheduledSite, unrelatedSite].sort((a, b) => a - b),
     );
-    expect(sites.some((site) => site.id === unrelatedSite)).toBe(false);
     await pool.query(
       "INSERT INTO gate_stations(site_id,name) VALUES($1,'Unassigned gate')",
       [scheduledSite],
     );
     const stations = await listChangeOverStations(f.outgoing, scheduledSite);
-    expect(stations.map((station) => station.name)).toEqual(["Scheduled gate"]);
+    expect(stations.map((station) => station.name)).toEqual(["Scheduled gate", "Unassigned gate"]);
   });
   it("grounds askV field answers in current state and refuses unrelated sites", async () => {
     const f = await fixture();

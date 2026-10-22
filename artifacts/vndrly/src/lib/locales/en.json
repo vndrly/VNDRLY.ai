@@ -5691,7 +5691,7 @@
     "textFallback": "Use text instead of voice"
   },
   "changeOver": {
-    "title": "Dashboard",
+    "title": "Gate Dashboard",
     "shiftNotes": "Shift Notes",
     "intro": "See who's on site, review open items, and keep the next shift informed.",
     "historyIntro": "Completed handoffs from the last 7 days, newest first. Older records remain available through the date filter.",

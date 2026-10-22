@@ -516,35 +516,33 @@ export default function GateChangeOverPage({
                     </BrandPillButton>
                   </>
                 )}
+                {ownShift && (
+                  <div className="space-y-3 border-t border-[#3a3a3a] pt-3">
+                    <label className="block font-bold">
+                      {t("changeOver.outgoingNotes")}
+                      <textarea
+                        className={`mt-2 min-h-28 font-normal ${BRANDED_NOTES_CLASS}`}
+                        value={notes}
+                        maxLength={8000}
+                        onChange={(e) => {
+                          setNotes(e.target.value);
+                          resetReview();
+                        }}
+                      />
+                    </label>
+                    <BrandPillButton
+                      disabled={busy || !online}
+                      hoverSrc={brandImagePillSrc(brand.primary, brand.name)}
+                      onClick={() => void act(() => mutate("prepare", { notes }))}
+                    >
+                      {t(
+                        prep ? "changeOver.refreshHandoff" : "changeOver.prepare",
+                      )}
+                    </BrandPillButton>
+                  </div>
+                )}
               </div>
             </WorkspacePanel>
-            {ownShift && (
-              <WorkspacePanel title={t("changeOver.outgoingNotes")} subtitle={t("watch.independent")} icon={NotebookPen}>
-                <div className="gate-panel-body space-y-3">
-                  <label className="block font-bold">
-                    {t("changeOver.outgoingNotes")}
-                    <textarea
-                      className={`mt-2 min-h-28 font-normal ${BRANDED_NOTES_CLASS}`}
-                      value={notes}
-                      maxLength={8000}
-                      onChange={(e) => {
-                        setNotes(e.target.value);
-                        resetReview();
-                      }}
-                    />
-                  </label>
-                  <BrandPillButton
-                    disabled={busy || !online}
-                    hoverSrc={brandImagePillSrc(brand.primary, brand.name)}
-                    onClick={() => void act(() => mutate("prepare", { notes }))}
-                  >
-                    {t(
-                      prep ? "changeOver.refreshHandoff" : "changeOver.prepare",
-                    )}
-                  </BrandPillButton>
-                </div>
-              </WorkspacePanel>
-            )}
             {prep && (
               <WorkspacePanel title={t("changeOver.review")} subtitle={t("changeOver.factualSummary")} icon={NotebookPen}>
                 <div className="gate-panel-body space-y-3">

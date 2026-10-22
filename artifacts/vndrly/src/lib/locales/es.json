@@ -5691,7 +5691,7 @@
     "textFallback": "Usar texto en lugar de voz"
   },
   "changeOver": {
-    "title": "Panel",
+    "title": "Panel de acceso",
     "shiftNotes": "Notas de turno",
     "intro": "Vea quién está en el sitio, revise los asuntos pendientes y mantenga informado al siguiente turno.",
     "historyIntro": "Entregas completadas en los últimos 7 días, más recientes primero. Consulte registros anteriores con el filtro de fechas.",
