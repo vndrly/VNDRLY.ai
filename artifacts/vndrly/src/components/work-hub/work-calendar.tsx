@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
+import SphereBackButton from "@/components/sphere-back-button";
 import { localDateKey } from "./calendar-views";
 import "./work-calendar.css";
 
@@ -28,9 +29,9 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     <div className="hub-calendar-heading"><h2>Work calendar</h2>{onSchedule && <BrandPillButton tone="brand" aria-expanded={scheduling} onClick={onSchedule}>{scheduling ? "Close scheduling" : "Schedule"}</BrandPillButton>}</div>
     <p className="hub-calendar-muted">Daily company work across shifts, meetings, tasks, and scheduled operations. Scheduling reserves planned time; it does not start work.</p>
     <div className="hub-month-navigation">
-      <BrandPillButton tone="brand" aria-label="Previous month" onClick={() => move(-1)}>‹</BrandPillButton>
+      <button type="button" className="group inline-flex min-h-11 min-w-11 items-center justify-center justify-self-start rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]" aria-label="Previous month" onClick={() => move(-1)}><SphereBackButton size={40} /></button>
       <h3 aria-live="polite">{month.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3>
-      <BrandPillButton tone="brand" aria-label="Next month" onClick={() => move(1)}>›</BrandPillButton>
+      <button type="button" className="group inline-flex min-h-11 min-w-11 items-center justify-center justify-self-end rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]" aria-label="Next month" onClick={() => move(1)}><SphereBackButton size={40} direction="right" /></button>
     </div>
     <div className="hub-month-grid" aria-label="Calendar days">
       {monthCalendarDays(month).map(date => {

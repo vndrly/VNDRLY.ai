@@ -13,3 +13,22 @@ test("retains encrypted originals and photo bytes through two tabs and a real br
   const read=await reopened.evaluate(async({evidenceId,operationId})=>{const j=(globalThis as any).retainedJournal,state=await j.readState();return {count:state.entries.length,original:state.entries.find((e:any)=>e.command.operationId===operationId),bytes:Array.from(await j.readEvidencePart(evidenceId,0,11))};},{evidenceId,operationId});expect(read.count).toBe(2);expect(read.original.command.payload.notes).toBe("Synthetic retained driver observation");expect(read.original.delivery.state).toBe("sending");expect(read.bytes).toEqual([137,80,78,71,13,10,26,10,1,2,3]);
  }finally{await context.close();}
 },60000);
+
+test("serializes read-modify-write across separate browser storage connections",async({page,baseURL})=>{
+ await page.goto(baseURL!);
+ const moduleURL=`/@fs/${fileURLToPath(new URL("../../../",import.meta.url)).replaceAll("\\","/")}lib/api-zod/src/fleet-work-browser-storage.ts`;
+ const result=await page.evaluate(async({moduleURL,identity})=>{
+  const {openFleetBrowserStorage}=await import(moduleURL);
+  const first=await openFleetBrowserStorage(identity,()=>true),second=await openFleetBrowserStorage(identity,()=>true);
+  let release!:()=>void,entered!:()=>void;
+  const held=new Promise<void>(resolve=>{release=resolve}),started=new Promise<void>(resolve=>{entered=resolve});
+  const a=first.transaction(async(tx:any)=>{const previous=Number(await tx.get("meta","sequence")??"0");entered();await held;await tx.set("meta","sequence",String(previous+1));});
+  await started;
+  const b=second.transaction(async(tx:any)=>{const previous=Number(await tx.get("meta","sequence")??"0");await tx.set("meta","sequence",String(previous+1));});
+  // Release from a later task, after an uncoordinated second snapshot can read.
+  await new Promise(resolve=>setTimeout(resolve,100));release();
+  await Promise.all([a,b]);
+  return first.transaction((tx:any)=>tx.get("meta","sequence"));
+ },{moduleURL,identity:`concurrency-regression:${randomUUID()}`});
+ expect(result).toBe("2");
+});

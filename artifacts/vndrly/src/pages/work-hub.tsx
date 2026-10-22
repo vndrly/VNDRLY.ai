@@ -685,6 +685,7 @@ function CalendarModule() {
   return (
     <Shell module="calendar">
       <div className="hub-calendar-page" data-testid="work-hub-calendar-layout">
+        <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
         <WorkCalendar month={month} selectedDay={selectedDay} items={filteredItems}
           onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}
           onOpenDay={() => setAgendaOpen(true)}
@@ -713,7 +714,6 @@ function CalendarModule() {
       </Card>
           </>}
         />
-        <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
         <div className="grid gap-4">
           {scheduling && form.calendarType === "project" && canManage && (
             <Card id="create-shift-card" className="border-2 border-[color:var(--brand-primary)] bg-white">

@@ -37,9 +37,10 @@ describe("Work Hub calendar ranges", () => {
     render(<CalendarTimeGrid selectedDay="2026-09-16" items={[]} onSelectDay={() => undefined} />);
 
     const brandPill = brandImagePillSrc(DEFAULT_BRAND.primary, DEFAULT_BRAND.name);
-    for (const name of ["Previous week", "Today", "Next week"]) {
-      const button = screen.getByRole("button", { name });
-      expect([...button.querySelectorAll("img")].some((image) => image.getAttribute("src") === brandPill)).toBe(true);
+    const today = screen.getByRole("button", { name: "Today" });
+    expect([...today.querySelectorAll("img")].some((image) => image.getAttribute("src") === brandPill)).toBe(true);
+    for (const name of ["Previous week", "Next week"]) {
+      expect(screen.getByRole("button", { name }).querySelector('[data-testid="sphere-back-circle"]')).not.toBeNull();
     }
 
     for (const name of ["Calendar view", "Event type"]) {

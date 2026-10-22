@@ -9,6 +9,7 @@ const arrowIcon = require("../assets/buttons/sphere-back-arrow.png");
 
 interface Props {
   size?: number;
+  direction?: "left" | "right";
   onPress?: () => void;
   accessibilityLabel?: string;
   style?: ViewStyle;
@@ -17,6 +18,7 @@ interface Props {
 
 export default function SphereBackButton({
   size = 40,
+  direction = "left",
   onPress,
   accessibilityLabel = "Back",
   style,
@@ -70,6 +72,7 @@ export default function SphereBackButton({
               width: size,
               height: size,
               tintColor: "#ffffff",
+              transform: [{ rotate: direction === "right" ? "180deg" : "0deg" }],
             }}
             resizeMode="contain"
           />

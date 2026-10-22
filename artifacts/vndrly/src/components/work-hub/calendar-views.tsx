@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
+import SphereBackButton from "@/components/sphere-back-button";
 import SidebarButton from "@/components/sidebar-button";
 import { BrandedSelect } from "./chrome";
 export function localDateKey(date: Date) {
@@ -35,32 +36,36 @@ export function CalendarTimeGrid({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
         <h2 className="font-semibold">Schedule</h2>
         <div className="flex flex-wrap gap-2">
-          <BrandPillButton
-            tone="brand"
+          <button
+            type="button"
+            aria-label={`Previous ${view}`}
+            className="group inline-flex min-h-11 min-w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]"
             onClick={() => {
               const next = new Date(`${selectedDay}T12:00:00`);
               next.setDate(next.getDate() - (view === "week" ? 7 : 1));
               onSelectDay(localDateKey(next));
             }}
           >
-            Previous {view}
-          </BrandPillButton>
+            <SphereBackButton size={40} direction="left" />
+          </button>
           <BrandPillButton
             tone="brand"
             onClick={() => onSelectDay(localDateKey(new Date()))}
           >
             Today
           </BrandPillButton>
-          <BrandPillButton
-            tone="brand"
+          <button
+            type="button"
+            aria-label={`Next ${view}`}
+            className="group inline-flex min-h-11 min-w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]"
             onClick={() => {
               const next = new Date(`${selectedDay}T12:00:00`);
               next.setDate(next.getDate() + (view === "week" ? 7 : 1));
               onSelectDay(localDateKey(next));
             }}
           >
-            Next {view}
-          </BrandPillButton>
+            <SphereBackButton size={40} direction="right" />
+          </button>
           <BrandedSelect
             aria-label="Calendar view"
             className="min-w-24"

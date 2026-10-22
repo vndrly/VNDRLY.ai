@@ -8,6 +8,8 @@ function completion(value:IDBTransaction):Promise<void>{return new Promise((reso
  * may advertise durable work. Every command/evidence metadata value is encrypted. */
 export async function openFleetBrowserStorage(identity:string,isCurrent:()=>boolean){
  if(!globalThis.isSecureContext||!globalThis.indexedDB||!globalThis.crypto?.subtle)throw Error("Durable Fleet work requires a secure browser with IndexedDB and Web Crypto");
+ const locks=globalThis.navigator?.locks;
+ if(!locks?.request)throw Error("Durable Fleet work requires browser support for cross-tab storage locks");
  if(!isCurrent())throw Error("Original work account changed");
  const id=hex(await crypto.subtle.digest("SHA-256",bytes(identity)));
  const opening=indexedDB.open(`vndrly-fleet-work-${id}`,1);
@@ -38,6 +40,9 @@ export async function openFleetBrowserStorage(identity:string,isCurrent:()=>bool
   }
   return result;
  };
- const storage:FleetJournalStore={transaction<T>(work:(tx:FleetJournalTransaction)=>Promise<T>){const pending=serial.then(()=>transact(work));serial=pending.then(()=>undefined,()=>undefined);return pending;}};
+ // Snapshot, crypto and commit must share one origin-wide lock. The per-instance
+ // queue alone cannot prevent another tab from overwriting the same sequence or
+ // racing scope revocation while encryption runs outside IndexedDB.
+ const storage:FleetJournalStore={async transaction<T>(work:(tx:FleetJournalTransaction)=>Promise<T>):Promise<T>{const pending=serial.then(()=>locks.request(`vndrly-fleet-storage:${id}`,()=>transact(work)));serial=pending.then(()=>undefined,()=>undefined);return await pending;}};
  return storage;
 }

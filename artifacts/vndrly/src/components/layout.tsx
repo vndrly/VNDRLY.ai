@@ -56,7 +56,7 @@ import ReferToVndrlyDialog from "@/components/refer-to-vndrly-dialog";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import NotificationsBell from "@/components/notifications-bell";
-import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { ASKV_PANE_BG, NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 
@@ -505,7 +505,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         {showAskVPane && (
         <div
-          style={navPaneStyle}
+          style={{ backgroundColor: ASKV_PANE_BG }}
           className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
           data-testid="askv-pane"
         >

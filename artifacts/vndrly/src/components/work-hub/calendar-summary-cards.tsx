@@ -1,10 +1,11 @@
-import { CalendarClock, CheckSquare2, MessageSquare, Users } from "lucide-react";
+import { CalendarClock, CheckSquare2, ChevronRight, MessageSquare, Users } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { WorkspacePanel } from "./workspace-panel";
 
 type Row = Record<string, any>;
 type Range = "next" | "week" | "month";
@@ -35,6 +36,8 @@ const timestamp = (value: unknown) => {
 const taskUrgency = (item: Row) => item.urgent === true || ["urgent", "high"].includes(String(item.priority ?? "").toLowerCase());
 
 export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks = [], channels = [], scheduleUnavailable = false, channelsUnavailable = false }: { shifts?: Row[]; meetings?: Row[]; tasks?: Row[]; channels?: Row[]; scheduleUnavailable?: boolean; channelsUnavailable?: boolean }) {
+  const { i18n } = useTranslation();
+  const es = (i18n?.language ?? "en").startsWith("es");
   const [open, setOpen] = useState<Summary | null>(null);
   const [ranges, setRanges] = useState<Record<string, Range>>({});
   const now = Date.now();
@@ -82,16 +85,17 @@ export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks
   ) : null;
 
   return <>
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {summaries.map((summary) => <Card key={summary.key} className="border-2 border-[color:var(--brand-primary)] bg-white">
-        <button type="button" className="w-full text-left" onClick={() => setOpen(summary)} aria-label={`Open ${summary.title}`}>
-          <CardContent className="pt-5">
-            <div className="flex items-center gap-2"><summary.icon className="h-5 w-5 text-[var(--brand-primary)]" /><p className="text-xs font-semibold uppercase text-muted-foreground">{summary.title}</p></div>
-            <p className="mt-2 font-semibold text-black">{(summary.key === "messages" ? channelsUnavailable : scheduleUnavailable) ? "Unavailable" : summary.value}</p><p className="text-xs text-muted-foreground">{(summary.key === "messages" ? channelsUnavailable : scheduleUnavailable) ? "Open to check this schedule source" : summary.detail}</p>
-          </CardContent>
-        </button>
-      </Card>)}
-    </div>
+    <WorkspacePanel title={es ? "De un vistazo" : "At a glance"} subtitle={es ? "Turnos, reuniones, tareas y conversaciones" : "Shifts, meetings, tasks, and conversations"} icon={CalendarClock}>
+      {summaries.map((summary) => {
+        const unavailable = summary.key === "messages" ? channelsUnavailable : scheduleUnavailable;
+        return <button key={summary.key} type="button" className="hub-home-row" onClick={() => setOpen(summary)} aria-label={`Open ${summary.title}`} aria-haspopup="dialog">
+          <summary.icon aria-hidden="true" className="hub-row-icon" />
+          <span className="hub-row-label">{summary.title}{!unavailable && <small className="mt-1 block text-xs font-normal text-[#b3b3b3]">{summary.detail}</small>}</span>
+          <span className="hub-row-value">{unavailable ? "Unavailable" : summary.value}</span>
+          <ChevronRight aria-hidden="true" className="hub-chevron" />
+        </button>;
+      })}
+    </WorkspacePanel>
     <Dialog open={Boolean(open)} onOpenChange={(isOpen) => { if (!isOpen) setOpen(null); }}>
       <MiniCardDialogContent
         icon={open?.icon ?? Users}

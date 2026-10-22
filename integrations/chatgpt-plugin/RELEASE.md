@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.1
+
+Matches the calendar navigation and compact summary refinements across web and iOS, plus origin-wide locking for encrypted browser offline work. Existing MCP tools, embedded views, five service skills, branding, account identity and grants are unchanged. This package does not establish physical device or provider acceptance.
+
 # VNDRLY plugin 1.22.0
 
 Matches the shared branded Work Hub and calendar redesign and independent shift/watch controls across web and iOS. Gate watch preparation and explicit own-account assumption preserve paid clocks, device sessions, current grants and durable notes. Sign-in/sign-out never starts or ends a shift or watch. Existing MCP identity, embedded views, five service skills, branding, linked accounts and grants remain intact. Incoming assumption uses the trusted device review screen; no new conversational scope is introduced.

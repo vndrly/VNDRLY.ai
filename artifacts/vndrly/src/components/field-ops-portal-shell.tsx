@@ -26,7 +26,7 @@ import {
   getGetVendorQueryKey,
   getGetVendorRatingsQueryKey,
 } from "@workspace/api-client-react";
-import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { ASKV_PANE_BG, NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 
@@ -297,7 +297,7 @@ export function FieldOpsPortalShell({
         )}
       >
         <div
-          style={navPaneStyle}
+          style={{ backgroundColor: ASKV_PANE_BG }}
           className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
           data-testid="askv-pane"
         >
