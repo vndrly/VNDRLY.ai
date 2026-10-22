@@ -15,6 +15,7 @@ import { WorkHubPageHeading } from "./chrome";
 import { ActivityDashboard } from "./activity-dashboard";
 import { AccountWorkspace, canUseGateWorkspace } from "./account-workspace";
 import { WorkspacePanel as HomeCard, WorkspaceRow as HomeRow } from "./workspace-panel";
+import DashboardTasks from "./dashboard-tasks";
 import "./home.css";
 
 type Row = Record<string, any>;
@@ -81,7 +82,7 @@ export function WorkHubHome() {
       <HomeCard title={c("Today", "Hoy")} subtitle={c("Your schedule, work, and priorities", "Su horario, trabajo y prioridades")} icon={Sun}>
         <HomeRow icon={CalendarDays} label={c("Calendar", "Calendario")} value={count(calendar?.length, c("upcoming", "próximos"))} href="/work-hub/calendar" />
         <HomeRow icon={Clock3} label={user?.managedSubcontractor ? c("My Hours", "Mis horas") : c("My Work", "Mi trabajo")} value={user?.managedSubcontractor ? c("Open", "Abrir") : count(workCount)} href={user?.managedSubcontractor ? "/work-hub/calendar" : undefined} onClick={() => toggle("work")} expanded={user?.managedSubcontractor ? undefined : panel === "work"} />
-        <HomeRow icon={Bell} label={c("Needs Attention", "Requiere atención")} value={count(attentionCount)} onClick={() => document.getElementById("hub-home-attention")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+        <HomeRow icon={Bell} label={c("Needs Attention", "Requiere atención")} value={count(attentionCount)} href="/notifications" />
         <HomeRow icon={Shield} label={c("Safety", "Seguridad")} value={count(safety.isSuccess ? pending.length : undefined)} onClick={() => toggle("safety")} expanded={panel === "safety"} />
         <HomeRow icon={CheckSquare2} label={c("Tasks & Forms", "Tareas y formularios")} value={count(activeTasks?.length)} href="/work-hub/tasks" />
       </HomeCard>
@@ -91,7 +92,7 @@ export function WorkHubHome() {
         <HomeRow icon={CalendarDays} label={c("Meetings", "Reuniones")} value={count(home.data?.meetings?.filter(({ occurrence }: Row) => occurrence.status !== "cancelled" && Date.parse(occurrence.endsAt ?? occurrence.startsAt) >= now).length, c("upcoming", "próximas"))} href="/work-hub/meetings" />
       </HomeCard>
       {gate && <WorkforcePanel />}
-
+      <DashboardTasks />
     </div>
     <section aria-label={c("More tools", "Más herramientas")}><h2 className="hub-tools-title">{c("More tools", "Más herramientas")}</h2><div className="hub-home-tools">{utilities.map(({ label, icon: Icon, href }) => <Link className="hub-tool" href={href} key={href}><Icon aria-hidden="true" />{label}</Link>)}</div></section>
     {panel === "work" && <section className="hub-home-card hub-detail" aria-label={c("My Work", "Mi trabajo")}><h2>{c("My Work", "Mi trabajo")}</h2>

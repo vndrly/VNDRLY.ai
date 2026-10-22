@@ -23,7 +23,7 @@ export default function DashboardTasks() {
     completed: assigned?.filter(task => task.status === "completed"),
   };
   const toggle = (next: typeof panel) => setPanel(panel === next ? null : next);
-  return <WorkspacePanel title={c("Tasks", "Tareas")} subtitle={c("Your assigned work without a ticket", "Su trabajo asignado sin ticket")} icon={CheckSquare2}>
+  return <WorkspacePanel title={c("Tasks", "Tareas")} subtitle={c("A task is an unticketed work assignment", "Una tarea es una asignación de trabajo sin ticket")} icon={CheckSquare2}>
     <WorkspaceRow icon={Bell} label={c("New", "Nuevas")} value={groups.new ? String(groups.new.length) : c("Unavailable", "No disponible")} onClick={() => toggle("new")} expanded={panel === "new"} />
     <WorkspaceRow icon={PlayCircle} label={c("In Progress", "En curso")} value={groups.progress ? String(groups.progress.length) : c("Unavailable", "No disponible")} onClick={() => toggle("progress")} expanded={panel === "progress"} />
     <WorkspaceRow icon={CheckCircle2} label={c("Completed", "Completadas")} value={groups.completed ? String(groups.completed.length) : c("Unavailable", "No disponible")} onClick={() => toggle("completed")} expanded={panel === "completed"} />
