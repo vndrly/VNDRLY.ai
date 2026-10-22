@@ -9,7 +9,7 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
   it("is additive, repeatable, and scoped by stable natural keys", () => {
     const sql = COMPANYGO_FLEET_SEED_SQL.join("\n").toLowerCase();
     expect(sql).not.toMatch(/\b(delete|truncate|drop)\b/);
-    expect(sql.match(/\bupdate\b/g)).toHaveLength(3);
+    expect(sql.match(/\bupdate\b/g)).toHaveLength(4);
     expect(sql).toContain("update ticket_line_items set type='other'");
     expect(sql).toContain("update tickets t set fleet_plan=");
     expect(sql).toContain("current.capabilities || resolved.capabilities");
@@ -141,7 +141,8 @@ describe("CompanyGo Fleet workflow fixture plan", () => {
     expect(sql).toContain("insert into assistant_action_audit");
     expect(sql).toContain("'fixture_repair'");
     expect(sql).not.toContain("update assistant_action_audit");
-    expect(sql).toContain("on conflict(id) do nothing");
+    expect(sql).toContain("on conflict(id) do update set check_in_time=excluded.check_in_time");
+    expect(sql).toContain("where tickets.notes='stable additive 30-day fleet workflow fixture'");
     expect(sql).not.toContain("password_hash=");
   });
 
