@@ -1,11 +1,27 @@
 .shift-card { border: 2px solid var(--brand-primary); border-radius: 12px; padding: 8px 12px; background: #373b40; color: #f8fafc; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px 12px; min-width: 0; }
 .shift-card-left { justify-self: start; }
-.shift-card-center { justify-self: center; text-align: center; }
+.shift-card-center { min-width: 0; max-width: 100%; justify-self: center; text-align: center; }
 .shift-card-on-call { justify-self: end; display: grid; gap: 4px; text-align: right; }
 .shift-card-on-call small { font-size: 11px; max-width: 180px; }
 .shift-card-feedback { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; }
 .workday-status-text { appearance: none; border: 0; border-radius: 0; background: none; background-image: none; box-shadow: none; color: #9ca3af; font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 4px 0; cursor: pointer; white-space: nowrap; }
 .workday-status-text.is-active { color: #22c55e; }
+.workday-status-switch { min-height: 44px; display: inline-flex; align-items: center; gap: 10px; max-width: 100%; }
+.workday-switch-label { white-space: normal; text-align: left; }
+.workday-switch-track { width: 44px; height: 24px; border-radius: 12px; padding: 3px; flex-shrink: 0; background: #6b7280; transition: background-color .15s; }
+.workday-switch-dot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.workday-status-switch.is-active .workday-switch-track { background: #22c55e; }
+.workday-status-switch.is-active .workday-switch-dot { transform: translateX(20px); }
+.watch-pass-control { max-width: 100%; display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 4px 8px; background: none; border: 0; color: #9ca3af; font: inherit; font-size: 17px; font-weight: 700 !important; cursor: pointer; }
+.watch-pass-control.is-holding-watch { color: #22c55e; }
+.watch-pass-symbol { flex-shrink: 0; display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 4px; }
+.watch-pass-control.is-holding-watch .watch-pass-symbol { flex-direction: row; }
+.watch-pass-key { width: 23px; height: 23px; }
+.watch-pass-arrow { width: 18px; height: 18px; transition: transform .15s; }
+.watch-pass-control:hover:not(:disabled) .watch-pass-arrow { transform: translateX(4px); }
+.watch-pass-control:disabled { cursor: default; }
+.watch-pass-control:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .workday-switch-track, .workday-switch-dot, .watch-pass-arrow { transition: none; } }
 .workday-status-text:disabled { cursor: default; }
 .workday-status-text:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 4px; }
 @media (max-width: 600px) { .shift-card { padding: 8px; gap: 8px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .shift-card-center { grid-column: 1 / -1; grid-row: 2; } .shift-card-on-call { grid-column: 2; grid-row: 1; } .shift-card button { min-width: 110px; } }

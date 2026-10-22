@@ -6,7 +6,7 @@ import {ownerForUser} from "@/lib/work-hub-client";
 import {openWebFleetWorkStorage} from "@/lib/fleet-work-journal-web";
 import {PngPillButton as TogglePillButton} from "@/components/png-pill-rollover";
 import type { ReactNode } from "react";
-import WorkdayStatusText from "./workday-status-text";
+import WorkdayStatusSwitch from "./workday-status-switch";
 import OnCallControl from "./on-call-control";
 import "./workday-controls.css";
 type Controller=ReturnType<typeof createWorkdayController>;
@@ -33,7 +33,7 @@ function Controls({identity,userId,membershipId,owner,watchControl}:{watchContro
  async function recover(){if(!controller.current||busy||!recoveryReason.trim())return;setBusy(true);try{await controller.current.recoverPrior({read:id=>http(`/operations/${id}`),send:command=>http("/events",command),authorize:(scope,reason)=>http("/reauthorize",{scope,reason})},recoveryReason);await refresh();}catch(e){setMessage(String(e));}finally{setBusy(false);}}
  async function record(){if(!controller.current||lock.current||busy)return;setBusy(true);try{await refresh();const live=await controller.current.read();await controller.current.record(live.onShift?"end_shift":"start_shift",new Date(),Intl.DateTimeFormat().resolvedOptions().timeZone);if(current()){setState(await controller.current.read());setMessage(es?"Guardado en este dispositivo; sincronizando":"Saved on this device; synchronizing");}await refresh();}catch(error){if(current())setMessage(error instanceof Error?error.message:"Workday unavailable");}finally{if(current())setBusy(false);}}
  return <section aria-label={es?"Jornada laboral":"Workday"} className="shift-card">
- <div className="shift-card-left"><WorkdayStatusText active={state?.onShift===true} disabled={busy||!state||state.held} label={state?.onShift?(es?"Finalizar turno":"End Shift"):(es?"Iniciar turno":"Start Shift")} onClick={()=>void record()}/></div>
+ <div className="shift-card-left"><WorkdayStatusSwitch accessibilityLabel={es?"Turno":"Shift"} active={state?.onShift===true} disabled={busy||!state||state.held} label={state?.onShift?(es?"Finalizar turno":"End Shift"):(es?"Iniciar turno":"Start Shift")} onClick={()=>void record()}/></div>
  <div className="shift-card-center">{watchControl}</div>
  <OnCallControl identity={identity}/>
  <div className="shift-card-feedback">
