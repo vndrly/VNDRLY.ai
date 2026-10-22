@@ -1,4 +1,5 @@
 import WorkdayControls from "@/components/workday-controls";
+import "@/components/gate-dashboard.css";
 import GateWatchLink from "@/components/gate-watch-link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
@@ -1220,7 +1221,33 @@ export default function GatekeeperPage() {
         </Link>
       </div>
 
-      <WorkdayControls watchControl={<GateWatchLink stationId={selectedGateLocation?.id} siteId={site.data?.site.id} />} />
+      <WorkdayControls watchControl={
+        <div className="gate-dashboard-location-selectors">
+          <label className="min-w-36 space-y-1 text-sm font-medium">
+            {t("changeOver.site")}
+            <BrandedSelect className="gate-dashboard-location-select" aria-label={t("gatekeeper.selectSite")}
+              data-testid="select-gate-current-location"
+              value={assignedSites.some(row => row.siteCode === confirmedCode) ? confirmedCode! : ""}
+              onChange={event => {
+                setSiteCode(event.target.value);
+                setConfirmedCode(event.target.value);
+                setGateLocationId("");
+                setHostKey("");
+              }}>
+              <option value="">{t("gatekeeper.selectSite")}</option>
+              {assignedSites.map(row => <option key={row.siteCode} value={row.siteCode}>{siteDisplayName(row)}</option>)}
+            </BrandedSelect>
+          </label>
+          <label className="min-w-36 space-y-1 text-sm font-medium">
+            {t("changeOver.gate")}
+            <BrandedSelect className="gate-dashboard-location-select" aria-label={t("gatekeeper.gateLocation")}
+              value={selectedGateLocation?.id ?? ""} onChange={event => setGateLocationId(event.target.value)}>
+              <option value="">{t("gatekeeper.selectGateLocation")}</option>
+              {gateLocations.data?.stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}
+            </BrandedSelect>
+          </label>
+        </div>
+      } />
 
       {live.flash && (
         <div
@@ -1266,6 +1293,7 @@ export default function GatekeeperPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="min-w-0 space-y-3">
         <Card
           className="flex min-h-[360px] flex-col !border-[color:var(--brand-primary)] lg:min-h-[420px]"
           data-testid="gate-on-site-card"
@@ -1475,6 +1503,10 @@ export default function GatekeeperPage() {
             </div> : null}
           </CardContent>
         </Card>
+        <div className="flex justify-center" data-testid="gate-watch-below-on-site">
+          <GateWatchLink stationId={selectedGateLocation?.id} siteId={site.data?.site.id} />
+        </div>
+        </div>
 
         <Card
           className="!border-[color:var(--brand-primary)]"
@@ -1723,37 +1755,10 @@ export default function GatekeeperPage() {
                 <div className={WORK_HUB_BRANDED_FIELD_CLASS} data-testid="gate-locked-partner" aria-readonly="true">
                   {selectedAssignedSite?.partnerName ?? t("gatekeeper.selectCompany")}
                 </div>
-                <Select
-                  value={
-                    assignedSites.some((row) => row.siteCode === confirmedCode)
-                      ? confirmedCode!
-                      : ""
-                  }
-                  onValueChange={(code) => {
-                    setSiteCode(code);
-                    setConfirmedCode(code);
-                    setHostKey("");
-                  }}
-                >
-                  <SelectTrigger aria-label={t("gatekeeper.selectSite")} data-testid="select-gate-current-location" className={WORK_HUB_BRANDED_FIELD_CLASS}>
-                    <SelectValue placeholder={t("gatekeeper.selectSite")} />
-                  </SelectTrigger>
-                  <SelectContent className={GATE_SELECT_CONTENT_CLASS}>
-                    {assignedSites.map((row) => (
-                      <SelectItem className={GATE_SELECT_ITEM_CLASS} key={row.siteCode} value={row.siteCode}>
-                        {siteDisplayName(row)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
                 </div>
               ) : null}
-              {!!gateLocations.data?.stations.length && <label className="block space-y-1 text-sm font-medium">{t("gatekeeper.gateLocation")}
-                <select className={WORK_HUB_BRANDED_FIELD_CLASS} value={selectedGateLocation?.id ?? ""} onChange={event => setGateLocationId(event.target.value)} aria-label={t("gatekeeper.gateLocation")}>
-                  <option value="">{t("gatekeeper.selectGateLocation")}</option>
-                  {gateLocations.data.stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}
-                </select>
-              </label>}
+
               {site.data && (
                 <div className="space-y-1">
                   <p className="text-base font-bold leading-tight text-foreground">
