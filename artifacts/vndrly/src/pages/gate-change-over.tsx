@@ -1,4 +1,3 @@
-import WatchPassControl from "@/components/watch-pass-control";
 import WorkdayControls from "@/components/workday-controls";
 import DashboardTasks from "@/components/work-hub/dashboard-tasks";
 import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
@@ -268,10 +267,51 @@ export default function GateChangeOverPage({
     (history ? log.isLoading : state.isLoading);
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
+  const locationSelectors = (
+    <div className={history ? "flex flex-wrap gap-3" : "gate-dashboard-location-selectors"}>
+      <label className="min-w-36 space-y-1 text-sm font-medium">
+        {t("changeOver.site")}
+        <BrandedSelect
+          aria-label={t("changeOver.site")}
+          className={history ? "min-w-36" : "gate-dashboard-location-select"}
+          value={siteId}
+          onChange={(e) => {
+            setSelectedSite(e.target.value);
+            setSelectedStation("");
+          }}
+        >
+          <option value="">{t("changeOver.choose")}</option>
+          {sites.data?.sites.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </BrandedSelect>
+      </label>
+      <label className="min-w-36 space-y-1 text-sm font-medium">
+        {t("changeOver.gate")}
+        <BrandedSelect
+          aria-label={t("changeOver.gate")}
+          className={history ? "min-w-36" : "gate-dashboard-location-select"}
+          value={stationId}
+          onChange={(e) => setSelectedStation(e.target.value)}
+        >
+          <option value="">{t("changeOver.choose")}</option>
+          {stations.data?.stations.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </BrandedSelect>
+      </label>
+    </div>
+  );
   return (
     <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5 ${history ? "" : "gate-dashboard"}`}>
       <div className="flex items-center gap-3">
-        <ContentPaneBackLink href={history ? "/gate/change-over" : "/gate"} ariaLabel={t("changeOver.title")} testId="button-back" />
+        {history
+          ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />
+          : <ContentPaneBackLink onClick={() => window.history.back()} ariaLabel={t("changeOver.title")} testId="button-back" />}
         {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         <div>
@@ -281,7 +321,7 @@ export default function GateChangeOverPage({
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
       </div>
-      {!history && <WorkdayControls watchControl={<WatchPassControl active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onClick={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) document.getElementById("watch-review")?.scrollIntoView({ behavior: "smooth" }); else void act(assumeWatch); }} />} />}
+      {!history && <WorkdayControls watchControl={locationSelectors} />}
       {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
       <div
         className={history
@@ -289,43 +329,7 @@ export default function GateChangeOverPage({
           : "space-y-5"}
         data-testid={history ? "shift-notes-main-card" : undefined}
       >
-      <div className="flex flex-wrap gap-3">
-        <label className="min-w-36 space-y-1 text-sm font-medium">
-          {t("changeOver.site")}
-          <BrandedSelect
-            aria-label={t("changeOver.site")}
-            className="min-w-36"
-            value={siteId}
-            onChange={(e) => {
-              setSelectedSite(e.target.value);
-              setSelectedStation("");
-            }}
-          >
-            <option value="">{t("changeOver.choose")}</option>
-            {sites.data?.sites.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </BrandedSelect>
-        </label>
-        <label className="min-w-36 space-y-1 text-sm font-medium">
-          {t("changeOver.gate")}
-          <BrandedSelect
-            aria-label={t("changeOver.gate")}
-            className="min-w-36"
-            value={stationId}
-            onChange={(e) => setSelectedStation(e.target.value)}
-          >
-            <option value="">{t("changeOver.choose")}</option>
-            {stations.data?.stations.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </BrandedSelect>
-        </label>
-      </div>
+      {history && locationSelectors}
       {!online && <p role="status">{t("changeOver.offline")}</p>}
       {loading && <p role="status">{t("changeOver.loading")}</p>}
       {(error || loadError) && (

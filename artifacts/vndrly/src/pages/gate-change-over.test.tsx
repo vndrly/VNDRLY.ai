@@ -9,7 +9,7 @@ import {
   within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
-vi.mock("@/components/workday-controls", () => ({ default: ({watchControl}: {watchControl?: React.ReactNode}) => <div>{watchControl}</div> }));
+vi.mock("@/components/workday-controls", () => ({ default: ({watchControl}: {watchControl?: React.ReactNode}) => <section aria-label="Workday"><button type="button" role="switch" aria-label="Shift" aria-checked="false" /><button type="button" role="switch" aria-label="On Call" aria-checked="false" />{watchControl}</section> }));
 const api = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: api }));
 vi.mock("@/hooks/use-auth", () => ({
@@ -240,13 +240,29 @@ it('clears review and disables watch assumption when offline', async () => {
   expect((screen.getByLabelText('changeOver.acknowledge') as HTMLInputElement).checked).toBe(false);
   for (const button of screen.getAllByRole('button', { name: 'watch.assume' })) expect((button as HTMLButtonElement).disabled).toBe(true);
 });
-it('prepares outgoing watch notes without ending a shift or changing accounts', async () => {
-  mount(); fireEvent.click(await screen.findByRole('button', { name: 'watch.handover' }));
-  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/prepare', { notes: 'Barrier note' }));
-  expect(api.mock.calls.some(([path]) => /\/(transfer|logout|end|start)$/.test(path))).toBe(false);
+it('keeps the top Workday card limited to shift and on-call controls', async () => {
+  mount();
+  const workday = await screen.findByRole('region', { name: 'Workday' });
+  expect(within(workday).getByRole('switch', { name: 'Shift' })).toBeTruthy();
+  expect(within(workday).getByRole('switch', { name: 'On Call' })).toBeTruthy();
+  for (const name of ['changeOver.site', 'changeOver.gate']) {
+    const select = within(workday).getByRole('combobox', { name });
+    expect(select.className).toContain('gate-dashboard-location-select');
+  }
+  expect(within(workday).queryByRole('button', { name: 'watch.handover' })).toBeNull();
+  expect(within(workday).queryByRole('button', { name: 'watch.assume' })).toBeNull();
+  expect(screen.getAllByRole('combobox')).toHaveLength(2);
 });
 
-it('retains the exact original watch command when the response is lost and displayed custody changes', async () => {
+it('uses browser history for the Dashboard back button', async () => {
+  const back = vi.spyOn(window.history, 'back').mockImplementation(() => undefined);
+  mount();
+  fireEvent.click(await screen.findByTestId('button-back'));
+  expect(back).toHaveBeenCalledOnce();
+  back.mockRestore();
+});
+
+it('does not duplicate the original watch command while canonical recovery is pending', async () => {
   const base=api.getMockImplementation()!;
   let current=incomingState(), attempts=0;
   api.mockImplementation(async (path,body) => {
@@ -260,8 +276,7 @@ it('retains the exact original watch command when the response is lost and displ
   fireEvent.click(within(document.getElementById('watch-review')!).getByRole('button',{name:'watch.assume'}));
   await screen.findByText('Lost response');
   await cache.invalidateQueries({queryKey:['change-over-state']});
-  fireEvent.click(await screen.findByRole('button',{name:'watch.recover'}));
-  await waitFor(()=>expect(attempts).toBe(2));
+  await waitFor(()=>expect(api.mock.calls.some(([path])=>path.includes('/watch/operations/'))).toBe(true));
   const writes=api.mock.calls.filter(([path])=>path.endsWith('/watch/assume'));
-  expect(writes[1][1]).toEqual(writes[0][1]);
+  expect(writes).toHaveLength(1);
 });
