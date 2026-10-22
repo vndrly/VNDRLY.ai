@@ -1,4 +1,4 @@
-.shift-card { border: 2px solid var(--brand-primary); border-radius: 12px; padding: 8px 12px; background: #373b40; color: #f8fafc; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px 12px; min-width: 0; }
+.shift-card { border: 2px solid var(--brand-primary); border-radius: 12px; padding: 8px 12px; background: #242426; color: #f8fafc; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px 12px; min-width: 0; }
 .shift-card-left { justify-self: start; }
 .shift-card-center { min-width: 0; max-width: 100%; justify-self: center; text-align: center; }
 .shift-card-on-call { justify-self: end; display: grid; gap: 4px; text-align: right; }

@@ -25,4 +25,10 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-panel-body textarea, .gate-panel-body input:not([type=checkbox]) { background: #303034; color: #ececec; border-width: 1px; }
 .gate-panel-body [data-testid^=carry-forward-item] { background: #303034; color: #ececec; border-width: 1px; }
 .gate-panel-body > ul { display: grid; gap: 6px; }
+.gate-dashboard-location-selectors { display: flex; align-items: end; justify-content: center; gap: 10px; color: #ececec; }
+.gate-dashboard-location-selectors label { text-align: left; }
+.gate-dashboard-location-select { min-width: 9rem; border-color: var(--brand-primary) !important; background: #242426 !important; color: #fff !important; color-scheme: dark !important; }
+.gate-dashboard-location-select:focus { outline: 2px solid color-mix(in srgb, var(--brand-primary) 70%, white); outline-offset: 2px; }
+.gate-dashboard-location-select option { background: #242426; color: #b3b3b3; }
+.gate-dashboard-location-select option:checked { background: #6b7280; color: #fff; }
 @media (max-width: 767px) { .gate-dashboard-panels { grid-template-columns: minmax(0, 1fr); } }
