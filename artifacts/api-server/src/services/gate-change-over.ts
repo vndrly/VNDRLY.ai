@@ -336,14 +336,59 @@ export async function listChangeOverStations(
     )
   ).rows;
 }
+/** Gate creation is an office capability; it does not grant watch recovery. */
+async function requireGateStationManagementAccess(client: Queryable, session: SessionPayload, siteId: number) {
+  try {
+    if ((await requireChangeOverAccess(client, session, siteId)).supervisor) return;
+  } catch (error) {
+    if (!(error instanceof ChangeOverError) || error.status !== 403) throw error;
+  }
+  if (!session.managedSubcontractor && session.vendorId && ["vendor", "field_employee"].includes(session.role ?? "")) {
+    const office = await client.query(
+      `SELECT 1 FROM users u
+       JOIN user_org_memberships m ON m.user_id=u.id AND m.org_type='vendor' AND m.vendor_id=$2
+       JOIN vendor_people p ON p.id=m.vendor_people_id AND p.user_id=u.id AND p.vendor_id=m.vendor_id
+       JOIN site_work_assignments a ON a.vendor_id=m.vendor_id AND a.site_location_id=$3 AND a.is_gate_contractor=true
+       JOIN site_locations s ON s.id=a.site_location_id
+       WHERE u.id=$1 AND u.session_version=$4 AND u.suspended_at IS NULL
+         AND ($5::int IS NULL OR m.id=$5)
+         AND p.deleted_at IS NULL AND p.is_active=true AND p.vendor_role IN ('office','both')
+         AND s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true LIMIT 1`,
+      [session.userId, session.vendorId, siteId, session.sv, session.activeMembershipId ?? null],
+    );
+    if (office.rowCount) return;
+  }
+  return fail(403, "supervisor_required", "Supervisor, office or admin access required");
+}
+
+export async function listGateStationManagementSites(session: SessionPayload) {
+  const candidates = (await pool.query(
+    `SELECT s.id,s.name FROM site_locations s
+     WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
+       AND ($1='admin' OR ($1='partner' AND s.partner_id=$2)
+         OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true))
+     ORDER BY s.name LIMIT 2000`,
+    [session.role, session.partnerId ?? null, session.vendorId ?? null],
+  )).rows;
+  const sites: { id: number; name: string }[] = [];
+  for (const site of candidates) {
+    try {
+      await requireGateStationManagementAccess(pool, session, site.id);
+      sites.push({ id: site.id, name: site.name });
+    } catch (error) {
+      if (!(error instanceof ChangeOverError) || error.status !== 403) throw error;
+    }
+  }
+  return sites;
+}
+
 export async function addChangeOverStation(
   session: SessionPayload,
   siteId: number,
   name: string,
 ) {
   return changeOverTransaction(async (c) => {
-    if (!(await requireChangeOverAccess(c, session, siteId)).supervisor)
-      return fail(403, "supervisor_required", "Supervisor access required");
+    await requireGateStationManagementAccess(c, session, siteId);
     return (
       await c.query(
         "INSERT INTO gate_stations(site_id,name) VALUES($1,$2) ON CONFLICT(site_id,name) DO UPDATE SET name=excluded.name RETURNING *",

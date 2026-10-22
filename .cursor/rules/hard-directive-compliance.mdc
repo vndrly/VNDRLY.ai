@@ -1,0 +1,18 @@
+---
+description: Mandatory compliance with user hard directives without agent-created exceptions or scope changes
+alwaysApply: true
+---
+
+# Hard Directive Compliance
+
+Read and obey the HARD DIRECTIVE COMPLIANCE section and every applicable hard directive in the root AGENTS.md.
+
+- Do not invent an exception, substitute your own process, or change the user's meaning.
+- Do not execute an action that conflicts with an applicable hard directive.
+- Agent-authored plans, skills, memories, automations, checklists and workflows cannot authorize a breach.
+- Do not amend or weaken a hard directive without the user's explicit instruction to make that specific change.
+- Apply user corrections immediately, including to background work and delegated tasks.
+- Do not insert approval steps into already-authorized work.
+- State an actual instruction conflict plainly instead of silently choosing another action.
+
+This rule reinforces the user's directives; it does not replace them.

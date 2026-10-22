@@ -134,7 +134,6 @@ export default function GateChangeOverPage({
   const [search, setSearch] = useState("");
   const [days, setDays] = useState(7);
   const [before, setBefore] = useState("");
-  const [stationName, setStationName] = useState("");
   const sites = useQuery({
     queryKey: ["change-over-sites", user?.userId, history],
     queryFn: () =>
@@ -444,7 +443,7 @@ export default function GateChangeOverPage({
               pendingWatch={Boolean(pendingWatch)} onRecoverWatch={() => void act(recoverWatch)}
               reason={reason} onReasonChange={setReason} onWithdraw={() => void act(() => mutate("cancel", { reason }))}
             />
-            {current.supervisor && (
+            {current.supervisor && current.shift && !ownShift && (
               <WorkspacePanel title={t("changeOver.supervisor")} subtitle={t("changeOver.gate")} icon={Shield}>
                 <div className="gate-panel-body space-y-3">
                   {current.shift && !ownShift && (
@@ -472,27 +471,6 @@ export default function GateChangeOverPage({
                       </BrandPillButton>
                     </>
                   )}
-                  <BrandedInput
-                    aria-label={t("changeOver.newGate")}
-                    placeholder={t("changeOver.newGate")}
-                    value={stationName}
-                    onChange={(e) => setStationName(e.target.value)}
-                  />
-                  <BrandPillButton
-                    disabled={busy || !online || !stationName.trim()}
-                    onClick={() =>
-                      void act(async () => {
-                        await request("/stations", {
-                          siteId: Number(siteId),
-                          name: stationName,
-                        });
-                        setStationName("");
-                        await stations.refetch();
-                      })
-                    }
-                  >
-                    {t("changeOver.addGate")}
-                  </BrandPillButton>
                 </div>
               </WorkspacePanel>
             )}

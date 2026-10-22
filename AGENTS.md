@@ -1,5 +1,21 @@
 # VNDRLY Field Operations Management
 
+## HARD DIRECTIVE COMPLIANCE — NO AGENT EXCEPTIONS
+
+The user's hard directives are binding constraints, not suggestions.
+
+- Follow every applicable hard directive exactly. Do not invent exceptions, reinterpret its meaning, or substitute an agent-preferred process.
+- Preserve the user's words and scope. Do not add, remove, narrow, or broaden what the user instructed.
+- An agent plan, skill, memory, automation, checklist, workflow, best practice, or self-authored rule does not authorize breaking a hard directive.
+- Do not rewrite, weaken, bypass, or amend a hard directive unless the user explicitly instructs that specific change.
+- Before taking an action, check that it is authorized and does not conflict with an applicable hard directive. If it conflicts, do not execute it.
+- An apparent conflict or inability to comply must be stated plainly with the exact conflicting directive. It is not permission to choose a substitute action or an inferred exception.
+- Do not add an approval step to work the user has already authorized.
+- A user correction must govern the next action immediately. Do not repeat the prohibited behavior through another command, tool, agent, or background task.
+- Describe only what was actually done. Do not claim that a hard directive was followed when it was bypassed.
+
+These compliance guardrails do not replace or amend any existing hard directive below.
+
 ## Overview
 VNDRLY is a full-stack web application designed to streamline oil & gas field operations by facilitating interactions and workflows among Partners, Vendors, Field Employees, and VNDRLY Admins. The system enables Partners to manage drilling Site Locations, Vendors to assign Field Employees, and Field Employees to track work via QR code-initiated Tickets with GPS monitoring. Its core purpose is to enhance efficiency, transparency, and accountability in field operations, providing a comprehensive solution for managing complex logistics and personnel across multiple stakeholders, ultimately driving better business outcomes and market penetration in the oil & gas sector.
 

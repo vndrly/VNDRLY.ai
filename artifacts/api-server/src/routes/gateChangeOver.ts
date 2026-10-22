@@ -17,6 +17,7 @@ import { summarizeShiftFacts } from "../services/gate-change-over-summary";
 import {
   ChangeOverError,
   listChangeOverSites,
+  listGateStationManagementSites,
   listChangeOverStations,
   addChangeOverStation,
   getChangeOverState,
@@ -101,6 +102,9 @@ router.get("/gate-change-over/map", async (req, res) => {
     gates.push(...stations.map(station => ({ ...station, siteId: site.id, siteName: site.name, siteLatitude: site.latitude, siteLongitude: site.longitude })));
   }
   res.json({ gates });
+});
+router.get("/gate-change-over/station-management/sites", async (req, res) => {
+  res.json({ sites: await listGateStationManagementSites(sessionFor(req)) });
 });
 router.get("/gate-change-over/stations", async (req, res) => {
   res.json({
