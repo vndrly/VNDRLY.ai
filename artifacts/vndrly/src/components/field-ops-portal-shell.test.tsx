@@ -7,6 +7,18 @@ const mockState = vi.hoisted(() => ({
   user: null as Record<string, unknown> | null,
   vendorRatings: null as { items: Array<{ rating: number }> } | null,
   fetchMock: vi.fn(),
+  voiceState: "stopped",
+  setMuted: vi.fn(),
+}));
+
+vi.mock("@/hooks/use-askv-voice-session", () => ({
+  useAskVVoiceSession: () => ({
+    state: mockState.voiceState,
+    muted: mockState.voiceState === "muted",
+    availabilityStatus: "available",
+    error: null,
+    setMuted: mockState.setMuted,
+  }),
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
@@ -120,6 +132,7 @@ beforeEach(() => {
       lastName: "Foreman",
     }),
   });
+  mockState.voiceState = "stopped";
 });
 
 afterEach(() => {
@@ -158,7 +171,7 @@ describe("FieldOpsPortalShell", () => {
 
     const button = screen.getByTestId("button-gate-voice");
     expect(button.tagName).toBe("BUTTON");
-    expect(button.getAttribute("aria-label")).toBe("Start gate voice entry");
+    expect(button.getAttribute("aria-label")).toBe("Start Gate Voice");
     expect(screen.getAllByTestId("askv-waveform").some((wave) => wave.getAttribute("data-active") === "false")).toBe(true);
     expect(button.getAttribute("aria-pressed")).toBe("false");
     expect(button.getAttribute("data-state")).toBe("idle");
@@ -171,15 +184,16 @@ describe("FieldOpsPortalShell", () => {
     expect(screen.getByTestId("gate-voice-circle").className).toContain(
       "group-hover:scale-[1.04]",
     );
-    expect(button.textContent).toContain("Start gate voice entry");
+    expect(button.textContent).toContain("Start Gate Voice");
 
     const gateVoice = vi.fn();
     const askVOpen = vi.fn();
     window.addEventListener("vndrly:gate-voice", gateVoice);
     window.addEventListener("askv:open-panel", askVOpen);
     button.click();
-    expect(gateVoice).toHaveBeenCalledTimes(1);
-    expect(askVOpen).not.toHaveBeenCalled();
+    expect(gateVoice).not.toHaveBeenCalled();
+    expect(mockState.setMuted).toHaveBeenCalledWith(false);
+    expect(askVOpen).toHaveBeenCalledTimes(1);
     window.removeEventListener("vndrly:gate-voice", gateVoice);
     window.removeEventListener("askv:open-panel", askVOpen);
   });

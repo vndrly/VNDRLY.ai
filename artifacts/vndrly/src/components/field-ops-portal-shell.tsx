@@ -42,10 +42,7 @@ const AssistantLauncher = lazy(() =>
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { EnergyMarketTicker } from './energy-market-ticker';
 import AskVWaveform from "@/components/askv-waveform";
-import {
-  requestGateVoiceEntry,
-  subscribeGateVoiceListening,
-} from "@/lib/gate-voice-launch";
+import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -385,15 +382,23 @@ export function FieldOpsPortalShell({
 }
 
 function GateVoiceEntryCircle({ testId }: { testId: string }) {
-  const [listening, setListening] = useState(false);
-  useEffect(() => subscribeGateVoiceListening(setListening), []);
+  const voice = useAskVVoiceSession();
+  const listening = ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
+  const toggle = () => {
+    if (listening) {
+      voice.setMuted(true);
+      return;
+    }
+    voice.setMuted(false);
+    window.dispatchEvent(new CustomEvent("askv:open-panel"));
+  };
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-3">
       <GateVoiceCircleButton
         active={listening}
-        onClick={requestGateVoiceEntry}
+        onClick={toggle}
         testId={testId}
-        label={listening ? "Stop gate voice entry" : "Start gate voice entry"}
+        label={listening ? "Stop Gate Voice" : "Start Gate Voice"}
       />
       <AskVWaveform active={listening} />
     </div>
