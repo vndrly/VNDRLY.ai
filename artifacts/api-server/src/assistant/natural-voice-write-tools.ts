@@ -112,7 +112,7 @@ async function gatekeeper(session: SessionPayload): Promise<boolean> {
     (session.vendorRole === "gatekeeper" || session.vendorRole === "gate_supervisor"),
   );
 }
-const GATE_FORM_FIELDS = ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "gateStationId", "latitude", "longitude"] as const;
+const GATE_FORM_FIELDS = ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "hostType", "hostPartnerId", "hostVendorId", "gateStationId", "entryCategory", "latitude", "longitude"] as const;
 function gateFormValues(args: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(GATE_FORM_FIELDS.filter((key) => args[key] != null).map((key) => [key, args[key]]));
 }
@@ -428,6 +428,10 @@ export async function resolveGateCheckInCandidate(
     "expectedDurationMinutes",
     "siteLocationId",
     "gateStationId",
+    "hostType",
+    "hostPartnerId",
+    "hostVendorId",
+    "entryCategory",
     "latitude",
     "longitude",
   ] as const;
@@ -446,6 +450,10 @@ export async function resolveGateCheckInCandidate(
       "purpose",
       "expectedDurationMinutes",
       "siteLocationId",
+      "hostType",
+      "hostPartnerId",
+      "hostVendorId",
+      "entryCategory",
     ] as const;
     for (const field of historicalFields) {
       if (draft[field] != null || candidate[field] == null) continue;

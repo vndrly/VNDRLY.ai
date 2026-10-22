@@ -56,8 +56,9 @@ describe("AskV canonical Gate and field operations", () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).not.toHaveProperty("latitude");
     expect(JSON.parse(await confirmVisitorCheckOut({ visitId: 44, gateStationId, confirmed: true, idempotencyKey: "manual-out" }, gate))).toMatchObject({ ok: true });
     expect(JSON.parse(fetchMock.mock.calls[1][1].body)).not.toHaveProperty("latitude");
-    const prepared = JSON.parse(await prepareVisitorCheckIn({ ...manual, gateStationId }));
+    const prepared = JSON.parse(await prepareVisitorCheckIn({ ...manual, gateStationId, entryCategory: "routine_vendor_work" }));
     expect(prepared.intent.arguments.values.gateStationId).toBe(gateStationId);
+    expect(prepared.intent.arguments.values.entryCategory).toBe("routine_vendor_work");
   });
   it("uses current operational roles for normalized Gate accounts and rejects revoked roles", async () => {
     const session = { ...gate, vendorRole: "field_employee", vendorPeopleId: 77 };
@@ -288,6 +289,42 @@ describe("AskV canonical Gate and field operations", () => {
       },
       execution: "client",
       intent: { name: "prefill_gate_visit", arguments: { mode: "check-in" } },
+    });
+  });
+
+  it("resolves the most recent authorized driver and keeps the current Gate selections for direct login", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { id: 91, firstName: "Ana", lastName: "Cruz", company: "Warwick", vehiclePlate: "ANC123", plateState: "OK", purpose: "Delivery", siteLocationId: 9, hostType: "partner", hostPartnerId: 7, checkInTime: "2026-10-21T10:00:00.000Z" },
+      ],
+    });
+    const gateStationId = "11111111-1111-4111-8111-111111111111";
+    const result = JSON.parse(await resolveGateCheckInCandidate({
+      vehiclePlate: "anc123",
+      plateState: "OK",
+      siteLocationId: 9,
+      hostType: "vendor",
+      hostVendorId: 22,
+      gateStationId,
+      entryCategory: "routine_vendor_work",
+    }, gate));
+    expect(result).toMatchObject({
+      ok: true,
+      confidence: "high",
+      missing: [],
+      draft: {
+        firstName: "Ana",
+        lastName: "Cruz",
+        company: "Warwick",
+        vehiclePlate: "ANC123",
+        plateState: "OK",
+        siteLocationId: 9,
+        hostType: "vendor",
+        hostVendorId: 22,
+        gateStationId,
+        entryCategory: "routine_vendor_work",
+      },
     });
   });
 

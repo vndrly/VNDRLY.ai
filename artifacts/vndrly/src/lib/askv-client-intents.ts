@@ -43,7 +43,12 @@ export function applyAskVClientIntent(intent: AskVClientIntent): { ok: boolean; 
   if (intent.name === 'prefill_gate_visit') {
     const mode = args.mode === 'check-out' ? 'check-out' : 'check-in';
     const raw = args.values && typeof args.values === 'object' && !Array.isArray(args.values) ? args.values as Record<string, unknown> : {};
-    const allowed = new Set(['firstName', 'lastName', 'company', 'vehiclePlate', 'plateState', 'purpose', 'notes', 'expectedDurationMinutes', 'siteLocationId']);
+    const allowed = new Set([
+      'firstName', 'lastName', 'company', 'vehiclePlate', 'plateState',
+      'purpose', 'notes', 'expectedDurationMinutes', 'siteLocationId',
+      'hostType', 'hostPartnerId', 'hostVendorId', 'gateStationId',
+      'entryCategory',
+    ]);
     const values = Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) && (typeof value === 'string' || typeof value === 'number')));
     const detail = { mode, values, provenance: args.provenance ?? {}, matches: Array.isArray(args.matches) ? args.matches : [], missing: Array.isArray(args.missing) ? args.missing : [] };
     window.dispatchEvent(new CustomEvent('askv:gate-prefill', { detail }));
@@ -70,7 +75,10 @@ export function applyAskVClientIntent(intent: AskVClientIntent): { ok: boolean; 
     return { ok: true, message: 'Control highlighted. Nothing has been submitted.' };
   }
   if (intent.name === 'launch_camera') {
-    const input = document.querySelector<HTMLInputElement>('input[type="file"][accept*="image"]');
+    const requestedTarget = args.target === 'vehicle' ? 'vehicle' : args.target === 'plate' ? 'plate' : null;
+    const input = requestedTarget
+      ? document.querySelector<HTMLInputElement>(`input[data-askv-camera="${requestedTarget}"]`)
+      : document.querySelector<HTMLInputElement>('input[type="file"][accept*="image"]');
     if (!input) return { ok: false, message: 'Open the relevant ticket or Gate photo form first, then use its camera control.' };
     input.click(); return { ok: true, message: 'Photo picker requested. Select or take a photo on screen; nothing has been attached yet.' };
   }

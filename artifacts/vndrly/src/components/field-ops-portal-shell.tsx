@@ -386,11 +386,11 @@ function GateVoiceEntryCircle({ testId }: { testId: string }) {
   const listening = ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
   const toggle = () => {
     if (listening) {
-      voice.setMuted(true);
+      voice.stop();
       return;
     }
     voice.setMuted(false);
-    window.dispatchEvent(new CustomEvent("askv:open-panel"));
+    void voice.startConversation("Gate voice entry", "/gate");
   };
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-3">

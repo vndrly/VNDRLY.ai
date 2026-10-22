@@ -7,6 +7,7 @@ describe("Ask V Gate intent", () => {
     "Bob Villa is coming in, same truck",
     "complete the check-in for Oklahoma ABC123",
     "go ahead and admit Sam Wilson",
+    "V, log in Oklahoma plate ANC123, same driver as before",
   ])("treats an imperative check-in as submission evidence: %s", (utterance) => {
     expect(
       classifyGateIntent({

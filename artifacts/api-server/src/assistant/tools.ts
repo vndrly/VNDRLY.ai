@@ -922,6 +922,7 @@ export const TOOLS: Anthropic.Tool[] = [
         hostPartnerId: { type: "number" },
         hostVendorId: { type: "number" },
         gateStationId: { type: "string", format: "uuid", description: "Exact authorized Gate location explicitly selected by the user; optional." },
+        entryCategory: { type: "string", enum: ["visitor", "routine_vendor_work", "partner_admin", "vendor_admin"] },
         latitude: { type: "number" },
         longitude: { type: "number" },
       },
@@ -950,6 +951,7 @@ export const TOOLS: Anthropic.Tool[] = [
         phone: { type: "string" }, email: { type: "string" },
         platePhotoUrl: { type: "string" }, vehiclePhotoUrl: { type: "string" },
         gateStationId: { type: "string", format: "uuid", description: "Exact authorized Gate location explicitly selected by the user; optional." },
+        entryCategory: { type: "string", enum: ["visitor", "routine_vendor_work", "partner_admin", "vendor_admin"] },
         latitude: { type: "number" },
         longitude: { type: "number" },
       },
@@ -978,6 +980,7 @@ export const TOOLS: Anthropic.Tool[] = [
         phone: { type: "string" }, email: { type: "string" },
         platePhotoUrl: { type: "string" }, vehiclePhotoUrl: { type: "string" },
         gateStationId: { type: "string", format: "uuid", description: "Exact authorized Gate location explicitly selected by the user; optional." },
+        entryCategory: { type: "string", enum: ["visitor", "routine_vendor_work", "partner_admin", "vendor_admin"] },
         latitude: { type: "number" },
         longitude: { type: "number" },
         idempotencyKey: { type: "string" },
@@ -1180,8 +1183,12 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "launch_camera",
-    description: "Client capability: open the device camera.",
-    input_schema: { type: "object", properties: {}, additionalProperties: false },
+    description: "Client capability: open the device camera. On the Gate form, choose whether the user requested a plate photo or a vehicle photo.",
+    input_schema: {
+      type: "object",
+      properties: { target: { type: "string", enum: ["plate", "vehicle"] } },
+      additionalProperties: false,
+    },
   },
   {
     name: "launch_maps",

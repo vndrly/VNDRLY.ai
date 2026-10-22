@@ -30,9 +30,22 @@ describe("AskV client intents", () => {
   it("dispatches Gate prefill facts to the visible Gate form", () => {
     const listener = vi.fn();
     window.addEventListener("askv:gate-prefill", listener);
-    const result = applyAskVClientIntent({ name: "prefill_gate_visit", arguments: { mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22" }, missing: ["plateState"] } });
+    const result = applyAskVClientIntent({ name: "prefill_gate_visit", arguments: { mode: "check-in", values: {
+      firstName: "Bob",
+      vehiclePlate: "8TRK22",
+      hostType: "vendor",
+      hostVendorId: 22,
+      gateStationId: "11111111-1111-4111-8111-111111111111",
+      entryCategory: "routine_vendor_work",
+    }, missing: ["plateState"] } });
     expect(result).toMatchObject({ ok: true });
     expect(listener).toHaveBeenCalledOnce();
+    expect((listener.mock.calls[0][0] as CustomEvent).detail.values).toMatchObject({
+      hostType: "vendor",
+      hostVendorId: 22,
+      gateStationId: "11111111-1111-4111-8111-111111111111",
+      entryCategory: "routine_vendor_work",
+    });
     window.removeEventListener("askv:gate-prefill", listener);
   });
 
@@ -47,10 +60,20 @@ describe("AskV client intents", () => {
     const imageInput = document.createElement("input");
     imageInput.type = "file";
     imageInput.accept = "image/*";
+    imageInput.dataset.askvCamera = "plate";
     document.body.appendChild(imageInput);
     const click = vi.spyOn(imageInput, "click");
     expect(applyAskVClientIntent({ name: "launch_camera", arguments: {} })).toMatchObject({ ok: true });
     expect(click).toHaveBeenCalledOnce();
+
+    const vehicleInput = document.createElement("input");
+    vehicleInput.type = "file";
+    vehicleInput.accept = "image/*";
+    vehicleInput.dataset.askvCamera = "vehicle";
+    document.body.appendChild(vehicleInput);
+    const vehicleClick = vi.spyOn(vehicleInput, "click");
+    expect(applyAskVClientIntent({ name: "launch_camera", arguments: { target: "vehicle" } })).toMatchObject({ ok: true });
+    expect(vehicleClick).toHaveBeenCalledOnce();
 
     const open = vi.spyOn(window, "open").mockReturnValue(window);
     expect(applyAskVClientIntent({ name: "launch_maps", arguments: { latitude: 35.5, longitude: -97.5 } })).toMatchObject({ ok: true });
@@ -68,5 +91,6 @@ describe("AskV client intents", () => {
     open.mockRestore();
     focus.remove();
     imageInput.remove();
+    vehicleInput.remove();
   });
 });

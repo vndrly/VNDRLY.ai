@@ -13,7 +13,12 @@ export type AssistantPageContext = {
 };
 export function parseGateDraft(raw: unknown): Record<string, unknown> | undefined {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
-  const allowed = new Set(["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "siteLocationId", "expectedDurationMinutes"]);
+  const allowed = new Set([
+    "firstName", "lastName", "company", "vehiclePlate", "plateState",
+    "purpose", "notes", "siteLocationId", "expectedDurationMinutes",
+    "hostType", "hostPartnerId", "hostVendorId", "gateStationId",
+    "entryCategory", "latitude", "longitude",
+  ]);
   return Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) &&
     ((typeof value === "string" && value.length <= 1000) || (typeof value === "number" && Number.isFinite(value)))));
 }

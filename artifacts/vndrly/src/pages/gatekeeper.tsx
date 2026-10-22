@@ -334,6 +334,8 @@ export default function GatekeeperPage() {
   });
   const [gateLocationId, setGateLocationId] = useState("");
   const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
+  const gateLocationOptionsRef = useRef(gateLocations.data?.stations ?? []);
+  gateLocationOptionsRef.current = gateLocations.data?.stations ?? [];
   const preferredPlateStates = useQuery({
     queryKey: ["preferred-plate-states", site.data?.site.id, confirmedCode],
     queryFn: () =>
@@ -448,6 +450,20 @@ export default function GatekeeperPage() {
       const values = detail.values ?? {};
       if (typeof values.siteLocationId === "number" && Number.isSafeInteger(values.siteLocationId)) {
         setResolvedPrefillSiteId(values.siteLocationId);
+      }
+      if (typeof values.gateStationId === "string" && gateLocationOptionsRef.current.some((gate) => gate.id === values.gateStationId)) {
+        setGateLocationId(values.gateStationId);
+      }
+      const requestedHostKey = values.hostType === "partner" && typeof values.hostPartnerId === "number"
+        ? `partner:${values.hostPartnerId}`
+        : values.hostType === "vendor" && typeof values.hostVendorId === "number"
+          ? `vendor:${values.hostVendorId}`
+          : null;
+      if (requestedHostKey && gateHostOptionsRef.current.some((host) => host.key === requestedHostKey)) {
+        setHostKey(requestedHostKey);
+      }
+      if (["visitor", "routine_vendor_work", "partner_admin", "vendor_admin"].includes(String(values.entryCategory ?? ""))) {
+        setEntryCategory(values.entryCategory as typeof entryCategory);
       }
       const current = entryDraftRef.current;
       const next: GateEntryDraft = {
@@ -938,12 +954,26 @@ export default function GatekeeperPage() {
   const voiceSiteRef = useRef(site.data?.site.id);
   voiceSiteRef.current = site.data?.site.id;
   useEffect(() => registerGateVoiceForm({
-    read: () => ({ ...entryDraftRef.current, expectedDurationMinutes: Number(entryDraftRef.current.expectedDuration), siteLocationId: voiceSiteRef.current }),
+    read: () => ({
+      ...entryDraftRef.current,
+      expectedDurationMinutes: Number(entryDraftRef.current.expectedDuration),
+      siteLocationId: voiceSiteRef.current,
+      ...(selectedHost ? {
+        hostType: selectedHost.type,
+        ...(selectedHost.type === "partner" ? { hostPartnerId: selectedHost.id } : { hostVendorId: selectedHost.id }),
+      } : {}),
+      gateStationId: selectedGateLocation?.id,
+      entryCategory: entryCategory || undefined,
+      platePhotoUrl: platePhotoUrl ?? undefined,
+      vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
+      latitude: origin?.latitude,
+      longitude: origin?.longitude,
+    }),
     saved: submitted => {
       if (gateDraftMatches({ ...entryDraftRef.current, siteLocationId: voiceSiteRef.current }, submitted)) resetVoiceDraftRef.current();
     },
-  }), []);
-  useEffect(() => notifyGateVoiceDraftChanged(), [entryDraft, site.data?.site.id]);
+  }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, vehiclePhotoUrl]);
+  useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl]);
 
   const usePreviousPlateDetails = () => {
     if (!previousPlateVisit) return;
@@ -1823,6 +1853,7 @@ export default function GatekeeperPage() {
             </div>
             <input
               ref={plateInput}
+              data-askv-camera="plate"
               className="hidden"
               type="file"
               accept="image/*"
@@ -1831,6 +1862,7 @@ export default function GatekeeperPage() {
             />
             <input
               ref={vehicleInput}
+              data-askv-camera="vehicle"
               className="hidden"
               type="file"
               accept="image/*"

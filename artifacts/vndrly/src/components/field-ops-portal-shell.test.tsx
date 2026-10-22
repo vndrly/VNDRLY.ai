@@ -9,6 +9,8 @@ const mockState = vi.hoisted(() => ({
   fetchMock: vi.fn(),
   voiceState: "stopped",
   setMuted: vi.fn(),
+  startConversation: vi.fn(),
+  stopVoice: vi.fn(),
 }));
 
 vi.mock("@/hooks/use-askv-voice-session", () => ({
@@ -18,6 +20,8 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({
     availabilityStatus: "available",
     error: null,
     setMuted: mockState.setMuted,
+    startConversation: mockState.startConversation,
+    stop: mockState.stopVoice,
   }),
 }));
 
@@ -193,7 +197,8 @@ describe("FieldOpsPortalShell", () => {
     button.click();
     expect(gateVoice).not.toHaveBeenCalled();
     expect(mockState.setMuted).toHaveBeenCalledWith(false);
-    expect(askVOpen).toHaveBeenCalledTimes(1);
+    expect(mockState.startConversation).toHaveBeenCalledWith("Gate voice entry", "/gate");
+    expect(askVOpen).not.toHaveBeenCalled();
     window.removeEventListener("vndrly:gate-voice", gateVoice);
     window.removeEventListener("askv:open-panel", askVOpen);
   });

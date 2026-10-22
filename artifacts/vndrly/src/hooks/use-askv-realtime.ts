@@ -86,7 +86,7 @@ export function useAskVRealtime(args?: {
           if (!valid()) throw new Error('Voice session ended.');
           clearIdle(); transition('thinking');
           let domain = call.arguments && typeof call.arguments === 'object' ? call.arguments as Record<string, unknown> : {};
-          const gateDraft = /^(prepare|confirm)_visitor_check_in$/.test(call.name) ? readGateVoiceDraft() : undefined;
+          const gateDraft = /^(resolve_gate_check_in|(prepare|confirm)_visitor_check_in)$/.test(call.name) ? readGateVoiceDraft() : undefined;
           if (gateDraft) {
             domain = { ...gateDraft, ...domain };
             applyAskVClientIntent({ name: 'prefill_gate_visit', arguments: { values: domain } });

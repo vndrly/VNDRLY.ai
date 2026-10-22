@@ -22,7 +22,7 @@ export interface GateIntentDecision {
 }
 
 const PREPARE = /\b(new|start|open|prepare|pull up|set up)\b/;
-const CHECK_IN = /\b(check[ -]?in|check\b.{1,80}\bin|checking in|coming in|arriving|admit)\b/;
+const CHECK_IN = /\b(check[ -]?in|check\b.{1,80}\bin|checking in|log[ -]?in|logging in|coming in|arriving|admit)\b/;
 const CHECK_OUT = /\b(check[ -]?out|check\b.{1,80}\bout|checking out|leaving|departing)\b/;
 const SUBMIT = /\b(submit|complete|go ahead|do it|finish)\b/;
 const CANCEL = /\b(cancel|stop|never mind|nevermind|do not proceed|don't proceed)\b/;
