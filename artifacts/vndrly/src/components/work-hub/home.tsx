@@ -11,6 +11,7 @@ import { visitsApi } from "@/lib/visits-api";
 import { useDailyWork } from "./daily-workspace";
 import { WorkHubPageHeading } from "./chrome";
 import { ActivityDashboard } from "./activity-dashboard";
+import { AccountWorkspace, canUseGateWorkspace } from "./account-workspace";
 import "./home.css";
 
 type Row = Record<string, any>;
@@ -38,7 +39,7 @@ export function WorkHubHome() {
   const home = useQuery<Row>({ queryKey: ["work-hub", "home", ...identity], queryFn: () => workHubRequest("/home"), enabled: !!user, refetchInterval: 15000 });
   const channels = useQuery<Row[]>({ queryKey: ["work-hub", "/channels", ...identity], queryFn: () => workHubRequest("/channels"), enabled: !!user, refetchInterval: 15000 });
   const operations = useQuery({ queryKey: ["work-hub-home-operations", ...identity], queryFn: () => read<{ categories: string[] }>("/api/company-operations"), enabled: !!user?.vendorId });
-  const gate = operations.data?.categories.includes("gate") === true;
+  const gate = canUseGateWorkspace(user, operations.data?.categories ?? []);
   const sites = useQuery({ queryKey: ["work-hub-home-gates", ...identity], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites"), enabled: gate, retry: false, refetchInterval: 30000 });
   const visits = useQuery({ queryKey: ["work-hub-home-visits", ...identity], queryFn: () => visitsApi.list({ activeOnly: true, limit: 100 }), enabled: gate, retry: false, refetchInterval: 15000 });
   const notices = useQuery({ queryKey: ["work-hub-home-notices", ...identity], queryFn: () => read<Row[] | { items: Row[]; nextCursor?: string }>("/api/notifications?limit=100"), enabled: !!user, refetchInterval: 30000 });
@@ -83,7 +84,7 @@ export function WorkHubHome() {
     <div className="hub-home-columns">
       <HomeCard title={c("Today", "Hoy")} subtitle={c("Your schedule, work, and priorities", "Su horario, trabajo y prioridades")} icon={Sun}>
         <HomeRow icon={CalendarDays} label={c("Calendar", "Calendario")} value={count(calendar?.length, c("upcoming", "próximos"))} href="/work-hub/calendar" />
-        <HomeRow icon={Clock3} label={c("My Work", "Mi trabajo")} value={count(workCount)} onClick={() => toggle("work")} expanded={panel === "work"} />
+        <HomeRow icon={Clock3} label={user?.managedSubcontractor ? c("My Hours", "Mis horas") : c("My Work", "Mi trabajo")} value={user?.managedSubcontractor ? c("Open", "Abrir") : count(workCount)} href={user?.managedSubcontractor ? "/work-hub/calendar" : undefined} onClick={() => toggle("work")} expanded={user?.managedSubcontractor ? undefined : panel === "work"} />
         <HomeRow icon={Bell} label={c("Needs Attention", "Requiere atención")} value={count(attentionCount)} onClick={() => document.getElementById("hub-home-attention")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
         <HomeRow icon={Shield} label={c("Safety", "Seguridad")} value={count(safety.isSuccess ? pending.length : undefined)} onClick={() => toggle("safety")} expanded={panel === "safety"} />
         <HomeRow icon={CheckSquare2} label={c("Tasks & Forms", "Tareas y formularios")} value={count(activeTasks?.length)} href="/work-hub/tasks" />
@@ -104,6 +105,7 @@ export function WorkHubHome() {
     </section>}
     {panel === "safety" && <section className="hub-home-card hub-detail" aria-label="Safety needs attention"><h2>{c("Safety", "Seguridad")}</h2>{safety.isSuccess ? pending.length ? pending.map(row => <Link className="hub-record" href={`/safety/${row.id}`} key={row.id}><Shield aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>) : <p>{c("No active safety events in returned records.", "No hay eventos de seguridad activos en los registros recibidos.")}</p> : <p role="status">{unavailable}</p>}<Link href="/safety" className="hub-text-link">{c("Open all safety records", "Abrir todos los registros de seguridad")}</Link></section>}
     <section className="hub-web-extras" aria-label="More from Work Hub"><h2>{c("More from Work Hub", "Más de Work Hub")}</h2>
+    <AccountWorkspace categories={operations.data?.categories} />
     {gate && <HomeCard title={c("Gate desk", "Puesto de acceso")} subtitle={c("Your gates, visitors, and shift handoffs", "Sus accesos, visitantes y relevos de turno")} icon={Shield}>
       <div className="hub-gate-rows">
         <HomeRow icon={MapPin} label={c("Assigned sites", "Sitios asignados")} value={count(sites.isSuccess ? sites.data.sites.length : undefined)} onClick={() => toggle("work")} expanded={panel === "work"} />
