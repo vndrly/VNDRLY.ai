@@ -612,7 +612,9 @@ router.post("/mcp", async (req, res) => {
       if (allowedNames.has("search_marketplace_services")) output.availableViews.push("marketplace");
       if (allowedNames.has("query_gate_stations")) {
         const gates = request.view === "gate_board" ? raw : JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
-        if (request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0)) output.availableViews.push("gate_board");
+        const hasGateAccess = request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0);
+        if (hasGateAccess) output.availableViews.push("gate_board");
+        if (hasGateAccess && allowedNames.has("query_gate_arrivals")) output.availableViews.push("gate_arrivals");
         if (request.view !== "gate_board") await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "query_gate_stations", targetType: "site", toolInput: {}, toolOutput: gates, resultStatus: gates.error ? "failure" : "success" });
       }
       await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: source.name, targetType: source.auditTarget, toolInput: request.sourceArguments, toolOutput: raw, resultStatus: "success" });

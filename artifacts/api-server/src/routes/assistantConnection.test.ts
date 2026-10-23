@@ -789,6 +789,17 @@ describe("ChatGPT account connection boundary", () => {
     expect((await call("gate_board")).body.result.isError).toBe(true);
     expect(mocks.run).not.toHaveBeenCalled();
   });
+  it.each([true, false])("discovers Gate Arrivals only with authorized Gate sites: %s", async hasSites => {
+    const { db } = await import("@workspace/db");
+    vi.spyOn(db, "select").mockReturnValueOnce({ from: () => ({ where: () => ({ limit: async () => [] }) }) } as never);
+    const credentials = await tokens("gate:read work_hub:read");
+    mocks.run.mockImplementation(async name => JSON.stringify(name === "query_gate_stations"
+      ? { sites: hasSites ? [{ id: 390, name: "Authorized site" }] : [] }
+      : { tasks: [], shifts: [], meetings: [], announcements: [] }));
+    const result = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_show_workspace", arguments: { view: "my_workday" } } });
+    expect(result.body.result.isError, JSON.stringify(result.body)).toBe(false);
+    expect(result.body.result.structuredContent.availableViews.includes("gate_arrivals")).toBe(hasSites);
+  });
   it.each(["tickets:read", "operations:read"])("advertises workspace for standalone %s access", async scope => {
     const credentials = await tokens(scope);
     const result = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
