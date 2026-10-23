@@ -79,9 +79,8 @@ test("gate watch survives sign-out and transfers only after the incoming account
     await page
       .getByRole("button", { name: "Save handoff", exact: true })
       .click();
-    await expect(
-      page.getByText("Ready for next watch", { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText("Ready for next watch", { exact: true })).toHaveCount(0);
+    await expect.poll(async()=> (await pool.query("SELECT p.notes FROM gate_shifts s JOIN gate_preparations p ON p.id=s.preparation_id WHERE s.station_id=$1 AND s.ended_at IS NULL",[gate])).rows[0]?.notes).toBe("Inspect the north barrier before admitting heavy loads.");
 
     await page.screenshot({path:'.local/releases/handoff-outgoing-desktop.png',fullPage:true});
     const logout=await page.request.post('/api/auth/logout');

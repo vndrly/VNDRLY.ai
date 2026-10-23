@@ -4,6 +4,7 @@ import DashboardTasks from "@/components/work-hub/dashboard-tasks";
 import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
 import "@/components/gate-dashboard.css";
 import GateWatchSummary from "@/components/gate-watch-summary";
+import GateGpsSelector from "@/components/gate-gps-selector";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -12,6 +13,7 @@ import {
   type ChangeOverState,
   type ChangeOverSnapshot,
   type ShiftNotesResponse,
+  evaluateGpsFence,
 } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import BrandPillButton from "@/components/brand-pill-button";
@@ -122,6 +124,7 @@ export default function GateChangeOverPage({
   const { t } = useTranslation();
   const { user } = useAuth();
   const cache = useQueryClient();
+  const [onDuty, setOnDuty] = useState(false);
   const [selectedSite, setSelectedSite] = useState(
     () => new URLSearchParams(window.location.search).get("siteId") ?? "",
   );
@@ -141,10 +144,16 @@ export default function GateChangeOverPage({
   const [search, setSearch] = useState("");
   const [days, setDays] = useState(7);
   const [before, setBefore] = useState("");
+  const [gpsPosition,setGpsPosition]=useState<{latitude:number;longitude:number}|null>(null);
+  useEffect(()=>{
+    if(history || !navigator.geolocation)return;
+    const id=navigator.geolocation.watchPosition(p=>setGpsPosition({latitude:p.coords.latitude,longitude:p.coords.longitude}),()=>setGpsPosition(null),{enableHighAccuracy:true,timeout:15000,maximumAge:10000});
+    return ()=>navigator.geolocation.clearWatch(id);
+  },[history]);
   const sites = useQuery({
     queryKey: ["change-over-sites", user?.userId, history],
     queryFn: () =>
-      request<{ sites: { id: number; name: string; supervisor: boolean }[] }>(
+      request<{ sites: { id: number; name: string; supervisor: boolean; latitude?:number|null;longitude?:number|null }[] }>(
         history ? "/sites?mode=history" : "/sites",
       ),
     retry: false,
@@ -153,13 +162,18 @@ export default function GateChangeOverPage({
   const stations = useQuery({
     queryKey: ["change-over-stations", user?.userId, siteId, history],
     queryFn: () =>
-      request<{ stations: { id: string; name: string }[] }>(
+      request<{ stations: { id: string; name: string;latitude?:number|null;longitude?:number|null;geofenceRadiusM?:number|null }[] }>(
         `/stations?siteId=${siteId}${history ? "&mode=history" : ""}`,
       ),
     enabled: Boolean(siteId),
     retry: false,
   });
   const stationId = selectedStation || stations.data?.stations[0]?.id || "";
+  const gpsSite=sites.data?.sites.find(s=>String(s.id)===siteId),gpsGate=stations.data?.stations.find(s=>s.id===stationId);
+  const latitude=gpsGate?.latitude??gpsSite?.latitude,longitude=gpsGate?.longitude??gpsSite?.longitude;
+  const gpsFence=evaluateGpsFence({gps:gpsPosition?"locked":"unavailable",origin:gpsPosition,site:latitude!=null&&longitude!=null?{latitude,longitude,siteRadiusMeters:gpsGate?.geofenceRadiusM??500}:null});
+  const gpsStatus=gpsFence.milesToSite==null?"unavailable":gpsFence.insideFence?"verified":"mismatch";
+  const gpsLabel=t(gpsStatus==="verified"?"gatekeeper.gpsAtSelectedLocation":gpsStatus==="mismatch"?"gatekeeper.gpsOutsideGeofence":"gatekeeper.gpsUnavailable");
   const state = useQuery({
     queryKey: ["change-over-state", user?.userId, stationId],
     queryFn: () => request<ChangeOverState>(`/${stationId}/state`),
@@ -240,7 +254,7 @@ export default function GateChangeOverPage({
   };
   const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios"; preparationId?:string; reviewedRevision?:string; acknowledged?:boolean}} | null>(null);
   const assumeWatch = async (reviewed = false) => {
-    const command = pendingWatch ?? { stationId, body: { operationId: crypto.randomUUID(), source: "web" as const, ...(current?.shift && !ownShift ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged: reviewed } : {}) } };
+    const command = pendingWatch ?? { stationId, body: { operationId: crypto.randomUUID(), source: "web" as const, ...((current?.shift && !ownShift)||current?.releasedWatch ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged: reviewed } : {}) } };
     setPendingWatch(command);
     try { await request(`/${command.stationId}/watch/assume`, command.body); }
     catch (error) {
@@ -254,6 +268,7 @@ export default function GateChangeOverPage({
     setPendingWatch(null);
     await cache.invalidateQueries({ queryKey: ["gate-watch-own-duty"] });
     await cache.invalidateQueries({ queryKey: ["gate-watch-previous-notes"] });
+    await cache.invalidateQueries({ queryKey: ["gate-active-watches"] });
     await state.refetch();
   };
   const recoverWatch = async () => {
@@ -290,6 +305,15 @@ export default function GateChangeOverPage({
     await watchSaved();
     await cache.invalidateQueries({ queryKey: ["work-hub-workforce"] });
   };
+  const releaseWatch=async()=>{
+    if(!current?.shift||!ownShift)return;
+    await request(`/${stationId}/watch/release`,{expectedShiftId:current.shift.id,notes});
+    await watchSaved();
+  };
+  const openWatch=()=>{
+    if(current?.shift||current?.releasedWatch)document.querySelector(".gate-handoff-desk")?.scrollIntoView({behavior:"smooth",block:"start"});
+    else void act(assumeWatch);
+  };
   const loading =
     sites.isLoading ||
     stations.isLoading ||
@@ -319,6 +343,7 @@ export default function GateChangeOverPage({
       </label>
       <label className="min-w-36 space-y-1 text-sm font-medium">
         {t("changeOver.gate")}
+        <GateGpsSelector status={gpsStatus} label={gpsLabel}>
         <BrandedSelect
           aria-label={t("changeOver.gate")}
           className={history ? "min-w-36" : "gate-dashboard-location-select"}
@@ -332,6 +357,7 @@ export default function GateChangeOverPage({
             </option>
           ))}
         </BrandedSelect>
+        </GateGpsSelector>
       </label>
     </div>
   );
@@ -350,7 +376,7 @@ export default function GateChangeOverPage({
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
       </div>
-      {!history && <WorkdayControls watchControl={locationSelectors} />}
+      {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
       {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
       <div
         className={history
@@ -457,10 +483,10 @@ export default function GateChangeOverPage({
       </div>
       {!history && current && (
           <div className="gate-dashboard-panels">
-            <GateWatchSummary stationId={stationId} current={current} onAssume={() => void act(assumeWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} />
+            <GateWatchSummary stationId={stationId} current={current} onAssume={openWatch} onHandoff={()=>void act(releaseWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} />
             <DashboardTasks />
             <ShiftSnapshotView snapshot={current.snapshot} activityWindow={current.shift ? undefined : "24h"} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: current.shift ? "current_shift" : "24h" })}`} />
-            <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} current={current} ownWatch={ownShift} busy={busy} online={online} readError={state.isError}
+            <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} current={current} ownWatch={ownShift} gatekeeperOnDuty={onDuty && (user?.vendorRole === "gatekeeper" || user?.vendorRole === "gate_supervisor" || Boolean(user?.managedSubcontractor?.siteGrants.some(grant=>grant.siteId===Number(siteId))))} busy={busy} online={online} readError={state.isError}
               notes={notes} onNotesChange={setNotes} itemText={itemText} onItemTextChange={setItemText}
               itemNotes={itemNotes} onItemNoteChange={(id, text) => setItemNotes(value => ({ ...value, [id]: text }))}
               onItemAction={(itemId, kind) => void act(async () => {

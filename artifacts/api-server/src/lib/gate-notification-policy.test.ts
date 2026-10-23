@@ -36,6 +36,7 @@ describe("gate notification policy", () => {
     ["safety_event_hipo", "alerts"],
     ["gate_closed", "alerts"],
     ["gate_access_changed_urgent", "alerts"],
+    ["gate_watch_assigned", "alerts"],
   ])("maps %s to %s independently of the stored category", (type, expected) => {
     const row = { type, category: "system", link: "/work-hub" };
     expect(resolveGateNotificationCategory(row)).toBe(expected);

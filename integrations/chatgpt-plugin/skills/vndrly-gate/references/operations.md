@@ -1,5 +1,7 @@
 ## Workday briefing and Gate
 
+query_gate_change_over also returns scheduledWatches for the caller's active company. These are personal scheduled assignments, including confirmation or conflict status; they do not prove attendance. My Watch in Gate Dashboard expands to Confirm | Conflict and the scheduler contact. Conflicts retain the assignment and notify the scheduler; conflicts reported less than 24 hours before the start escalate to that company's office/admin. All configured delivery channels respect saved preferences and SMS consent. Personal reasons are retained in the authenticated scheduling record, not pushed into alerts. The Gate Board displays these schedules as read-only records and links back to Gate Dashboard for a response. Do not substitute a handoff or shift-clock action for confirmation of a future schedule.
+
 For a general start-of-day request, use get_work_hub_briefing and the available Gate queries relevant to the user's site. Summarize upcoming work, active gate coverage, visitors, and handoff notes only when returned by the tools. Ask for a site only when the available account context does not resolve it.
 
 ## Workday briefing and Gate

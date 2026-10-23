@@ -10,11 +10,15 @@ import {
   act,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
-vi.mock("@/components/workday-controls", () => ({ default: ({watchControl}: {watchControl?: React.ReactNode}) => <section aria-label="Workday"><button type="button" role="switch" aria-label="Shift" aria-checked="false" /><button type="button" role="switch" aria-label="On Call" aria-checked="false" />{watchControl}</section> }));
+const duty = vi.hoisted(() => ({ onShift: false, vendorRole: "office", managedSiteId:null as number|null }));
+vi.mock("@/components/workday-controls", () => ({ default: ({watchControl,onShiftChange}: {watchControl?: React.ReactNode;onShiftChange?:(active:boolean)=>void}) => {
+  React.useEffect(()=>{onShiftChange?.(duty.onShift);},[onShiftChange]);
+  return <section aria-label="Workday"><button type="button" role="switch" aria-label="Shift" aria-checked={duty.onShift} /><button type="button" role="switch" aria-label="On Call" aria-checked="false" />{watchControl}</section>;
+} }));
 const api = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: api }));
 vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => ({ user: { userId: 1 } }),
+  useAuth: () => ({ user: { userId: 1, vendorRole: duty.vendorRole, ...(duty.managedSiteId?{managedSubcontractor:{siteGrants:[{siteId:duty.managedSiteId,role:"gatekeeper"}]}}:{}) } }),
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
@@ -65,6 +69,9 @@ const state = () => ({
   items: [],
 });
 beforeEach(() => {
+  duty.onShift = false;
+  duty.vendorRole = "office";
+  duty.managedSiteId = null;
   api.mockReset();
   Object.defineProperty(navigator, "onLine", {
     value: true,
@@ -87,6 +94,23 @@ beforeEach(() => {
 });
 const caches: QueryClient[] = [];
 afterEach(() => { cleanup(); for (const cache of caches.splice(0)) cache.clear(); });
+it.each([
+  ["gatekeeper", true, true],
+  ["gate_supervisor", true, true],
+  ["gatekeeper", false, false],
+  ["office", true, false],
+])("limits Next Actions to on-duty gatekeepers (%s, %s)", async (vendorRole, onShift, visible) => {
+  duty.vendorRole = vendorRole as string;
+  duty.onShift = onShift as boolean;
+  mount();
+  await screen.findByRole("heading", { name: "handoffDesk.title" });
+  expect(Boolean(screen.queryByLabelText("handoffDesk.nextActions"))).toBe(visible);
+});
+it.each([[1,true],[2,false]])("shows on-duty guidance only at the managed worker's granted site (%s)",async(managedSiteId,visible)=>{
+  duty.onShift=true;duty.vendorRole="field";duty.managedSiteId=managedSiteId as number;
+  mount();await screen.findByRole("heading",{name:"handoffDesk.title"});
+  expect(Boolean(screen.queryByLabelText("handoffDesk.nextActions"))).toBe(visible);
+});
 it("keeps the coverage map off the Dashboard", () => {
   mount(false);
   expect(screen.queryByRole("region", { name: "Gate coverage map" })).toBeNull();
@@ -384,7 +408,7 @@ it('keeps initial no-watch assumption disabled after a lost response and failed 
     return base(path, body);
   });
   mount();
-  const assume = await screen.findByRole('button', { name: 'watch.assume' }) as HTMLButtonElement;
+  const assume = await screen.findByRole('button', { name: 'Assume Watch' }) as HTMLButtonElement;
   expect(assume.disabled).toBe(false);
   fireEvent.click(assume);
   await screen.findByText('Lost initial watch response');
@@ -466,7 +490,7 @@ it("keeps the same Dashboard panels before a company has an active watch", async
   expect(within(activity).getByTestId("dashboard-metric-checkIns").textContent).toContain("2");
   expect(within(activity).getByTestId("dashboard-metric-checkIns").getAttribute("href")).toContain("range=24h");
   const watch = screen.getByRole("region", { name: "Watch & handover" });
-  expect(within(watch).getByRole("button", { name: "watch.assume" })).toBeTruthy();
+  expect(within(watch).getByRole("button", { name: "Assume Watch" })).toBeTruthy();
 });
 
 it("preserves the Dashboard panels while site snapshot data is unavailable without inventing zeros", async () => {

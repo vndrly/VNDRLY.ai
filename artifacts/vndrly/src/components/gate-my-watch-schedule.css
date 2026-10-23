@@ -1,0 +1,11 @@
+.gate-my-watch-schedule summary small { white-space: normal; text-align: right; }
+.gate-scheduled-watch-list { max-height: 430px; overflow-y: auto; }
+.gate-scheduled-watch { padding: 10px 0; border-bottom: 1px solid #414145; }
+.gate-scheduled-watch > p { margin: 4px 0; color: #b3b3b3; font-size: 12px; }
+.gate-scheduled-watch-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.gate-schedule-response { color: #81c995; }
+.gate-schedule-response[data-conflict=true] { color: #f5bd63; }
+.gate-watch-conflict-form { display: grid; gap: 7px; margin-top: 8px; }
+.gate-watch-conflict-form label { font-size: 12px; }
+.gate-watch-conflict-form textarea { display: block; width: 100%; min-height: 65px; padding: 8px; background: #303034; color: #ececec; border: 1px solid var(--brand-primary); border-radius: 7px; }
+.gate-watch-conflict-form button { justify-self: end; }

@@ -14,6 +14,7 @@ import {
   readHandoffProof,
 } from "../services/gate-change-over-auth";
 import { summarizeShiftFacts } from "../services/gate-change-over-summary";
+import { listMyScheduledWatches, respondToScheduledWatch } from "../services/gate-watch-schedule";
 import {
   ChangeOverError,
   listChangeOverSites,
@@ -31,6 +32,11 @@ import {
   transferGateShift,
   assumeGateWatch,
   getGateWatchOperation,
+  listActiveGateWatches,
+  releaseGateWatch,
+  administerGateWatch,
+  getAdminGateWatchOperation,
+  listAvailableGateWatchStanders,
   getShiftNotes,
 } from "../services/gate-change-over";
 import {
@@ -76,8 +82,31 @@ router.use("/gate-change-over", async (req, res, next) => {
     return;
   next();
 });
+
+router.get("/gate-change-over/my-scheduled-watches", async(req,res)=>{
+  res.json(await listMyScheduledWatches(sessionFor(req)));
+});
+router.post("/gate-change-over/my-scheduled-watches/:shiftId/response", async(req,res)=>{
+  const input=z.discriminatedUnion("response",[
+    z.object({operationId:uuid,expectedVersion:z.number().int().positive(),assignmentId:uuid,response:z.literal("confirm")}).strict(),
+    z.object({operationId:uuid,expectedVersion:z.number().int().positive(),assignmentId:uuid,response:z.literal("conflict"),reason:z.string().trim().min(1).max(1000)}).strict(),
+  ]).parse(req.body);
+  res.json(await respondToScheduledWatch(sessionFor(req),uuid.parse(req.params.shiftId),input));
+});
 const sessionFor = (req: Parameters<typeof getSessionFromRequest>[0]) =>
   getSessionFromRequest(req)!;
+router.get("/gate-change-over/watches",async(req,res)=>res.json(await listActiveGateWatches(sessionFor(req))));
+router.get("/gate-change-over/:stationId/watch/standers",async(req,res)=>res.json(await listAvailableGateWatchStanders(sessionFor(req),uuid.parse(req.params.stationId))));
+router.get("/gate-change-over/:stationId/watch/admin-operations/:operationId",async(req,res)=>res.json(await getAdminGateWatchOperation(sessionFor(req),uuid.parse(req.params.stationId),uuid.parse(req.params.operationId))));
+router.post("/gate-change-over/:stationId/watch/admin",async(req,res)=>{
+  const common={expectedShiftId:uuid,operationId:uuid};
+  const input=z.discriminatedUnion("action",[z.object({...common,action:z.literal("assume")}).strict(),z.object({...common,action:z.literal("assign"),targetMembershipId:z.number().int().positive()}).strict()]).parse(req.body);
+  res.json(await administerGateWatch(sessionFor(req),{...input,stationId:uuid.parse(req.params.stationId)}));
+});
+router.post("/gate-change-over/:stationId/watch/release",async(req,res)=>{
+  const input=z.object({expectedShiftId:uuid,notes:z.string().max(8000)}).strict().parse(req.body);
+  res.json(await releaseGateWatch(sessionFor(req),{...input,stationId:uuid.parse(req.params.stationId)}));
+});
 router.get("/gate-change-over/:stationId/watch/operations/:operationId", async (req, res) => {
   res.json(await getGateWatchOperation(sessionFor(req), uuid.parse(req.params.stationId), uuid.parse(req.params.operationId)));
 });

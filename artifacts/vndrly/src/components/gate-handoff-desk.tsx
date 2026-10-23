@@ -4,13 +4,13 @@ import { ClipboardCheck, ClipboardList, NotebookPen } from "lucide-react";
 import type { ChangeOverState } from "@workspace/gate-booth";
 import { useBrand } from "@/hooks/use-brand";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
-import ImagePill from "@/components/image-pill";
 import WatchPassControl from "@/components/watch-pass-control";
 import "./gate-handoff-desk.css";
 
 export interface GateHandoffDeskProps {
   current: ChangeOverState;
   ownWatch: boolean;
+  gatekeeperOnDuty?: boolean;
   busy: boolean;
   online: boolean;
   readError: boolean;
@@ -34,7 +34,7 @@ export interface GateHandoffDeskProps {
 /** Saving records the handoff. Only the incoming operator's explicit review action changes watch custody. */
 export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const {
-    current, ownWatch, busy, online, readError, notes, onNotesChange,
+    current, ownWatch, gatekeeperOnDuty = false, busy, online, readError, notes, onNotesChange,
     itemText, onItemTextChange, itemNotes, onItemNoteChange, onItemAction,
     onAddItem, onSave, onAssumeReviewed, pendingWatch, onRecoverWatch,
     reason, onReasonChange, onWithdraw,
@@ -48,7 +48,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const ready = freshSaved && notes === preparation?.notes;
   const blocked = busy || !online || readError || pendingWatch;
   const mayEditItems = ownWatch || current.supervisor;
-  const mayAssume = Boolean(preparation && current.shift && !ownWatch && freshSaved && !blocked);
+  const mayAssume = Boolean(preparation && (current.shift || current.releasedWatch) && !ownWatch && (current.releasedWatch || freshSaved) && !blocked);
   const pillSrc = brandImagePillSrc(brand.primary, brand.name);
   const selectedItems = current.items.filter((item) => item.status === itemView);
 
@@ -122,7 +122,10 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     <header className="handoff-heading">
       <span className="hub-card-icon"><ClipboardCheck aria-hidden="true" /></span>
       <div><h2>{t("handoffDesk.title")}</h2><p>{t(ownWatch ? "handoffDesk.outgoingIntro" : "handoffDesk.incomingIntro")}</p></div>
-      {preparation && ready && <div className="handoff-status" role="status"><ImagePill color="green">{t("handoffDesk.ready")}</ImagePill></div>}
+      {gatekeeperOnDuty && <aside className="handoff-next-actions" aria-label={t("handoffDesk.nextActions")} role="status">
+        <h3>{t("handoffDesk.nextActions")}</h3>
+        <p>{t(!ownWatch ? "handoffDesk.nextReview" : notes.trim() ? "handoffDesk.nextHandoff" : "handoffDesk.nextPrepare")}</p>
+      </aside>}
     </header>
 
     {(!online || readError || (preparation && !freshSaved)) && <p className="handoff-notice" role="status">

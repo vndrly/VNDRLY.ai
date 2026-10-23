@@ -11,14 +11,15 @@ import OnCallControl from "./on-call-control";
 import "./workday-controls.css";
 type Controller=ReturnType<typeof createWorkdayController>;
 async function http(path:string,body?:unknown){const response=await fetch(`/api/work-hub/workday${path}`,{credentials:"include",cache:"no-store",...(body?{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}:{})});if(!response.ok){const error=Object.assign(Error("Workday request could not be verified"),{status:response.status});throw error;}return response.json();}
-export default function WorkdayControls({watchControl}:{watchControl?:ReactNode}={}){
+export default function WorkdayControls({watchControl,onShiftChange}:{watchControl?:ReactNode;onShiftChange?:(onShift:boolean)=>void}={}){
  const {user}=useAuth(),owner=ownerForUser(user);if(!user||!owner)return null;
- const identity=JSON.stringify([owner,user.userId,user.activeMembershipId]);return <Controls watchControl={watchControl} key={identity} identity={identity} userId={user.userId} membershipId={user.activeMembershipId} owner={owner}/>;
+ const identity=JSON.stringify([owner,user.userId,user.activeMembershipId]);return <Controls watchControl={watchControl} onShiftChange={onShiftChange} key={identity} identity={identity} userId={user.userId} membershipId={user.activeMembershipId} owner={owner}/>;
 }
-function Controls({identity,userId,membershipId,owner,watchControl}:{watchControl?:ReactNode;identity:string;userId:number;membershipId:number|null|undefined;owner:WorkdayScope["owner"]}){
+function Controls({identity,userId,membershipId,owner,watchControl,onShiftChange}:{watchControl?:ReactNode;onShiftChange?:(onShift:boolean)=>void;identity:string;userId:number;membershipId:number|null|undefined;owner:WorkdayScope["owner"]}){
  const {i18n}=useTranslation(),es=(i18n?.language??"en").startsWith("es"),alive=useRef(true),controller=useRef<Controller|null>(null),lock=useRef(false);
  const [state,setState]=useState<Awaited<ReturnType<Controller["read"]>>|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[recoveryReason,setRecoveryReason]=useState("");
  const current=()=>alive.current;
+ useEffect(()=>{onShiftChange?.(state?.onShift===true);return()=>onShiftChange?.(false);},[state?.onShift,onShiftChange]);
  const refresh=async()=>{if(!controller.current||lock.current)return;lock.current=true;try{const next=await controller.current.sync({read:id=>http(`/operations/${id}`),send:command=>http("/events",command),current:()=>http("")});if(current())setState(next);}finally{lock.current=false;}};
  useEffect(()=>{alive.current=true;void(async()=>{try{
   const storage=await openWebFleetWorkStorage(`workday-account:${identity}`,current);let value:unknown,online=true;

@@ -36,6 +36,7 @@ export interface ChangeOverPreparation {
   created_at: string;
 }
 export interface ChangeOverState {
+  releasedWatch?: { id: string; operator_id: number; operator_name: string; started_at: string } | null;
   station: { id: string; name: string; site_id: number };
   site: { id: number; name: string };
   supervisor: boolean;

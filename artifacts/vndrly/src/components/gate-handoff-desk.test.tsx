@@ -66,11 +66,38 @@ it("saves changed outgoing notes without an update badge or assuming watch", () 
   expect(callbacks.onAssumeReviewed).not.toHaveBeenCalled();
 });
 
+it.each([false, true])("removes the old readiness indicator for incoming and outgoing watches (%s)", (ownWatch) => {
+  render(<GateHandoffDesk {...props({ ownWatch })} />);
+  expect(screen.queryByText("handoffDesk.ready")).toBeNull();
+  expect(screen.queryByLabelText("handoffDesk.nextActions")).toBeNull();
+});
+
+it.each([
+  { ownWatch: false, notes: "Saved notes", reminder: "handoffDesk.nextReview" },
+  { ownWatch: true, notes: "  ", reminder: "handoffDesk.nextPrepare" },
+  { ownWatch: true, notes: "New notes not saved yet", reminder: "handoffDesk.nextHandoff" },
+  { ownWatch: true, notes: "Saved notes", reminder: "handoffDesk.nextHandoff" },
+])("shows the on-duty gatekeeper's next action: $reminder", ({ ownWatch, notes, reminder }) => {
+  render(<GateHandoffDesk {...props({ ownWatch, notes, gatekeeperOnDuty: true })} />);
+  const card = screen.getByLabelText("handoffDesk.nextActions");
+  expect(card.textContent).toContain(reminder);
+  expect(card.querySelector("button, a, input, [tabindex]")).toBeNull();
+});
+
 it("identifies the actual operator while incoming waits for a saved handoff", () => {
   render(<GateHandoffDesk {...props({ current: { ...state(), preparation: null } })} />);
   expect(screen.getByText("handoffDesk.waiting: Actual operator")).toBeTruthy();
   expect(screen.queryByRole("textbox")).toBeNull();
   expect(screen.queryByRole("button", { name: "handoffDesk.assume" })).toBeNull();
+});
+
+it("keeps a released watch's saved notes reviewable before the next operator assumes",()=>{
+  const current=state();current.releasedWatch=current.shift;current.shift=null;
+  const callbacks=props({current});render(<GateHandoffDesk {...callbacks}/>);
+  expect(screen.getByText("Saved notes")).toBeTruthy();
+  const action=screen.getByRole("button",{name:"handoffDesk.assume"}) as HTMLButtonElement;
+  expect(action.disabled).toBe(false);fireEvent.click(action);
+  expect(callbacks.onAssumeReviewed).toHaveBeenCalledOnce();
 });
 
 it("keeps an uncertain watch request recoverable without issuing a new assumption", () => {

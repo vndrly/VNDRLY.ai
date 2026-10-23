@@ -40,7 +40,7 @@ export function parseNotificationTarget(
       return null;
     const url = new URL(href, "https://notification.invalid");
     if (url.origin !== "https://notification.invalid" || url.hash) return null;
-    const path = url.pathname.replace(/^\/\(tabs\)(?=\/)/, "");
+    const path = url.pathname.replace(/^\/\(tabs\)(?=\/)/, "").replace(/^\/gate\/change-over$/, "/gate-change-over");
     const params = url.searchParams;
     const keys = [...params.keys()];
     if (new Set(keys).size !== keys.length) return null;

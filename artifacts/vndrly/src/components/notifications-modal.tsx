@@ -470,7 +470,7 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
                     items.map((n) => {
                       const meta = typeMetaFor(n.type);
                       const Icon = meta.Icon;
-                      const rowHref = n.link ? stripLinkQuery(n.link) : null;
+  const rowHref = n.link ? ["gate_watch_assigned","gate_watch_confirmed","gate_watch_conflict","gate_watch_conflict_urgent"].includes(n.type) ? n.link : stripLinkQuery(n.link) : null;
                       const siteLocation = n.link ? parseSiteLocationFromHref(n.link) : null;
                       const inner = (
                         <div

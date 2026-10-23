@@ -74,7 +74,7 @@ export async function resolveNotificationDestination(
   if (url.origin !== "https://notification.invalid" || url.hash) return null;
   const keys = [...url.searchParams.keys()];
   if (new Set(keys).size !== keys.length) return null;
-  const path = url.pathname.replace(/^\/\(tabs\)/, "");
+  const path = url.pathname.replace(/^\/\(tabs\)/, "").replace(/^\/gate\/change-over$/, "/gate-change-over");
   const params = url.searchParams;
   const libraryPath=path.match(/^\/work-hub\/(training|checklist|library|bundle)\/([0-9a-f-]{36})$/i);
   if(libraryPath){if(keys.length||!uuid.test(libraryPath[2]))return null;try{if(["training","checklist"].includes(libraryPath[1])){const service=await import("../work-hub/training-service");await service.getAssignedLibrary({...session,userId:session.userId!},libraryPath[2]);}else{const service=await import("../work-hub/library-service");await service.getLibrary({...session,userId:session.userId!},libraryPath[2]);}return path;}catch{return null;}}

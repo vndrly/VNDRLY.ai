@@ -57,7 +57,10 @@ test("Workforce profiles, availability and real offers preserve the employee acc
     await loginAsVendor(page, employees[0]);
     await page.goto("/work-hub");
     await page.getByRole("button", { name: /My Shift Offers.*1/ }).click();
+    const responsePromise = page.waitForResponse(response => response.url().includes("/offers/") && response.url().endsWith("/respond") && response.request().method() === "POST");
     await page.getByRole("region", { name: "My Shift Offers", exact: true }).getByRole("button", { name: "Accept", exact: true }).click();
+    const response = await responsePromise;
+    expect(response.status(), await response.text()).toBe(200);
     await expect(page.getByText("Offer accepted. Assignment saved.", { exact: true })).toBeVisible();
     expect((await pool.query("SELECT user_id,status FROM work_hub_shift_assignments WHERE shift_id=$1", [shift])).rows).toEqual([{ user_id: employees[0].userId, status: "accepted" }]);
     expect((await pool.query("SELECT assigned_count,actual_count,state FROM workforce_coverage_records WHERE shift_id=$1", [shift])).rows[0]).toEqual({ assigned_count: 1, actual_count: 0, state: "uncovered" });

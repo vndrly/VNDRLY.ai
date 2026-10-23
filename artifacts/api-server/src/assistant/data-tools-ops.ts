@@ -1465,7 +1465,13 @@ export async function runOpsDataTool(
             : { stations: await listChangeOverStations(session, z.number().int().positive().parse(args.siteId), mode) });
         }
         const stationId = z.string().uuid().parse(args.stationId);
-        if (name === "query_gate_change_over") return JSON.stringify(await getChangeOverState(session, stationId));
+        if (name === "query_gate_change_over") {
+          const state=await getChangeOverState(session,stationId);
+          const scheduledWatches=session.activeMembershipId && (session.vendorId||session.partnerId)
+            ? await (await import("../services/gate-watch-schedule")).listMyScheduledWatches(session)
+            : null;
+          return JSON.stringify({...state,scheduledWatches});
+        }
         const filters = z.object({ days: z.number().int().min(1).max(3650).optional(), search: z.string().max(200).optional(), before: z.string().datetime().optional() }).parse(args);
         return JSON.stringify(await getShiftNotes(session, { ...filters, stationId }));
       } catch (error) {

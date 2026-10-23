@@ -39,6 +39,10 @@ const GATE_TYPE_CATEGORY: Readonly<Record<string, GateNotificationCategory>> = {
   gate_sharing_disabled: "alerts",
   gate_sharing_escalation: "alerts",
   gate_access_changed_urgent: "alerts",
+  gate_watch_assigned: "alerts",
+  gate_watch_confirmed: "alerts",
+  gate_watch_conflict: "alerts",
+  gate_watch_conflict_urgent: "alerts",
 };
 
 export function resolveGateNotificationCategory(row: { type: string }): GateNotificationCategory | null {

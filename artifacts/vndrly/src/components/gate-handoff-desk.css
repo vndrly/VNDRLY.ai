@@ -11,7 +11,10 @@
   line-height: 1.5;
 }
 .handoff-heading { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; }
-.handoff-heading > div:not(.handoff-status) { flex: 1; min-width: 0; }
+.handoff-heading > div { flex: 1; min-width: 0; }
+.handoff-next-actions { flex: 0 1 370px; padding: 9px 12px; border: 1px solid #414145; border-left: 3px solid var(--brand-primary); border-radius: 9px; background: #2b2b2f; }
+.handoff-next-actions h3 { margin: 0; color: #ececec; font-size: 14px; font-weight: 700; }
+.handoff-next-actions p { color: #d1d1d1; }
 .handoff-heading h2, .handoff-panel h3 { margin: 0; color: #ececec; font-size: 17px; font-weight: 700; }
 .handoff-heading p { margin: 2px 0 0; color: #b3b3b3; font-size: 13px; }
 .handoff-compose-panels, .handoff-review-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -59,6 +62,6 @@
   .gate-handoff-desk { padding: 12px; }
   .handoff-compose-panels { grid-template-columns: 1fr; }
   .handoff-heading { flex-wrap: wrap; }
-  .handoff-status { flex-basis: 100%; padding-left: 44px; }
+  .handoff-next-actions { flex-basis: 100%; }
   .handoff-assume > .watch-pass-control { width: 100%; }
 }

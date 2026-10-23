@@ -359,6 +359,9 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "gate_coverage_uncovered",
   "gate_coverage_understaffed",
   "gate_coverage_restored",
+  "gate_watch_confirmed",
+  "gate_watch_conflict",
+  "gate_watch_conflict_urgent",
 ]);
 
 export function isHighPriorityNotificationType(type: string): boolean {
@@ -661,6 +664,15 @@ export async function deliverUrgentOfficeNotification(notice: import("../service
   if (!categoryEnabled(p, category)) {
     await deps.cancelRetryable(notice, ["push", "email", "sms"], "category_disabled");
     return true;
+  }
+  if (["gate_watch_confirmed", "gate_watch_conflict", "gate_watch_conflict_urgent"].includes(notice.type)) {
+    // Scheduling responses use all configured channels for office recipients as well.
+    // Existing consent still binds SMS to this active membership and linked employee phone.
+    return (await import("../services/gate-alert-delivery")).deliverGateAlert(notice, {
+      ...deps,
+      push: async n => (await import("../services/gate-alert-push")).sendGateAlertPush(n, (await countUnreadForUsers([n.userId], prefs)).get(n.userId) ?? 0),
+    }, { ...recipient, gate:true, gateAlertsEnabled:true, pushEnabled:p.pushEnabled,
+      alertsEmailEnabled:recipient.alertsEmailEnabled && categoryEmailEnabled(p,category,notice.type) });
   }
   // Office roles never inherit a gate SMS retry, even when the same destination remains authorized.
   const results = await Promise.allSettled((["push", "email", "sms"] as const).map(async channel => {
