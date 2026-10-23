@@ -25,9 +25,11 @@ import { changeOverRequest as request } from "@/lib/change-over-api";
 export function ShiftSnapshotView({
   snapshot,
   historyBaseHref,
+  activityWindow,
 }: {
-  snapshot: ChangeOverSnapshot;
+  snapshot: ChangeOverSnapshot | null;
   historyBaseHref?: string;
+  activityWindow?: "24h";
 }) {
   const { t, i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
@@ -40,18 +42,20 @@ export function ShiftSnapshotView({
     pendingAdmission: "pending",
   };
   if (historyBaseHref) {
-    const metric = (key: keyof ChangeOverSnapshot["metrics"], icon: typeof LogIn) => <WorkspaceRow key={key} icon={icon} label={t(`changeOver.${key}`)} value={String(snapshot.metrics[key])} href={`${historyBaseHref}&recordType=${metricRecordType[key]}`} testId={`dashboard-metric-${key}`} />;
+    const metric = (key: keyof ChangeOverSnapshot["metrics"], icon: typeof LogIn) => <WorkspaceRow key={key} icon={icon} label={t(`changeOver.${key}`)} value={snapshot ? String(snapshot.metrics[key]) : c("Unavailable", "No disponible")} href={`${historyBaseHref}&recordType=${metricRecordType[key]}`} testId={`dashboard-metric-${key}`} />;
+    const unavailable = c("Site records unavailable.", "Registros del sitio no disponibles.");
     return <>
-      <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={`${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}`} icon={LogIn}>
+      <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={snapshot ? `${activityWindow === "24h" ? c("Last 24 hours", "Últimas 24 horas") + " · " : ""}${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}` : unavailable} icon={LogIn}>
         {metric("checkIns", LogIn)}{metric("checkOuts", LogOut)}{metric("pendingAdmission", Clock3)}
-        <details className="gate-panel-disclosure"><summary><AlertTriangle aria-hidden="true" /><span>{t("changeOver.exceptions")}</span><small>{snapshot.exceptions.length}</small></summary><div className="gate-panel-detail">{snapshot.exceptions.length ? snapshot.exceptions.map(e => <p key={`${e.sourceId}:${e.code}`}>{e.text}</p>) : <p>{t("changeOver.none")}</p>}</div></details>
+        <details className="gate-panel-disclosure"><summary><AlertTriangle aria-hidden="true" /><span>{t("changeOver.exceptions")}</span><small>{snapshot?.exceptions.length ?? "—"}</small></summary><div className="gate-panel-detail">{!snapshot ? <p>{unavailable}</p> : snapshot.exceptions.length ? snapshot.exceptions.map(e => <p key={`${e.sourceId}:${e.code}`}>{e.text}</p>) : <p>{t("changeOver.none")}</p>}</div></details>
       </WorkspacePanel>
       <WorkspacePanel title={c("On site", "En el sitio")} subtitle={c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
         {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
-        <details className="gate-panel-disclosure"><summary><ClipboardList aria-hidden="true" /><span>{t("changeOver.outstanding")}</span><small>{snapshot.outstanding.length}</small></summary><div className="gate-panel-detail">{snapshot.outstanding.length ? snapshot.outstanding.map(row => <div key={row.id}><strong>{row.name || row.id}</strong><p>{row.company} · {row.plate} · {new Date(row.checkIn).toLocaleString()}</p>{row.notes && <p className="whitespace-pre-wrap">{row.notes}</p>}</div>) : <p>{t("changeOver.none")}</p>}<p>{t("changeOver.coverage")}</p></div></details>
+        <details className="gate-panel-disclosure"><summary><ClipboardList aria-hidden="true" /><span>{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></summary><div className="gate-panel-detail">{!snapshot ? <p>{unavailable}</p> : snapshot.outstanding.length ? snapshot.outstanding.map(row => <div key={row.id}><strong>{row.name || row.id}</strong><p>{row.company} · {row.plate} · {new Date(row.checkIn).toLocaleString()}</p>{row.notes && <p className="whitespace-pre-wrap">{row.notes}</p>}</div>) : <p>{t("changeOver.none")}</p>}<p>{t("changeOver.coverage")}</p></div></details>
       </WorkspacePanel>
     </>;
   }
+  if (!snapshot) return null;
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
@@ -453,9 +457,9 @@ export default function GateChangeOverPage({
       </div>
       {!history && current && (
           <div className="gate-dashboard-panels">
-            <GateWatchSummary stationId={stationId} current={current} />
+            <GateWatchSummary stationId={stationId} current={current} onAssume={() => void act(assumeWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} />
             <DashboardTasks />
-            {current.shift && current.snapshot ? <ShiftSnapshotView snapshot={current.snapshot} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: "current_shift" })}`} /> : <WorkspacePanel title={t("changeOver.title")} subtitle={t("changeOver.noShift")} icon={LayoutDashboard}><div className="gate-panel-body"><BrandPillButton disabled={busy || !online || Boolean(pendingWatch) || state.isError} onClick={() => void act(assumeWatch)}>{t("watch.assume")}</BrandPillButton></div></WorkspacePanel>}
+            <ShiftSnapshotView snapshot={current.snapshot} activityWindow={current.shift ? undefined : "24h"} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: current.shift ? "current_shift" : "24h" })}`} />
             <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} current={current} ownWatch={ownShift} busy={busy} online={online} readError={state.isError}
               notes={notes} onNotesChange={setNotes} itemText={itemText} onItemTextChange={setItemText}
               itemNotes={itemNotes} onItemNoteChange={(id, text) => setItemNotes(value => ({ ...value, [id]: text }))}

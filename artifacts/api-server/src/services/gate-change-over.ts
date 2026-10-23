@@ -412,9 +412,9 @@ export async function getChangeOverState(
           ])
         ).rows[0]
       : null;
-    const current = shift
-      ? await snapshot(c, access.station.site_id, stationId, shift.started_at)
-      : null;
+    // Site activity and occupancy remain visible before anybody assumes a watch.
+    const current = await snapshot(c, access.station.site_id, stationId,
+      shift?.started_at ?? new Date(Date.now() - 24 * 60 * 60_000));
     return {
       station: access.station,
       site: access.site,

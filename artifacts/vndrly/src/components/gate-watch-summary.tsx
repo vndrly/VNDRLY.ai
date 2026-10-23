@@ -6,9 +6,10 @@ import { useTranslation } from "react-i18next";
 import type { ChangeOverState, ShiftNotesResponse } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import { changeOverRequest } from "@/lib/change-over-api";
+import BrandPillButton from "@/components/brand-pill-button";
 
-export default function GateWatchSummary({ stationId, current }: { stationId: string; current?: ChangeOverState }) {
-  const { user } = useAuth(), { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
+export default function GateWatchSummary({ stationId, current, onAssume, assumeDisabled }: { stationId: string; current?: ChangeOverState; onAssume?: () => void; assumeDisabled?: boolean }) {
+  const { user } = useAuth(), { t, i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
   const notes = useQuery({ queryKey: ["gate-watch-previous-notes", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, stationId], queryFn: () => changeOverRequest<ShiftNotesResponse>(`/${stationId}/notes?days=30`), enabled: Boolean(stationId), retry: false, throwOnError: false });
@@ -22,6 +23,7 @@ export default function GateWatchSummary({ stationId, current }: { stationId: st
     <WorkspaceRow icon={Clock3} label={c("My watch", "Mi vigilancia")} value={!current || roster.isPending || roster.isError ? c("Unavailable", "No disponible") : minutes === null ? c("Not on watch", "Sin vigilancia") : minutes >= 1440 ? c("Open watch needs review", "Revisar vigilancia abierta") : `${Math.floor(minutes / 60)}h ${minutes % 60}m`} href={`/gate/history?stationId=${stationId}&range=current_shift`} />
     {own && <p className="gate-panel-caption">{c("Assumed", "Iniciada")} {new Date(own.startedAt).toLocaleString()}</p>}
     <WorkspaceRow icon={UserCheck} label={c("On watch", "En vigilancia")} value={!current ? c("Unavailable", "No disponible") : current.shift?.operator_name ?? c("No active watch", "Sin vigilancia activa")} href={`/gate/history?stationId=${stationId}&range=current_shift`} />
+    {current && !current.shift && onAssume && <div className="gate-panel-body"><BrandPillButton disabled={assumeDisabled} onClick={onAssume}>{t("watch.assume")}</BrandPillButton></div>}
     <details className="gate-panel-disclosure">
       <summary><NotebookPen aria-hidden="true" /> <span>{c("Previous watch", "Vigilancia anterior")}</span><small>{previous?.outgoing_name ?? c("Notes", "Notas")}</small></summary>
       <div className="gate-panel-detail">

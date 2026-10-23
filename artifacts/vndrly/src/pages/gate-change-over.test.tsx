@@ -453,3 +453,29 @@ it.each(["self", "22"])("uses the single Recover Shift action for dropdown choic
     ...(target === "self" ? {} : { targetMembershipId: 22 }),
   });
 });
+
+it("keeps the same Dashboard panels before a company has an active watch", async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation((path, body) => path.endsWith("/state")
+    ? { ...state(), shift: null, preparation: null }
+    : base(path, body));
+  mount();
+  const activity = await screen.findByRole("region", { name: "Gate activity" });
+  expect(screen.getByRole("region", { name: "On site" })).toBeTruthy();
+  expect(screen.getByRole("region", { name: "Watch & handover" })).toBeTruthy();
+  expect(within(activity).getByTestId("dashboard-metric-checkIns").textContent).toContain("2");
+  expect(within(activity).getByTestId("dashboard-metric-checkIns").getAttribute("href")).toContain("range=24h");
+  const watch = screen.getByRole("region", { name: "Watch & handover" });
+  expect(within(watch).getByRole("button", { name: "watch.assume" })).toBeTruthy();
+});
+
+it("preserves the Dashboard panels while site snapshot data is unavailable without inventing zeros", async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation((path, body) => path.endsWith("/state")
+    ? { ...state(), shift: null, preparation: null, snapshot: null }
+    : base(path, body));
+  mount();
+  const activity = await screen.findByRole("region", { name: "Gate activity" });
+  expect(screen.getByRole("region", { name: "On site" })).toBeTruthy();
+  expect(within(activity).getByTestId("dashboard-metric-checkIns").textContent).toContain("Unavailable");
+});
