@@ -230,7 +230,7 @@ export default function WorkHubShiftCalendar({
 const styles = StyleSheet.create({
   card: { borderRadius: 16, borderWidth: 2, gap: 10, padding: 12 },
   headerRow: { alignItems: "center", flexDirection: "row", gap: 10, justifyContent: "space-between" },
-  title: { fontSize: 17, fontWeight: "800" },
+  title: { fontFamily: "Inter_700Bold", fontSize: 20, fontWeight: "700" },
   viewToggle: { flexDirection: "row", gap: 6 },
   toggle: { alignSelf: "auto", width: 84 },
   periodLabel: { fontSize: 12, fontWeight: "600" },
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   shiftDescription: { fontSize: 10, fontVariant: ["tabular-nums"], fontWeight: "700" },
   noShift: { fontSize: 10 },
   emptyText: { paddingVertical: 6, textAlign: "center" },
-  monthTitle: { fontSize: 16, fontWeight: "800", textAlign: "center" },
+  monthTitle: { fontFamily: "Inter_700Bold", fontSize: 20, fontWeight: "700", textAlign: "center" },
   weekdayRow: { flexDirection: "row" },
   weekday: { flex: 1, fontSize: 11, fontWeight: "700", textAlign: "center" },
   monthGrid: { flexDirection: "row", flexWrap: "wrap" },

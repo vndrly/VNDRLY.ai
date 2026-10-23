@@ -1,6 +1,11 @@
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 export const CHANGE_OVER_TOOLS: Anthropic.Tool[] = [
   {
+    name: "query_gate_arrivals",
+    description: "Read incoming ticketed Fleet runs for an authorized Gate site, or selected-site operational detail for an exact runId. Incoming requires a current directed run and fresh consented designated driver-phone observation. ETA uses actual routing data or is unavailable; neither phone reports nor estimates prove physical arrival. Never infer a visit link. Billing, private documents and other-site operations are excluded. ChatGPT requires gate:read.",
+    input_schema: { type:"object", properties:{siteLocationId:{type:"integer",minimum:1},runId:{type:"string",format:"uuid"}},required:["siteLocationId"],additionalProperties:false },
+  },
+  {
     name: "query_gate_stations",
     description:
       "Resolve currently authorized Change Over sites and gates. Use before shift tools when the gate ID is unknown. Never guess a gate or infer permission from conversation.",

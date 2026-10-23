@@ -93,10 +93,11 @@ describe("AskV realtime tool packs", () => {
   });
 
   it("keeps every retained read-only data tool discoverable in a bounded workflow", () => {
+    const roles = ["admin", "vendor", "field_employee"] as const;
     const names = new Set(
-      VOICE_WORKFLOWS.flatMap((workflow) =>
-        toolsForRealtime({ role: "admin", workflow }).map((tool) => tool.name),
-      ),
+      roles.flatMap(role => VOICE_WORKFLOWS.flatMap((workflow) =>
+        toolsForRealtime({ role, workflow }).map((tool) => tool.name),
+      )),
     );
     for (const name of DATA_TOOL_NAMES)
       expect(names.has(name), name).toBe(true);

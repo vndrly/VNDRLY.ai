@@ -103,6 +103,7 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
     risk: metadata.mutating ? "high" : "read", execution: "server", pack: "screen", auditTarget: "hotlist",
   }])),
   query_gate_stations: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
+  query_gate_arrivals: { roles: ["vendor","field_employee"], pack: "screen", auditTarget: "site" },
   query_gate_change_over: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   query_shift_notes: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   ...Object.fromEntries(

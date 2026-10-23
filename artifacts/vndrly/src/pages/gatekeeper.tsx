@@ -1,10 +1,14 @@
 import WorkdayControls from "@/components/workday-controls";
 import "@/components/gate-dashboard.css";
+import { gateDeparturesForSite, gateHistoryFromIso } from "@/lib/gate-history";
+import "@/components/gate-presence-tabs.css";
 import GateGpsSelector from "@/components/gate-gps-selector";
 import GateWatchLink from "@/components/gate-watch-link";
+import { GateArrivalsPanel, useGateArrivals } from "@/components/gate-arrivals-panel";
+import { GateArrivalDetails } from "@/components/gate-arrival-details";
+import { GateVisitDetails } from "@/components/gate-visit-details";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
-import { Link } from "wouter";
 import {
   Camera,
   ClipboardList,
@@ -43,7 +47,6 @@ import {
   CardHeader,
   CardTitle,
   CARD_INNER_TILE_CLASS,
-  CARD_TITLE_ICON_CLASS,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -266,7 +269,9 @@ export default function GatekeeperPage() {
   const [purpose, setPurpose] = useState("");
   const [entryCategory, setEntryCategory] = useState<"" | "visitor" | "routine_vendor_work" | "partner_admin" | "vendor_admin">("");
   const [notes, setNotes] = useState("");
-  const [checkOutNotes, setCheckOutNotes] = useState("");
+  const [presenceView, setPresenceView] = useState<"arrivals" | "active" | "departures">("active");
+  const [detailVisitId, setDetailVisitId] = useState<number | null>(null);
+  const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [duration, setDuration] = useState("60");
   const [gps, setGps] = useState<GpsLockState>("searching");
   const [origin, setOrigin] = useState<Coordinates | null>(null);
@@ -328,6 +333,19 @@ export default function GatekeeperPage() {
     enabled: !!confirmedCode,
     retry: false,
   });
+  const departures = useQuery({
+    queryKey: ["gatekeeper-departures", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, site.data?.site.id],
+    queryFn: () => listAllVisits({ siteLocationId: site.data!.site.id, from: gateHistoryFromIso(), overlap: true }),
+    enabled: presenceView === "departures" && Boolean(site.data?.site.id),
+    refetchInterval: presenceView === "departures" ? 30000 : false,
+    retry: false,
+  });
+  const recentDepartures = useMemo(() => gateDeparturesForSite(departures.data ?? [], site.data?.site.id), [departures.data, site.data?.site.id]);
+  const arrivals = useGateArrivals(site.data?.site.id);
+  useEffect(() => {
+    setDetailVisitId(null);
+    setDetailRunId(null);
+  }, [site.data?.site.id, user?.activeMembershipId]);
   const gateLocations = useQuery({
     queryKey: ["gate-visit-locations", user?.vendorId, site.data?.site.id],
     queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number }[] }>(`/stations?siteId=${site.data!.site.id}`),
@@ -876,10 +894,10 @@ export default function GatekeeperPage() {
     : fence.milesToSite != null ? t("gatekeeper.gpsDistanceEvidence", { miles: fence.milesToSite.toFixed(1), radius: fence.radiusMiles?.toFixed(1) })
     : t("gatekeeper.gpsRequiredToSubmit");
   const pendingVisits = activeVisits.filter(
-    (visit) => visit.admissionStatus === "pending",
+    (visit) => visit.siteLocationId === site.data?.site.id && visit.admissionStatus === "pending",
   );
   const onSiteVisits = activeVisits.filter(
-    (visit) => visit.admissionStatus !== "pending",
+    (visit) => visit.siteLocationId === site.data?.site.id && visit.admissionStatus !== "pending",
   );
 
   const currentPlateMatchKey = plateMatchKey(plateState, vehiclePlate);
@@ -937,7 +955,6 @@ export default function GatekeeperPage() {
     setPurpose("");
     setEntryCategory("");
     setNotes("");
-    setCheckOutNotes("");
     setDuration("60");
     setHostKey("");
     setPlateState(null);
@@ -1109,6 +1126,7 @@ export default function GatekeeperPage() {
       resetEntry();
       setVoiceResponse({ messageKey: "gatekeeper.checkedInTitle" });
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["gatekeeper-departures"] });
       await queryClient.invalidateQueries({
         queryKey: ["gatekeeper-recent-visits"],
       });
@@ -1136,12 +1154,12 @@ export default function GatekeeperPage() {
         id,
         coords?.latitude,
         coords?.longitude,
-        checkOutNotes.trim() || undefined,
+        undefined,
         activeVisits.find(visit => visit.id === id)?.siteLocationId === site.data?.site.id ? selectedGateLocation?.id : undefined,
       );
-      setCheckOutNotes("");
-      resetEntry();
+        resetEntry();
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["gatekeeper-departures"] });
       await queryClient.invalidateQueries({
         queryKey: ["gatekeeper-recent-visits"],
       });
@@ -1175,20 +1193,14 @@ export default function GatekeeperPage() {
 
   return (
     <div className={FIELD_OPS_PAGE_CLASS} data-testid="gatekeeper-page">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("nav.dashboard")} testId="button-back" />
-          <ClipboardList aria-hidden="true" data-testid="gate-header-icon" className="mt-2 h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
+          <ClipboardList aria-hidden="true" data-testid="gate-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
           <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t("gatekeeper.title")}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("gatekeeper.subtitle")}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("gatekeeper.handsFreeHint")}
-          </p>
           {voiceListening && (
             <p role="status" aria-live="polite" className="mt-1 text-sm font-medium text-[color:var(--brand-primary)]">
               {t("gatekeeper.voiceListening")}
@@ -1210,14 +1222,9 @@ export default function GatekeeperPage() {
           )}
           </div>
         </div>
-        <Link
-          href="/gate/history"
-          className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
-          data-testid="link-gate-history"
-        >
-          <History className="h-4 w-4" />
-          {t("gatekeeper.history")}
-        </Link>
+        <div className="gate-header-watch" data-testid="gate-watch-header">
+          <GateWatchLink stationId={selectedGateLocation?.id} siteId={site.data?.site.id} />
+        </div>
       </div>
 
       <WorkdayControls watchControl={
@@ -1307,38 +1314,54 @@ export default function GatekeeperPage() {
             maxHeight: "560px",
           }}
         >
-          <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="flex items-center gap-2">
-              <Shield className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
-              {t("gatekeeper.onSiteNow")}
+          <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
+            <CardTitle className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
+              <button type="button" className={`gate-presence-tab${arrivals.newInboundIds.size ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
+                {t("gatekeeper.arrivalsTab")}
+              </button>
+              <span className="gate-presence-divider" aria-hidden="true">|</span>
+              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "active"} onClick={() => setPresenceView("active")}>
+                {t("gatekeeper.onSiteTab")}
+              </button>
+              <span className="gate-presence-divider" aria-hidden="true">|</span>
+              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
+                {t("gatekeeper.departuresTab")}
+              </button>
             </CardTitle>
-            <div className="flex items-center gap-2">
-              {!live.flash && (
-                <LiveConnectionPill
-                  status={live.liveStatus}
-                  compact
-                  onRefresh={() => void visits.refetch()}
-                />
-              )}
-              <BrandPillButton
-                tone="brand"
-                onClick={() => void visits.refetch()}
-                disabled={visits.isFetching}
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                className="gate-presence-refresh"
+                onClick={() => void (presenceView === "arrivals" ? arrivals.refetch() : presenceView === "departures" ? departures.refetch() : visits.refetch())}
+                disabled={presenceView === "arrivals" ? arrivals.isFetching : presenceView === "departures" ? departures.isFetching : visits.isFetching}
                 data-testid="button-gate-refresh"
+                aria-label={t("common.refresh")}
                 title={t("common.refresh")}
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only">{t("common.refresh")}</span>
-              </BrandPillButton>
+              </button>
             </div>
           </CardHeader>
           <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
             <div
-              className="min-h-0 basis-3/4 space-y-3 overflow-y-auto pr-1"
-              data-testid="gate-on-site-entries"
+              className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1"
+              data-testid={presenceView === "arrivals" ? "gate-arrivals" : presenceView === "departures" ? "gate-recent-departures" : "gate-on-site-entries"}
               role="region"
-              aria-label={t("gatekeeper.onSiteNow")}
+              aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
             >
+            {presenceView === "arrivals" ? <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} /> : presenceView === "departures" ? (
+              departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />
+              : departures.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.departuresLoadFailed")}</p>
+              : recentDepartures.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noRecentDepartures")}</p>
+              : recentDepartures.map(visit => <button type="button" key={visit.id} className="gate-record-link" data-testid="gate-recent-departure" onClick={() => setDetailVisitId(visit.id)}>
+                  <p className="font-semibold text-foreground">{visit.firstName} {visit.lastName}</p>
+                  <p className="text-xs text-muted-foreground">{[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}</p>
+                  <p className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedOut")} · {new Date(visit.checkOutTime!).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{t("gatekeeper.minutesOnSite", { minutes: Math.max(0, Math.floor((Date.parse(visit.checkOutTime!) - Date.parse(visit.checkInTime)) / 60_000)) })}</p>
+                  {visit.checkOutNotes && <p className="whitespace-pre-wrap text-xs text-muted-foreground">{visit.checkOutNotes}</p>}
+                </button>)
+            ) : <>
             {pendingVisits.length > 0 && (
               <div className="space-y-2" data-testid="gate-pending-visitors">
                 <p className="text-sm font-semibold text-foreground">
@@ -1349,7 +1372,7 @@ export default function GatekeeperPage() {
                     key={visit.id}
                     className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3`}
                   >
-                    <div className="min-w-0">
+                    <button type="button" className="gate-record-link gate-record-inline min-w-0" onClick={() => setDetailVisitId(visit.id)}>
                       <p className="font-semibold text-foreground">
                         {visit.firstName} {visit.lastName}
                       {visit.reconciliationState === "observed" ||
@@ -1375,7 +1398,7 @@ export default function GatekeeperPage() {
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
-                    </div>
+                    </button>
                     <GreenButton
                       onClick={() => void admitVisit(visit.id)}
                       disabled={busy}
@@ -1404,7 +1427,7 @@ export default function GatekeeperPage() {
                   key={visit.id}
                   className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3 ${live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}`}
                 >
-                  <div className="min-w-0">
+                  <button type="button" className="gate-record-link gate-record-inline min-w-0" onClick={() => setDetailVisitId(visit.id)}>
                     <p className="font-semibold text-foreground">
                       {visit.firstName} {visit.lastName}
                       {visit.reconciliationState === "observed" ||
@@ -1431,12 +1454,15 @@ export default function GatekeeperPage() {
                         .join(" · ")}
                     </p>
                     <p className="text-xs text-muted-foreground">
+                      {t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
                       {t("gatekeeper.minutesOnSite", { minutes: dwell.minutesOnSite })}
                       {dwell.overdue
                         ? ` · ${t("gatekeeper.overdue", { minutes: dwell.overdueMinutes })}`
                         : ""}
                     </p>
-                  </div>
+                  </button>
                   <AmberButton
                     onClick={() => void checkOut(visit.id)}
                     disabled={busy}
@@ -1478,21 +1504,7 @@ export default function GatekeeperPage() {
                 </BlueButton>
               </div>
             )}
-            </div>
-            <div
-              className="min-h-0 basis-1/4 overflow-y-auto pr-1"
-              data-testid="gate-checkout-notes-region"
-              role="region"
-              aria-label={t("gatekeeper.checkOutNotes")}
-            >
-              <Label htmlFor="gate-checkout-notes">{t("gatekeeper.checkOutNotes")}</Label>
-              <Textarea
-                id="gate-checkout-notes"
-                value={checkOutNotes}
-                onChange={(e) => setCheckOutNotes(e.target.value)}
-                placeholder={t("gatekeeper.notesPlaceholder")}
-                data-testid="input-gate-checkout-notes"
-              />
+            </>}
             </div>
             {site.data ? <div className="flex shrink-0 justify-end pt-1">
               <BrandPillButton
@@ -1506,9 +1518,8 @@ export default function GatekeeperPage() {
             </div> : null}
           </CardContent>
         </Card>
-        <div className="flex justify-center" data-testid="gate-watch-below-on-site">
-          <GateWatchLink stationId={selectedGateLocation?.id} siteId={site.data?.site.id} />
-        </div>
+        <GateVisitDetails visitId={detailVisitId} onClose={() => setDetailVisitId(null)} onOpenRun={runId => { setDetailVisitId(null); setDetailRunId(runId); }} />
+        <GateArrivalDetails siteId={site.data?.site.id} runId={detailRunId} onClose={() => setDetailRunId(null)} />
         </div>
 
         <Card

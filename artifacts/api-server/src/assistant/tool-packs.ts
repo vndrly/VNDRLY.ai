@@ -40,6 +40,7 @@ const CORE_TOOLS = new Set([
 const GATE_SCREEN_TOOLS = new Set([
   "query_gate_daily_billing", "configure_gate_daily_billing", "invoice_gate_post",
   "query_gate_stations",
+  "query_gate_arrivals",
   "query_gate_change_over",
   "query_shift_notes",
   "query_gate_report",

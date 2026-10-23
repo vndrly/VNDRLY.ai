@@ -929,6 +929,16 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "gate_arrivals": {
+      "unavailable": "Los viajes entrantes no están disponibles temporalmente. Inténtelo de nuevo.",
+      "invalid_request": "Seleccione un sitio o viaje válido e inténtelo de nuevo.",
+      "site_unavailable": "Este sitio no está disponible o está fuera de su acceso actual.",
+      "visit_unavailable": "Esta visita no está disponible en el sitio seleccionado.",
+      "run_unavailable": "Este viaje no está disponible en el sitio seleccionado.",
+      "link_capacity_reached": "Esta visita tiene demasiados viajes vinculados para mostrarlos de forma segura. Contacte a su supervisor.",
+      "route_unavailable": "No hay una estimación de conducción disponible.",
+      "location_unavailable": "No hay una ubicación compartida actual del conductor disponible."
+    },
     "marketplace": {
       "unavailable": "El mercado de servicios no está disponible temporalmente. Inténtalo de nuevo.",
       "ticket_reinvite_not_allowed": "Cancela este ticket del mercado y crea una nueva oferta de trabajo para contratar a otro proveedor."
@@ -2980,7 +2990,16 @@
     "addGate": "Agregar entrada",
     "refresh": "Actualizar conexión y registros",
     "recover": "Aceptar responsabilidad y recuperar turno",
-    "recoverExplanation": "Si el operador saliente no está disponible, revise los datos actuales e ingrese un motivo arriba. Esta acción registra su reconocimiento, le transfiere la responsabilidad y cierra la sesión del operador anterior."
+    "recoverExplanation": "Si el operador saliente no está disponible o debe abandonar la guardia antes de tiempo, revise los datos actuales e ingrese el motivo o la resolución. Asuma la guardia o asigne un reemplazo autorizado.",
+    "recoveryReason": "Motivo o resolución",
+    "recoveryReplacement": "¿Quién asumirá la guardia?",
+    "recoverySelf": "Yo asumiré la guardia",
+    "recoveryRosterUnavailable": "No se pudieron cargar los operadores de reemplazo. Aún puede asumir la guardia usted mismo.",
+    "recoveryEffect": "Finaliza la guardia y el turno pagado del operador saliente y cierra su sesión de VNDRLY. Su propia sesión permanece activa. Asignar un reemplazo no inicia su turno pagado ni confirma la entrega en su nombre.",
+    "recoveryAssume": "Finalizar turno saliente y asumir guardia",
+    "recoveryAssign": "Finalizar turno saliente y asignar guardia",
+    "recoveryRetry": "Consultar resultado de recuperación",
+    "recoveryUnconfirmed": "El resultado no está confirmado. Consulte la solicitud original antes de hacer otro cambio."
   },
   "onboardingNative": {
     "title": "Completar configuración de la cuenta",

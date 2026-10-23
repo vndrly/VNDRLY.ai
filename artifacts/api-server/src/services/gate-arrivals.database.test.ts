@@ -1,0 +1,46 @@
+import { randomUUID } from "node:crypto";
+import { expect,it,vi } from "vitest";
+import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
+import { FleetRunSchema } from "@workspace/api-zod";
+import { createGateArrivalsService } from "./gate-arrivals";
+const isolated=process.env.VNDRLY_TEST_DB_MODE==="fresh-local" && process.env.VNDRLY_ISOLATED_TEST_DB==="1";
+it.skipIf(!isolated)("reads canonical PostgreSQL incoming/completed runs, live consent and explicit visit links without financial disclosure",async()=>{
+  assertFreshLocalTestDatabaseEnvironment(process.env);
+  const {pool}=await import("@workspace/db"),tag=randomUUID(),now=new Date();
+  const vendor=(await pool.query("INSERT INTO vendors(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",[`Arrivals ${tag}`,`${tag}@example.invalid`])).rows[0].id;
+  const partner=(await pool.query("INSERT INTO partners(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",[`Arrival owner ${tag}`,`p-${tag}@example.invalid`])).rows[0].id;
+  const site=(await pool.query("INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code,site_radius_meters) VALUES($1,'Arrival pad','Synthetic',35,-97,$2,500) RETURNING id",[partner,tag])).rows[0].id;
+  const workType=(await pool.query("INSERT INTO work_types(name,category) VALUES($1,'haul') RETURNING id",[`Arrival ${tag}`])).rows[0].id;
+  const driver=(await pool.query("INSERT INTO users(username,password_hash,role,display_name) VALUES($1,'unusable-synthetic','field_employee','Arrival driver') RETURNING id",[tag])).rows[0].id;
+  const ticket=(await pool.query("INSERT INTO tickets(site_location_id,vendor_id,work_type_id,status) VALUES($1,$2,$3,'initiated') RETURNING id",[site,vendor,workType])).rows[0].id;
+  const vehicle=(await pool.query("INSERT INTO assets(name,category,legal_owner_name,responsible_org_type,responsible_org_id) VALUES('Arrival truck','truck','Synthetic','vendor',$1) RETURNING id",[vendor])).rows[0].id;
+  await pool.query("INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')",[partner,vendor]);
+  await pool.query("INSERT INTO user_org_memberships(user_id,org_type,vendor_id,role) VALUES($1,'vendor',$2,'field_employee')",[driver,vendor]);
+  const device=(await pool.query("INSERT INTO work_hub_devices(user_id,owner_org_type,owner_org_id,friendly_name,device_class) VALUES($1,'vendor',$2,'Synthetic phone','phone') RETURNING id",[driver,vendor])).rows[0].id;
+  await pool.query("INSERT INTO location_consents(user_id,device_id) VALUES($1,$2)",[driver,device]);
+  await pool.query("INSERT INTO work_hub_device_preferences(user_id,owner_org_type,owner_org_id,native_operations) VALUES($1,'vendor',$2,$3::jsonb)",[driver,vendor,JSON.stringify({designatedDeviceId:device,consent:{locationSharing:true},duty:{active:true,mode:"manual",endsAt:null}})]);
+  const run=FleetRunSchema.parse({id:randomUUID(),companyId:vendor,fleetId:randomUUID(),title:"Arrival test",driverUserId:driver,vehicleAssetId:vehicle,trailerAssetId:null,status:"in_progress",phase:"traveling_to_next_stop",version:2,siteIds:[site],stops:[{id:randomUUID(),siteId:site,kind:"delivery",sequence:0}],loads:[],inspections:[],records:[],currentStopId:null,visitedStopIds:[],events:[],linkedTicketId:ticket,allowedActions:[]});
+  const observation={runId:run.id,driverUserId:driver,vehicleAssetId:vehicle,latitude:35.1,longitude:-97.1,recordedAt:now.toISOString(),receivedAt:now.toISOString(),accuracyMeters:5,source:"driver_phone",freshness:"recent",physicalProofVerified:false};
+  const save=()=>pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[vendor,JSON.stringify({enabled:true,runs:[run]})]);
+  await save();
+  async function audit(type:string,target:string,value:unknown) {
+    await pool.query("INSERT INTO assistant_action_audit(user_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'ios','device','canonical','synthetic_arrival','test',$3,$4,$5::jsonb,'success')",[driver,vendor,type,target,JSON.stringify(value)]);
+  }
+  await audit("fleet-run",run.id,run);
+  await audit("fleet-location",run.id,{deviceId:device,assignment:JSON.stringify([run.id,vendor,driver,vehicle,null]),observation});
+  const authorize=vi.fn(async()=>{}),service=createGateArrivalsService(pool,authorize,async()=>({ok:false,errorCode:"mapbox.missing_token",message:"No external routing in test"}),()=>now);
+  const session={userId:driver,role:"field_employee",vendorId:vendor,sv:1};
+  const list=await service.list(session,site);
+  expect(list.arrivals).toHaveLength(1);expect(list.arrivals[0]).toMatchObject({runId:run.id,ticketId:ticket,driverName:"Arrival driver",etaMinutes:null});
+  expect(JSON.stringify(list)).not.toMatch(/latitude|longitude|deviceId|billing|manifest/);
+  const visit=(await pool.query("INSERT INTO site_visits(site_location_id,first_name,last_name,host_type,host_partner_id) VALUES($1,'Synthetic','Driver','partner',$2) RETURNING id",[site,partner])).rows[0].id;
+  expect((await service.visitLinks(session,site,visit)).runs).toEqual([]);
+  await audit("fleet-gate-link",String(visit),{runId:run.id,visitId:visit,observation:{siteId:site}});
+  run.status="completed";run.version++;await save();
+  expect((await service.list(session,site)).arrivals).toEqual([]);
+  const links=await service.visitLinks(session,site,visit);
+  expect(links.runs[0]).toMatchObject({runId:run.id,runComplete:true,detailScope:"selected_site",linkedVisitIds:[visit]});
+  run.status="in_progress";run.version++;await save();
+  await pool.query("UPDATE location_consents SET revoked_at=now() WHERE user_id=$1 AND device_id=$2",[driver,device]);
+  expect((await service.list(session,site)).arrivals).toEqual([]);
+});

@@ -15,7 +15,12 @@ const api = vi.hoisted(() => ({
   listPreferredPlateStates: vi.fn(),
   readPlate: vi.fn(),
   gateAdmit: vi.fn(),
+  get: vi.fn(),
 }));
+vi.mock("@/lib/gate-arrivals-api", () => ({ gateArrivalsApi: {
+  list: vi.fn(async () => ({ arrivals: [], truncated: false, generatedAt: "now" })),
+  visitLinks: vi.fn(async () => ({ runs: [] })),
+} }));
 const liveMonitor = vi.hoisted(() => ({
   flash: null as Record<string, unknown> | null,
 }));
@@ -189,6 +194,7 @@ beforeEach(() => {
   liveMonitor.flash = null;
   locale.spanish = false;
   api.list.mockResolvedValue([]);
+  api.get.mockImplementation(async (id: number) => recentVisit({ id, checkOutTime: null }));
   api.listAllVisits.mockResolvedValue([]);
   api.listAssignedGateSites.mockResolvedValue({
     sites: [ASSIGNED_SITE],
@@ -232,6 +238,33 @@ beforeEach(() => {
 });
 
 describe("GatekeeperPage plate state", () => {
+  it("opens an on-site record without checking it out", async () => {
+    api.list.mockResolvedValue([recentVisit({ id: 28, checkOutTime: null, admissionStatus: "admitted" })]);
+    renderPage();
+    const card = await screen.findByTestId("gate-on-site-card");
+    fireEvent.click(await within(card).findByRole("button", { name: /Oklahoma Visitor/ }));
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith(28));
+    expect(api.gateCheckOut).not.toHaveBeenCalled();
+    expect(api.gateCheckIn).not.toHaveBeenCalled();
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+  });
+
+  it("shows departures newest first with check-in, check-out and dwell time", async () => {
+    api.listAllVisits.mockResolvedValue([
+      recentVisit({ id: 1, firstName: "Earlier", checkInTime: "2026-10-22T10:00:00Z", checkOutTime: "2026-10-22T10:30:00Z" }),
+      recentVisit({ id: 2, firstName: "Latest", checkInTime: "2026-10-22T11:00:00Z", checkOutTime: "2026-10-22T12:00:00Z" }),
+    ]);
+    renderPage();
+    await screen.findByTestId("button-gate-full-history");
+    fireEvent.click(screen.getByRole("button", { name: "gatekeeper.departuresTab" }));
+    const records = await screen.findAllByTestId("gate-recent-departure");
+    expect(records[0].textContent).toContain("Latest");
+    expect(records[0].textContent).toContain("gatekeeper.historyCheckedIn");
+    expect(records[0].textContent).toContain("gatekeeper.historyCheckedOut");
+    expect(records[0].textContent).toContain("gatekeeper.minutesOnSite");
+    expect(records[1].textContent).toContain("Earlier");
+  });
+
   it("submits a gate entry when GPS is unavailable", async () => {
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: undefined });
     renderPage();
@@ -834,7 +867,7 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("");
   });
 
-  it("constrains on-site activity to independently scrollable entry and note regions", async () => {
+  it("gives on-site entries the scrollable card area without checkout notes", async () => {
     renderPage();
 
     const card = await screen.findByTestId("gate-on-site-card");
@@ -842,11 +875,9 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(card.style.height).toBe("560px");
 
     const entries = within(card).getByTestId("gate-on-site-entries");
-    const notes = within(card).getByTestId("gate-checkout-notes-region");
-    expect(entries.className).toContain("basis-3/4");
+    expect(entries.className).toContain("flex-1");
     expect(entries.className).toContain("overflow-y-auto");
-    expect(notes.className).toContain("basis-1/4");
-    expect(notes.className).toContain("overflow-y-auto");
+    expect(within(card).queryByTestId("gate-checkout-notes-region")).toBeNull();
   });
 
   it("uses brand-aware pills for Gate actions and keeps history anchored in the on-site card", async () => {
@@ -857,8 +888,10 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(history.getAttribute("href")).toBe("/gate/history?siteLocationId=42");
     expect(history.querySelector("img")).toBeTruthy();
 
+    const refresh = screen.getByTestId("button-gate-refresh");
+    expect(refresh.querySelector("img")).toBeNull();
+    expect(refresh.querySelector("svg")).toBeTruthy();
     const actionIds = [
-      "button-gate-refresh",
       "button-gate-read-plate",
       "button-gate-vehicle-photo",
       "button-gate-duration-30m",
@@ -970,9 +1003,9 @@ describe("GatekeeperPage compact branded workspace", () => {
   it("names the independently scrollable Gate regions and associates their form labels", async () => {
     renderPage();
     const card = await screen.findByTestId("gate-on-site-card");
-    expect(within(card).getByRole("region", { name: "gatekeeper.onSiteNow" })).toBeTruthy();
-    expect(within(card).getByRole("region", { name: "gatekeeper.checkOutNotes" })).toBeTruthy();
-    expect(screen.getByRole("textbox", { name: "gatekeeper.checkOutNotes" })).toBe(screen.getByTestId("input-gate-checkout-notes"));
+    expect(within(card).getByRole("region", { name: "gatekeeper.onSiteTab" })).toBeTruthy();
+    expect(within(card).queryByRole("region", { name: "gatekeeper.checkOutNotes" })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "gatekeeper.checkOutNotes" })).toBeNull();
     expect(screen.getByRole("textbox", { name: "gatekeeper.expectedMinutes" })).toBe(screen.getByTestId("input-gate-duration"));
   });
 

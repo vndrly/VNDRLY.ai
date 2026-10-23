@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { VisitorRow } from "@/lib/visits-api";
 import {
   GATE_HISTORY_DAYS,
+  gateDeparturesForSite,
   filterGateHistory,
   gateHistoryFromIso,
   visitMatchesHistorySearch,
@@ -97,5 +98,19 @@ describe("gate history search", () => {
       checkInTime: "2026-08-21T12:00:00.000Z",
     });
     expect(filterGateHistory([...rows, extra], "pat").map((row) => row.id)).toEqual([1, 3]);
+  });
+});
+
+describe("selected-site recent departures", () => {
+  it("uses checkout order, excluding active, invalid, and other-site entries", () => {
+    const older = visit({ id: 1, firstName: "Earlier", lastName: "Departure", checkInTime: "2026-10-22T10:00:00Z", checkOutTime: "2026-10-22T12:00:00Z" });
+    const latest = visit({ id: 2, firstName: "Latest", lastName: "Departure", checkInTime: "2026-10-20T10:00:00Z", checkOutTime: "2026-10-22T14:00:00Z" });
+    const active = visit({ id: 3, firstName: "Still", lastName: "Here", checkInTime: "2026-10-22T15:00:00Z" });
+    const elsewhere = { ...latest, id: 4, siteLocationId: 999 };
+    const invalid = { ...latest, id: 5, checkOutTime: "invalid" };
+    const rows = [older, active, elsewhere, invalid, latest];
+    expect(gateDeparturesForSite(rows, 309).map(row => row.id)).toEqual([2, 1]);
+    expect(rows.map(row => row.id)).toEqual([1, 3, 4, 5, 2]);
+    expect(gateDeparturesForSite(rows, undefined)).toEqual([]);
   });
 });

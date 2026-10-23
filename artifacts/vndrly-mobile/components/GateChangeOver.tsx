@@ -133,6 +133,10 @@ export default function GateChangeOver({
   const [itemView, setItemView] = useState<"open" | "resolved">("open");
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [reason, setReason] = useState("");
+  const [recoveryReason, setRecoveryReason] = useState("");
+  const [recoveryTarget, setRecoveryTarget] = useState("self");
+  const [recoveryMenuOpen, setRecoveryMenuOpen] = useState(false);
+  const [pendingRecovery, setPendingRecovery] = useState<{ stationId: string; body: { expectedShiftId: string; reason: string; acknowledged: true; targetMembershipId?: number } } | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -224,6 +228,12 @@ export default function GateChangeOver({
     }
   };
   const current = state.data;
+  const replacements = useQuery({
+    queryKey: ["gate-recovery-operators", user?.id, user?.activeMembershipId, stationId],
+    queryFn: () => request<{ operators: { userId: number; membershipId: number; name: string; companyName: string }[] }>(`/${stationId}/recovery-operators`),
+    enabled: Boolean(!history && current?.supervisor && current.shift && current.shift.operator_id !== user?.id),
+    retry: false,
+  });
   const prep = current?.preparation;
   const revision = current?.snapshot?.revision ?? "";
   const ownShift = current?.shift?.operator_id === user?.id;
@@ -234,6 +244,10 @@ export default function GateChangeOver({
   useEffect(() => {
     resetReview();
     setPendingWatch(null);
+    setPendingRecovery(null);
+    setRecoveryReason("");
+    setRecoveryTarget("self");
+    setRecoveryMenuOpen(false);
     setNotes("");
     setError("");
     setVisibleNoteCount(10);
@@ -360,6 +374,27 @@ export default function GateChangeOver({
     }
     setPendingWatch(null); resetReview();
     await state.refetch();
+  };
+  const recoverAbandonedWatch = async () => {
+    if ((!current?.shift && !pendingRecovery) || pendingWatch) return;
+    const command = pendingRecovery ?? { stationId, body: {
+      expectedShiftId: current!.shift!.id, reason: recoveryReason.trim(), acknowledged: true as const,
+      ...(recoveryTarget !== "self" ? { targetMembershipId: Number(recoveryTarget) } : {}),
+    } };
+    setPendingRecovery(command);
+    try { await request(`/${command.stationId}/recover`, command.body); }
+    catch (error) {
+      const status = (error as { status?: number }).status;
+      if (status && status >= 400 && status < 500) { setPendingRecovery(null); void state.refetch(); }
+      throw error;
+    }
+    setPendingRecovery(null);
+    setRecoveryReason("");
+    setRecoveryTarget("self");
+    resetReview();
+    await state.refetch();
+    await cache.invalidateQueries({ queryKey: ["gate-watch-own-duty"] });
+    await cache.invalidateQueries({ queryKey: ["work-hub-workforce"] });
   };
   useEffect(() => {
     if (!pendingWatch || !online) return;
@@ -755,22 +790,29 @@ export default function GateChangeOver({
                     <>
                       {label(t("changeOver.recoverExplanation"))}
                       <TextInput
-                        accessibilityLabel={t("changeOver.reason")}
-                        placeholder={t("changeOver.reason")}
+                        accessibilityLabel={t("changeOver.recoveryReason")}
+                        placeholder={t("changeOver.recoveryReason")}
                         placeholderTextColor={colors.mutedForeground}
                         style={fieldStyle}
-                        value={reason}
-                        onChangeText={setReason}
+                        maxLength={2000}
+                        editable={!busy && !pendingRecovery}
+                        value={recoveryReason}
+                        onChangeText={setRecoveryReason}
                       />
+                      <TogglePillButton compactOnTablet disabled={busy || Boolean(pendingRecovery)} accessibilityLabel={t("changeOver.recoveryReplacement")} accessibilityState={{ expanded: recoveryMenuOpen }} onPress={() => setRecoveryMenuOpen(open => !open)}>
+                        {recoveryTarget === "self" ? t("changeOver.recoverySelf") : replacements.data?.operators.find(operator => String(operator.membershipId) === recoveryTarget)?.name ?? t("changeOver.recoveryReplacement")}
+                      </TogglePillButton>
+                      {recoveryMenuOpen && <View style={{ gap: 8 }}>
+                        <TogglePillButton compactOnTablet disabled={busy || Boolean(pendingRecovery)} onPress={() => { setRecoveryTarget("self"); setRecoveryMenuOpen(false); }}>{t("changeOver.recoverySelf")}</TogglePillButton>
+                        {replacements.data?.operators.filter(operator => operator.userId !== current.shift!.operator_id && operator.userId !== user?.id).map(operator => <TogglePillButton compactOnTablet key={operator.membershipId} disabled={busy || Boolean(pendingRecovery)} onPress={() => { setRecoveryTarget(String(operator.membershipId)); setRecoveryMenuOpen(false); }}>{operator.name} · {operator.companyName}</TogglePillButton>)}
+                      </View>}
+                      {replacements.isError && label(t("changeOver.recoveryRosterUnavailable"))}
+                      {label(t("changeOver.recoveryEffect"))}
+                      {pendingRecovery && label(t("changeOver.recoveryUnconfirmed"))}
                       {button(
-                        t("changeOver.recover"),
-                        () =>
-                          mutate("recover", {
-                            expectedShiftId: current.shift!.id,
-                            reason,
-                            acknowledged: true,
-                          }),
-                        !online || !reason.trim(),
+                        t(pendingRecovery ? "changeOver.recoveryRetry" : recoveryTarget === "self" ? "changeOver.recoveryAssume" : "changeOver.recoveryAssign"),
+                        recoverAbandonedWatch,
+                        !online || Boolean(pendingWatch) || (!pendingRecovery && (!recoveryReason.trim() || state.isError)),
                       )}
                     </>
                   )}

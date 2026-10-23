@@ -1441,6 +1441,19 @@ export async function runOpsDataTool(
 ): Promise<string> {
   if (isMarketplaceReadTool(name)) return JSON.stringify(await runMarketplaceTool(name, args, session));
   switch (name) {
+    case "query_gate_arrivals": {
+      const { createGateArrivalsService, GateArrivalsError } = await import("../services/gate-arrivals");
+      const { OfflineGateError } = await import("../services/gate-offline-observation");
+      try {
+        const input = z.object({siteLocationId:z.number().int().positive(),runId:z.string().uuid().optional()}).strict().parse(args);
+        const service = createGateArrivalsService();
+        return JSON.stringify(input.runId ? await service.detail(session,input.siteLocationId,input.runId) : await service.list(session,input.siteLocationId));
+      } catch (error) {
+        if (error instanceof GateArrivalsError || error instanceof OfflineGateError || error instanceof z.ZodError)
+          return err(error instanceof z.ZodError ? "Select an authorized site and exact run." : error.code);
+        throw error;
+      }
+    }
     case "query_gate_stations":
     case "query_gate_change_over":
     case "query_shift_notes":

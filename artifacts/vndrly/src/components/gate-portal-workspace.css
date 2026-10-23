@@ -1,0 +1,53 @@
+/* Gate-only workspace palette shared with the approved Dashboard and Work Hub.
+ * Keep branded action artwork, status colors and the actual map imagery intact. */
+:root:not(.dark) main:has(> .gate-portal-workspace), .dark main:has(> .gate-portal-workspace) { background: #3a3d42 !important; color: #ececec; }
+.gate-portal-workspace { max-width: 1280px; margin-inline: auto; color: #ececec; color-scheme: dark; --background: 220 7% 24%; --foreground: 0 0% 93%; --card: 240 3% 15%; --card-foreground: 0 0% 93%; --muted: 240 4% 20%; --muted-foreground: 0 0% 70%; --input: 240 4% 20%; --border: 240 3% 25%; }
+.gate-portal-workspace :is(h1,h2,h3,[data-slot=card-title]) { color: #ececec; font-weight: 700; }
+.gate-portal-workspace h1 { font-size: 24px; }
+.gate-portal-workspace :is(h2,[data-slot=card-title]) { font-size: 17px; }
+.gate-portal-workspace :is(.text-muted-foreground,.text-gray-500,.text-gray-600,.text-gray-700) { color: #b3b3b3; }
+.gate-portal-workspace :is(.text-foreground,.text-black,.text-gray-900):not(button):not([role=button]) { color: #ececec; }
+.gate-portal-workspace :is([data-slot=card],.hub-home-card,[data-gate-workspace-panel]) { background: #242426 !important; color: #ececec; border: 2px solid var(--brand-primary) !important; border-radius: 14px; box-shadow: none !important; }
+.gate-portal-workspace [data-slot=card] > :is(.p-6,.p-5) { padding: 14px 16px; }
+.gate-portal-workspace :is(.bg-white,.dark\:bg-white):not(button):not([role=button]) { background-color: #242426; }
+.gate-portal-workspace :is([data-slot=card],.gate-log-record):hover { background-color: #242426 !important; }
+.gate-portal-workspace :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea,button[role=combobox],[data-testid=plate-state-picker-trigger]) { background: #303034 !important; color: #ececec !important; border-color: var(--brand-primary) !important; border-width: 1px; box-shadow: none; }
+.gate-portal-workspace :is(input,textarea)::placeholder { color: #969ba4; opacity: 1; }
+.gate-portal-workspace :is(select option,select optgroup) { background: #303034; color: #ececec; }
+.gate-portal-workspace :is(input,textarea,select):focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.gate-portal-workspace :is(.border-gray-200,.border-gray-300,.border-gray-400) { border-color: #414145; }
+.gate-portal-workspace label { font-size: 13px; }
+.gate-portal-workspace table { background: #242426; color: #ececec; }
+.gate-portal-workspace :is(th,td) { border-color: #414145; }
+.gate-portal-workspace th { color: #b3b3b3; font-weight: 600; }
+.gate-portal-workspace details > summary { cursor: pointer; }
+.gate-portal-workspace .gate-presence-tab { color: #b3b3b3; }
+.gate-portal-workspace .gate-presence-tab[aria-pressed=true] { color: var(--brand-primary); }
+.gate-portal-workspace :is([data-testid=gate-on-site-entries],[data-testid=gate-recent-departures]) > .rounded-xl,
+.gate-portal-workspace [data-testid=gate-pending-visitors] > .rounded-xl { border: 0; border-bottom: 1px solid #414145; border-radius: 0; background: transparent; padding: 10px 0; }
+.gate-portal-workspace .gate-log-record { padding: 12px 0; border-top: 1px solid #414145; color: #ececec; }
+.gate-portal-workspace .gate-log-record [data-location-flagged=true] { color: #fbbf24; }
+.gate-portal-workspace .gate-log-record [data-location-flagged=false] { color: #4ade80; }
+.gate-portal-workspace .gate-notes-records { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; align-items: start; }
+.gate-portal-workspace .gate-notes-records .hub-home-card { padding: 12px 14px 0; }
+.gate-portal-workspace .gate-notes-records .gate-panel-body { display: grid; gap: 10px; }
+.gate-portal-workspace .gate-notes-records ul { display: grid; gap: 6px; color: #b3b3b3; font-size: 13px; }
+.gate-portal-workspace .gate-audit-row { border-top: 1px solid #414145; padding: 10px 0; font-size: 13px; }
+.gate-portal-workspace .gate-map-rosters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.gate-portal-workspace .gate-map-rosters .hub-home-card { padding: 12px 14px 0; }
+.gate-portal-workspace .gate-map-rosters li { border-top: 1px solid #414145; padding: 10px 0; font-size: 13px; }
+.gate-portal-workspace .gate-map-rosters li strong { display: block; font-size: 14px; }
+.gate-portal-workspace .gate-map-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0 16px; border-block: 1px solid #414145; }
+.gate-portal-workspace .gate-map-fact { display: flex; align-items: center; gap: 8px; padding: 12px 0; font-size: 12px; color: #b3b3b3; }
+.gate-portal-workspace .gate-map-fact strong { margin-left: auto; color: #ececec; font-size: 17px; }
+.gate-portal-workspace .gate-map-fact svg { width: 18px; height: 18px; color: var(--brand-primary); flex-shrink: 0; }
+@media (max-width: 767px) { .gate-portal-workspace .gate-notes-records,.gate-portal-workspace .gate-map-rosters { grid-template-columns: minmax(0,1fr); } .gate-portal-workspace .gate-map-facts { grid-template-columns: minmax(0,1fr); } .gate-portal-workspace .gate-map-fact + .gate-map-fact { border-top: 1px solid #414145; } }
+
+/* Preserve the established dark text on light PNG actions and white on hover. */
+.gate-portal-workspace :is(button,a,span).relative.inline-flex.items-center.select-none > .relative.z-10.text-gray-700 { color: #374151 !important; }
+.gate-portal-workspace :is(button,a).relative.inline-flex.items-center.select-none:hover > .relative.z-10.text-gray-700 { color: #fff !important; }
+body:has(.gate-portal-workspace) [data-radix-popper-content-wrapper] :is([role=dialog],[cmdk-root],[cmdk-group],[cmdk-item],[cmdk-input]) { background: #303034; color: #ececec; border-color: var(--brand-primary); }
+body:has(.gate-portal-workspace) [data-radix-popper-content-wrapper] [cmdk-item][data-selected=true] { background: var(--brand-primary); color: white; }
+
+:root:not(.dark) main .gate-portal-workspace .bg-card,
+.dark main .gate-portal-workspace .bg-card { background: #242426 !important; color: #ececec; border-color: var(--brand-primary); border-radius: 14px; box-shadow: none !important; }

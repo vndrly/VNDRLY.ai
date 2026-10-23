@@ -40,3 +40,11 @@ export function sortHistoryNewestFirst(visits: VisitorRow[]): VisitorRow[] {
 export function filterGateHistory(visits: VisitorRow[], query: string): VisitorRow[] {
   return sortHistoryNewestFirst(visits.filter((visit) => visitMatchesHistorySearch(visit, query)));
 }
+
+/** Recent departures belong to the selected site and sort by actual checkout,
+ * not by arrival time. Invalid or still-open records are not departures. */
+export function gateDeparturesForSite(visits: VisitorRow[], siteId: number | undefined): VisitorRow[] {
+  if (!siteId) return [];
+  return visits.filter(visit => visit.siteLocationId === siteId && visit.checkOutTime != null && Number.isFinite(Date.parse(visit.checkOutTime)))
+    .sort((a, b) => Date.parse(b.checkOutTime!) - Date.parse(a.checkOutTime!) || b.id - a.id);
+}

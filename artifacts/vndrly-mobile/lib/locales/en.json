@@ -929,6 +929,16 @@
     "cameraUnavailablePickSite": "Camera is unavailable in this build. Choose a site by name instead."
   },
   "errors": {
+    "gate_arrivals": {
+      "unavailable": "Incoming runs are temporarily unavailable. Try again.",
+      "invalid_request": "Select a valid site or run and try again.",
+      "site_unavailable": "This site is unavailable or outside your current access.",
+      "visit_unavailable": "This gate visit is unavailable at the selected site.",
+      "run_unavailable": "This run is unavailable at the selected site.",
+      "link_capacity_reached": "This visit has too many linked runs to display safely. Contact your supervisor.",
+      "route_unavailable": "A driving estimate is not available.",
+      "location_unavailable": "A current shared driver location is not available."
+    },
     "marketplace": {
       "unavailable": "The service marketplace is temporarily unavailable. Please try again.",
       "ticket_reinvite_not_allowed": "Cancel this marketplace ticket and create a new job offer to engage another vendor."
@@ -2980,7 +2990,16 @@
     "addGate": "Add gate",
     "refresh": "Refresh connection and records",
     "recover": "Accept responsibility and recover shift",
-    "recoverExplanation": "If the outgoing operator is unavailable, review the current facts and enter a reason above. This action records your acknowledgment, transfers responsibility to you, and signs out the previous operator."
+    "recoverExplanation": "If the outgoing operator is unavailable or must leave the watch early, review the current facts and enter the reason or resolution. Assume the watch yourself or assign a permitted replacement.",
+    "recoveryReason": "Reason or resolution",
+    "recoveryReplacement": "Who will take the watch?",
+    "recoverySelf": "I will assume the watch",
+    "recoveryRosterUnavailable": "Replacement operators could not be loaded. You can still assume the watch yourself.",
+    "recoveryEffect": "Ends the outgoing operator’s watch and paid shift and signs them out of VNDRLY. Your sign-in stays active. Assigning a replacement does not start their paid shift or acknowledge the handoff on their behalf.",
+    "recoveryAssume": "End outgoing shift and assume watch",
+    "recoveryAssign": "End outgoing shift and assign watch",
+    "recoveryRetry": "Check recovery result",
+    "recoveryUnconfirmed": "The result is not confirmed. Check the original recovery request before making another change."
   },
   "onboardingNative": {
     "title": "Finish account setup",

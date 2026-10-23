@@ -1,3 +1,5 @@
+import { MapPin, Users, SignalZero, ClipboardList } from "lucide-react";
+import { WorkspacePanel } from "@/components/work-hub/workspace-panel";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -54,9 +56,9 @@ export function GateCoverageMap() {
     ...(coverage.data?.staff ?? []).flatMap(person => filter === "all" && person.fresh && person.location ? [{ id: `staff:${person.userId}`, latitude: person.location.latitude, longitude: person.location.longitude, title: person.name, label: "●" }] : []),
   ];
   if (!user?.vendorId) return null;
-  return <section aria-label="Gate coverage map" className="space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+  return <section aria-label="Gate coverage map" data-gate-workspace-panel className="space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-lg font-semibold">Gate coverage map</h2>
+      <h2 className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de cobertura del acceso" : "Gate coverage map"}</h2>
       <div className="flex items-center gap-2">
         <PngPill color="green" rest={!!instant || !coverage.isSuccess || coverage.isFetching || coverage.fetchStatus === "paused"}>{!instant && coverage.isSuccess && !coverage.isFetching && coverage.fetchStatus !== "paused" ? c.live : c.paused}</PngPill>
         <PngPillButton disabled={coverage.isFetching} onClick={() => void coverage.refetch()}>{c.refresh}</PngPillButton>
@@ -79,15 +81,26 @@ export function GateCoverageMap() {
           <MapboxMap key={`${fitRevision}:${expanded}`} points={points} selectedPointId={selected ? `gate:${selected.id}` : null} styleKind={styleKind} fitToData height={expanded ? "100%" : 420} />
         </div>
         {!points.length && <p role="status">{c.noPoints}</p>}
-        <p className="text-xs text-muted-foreground">G · {c.gates} ({shownGates.length}) · ● · {c.staff} ({coverage.data.staff.filter(person => person.fresh && person.location).length}) · {c.missing} ({coverage.data.staff.filter(person => !person.fresh || !person.location).length})</p>
+        <div className="gate-map-facts">
+          <div className="gate-map-fact"><MapPin aria-hidden="true" /><span>{c.gates}</span><strong>{shownGates.length}</strong></div>
+          <div className="gate-map-fact"><Users aria-hidden="true" /><span>{c.staff}</span><strong>{coverage.data.staff.filter(person => person.fresh && person.location).length}</strong></div>
+          <div className="gate-map-fact"><SignalZero aria-hidden="true" /><span>{c.missing}</span><strong>{coverage.data.staff.filter(person => !person.fresh || !person.location).length}</strong></div>
+        </div>
         <div className="rounded-xl border-2 border-[color:var(--brand-primary)] p-3" aria-label={c.details}>
           {selected ? <><strong>{selected.siteName} · {selected.name}</strong>{duties.filter(duty => duty.stationId === selected.id).map(duty => <p key={duty.id}>{duty.name} · {duty.coverage.status ?? "Coverage status not recorded"}</p>)}{!duties.some(duty => duty.stationId === selected.id) && <p>{c.noDuty}</p>}</> : <p>{c.select}</p>}
         </div>
       </div>
       <p className="text-xs text-muted-foreground">Only current, consented staff observations appear on the map. Missing or stale locations remain listed below.</p>
-      <ul className="space-y-2">{coverage.data.staff.map(person => <li key={person.userId}><strong>{person.name}</strong> · {person.assignment} · {person.locationReason.replaceAll("_", " ")}{person.location && ` · ${new Date(person.location.capturedAt).toLocaleString()}`}</li>)}</ul>
-      <ul className="space-y-2">{coverage.data.duties.map(duty => <li key={duty.id}>{duty.name} · {new Date(duty.startedAt).toLocaleString()} · {duty.coverage.status ?? "Coverage status not recorded"}</li>)}</ul>
-      {!coverage.data.staff.length && <p>No on-duty staff records returned for this time.</p>}
+      <div className="gate-map-rosters">
+        <WorkspacePanel title={es ? "Ubicaciones del personal" : "Staff locations"} subtitle={es ? "Observaciones de ubicación registradas" : "Recorded location observations"} icon={Users}>
+          <ul>{coverage.data.staff.map(person => <li key={person.userId}><strong>{person.name}</strong><span className="text-muted-foreground">{person.assignment} · {person.locationReason.replaceAll("_", " ")}{person.location && ` · ${new Date(person.location.capturedAt).toLocaleString()}`}</span></li>)}</ul>
+          {!coverage.data.staff.length && <p className="pb-3 text-sm text-muted-foreground">{es ? "No hay registros de personal de turno para esta hora." : "No on-duty staff records returned for this time."}</p>}
+        </WorkspacePanel>
+        <WorkspacePanel title={es ? "Guardias registradas" : "Recorded watches"} subtitle={es ? "Personal asignado y estado de cobertura" : "Assigned staff and coverage status"} icon={ClipboardList}>
+          <ul>{coverage.data.duties.map(duty => <li key={duty.id}><strong>{duty.name}</strong><span className="text-muted-foreground">{new Date(duty.startedAt).toLocaleString()} · {duty.coverage.status ?? "Coverage status not recorded"}</span></li>)}</ul>
+          {!coverage.data.duties.length && <p className="pb-3 text-sm text-muted-foreground">{c.noDuty}</p>}
+        </WorkspacePanel>
+      </div>
     </>}
   </section>;
 }

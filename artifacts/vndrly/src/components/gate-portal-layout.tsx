@@ -1,3 +1,4 @@
+import "./gate-portal-workspace.css";
 import { type ReactNode } from "react";
 import { ArrowLeft, BriefcaseBusiness, History, MapPin, Mic, Shield } from "lucide-react";
 import { FieldOpsPortalShell, type FieldOpsTabDef } from "@/components/field-ops-portal-shell";
@@ -60,7 +61,7 @@ export function GatePortalLayout({ children, returnToAdmin = false }: { children
       portalLabelKey="gatekeeper.portal"
       navAriaKey="gateNav.aria"
     >
-      {children}
+      <div className="gate-portal-workspace">{children}</div>
     </FieldOpsPortalShell>
   );
 }

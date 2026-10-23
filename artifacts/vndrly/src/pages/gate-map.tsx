@@ -1,3 +1,4 @@
+import { MapPin } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -43,9 +44,10 @@ export default function GateMapPage() {
     <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5`}>
       <div className="flex items-center gap-3">
         <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("nav.dashboard")} testId="button-back" />
+        <MapPin aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("gateNav.map")}</h1>
       </div>
-      {sites.isSuccess && available.length > 0 && <form onSubmit={addGate} aria-label={t("changeOver.addGate")}
+      {sites.isSuccess && available.length > 0 && <form onSubmit={addGate} aria-label={t("changeOver.addGate")} data-gate-workspace-panel
         className="flex flex-wrap items-end gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
         <label className="grid min-w-48 flex-1 gap-1 text-sm font-medium">{t("changeOver.site")}
           <BrandedSelect value={siteId} disabled={busy} onChange={event => { setSelectedSite(event.target.value); setError(""); }}>

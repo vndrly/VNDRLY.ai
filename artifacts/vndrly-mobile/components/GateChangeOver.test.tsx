@@ -40,8 +40,8 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <>{children}</>,
 }));
 vi.mock("@/components/TogglePillButton", () => ({
-  default: ({ askVInactiveStyle, children, color, disabled, inactive, onPress, solid, style, testID }: any) => (
-    <button data-testid={testID} data-askv-inactive-style={askVInactiveStyle ? "true" : "false"} data-color={color} data-inactive={inactive ? "true" : "false"} data-solid={String(Boolean(solid))} disabled={disabled} onClick={onPress} style={style}>
+  default: ({ accessibilityLabel, askVInactiveStyle, children, color, disabled, inactive, onPress, solid, style, testID }: any) => (
+    <button aria-label={accessibilityLabel} data-testid={testID} data-askv-inactive-style={askVInactiveStyle ? "true" : "false"} data-color={color} data-inactive={inactive ? "true" : "false"} data-solid={String(Boolean(solid))} disabled={disabled} onClick={onPress} style={style}>
       {children}
     </button>
   ),
@@ -113,6 +113,35 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("assigns supervisor recovery to a permitted replacement and retains the original request after response loss", async () => {
+  const base = env.api.getMockImplementation()!;
+  let recoveries = 0;
+  env.api.mockImplementation(async (path, body) => {
+    if (path.endsWith("/state")) return { ...state(), supervisor: true, shift: { ...state().shift, id: "outgoing-watch", operator_id: 2 } };
+    if (path.endsWith("/recovery-operators")) return { operators: [
+      { userId: 1, membershipId: 11, name: "Supervisor", companyName: "Company" },
+      { userId: 2, membershipId: 12, name: "Outgoing", companyName: "Company" },
+      { userId: 3, membershipId: 13, name: "Replacement", companyName: "Company" },
+    ] };
+    if (path.endsWith("/recover")) { if (++recoveries === 1) throw new Error("Response lost"); return {}; }
+    return base(path, body);
+  });
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={cache}><GateChangeOver /></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole("button", { name: "changeOver.recoveryReplacement" }));
+  expect(screen.queryByRole("button", { name: "Outgoing · Company" })).toBeNull();
+  fireEvent.click(await screen.findByRole("button", { name: "Replacement · Company" }));
+  fireEvent.change(screen.getByLabelText("changeOver.recoveryReason"), { target: { value: "Medical relief" } });
+  expect(screen.getByText("changeOver.recoveryEffect")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "changeOver.recoveryAssign" }));
+  await screen.findByText("changeOver.recoveryUnconfirmed");
+  expect(screen.getByLabelText("changeOver.recoveryReason").getAttribute("readonly")).not.toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "changeOver.recoveryRetry" }));
+  await waitFor(() => expect(env.api.mock.calls.filter(([path]) => path.endsWith("/recover"))).toHaveLength(2));
+  const commands = env.api.mock.calls.filter(([path]) => path.endsWith("/recover"));
+  expect(commands[0][1]).toEqual({ expectedShiftId: "outgoing-watch", reason: "Medical relief", acknowledged: true, targetMembershipId: 13 });
+  expect(commands[1]).toEqual(commands[0]);
+});
 it("uses history discovery for inactive station notes", async () => {
   const base = env.api.getMockImplementation()!;
   env.api.mockImplementation((path, body) => path.includes("/notes?") ? { rows: [], actions: [], nextBefore: null } : base(path, body));

@@ -406,13 +406,10 @@ export default function GateChangeOverPage({
             </BrandedSelect>
           </div>
           {log.data?.rows.length === 0 && <p>{t("changeOver.noNotes")}</p>}
+          <div className="gate-notes-records">
           {log.data?.rows.map((row) => (
-            <Card key={row.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-50">
-              <CardContent className="space-y-4 p-5">
-                <h2 className="font-bold">
-                  {new Date(row.acknowledged_at).toLocaleString()} ·{" "}
-                  {row.outgoing_name} → {row.incoming_name}
-                </h2>
+            <WorkspacePanel key={row.id} title={new Date(row.acknowledged_at).toLocaleString()} subtitle={`${row.outgoing_name} → ${row.incoming_name}`} icon={ClipboardList}>
+              <div className="gate-panel-body">
                 <p>{t("changeOver.acknowledged")}</p>
                 <ul>
                   {row.summary.facts.map((f) => (
@@ -429,9 +426,10 @@ export default function GateChangeOverPage({
                   <summary>{t("changeOver.snapshot")}</summary>
                   <ShiftSnapshotView snapshot={row.snapshot} />
                 </details>
-              </CardContent>
-            </Card>
+              </div>
+            </WorkspacePanel>
           ))}
+          </div>
           {log.data?.nextBefore && (
             <BrandPillButton onClick={() => setBefore(log.data!.nextBefore!)}>
               {t("changeOver.older")}
@@ -442,7 +440,7 @@ export default function GateChangeOverPage({
               <CardContent className="space-y-2 p-5">
                 <h2 className="font-bold">{t("changeOver.audit")}</h2>
                 {log.data.actions.map((a) => (
-                  <p key={a.id}>
+                  <p key={a.id} className="gate-audit-row">
                     {new Date(a.created_at).toLocaleString()} · {a.actor_name} ·{" "}
                     {a.kind}: {a.text}
                   </p>

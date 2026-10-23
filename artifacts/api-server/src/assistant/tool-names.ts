@@ -19,6 +19,7 @@ export const EXT_DATA_TOOL_NAMES = [
 export const OPS_DATA_TOOL_NAMES = [
   ...MARKETPLACE_READ_TOOL_NAMES,
   "query_gate_stations",
+  "query_gate_arrivals",
   "query_gate_change_over",
   "query_shift_notes",
   "query_safety_events",

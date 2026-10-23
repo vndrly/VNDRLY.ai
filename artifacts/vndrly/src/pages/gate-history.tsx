@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import { GateReportToolbar, queryGateReportRows, type GateReportRange, type GateReportRecordType } from "@/components/gate-report-toolbar";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
-import { Card, CardContent, CARD_INNER_TILE_CLASS, CARD_SURFACE_CLASS } from "@/components/ui/card";
+import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest } from "@/lib/change-over-api";
 import { formatMetersAsMiles } from "@workspace/map-utils";
@@ -78,7 +78,7 @@ export default function GateHistoryPage() {
             <BrandedSelect aria-label="Record type" value={recordType} onChange={(event) => setRecordType(event.target.value as GateReportRecordType)}>{TYPE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</BrandedSelect>
           </div>
           {rows.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : rows.isError ? <p className="text-sm text-destructive">{t("gatekeeper.historyLoadFailed")}</p> : !rows.data?.length ? <p className="text-sm text-muted-foreground">{t("gatekeeper.historyEmpty")}</p> : rows.data.map((visit) => (
-            <div key={visit.id} className={`${CARD_INNER_TILE_CLASS} transition-colors hover:bg-gray-50`} data-testid="gate-history-row">
+            <div key={visit.id} className="gate-log-record" data-testid="gate-history-row">
               {(["checkInGpsEvidence", "checkOutGpsEvidence"] as const).map(key => visit[key] && <p key={key} className={`flex flex-wrap items-center gap-1 text-xs font-semibold ${visit[key]!.status === "verified" ? "text-green-700 dark:text-green-400" : "border-l-2 border-amber-500 pl-2 text-amber-700 dark:text-amber-400"}`} data-testid={`gps-${key}`} data-location-flagged={visit[key]!.status !== "verified"}>
                 {visit[key]!.status !== "verified" && <><AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" /><span>{t("gatekeeper.gpsLogFlagged")} · </span></>}
                 {key === "checkInGpsEvidence" ? t("gatekeeper.gpsEntry") : t("gatekeeper.gpsExit")}: {t(`gatekeeper.gpsEvidence.${visit[key]!.status}`, { defaultValue: t("gatekeeper.gpsEvidence.unavailable") })}{visit[key]!.gateName ? ` · ${visit[key]!.gateName}` : ""}{visit[key]!.distanceMeters != null ? ` · ${formatMetersAsMiles(visit[key]!.distanceMeters!)} mi` : ""}
