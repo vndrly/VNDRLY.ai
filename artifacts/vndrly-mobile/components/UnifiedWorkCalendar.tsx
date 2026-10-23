@@ -1,7 +1,6 @@
 import React,{useState} from "react";
 import {ActivityIndicator,Pressable,Text,View} from "react-native";
 import {useRouter} from "expo-router";
-import {useTranslation} from "react-i18next";
 import TogglePillButton from "./TogglePillButton";
 import SphereBackButton from "./SphereBackButton";
 import ForemanScheduleTicketsModal from "./ForemanScheduleTicketsModal";
@@ -20,7 +19,6 @@ export default function UnifiedWorkCalendar({initialDate=new Date()}:{initialDat
 }
 function Calendar({initialDate}:{initialDate:Date}){
  const colors=useColors(),router=useRouter(),{user}=useAuth();
- const {i18n}=useTranslation(),es=(i18n.language??"en").startsWith("es");
  const [day,setDay]=useState(initialDate),[menu,setMenu]=useState(false),[form,setForm]=useState<"field"|"shift"|"meeting"|null>(null),[opened,setOpened]=useState<{title:string;status?:string;startsAt?:string;endsAt?:string}|null>(null),[notice,setNotice]=useState("");
  const range=calendarMonthRange(day),query=useUnifiedWorkCalendar(range),items=query.data?.items??[],cap=query.data?.capabilities;
  const first=new Date(range.start),cells=Array.from({length:42},(_,index)=>{const date=new Date(first);date.setDate(date.getDate()+index);return date;});
@@ -36,8 +34,6 @@ function Calendar({initialDate}:{initialDate:Date}){
   {form&&form!=="field"&&<View style={{gap:10}}><TogglePillButton compactOnTablet onPress={()=>setForm(null)}>Close scheduling</TogglePillButton>{form==="shift"?<ShiftScheduling onSaved={saved}/>:<MeetingScheduling onSaved={saved}/>}</View>}
   {form==="field"&&user?.vendorId&&<ForemanScheduleTicketsModal visible vendorId={user.vendorId} onClose={()=>setForm(null)} onScheduled={()=>void saved()}/>}
   <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:8}}><SphereBackButton accessibilityLabel="Previous month" onPress={()=>setDay(new Date(day.getFullYear(),day.getMonth()-1,1))}/><Text style={{...text,fontFamily:"Inter_700Bold",fontWeight:"700",fontSize:20}}>{day.toLocaleDateString([],{month:"long",year:"numeric"})}</Text><SphereBackButton direction="right" accessibilityLabel="Next month" onPress={()=>setDay(new Date(day.getFullYear(),day.getMonth()+1,1))}/></View>
-  <TogglePillButton compactOnTablet onPress={()=>setDay(new Date())}>{es?"Hoy":"Today"}</TogglePillButton>
-  <View style={{flexDirection:"row"}}>{(es?["dom","lun","mar","mié","jue","vie","sáb"]:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]).map(label=><Text key={label} style={{...muted,width:"14.285%",textAlign:"center",fontWeight:"700"}}>{label}</Text>)}</View>
   <View style={{flexDirection:"row",flexWrap:"wrap"}}>{cells.map(date=>{const count=calendarDayItems(items,date).length;return <Pressable key={key(date)} accessibilityRole="button" accessibilityLabel={`${date.toLocaleDateString([],{month:"long",day:"numeric"})}, ${count} scheduled records`} accessibilityState={{selected:key(date)===key(day)}} onPress={()=>setDay(date)} style={{width:"14.285%",minHeight:54,borderWidth:2,borderColor:key(date)===key(day)?colors.primary:colors.border,padding:5,borderRadius:8}}><Text style={{...text,opacity:date.getMonth()===day.getMonth()?1:.5}}>{date.getDate()}</Text><Text style={{color:colors.primary,fontWeight:"700"}}>{count?`${count} •`:""}</Text></Pressable>;})}</View>
   <Text style={{...text,fontWeight:"700"}}>{day.toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"})} · {selected.length} scheduled records</Text>
   <Text style={muted}>Calendar days use your device timezone ({Intl.DateTimeFormat().resolvedOptions().timeZone}). Original schedule timezones appear on records.</Text>

@@ -359,8 +359,7 @@
     "add": "Add",
     "save": "Save",
     "edit": "Edit",
-    "back": "Back",
-    "refresh": "Refresh"
+    "back": "Back"
   },
   "freshness": {
     "live": "Live",
@@ -443,6 +442,7 @@
     "voiceConfirm": "Confirm",
     "portal": "Gate Portal",
     "subtitle": "Track vehicle and visitor traffic at site locations.",
+    "activeNow": "On site now",
     "noActive": "No active gate entries.",
     "newEntry": "New gate entry",
     "submitCheckIn": "Submit Check-In",
@@ -456,9 +456,11 @@
     "tagPhoto": "Tag photo",
     "vehiclePhoto": "Vehicle photo",
     "historySearch": "Search by name, plate, company, or site",
+    "currentLocation": "Current location",
     "handsFreeHint": "Tap the microphone to talk. Say the plate and name, then confirm. Select the correct gate; GPS discrepancies are recorded without blocking entry.",
     "notes": "Notes",
     "notesPlaceholder": "Optional — anything the booth should know",
+    "checkOutNotes": "Check-out notes",
     "gpsSearching": "GPS searching",
     "gpsDenied": "GPS denied",
     "gpsUnavailable": "GPS unavailable",
@@ -482,41 +484,10 @@
     "durationOvernight": "Overnight",
     "minutesOnSite": "{{minutes}} min on site",
     "overdue": "Overdue {{minutes}} min",
+    "pendingAdmit": "Waiting to enter",
     "reconciliationObserved": "Observed entry - details needed",
     "reconciliationReview": "Gate Supervisor review needed",
-    "admit": "Admit",
-    "arrivalEta": "ETA ~{{minutes}} min",
-    "arrivalsLoadFailed": "Could not load incoming runs. Refresh to try again.",
-    "arrivalsTab": "Arrivals",
-    "arrivalsTruncated": "The incoming-run list is limited. Additional records may not be shown.",
-    "company": "Company",
-    "departuresTab": "Departures",
-    "driver": "Driver",
-    "etaUnavailable": "ETA unavailable",
-    "gateRecordNumber": "Gate record #{{id}}",
-    "historyCheckedIn": "Checked in",
-    "historyCheckedOut": "Checked out",
-    "lastGpsReport": "Last shared location",
-    "linkedRunsUnavailable": "Linked run details could not be loaded.",
-    "noArrivals": "No incoming runs with a current shared location.",
-    "onSiteTab": "On Site",
-    "purpose": "Purpose",
-    "recordDetails": "Gate record",
-    "recordLoadFailed": "Could not load this record. Close and try again.",
-    "recordState": "Record",
-    "runComplete": "Complete",
-    "runDetails": "Run details",
-    "runPartial": "In progress / partial",
-    "runRecord": "Ticket",
-    "timeOnSite": "Time on site",
-    "vehiclePlate": "Vehicle plate",
-    "noDepartures": "No recent departures.",
-    "runEvents": {
-      "arrive_stop": "Arrived at stop",
-      "depart_stop": "Departed stop",
-      "gate_linked": "Gate record linked"
-    },
-    "arriving": "Arriving"
+    "admit": "Admit"
   },
   "login": {
     "title": "Field Employee Portal",
@@ -3953,11 +3924,5 @@
     "waiting": "Waiting for the current operator to prepare the handover.",
     "independent": "Signing in or out does not start or end your shift or watch.",
     "recover": "Recover watch action"
-  },
-  "handoffDesk": {
-    "title": "Shift handoff",
-    "outgoingIntro": "Leave the next operator a clear watch brief.",
-    "incomingIntro": "Review the saved handoff before taking the watch.",
-    "save": "Save handoff"
   }
 }

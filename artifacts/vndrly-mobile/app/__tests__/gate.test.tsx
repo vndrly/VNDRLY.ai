@@ -9,7 +9,6 @@ const routerState = vi.hoisted(() => ({
   back: vi.fn(),
   canGoBack: vi.fn(() => true),
   replace: vi.fn(),
-  push: vi.fn(),
 }));
 vi.mock("expo-router", () => ({ router: routerState }));
 vi.mock("@/components/AskVVoiceIndicator", () => ({
@@ -39,9 +38,7 @@ vi.mock("@/hooks/useColors", () => ({
   }),
 }));
 
-vi.mock("@expo/vector-icons", () => ({ Feather: () => null, Ionicons: () => null }));
-vi.mock("react-native-svg", () => ({ default: () => null, Defs: () => null, LinearGradient: () => null, Path: () => null, Stop: () => null }));
-vi.mock("@/components/WorkdayControls", () => ({ default: ({ watchControl }: any) => <div data-testid="gate-workday-strip">{watchControl}</div> }));
+vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 
 vi.mock("react-native-safe-area-context", async () => {
   const RN = await import("react-native");
@@ -103,8 +100,7 @@ vi.mock("expo-secure-store", () => ({
   deleteItemAsync: vi.fn(async () => {}),
 }));
 
-const apiRead = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/api", () => ({ apiFetch: apiRead, initApi: vi.fn() }));
+vi.mock("@/lib/api", () => ({ apiFetch: vi.fn(), initApi: vi.fn() }));
 vi.mock("@/lib/auth", () => ({
   setToken: vi.fn(),
   setUser: vi.fn(),
@@ -273,11 +269,6 @@ const FLYWHEEL_SITE = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  apiRead.mockImplementation(async (path: string) => {
-    if (path.includes('/stations?')) return { stations: [] };
-    if (path.startsWith('/api/gate-arrivals')) return { arrivals: [], truncated: false };
-    return undefined;
-  });
   voiceFeature.enabled = false;
   captureAndUploadImageMock.mockReset();
   readGatePlateMock.mockReset();
@@ -360,102 +351,6 @@ function isDisabled(el: HTMLElement): boolean {
 }
 
 describe("GatekeeperScreen", () => {
-  it("keeps authoritative site selection above visitor fields with no duplicate site or checkout notes", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    renderScreen();
-    const selector = await findFirstByTestId("gate-site-selector");
-    expect(selector.compareDocumentPosition(firstByTestId("gate-first-name")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.queryByTestId("gate-checkout-notes")).toBeNull();
-    expect(screen.queryByTestId("host-picker-site-summary")).toBeNull();
-  });
-  it("defaults to On Site and reads real incoming runs only when Arrivals is opened", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    apiRead.mockImplementation(async (path: string) => {
-      if (path.includes('/stations?')) return { stations: [] };
-      if (path.startsWith('/api/gate-arrivals')) return { arrivals: [{ id: "arrival-1", runId: "run/1", driverName: "Inbound Driver", title: "Delivery", companyName: "Hauler", vehicleLabel: "Truck 12", ticketNumber: "100", etaMinutes: null }], truncated: false };
-      return undefined;
-    });
-    renderScreen();
-    await findFirstByTestId("gate-site-selector");
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
-    expect(firstByTestId("gate-tab-onsite").getAttribute("aria-selected")).toBe("true");
-    expect(screen.queryByText("Inbound Driver")).toBeNull();
-    tap(firstByTestId("gate-tab-arrivals"));
-    expect(await screen.findByText("Inbound Driver")).toBeTruthy();
-    expect(screen.getByText("gatekeeper.etaUnavailable")).toBeTruthy();
-    expect(screen.queryByTestId("gate-checkout-run/1")).toBeNull();
-  });
-  it("opens only canonical linked run and gate records and keeps departure timestamps separate", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    apiRead.mockImplementation(async (path: string) => {
-      if (path.includes('/stations?')) return { stations: [] };
-      if (path === '/api/gate-arrivals?siteLocationId=42') return { arrivals: [{ id: "arrival-1", runId: "run/1", driverName: "Inbound Driver", title: "Delivery", companyName: "Hauler", vehicleLabel: "Truck 12", ticketNumber: "100", etaMinutes: 7.2 }], truncated: false };
-      if (path === '/api/gate-arrivals/run%2F1?siteLocationId=42') return { title: "Delivery details", driverName: "Inbound Driver", ticketNumber: "100", destinationName: "Acme HQ", runComplete: false, loads: [], events: [{ type: "started", recordedAt: "2026-10-22T10:00:00Z" }], linkedVisitIds: [88] };
-      if (path === '/api/visits/88') return { id: 88, firstName: "Linked", lastName: "Visitor", siteLocationId: 42, checkInTime: "2026-10-22T10:00:00Z", checkOutTime: "2026-10-22T12:00:00Z" };
-      if (path.includes('/visit/88?')) return { runs: [] };
-      return undefined;
-    });
-    renderScreen();
-    await findFirstByTestId("gate-site-selector");
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
-    tap(firstByTestId("gate-tab-arrivals"));
-    tap(await findFirstByTestId("gate-arrival-run/1"));
-    expect(await screen.findByText("Delivery details")).toBeTruthy();
-    tap(await findFirstByTestId("gate-linked-visit-88"));
-    expect(await screen.findByText("Linked Visitor")).toBeTruthy();
-    expect(screen.getByTestId("gate-record-check-in").textContent).toContain(new Date("2026-10-22T10:00:00Z").toLocaleString());
-    expect(screen.getByTestId("gate-record-check-out").textContent).toContain(new Date("2026-10-22T12:00:00Z").toLocaleString());
-  });
-  it("shows departures separately and never offers a second checkout", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    fetchGatekeeperRecentVisitsMock.mockResolvedValue([{ id: 93, siteLocationId: 42, firstName: "Departed", lastName: "Driver", checkInTime: "2026-10-22T10:00:00Z", checkOutTime: "2026-10-22T12:00:00Z" }]);
-    renderScreen();
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
-    expect(screen.queryByText("Departed Driver")).toBeNull();
-    tap(firstByTestId("gate-tab-departures"));
-    expect(await screen.findByText("Departed Driver")).toBeTruthy();
-    expect(screen.queryByTestId("gate-checkout-93")).toBeNull();
-  });
-  it("does not request run records after a failed arrivals read", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    apiRead.mockImplementation(async (path: string) => {
-      if (path.includes('/stations?')) return { stations: [] };
-      if (path.startsWith('/api/gate-arrivals')) throw new Error("Permission denied");
-      return undefined;
-    });
-    renderScreen();
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
-    tap(firstByTestId("gate-tab-arrivals"));
-    expect(await screen.findByText("gatekeeper.arrivalsLoadFailed")).toBeTruthy();
-    expect(apiRead.mock.calls.filter(([path]) => String(path).startsWith('/api/gate-arrivals/'))).toHaveLength(0);
-  });
-  it("shows a departures read failure even when the active visits read succeeds", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    fetchGatekeeperRecentVisitsMock.mockRejectedValue(new Error("Departures unavailable"));
-    renderScreen();
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
-    tap(firstByTestId("gate-tab-departures"));
-    expect(await screen.findByText("gatekeeper.recordLoadFailed")).toBeTruthy();
-    expect(screen.queryByText("gatekeeper.noDepartures")).toBeNull();
-  });
-  it("does not display an empty departure list while its read is pending", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    fetchGatekeeperRecentVisitsMock.mockImplementation(() => new Promise(() => {}));
-    renderScreen();
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
-    tap(firstByTestId("gate-tab-departures"));
-    expect(screen.queryByText("gatekeeper.noDepartures")).toBeNull();
-    expect(screen.getAllByRole("progressbar").length).toBeGreaterThan(0);
-  });
-  it("keeps watch custody in the title row and shift controls separate", async () => {
-    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    apiRead.mockImplementation(async (path: string) => path.includes('/stations?') ? { stations: [{ id: "station-1", name: "Main gate" }] } : path.endsWith('/state') ? { shift: null } : { arrivals: [], truncated: false });
-    renderScreen();
-    const watch = await findFirstByTestId("gate-watch-summary");
-    const titleRow = screen.getByText("gatekeeper.portal").parentElement?.parentElement;
-    expect(titleRow?.contains(watch)).toBe(true);
-    expect(screen.getByTestId("gate-workday-strip").contains(watch)).toBe(false);
-  });
   it("submits at the selected site when device GPS is denied", async () => {
     fetchSiteContextMock.mockResolvedValue(SITE_CTX);
     submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 88 });

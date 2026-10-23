@@ -9,8 +9,6 @@ import {useDailySummary} from "@/lib/daily-workspace";
 type DailyWorkHubSummary={calendarCount:number|null;myWorkCount:number|null;attentionCount:number|null;safetyCount:number|null};
 import NativeOperations from "@/components/work-hub/NativeOperations";
 import NativeJournal from "@/components/work-hub/NativeJournal";
-import NativeWorkforce from "@/components/work-hub/NativeWorkforce";
-import NativeAccountWorkspace from "@/components/work-hub/NativeAccountWorkspace";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -98,8 +96,6 @@ export default function WorkHubScreen() {
       <TodayCard title="Today" width={cardWidth} myWorkTitle={myWorkTitle} daily={daily} tasks={tasks} />
       <CommunicationsCard title="Communications" width={cardWidth} companyName={membership?.orgName?.trim() || "Company"} meetings={meetings} />
     </View>
-    <NativeWorkforce />
-    <NativeAccountWorkspace />
     {utilityModules.length ? <View style={{ gap: 10 }}><Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>More tools</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>{utilityModules.map(({ key, icon, label }) => <Pressable key={key} accessibilityRole="button" accessibilityLabel={`Open ${label}`} onPress={() => openModule(key)} style={({ pressed }) => ({ alignItems: "center", backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 14, borderWidth: 2, flexDirection: "row", gap: 8, opacity: pressed ? .72 : 1, paddingHorizontal: 14, paddingVertical: 11 })}><Feather name={icon as React.ComponentProps<typeof Feather>["name"]} size={18} color={colors.primary} /><Text style={{ color: colors.text, fontWeight: "600" }}>{label}</Text></Pressable>)}</View></View> : null}
     <Pressable
       accessibilityRole="link"

@@ -1,10 +1,6 @@
-# VNDRLY plugin 1.22.3
+# VNDRLY plugin 1.22.4
 
-Matches the October 22 iOS parity batch: compact company-branded Gate entry, saved-record details and history, explicit watch handover, Gate map navigation, role-scoped Work Hub Workforce/account workspaces, and a native calendar with expandable personal summaries and a read-only project timeline. Calendar summary lists disclose their latest-50 personal-source and visible-10 limits; missing data stays unavailable. English and Spanish labels follow the selected account language. Native date pickers, source timezones, merged schedules and canonical record destinations remain intact. The existing recent Fleet Home/readiness workflows remain capability-scoped, with accessible expanded/selected controls.
-
-Workforce offer creation and acceptance/decline are available through authenticated web and iOS Work Hub interfaces. A pending offer records no assignment; acceptance still rechecks current company, site authority, eligibility, shift version and capacity. Unknown outcomes recover the same persisted operation and fingerprint. These interfaces do not create a new ChatGPT offer tool: use only the current connection's advertised tools and supported device/workspace handoff. Calendars, rosters, map positions, saved arrivals and assignments do not prove physical attendance, start clocks or transfer watch custody. Refresh protected records after account, company, membership or sign-in changes.
-
-This package preserves plugin `dev-6ac4f61e0aac8191b7f7b4fbbc5822b0`, app `asdk_app_6ac4f61e0aac8191b7f7b4fbbc5822b0`, all five existing service skills and labels, branding, linked accounts and current grants. No new MCP tool, embedded view, permission scope, native dependency or database migration is introduced by this package. Local package validation does not establish API deployment, installation, live tool refresh, scoped read/action verification, TestFlight submission, physical iOS acceptance or public review approval. Record each release result separately under `docs/chatgpt-plugin-release.md`.
+Rollback package restoring the 1.22.2 skills and operation guidance alongside the source rollback of d72b4259. The version advances only to support updating the same installed plugin; it does not retain the 1.22.3 iOS parity guidance. Existing plugin/app identity, all five service labels, branding, linked accounts and grants remain unchanged. No new tools, views or scopes are introduced. Package validation does not establish installation or public review status.
 
 # VNDRLY plugin 1.22.2
 

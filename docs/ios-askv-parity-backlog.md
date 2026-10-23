@@ -1,19 +1,5 @@
 # iOS Ask V parity backlog
 
-## October 22 native parity candidate
-
-The current full-ship candidate includes the recent web-to-iOS interface parity batch and matching existing-identity ChatGPT package **1.22.3**:
-
-- Compact Gate entry panels, canonical saved-record details/history, explicit watch handover and Gate map navigation retain their existing permissions and native device capture.
-- Work Hub includes role/company-scoped Workforce and account workspaces. Shift offers use the original persisted operation, fingerprint and receipt recovery; only an eligible recipient's explicit acceptance records assignment. An assignment does not establish physical attendance.
-- Calendar adds expandable personal summaries with explicit latest-50/visible-10 limits, a read-only project milestone timeline, English/Spanish copy, shared sphere navigation, Today and weekday labels. Existing merged schedules, timezone handling, native scheduling/date pickers and exact record destinations remain intact.
-- Existing recent Fleet Home, driver/equipment/readiness drilldowns and mutation safeguards are retained. Expanded and selected controls expose their accessible state.
-- Protected new workspace/summary caches are scoped to the current sign-in generation as well as the selected account/company context.
-
-These are source-level implementation boundaries. Exact-tree repository gates, compatible OTA, signed TestFlight build/submission, installed plugin/tool refresh, live scoped read/action readback and public review status remain separate release evidence. Physical iOS, camera, location, watch handoff, push and provider acceptance are unverified until observed on a supported device. Package guidance does not advertise a new ChatGPT offer tool or widen any linked account's grants.
-
-## Earlier native parity baseline
-
 This checklist is included in the September 22 Gate operations TestFlight release. Calendar and Gate Ask V parity share server permissions, confirmation, audit, and idempotency boundaries. The September 30 wiring audit completed the remaining code-level toolbox, client-intent, destination, visual-result, and mutation-refresh parity work. Physical iOS and push verification remains a release acceptance step, not an unwired code path.
 
 Before the next iOS or TestFlight update, explicitly confirm with the user that this parity batch is included, then verify each item in the native app rather than assuming server availability proves the iOS experience.
