@@ -31,4 +31,10 @@ describe("DayAgendaDialog", () => {
     expect(screen.getByText("Admin meeting")).toBeTruthy();
     expect(screen.queryByText("Inspect gate")).toBeNull();
   });
+  it("keeps a recorded shift on its actual calendar day instead of treating its clock ID as a scheduled shift ID", () => {
+    render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2026-10-08" items={[{ id: "workday-clock-1", workdayId: "clock-1", recordedShift: true, kind: "Shift", title: "My recorded shift", startsAt: new Date(2026, 9, 8, 9).toISOString(), recordedMilliseconds: 9900000 }]} />);
+    const link = screen.getByRole("link", { name: /My recorded shift/ });
+    expect(link.getAttribute("href")).toBe("/work-hub/calendar?day=2026-10-08&workday=clock-1");
+    expect(link.textContent).toContain("Recorded hours: 2h 45m");
+  });
 });

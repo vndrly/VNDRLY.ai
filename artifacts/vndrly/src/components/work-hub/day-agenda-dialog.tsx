@@ -4,12 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import { Dialog } from "@/components/ui/dialog";
+import { recordedShiftCalendarHref } from "@/lib/calendar-day-link";
+import { formatRecordedHours } from "@/lib/dashboard-shift-hours";
 
 type Row = Record<string, any>;
 const AGENDA_KINDS = ["Meeting", "Shift", "Task", "Event"] as const;
 type AgendaKind = (typeof AGENDA_KINDS)[number];
 
 export function calendarItemHref(item: Row) {
+  if (item.recordedShift) return recordedShiftCalendarHref({ id: item.workdayId, startedAt: item.startsAt });
   if (item.kind === "Meeting") return `/work-hub/meetings/${item.id}`;
   if (item.kind === "Task") return `/work-hub/tasks/${item.id}`;
   return `/work-hub/calendar?shift=${item.id}`;
@@ -72,6 +75,7 @@ export default function DayAgendaDialog({
             <a key={`${item.kind}-${item.id}`} href={calendarItemHref(item)} className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 text-black" data-testid="day-agenda-item">
               <span className="text-xs font-semibold uppercase text-muted-foreground">{item.kind}</span>
               <div className="flex items-start justify-between gap-3"><strong>{item.title}</strong><time className="text-sm">{new Date(item.startsAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time></div>
+              {item.recordedShift && <p className="text-sm">Recorded hours: {formatRecordedHours(item.recordedMilliseconds)}</p>}
             </a>
           ))}
           {!visibleItems.length && <p className="rounded-xl p-6 text-center text-muted-foreground">Nothing is scheduled for this day.</p>}

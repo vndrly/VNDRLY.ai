@@ -39,6 +39,13 @@ describe("iOS-style web work calendar", () => {
     expect(screen.queryByText("No scheduled records for this day.")).toBeNull();
     expect(screen.getByText(/No records available/)).toBeTruthy();
   });
+  it("shows actual recorded shift hours without treating an open shift as clocked out", () => {
+    render(<WorkCalendar {...props} items={[{ id: "workday-1", workdayId: "clock-1", recordedShift: true, title: "My recorded shift", kind: "Shift", startsAt: new Date(2026, 9, 22, 9).toISOString(), endsAt: null, recordedMilliseconds: 9900000, status: "on_shift" }]} />);
+    expect(screen.getByText("Recorded hours: 2h 45m · running")).toBeTruthy();
+    expect(screen.getByText(/Recorded shift.*Shift in progress/)).toBeTruthy();
+    expect(screen.queryByText(/End time unspecified/)).toBeNull();
+    expect(screen.getByRole("button", { name: "View recorded shift" })).toBeTruthy();
+  });
   it("only offers scheduling when authorized and retains filters on demand", () => {
     const view = render(<WorkCalendar {...props} />);
     expect(screen.queryByRole("button", { name: "Schedule" })).toBeNull();

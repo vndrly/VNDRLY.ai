@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, CheckSquare2 } from "lucide-react";
 import BrandPillButton from "@/components/brand-pill-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { BrandedSelect, WorkHubCardTitle } from "@/components/work-hub/chrome";
+import { BrandedSelect } from "@/components/work-hub/chrome";
+import { WorkspacePanel } from "./workspace-panel";
+import "./calendar-create-cards.css";
 import SplitToggleHalf from "@/components/split-toggle-half";
 import { useBrand } from "@/hooks/use-brand";
 import { pickTogglePillSrc, splitToggleDividerClass, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
@@ -49,7 +50,7 @@ function Picker({
   const toggle = <T,>(values: T[], value: T) =>
     values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
   return (
-    <div className="grid gap-2 rounded-2xl border-2 border-[color:var(--brand-primary)] bg-white p-3">
+    <div className="hub-schedule-attendees grid gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold">Assign attendees</p>
         <div className="inline-flex items-stretch overflow-hidden rounded-full" data-testid="calendar-assignee-toggle">
@@ -59,7 +60,7 @@ function Picker({
         </div>
       </div>
       <div
-        className="grid h-36 content-start gap-2 overflow-y-auto pr-1"
+        className="hub-schedule-attendees-list grid content-start gap-2 overflow-y-auto pr-1"
         data-testid="calendar-assignee-list"
         style={{ colorScheme: "light" }}
       >
@@ -226,11 +227,12 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
   });
   const commonClass = "grid gap-3 [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:border-2 [&_input:not([type=checkbox])]:border-[color:var(--brand-primary)] [&_input:not([type=checkbox])]:bg-white [&_select]:h-10 [&_select]:rounded-full [&_select]:border-2 [&_select]:border-[color:var(--brand-primary)] [&_select]:bg-white [&_select]:px-3";
   return (
-    <div className="grid gap-4 lg:grid-cols-2 lg:items-start" data-testid="calendar-create-card-row">
-      <Card id="create-shift-card" className="border-2 border-[color:var(--brand-primary)] bg-white">
-        <CardHeader><CardTitle><WorkHubCardTitle icon={CalendarDays}>Create Shift/Event</WorkHubCardTitle></CardTitle></CardHeader>
-        <CardContent>
-          <form className={commonClass} onSubmit={(event) => { event.preventDefault(); createItem.mutate(); }}>
+    <div id="create-shift-card" data-testid="calendar-create-card-row">
+      <WorkspacePanel title="Schedule work" subtitle="Create shifts, meetings, and tasks for your company." icon={CalendarDays}>
+        <div className="hub-schedule-body">
+          <form aria-label="Create Shift/Event" className={`hub-schedule-form ${commonClass}`} onSubmit={(event) => { event.preventDefault(); createItem.mutate(); }}>
+            <h3><CalendarDays aria-hidden="true" />Create Shift/Event</h3>
+            <div className="hub-schedule-fields">
             <Field label="Work type">
               <BrandedSelect aria-label="Work type" value={form.kind} onChange={(event) => setForm({ ...form, kind: event.target.value })}>
                 <option value="shift">Shift</option>
@@ -243,7 +245,8 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
                 <option value="gate">Gate shift</option>
               </BrandedSelect>
             </Field>}
-            {form.kind === "shift" && form.shiftType === "gate" && <>
+            </div>
+            {form.kind === "shift" && form.shiftType === "gate" && <fieldset className="hub-schedule-section"><legend>Gate coverage</legend><div className="hub-schedule-fields">
               <Field label="Gate site">
                 <BrandedSelect aria-label="Gate site" value={form.siteLocationId} onChange={(event) => setForm({ ...form, siteLocationId: event.target.value, gateStationId: "" })} required>
                   <option value="">Choose site</option>
@@ -263,37 +266,39 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
                   <option value="paid_travel">Paid travel starts work</option>
                 </BrandedSelect>
               </Field>
-            </>}
-            <Field label="Meeting Type">
+            </div></fieldset>}
+            {form.kind === "event" && <Field label="Meeting Type">
               <Input list="calendar-meeting-types" value={form.meetingType} onChange={(event) => setForm({ ...form, meetingType: event.target.value })} placeholder="Type or create a meeting type" />
               <datalist id="calendar-meeting-types">{meetingTypes.data?.map((type) => <option key={type.id} value={type.title} />)}</datalist>
-            </Field>
+            </Field>}
             <Field label="Title"><Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required /></Field>
+            <fieldset className="hub-schedule-section"><legend>When</legend><div className="hub-schedule-fields">
             <Field label="Starts"><Input type="datetime-local" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} required /></Field>
             <Field label="Ends"><Input type="datetime-local" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} required /></Field>
+            </div></fieldset>
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={form.userIds} crewIds={form.crewIds} onUsers={(userIds) => setForm({ ...form, userIds })} onCrews={(crewIds) => setForm({ ...form, crewIds })} />
+            <fieldset className="hub-schedule-section"><legend>Options</legend>
             <Field label="Calendar"><BrandedSelect aria-label="Calendar" value="company" disabled><option value="company">Internal company</option></BrandedSelect></Field>
             <Field label="Notes"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
             <label className="flex items-center gap-2 text-sm font-semibold"><input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] bg-white accent-[var(--brand-primary)]" style={{ colorScheme: "light", accentColor: "var(--brand-primary)" }} type="checkbox" checked={form.mandatory} onChange={(event) => setForm({ ...form, mandatory: event.target.checked })} />Mandatory</label>
+            </fieldset>
             {createItem.error && <p role="alert" className="text-sm text-red-700">{createItem.error instanceof Error ? createItem.error.message : "Unable to create Calendar work."}</p>}
             <BrandPillButton type="submit" tone="brand" disabled={!owner || createItem.isPending}>{createItem.isPending ? "Creating…" : "Create Shift/Event"}</BrandPillButton>
           </form>
-        </CardContent>
-      </Card>
-      <Card className="border-2 border-[color:var(--brand-primary)] bg-white">
-        <CardHeader><CardTitle><WorkHubCardTitle icon={CheckSquare2}>Create Task</WorkHubCardTitle></CardTitle></CardHeader>
-        <CardContent>
-          <form className={commonClass} onSubmit={(event) => { event.preventDefault(); createTask.mutate(); }}>
+          <form aria-label="Create Task" className={`hub-schedule-form ${commonClass}`} onSubmit={(event) => { event.preventDefault(); createTask.mutate(); }}>
+            <h3><CheckSquare2 aria-hidden="true" />Create Task</h3>
             <Field label="Title"><Input value={task.title} onChange={(event) => setTask({ ...task, title: event.target.value })} required /></Field>
             <Field label="Description"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={task.description} onChange={(event) => setTask({ ...task, description: event.target.value })} /></Field>
+            <fieldset className="hub-schedule-section"><legend>When & priority</legend><div className="hub-schedule-fields">
             <Field label="Due"><Input type="datetime-local" value={task.dueAt} onChange={(event) => setTask({ ...task, dueAt: event.target.value })} /></Field>
             <Field label="Priority"><BrandedSelect aria-label="Priority" value={task.priority} onChange={(event) => setTask({ ...task, priority: event.target.value })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></BrandedSelect></Field>
+            </div></fieldset>
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={task.userIds} crewIds={task.crewIds} onUsers={(userIds) => setTask({ ...task, userIds })} onCrews={(crewIds) => setTask({ ...task, crewIds })} />
             {createTask.error && <p role="alert" className="text-sm text-red-700">{createTask.error instanceof Error ? createTask.error.message : "Unable to create task."}</p>}
             <BrandPillButton type="submit" tone="brand" disabled={!owner || createTask.isPending}>{createTask.isPending ? "Creating…" : "Create Task"}</BrandPillButton>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </WorkspacePanel>
     </div>
   );
 }

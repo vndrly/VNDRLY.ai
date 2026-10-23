@@ -3,7 +3,6 @@ import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
-import ShiftOpening from "@/components/work-hub/shift-opening";
 import { ManagedCrews } from "@/components/implementation-a/managed-crews";
 import { WorkforceCoverage } from "@/components/implementation-a/workforce-coverage";
 import { Assets } from "@/components/implementation-a/assets";
@@ -24,6 +23,8 @@ import { WorkHubAwaySettings } from "@/components/work-hub/away-settings";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
 import WorkCalendar, { monthCalendarDays } from "@/components/work-hub/work-calendar";
 import { localDateKey } from "@/components/work-hub/calendar-views";
+import { calendarDayFromSearch } from "@/lib/calendar-day-link";
+import { readDashboardShiftHours } from "@/lib/dashboard-shift-hours";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
@@ -32,7 +33,7 @@ import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
 import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import {
   CalendarDays,
   CheckSquare2,
@@ -590,8 +591,13 @@ function CalendarModule() {
       return response.json();
     },
   });
-  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()));
+  const search = useSearch();
+  const linkedDay = calendarDayFromSearch(search);
+  const [month, setMonth] = useState(() => { const date = linkedDay ? new Date(`${linkedDay}T12:00:00`) : new Date(); return new Date(date.getFullYear(), date.getMonth(), 1); });
+  const [selectedDay, setSelectedDay] = useState(() => linkedDay ?? localDateKey(new Date()));
+  useEffect(() => {
+    if (linkedDay) { const date = new Date(`${linkedDay}T12:00:00`); setSelectedDay(linkedDay); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }
+  }, [linkedDay]);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const visibleDays = monthCalendarDays(month);
@@ -605,6 +611,12 @@ function CalendarModule() {
       ),
   });
   const operations = useOperationalCalendar(start.toISOString(), end.toISOString());
+  const clockOwner = ownerForUser(user);
+  const recordedHours = useQuery({
+    queryKey: ["work-hub", "calendar-recorded-shifts", ...context, start.toISOString(), end.toISOString()],
+    queryFn: ({ signal }) => readDashboardShiftHours({ userId: user!.userId, owner: clockOwner!, start: start.toISOString(), end: end.toISOString() }, path => workHubRequest(path, { signal, cache: "no-store" })),
+    enabled: Boolean(user && clockOwner), retry: false, refetchInterval: 15000,
+  });
   const channelSummary = useQuery<Row[]>({
     queryKey: ["work-hub", "channels", ...context],
     queryFn: () => workHubRequest("/channels"),
@@ -641,6 +653,7 @@ function CalendarModule() {
   const items = useMemo(
     () =>
       [
+        ...(recordedHours.data?.shifts ?? []).map(shift => ({ id: `workday-${shift.id}`, workdayId: shift.id, recordedShift: true, title: "My recorded shift", kind: "Shift", startsAt: shift.startedAt, endsAt: shift.endedAt, timezone: shift.timezone, status: shift.state, recordedMilliseconds: shift.milliseconds })),
         ...(operations.data?.items ?? []).map(item => ({ ...item, kind: item.kind === "field_ticket" ? "Field Ticket" : "Fleet Run" })),
         ...(calendar.data?.shifts ?? []).map((x: Row) => ({
           ...x.item,
@@ -657,7 +670,7 @@ function CalendarModule() {
           kind: "Meeting",
         })),
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
-    [calendar.data, operations.data],
+    [calendar.data, operations.data, recordedHours.data],
   );
   const filteredItems = useMemo(() => {
     const needle = calendarFilters.search.trim().toLowerCase();
@@ -690,8 +703,8 @@ function CalendarModule() {
           onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}
           onOpenDay={() => setAgendaOpen(true)}
           onSchedule={canManage ? () => setScheduling(current => !current) : undefined}
-          scheduling={scheduling} loading={calendar.isPending || (Boolean(user?.vendorId) && operations.isPending)}
-          unavailable={calendar.isError || operations.isError || Boolean(operations.data?.unavailable.length)}
+          scheduling={scheduling} loading={calendar.isPending || (Boolean(user?.vendorId) && operations.isPending) || (Boolean(clockOwner) && recordedHours.isPending)}
+          unavailable={calendar.isError || operations.isError || Boolean(operations.data?.unavailable.length) || recordedHours.isError}
           filters={<>
       <Card className="border-0 bg-white shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -923,7 +936,6 @@ function CalendarModule() {
         <ProjectTimeline unavailable={calendar.isError || calendar.isPending} items={filteredItems} canManage={canManage} onCreate={() => { setScheduling(true); setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />
         <div className="hub-calendar-extras">
           <WorkHubAvailability />
-          <ShiftOpening shifts={calendar.data?.shifts ?? []} onSaved={() => calendar.refetch()} />
           {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} />}
         </div>
       </div>
@@ -1159,15 +1171,25 @@ function Governance({
 
 function TasksModule() {
   const [showCompleted,setShowCompleted]=useState(false);
+  const taskSearch = useSearch(), linkedTask = new URLSearchParams(taskSearch).get("task");
+  const focusedTask = useRef<HTMLElement>(null);
   const { t } = useTranslation();
   const { user } = useAuth();
   const canManage = isWorkHubScheduler(user);
   const owner = useOwner();
   const qc = useQueryClient();
   const tasks = useQuery<Row[]>({
-    queryKey: ["work-hub", "tasks"],
-    queryFn: () => workHubRequest("/tasks"),
+    queryKey: ["work-hub", "tasks", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, linkedTask],
+    queryFn: () => workHubRequest(`/tasks${linkedTask ? `?task=${encodeURIComponent(linkedTask)}` : ""}`),
   });
+  useEffect(() => {
+    const selected = tasks.data?.find(row => row.id === linkedTask);
+    if (!selected) return;
+    const completed = selected.status === "completed";
+    if (showCompleted !== completed) { setShowCompleted(completed); return; }
+    focusedTask.current?.scrollIntoView({ block: "center" });
+    focusedTask.current?.focus({ preventScroll: true });
+  }, [linkedTask, tasks.data, showCompleted]);
   const admin = useQuery<Row>({
     queryKey: ["work-hub", "admin"],
     queryFn: () => workHubRequest("/admin"),
@@ -1287,7 +1309,7 @@ function TasksModule() {
           </CardHeader>
           <CardContent className="grid gap-2">
             {tasks.data?.filter(row=>showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status)).map((row) => (
-              <article key={row.id} className="rounded-lg border-2 border-primary bg-card p-4">
+              <article key={row.id} ref={row.id === linkedTask ? focusedTask : undefined} tabIndex={row.id === linkedTask ? -1 : undefined} className="rounded-lg border-2 border-primary bg-card p-4">
                 <div className="flex justify-between gap-3">
                   <div>
                     <span className="text-xs uppercase text-muted-foreground">

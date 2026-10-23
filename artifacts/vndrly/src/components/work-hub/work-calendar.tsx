@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
 import { localDateKey } from "./calendar-views";
+import { formatRecordedHours } from "@/lib/dashboard-shift-hours";
 import "./work-calendar.css";
 
 type Row = Record<string, any>;
@@ -13,7 +14,7 @@ export function monthCalendarDays(month: Date) {
 const dayKey = (value: unknown) => value ? localDateKey(new Date(String(value))) : "";
 function recordTime(item: Row) {
   const options: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short", ...(item.timezone ? { timeZone: item.timezone } : {}) };
-  return `${new Date(item.startsAt).toLocaleString(undefined, options)}${item.endsAt ? ` – ${new Date(item.endsAt).toLocaleString(undefined, options)}` : " · End time unspecified"}${item.timezone ? ` · ${item.timezone}` : ""}`;
+  return `${new Date(item.startsAt).toLocaleString(undefined, options)}${item.endsAt ? ` – ${new Date(item.endsAt).toLocaleString(undefined, options)}` : item.recordedShift ? " · Shift in progress" : " · End time unspecified"}${item.timezone ? ` · ${item.timezone}` : ""}`;
 }
 
 /** The iOS month/day layout, using the web calendar's existing authorized records. */
@@ -50,10 +51,11 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     {!loading && !selected.length && <p className="hub-calendar-muted">{unavailable ? "No records available for this day from the schedules that loaded." : "No scheduled records for this day."}</p>}
     {selected.map(item => <article className="hub-calendar-record" key={`${item.kind}-${item.id}`}>
       <h3>{item.route ? <a href={item.route}>{item.title}</a> : <button type="button" onClick={onOpenDay}>{item.title}</button>}</h3>
-      <p className="hub-calendar-muted">{item.kind} · {recordTime(item)}</p>
+      <p className="hub-calendar-muted">{item.recordedShift ? "Recorded shift" : item.kind} · {recordTime(item)}</p>
+      {item.recordedShift && <p className="hub-calendar-muted">Recorded hours: {formatRecordedHours(item.recordedMilliseconds)}{item.status === "on_shift" ? " · running" : item.status === "on_break" ? " · on unpaid break" : ""}</p>}
       {item.kind === "Fleet Run" && <p className="hub-calendar-muted">{item.employeeName ? `${item.employeeName} · ` : ""}{item.linkedTicketId ? `Ticket #${item.linkedTicketId} · ` : ""}{item.timeBasis === "dispatch_recorded" ? "Dispatch recorded · no planned time" : "Planned run time"}</p>}
       {item.status && <p className="hub-calendar-muted">{String(item.status).replaceAll("_", " ")}</p>}
-      {item.route ? <a className="hub-calendar-record-link" href={item.route}>Open scheduled record</a> : <button className="hub-calendar-record-link" type="button" onClick={onOpenDay}>Open scheduled record</button>}
+      {item.route ? <a className="hub-calendar-record-link" href={item.route}>Open scheduled record</a> : <button className="hub-calendar-record-link" type="button" onClick={onOpenDay}>{item.recordedShift ? "View recorded shift" : "Open scheduled record"}</button>}
     </article>)}
     <details className="hub-calendar-filters"><summary>Filter schedules</summary>{filters}</details>
   </section>;

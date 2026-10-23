@@ -1,0 +1,23 @@
+.hub-schedule-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); color: #ececec; color-scheme: dark; }
+.hub-schedule-form { min-width: 0; align-content: start; padding: 14px 16px 16px 0; border-top: 1px solid #3a3a3a; }
+.hub-schedule-form + .hub-schedule-form { padding-inline: 16px 0; border-left: 1px solid #3a3a3a; }
+.hub-schedule-form h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+.hub-schedule-form h3 svg { width: 18px; height: 18px; color: var(--brand-primary); }
+.hub-schedule-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
+.hub-schedule-section { display: grid; gap: 12px; min-width: 0; margin: 0; padding: 12px 0 0; border: 0; border-top: 1px solid #3a3a3a; }
+.hub-schedule-section legend { padding-right: 10px; color: #b3b3b3; font-size: 12px; font-weight: 600; }
+.hub-schedule-form label { min-width: 0; color: #ececec; }
+.hub-schedule-form input:not([type=checkbox]), .hub-schedule-form select, .hub-schedule-form textarea { min-width: 0; max-width: 100%; }
+.hub-schedule-form :is(input,textarea)::placeholder { color: #b3b3b3; opacity: 1; }
+.hub-schedule-form select:disabled { color: #b3b3b3 !important; opacity: 1; }
+.hub-schedule-form [role=alert] { color: #fca5a5; }
+.hub-schedule-form input[type=datetime-local] { font-size: 12px; padding-inline: 8px; }
+.hub-schedule-form .hub-schedule-attendees { border-radius: 0; border: 0; border-top: 1px solid #3a3a3a; background: transparent; padding: 12px 0 0; }
+.hub-schedule-form .hub-schedule-attendees-list { max-height: 144px; height: auto; min-height: 28px; color-scheme: dark; }
+.hub-schedule-form textarea { min-height: 72px; }
+.hub-schedule-form > button[type=submit] { justify-self: end; }
+@media (max-width: 1023px) {
+  .hub-schedule-body { grid-template-columns: minmax(0, 1fr); }
+  .hub-schedule-form, .hub-schedule-form + .hub-schedule-form { padding: 14px 0 16px; border-left: 0; }
+}
+@media (max-width: 420px) { .hub-schedule-fields { grid-template-columns: minmax(0, 1fr); } }

@@ -12,6 +12,7 @@ import {
   desc,
   eq,
   getTableColumns,
+  gt,
   gte,
   ilike,
   inArray,
@@ -95,6 +96,7 @@ import {
 import { validateVoiceNoteMetadata } from "../work-hub/file-policy";
 import { notifyUsers } from "./notifications";
 import { currentNotificationRecipients } from "../work-hub/notification-recipients";
+import { dashboardTaskTiming } from "../work-hub/dashboard-task-timing";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import { findAvailableMeetingTimes, getParticipantBusyIntervals, requestedMeetingAvailability } from "../work-hub/meeting-availability";
@@ -578,6 +580,29 @@ router.get("/work-hub/tasks", async (req, res) => {
       "auth.unauthenticated",
       "Authentication required",
     );
+  if (req.query.dashboard === "1") {
+    const cursor = z.string().uuid().optional().safeParse(req.query.cursor);
+    if (!cursor.success) return sendApiError(res, 400, "work_hub.invalid_cursor", "Invalid task cursor");
+    const company = !session.managedSubcontractor && (session.role === "admin" ||
+      !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "") &&
+      (session.membershipRole === "admin" || ["office", "both"].includes(session.vendorRole ?? "")));
+    const rows = await db.select({ ...getTableColumns(workHubTasksTable), assigneeName: usersTable.displayName })
+      .from(workHubTasksTable).leftJoin(usersTable, eq(usersTable.id, workHubTasksTable.assigneeUserId))
+      .where(and(ownerFilter(session), company ? undefined : eq(workHubTasksTable.assigneeUserId, session.userId),
+        cursor.data ? gt(workHubTasksTable.id, cursor.data) : undefined))
+      .orderBy(asc(workHubTasksTable.id)).limit(101);
+    const page = rows.slice(0, 100);
+    const events = page.length ? await db.select().from(workHubTaskEventsTable)
+      .where(and(inArray(workHubTaskEventsTable.taskId, page.map(task => task.id)),
+        inArray(workHubTaskEventsTable.eventType, ["assigned", "status.completed"])))
+      .orderBy(desc(workHubTaskEventsTable.createdAt)) : [];
+    return res.json({ scope: company ? "company" : "self", tasks: page.map(task => ({
+      ...task,
+      ...dashboardTaskTiming(task, events),
+    })), nextCursor: rows.length > 100 ? page.at(-1)!.id : null });
+  }
+  const exactTask = z.string().uuid().optional().safeParse(req.query.task);
+  if (!exactTask.success) return sendApiError(res, 400, "work_hub.invalid_task", "Invalid task identity");
   return res.json(
     await db
       .select()
@@ -585,6 +610,7 @@ router.get("/work-hub/tasks", async (req, res) => {
       .where(
         and(
           ownerFilter(session),
+          exactTask.data ? eq(workHubTasksTable.id, exactTask.data) : undefined,
           req.query.status
             ? eq(workHubTasksTable.status, String(req.query.status))
             : undefined,
@@ -1484,8 +1510,12 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
         await tx.insert(workHubTaskEventsTable).values({
           taskId: current.id,
           actorUserId: session.userId,
-          eventType: status ? `status.${status}` : "updated",
+          eventType: status && status !== current.status ? `status.${status}` : "updated",
         });
+        if (payload.assigneeUserId !== undefined && payload.assigneeUserId !== current.assigneeUserId) {
+          await tx.insert(workHubTaskEventsTable).values({ taskId: current.id, actorUserId: session.userId,
+            eventType: "assigned", detail: { assigneeUserId: payload.assigneeUserId } });
+        }
         return updated;
       },
     );
