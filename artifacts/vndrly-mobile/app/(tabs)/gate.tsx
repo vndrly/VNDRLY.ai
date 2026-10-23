@@ -23,12 +23,17 @@ import BrandTitleRow from "@/components/BrandTitleRow";
 import PlateStatePicker from "@/components/PlateStatePicker";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import SphereBackButton from "@/components/SphereBackButton";
+import GateGpsSelector from "@/components/GateGpsSelector";
+import GateRecordsPanel from "@/components/GateRecordsPanel";
+import WorkdayControls from "@/components/WorkdayControls";
+import GateWatchHeader from "@/components/GateWatchHeader";
 import VisitorHostPicker from "@/components/VisitorHostPicker";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import NativeGateJournal from "@/components/work-hub/NativeGateJournal";
 import NativeJournal from "@/components/work-hub/NativeJournal";
 import GateIdentityDocument from "@/components/work-hub/GateIdentityDocument";
+import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { assignedReadWithOfflineFallback } from "@/lib/native-assigned-cache";
 import { enqueueNativeOperation } from "@/lib/native-operation-journal-runtime";
 import { isOfflineWorkHubFailure } from "@/lib/work-hub-queue-runtime";
@@ -92,7 +97,6 @@ import {
   evaluateGpsFence,
   formatFenceMilesSentence,
   GATE_DURATION_CHIPS,
-  onSiteDwell,
   type GpsLockState,
 } from "@workspace/gate-booth";
 
@@ -139,9 +143,15 @@ function driverSuggestions(
 import { interpretGateSpeech, registerGateVoiceForm, gateDraftMatches, recoverGateSpeechFields, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
 
 export default function GatekeeperScreen() {
+  const { user, activeMembershipId } = useAuth();
+  const scope = captureAuthScope();
+  return <GatekeeperContent key={`${user?.id}:${activeMembershipId}:${scope.generation}`} />;
+}
+function GatekeeperContent() {
   const colors = useColors();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, activeMembershipId } = useAuth();
+  const authScope = captureAuthScope();
   const qc = useQueryClient();
   const gateEventPoller = useMemo(() => createGateEventPoller(), []);
   const appliedDefault = useRef(false);
@@ -166,7 +176,6 @@ export default function GatekeeperScreen() {
   } | null>(null);
   const [purpose, setPurpose] = useState("");
   const [notes, setNotes] = useState("");
-  const [checkOutNotes, setCheckOutNotes] = useState("");
   const [gps, setGps] = useState<GpsLockState>("searching");
   const [origin, setOrigin] = useState<{
     latitude: number;
@@ -194,7 +203,7 @@ export default function GatekeeperScreen() {
   const [gateLocationId, setGateLocationId] = useState("");
 
   const activeVisits = useQuery({
-    queryKey: ["gatekeeper-visits"],
+    queryKey: ["gatekeeper-visits", user?.id, activeMembershipId, authScope.generation],
     queryFn: () => user ? assignedReadWithOfflineFallback(user, "gate.visits", fetchGatekeeperVisits) : fetchGatekeeperVisits(),
     refetchInterval: 30000,
     retry: false,
@@ -225,12 +234,12 @@ export default function GatekeeperScreen() {
     }
   }), [activeVisits.data]);
   const recentVisits = useQuery({
-    queryKey: ["gatekeeper-recent-visits"],
+    queryKey: ["gatekeeper-recent-visits", user?.id, activeMembershipId, authScope.generation],
     queryFn: fetchGatekeeperRecentVisits,
     retry: false,
   });
   const assigned = useQuery({
-    queryKey: ["gatekeeper-assigned-sites", user?.vendorId],
+    queryKey: ["gatekeeper-assigned-sites", user?.vendorId, user?.id, activeMembershipId, authScope.generation],
     queryFn: () => {
       const fetcher = () => resolveAssignedGateSites({
         vendorId: user?.vendorId ?? null,
@@ -263,14 +272,14 @@ export default function GatekeeperScreen() {
     setSelectedPartnerId(selectedAssignedSite.partnerId);
   }, [selectedAssignedSite, selectedPartnerId]);
   const ctxQuery = useQuery<SiteContext>({
-    queryKey: ["gatekeeper-site-context", confirmedCode],
+    queryKey: ["gatekeeper-site-context", confirmedCode, user?.id, activeMembershipId, authScope.generation],
     queryFn: () => user ? assignedReadWithOfflineFallback(user, `gate.site.${confirmedCode!}`, () => fetchSiteContext(confirmedCode!)) : fetchSiteContext(confirmedCode!),
     enabled: !!confirmedCode,
     retry: false,
   });
   const selectedSiteId = ctxQuery.data?.site.id ?? null;
   const gateLocations = useQuery({
-    queryKey: ["gate-visit-locations", user?.id, user?.vendorId, selectedSiteId],
+    queryKey: ["gate-visit-locations", user?.id, user?.vendorId, selectedSiteId, activeMembershipId, authScope.generation],
     queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude: number | null; longitude: number | null; geofenceRadiusM: number }[] }>(`/stations?siteId=${selectedSiteId}`),
     enabled: Boolean(selectedSiteId), retry: false,
   });
@@ -286,7 +295,7 @@ export default function GatekeeperScreen() {
     });
   }, [gateEventPoller, qc, selectedSiteId]);
   const preferredPlateStates = useQuery({
-    queryKey: ["preferred-plate-states", ctxQuery.data?.site.id, confirmedCode],
+    queryKey: ["preferred-plate-states", ctxQuery.data?.site.id, confirmedCode, user?.id, activeMembershipId, authScope.generation],
     queryFn: () =>
       fetchPreferredPlateStates(ctxQuery.data!.site.id, confirmedCode!),
     enabled: Boolean(ctxQuery.data?.site.id && confirmedCode),
@@ -544,11 +553,14 @@ export default function GatekeeperScreen() {
   useEffect(() => {
     let cancelled = false;
     let subscription: { remove: () => void } | null = null;
+    const scope = captureAuthScope();
+    const current = () => !cancelled && isAuthScopeCurrent(scope);
     void (async () => {
+      setOrigin(null);
       setGps("searching");
       try {
         const perm = await Location.requestForegroundPermissionsAsync();
-        if (cancelled) return;
+        if (!current()) return;
         if (perm.status !== "granted") {
           setOrigin(null);
           setGps("denied");
@@ -557,7 +569,7 @@ export default function GatekeeperScreen() {
         subscription = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.Balanced, distanceInterval: 8 },
           (pos) => {
-            if (cancelled) return;
+            if (!current()) return;
             setGps("locked");
             setOrigin({
               latitude: pos.coords.latitude,
@@ -565,15 +577,16 @@ export default function GatekeeperScreen() {
             });
           },
         );
+        if (!current()) subscription.remove();
       } catch {
-        if (!cancelled) { setOrigin(null); setGps("unavailable"); }
+        if (current()) { setOrigin(null); setGps("unavailable"); }
       }
     })();
     return () => {
       cancelled = true;
       subscription?.remove();
     };
-  }, []);
+  }, [user?.id, activeMembershipId]);
 
   const fence = evaluateGpsFence({
     gps,
@@ -589,12 +602,6 @@ export default function GatekeeperScreen() {
   const fenceCopy = formatFenceMilesSentence(fence);
   const selectedActiveVisits = (activeVisits.data ?? []).filter(
     (visit) => selectedSiteId == null || visit.siteLocationId === selectedSiteId,
-  );
-  const pendingVisits = selectedActiveVisits.filter(
-    (visit) => visit.admissionStatus === "pending",
-  );
-  const onSiteVisits = selectedActiveVisits.filter(
-    (visit) => visit.admissionStatus !== "pending",
   );
 
   const fenceSentence =
@@ -841,8 +848,7 @@ export default function GatekeeperScreen() {
     setBusy(true);
     try {
       const visit = (activeVisits.data ?? []).find(row => row.id === visitId);
-      await gatekeeperCheckOut(visitId, checkOutNotes.trim() || undefined, { coordinates: origin, gateStationId: visit?.siteLocationId === selectedSiteId ? selectedGate?.id : undefined });
-      setCheckOutNotes("");
+      await gatekeeperCheckOut(visitId, undefined, { coordinates: origin, gateStationId: visit?.siteLocationId === selectedSiteId ? selectedGate?.id : undefined });
       resetForm();
       await qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await qc.invalidateQueries({ queryKey: ["gatekeeper-recent-visits"] });
@@ -897,12 +903,65 @@ export default function GatekeeperScreen() {
                 {t("gatekeeper.portal")}
               </Text>
             </View>
+            <GateWatchHeader siteId={selectedSiteId} stationId={selectedGate?.id} />
             <AskVVoiceIndicator inline />
           </View>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {t("gatekeeper.subtitle")}
           </Text>
 
+          <WorkdayControls />
+          <View testID="gate-authoritative-selectors" style={{ gap: 8 }}>
+            <View testID="gate-locked-partner" style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
+              <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.partnerName ?? "Current lease"}</Text>
+            </View>
+            <View testID={selectedAssignedSite ? `gate-site-option-${selectedAssignedSite.siteCode}` : undefined}>
+              <TouchableOpacity testID="gate-site-selector" onPress={() => setSiteMenuOpen((open) => !open)} style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
+                <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.name ?? "Select site"}</Text>
+              </TouchableOpacity>
+            </View>
+            {siteMenuOpen && assignedSites.map((site) => {
+              const selected = confirmedCode === site.siteCode;
+              return (
+                <TouchableOpacity
+                  key={site.siteCode}
+                  testID={`gate-site-option-${site.siteCode}`}
+                  onPress={() => {
+                    appliedDefault.current = true;
+                    setSiteCode(site.siteCode);
+                    setConfirmedCode(site.siteCode);
+                    setHostKey(null);
+                    setSiteMenuOpen(false);
+                  }}
+                  style={[
+                    styles.siteOption,
+                    {
+                      borderColor: selected ? colors.primary : colors.border,
+                      backgroundColor: colors.card,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.siteOptionName,
+                      { color: colors.foreground, fontSize: 20 },
+                    ]}
+                  >
+                    {site.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+            {!!gateLocations.data?.stations.length && <View style={{ gap: 6 }}>
+              <Text style={[styles.label, { color: colors.foreground }]}>{t("gatekeeper.gateLocation")}</Text>
+              <GateGpsSelector status={fenceCopy.kind === "inside" ? "verified" : fenceCopy.kind === "tooFar" ? "mismatch" : "unavailable"} label={fenceSentence}>
+              <TouchableOpacity testID="gate-location-selector" accessibilityRole="button" onPress={() => setGateMenuOpen(open => !open)} style={[styles.siteOption, { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.card }]}>
+                <Text style={{ color: colors.foreground }}>{selectedGate?.name ?? t("gatekeeper.selectGateLocation")}</Text>
+              </TouchableOpacity>
+              </GateGpsSelector>
+              {gateMenuOpen && gateLocations.data.stations.map(gate => <TouchableOpacity key={gate.id} testID={`gate-location-${gate.id}`} onPress={() => { setGateLocationId(gate.id); setGateMenuOpen(false); }} style={[styles.siteOption, { borderColor: selectedGate?.id === gate.id ? colors.primary : colors.border, backgroundColor: colors.card }]}><Text style={{ color: colors.foreground }}>{gate.name}</Text></TouchableOpacity>)}
+            </View>}
+          </View>
           <View
             style={[
               styles.card,
@@ -1127,62 +1186,6 @@ export default function GatekeeperScreen() {
               placeholderTextColor={colors.mutedForeground}
             />
 
-            <Text style={[styles.label, { color: colors.foreground }]}>
-              {t("gatekeeper.currentLocation")}
-            </Text>
-            <Text
-              testID="gate-gps-pill"
-              style={[styles.muted, { color: colors.mutedForeground }]}
-            >
-              {fenceSentence}
-            </Text>
-            <View testID="gate-locked-partner" style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.partnerName ?? "Current lease"}</Text>
-            </View>
-            <View testID={selectedAssignedSite ? `gate-site-option-${selectedAssignedSite.siteCode}` : undefined}>
-              <TouchableOpacity testID="gate-site-selector" onPress={() => setSiteMenuOpen((open) => !open)} style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
-                <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.name ?? "Select site"}</Text>
-              </TouchableOpacity>
-            </View>
-            {siteMenuOpen && assignedSites.map((site) => {
-              const selected = confirmedCode === site.siteCode;
-              return (
-                <TouchableOpacity
-                  key={site.siteCode}
-                  testID={`gate-site-option-${site.siteCode}`}
-                  onPress={() => {
-                    appliedDefault.current = true;
-                    setSiteCode(site.siteCode);
-                    setConfirmedCode(site.siteCode);
-                    setHostKey(null);
-                    setSiteMenuOpen(false);
-                  }}
-                  style={[
-                    styles.siteOption,
-                    {
-                      borderColor: selected ? colors.primary : colors.border,
-                      backgroundColor: colors.card,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.siteOptionName,
-                      { color: colors.foreground, fontSize: 20 },
-                    ]}
-                  >
-                    {site.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-            {!!gateLocations.data?.stations.length && <View style={{ gap: 6 }}>
-              <Text style={[styles.label, { color: colors.foreground }]}>{t("gatekeeper.gateLocation")}</Text>
-              <TouchableOpacity testID="gate-location-selector" accessibilityRole="button" onPress={() => setGateMenuOpen(open => !open)} style={[styles.siteOption, { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.card }]}>
-                <Text style={{ color: colors.foreground }}>{selectedGate?.name ?? t("gatekeeper.selectGateLocation")}</Text>
-              </TouchableOpacity>
-              {gateMenuOpen && gateLocations.data.stations.map(gate => <TouchableOpacity key={gate.id} testID={`gate-location-${gate.id}`} onPress={() => { setGateLocationId(gate.id); setGateMenuOpen(false); }} style={[styles.siteOption, { borderColor: selectedGate?.id === gate.id ? colors.primary : colors.border, backgroundColor: colors.card }]}><Text style={{ color: colors.foreground }}>{gate.name}</Text></TouchableOpacity>)}
-            </View>}
             {ctxQuery.isLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.primary} />
@@ -1198,6 +1201,7 @@ export default function GatekeeperScreen() {
                 onSelectHost={setHostKey}
                 hideHost
                 lockSite
+                hideSiteSummary
                 purpose={purpose}
                 onPurposeChange={(value) => {
                   forgetPlateAutoFill("purpose");
@@ -1258,135 +1262,19 @@ export default function GatekeeperScreen() {
               { borderColor: colors.primary, backgroundColor: colors.card },
             ]}
           >
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              {t("gatekeeper.activeNow")}
-            </Text>
-            {activeVisits.isLoading ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : pendingVisits.length === 0 && onSiteVisits.length === 0 ? (
-              <Text style={[styles.muted, { color: colors.mutedForeground }]}>
-                {t("gatekeeper.noActive")}
-              </Text>
-            ) : (
-              <>
-                {pendingVisits.length > 0 ? (
-                  <Text style={[styles.label, { color: colors.foreground }]}>
-                    {t("gatekeeper.pendingAdmit")}
-                  </Text>
-                ) : null}
-                {pendingVisits.map((visit) => (
-                  <View
-                    key={visit.id}
-                    style={[styles.visitRow, { borderColor: colors.border }]}
-                  >
-                    <View style={styles.visitText}>
-                      <Text
-                        style={[styles.visitName, { color: colors.foreground }]}
-                      >
-                        {visit.firstName} {visit.lastName}
-                      </Text>
-                      <Text
-                        style={[styles.muted, { color: colors.mutedForeground }]}
-                      >
-                        {[
-                          visit.company,
-                          formatPlateForDisplay(
-                            visit.plateState,
-                            visit.vehiclePlate,
-                            t("gatekeeper.plateStateUnconfirmed"),
-                          ),
-                          visit.siteName,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      testID={`gate-admit-${visit.id}`}
-                      disabled={busy}
-                      onPress={() => onAdmit(visit.id)}
-                      style={[styles.iconButton, { borderColor: colors.primary }]}
-                    >
-                      <Text style={[styles.admitLabel, { color: colors.primary }]}>
-                        {t("gatekeeper.admit")}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-                {onSiteVisits.map((visit) => {
-                  const dwell = onSiteDwell({
-                    checkInTime: visit.checkInTime,
-                    expectedDurationMinutes: visit.expectedDurationMinutes,
-                  });
-                  return (
-                    <View
-                      key={visit.id}
-                      style={[styles.visitRow, { borderColor: colors.border }]}
-                    >
-                      <View style={styles.visitText}>
-                        <Text
-                          style={[styles.visitName, { color: colors.foreground }]}
-                        >
-                          {visit.firstName} {visit.lastName}
-                          {visit.reconciliationState === "observed" ||
-                          visit.reconciliationState === "needs_supervisor_review"
-                            ? " · " +
-                              t(
-                                visit.reconciliationState === "needs_supervisor_review"
-                                  ? "gatekeeper.reconciliationReview"
-                                  : "gatekeeper.reconciliationObserved",
-                              )
-                            : ""}
-                        </Text>
-                        <Text
-                          style={[styles.muted, { color: colors.mutedForeground }]}
-                        >
-                          {[
-                            visit.company,
-                            formatPlateForDisplay(
-                              visit.plateState,
-                              visit.vehiclePlate,
-                              t("gatekeeper.plateStateUnconfirmed"),
-                            ),
-                            visit.siteName,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </Text>
-                        <Text
-                          style={[styles.muted, { color: colors.mutedForeground }]}
-                        >
-                          {t("gatekeeper.minutesOnSite", {
-                            minutes: dwell.minutesOnSite,
-                          })}
-                          {dwell.overdue
-                            ? ` · ${t("gatekeeper.overdue", { minutes: dwell.overdueMinutes })}`
-                            : ""}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        testID={`gate-checkout-${visit.id}`}
-                        disabled={busy}
-                        onPress={() => onCheckOut(visit.id)}
-                        style={[styles.iconButton, { borderColor: colors.primary }]}
-                      >
-                        <Feather name="log-out" size={18} color={colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
-              </>
-            )}
-            <Text style={[styles.label, { color: colors.foreground }]}>
-              {t("gatekeeper.checkOutNotes")}
-            </Text>
-            <TextInput
-              testID="gate-checkout-notes"
-              value={checkOutNotes}
-              onChangeText={setCheckOutNotes}
-              style={inputStyle}
-              placeholder={t("gatekeeper.notesPlaceholder")}
-              placeholderTextColor={colors.mutedForeground}
+            <GateRecordsPanel
+              key={`${user?.id}:${activeMembershipId}:${authScope.generation}:${selectedSiteId}`}
+              siteId={selectedSiteId}
+              active={selectedActiveVisits}
+              recent={recentVisits.data ?? []}
+              loading={activeVisits.isLoading}
+              error={activeVisits.isError}
+              recentLoading={recentVisits.isLoading}
+              recentError={recentVisits.isError}
+              busy={busy}
+              onRefresh={() => { void activeVisits.refetch(); void recentVisits.refetch(); }}
+              onAdmit={id => { void onAdmit(id); }}
+              onCheckout={id => { void onCheckOut(id); }}
             />
             {voiceCheckoutMatches.length > 0 ? (
               <View style={[styles.voiceConfirm, { borderColor: colors.primary }]}>
@@ -1430,7 +1318,7 @@ export default function GatekeeperScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { gap: 14, padding: 20, paddingBottom: 40 },
-  pageTitleRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
+  pageTitleRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between", flexWrap: "wrap" },
   pageTitleStart: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 },
   pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 },

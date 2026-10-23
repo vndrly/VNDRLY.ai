@@ -28,6 +28,7 @@ export interface VisitorHostPickerProps {
   showSubmit?: boolean;
   hideHost?: boolean;
   lockSite?: boolean;
+  hideSiteSummary?: boolean;
   notes?: string;
   onNotesChange?: (v: string) => void;
   durationChips?: Array<{ id: string; minutes: number; label: string }>;
@@ -68,6 +69,7 @@ export default function VisitorHostPicker({
   showSubmit = true,
   hideHost = false,
   lockSite = false,
+  hideSiteSummary = false,
   notes,
   onNotesChange,
   durationChips,
@@ -83,6 +85,7 @@ export default function VisitorHostPicker({
       testID="host-picker-card"
       style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card, marginTop: 16 }]}
     >
+      {!hideSiteSummary ? <View testID="host-picker-site-summary">
       <View style={styles.cardHeader}>
         <Text style={[styles.cardTitle, { color: colors.foreground }]}>{ctx.site.name}</Text>
         {!lockSite ? (
@@ -92,6 +95,8 @@ export default function VisitorHostPicker({
         ) : null}
       </View>
       <Text style={[styles.muted, { color: colors.mutedForeground }]}>{ctx.site.address}</Text>
+
+      </View> : null}
 
       {!hideHost ? <><Text style={[styles.label, { color: colors.foreground, marginTop: 14 }]}>{labels.whoVisiting}</Text>
       {hostOptions.length === 0 ? (

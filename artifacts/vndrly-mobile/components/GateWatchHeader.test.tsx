@@ -1,0 +1,24 @@
+import React from "react";
+import { afterEach, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const env = vi.hoisted(() => ({ read: vi.fn(async (_path: string, _options?: unknown, _scope?: unknown) => ({ shift: { operator_id: 9, operator_name: "Operator", started_at: "2026-10-22T10:00:00Z" } })), push: vi.fn() }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 9 }, activeMembershipId: 7 }) }));
+vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ foreground: "black", card: "white", primary: "blue" }) }));
+vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({ generation: 1 }) }));
+vi.mock("@/lib/api", () => ({ apiFetch: env.read }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock("expo-router", () => ({ router: { push: env.push } }));
+vi.mock("@/components/WorkdayControls", () => ({ default: ({ watchControl }: any) => <div data-testid="workday-strip">{watchControl}</div> }));
+vi.mock("@/components/WatchPassControl", () => ({ default: ({ compact, label, onPress, disabled }: any) => <button disabled={disabled} data-compact={String(Boolean(compact))} onClick={onPress}>{label}</button> }));
+import GateWatchHeader from "./GateWatchHeader";
+afterEach(() => { cleanup(); vi.clearAllMocks(); });
+it("keeps the compact watch card independent of workday controls and opens the existing handover", async () => {
+ render(<QueryClientProvider client={new QueryClient()}><GateWatchHeader siteId={42} stationId="station-1" /></QueryClientProvider>);
+ const button = await screen.findByRole("button", { name: "watch.handover" });
+ expect(screen.queryByTestId("workday-strip")).toBeNull();
+ expect(button.getAttribute("data-compact")).toBe("true");
+ fireEvent.click(button);
+ expect(env.push).toHaveBeenCalledWith({ pathname: "/(tabs)/change-over", params: { siteId: "42", stationId: "station-1" } });
+ expect(env.read.mock.calls.every(([, options]) => !(options as any)?.method)).toBe(true);
+});

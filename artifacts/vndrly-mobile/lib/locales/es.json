@@ -359,7 +359,8 @@
     "add": "Agregar",
     "save": "Guardar",
     "edit": "Editar",
-    "back": "Atrás"
+    "back": "Atrás",
+    "refresh": "Actualizar"
   },
   "freshness": {
     "live": "En vivo",
@@ -442,7 +443,6 @@
     "voiceConfirm": "Confirmar",
     "portal": "Portal de Entrada",
     "subtitle": "Registra el trafico de vehiculos y visitantes en las ubicaciones.",
-    "activeNow": "En sitio ahora",
     "noActive": "No hay entradas activas.",
     "newEntry": "Nueva entrada",
     "submitCheckIn": "Enviar registro de entrada",
@@ -456,11 +456,9 @@
     "tagPhoto": "Foto de placa",
     "vehiclePhoto": "Foto del vehículo",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",
-    "currentLocation": "Ubicación actual",
     "handsFreeHint": "Toque el micrófono, diga la placa y el nombre y confirme. Seleccione el acceso correcto; las discrepancias GPS no bloquean la entrada.",
     "notes": "Notas",
     "notesPlaceholder": "Opcional — cualquier cosa que deba saber la portería",
-    "checkOutNotes": "Notas de salida",
     "gpsSearching": "Buscando GPS",
     "gpsDenied": "GPS denegado",
     "gpsUnavailable": "GPS no disponible",
@@ -484,10 +482,41 @@
     "durationOvernight": "Nocturno",
     "minutesOnSite": "{{minutes}} min en el sitio",
     "overdue": "Atrasado {{minutes}} min",
-    "pendingAdmit": "Esperando entrar",
     "reconciliationObserved": "Entrada observada; faltan detalles",
     "reconciliationReview": "Se necesita revision del supervisor de puerta",
-    "admit": "Admitir"
+    "admit": "Admitir",
+    "arrivalEta": "Llegada en ~{{minutes}} min",
+    "arrivalsLoadFailed": "No se pudieron cargar los viajes entrantes. Actualice para reintentar.",
+    "arrivalsTab": "Llegadas",
+    "arrivalsTruncated": "La lista de viajes entrantes es limitada. Es posible que no se muestren todos los registros.",
+    "company": "Empresa",
+    "departuresTab": "Salidas",
+    "driver": "Conductor",
+    "etaUnavailable": "Hora estimada no disponible",
+    "gateRecordNumber": "Registro de acceso n.º {{id}}",
+    "historyCheckedIn": "Entrada registrada",
+    "historyCheckedOut": "Salió",
+    "lastGpsReport": "Última ubicación compartida",
+    "linkedRunsUnavailable": "No se pudieron cargar los detalles de los viajes vinculados.",
+    "noArrivals": "No hay viajes entrantes con una ubicación compartida actual.",
+    "onSiteTab": "En sitio",
+    "purpose": "Propósito",
+    "recordDetails": "Registro de acceso",
+    "recordLoadFailed": "No se pudo cargar este registro. Cierre e inténtelo de nuevo.",
+    "recordState": "Registro",
+    "runComplete": "Completo",
+    "runDetails": "Detalles del viaje",
+    "runPartial": "En curso / parcial",
+    "runRecord": "Ticket",
+    "timeOnSite": "Tiempo en sitio",
+    "vehiclePlate": "Placa",
+    "noDepartures": "Sin salidas recientes.",
+    "runEvents": {
+      "arrive_stop": "Llegada a parada",
+      "depart_stop": "Salida de parada",
+      "gate_linked": "Registro de puerta vinculado"
+    },
+    "arriving": "En camino"
   },
   "login": {
     "title": "Portal de Empleados de Campo",
@@ -3924,5 +3953,11 @@
     "waiting": "Esperando que el operador actual prepare el relevo.",
     "independent": "Iniciar o cerrar sesión no inicia ni termina su turno o vigilancia.",
     "recover": "Recuperar acción de guardia"
+  },
+  "handoffDesk": {
+    "title": "Entrega de turno",
+    "outgoingIntro": "Deja un informe claro para el siguiente operador.",
+    "incomingIntro": "Revisa la entrega guardada antes de asumir la guardia.",
+    "save": "Guardar entrega"
   }
 }

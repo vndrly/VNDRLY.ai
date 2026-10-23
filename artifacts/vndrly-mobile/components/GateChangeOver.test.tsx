@@ -9,7 +9,7 @@ import {
   within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-vi.mock("@/components/WorkdayControls", () => ({ default: () => <div data-testid="gate-start-clock">Start Shift</div> }));
+vi.mock("@/components/WorkdayControls", () => ({ default: ({ watchControl }: any) => <div data-testid="gate-start-clock">Start Shift{env.renderWatchControl && watchControl}</div> }));
 const env = vi.hoisted(() => ({
   api: vi.fn(),
   fetch: vi.fn(),
@@ -18,8 +18,23 @@ const env = vi.hoisted(() => ({
   back: vi.fn(),
   canGoBack: vi.fn(() => true),
   replace: vi.fn(),
+  scrollTo: vi.fn(),
+  renderWatchControl: false,
   params: {} as { siteId?: string; stationId?: string },
 }));
+vi.mock("react-native", async importOriginal => {
+  const actual = await importOriginal<typeof import("react-native")>();
+  return {
+    ...actual,
+    ScrollView: React.forwardRef<any, any>((props, ref) => {
+      React.useImperativeHandle(ref, () => ({ scrollTo: env.scrollTo }));
+      return <actual.ScrollView {...props} />;
+    }),
+    View: React.forwardRef<any, any>((props, ref) => env.renderWatchControl && props.onLayout && ["native-shift-handoff", "native-handoff-review"].includes(props.testID)
+      ? <div data-testid={props.testID} onDoubleClick={() => props.onLayout({ nativeEvent: { layout: { y: props.testID === "native-shift-handoff" ? 600 : 120 } } })}>{props.children}</div>
+      : <actual.View {...props} ref={ref} />),
+  };
+});
 vi.mock("@/lib/change-over-api", () => ({
   changeOverRequest: env.api,
   acceptChangeOverSession: env.accept,
@@ -99,6 +114,7 @@ const state = () => ({
 });
 beforeEach(() => {
   vi.clearAllMocks();
+  env.renderWatchControl = false;
   env.fetch.mockResolvedValue({ recipients: [] });
   env.api.mockImplementation(async (path: string) =>
     path.startsWith("/sites")
@@ -113,6 +129,46 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("scrolls incoming watch review to its parent plus child offset without assuming watch", async () => {
+  env.renderWatchControl = true;
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) => path.endsWith("/state") ? { ...state(), shift: { ...state().shift, operator_id: 2 } } : base(path, body));
+  mount();
+  fireEvent.doubleClick(await screen.findByTestId("native-shift-handoff"));
+  fireEvent.doubleClick(screen.getByTestId("native-handoff-review"));
+  fireEvent.click(within(screen.getByTestId("gate-start-clock")).getByRole("button", { name: "watch.assume" }));
+  expect(env.scrollTo).toHaveBeenCalledWith({ y: 720, animated: true });
+  expect(env.api.mock.calls.some(([path]) => path.includes("watch/assume"))).toBe(false);
+});
+it("groups carry-forward notes and saved review in one compact handoff desk without assuming watch on save", async () => {
+  mount();
+  const desk = await screen.findByTestId("native-shift-handoff");
+  expect(within(desk).getByLabelText("changeOver.outgoingNotes")).toBeTruthy();
+  expect(within(desk).getByLabelText("changeOver.newItem")).toBeTruthy();
+  fireEvent.change(within(desk).getByLabelText("changeOver.outgoingNotes"), { target: { value: "Barrier needs inspection" } });
+  fireEvent.click(within(desk).getByRole("button", { name: "handoffDesk.save" }));
+  await waitFor(() => expect(env.api).toHaveBeenCalledWith("/gate/prepare", { notes: "Barrier needs inspection" }));
+  expect(env.api.mock.calls.some(([path]) => path.includes("watch/assume"))).toBe(false);
+});
+it("keeps gate creation off the Dashboard supervisor recovery card", async () => {
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) => path.endsWith("/state") ? { ...state(), supervisor: true } : base(path, body));
+  mount();
+  await screen.findByTestId("native-shift-handoff");
+  expect(screen.queryByLabelText("changeOver.newGate")).toBeNull();
+});
+it("uses compact Watch, Tasks, activity, and on-site panels for Dashboard facts", async () => {
+  mount();
+  for (const id of ["gate-dashboard-watch", "gate-dashboard-tasks", "gate-dashboard-activity", "gate-dashboard-on-site"]) expect(await screen.findByTestId(id)).toBeTruthy();
+  expect(screen.getByText("changeOver.checkIns: 2")).toBeTruthy();
+});
+it("keeps an incoming stale handoff disabled even after review acknowledgment", async () => {
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) => path.endsWith("/state") ? { ...state(), stale: true, shift: { ...state().shift, operator_id: 2 } } : base(path, body));
+  mount();
+  fireEvent.click(await screen.findByLabelText("changeOver.acknowledge"));
+  expect(screen.getByRole("button", { name: "watch.assume" }).hasAttribute("disabled")).toBe(true);
+});
 it("assigns supervisor recovery to a permitted replacement and retains the original request after response loss", async () => {
   const base = env.api.getMockImplementation()!;
   let recoveries = 0;
@@ -377,8 +433,8 @@ it("keeps eligible sites compact until the operator opens the selector", async (
   );
   mount();
   expect((await screen.findAllByRole("button", { name: "Current site" }))).toHaveLength(1);
-  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).toContain("min-height: 120px");
-  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).toContain("background-color: rgb(40, 40, 42)");
+  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).not.toContain("min-height: 120px");
+  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).toContain("background-color: rgb(36, 36, 38)");
   expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).not.toContain("opacity");
   expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).not.toContain("filter");
   expect(screen.queryByRole("button", { name: "Scheduled site" })).toBeNull();
@@ -388,7 +444,7 @@ it("keeps eligible sites compact until the operator opens the selector", async (
 it("uses the static gray pill for the requested dashboard actions", async () => {
   mount();
 
-  for (const label of ["changeOver.refresh", "changeOver.resolvedItems", "changeOver.addItem", "changeOver.refreshHandoff"]) {
+  for (const label of ["changeOver.refresh", "changeOver.resolvedItems", "changeOver.addItem", "handoffDesk.save"]) {
     const action = await screen.findByRole("button", { name: label });
     expect(action.getAttribute("data-inactive")).toBe("true");
     expect(action.getAttribute("data-askv-inactive-style")).toBe("true");

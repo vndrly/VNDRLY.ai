@@ -33,6 +33,18 @@ afterEach(cleanup);
 const sunday = new Date(2026, 8, 20, 12);
 
 describe("WorkHubShiftCalendar", () => {
+  it("navigates weeks and months with the shared sphere controls", () => {
+    render(<WorkHubShiftCalendar items={[]} initialDate={sunday} />);
+    fireEvent.click(screen.getByRole("button", { name: "Next week" }));
+    expect(screen.getByLabelText("Sunday, September 27 schedule")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
+    expect(screen.getByLabelText("Sunday, September 20 schedule")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Month" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    expect(screen.getByText("October 2026")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
+    expect(screen.getByText("September 2026")).toBeTruthy();
+  });
   it("keeps a complete Sunday-through-Saturday week visible when no shifts exist", () => {
     render(<WorkHubShiftCalendar items={[]} initialDate={sunday} />);
 

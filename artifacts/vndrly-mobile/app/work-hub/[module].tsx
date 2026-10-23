@@ -7,6 +7,7 @@ import * as Crypto from "expo-crypto";
 import { mobileCommandEnvelope } from "@/lib/work-hub-mobile";
 import DailyWorkPanel from "@/components/DailyWorkPanel";
 import UnifiedWorkCalendar from "@/components/UnifiedWorkCalendar";
+import CalendarOverview from "@/components/CalendarOverview";
 import WorkHubAvailability from "@/components/WorkHubAvailability";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -322,7 +323,7 @@ function WorkHubModuleContent() {
       setMeetingFileBusy(false);
     }
   };
-  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="safety" && <SafetyDashboardCard/>}{module==="calendar"?<UnifiedWorkCalendar/>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
+  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="safety" && <SafetyDashboardCard/>}{module==="calendar"?<CalendarOverview><UnifiedWorkCalendar/></CalendarOverview>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
   if (["managed-crews", "workforce-coverage", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>

@@ -33,7 +33,9 @@ describe("Fleet Home", () => {
     requests.fetch.mockResolvedValue({ orders: [{ id: "22222222-2222-4222-8222-222222222222", companyId: 3, version: 1, yardId: null, detailId: null, runId: null, status: "reported", outcome: "unable_to_complete", requestedByUserId: 7, assignedToUserId: 7, requestedAt: "2026-10-20T12:00:00Z", scheduledAt: null, startedAt: "2026-10-20T12:01:00Z", reportedAt: "2026-10-20T12:02:00Z", requestedAssetIds: [], actualAssetIds: [], findings: [], notes: "Missing winch" }] });
     const onOpen = vi.fn();
     render(<FleetHome projection={home(["admin"])} onOpen={onOpen} />);
+    expect(screen.getByRole("button", { name: "Open Yard Orders" }).getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Open Yard Orders" }));
+    expect(screen.getByRole("button", { name: "Open Yard Orders" }).getAttribute("aria-expanded")).toBe("true");
     expect(await screen.findByText("Missing winch")).toBeTruthy();
     expect(screen.getByText(/unable to complete/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Open Missing winch" }));
@@ -90,7 +92,10 @@ describe("Fleet Home", () => {
     expect((await screen.findByRole("button", { name: "Open Truck 12" })).getAttribute("style")).toContain("border-left-color: rgb(37, 99, 235)");
     expect(screen.getByText(/truck · in use · Verified: North Yard · Custody: Ray \(verified yard check-in\)/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Open Trailer 4" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Show Trucks and Vehicles" }).getAttribute("aria-selected")).toBe("true");
     fireEvent.click(screen.getByRole("button", { name: "Show Rigging Packages" }));
+    expect(screen.getByRole("button", { name: "Show Rigging Packages" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("button", { name: "Show Trucks and Vehicles" }).getAttribute("aria-selected")).toBe("false");
     expect(screen.getByRole("button", { name: "Open Trailer 4" }).getAttribute("style")).toContain("border-left-color: rgb(22, 163, 74)");
     expect(screen.getByRole("button", { name: "Open Pump 7" }).getAttribute("style")).toContain("border-left-color: rgb(100, 116, 139)");
     expect(screen.getByText(/pump · unavailable · No location available · Custody: Unknown/)).toBeTruthy();

@@ -3,6 +3,7 @@ import { apiFetch } from "@/lib/api";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 vi.mock("@/components/MeetingRsvp", () => ({ default: () => null }));
 import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   cleanup,
@@ -1450,17 +1451,22 @@ describe("Work Hub calendar routing", () => {
   it("keeps the unified work calendar visible for an empty schedule", async () => {
     env.moduleName = "calendar";
     env.moduleData = { shifts: [], tasks: [], meetings: [] };
-
-    render(<WorkHubModuleScreen />);
+    const implementation = vi.mocked(apiFetch).getMockImplementation();
+    vi.mocked(apiFetch).mockImplementation(async (path: any) => path.startsWith("/api/work-hub/channels?") ? [] : env.moduleData);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><WorkHubModuleScreen /></QueryClientProvider>);
     await act(async () => {
       for (let index = 0; index < 10; index += 1) await Promise.resolve();
     });
 
     expect(screen.getByText("Work calendar")).toBeTruthy();
+    expect(screen.getByText("At a glance")).toBeTruthy();
+    expect(screen.getByText("Project timeline")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Previous month" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Next month" })).toBeTruthy();
     expect(screen.getByText("No scheduled records for this day.")).toBeTruthy();
     expect(screen.queryByText("No authorized records yet.")).toBeNull();
+    vi.mocked(apiFetch).mockImplementation(implementation!);
   });
 });
 it("keeps exact speak-request recovery visible after the host releases mute", () => {

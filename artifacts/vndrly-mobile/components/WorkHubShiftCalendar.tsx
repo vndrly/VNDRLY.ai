@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import TogglePillButton from "@/components/TogglePillButton";
+import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 
 export type WorkHubCalendarItem = {
@@ -115,6 +116,12 @@ export default function WorkHubShiftCalendar({
         </View>
       </View>
 
+      <View style={styles.periodNavigation}>
+        <SphereBackButton accessibilityLabel={`Previous ${view}`} onPress={() => setSelectedDate(view === "week" ? addDays(selectedDate, -7) : new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))} />
+        <Text style={[styles.monthTitle, { color: colors.text }]}>{selectedDate.toLocaleDateString([], { month: "long", year: "numeric" })}</Text>
+        <SphereBackButton direction="right" accessibilityLabel={`Next ${view}`} onPress={() => setSelectedDate(view === "week" ? addDays(selectedDate, 7) : new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))} />
+      </View>
+
       {view === "week" ? (
         <>
           <Text selectable style={[styles.periodLabel, { color: colors.mutedForeground }]}> 
@@ -187,9 +194,6 @@ export default function WorkHubShiftCalendar({
         </>
       ) : (
         <>
-          <Text selectable style={[styles.monthTitle, { color: colors.text }]}> 
-            {selectedDate.toLocaleDateString([], { month: "long", year: "numeric" })}
-          </Text>
           <View style={styles.weekdayRow}>
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <Text key={day} style={[styles.weekday, { color: colors.mutedForeground }]}>{day}</Text>
@@ -234,6 +238,7 @@ const styles = StyleSheet.create({
   viewToggle: { flexDirection: "row", gap: 6 },
   toggle: { alignSelf: "auto", width: 84 },
   periodLabel: { fontSize: 12, fontWeight: "600" },
+  periodNavigation: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   weekRow: { flexDirection: "column", gap: 6, paddingBottom: 4, width: "100%" },
   dayColumn: { alignItems: "stretch", borderRadius: 8, borderWidth: 1, flexDirection: "row", minHeight: 76, overflow: "hidden" },
   dayHeading: { fontSize: 12, fontWeight: "800", paddingHorizontal: 8, paddingVertical: 10, textAlign: "center", textAlignVertical: "center", width: 62 },
