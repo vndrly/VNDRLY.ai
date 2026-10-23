@@ -43,6 +43,18 @@ describe("Gate incoming runs", () => {
     expect(screen.getByText("gatekeeper.etaUnavailable")).toBeTruthy();
     expect(screen.queryByText(/gatekeeper.checkOut/)).toBeNull();
   });
+  it("bounds the visible arrivals without changing the source records", () => {
+    const records = Array.from({ length: 105 }, (_, i) => ({ ...arrival, id: `arrival-${i}`, runId: `run-${i}` }));
+    const query = { isLoading: false, isError: false, data: { arrivals: records, truncated: false }, newInboundIds: new Set() } as ReturnType<typeof useGateArrivals>;
+    const open = vi.fn();
+    render(<GateArrivalsPanel query={query} onOpen={open} limit={100} />);
+    const buttons = screen.getAllByRole("button", { name: /Pat Driver/ });
+    expect(buttons).toHaveLength(100);
+    buttons[99].click();
+    expect(open).toHaveBeenCalledExactlyOnceWith("run-99");
+    expect(query.data!.arrivals).toHaveLength(105);
+  });
+
   it("does not claim no arrivals when the bounded source list is incomplete", () => {
     const query = { isLoading: false, isError: false, data: { arrivals: [], truncated: true }, newInboundIds: new Set() } as unknown as ReturnType<typeof useGateArrivals>;
     render(<GateArrivalsPanel query={query} onOpen={vi.fn()} />);

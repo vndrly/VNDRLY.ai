@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ASKV_NATURAL_VOICE_FLAG } from "@/lib/askv-natural-voice";
@@ -91,9 +91,11 @@ Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
   configurable: true,
   value: vi.fn(),
 });
+const resize = { update: () => {} };
 vi.stubGlobal(
   "ResizeObserver",
   class {
+    constructor(update: () => void) { resize.update = update; }
     observe() {}
     unobserve() {}
     disconnect() {}
@@ -238,6 +240,20 @@ beforeEach(() => {
 });
 
 describe("GatekeeperPage plate state", () => {
+  it("defaults to On Site and marks only visits beyond their estimated duration as overdue", async () => {
+    api.list.mockResolvedValue([
+      recentVisit({ id: 1, firstName: "Overdue", checkOutTime: null, checkInTime: new Date(Date.now() - 61 * 60_000).toISOString(), expectedDurationMinutes: 60 }),
+      recentVisit({ id: 2, firstName: "Within", checkOutTime: null, checkInTime: new Date(Date.now() - 10 * 60_000).toISOString(), expectedDurationMinutes: 60 }),
+      recentVisit({ id: 3, firstName: "Unestimated", checkOutTime: null, checkInTime: new Date(Date.now() - 120 * 60_000).toISOString(), expectedDurationMinutes: null }),
+    ]);
+    renderPage();
+    const list = await screen.findByTestId("gate-on-site-entries");
+    expect(screen.getByRole("button", { name: "gatekeeper.onSiteTab" }).getAttribute("aria-pressed")).toBe("true");
+    expect((await within(list).findByRole("button", { name: /^Overdue/ })).parentElement?.dataset.overdue).toBe("true");
+    expect(within(list).getByRole("button", { name: /^Within/ }).parentElement?.dataset.overdue).toBe("false");
+    expect(within(list).getByRole("button", { name: /^Unestimated/ }).parentElement?.dataset.overdue).toBe("false");
+  });
+
   it("opens an on-site record without checking it out", async () => {
     api.list.mockResolvedValue([recentVisit({ id: 28, checkOutTime: null, admissionStatus: "admitted" })]);
     renderPage();
@@ -965,39 +981,41 @@ describe("GatekeeperPage compact branded workspace", () => {
     ).toBe("/gate/history?siteLocationId=42");
   });
 
-  it("uses a compact viewport-relative on-site height on narrow screens", async () => {
-    const originalWidth = window.innerWidth;
-    Object.defineProperty(window, "innerWidth", {
-      configurable: true,
-      value: 390,
-    });
-
-    const view = renderPage();
-    const card = await screen.findByTestId("gate-on-site-card");
-    await waitFor(() => expect(card.style.height).toBe("68vh"));
-    expect(card.style.maxHeight).toBe("560px");
-
-    view.unmount();
-    Object.defineProperty(window, "innerWidth", {
-      configurable: true,
-      value: originalWidth,
-    });
+  it("keeps traffic the same height as the entry form when it resizes", async () => {
+    renderPage();
+    const entry = await screen.findByTestId("gate-new-entry-card");
+    const traffic = screen.getByTestId("gate-on-site-card");
+    vi.spyOn(entry, "getBoundingClientRect").mockReturnValue({ height: 920 } as DOMRect);
+    act(() => resize.update());
+    expect(traffic.style.height).toBe("920px");
+    vi.spyOn(entry, "getBoundingClientRect").mockReturnValue({ height: 1150 } as DOMRect);
+    act(() => resize.update());
+    expect(traffic.style.height).toBe("1150px");
+    expect(entry.compareDocumentPosition(traffic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("uses a viewport-relative on-site height on a short wide landscape viewport", async () => {
-    const originalWidth = window.innerWidth;
-    const originalHeight = window.innerHeight;
-    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 });
-    Object.defineProperty(window, "innerHeight", { configurable: true, value: 520 });
+  it("caps on-site traffic at 100 including pending admissions and retains Gate Log", async () => {
+    api.list.mockResolvedValue([
+      ...Array.from({ length: 5 }, (_, i) => recentVisit({ id: i + 1, checkOutTime: null, admissionStatus: "pending" })),
+      ...Array.from({ length: 105 }, (_, i) => recentVisit({ id: i + 10, checkOutTime: null, admissionStatus: "admitted" })),
+      recentVisit({ id: 999, checkOutTime: null, siteLocationId: 999 }),
+    ]);
+    renderPage();
+    const list = await screen.findByTestId("gate-on-site-entries");
+    await waitFor(() => expect(within(list).getAllByRole("button", { name: /Oklahoma Visitor/ })).toHaveLength(100));
+    expect(within(list).getAllByTestId(/^button-gate-admit-/)).toHaveLength(5);
+    expect((await screen.findByTestId("button-gate-full-history")).getAttribute("href")).toBe("/gate/history?siteLocationId=42");
+    expect(list.contains(screen.getByTestId("button-gate-full-history"))).toBe(false);
+  });
 
-    const view = renderPage();
-    const card = await screen.findByTestId("gate-on-site-card");
-    await waitFor(() => expect(card.style.height).toBe("68vh"));
-    expect(card.style.maxHeight).toBe("560px");
-
-    view.unmount();
-    Object.defineProperty(window, "innerWidth", { configurable: true, value: originalWidth });
-    Object.defineProperty(window, "innerHeight", { configurable: true, value: originalHeight });
+  it("limits departures to the 100 latest at the selected site", async () => {
+    api.listAllVisits.mockResolvedValue(Array.from({ length: 105 }, (_, i) => recentVisit({ id: i + 1, checkOutTime: new Date(Date.UTC(2026, 9, 22, 10, i)).toISOString() })));
+    renderPage();
+    await screen.findByTestId("button-gate-full-history");
+    fireEvent.click(screen.getByRole("button", { name: "gatekeeper.departuresTab" }));
+    await waitFor(() => expect(screen.getAllByTestId("gate-recent-departure")).toHaveLength(100));
+    fireEvent.click(screen.getAllByTestId("gate-recent-departure")[0]);
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith(105));
   });
 
   it("names the independently scrollable Gate regions and associates their form labels", async () => {

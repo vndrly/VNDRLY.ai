@@ -501,7 +501,7 @@ export default function GateChangeOverPage({
                       <BrandPillButton
                         disabled={busy || !online || Boolean(pendingWatch) || (!pendingRecovery && (!recoveryReason.trim() || state.isError))}
                         onClick={() => void act(recoverAbandonedWatch)}>
-                        {t(pendingRecovery ? "changeOver.recoveryRetry" : recoveryTarget === "self" ? "changeOver.recoveryAssume" : "changeOver.recoveryAssign")}
+                        {t(pendingRecovery ? "changeOver.recoveryRetry" : "changeOver.recover")}
                       </BrandPillButton>
                     </>
                   )}

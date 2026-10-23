@@ -553,8 +553,13 @@ async function recoveryOperators(client: Queryable, session: SessionPayload, sta
        AND (m.role='admin' OR EXISTS(SELECT 1 FROM vendor_people p WHERE p.id=m.vendor_people_id AND p.user_id=m.user_id AND p.vendor_id=m.vendor_id AND p.is_active=true AND p.deleted_at IS NULL))
      ORDER BY name,m.id`, [access.station.site_id, session.vendorId ?? null],
   )).rows;
+  const occupied = new Set<number>(rows.length ? (await client.query(
+    "SELECT DISTINCT operator_id FROM gate_shifts WHERE ended_at IS NULL AND operator_id=ANY($1::int[])",
+    [rows.map(row => row.user_id)],
+  )).rows.map(row => row.operator_id) : []);
   const eligible: RecoveryOperator[] = [];
   for (const row of rows) {
+    if (occupied.has(row.user_id)) continue;
     const candidate: SessionPayload = { userId: row.user_id, vendorId: row.vendor_id, activeMembershipId: row.membership_id,
       membershipRole: row.role, role: row.role === "field_employee" ? "field_employee" : "vendor",
       vendorPeopleId: row.vendor_people_id, sv: row.session_version };
@@ -604,6 +609,8 @@ export async function recoverGateShift(
       incoming = target.session;
       incomingName = target.name;
     }
+    if ((await c.query("SELECT id FROM gate_shifts WHERE operator_id=$1 AND ended_at IS NULL LIMIT 1", [incoming.userId])).rowCount)
+      return fail(409, "operator_on_watch", "Choose an operator who is not currently assigned a watch");
     if (incoming.userId && (incoming.vendorId || incoming.partnerId)) await assertRequiredWorkClear(c, incoming.userId,
       incoming.partnerId ? { type: "partner", id: incoming.partnerId } : { type: "vendor", id: incoming.vendorId! });
     const incomingDuty = (await c.query("SELECT post_coverage FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL FOR UPDATE", [stationId, incoming.userId])).rows[0];

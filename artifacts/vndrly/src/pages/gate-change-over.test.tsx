@@ -424,3 +424,32 @@ it('accepts an existing canonical receipt without resending the watch command', 
   expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
   expect(api.mock.calls.slice(beforeCheck).some(([path]) => path.endsWith('/state'))).toBe(true);
 });
+
+it.each(["self", "22"])("uses the single Recover Shift action for dropdown choice %s", async (target) => {
+  const base = api.getMockImplementation()!;
+  const current = { ...state(), supervisor: true, shift: { ...state().shift, operator_id: 9 } };
+  api.mockImplementation(async (path, body) => {
+    if (path.endsWith("/state")) return current;
+    if (path.endsWith("/recovery-operators")) return { operators: [
+      { userId: 9, membershipId: 99, name: "Outgoing", companyName: "Company" },
+      { userId: 1, membershipId: 11, name: "Me", companyName: "Company" },
+      { userId: 2, membershipId: 22, name: "Available", companyName: "Company" },
+    ] };
+    return base(path, body);
+  });
+  mount();
+  const panel = await screen.findByRole("region", { name: "changeOver.supervisor" });
+  const selector = within(panel).getByRole("combobox", { name: "changeOver.recoveryReplacement" });
+  await within(selector).findByRole("option", { name: "Available · Company" });
+  expect((selector as HTMLSelectElement).options[0].text).toBe("changeOver.recoverySelf");
+  expect((selector as HTMLSelectElement).value).toBe("self");
+  expect(within(panel).getAllByRole("button")).toHaveLength(1);
+  fireEvent.change(within(panel).getByLabelText("changeOver.reason"), { target: { value: "Outgoing operator unavailable" } });
+  fireEvent.change(selector, { target: { value: target } });
+  fireEvent.click(within(panel).getByRole("button", { name: "changeOver.recover" }));
+  await waitFor(() => expect(api.mock.calls.some(([path]) => path.endsWith("/recover"))).toBe(true));
+  const command = api.mock.calls.find(([path]) => path.endsWith("/recover"))![1];
+  expect(command).toEqual({ expectedShiftId: "watch-outgoing", reason: "Outgoing operator unavailable", acknowledged: true,
+    ...(target === "self" ? {} : { targetMembershipId: 22 }),
+  });
+});

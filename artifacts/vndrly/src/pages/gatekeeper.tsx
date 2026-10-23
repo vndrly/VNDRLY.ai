@@ -61,7 +61,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { useGateLiveMonitor } from "@/hooks/use-gate-live-monitor";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import {
   latestVisitForPlate,
@@ -242,10 +241,8 @@ export default function GatekeeperPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const brand = useBrand();
-  const isMobile = useIsMobile();
-  const [isShortViewport, setIsShortViewport] = useState(
-    () => typeof window !== "undefined" && window.innerHeight < 700,
-  );
+  const entryCardRef = useRef<HTMLDivElement>(null);
+  const [entryCardHeight, setEntryCardHeight] = useState<number | null>(null);
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const queryClient = useQueryClient();
   const plateInput = useRef<HTMLInputElement>(null);
@@ -301,9 +298,17 @@ export default function GatekeeperPage() {
     formatPlateForDisplay(state, plate, t("gatekeeper.plateStateUnconfirmed"));
 
   useEffect(() => {
-    const update = () => setIsShortViewport(window.innerHeight < 700);
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    const card = entryCardRef.current;
+    if (!card) return;
+    // Follow the form as fields wrap, validation appears, or the viewport changes.
+    const update = () => {
+      const height = card.getBoundingClientRect().height;
+      if (height > 0) setEntryCardHeight(height);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(card);
+    return () => observer.disconnect();
   }, []);
 
   const visits = useQuery({
@@ -340,7 +345,7 @@ export default function GatekeeperPage() {
     refetchInterval: presenceView === "departures" ? 30000 : false,
     retry: false,
   });
-  const recentDepartures = useMemo(() => gateDeparturesForSite(departures.data ?? [], site.data?.site.id), [departures.data, site.data?.site.id]);
+  const recentDepartures = useMemo(() => gateDeparturesForSite(departures.data ?? [], site.data?.site.id).slice(0, 100), [departures.data, site.data?.site.id]);
   const arrivals = useGateArrivals(site.data?.site.id);
   useEffect(() => {
     setDetailVisitId(null);
@@ -895,10 +900,10 @@ export default function GatekeeperPage() {
     : t("gatekeeper.gpsRequiredToSubmit");
   const pendingVisits = activeVisits.filter(
     (visit) => visit.siteLocationId === site.data?.site.id && visit.admissionStatus === "pending",
-  );
+  ).slice(0, 100);
   const onSiteVisits = activeVisits.filter(
     (visit) => visit.siteLocationId === site.data?.site.id && visit.admissionStatus !== "pending",
-  );
+  ).slice(0, 100 - pendingVisits.length);
 
   const currentPlateMatchKey = plateMatchKey(plateState, vehiclePlate);
   useEffect(() => {
@@ -1302,227 +1307,9 @@ export default function GatekeeperPage() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="min-w-0 space-y-3">
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <Card
-          className="flex min-h-[360px] flex-col !border-[color:var(--brand-primary)] lg:min-h-[420px]"
-          data-testid="gate-on-site-card"
-          data-brand-outline="true"
-          style={{
-            borderColor: brand.primary,
-            height: isMobile || isShortViewport ? "68vh" : "560px",
-            maxHeight: "560px",
-          }}
-        >
-          <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
-            <CardTitle className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
-              <button type="button" className={`gate-presence-tab${arrivals.newInboundIds.size ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
-                {t("gatekeeper.arrivalsTab")}
-              </button>
-              <span className="gate-presence-divider" aria-hidden="true">|</span>
-              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "active"} onClick={() => setPresenceView("active")}>
-                {t("gatekeeper.onSiteTab")}
-              </button>
-              <span className="gate-presence-divider" aria-hidden="true">|</span>
-              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
-                {t("gatekeeper.departuresTab")}
-              </button>
-            </CardTitle>
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                className="gate-presence-refresh"
-                onClick={() => void (presenceView === "arrivals" ? arrivals.refetch() : presenceView === "departures" ? departures.refetch() : visits.refetch())}
-                disabled={presenceView === "arrivals" ? arrivals.isFetching : presenceView === "departures" ? departures.isFetching : visits.isFetching}
-                data-testid="button-gate-refresh"
-                aria-label={t("common.refresh")}
-                title={t("common.refresh")}
-              >
-                <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
-            <div
-              className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1"
-              data-testid={presenceView === "arrivals" ? "gate-arrivals" : presenceView === "departures" ? "gate-recent-departures" : "gate-on-site-entries"}
-              role="region"
-              aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
-            >
-            {presenceView === "arrivals" ? <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} /> : presenceView === "departures" ? (
-              departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />
-              : departures.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.departuresLoadFailed")}</p>
-              : recentDepartures.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noRecentDepartures")}</p>
-              : recentDepartures.map(visit => <button type="button" key={visit.id} className="gate-record-link" data-testid="gate-recent-departure" onClick={() => setDetailVisitId(visit.id)}>
-                  <p className="font-semibold text-foreground">{visit.firstName} {visit.lastName}</p>
-                  <p className="text-xs text-muted-foreground">{[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}</p>
-                  <p className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedOut")} · {new Date(visit.checkOutTime!).toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">{t("gatekeeper.minutesOnSite", { minutes: Math.max(0, Math.floor((Date.parse(visit.checkOutTime!) - Date.parse(visit.checkInTime)) / 60_000)) })}</p>
-                  {visit.checkOutNotes && <p className="whitespace-pre-wrap text-xs text-muted-foreground">{visit.checkOutNotes}</p>}
-                </button>)
-            ) : <>
-            {pendingVisits.length > 0 && (
-              <div className="space-y-2" data-testid="gate-pending-visitors">
-                <p className="text-sm font-semibold text-foreground">
-                  {t("gatekeeper.pendingAdmit")}
-                </p>
-                {pendingVisits.map((visit) => (
-                  <div
-                    key={visit.id}
-                    className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3`}
-                  >
-                    <button type="button" className="gate-record-link gate-record-inline min-w-0" onClick={() => setDetailVisitId(visit.id)}>
-                      <p className="font-semibold text-foreground">
-                        {visit.firstName} {visit.lastName}
-                      {visit.reconciliationState === "observed" ||
-                      visit.reconciliationState === "needs_supervisor_review" ? (
-                        <span
-                          className="ml-2 text-xs font-medium text-amber-700 dark:text-amber-300"
-                          data-testid={"gate-reconciliation-status-" + visit.id}
-                        >
-                          {t(
-                            visit.reconciliationState === "needs_supervisor_review"
-                              ? "gatekeeper.reconciliationReview"
-                              : "gatekeeper.reconciliationObserved",
-                          )}
-                        </span>
-                      ) : null}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {[
-                          visit.company,
-                          displayPlate(visit.plateState, visit.vehiclePlate),
-                          visit.siteName,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                    </button>
-                    <GreenButton
-                      onClick={() => void admitVisit(visit.id)}
-                      disabled={busy}
-                      data-testid={`button-gate-admit-${visit.id}`}
-                    >
-                      {t("gatekeeper.admit")}
-                    </GreenButton>
-                  </div>
-                ))}
-              </div>
-            )}
-            {visits.isLoading ? (
-              <Loader2 className="animate-spin text-muted-foreground" />
-            ) : onSiteVisits.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {t("gatekeeper.noActive")}
-              </p>
-            ) : (
-              onSiteVisits.map((visit) => {
-                const dwell = onSiteDwell({
-                  checkInTime: visit.checkInTime,
-                  expectedDurationMinutes: visit.expectedDurationMinutes,
-                });
-                return (
-                <div
-                  key={visit.id}
-                  className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3 ${live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}`}
-                >
-                  <button type="button" className="gate-record-link gate-record-inline min-w-0" onClick={() => setDetailVisitId(visit.id)}>
-                    <p className="font-semibold text-foreground">
-                      {visit.firstName} {visit.lastName}
-                      {visit.reconciliationState === "observed" ||
-                      visit.reconciliationState === "needs_supervisor_review" ? (
-                        <span
-                          className="ml-2 text-xs font-medium text-amber-700 dark:text-amber-300"
-                          data-testid={"gate-reconciliation-status-" + visit.id}
-                        >
-                          {t(
-                            visit.reconciliationState === "needs_supervisor_review"
-                              ? "gatekeeper.reconciliationReview"
-                              : "gatekeeper.reconciliationObserved",
-                          )}
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {[
-                        visit.company,
-                        displayPlate(visit.plateState, visit.vehiclePlate),
-                        visit.siteName,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("gatekeeper.minutesOnSite", { minutes: dwell.minutesOnSite })}
-                      {dwell.overdue
-                        ? ` · ${t("gatekeeper.overdue", { minutes: dwell.overdueMinutes })}`
-                        : ""}
-                    </p>
-                  </button>
-                  <AmberButton
-                    onClick={() => void checkOut(visit.id)}
-                    disabled={busy}
-                  >
-                    {t("gatekeeper.checkOut")}
-                  </AmberButton>
-                </div>
-                );
-              })
-            )}
-            {voiceCheckoutMatches.length > 0 && (
-              <div className={`${CARD_INNER_TILE_CLASS} space-y-3 border-[color:var(--brand-primary)]`} data-testid="gate-voice-checkout-confirmation">
-                <p className="text-sm font-semibold text-foreground">
-                  {voiceCheckoutMatches.length === 1
-                    ? t("gatekeeper.voiceConfirmCheckOut")
-                    : t("gatekeeper.voiceChooseCheckout")}
-                </p>
-                <div className="space-y-2">
-                  {voiceCheckoutMatches.map((visit) => (
-                    <AmberButton
-                      key={visit.id}
-                      className="w-full"
-                      disabled={busy}
-                      data-testid={`button-gate-voice-checkout-${visit.id}`}
-                      onClick={() => {
-                        setVoiceCheckoutMatches([]);
-                        void checkOut(visit.id);
-                      }}
-                    >
-                      {t("gatekeeper.voiceCheckOutRecord", {
-                        name: `${visit.firstName ?? ""} ${visit.lastName ?? ""}`.trim(),
-                        plate: visit.vehiclePlate ?? "",
-                      })}
-                    </AmberButton>
-                  ))}
-                </div>
-                <BlueButton className="w-full" onClick={() => setVoiceCheckoutMatches([])}>
-                  {t("common.cancel")}
-                </BlueButton>
-              </div>
-            )}
-            </>}
-            </div>
-            {site.data ? <div className="flex shrink-0 justify-end pt-1">
-              <BrandPillButton
-                tone="brand"
-                href={`/gate/history?siteLocationId=${site.data.site.id}`}
-                data-testid="button-gate-full-history"
-              >
-                <History className="h-4 w-4" aria-hidden="true" />
-                {t("gatekeeper.fullGateHistory")}
-              </BrandPillButton>
-            </div> : null}
-          </CardContent>
-        </Card>
-        <GateVisitDetails visitId={detailVisitId} onClose={() => setDetailVisitId(null)} onOpenRun={runId => { setDetailVisitId(null); setDetailRunId(runId); }} />
-        <GateArrivalDetails siteId={site.data?.site.id} runId={detailRunId} onClose={() => setDetailRunId(null)} />
-        </div>
-
-        <Card
+          ref={entryCardRef}
           className="!border-[color:var(--brand-primary)]"
           data-testid="gate-new-entry-card"
           data-brand-outline="true"
@@ -1855,6 +1642,224 @@ export default function GatekeeperPage() {
             </AmberButton>
           </CardContent>
         </Card>
+        <div className="min-w-0 space-y-3">
+        <Card
+          className="flex min-h-0 flex-col overflow-hidden !border-[color:var(--brand-primary)]"
+          data-testid="gate-on-site-card"
+          data-brand-outline="true"
+          style={{
+            borderColor: brand.primary,
+            height: entryCardHeight ?? 560,
+          }}
+        >
+          <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
+            <CardTitle className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
+              <button type="button" className={`gate-presence-tab${arrivals.newInboundIds.size ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
+                {t("gatekeeper.arrivalsTab")}
+              </button>
+              <span className="gate-presence-divider" aria-hidden="true">|</span>
+              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "active"} onClick={() => setPresenceView("active")}>
+                {t("gatekeeper.onSiteTab")}
+              </button>
+              <span className="gate-presence-divider" aria-hidden="true">|</span>
+              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
+                {t("gatekeeper.departuresTab")}
+              </button>
+            </CardTitle>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                className="gate-presence-refresh"
+                onClick={() => void (presenceView === "arrivals" ? arrivals.refetch() : presenceView === "departures" ? departures.refetch() : visits.refetch())}
+                disabled={presenceView === "arrivals" ? arrivals.isFetching : presenceView === "departures" ? departures.isFetching : visits.isFetching}
+                data-testid="button-gate-refresh"
+                aria-label={t("common.refresh")}
+                title={t("common.refresh")}
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
+            <div
+              className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1"
+              data-testid={presenceView === "arrivals" ? "gate-arrivals" : presenceView === "departures" ? "gate-recent-departures" : "gate-on-site-entries"}
+              role="region"
+              aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
+            >
+            {presenceView === "arrivals" ? <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} limit={100} /> : presenceView === "departures" ? (
+              departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />
+              : departures.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.departuresLoadFailed")}</p>
+              : recentDepartures.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noRecentDepartures")}</p>
+              : recentDepartures.map(visit => <button type="button" key={visit.id} className="gate-record-link" data-testid="gate-recent-departure" onClick={() => setDetailVisitId(visit.id)}>
+                  <p className="font-semibold text-foreground">{visit.firstName} {visit.lastName}</p>
+                  <p className="text-xs text-muted-foreground">{[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}</p>
+                  <p className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedOut")} · {new Date(visit.checkOutTime!).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{t("gatekeeper.minutesOnSite", { minutes: Math.max(0, Math.floor((Date.parse(visit.checkOutTime!) - Date.parse(visit.checkInTime)) / 60_000)) })}</p>
+                  {visit.checkOutNotes && <p className="whitespace-pre-wrap text-xs text-muted-foreground">{visit.checkOutNotes}</p>}
+                </button>)
+            ) : <>
+            {pendingVisits.length > 0 && (
+              <div className="space-y-2" data-testid="gate-pending-visitors">
+                <p className="text-sm font-semibold text-foreground">
+                  {t("gatekeeper.pendingAdmit")}
+                </p>
+                {pendingVisits.map((visit) => (
+                  <div
+                    key={visit.id}
+                    className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3`}
+                  >
+                    <button type="button" className="gate-record-link gate-record-inline min-w-0" onClick={() => setDetailVisitId(visit.id)}>
+                      <p className="font-semibold text-foreground">
+                        {visit.firstName} {visit.lastName}
+                      {visit.reconciliationState === "observed" ||
+                      visit.reconciliationState === "needs_supervisor_review" ? (
+                        <span
+                          className="ml-2 text-xs font-medium text-amber-700 dark:text-amber-300"
+                          data-testid={"gate-reconciliation-status-" + visit.id}
+                        >
+                          {t(
+                            visit.reconciliationState === "needs_supervisor_review"
+                              ? "gatekeeper.reconciliationReview"
+                              : "gatekeeper.reconciliationObserved",
+                          )}
+                        </span>
+                      ) : null}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {[
+                          visit.company,
+                          displayPlate(visit.plateState, visit.vehiclePlate),
+                          visit.siteName,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </button>
+                    <GreenButton
+                      onClick={() => void admitVisit(visit.id)}
+                      disabled={busy}
+                      data-testid={`button-gate-admit-${visit.id}`}
+                    >
+                      {t("gatekeeper.admit")}
+                    </GreenButton>
+                  </div>
+                ))}
+              </div>
+            )}
+            {visits.isLoading ? (
+              <Loader2 className="animate-spin text-muted-foreground" />
+            ) : onSiteVisits.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t("gatekeeper.noActive")}
+              </p>
+            ) : (
+              onSiteVisits.map((visit) => {
+                const dwell = onSiteDwell({
+                  checkInTime: visit.checkInTime,
+                  expectedDurationMinutes: visit.expectedDurationMinutes,
+                });
+                return (
+                <div
+                  key={visit.id}
+                  data-overdue={dwell.overdue}
+                  className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3 ${live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}`}
+                >
+                  <button type="button" className="gate-record-link gate-record-inline min-w-0" onClick={() => setDetailVisitId(visit.id)}>
+                    <p className="font-semibold text-foreground">
+                      {visit.firstName} {visit.lastName}
+                      {visit.reconciliationState === "observed" ||
+                      visit.reconciliationState === "needs_supervisor_review" ? (
+                        <span
+                          className="ml-2 text-xs font-medium text-amber-700 dark:text-amber-300"
+                          data-testid={"gate-reconciliation-status-" + visit.id}
+                        >
+                          {t(
+                            visit.reconciliationState === "needs_supervisor_review"
+                              ? "gatekeeper.reconciliationReview"
+                              : "gatekeeper.reconciliationObserved",
+                          )}
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {[
+                        visit.company,
+                        displayPlate(visit.plateState, visit.vehiclePlate),
+                        visit.siteName,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("gatekeeper.minutesOnSite", { minutes: dwell.minutesOnSite })}
+                      {dwell.overdue
+                        ? ` · ${t("gatekeeper.overdue", { minutes: dwell.overdueMinutes })}`
+                        : ""}
+                    </p>
+                  </button>
+                  <AmberButton
+                    onClick={() => void checkOut(visit.id)}
+                    disabled={busy}
+                  >
+                    {t("gatekeeper.checkOut")}
+                  </AmberButton>
+                </div>
+                );
+              })
+            )}
+            {voiceCheckoutMatches.length > 0 && (
+              <div className={`${CARD_INNER_TILE_CLASS} space-y-3 border-[color:var(--brand-primary)]`} data-testid="gate-voice-checkout-confirmation">
+                <p className="text-sm font-semibold text-foreground">
+                  {voiceCheckoutMatches.length === 1
+                    ? t("gatekeeper.voiceConfirmCheckOut")
+                    : t("gatekeeper.voiceChooseCheckout")}
+                </p>
+                <div className="space-y-2">
+                  {voiceCheckoutMatches.map((visit) => (
+                    <AmberButton
+                      key={visit.id}
+                      className="w-full"
+                      disabled={busy}
+                      data-testid={`button-gate-voice-checkout-${visit.id}`}
+                      onClick={() => {
+                        setVoiceCheckoutMatches([]);
+                        void checkOut(visit.id);
+                      }}
+                    >
+                      {t("gatekeeper.voiceCheckOutRecord", {
+                        name: `${visit.firstName ?? ""} ${visit.lastName ?? ""}`.trim(),
+                        plate: visit.vehiclePlate ?? "",
+                      })}
+                    </AmberButton>
+                  ))}
+                </div>
+                <BlueButton className="w-full" onClick={() => setVoiceCheckoutMatches([])}>
+                  {t("common.cancel")}
+                </BlueButton>
+              </div>
+            )}
+            </>}
+            </div>
+            {site.data ? <div className="flex shrink-0 justify-end pt-1">
+              <BrandPillButton
+                tone="brand"
+                href={`/gate/history?siteLocationId=${site.data.site.id}`}
+                data-testid="button-gate-full-history"
+              >
+                <History className="h-4 w-4" aria-hidden="true" />
+                {t("gatekeeper.fullGateHistory")}
+              </BrandPillButton>
+            </div> : null}
+          </CardContent>
+        </Card>
+        <GateVisitDetails visitId={detailVisitId} onClose={() => setDetailVisitId(null)} onOpenRun={runId => { setDetailVisitId(null); setDetailRunId(runId); }} />
+        <GateArrivalDetails siteId={site.data?.site.id} runId={detailRunId} onClose={() => setDetailRunId(null)} />
+        </div>
       </div>
     </div>
   );

@@ -36,15 +36,15 @@ export function useGateArrivals(siteId?: number) {
   return { ...query, newInboundIds };
 }
 
-export function GateArrivalsPanel({ query, onOpen }: {
-  query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void;
+export function GateArrivalsPanel({ query, onOpen, limit }: {
+  query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void; limit?: number;
 }) {
   const { t } = useTranslation();
   if (query.isLoading) return <Loader2 className="animate-spin" />;
   if (query.isError) return <p role="alert" className="text-sm text-destructive">{t("gatekeeper.arrivalsLoadFailed")}</p>;
   if (!query.data?.arrivals.length) return <p className="text-sm text-muted-foreground">{t(query.data?.truncated ? "gatekeeper.arrivalsTruncated" : "gatekeeper.noArrivals")}</p>;
   return <div className="space-y-2">
-    {query.data.arrivals.map((run: GateArrival) => <button type="button" className="gate-record-link gate-arrival-record" key={run.id} onClick={() => onOpen(run.runId)}>
+    {query.data.arrivals.slice(0, limit).map((run: GateArrival) => <button type="button" className="gate-record-link gate-arrival-record" key={run.id} onClick={() => onOpen(run.runId)}>
       <span className="flex items-center justify-between gap-2">
         <span className="font-semibold">{run.driverName || run.title}</span>
         <span className={query.newInboundIds.has(run.id) ? "gate-arriving is-new" : "gate-arriving"}>{t("gatekeeper.arriving")}</span>
