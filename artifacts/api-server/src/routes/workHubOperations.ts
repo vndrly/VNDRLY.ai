@@ -111,6 +111,7 @@ import { getObjectStore } from "../lib/objectStore";
 import workHubMeetingsRouter from "./workHubMeetings";
 import gateShiftAssignmentsRouter from "./gateShiftAssignments";
 import { lockShiftSchedulingRows, authorizeGateSchedulingSite, executeGateShiftClaim, gateAssignmentTransactionClient, guardGateShiftAssignments, GateShiftAssignmentError } from "../services/gate-shift-assignment";
+import {coverageOwners} from "../work-hub/coverage-rules";
 import workHubMeetingReplayRouter from "./workHubMeetingReplay";
 import { assertOwnerMatchesChannel, assertOwnerUsers } from "../work-hub/owner-users";
 import {
@@ -2017,7 +2018,17 @@ router.post("/work-hub/shifts", async (req, res) => {
         return { ...shift, assigneeUserIds: [...new Set(payload.assigneeUserIds)].sort((a, b) => a - b) };
       },
       async (tx) => {
-        await lockShiftSchedulingRows(gateAssignmentTransactionClient(tx),session.userId,null,payload.assigneeUserIds);
+        const client=gateAssignmentTransactionClient(tx);
+        if(isGateShift && envelope.owner.type==="vendor" && !recurrence){
+          const originalOwners=[...payload.assigneeUserIds];
+          const input={vendorId:envelope.owner.id,stationId:payload.gateStationId!,startsAt:payload.startsAt,endsAt:payload.endsAt,timezone:payload.timezone,owners:originalOwners,capacity:payload.requiredStaffCount??1};
+          const owners=await coverageOwners(client,input);
+          await lockShiftSchedulingRows(client,session.userId,null,[...originalOwners,...owners]);
+          await client.query("SELECT pg_advisory_xact_lock(hashtext($1))",[`coverage-series:${envelope.owner.id}:${payload.gateStationId}`]);
+          const fresh=await coverageOwners(client,input);
+          if(JSON.stringify(fresh)!==JSON.stringify(owners))throw new Error("Coverage responsibility changed. Review the shift again.");
+          payload.assigneeUserIds=fresh;
+        }else await lockShiftSchedulingRows(client,session.userId,null,payload.assigneeUserIds);
         if (isGateShift) await authorizeGateSchedulingSite(gateAssignmentTransactionClient(tx), session, payload.siteLocationId!, payload.gateStationId!);
       },
     );

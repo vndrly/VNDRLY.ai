@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { workHubIcons } from "@/lib/work-hub-nav";
 import { CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import PageBackButton from "@/components/page-back-button";
+import "./branded-select.css";
 
 export type WorkHubModuleKey = keyof typeof workHubIcons;
 type HubIcon = ComponentType<SVGProps<SVGSVGElement>>;
@@ -100,7 +101,7 @@ export function BrandedSelect({ className, children, style, ...props }: SelectHT
       <select
         className={cn(
           WORK_HUB_BRANDED_FIELD_CLASS,
-          "appearance-none pr-8 [&>option]:bg-white [&>option]:text-gray-700 [&>option:hover]:bg-[var(--brand-primary)] [&>option:hover]:text-white [&>option:checked]:bg-[var(--brand-primary)] [&>option:checked]:text-white",
+          "hub-branded-select appearance-none pr-8",
           className,
         )}
         style={{ colorScheme: "light", ...style }}

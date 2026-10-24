@@ -9,6 +9,8 @@ export const workforceStaffingRequirementsTable = pgTable("workforce_staffing_re
   ownerOrgId: integer("owner_org_id").notNull(),
   siteId: integer("site_id").notNull(),
   roleCode: text("role_code").notNull(),
+  patternName: text("pattern_name"),
+  timezone: text("timezone"),
   weekday: integer("weekday").notNull(),
   startsAtLocal: text("starts_at_local").notNull(),
   endsAtLocal: text("ends_at_local").notNull(),

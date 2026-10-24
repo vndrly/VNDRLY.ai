@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "migrate:coverage-resolutions": "tsx scripts/migrate-coverage-resolutions.ts",
     "migrate:device-consent": "node scripts/apply-device-consent-migration.mjs",
     "migrate:native-operations": "tsx scripts/migrate-native-operations.ts",
     "migrate:stripe-billing": "tsx scripts/migrate-stripe-billing.ts",

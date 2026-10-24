@@ -27,6 +27,8 @@ import { calendarDayFromSearch, calendarWorkerFromSearch } from "@/lib/calendar-
 import { readDashboardShiftHours, readEmployeeCalendarContext } from "@/lib/dashboard-shift-hours";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
+import SiteShiftAdministration from "@/components/work-hub/site-shift-administration";
+import {RequestShiftCoverage} from "@/components/work-hub/request-shift-coverage";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
 import CalendarCreateCards from "@/components/work-hub/calendar-create-cards";
 import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
@@ -948,6 +950,8 @@ function CalendarModule() {
           <WorkHubAvailability />
           {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} />}
         </div>}
+        {!employeeView && user?.vendorId && <RequestShiftCoverage key={`${user.userId}:${selectedDay}`} userId={user.userId} owner={{type:"vendor",id:user.vendorId}} day={selectedDay} />}
+        {!employeeView && <SiteShiftAdministration />}
       </div>
     </Shell>
   );

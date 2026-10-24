@@ -101,6 +101,12 @@ export default defineConfig({
     ...(process.env.VITE_API_PROXY_TARGET
       ? {
           proxy: {
+            ...(process.env.VITE_COVERAGE_API_PROXY_TARGET ? {
+              "/api/work-hub/site-shift-plans": {
+                target: process.env.VITE_COVERAGE_API_PROXY_TARGET,
+                changeOrigin: true,
+              },
+            } : {}),
             "/api": {
               target: process.env.VITE_API_PROXY_TARGET,
               changeOrigin: true,

@@ -204,6 +204,7 @@ jobs:
             sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" DEMO_DATABASE_URL="$demo_database_url" pnpm --filter @workspace/db run migrate:ios-parity-demo
           fi
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:stripe-billing
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:coverage-resolutions
           sudo bash scripts/provision-assistant-discovery.sh
           if ! sudo grep -q '^ASSISTANT_CONNECTION_ENABLED=' .env.production; then
             printf '%s\n' 'ASSISTANT_CONNECTION_ENABLED=1' | sudo tee -a .env.production >/dev/null

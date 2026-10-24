@@ -27,7 +27,7 @@ section:has(> .hub-calendar-page) > header p { color: #b3b3b3; }
 .hub-calendar-page [data-slot=card-title] span { color: #ececec; }
 .hub-calendar-page [data-slot=card], .hub-calendar-page .rounded-xl.border-2 { border-radius: 16px; }
 .hub-calendar-page input, .hub-calendar-page select, .hub-calendar-page textarea { color-scheme: dark !important; color: #ececec !important; background: #242426 !important; }
-.hub-calendar-page select option { color: #ececec !important; background: #242426 !important; }
+.hub-calendar-page { --hub-option-background: #242426; --hub-option-text: #ececec; }
 .hub-calendar-extras { display: grid; gap: 18px; }
 .hub-calendar-selected-day .hub-home-card { padding: 12px 14px; }
 .hub-calendar-selected-day .hub-card-heading { padding-bottom: 10px; }
