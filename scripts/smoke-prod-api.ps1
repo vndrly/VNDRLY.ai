@@ -47,7 +47,7 @@ foreach ($p in $Personas) {
   }
 }
 
-$out = "c:\Users\JohnElerick\DEV\VNDRLY.ai\docs\_smoke-api-results.txt"
+$out = (Join-Path $PSScriptRoot "..\docs\_smoke-api-results.txt")
 $results | Format-Table -AutoSize | Out-String | Set-Content $out
 $results | ConvertTo-Csv -NoTypeInformation | Add-Content $out
 Write-Output "Wrote $($results.Count) rows to $out"

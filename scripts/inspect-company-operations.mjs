@@ -1,3 +1,4 @@
+import { fileURLToPath as moveLocalPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { writeFile } from 'node:fs/promises';
 import { loadVpsSshConfig } from './ssh-vps-config.mjs';
@@ -16,4 +17,4 @@ FROM vendors v ORDER BY v.id\`);console.log(JSON.stringify({realm:key==='DATABAS
 }finally{await c.end();}}
 `;
 let output='';
-try { await new Promise((ok,no)=>client.exec('node --input-type=module',(error,stream)=>{if(error)return no(error);stream.on('data',data=>output+=data);stream.stderr.on('data',data=>process.stderr.write(data));stream.on('close',code=>code?no(Error('Inspection failed')):ok());stream.end(source);})); await writeFile('C:/Users/JohnElerick/DEV/VNDRLY.ai/.local/company-operations-inventory.jsonl',output); console.log(output); } finally {client.end();}
+try { await new Promise((ok,no)=>client.exec('node --input-type=module',(error,stream)=>{if(error)return no(error);stream.on('data',data=>output+=data);stream.stderr.on('data',data=>process.stderr.write(data));stream.on('close',code=>code?no(Error('Inspection failed')):ok());stream.end(source);})); await writeFile(moveLocalPath(new URL('../.local/company-operations-inventory.jsonl', import.meta.url)),output); console.log(output); } finally {client.end();}

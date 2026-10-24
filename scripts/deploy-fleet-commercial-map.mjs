@@ -1,6 +1,7 @@
+import { fileURLToPath as moveLocalPath } from 'node:url';
 import{createRequire}from'node:module';import{readFile,writeFile}from'node:fs/promises';import{loadVpsSshConfig}from'./ssh-vps-config.mjs';
 const{Client}=createRequire(import.meta.url)('ssh2'),c=new Client();await new Promise((ok,no)=>c.on('ready',ok).on('error',no).connect(loadVpsSshConfig()));
-const root='/var/www/vndrly/',baseline='C:/Users/JohnElerick/DEV/VNDRLY.ai/.local/fleet-live-baseline/';
+const root='/var/www/vndrly/',baseline=moveLocalPath(new URL('../.local/fleet-live-baseline/', import.meta.url));
 const sf=await new Promise((ok,no)=>c.sftp((e,s)=>e?no(e):ok(s)));
 const read=p=>new Promise((ok,no)=>{let out='';const s=sf.createReadStream(root+p);s.on('data',b=>out+=b);s.on('end',()=>ok(out));s.on('error',no);});
 const put=(p,value)=>new Promise((ok,no)=>{const s=sf.createWriteStream(root+p);s.on('close',ok);s.on('error',no);s.end(value);});
@@ -19,5 +20,5 @@ try{
  await run(`cd ${root} && node ${folder}/migration.mjs`);
  for(const [p,v]of patches)await put(p,v);for(const p of added)await put(p,await readFile(p));
  await run(`cd ${root} && pnpm exec tsc -b lib/api-zod && pnpm --filter @workspace/api-server run build && sudo systemctl restart vndrly-api`);
- await writeFile('C:/Users/JohnElerick/DEV/VNDRLY.ai/.local/fleet-commercial-deployment.json',JSON.stringify({backup:folder+'/before.tgz',deployedAt:new Date().toISOString(),api:true},null,2));
+ await writeFile(moveLocalPath(new URL('../.local/fleet-commercial-deployment.json', import.meta.url)),JSON.stringify({backup:folder+'/before.tgz',deployedAt:new Date().toISOString(),api:true},null,2));
 }finally{c.end();}

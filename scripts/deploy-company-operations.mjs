@@ -1,3 +1,4 @@
+import { fileURLToPath as moveLocalPath } from 'node:url';
 import {createRequire} from 'node:module';
 import {readFile,writeFile} from 'node:fs/promises';
 import {loadVpsSshConfig} from './ssh-vps-config.mjs';
@@ -29,5 +30,5 @@ try{
   for(const [path,value]of patches)await put(path,value);
   for(const path of ['artifacts/api-server/src/routes/companyOperations.ts','artifacts/vndrly/src/components/company-operations-choice.tsx'])await put(path,await readFile(path));
   await run(`cd ${root} && pnpm --filter @workspace/api-server run build && NODE_OPTIONS='--max-old-space-size=2048' BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/vndrly run build --outDir ${root+folder}/web && cp -a ${folder}/web/. artifacts/vndrly/dist/public/ && sudo systemctl restart vndrly-api`);
-  await writeFile('C:/Users/JohnElerick/DEV/VNDRLY.ai/.local/company-operations-deployment.json',JSON.stringify({deployedAt:new Date().toISOString(),backup:folder+'/before.tgz',web:true,api:true},null,2));
+  await writeFile(moveLocalPath(new URL('../.local/company-operations-deployment.json', import.meta.url)),JSON.stringify({deployedAt:new Date().toISOString(),backup:folder+'/before.tgz',web:true,api:true},null,2));
 }finally{c.end();}

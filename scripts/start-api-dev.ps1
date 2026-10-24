@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$NodeDir = "C:\Users\JohnElerick\DEV\tools\node"
+$NodeDir = Join-Path $Repo ".local\tools"
 $env:Path = "$NodeDir;C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
 Remove-Item Env:NODE_OPTIONS -ErrorAction SilentlyContinue
 $env:VNDRLY_LOAD_ENV_LOCAL = "1"

@@ -1,7 +1,8 @@
 # Shared helpers for Ship it / publish scripts.
 
 function Initialize-ShipEnvironment {
-  $env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
+  $localTools = Join-Path (Split-Path $PSScriptRoot -Parent) ".local\tools"
+  $env:Path = "$localTools;C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
   $env:EAS_BUILD_NO_EXPO_GO_WARNING = "true"
   # pnpm on this machine runs via DEV\tools\node, which rejects --use-system-ca
   # in NODE_OPTIONS. Clear it for workspace scripts; EAS helpers set CA per-invoke.

@@ -3,6 +3,7 @@
  * Does not override variables already set in the shell.
  */
 import { existsSync, readFileSync } from "node:fs";
+import { parseLocalSecret } from "./parse-local-secret.mjs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -27,16 +28,7 @@ function parseEnvFile(filePath) {
   // or override the wrapper's database target, including through child imports.
   if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") return out;
   if (!existsSync(filePath)) return out;
-  for (const line of readFileSync(filePath, "utf8").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    const value = trimmed.slice(eq + 1).trim();
-    if (key) out[key] = value;
-  }
-  return out;
+  return parseLocalSecret(readFileSync(filePath, "utf8"));
 }
 
 function setEnv(key, value) {
@@ -69,7 +61,7 @@ setEnv(
 
 const supabaseDatabaseEnv = parseEnvFile(supabaseDatabaseEnvPath());
 const legacySupabasePath = supabaseEnvPath();
-const legacySupabaseRaw = existsSync(legacySupabasePath)
+const legacySupabaseRaw = process.env.VNDRLY_TEST_DB_MODE !== "fresh-local" && existsSync(legacySupabasePath)
   ? readFileSync(legacySupabasePath, "utf8")
   : "";
 const legacyDatabasePassword =
@@ -88,7 +80,7 @@ if (!process.env.DATABASE_URL && databasePassword) {
 
 const anthropicPath = anthropicEnvPath();
 const anthropicEnv = parseEnvFile(anthropicPath);
-const anthropicRaw = existsSync(anthropicPath) ? readFileSync(anthropicPath, "utf8").trim() : "";
+const anthropicRaw = process.env.VNDRLY_TEST_DB_MODE !== "fresh-local" && existsSync(anthropicPath) ? readFileSync(anthropicPath, "utf8").trim() : "";
 setEnv(
   "ANTHROPIC_API_KEY",
   envFileValue(anthropicEnv, "ANTHROPIC_API_KEY") || (/^sk-ant-/i.test(anthropicRaw) ? anthropicRaw : ""),
@@ -107,7 +99,7 @@ setEnv("VITE_MAPBOX_ACCESS_TOKEN", mapboxAccessToken);
 setEnv("EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN", mapboxAccessToken);
 
 const massivePath = massiveEnvPath();
-if (existsSync(massivePath)) setEnv("MASSIVE_API_KEY_FILE", massivePath);
+if (process.env.VNDRLY_TEST_DB_MODE !== "fresh-local" && existsSync(massivePath)) setEnv("MASSIVE_API_KEY_FILE", massivePath);
 
 const twilioEnv = parseEnvFile(twilioEnvPath());
 for (const key of [

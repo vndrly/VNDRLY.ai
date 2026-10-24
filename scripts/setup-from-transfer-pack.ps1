@@ -34,7 +34,7 @@ Write-Host "  VNDRLY — new machine setup" -ForegroundColor Green
 Write-Host ""
 
 if (-not $InstallPath) {
-  $Default = if ($env:VNDRLY_HOME) { $env:VNDRLY_HOME } else { "C:\Users\JohnElerick\DEV\VNDRLY.ai" }
+  $Default = if ($env:VNDRLY_HOME) { $env:VNDRLY_HOME } else { (Join-Path $env:USERPROFILE "Dev\VNDRLY.ai") }
   Write-Host "Install the repo to a folder on this PC."
   $InstallPath = Read-Host "Target path [$Default]"
   if (-not $InstallPath.Trim()) { $InstallPath = $Default }

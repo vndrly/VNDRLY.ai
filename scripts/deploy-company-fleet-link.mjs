@@ -1,3 +1,4 @@
+import { fileURLToPath as moveLocalPath } from 'node:url';
 import{createRequire}from'node:module';
 import{spawnSync}from'node:child_process';
 import{writeFile}from'node:fs/promises';
@@ -13,5 +14,5 @@ try{
  const sf=await new Promise((ok,no)=>c.sftp((error,s)=>error?no(error):ok(s)));
  await new Promise((ok,no)=>{const stream=sf.createWriteStream('/var/www/vndrly/'+folder+'/api.patch');stream.on('error',no).on('close',ok);stream.end(diff.stdout);});
  await run(`cd /var/www/vndrly && tar -czf ${folder}/before.tgz ${files.join(' ')} artifacts/api-server/dist && cp ${folder}/api.patch ${files[0]} && pnpm --filter @workspace/api-server run build && sudo systemctl restart vndrly-api`);
- await writeFile('C:/Users/JohnElerick/DEV/VNDRLY.ai/.local/askv-workday-deployment.json',JSON.stringify({deployedAt:new Date().toISOString(),backup:folder+'/before.tgz',api:true},null,2));
+ await writeFile(moveLocalPath(new URL('../.local/askv-workday-deployment.json', import.meta.url)),JSON.stringify({deployedAt:new Date().toISOString(),backup:folder+'/before.tgz',api:true},null,2));
 }finally{c.end();}

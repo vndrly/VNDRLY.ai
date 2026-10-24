@@ -78,3 +78,15 @@ lib/e2e/scripts/.replit-profile/
 eval-summary.json
 vitest-results.json
 .claude/
+
+# Local credential files and signing material
+.env.*
+!.env.example
+*.env
+*.p8
+*.p12
+*.pfx
+*.pem
+*.key
+*.mobileprovision
+API Keys and Secrets/

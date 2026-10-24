@@ -47,11 +47,25 @@ function Import-MapboxSecretEnv {
   }
 }
 
+function Import-ExpoSecretEnv {
+  if ($env:EXPO_TOKEN) { return }
+  $secretPath = Join-Path (Get-VndrlySecretsDir -RepoRoot $script:RepoRoot) "EXPO_PAT_VNDRLY.env"
+  if (-not (Test-Path -LiteralPath $secretPath)) { return }
+  foreach ($line in Get-Content -LiteralPath $secretPath) {
+    if ($line -match '^\s*(?:EXPO_TOKEN|EXPO_PAT)\s*=\s*(.+?)\s*$') {
+      $env:EXPO_TOKEN = $Matches[1].Trim().Trim([char]34).Trim([char]39)
+      return
+    }
+  }
+}
+
 function Initialize-EasEnvironment {
-  $env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
+  $localTools = Join-Path (Split-Path $PSScriptRoot -Parent) ".local\tools"
+  $env:Path = "$localTools;C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
   Remove-Item Env:NODE_OPTIONS -ErrorAction SilentlyContinue
   $env:EAS_BUILD_NO_EXPO_GO_WARNING = "true"
   Import-RepoEnvLocal
+  Import-ExpoSecretEnv
   Import-MapboxSecretEnv
   if (-not $env:EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN -and $env:MAPBOX_ACCESS_TOKEN) {
     $env:EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN = $env:MAPBOX_ACCESS_TOKEN

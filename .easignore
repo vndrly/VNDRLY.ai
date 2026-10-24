@@ -14,20 +14,11 @@ eval-summary.json
 tsconfig.zip
 lib/db/drizzle
 
-lib/e2e
-lib/api-spec
-lib/form1099
-lib/majik
-lib/integrations-anthropic-ai
-
-scripts/*
-!scripts/prepare-askv-ios.mjs
 docs
 snapshots
 .github
 
-# Desktop Tauri app + Rust build artifacts (5+ GB locally; not used by mobile).
-artifacts/majik-desktop
+# Preserve workspace packages; omit generated Rust build artifacts.
 **/src-tauri/target
 
 .env
@@ -36,12 +27,8 @@ artifacts/majik-desktop
 
 node_modules
 
-# Web-only assets and unrelated workspace apps (mobile build does not use these).
+# Web-only assets (workspace packages remain available to pnpm).
 attached_assets
-artifacts/vndrly
-artifacts/api-server
-artifacts/vndrly-commercial
-artifacts/mockup-sandbox
 artifacts/vndrly-mobile/.expo-smoke-export
 
 # Leftover export archives and design sources — never needed on EAS.
@@ -50,3 +37,20 @@ artifacts/vndrly-mobile/.expo-smoke-export
 
 # Fetch and verify pinned native libraries during pod install.
 artifacts/vndrly-mobile/modules/askv-wake/ios/vendor
+
+# Local credential files and signing material
+.env.*
+!.env.example
+*.env
+*.p8
+*.p12
+*.pfx
+*.pem
+*.key
+*.mobileprovision
+API Keys and Secrets/
+
+# Local build and test output
+dist
+coverage
+*.tsbuildinfo
