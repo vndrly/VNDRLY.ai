@@ -24,6 +24,10 @@ function endpoint(
   };
 }
 router.get(
+  "/work-hub/workday/dashboard-hours",
+  endpoint((session, req) => workdayService.dashboardHours(session, req.query)),
+);
+router.get(
   "/work-hub/workday",
   endpoint((session) => workdayService.current(session)),
 );

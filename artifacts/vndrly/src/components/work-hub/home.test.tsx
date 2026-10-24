@@ -144,6 +144,29 @@ describe("Work Hub home", () => {
     expect(await screen.findByRole("link", { name: /Old unfinished task/ })).toBeTruthy();
     expect(screen.queryByRole("link", { name: /Waiting task/ })).toBeNull();
   });
+  it.each(["admin", "office"])("shows %s personal and company Hours inline, expands employees, and makes only mine green", async mode => {
+    mocks.user = { ...mocks.user, vendorRole: mode === "office" ? "office" : null, availableMemberships: [{ id: 3, role: mode === "admin" ? "admin" : "member" }] };
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string) => {
+      if (!path.startsWith("/workday/dashboard-hours?")) return original(path);
+      const query = new URL(path, "https://example.test").searchParams;
+      return { owner: { type: "vendor", id: 1 }, viewerUserId: 7, observedAt: new Date().toISOString(), range: { start: query.get("start"), end: query.get("end") }, mineMilliseconds: 9000000, totalMilliseconds: 27000000,
+        employees: [{ userId: 7, name: "My admin account", milliseconds: 9000000 }, { userId: 8, name: "Alex Gate", milliseconds: 18000000 }, { userId: 9, name: "No shifts yet", milliseconds: 0 }] };
+    });
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><DashboardTasks /></QueryClientProvider>);
+    const row = await screen.findByRole("button", { name: /Hours.*2h 30m mine.*7h 30m total/ });
+    expect(within(row).getByText("2h 30m mine").classList.contains("hub-hours-mine")).toBe(true);
+    fireEvent.click(row);
+    const details = screen.getByRole("region", { name: "Employee shift hours" });
+    expect(details.previousElementSibling).toBe(row);
+    expect(within(details).getByText("My admin account").closest(".hub-hours-person")?.classList.contains("hub-hours-mine")).toBe(true);
+    expect(within(details).getByText("Alex Gate").closest(".hub-hours-person")?.classList.contains("hub-hours-mine")).toBe(false);
+    expect(within(details).getByText("5h 0m")).toBeTruthy();
+    expect(within(details).getByText("0h 0m")).toBeTruthy();
+    expect(mocks.request.mock.calls.some(([path]) => String(path).startsWith("/workday/workers/"))).toBe(false);
+    fireEvent.click(row);
+    expect(screen.queryByRole("region", { name: "Employee shift hours" })).toBeNull();
+  });
   afterEach(() => vi.unstubAllGlobals());
   it("shows the iOS groups and opens real assigned gate work without exposing Fleet", async () => {
     mount();

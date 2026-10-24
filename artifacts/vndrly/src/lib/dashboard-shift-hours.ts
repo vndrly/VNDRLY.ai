@@ -14,6 +14,23 @@ export function monthlyShiftHoursRange(now = new Date()) {
   return { start: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(), end: new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString() };
 }
 
+const CompanyHoursSchema = z.object({
+  owner: z.object({ type: z.enum(["vendor", "partner"]), id: z.number().int().positive() }),
+  viewerUserId: z.number().int().positive(), observedAt: z.iso.datetime(),
+  range: z.object({ start: z.iso.datetime(), end: z.iso.datetime() }),
+  mineMilliseconds: z.number().int().nonnegative(), totalMilliseconds: z.number().int().nonnegative(),
+  employees: z.array(z.object({ userId: z.number().int().positive(), name: z.string(), milliseconds: z.number().int().nonnegative() })),
+});
+export async function readCompanyDashboardHours(scope: Scope, request: (path: string) => Promise<unknown>) {
+  const result = CompanyHoursSchema.parse(await request(`/workday/dashboard-hours?${new URLSearchParams({ start: scope.start, end: scope.end })}`));
+  if (result.viewerUserId !== scope.userId || !sameWorkdayOwner(result.owner, scope.owner) ||
+    Date.parse(result.range.start) !== Date.parse(scope.start) || Date.parse(result.range.end) !== Date.parse(scope.end)) throw Error("Workday account or period changed");
+  if (new Set(result.employees.map(person => person.userId)).size !== result.employees.length ||
+    result.employees.reduce((sum, person) => sum + person.milliseconds, 0) !== result.totalMilliseconds ||
+    result.employees.find(person => person.userId === scope.userId)?.milliseconds !== result.mineMilliseconds) throw Error("Workday totals do not reconcile");
+  return result;
+}
+
 /** Read only the worker's canonical clock. Open time is a running total, never a saved clock-out. */
 export async function readDashboardShiftHours(scope: Scope, request: (path: string) => Promise<unknown>, now = Date.now()) {
   let milliseconds = 0, state: "on_shift" | "on_break" | null = null, after: string | null = null;

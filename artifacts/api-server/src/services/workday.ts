@@ -20,6 +20,7 @@ import {
 import type { PoolClient } from "pg";
 import type { SessionPayload } from "../lib/session";
 import { FleetStateSchema } from "./fleet-repository";
+import { accruedWorkdayMilliseconds } from "./dashboard-workday-hours";
 
 export class WorkdayError extends Error {
   constructor(
@@ -257,6 +258,47 @@ async function openWorkday(client: PoolClient, scope: WorkdayScope) {
 /** A single organization/worker workday for every portal and client. Domain
  * assignment, duty/contact policy, GPS and billable work remain separate facts. */
 export function createWorkdayService(run: typeof transaction = transaction) { return {
+  dashboardHours: (session: SessionPayload, raw: unknown) => run(session, async (client, scope) => {
+    const input = z.object({ start: z.iso.datetime(), end: z.iso.datetime() }).strict()
+      .refine(value => Date.parse(value.start) < Date.parse(value.end)).parse(raw);
+    let company = !session.managedSubcontractor && (session.role === "admin" ||
+      !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "") && session.membershipRole === "admin");
+    if (!company && !session.managedSubcontractor && scope.owner.type === "vendor" && !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")) {
+      company = Boolean((await client.query(`SELECT id FROM vendor_people WHERE user_id=$1 AND vendor_id=$2
+        AND is_active=true AND deleted_at IS NULL AND vendor_role IN ('office','both') FOR SHARE`, [scope.userId, scope.owner.id])).rows.length);
+    }
+    if (!company) throw new WorkdayError("workday.office_required", 403);
+    const { own, other } = columns(scope), at = new Date();
+    // One database snapshot reads each latest clock and its exact events together.
+    // No row limit: totals must include every recorded shift in the selected period.
+    const saved = await client.query(`WITH latest AS (
+      SELECT DISTINCT ON(target_id) id,tool_output FROM assistant_action_audit
+      WHERE ${own}=$1 AND ${other} IS NULL AND target_type='workday' ORDER BY target_id,id DESC
+    ), period AS (
+      SELECT * FROM latest WHERE (tool_output->'summary'->>'startedAt')::timestamptz<$3::timestamptz
+      AND (tool_output->'summary'->>'endedAt' IS NULL OR (tool_output->'summary'->>'endedAt')::timestamptz>$2::timestamptz)
+    ) SELECT p.tool_output,coalesce(jsonb_agg(e.tool_output->'event' ORDER BY e.id) FILTER(WHERE e.id IS NOT NULL),'[]'::jsonb) AS history
+      FROM period p LEFT JOIN assistant_action_audit e ON e.${own}=$1 AND e.${other} IS NULL
+      AND e.target_type='workday-event' AND e.tool_output->'event'->>'shiftId'=p.tool_output->>'id'
+      GROUP BY p.id,p.tool_output ORDER BY p.id`, [scope.owner.id, input.start, input.end]);
+    const totals = new Map<number, number>();
+    for (const row of saved.rows) {
+      const clock = WorkdaySnapshotSchema.parse(row.tool_output), history = z.array(WorkdayEventSchema).parse(row.history);
+      if (!sameWorkdayOwner(clock.owner, scope.owner) || clock.workerUserId !== clock.summary.workerUserId || !sameWorkdayOwner(clock.summary.owner, scope.owner)) throw new WorkdayError("workday.invalid_history");
+      verify(clock, history);
+      const milliseconds = accruedWorkdayMilliseconds(history, input.start, input.end, at);
+      totals.set(clock.workerUserId, (totals.get(clock.workerUserId) ?? 0) + milliseconds);
+    }
+    // Include current employees with zero recorded time, and former employees who
+    // still have hours in this period. Membership joins cannot duplicate a worker.
+    const people = await client.query(`SELECT u.id AS "userId",coalesce(nullif(u.display_name,''),u.username) AS name
+      FROM users u WHERE u.id=$2 OR u.id=ANY($3::int[]) OR EXISTS(SELECT 1 FROM user_org_memberships m
+        WHERE m.user_id=u.id AND m.org_type=$4 AND m.${own}=$1) ORDER BY lower(coalesce(u.display_name,u.username)),u.id`,
+      [scope.owner.id, scope.userId, [...totals.keys()], scope.owner.type]);
+    const employees = people.rows.map(person => ({ userId: person.userId as number, name: person.name as string, milliseconds: totals.get(person.userId) ?? 0 }));
+    return { owner: scope.owner, viewerUserId: scope.userId, observedAt: at.toISOString(), range: input,
+      mineMilliseconds: totals.get(scope.userId) ?? 0, totalMilliseconds: employees.reduce((sum, person) => sum + person.milliseconds, 0), employees };
+  }),
  reauthorize:(session:SessionPayload,raw:unknown)=>run(session,async(client,scope)=>{
   const input=z.object({scope:WorkdayScopeSchema,reason:z.string().trim().min(1).max(2000)}).strict().parse(raw),old=input.scope;
   if(session.realm==="demo"||session.publicDemo||old.userId!==scope.userId||old.membershipId!==scope.membershipId||!sameWorkdayOwner(old.owner,scope.owner)||old.sessionVersion>=scope.sessionVersion)throw new WorkdayError("workday.original_scope_required",403);

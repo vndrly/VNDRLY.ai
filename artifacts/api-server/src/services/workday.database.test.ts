@@ -6,6 +6,35 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import {buildTestCookie} from "../test-utils/session";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
+it("summarizes every employee's recorded monthly hours once, excludes other employers, and authorizes office from saved roles", async () => {
+  const f = await fixture(), workerShift = randomUUID(), officeShift = randomUUID(), partnerShift = randomUUID();
+  await f.service.record(f.worker, command(f.worker, workerShift, "start_shift", "2026-09-30T23:00:00Z"));
+  await f.service.record(f.worker, command(f.worker, workerShift, "end_shift", "2026-10-01T02:00:00Z"));
+  for (const [action, at] of [["start_shift", "2026-10-15T08:00:00Z"], ["start_unpaid_break", "2026-10-15T09:00:00Z"], ["end_unpaid_break", "2026-10-15T09:30:00Z"], ["end_shift", "2026-10-15T11:00:00Z"]]) {
+    await f.service.record(f.office, command(f.office, officeShift, action, at));
+  }
+  await f.service.record(f.partner, command(f.partner, partnerShift, "start_shift", "2026-10-15T10:00:00Z"));
+  await f.service.record(f.partner, command(f.partner, partnerShift, "end_shift", "2026-10-15T20:00:00Z"));
+  const range = { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" };
+  const result = await f.service.dashboardHours(f.office, range);
+  expect(result).toMatchObject({ owner: { type: "vendor", id: f.worker.vendorId }, viewerUserId: f.office.userId, mineMilliseconds: 9000000, totalMilliseconds: 16200000, range });
+  expect(result.employees).toHaveLength(3);
+  expect(result.employees.find(person => person.userId === f.worker.userId)?.milliseconds).toBe(7200000);
+  expect(result.employees.find(person => person.userId === f.other.userId)?.milliseconds).toBe(0);
+  await expect(f.service.dashboardHours(f.worker, range)).rejects.toMatchObject({ status: 403 });
+  await expect(f.service.dashboardHours({ ...f.other, vendorRole: "office" }, range)).rejects.toMatchObject({ status: 403 });
+  await expect(f.service.dashboardHours({ ...f.office, vendorRole: "gate_supervisor" }, range)).rejects.toMatchObject({ status: 403 });
+  await f.pool.query("INSERT INTO vendor_people(vendor_id,user_id,first_name,last_name,email,vendor_role) VALUES($1,$2,'Office','Fixture',$3,'office')", [f.other.vendorId, f.other.userId, `${randomUUID()}@example.invalid`]);
+  expect((await f.service.dashboardHours({ ...f.other, vendorRole: "office" }, range)).totalMilliseconds).toBe(16200000);
+  await f.pool.query("UPDATE vendor_people SET is_active=false WHERE user_id=$1", [f.other.userId]);
+  await expect(f.service.dashboardHours({ ...f.other, vendorRole: "office" }, range)).rejects.toMatchObject({ status: 403 });
+  const { default: routes } = await import("../routes/workday");
+  const app = express().use(cookieParser()).use(routes);
+  const response = await request(app).get("/work-hub/workday/dashboard-hours").query(range).set("Cookie", buildTestCookie(f.office));
+  expect(response.status).toBe(200); expect(response.headers["cache-control"]).toBe("no-store");
+  expect(response.body.totalMilliseconds).toBe(16200000);
+  expect((await request(app).get("/work-hub/workday/dashboard-hours").query(range)).status).toBe(401);
+});
 it("starts and ends only the confirmed assistant worker's current day with server time and exact receipt retries",async()=>{
  const f=await fixture(),operationId=randomUUID();
  const start={operationId,action:"start_shift",expectedShiftId:null,timezone:"America/Chicago"};

@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import { summarizeWorkday, type WorkdayEvent } from "@workspace/api-zod";
-import { monthlyShiftHoursRange, readDashboardShiftHours } from "./dashboard-shift-hours";
+import { monthlyShiftHoursRange, readDashboardShiftHours, readCompanyDashboardHours } from "./dashboard-shift-hours";
 
 const owner = { type: "vendor" as const, id: 1 }, userId = 7;
 const scope = { owner, userId, start: "2026-10-23T05:00:00.000Z", end: "2026-10-24T05:00:00.000Z" };
@@ -15,6 +15,14 @@ const closed = { ...snapshot(events([["start_shift", "2026-10-23T12:00:00Z"], ["
 it("rolls the displayed period on the first without touching recorded clock data", () => {
   expect(monthlyShiftHoursRange(new Date(2026, 9, 31, 23, 59))).toEqual({ start: new Date(2026, 9, 1).toISOString(), end: new Date(2026, 10, 1).toISOString() });
   expect(monthlyShiftHoursRange(new Date(2026, 10, 1))).toEqual({ start: new Date(2026, 10, 1).toISOString(), end: new Date(2026, 11, 1).toISOString() });
+});
+it("reconciles company totals including mine once, and rejects stale scopes or duplicate employee totals", async () => {
+  const result = { owner, viewerUserId: userId, observedAt: "2026-10-23T20:00:00Z", range: { start: scope.start, end: scope.end }, mineMilliseconds: 3600000, totalMilliseconds: 10800000,
+    employees: [{ userId, name: "Me", milliseconds: 3600000 }, { userId: 8, name: "Alex", milliseconds: 7200000 }] };
+  expect(await readCompanyDashboardHours(scope, vi.fn().mockResolvedValue(result))).toEqual(result);
+  for (const bad of [{ ...result, viewerUserId: 9 }, { ...result, owner: { type: "vendor", id: 99 } }, { ...result, range: { ...result.range, start: "2026-09-01T00:00:00Z" } }, { ...result, employees: [...result.employees, result.employees[0]] }, { ...result, totalMilliseconds: 123 }]) {
+    await expect(readCompanyDashboardHours(scope, vi.fn().mockResolvedValue(bad))).rejects.toThrow();
+  }
 });
 it.each([[2026, 11, 2027, 0], [2028, 1, 2028, 2]])("handles month/year/leap boundaries for %i/%i", (year, month, nextYear, nextMonth) => {
   expect(monthlyShiftHoursRange(new Date(year, month, 16))).toEqual({ start: new Date(year, month, 1).toISOString(), end: new Date(nextYear, nextMonth, 1).toISOString() });
