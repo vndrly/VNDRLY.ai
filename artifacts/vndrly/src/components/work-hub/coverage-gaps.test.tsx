@@ -70,7 +70,8 @@ describe("coverage classification", () => {
   });
   it('shows vacancies and departed workers in both normal and urgent lists at the 24 hour boundary',()=>{
     const now=Date.parse(shift.startsAt)-86400000;
-    for(const [scheduled, extra] of [[{...shift,assignees:[]},{}],[shift,{workers:[{userId:7,state:'inactive' as const}]}]] as const){
+    const cases: Array<[ScheduleShift, Partial<CoverageFacts>]> = [[{...shift,assignees:[]},{}],[shift,{workers:[{userId:7,state:'inactive'}]}]];
+    for(const [scheduled, extra] of cases){
       const gaps=classifyCoverage(9,'Gate',[scheduled],{...facts,...extra},now);
       expect(gaps.map(g=>g.category)).toEqual(['New / Unassigned Recurring Shifts','Urgent gaps']);
       expect(classifyCoverage(9,'Gate',[scheduled],{...facts,...extra},now-1).map(g=>g.category)).toEqual(['New / Unassigned Recurring Shifts']);
