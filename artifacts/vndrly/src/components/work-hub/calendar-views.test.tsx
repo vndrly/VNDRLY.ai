@@ -47,8 +47,8 @@ describe("Work Hub calendar ranges", () => {
       const select = screen.getByLabelText(name);
       expect(select.className).toContain("bg-white");
       expect(select.className).toContain("rounded-full");
-      expect(select.className).toContain("[&>option]:bg-white");
-      expect(select.className).toContain("[&>option:hover]:bg-[var(--brand-primary)]");
+
+      expect(select.className).toContain("hub-branded-select");
       expect(select.style.colorScheme).toBe("light");
       expect(select.className).toContain("border-[color:var(--brand-primary)]");
     }

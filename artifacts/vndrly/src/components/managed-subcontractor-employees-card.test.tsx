@@ -86,7 +86,7 @@ it("uses the Ask V header shell and branded fields inside the subcontractor empl
     const select = screen.getByRole("combobox", { name });
     expect(select.className).toContain("rounded-full");
     expect(select.className).toContain("border-[color:var(--brand-primary)]");
-    expect(select.className).toContain("[&>option:hover]:bg-[var(--brand-primary)]");
+    expect(select.className).toContain("hub-branded-select");
   }
 
   for (const name of ["managedSubcontractors.workerName", "managedSubcontractors.email"]) {

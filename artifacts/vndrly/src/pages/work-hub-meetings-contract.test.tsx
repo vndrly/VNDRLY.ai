@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import WorkHubPage from "./work-hub";
 
 const env = vi.hoisted(() => ({ path: "/work-hub/meetings", request: vi.fn() }));
-vi.mock("wouter", () => ({ useLocation: () => [env.path, vi.fn()] }));
+vi.mock("wouter", () => ({ useLocation: () => [env.path, vi.fn()], useSearch: () => window.location.search.slice(1) }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 1069, role: "partner", partnerId: 609, membershipRole: "member" } }) }));
 vi.mock("@/components/meeting-workspace", () => ({ default: ({ occurrenceId }: any) => <div>Workspace occurrence: {occurrenceId}</div> }));
 vi.mock("@/lib/work-hub-client", async (original) => ({ ...(await original<any>()), workHubRequest: env.request }));
