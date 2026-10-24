@@ -169,7 +169,7 @@ router.post("/work-hub/channels/start-chat", async (req, res) => {
   const actor = session(req);
   if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
   try { return res.status(201).json(await startChat(actor, req.body)); }
-  catch (error) { fail(res, error); }
+  catch (error) { return fail(res, error); }
 });
 
 router.get("/work-hub/channels", async (req, res) => {

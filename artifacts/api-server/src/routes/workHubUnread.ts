@@ -51,7 +51,7 @@ router.put("/work-hub/channels/:channelId/messages/:messageId/read", async (req,
   if (!actor?.userId) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
   try {
     const channelId = uuid.parse(req.params.channelId), messageId = uuid.parse(req.params.messageId);
-    await resolveChannelAccess(actor, channelId, "channel.read");
+    await resolveChannelAccess({ ...actor, userId: actor.userId }, channelId, "channel.read");
     const [message] = await db.select({ id: workHubMessagesTable.id }).from(workHubMessagesTable)
       .where(and(eq(workHubMessagesTable.id, messageId), eq(workHubMessagesTable.channelId, channelId))).limit(1);
     if (!message) throw new WorkHubAccessError("not_found");
