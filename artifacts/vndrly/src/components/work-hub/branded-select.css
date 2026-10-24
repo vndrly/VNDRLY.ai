@@ -13,6 +13,16 @@
   color: white;
 }
 
+.hub-branded-select.hub-pickup-priority,
+.hub-branded-select option.hub-pickup-priority {
+  color: #15803d;
+  font-weight: 600;
+}
+.hub-branded-select option.hub-pickup-priority:checked {
+  background: #15803d;
+  color: white;
+}
+
 /* Use the browser's customizable picker so Windows does not replace these
    selection and hover colors with its system highlight. */
 @supports (appearance: base-select) {

@@ -193,7 +193,7 @@ export function WorkHubCalls() {
     operationId: string;
   } | null>(null);
   const [filter, setFilter] = useState("all"),
-    [person, setPerson] = useState(""),
+    [person, setPerson] = useState(() => new URLSearchParams(window.location.search).get("person") ?? ""),
     [selected, setSelected] = useState<string | null>(null),
     [mailCall, setMailCall] = useState<string | null>(null),
     [notice, setNotice] = useState("");

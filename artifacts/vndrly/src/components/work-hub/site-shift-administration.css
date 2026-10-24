@@ -38,3 +38,17 @@
 .hub-coverage-choice span { font-size: 12px; color: #b3b3b3; }
 .hub-coverage-choice:hover { background: #3a3a3a; }
 .hub-coverage-choice[aria-pressed=true] { border-color: var(--brand-primary); background: color-mix(in srgb,var(--brand-primary) 12%,transparent); }
+.hub-shift-admin.hub-coverage-inline { grid-template-columns: minmax(0,1fr); }
+.hub-coverage-inline .hub-task-list { max-height: none; }
+.hub-coverage-choice strong { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.hub-gap-chevron { width:16px; height:16px; flex-shrink:0; }
+.hub-coverage-choice[aria-expanded=true] .hub-gap-chevron { transform:rotate(180deg); }
+.hub-gap-editor { padding:12px; border:1px solid var(--brand-primary); border-top:0; border-radius:0 0 12px 12px; }
+.hub-coverage-choice[aria-expanded=true] { border-bottom-left-radius:0; border-bottom-right-radius:0; }
+.hub-gap-assignment-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.hub-gap-kind { flex-shrink:0; }
+.hub-gap-worker { flex:1; min-width:180px; }
+.hub-gap-worker .hub-branded-select.hub-pickup-priority { color:#15803d !important; }
+.hub-gap-scope { font-size:12px; margin-top:6px; }
+.hub-gap-transfer { margin-top:12px; }
+.hub-gap-transfer > button { margin:8px 8px 0 0; }

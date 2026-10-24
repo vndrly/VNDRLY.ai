@@ -6,6 +6,11 @@ import { localDateKey } from "./calendar-views";
 
 const props = { month: new Date(2026, 9, 1), selectedDay: "2026-10-22", items: [], onSelectDay: vi.fn(), onOpenDay: vi.fn(), scheduling: false, loading: false, unavailable: false, filters: <input aria-label="Employee filter" /> };
 describe("iOS-style web work calendar", () => {
+  it('uses the gatekeeper shift row instead of a counted Shifts group',()=>{
+    render(<WorkCalendar {...props} personalShifts={<p>No shift today</p>}/>);
+    expect(screen.getByText('No shift today')).toBeTruthy();
+    expect(screen.queryByText('Shifts')).toBeNull();
+  });
   it("includes all 42 local days across month and year boundaries", () => {
     const days = monthCalendarDays(new Date(2027, 0, 1)).map(localDateKey);
     expect(days).toHaveLength(42);

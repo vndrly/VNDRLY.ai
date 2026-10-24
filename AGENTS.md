@@ -60,6 +60,17 @@ This standing authorization never permits a force push/history rewrite,
 destructive database action, or credential rotation. App Store
 "Ready for Sale" still needs an explicit ask. TestFlight does not.
 
+### STANDING RULE — OPTIMIZED DEPLOY ONLY (John, 2026-10-24)
+
+Never use the long `.github/workflows/verify-release.yml` verification cycle as the deployment pathway again. Use the optimized release fast path in `docs/release-fast-path.md`.
+
+- Batch typechecking, API/error checks, and broader regression checks during development, before the deploy command. Do not run API typechecks after every edit or small change; batch them at meaningful checkpoints and reuse results. Keep heavy checks off John's workstation; do not run competing memory-heavy checks locally or block iterative UI work on broad validation.
+- Reuse valid passing evidence for unchanged code. Do not serialize duplicate API/full-suite runs or restart broad verification for documentation or line-ending-only changes.
+- A deploy command means publish the prepared release and verify it live, targeting 5–10 minutes. It must not silently become hours of whole-repository verification or repairs.
+- Save progress independently of deployment. If a missing check or failure blocks safe release, state the exact blocker and remaining checks promptly; do not hide waiting time by starting the reported clock only after verification.
+- Report completed/total validation stages, running and pending stages, then deployment status. Distinguish stage-count progress from estimated time.
+- Preserve the existing release scope: an ordinary web/API deploy does not implicitly request iOS/TestFlight; an explicit full ship retains its defined tracks. Never bypass a known failure, expose/change secrets, or modify existing assignments while testing.
+
 #### RELEASE FAST PATH — 10-MINUTE TARGET, 15-MINUTE ESCALATION
 Once the exact release tree has passed its required verification, the
 commit/push/web-deploy clock starts. The target is a verified public web

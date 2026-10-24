@@ -105,6 +105,8 @@ router.put(
     nativeOperationsService.onCall(getSessionFromRequest(req)!, req.body),
   ),
 );
+router.get("/native-operations/pickup-shifts", handler(req => nativeOperationsService.pickupShifts(getSessionFromRequest(req)!)));
+router.put("/native-operations/pickup-shifts", handler(req => nativeOperationsService.pickupShifts(getSessionFromRequest(req)!, req.body)));
 router.post(
   "/native-operations/requests/:id/acknowledge",
   handler((req) =>

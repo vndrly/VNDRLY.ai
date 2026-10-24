@@ -6,6 +6,7 @@ import type { SessionPayload } from "../lib/session";
 import { requireChangeOverAccess } from "../services/gate-change-over";
 import { evaluateAssignmentEligibility } from "../services/workforce-coverage";
 import { requireChatGptReadableTool } from "./chatgpt-tool-access";
+import { pickupShiftEligible } from "../services/pickup-shifts-policy";
 
 export const GATE_STAFFING_CANDIDATE_INPUT = z.object({ shiftId: z.uuid() }).strict();
 export const GATE_STAFFING_CANDIDATE_OUTPUT = GateShiftStaffingCandidateEvidenceSchema;
@@ -40,6 +41,7 @@ export async function readGateStaffingCandidates(raw: unknown, session: SessionP
 export async function readGateStaffingCandidatesForClient(
   shiftId: string, session: SessionPayload, client: Pick<PoolClient, "query">,
   authorize = requireChangeOverAccess, now = new Date(), selectedUserIds?: number[], supervisor = true,
+  contractMode: "approved" | "designated_preview" = "approved",
 ) {
   const input = GATE_STAFFING_CANDIDATE_INPUT.parse({ shiftId });
   if (!["vendor", "field_employee"].includes(session.role ?? "") || !session.vendorId || !session.userId) throw Error("gate_candidates.current_vendor_required");
@@ -62,7 +64,9 @@ export async function readGateStaffingCandidatesForClient(
     const start = date(shift.starts_at), end = date(shift.ends_at);
     if (end <= start || end.getTime() - start.getTime() > 7 * 86400000 || !Number.isFinite(now.getTime())) throw Error("gate_candidates.invalid_interval");
     const codes = z.array(z.string().trim().min(1).max(100)).max(50).nullable().parse(shift.qualification_codes) ?? [];
-    const people = await client.query(`SELECT p.id,p.user_id,p.first_name,p.last_name FROM vendor_people p JOIN users u ON u.id=p.user_id
+    const people = await client.query(`SELECT p.id,p.user_id,p.first_name,p.last_name,
+      COALESCE((SELECT d.native_operations->'pickupShifts' = 'true'::jsonb FROM work_hub_device_preferences d WHERE d.user_id=p.user_id AND d.owner_org_type='vendor' AND d.owner_org_id=$1),false) AS pickup_shifts
+      FROM vendor_people p JOIN users u ON u.id=p.user_id
       WHERE p.vendor_id=$1 AND p.is_active=true AND p.deleted_at IS NULL AND u.suspended_at IS NULL
       AND EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=u.id AND m.org_type='vendor' AND m.vendor_id=$1)
       AND EXISTS(SELECT 1 FROM vendor_person_site_access a WHERE a.vendor_people_id=p.id AND a.site_location_id=$2 AND a.is_active=true)
@@ -95,7 +99,19 @@ export async function readGateStaffingCandidatesForClient(
       const explicitlyUnavailable = availability.rows.some(item => item.available === false);
       const recordedAvailable = availability.rows.some(item => item.available === true && item.recurrence == null && date(item.starts_at) <= start && date(item.ends_at) >= end);
       const eligibility = evaluateAssignmentEligibility({ accountState: "active", credentialsCurrent: requirements.every(item => item.currentRecorded), overlaps: overlaps || meeting.rows.length > 0, restWindow, overtime });
+      const pickupCommitments = rawPerson.pickup_shifts === true ? await client.query(`SELECT s.starts_at,s.ends_at FROM work_hub_shift_assignments a JOIN work_hub_shifts s ON s.id=a.shift_id
+        WHERE a.user_id=$1 AND s.id<>$2 AND a.status NOT IN ('cancelled','declined') AND s.milestone_status<>'cancelled'
+        AND s.ends_at>$3 AND s.starts_at<$4
+        UNION ALL SELECT started_at AS starts_at,ended_at AS ends_at FROM gate_shifts
+        WHERE operator_id=$1 AND (ended_at IS NULL OR ended_at>$3) AND started_at<$4`, [person.user_id, shift.id, new Date(+start-8*3600000), new Date(+end+8*3600000)]) : {rows: []};
+      const pickupShifts = { optedIn: rawPerson.pickup_shifts === true, eligible: pickupShiftEligible({
+        optedIn: rawPerson.pickup_shifts === true, startsAt: start, endsAt: end,
+        available: recordedAvailable && !unsupportedRecurrence && !explicitlyUnavailable && !overlaps && !meeting.rows.length,
+        allowed: eligibility.allowed, overrideRequired: eligibility.overrideRequired,
+        commitments: pickupCommitments.rows.map(row => ({start: date(row.starts_at), end: row.ends_at == null ? null : date(row.ends_at)})),
+      }) };
       candidates.push({ vendorPeopleId: person.id, userId: person.user_id, name: `${person.first_name} ${person.last_name}`.trim(), requirements,
+        pickupShifts,
         qualificationState: codes.length ? requirements.every(item => item.currentRecorded && item.vendorVerified) ? "recorded_requirements_verified" : "missing_or_unverified" : "unknown_no_configured_requirements",
         availability: explicitlyUnavailable || overlaps || meeting.rows.length > 0 ? "recorded_conflict" : unsupportedRecurrence ? "unknown_recurrence" : recordedAvailable ? "recorded_available" : "unknown_no_window",
         eligibility, contact: { workHubUserId: person.user_id, reachability: "unknown" }, sourceReference: `vendor_people:${person.id}` });

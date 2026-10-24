@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, ChevronDown } from "lucide-react";
 import { BrandedInput, BrandedSelect } from "./chrome";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { WorkspaceRow } from "./workspace-panel";
@@ -19,9 +19,14 @@ import {
   assignmentConflicts,
   type ScheduleData,
 } from "./shift-assignment-model";
+import SplitToggleHalf from "@/components/split-toggle-half";
+import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
+import { useBrand } from "@/hooks/use-brand";
 const localDay = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
+  const brand = useBrand();
+  const activePill = pickTogglePillSrc(brand.primary,brand.name);
   const [from, setFrom] = useState(() => localDay(new Date())),
     [through, setThrough] = useState(() => {
       const d = new Date();
@@ -38,6 +43,8 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
     [attempt, setAttempt] = useState<ReturnType<typeof commandEnvelope> | null>(
       null,
     );
+  const [reassigning, setReassigning] = useState(false);
+  const [decisionAttempt,setDecisionAttempt]=useState<{decision:'approved'|'declined';envelope:ReturnType<typeof commandEnvelope>}|null>(null);
   const valid = Boolean(
     from &&
     through &&
@@ -49,6 +56,7 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
     enabled: valid,
     retry: false,
     refetchOnWindowFocus: false,
+    refetchInterval: 15000,
     queryFn: async () => {
       const { sites } = await workHubRequest<{
         sites: { id: number; name: string }[];
@@ -88,12 +96,13 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
   const schedule = query.data?.schedules.find(
     (s) => s.site.id === chosen?.siteId,
   )?.data;
-  const people =
-    schedule?.people.filter(
-      (p) =>
-        p.id !== chosen?.originalUserId &&
-        !chosen?.shift?.assignees.includes(p.id),
-    ) ?? [];
+  const candidates = useQuery({
+    queryKey: ["coverage-candidates", owner.type, owner.id, chosen?.shift?.id, chosen?.shift?.version, chosen?.originalUserId, kind],
+    enabled: Boolean(chosen?.shift && chosen.requestStatus!=='pending' && (!chosen.awaitingAcknowledgment || reassigning)), retry: false,
+    queryFn: () => workHubRequest<{people:{id:number;name:string;pickupExtraShifts:boolean}[];truncated:boolean}>(
+      `/site-shift-plans/coverage-candidates?type=${owner.type}&id=${owner.id}&shiftId=${chosen!.shift!.id}&kind=${kind}${chosen?.originalUserId ? `&originalUserId=${chosen.originalUserId}` : ""}`),
+  });
+  const people = candidates.isSuccess && !candidates.isFetching ? candidates.data.people : [];
   const effectiveShifts = chosen?.shift
     ? kind === "temporary"
       ? [chosen.shift]
@@ -115,7 +124,9 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
   );
   const canReview = Boolean(
     chosen?.shift &&
+    chosen.requestStatus!=='pending' &&
     worker &&
+    people.some(p=>p.id === Number(worker)) &&
     effectiveShifts.length &&
     !conflicts.length &&
     query.isSuccess &&
@@ -150,7 +161,8 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
         body: JSON.stringify(envelope),
       });
       reset();
-      setMessage("Coverage resolution saved.");
+      setCategory("Awaiting acknowledgment");
+      setMessage("Assigned — awaiting gatekeeper acknowledgment.");
       await query.refetch();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Save not confirmed.");
@@ -158,19 +170,31 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
       setSaving(false);
     }
   }
+  async function decide(decision:'approved'|'declined'){
+    if(!chosen?.requestId||!chosen.shift||saving||query.data?.readOnly)return;
+    if(decisionAttempt&&decisionAttempt.decision!==decision)return;
+    const envelope=decisionAttempt?.envelope??commandEnvelope(owner,{requestId:chosen.requestId,shiftId:chosen.shift.id,decision});
+    setDecisionAttempt({decision,envelope});setSaving(true);setMessage('');
+    try{
+      await workHubRequest('/site-shift-plans/decide-shift-off',{method:'POST',body:JSON.stringify(envelope)});
+      setDecisionAttempt(null);setWorker('');setReview(false);
+      setMessage(decision==='approved'?'Approved — select a replacement.':'Shift-off request declined.');
+      await query.refetch();
+    }catch{setMessage('Decision not confirmed. Retry the same decision.');}finally{setSaving(false);}
+  }
   return (
-    <div className="hub-shift-admin">
+    <div className="hub-shift-admin hub-coverage-inline">
       <section className="hub-shift-panel">
         <h3>
           <CalendarDays aria-hidden="true" />
           Unfilled scheduled shifts
         </h3>
-        <fieldset disabled={saving || Boolean(attempt)}>
+        <fieldset disabled={saving}>
           <div className="hub-assignment-dates">
             <label>
               From
               <BrandedInput
-                type="date"
+                type="date" disabled={Boolean(attempt||decisionAttempt)}
                 aria-label="Coverage from"
                 value={from}
                 onChange={(e) => {
@@ -182,7 +206,7 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
             <label>
               Through
               <BrandedInput
-                type="date"
+                type="date" disabled={Boolean(attempt||decisionAttempt)}
                 aria-label="Coverage through"
                 value={through}
                 onChange={(e) => {
@@ -210,32 +234,35 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                   <section className="hub-task-group" key={c}>
                     <WorkspaceRow icon={CalendarDays} label={c}
                       value={query.isError ? "Unavailable" : !query.data ? "Loading…" : `${rows.length} total`}
-                      expanded={category === c} onClick={() => setCategory(category === c ? null : c)} />
+                      expanded={category === c} onClick={() => { if (!attempt&&!decisionAttempt) setCategory(category === c ? null : c); }} />
                     {category === c && <div className="hub-inline-panel hub-task-list" role="region" aria-label={`${c} details`}>
                     {!rows.length && query.isSuccess && (
                       <p>No recorded gaps in this category.</p>
                     )}
                     {rows.map((g) => (
+                      <div key={g.id} className="hub-coverage-entry">
                       <button
                         type="button"
-                        key={g.id}
+                        disabled={Boolean(attempt||decisionAttempt)}
+                        aria-expanded={selectedId === g.id}
+                        aria-controls={`coverage-editor-${g.id}`}
                         aria-pressed={selectedId === g.id}
                         className="hub-coverage-choice"
                         onClick={() => {
-                          setSelectedId(g.id);
+                          setSelectedId(selectedId === g.id ? "" : g.id);
                           setWorker("");
                           setKind(
-                            g.category === "Permanent vacancies" ||
-                              g.category === "New / Unassigned Recurring Shifts"
+                            g.category === "New / Unassigned Recurring Shifts"
                               ? "permanent"
                               : "temporary",
                           );
                           setReview(false);
+                          setReassigning(false);
                           setMessage("");
                         }}
                       >
                         <strong>
-                          {g.siteName} · {g.title}
+                          {g.title}<ChevronDown aria-hidden="true" className="hub-gap-chevron" />
                         </strong>
                         <span>
                           {g.shift
@@ -245,6 +272,43 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                         {g.shift && g.category === "New / Unassigned Recurring Shifts" && <span>Needs gatekeeper</span>}
                         <span>{g.detail}</span>
                       </button>
+                      {selectedId === g.id && chosen && <div id={`coverage-editor-${g.id}`} className="hub-gap-editor" role="region" aria-label={`Assign coverage for ${g.title}`}>
+                        {!g.shift ? <p>Use Set/Edit a recurring shift to define this gate’s staffing first.</p> : <>
+                          {g.requestStatus==='pending'&&<div className="hub-gap-assignment-row">
+                            <PngPillButton color="brand" disabled={query.data?.readOnly||Boolean(decisionAttempt&&decisionAttempt.decision!=='approved')} onClick={()=>void decide('approved')}>{decisionAttempt?.decision==='approved'?'Retry approval':'Approve'}</PngPillButton>
+                            <PngPillButton color="brand" disabled={query.data?.readOnly||Boolean(decisionAttempt&&decisionAttempt.decision!=='declined')} onClick={()=>void decide('declined')}>{decisionAttempt?.decision==='declined'?'Retry decline':'Decline'}</PngPillButton>
+                          </div>}
+                          {g.awaitingAcknowledgment && <div className="hub-gap-assignment-row">
+                            <PngPillButton color="brand" onClick={()=>{window.location.href=`/work-hub/calls?person=${g.originalUserId}`;}}>Call</PngPillButton>
+                            <PngPillButton color="brand" onClick={()=>{window.location.href=`/work-hub/chat?person=${g.originalUserId}`;}}>Chat</PngPillButton>
+                            <PngPillButton color="brand" disabled={Boolean(attempt||decisionAttempt)} onClick={()=>setReassigning(!reassigning)}>{reassigning?'Cancel':'Reassign'}</PngPillButton>
+                          </div>}
+                          {g.requestStatus!=='pending'&&(!g.awaitingAcknowledgment || reassigning) && <>
+                          <div className="hub-gap-assignment-row">
+                            <div className="hub-gap-kind inline-flex overflow-hidden rounded-full" role="group" aria-label="Coverage replacement type">
+                              {(["temporary","permanent"] as const).map((value,index)=><SplitToggleHalf key={value} side={index===0?"left":"right"} active={kind===value} pillSrc={kind===value?activePill:TOGGLE_IDLE_PILL_SRC} aria-pressed={kind===value} title={value==='temporary'?'This shift only':'Recurring replacement'} disabled={Boolean(attempt||decisionAttempt)} onClick={()=>{setKind(value);setWorker("");setReview(false);}}>{value==='temporary'?'TEMP':'PERM'}</SplitToggleHalf>)}
+                            </div>
+                            <div className="hub-gap-worker">
+                              <BrandedSelect aria-label="Coverage replacement gatekeeper" value={worker} disabled={Boolean(attempt)||candidates.isFetching||!candidates.isSuccess} className={people.find(p=>p.id===Number(worker))?.pickupExtraShifts ? "hub-pickup-priority" : undefined} onChange={e=>{setWorker(e.target.value);setReview(false);}}>
+                                <option value="">Select a gatekeeper</option>
+                                {people.map(p=><option key={p.id} value={p.id} className={p.pickupExtraShifts?'hub-pickup-priority':undefined}>{p.name}</option>)}
+                              </BrandedSelect>
+                            </div>
+                            <PngPillButton color="brand" disabled={!canReview||query.data?.readOnly||saving} onClick={()=>chosen.originalUserId?setReview(true):void save()}>{saving?'Assigning…':attempt?'Retry':'Assign'}</PngPillButton>
+                          </div>
+                          {candidates.isFetching && <p role="status">Loading gatekeepers…</p>}
+                          {candidates.isError && <p role="alert">Gatekeepers could not load. <button type="button" onClick={()=>void candidates.refetch()}>Retry</button></p>}
+                          {candidates.isSuccess&&!candidates.isFetching&&!people.length && <p role="status">No gatekeepers fit this schedule.</p>}
+                          {!!conflicts.length && <p role="alert">This gatekeeper has a schedule conflict.</p>}
+                          {review && chosen.originalUserId && <div className="hub-gap-transfer" role="group" aria-label="Confirm shift transfer">
+                            <p>This shift is assigned to {g.shift.assigneeNames?.[String(chosen.originalUserId)] ?? schedule?.people.find(p=>p.id===chosen.originalUserId)?.name ?? 'another gatekeeper'}. Transfer responsibility to {people.find(p=>p.id===Number(worker))?.name}?</p>
+                            <PngPillButton color="brand" disabled={Boolean(attempt)||saving} onClick={()=>setReview(false)}>Cancel</PngPillButton>
+                            <PngPillButton color="brand" disabled={!canReview||query.data?.readOnly||saving} onClick={()=>void save()}>{saving?'Saving…':attempt?'Retry transfer':'Yes Reassign Shift'}</PngPillButton>
+                          </div>}
+                          </>}
+                        </>}
+                      </div>}
+                      </div>
                     ))}
                     </div>}
                   </section>
@@ -253,126 +317,8 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
           </div>
         </fieldset>
       </section>
-      <section className="hub-shift-panel">
-        <h3>
-          <Users aria-hidden="true" />
-          Coverage Resolution
-        </h3>
-        {!chosen ? (
-          <p>Select a coverage gap on the left.</p>
-        ) : (
-          <>
-            <h4>
-              {chosen.siteName} · {chosen.title}
-            </h4>
-            <p>{chosen.detail}</p>
-            {chosen.originalUserId && <p>Currently assigned: {chosen.shift?.assigneeNames?.[String(chosen.originalUserId)] ?? schedule?.people.find(p=>p.id===chosen.originalUserId)?.name ?? "Assigned gatekeeper"}</p>}
-            {chosen.shift && (
-              <>
-                <fieldset disabled={saving || Boolean(attempt)}>
-                  <label>
-                    Replacement type
-                    <BrandedSelect
-                      aria-label="Coverage replacement type"
-                      value={kind}
-                      onChange={(e) => {
-                        setKind(e.target.value);
-                        setReview(false);
-                      }}
-                    >
-                      <option value="temporary">Temporary</option>
-                      <option value="permanent">Permanent</option>
-                    </BrandedSelect>
-                  </label>
-                  <label>
-                    Gatekeeper
-                    <BrandedSelect
-                      aria-label="Coverage replacement gatekeeper"
-                      value={worker}
-                      onChange={(e) => {
-                        setWorker(e.target.value);
-                        setReview(false);
-                      }}
-                    >
-                      <option value="">Select a gatekeeper</option>
-                      {people.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </BrandedSelect>
-                  </label>
-                </fieldset>
-                <p>
-                  {kind === "temporary"
-                    ? "Covers this dated shift only. The original recurring responsibility is preserved."
-                    : `Changes this ${["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][chosen.shift.weekday]} responsibility from ${chosen.shift.date} onward, including matching future shifts beyond the displayed range. Existing earlier shifts stay unchanged.`}
-                </p>
-                {!!conflicts.length && (
-                  <p role="alert">
-                    This gatekeeper has overlapping assignments. Choose another
-                    gatekeeper.
-                  </p>
-                )}
-                {!review ? (
-                  <PngPillButton
-                    color="brand"
-                    disabled={!canReview}
-                    onClick={() => setReview(true)}
-                  >
-                    Review coverage
-                  </PngPillButton>
-                ) : (
-                  <>
-                    <h4>Review coverage resolution</h4>
-                    <p>
-                      {kind === "temporary"
-                        ? "Temporary cover"
-                        : "Permanent replacement"}
-                      : {people.find((p) => p.id === Number(worker))?.name}
-                    </p>
-                    <p>
-                      {chosen.shift.date} · {chosen.shift.starts}–
-                      {chosen.shift.ends} · {chosen.shift.timezone}
-                    </p>
-                    <PngPillButton
-                      color="brand"
-                      disabled={saving || Boolean(attempt)}
-                      onClick={() => setReview(false)}
-                    >
-                      Back to editing
-                    </PngPillButton>
-                    <PngPillButton
-                      color="brand"
-                      disabled={!canReview || query.data?.readOnly || saving}
-                      onClick={() => void save()}
-                    >
-                      {saving
-                        ? "Saving…"
-                        : attempt
-                          ? "Retry same resolution"
-                          : "Save coverage resolution"}
-                    </PngPillButton>
-                  </>
-                )}
-              </>
-            )}
-            {!chosen.shift && (
-              <p>
-                Use Set/Edit a recurring shift to define the gate’s staffing
-                first.
-              </p>
-            )}
-          </>
-        )}
-        {query.data?.readOnly && (
-          <p role="status">
-            Local read-only preview: resolutions and requests are not submitted
-            to the live schedule.
-          </p>
-        )}
-        {message && <p role="status">{message}</p>}
-      </section>
+      {query.data?.readOnly && <p role="status">Read-only preview: assignments are not saved.</p>}
+      {message && <p role="status">{message}</p>}
     </div>
   );
 }

@@ -13,7 +13,7 @@ beforeEach(() => { state.user.membershipRole = "admin"; state.request.mockReset(
 describe("site shift administration", () => {
   it("hides administrative controls from employees", () => { state.user.membershipRole = "field_employee"; mount(); expect(screen.queryByText("Administrative functions")).toBeNull(); });
   it("creates three editable shifts and saves weekly headcounts for the selected site", async () => {
-    mount(); fireEvent.change(screen.getByLabelText("Site location"), { target: { value: "7" } });
+    mount(); await screen.findByRole("option", {name:"North site"}); fireEvent.change(screen.getByLabelText("Site location"), { target: { value: "7" } });
     await waitFor(() => expect((screen.getByRole("button", { name: "Save weekly shifts" }) as HTMLButtonElement).disabled).toBe(false), { timeout: 5000 });
     fireEvent.change(screen.getByLabelText("Coverage"), { target: { value: "24_hour" } });
     expect(screen.getByLabelText("Shift 3 end time")).toBeTruthy();
@@ -28,8 +28,22 @@ describe("site shift administration", () => {
     expect(body.payload.plan.shifts[1].requiredCount).toBe(4);
     expect(body.payload.plan.shifts[1].weekdays).toEqual([1, 2, 3, 4, 5]);
   });
+  it("retries a failed site list without showing an empty-list message", async () => {
+    state.request.mockRejectedValueOnce(new Error("Unavailable")); mount();
+    expect((await screen.findByRole("alert")).textContent).toContain("Sites could not load.");
+    expect(screen.queryByText("No sites are currently available for this company.")).toBeNull();
+    fireEvent.click(screen.getByRole("button", {name:"Retry"}));
+    await screen.findByRole("option", {name:"North site"});
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+  it("uses the scheduling site list without a redundant catalog request", async () => {
+    mount(); await screen.findByRole("option", {name:"North site"});
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(state.request.mock.calls).toHaveLength(1);
+  });
   it("blocks saves when the API is unavailable", async () => {
-    state.request.mockRejectedValue(new Error("Unavailable")); mount();
+    state.request.mockImplementation(async (path: string) => { if(path.startsWith("/site-shift-plans?")) return {sites:[{id:7,name:"North site"}]}; throw new Error("Unavailable"); }); mount();
+    await screen.findByRole("option", {name:"North site"});
     fireEvent.change(screen.getByLabelText("Site location"), { target: { value: "7" } });
     await screen.findByRole("alert");
     expect((screen.getByRole("button", { name: "Save weekly shifts" }) as HTMLButtonElement).disabled).toBe(true);

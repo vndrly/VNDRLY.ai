@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useListSiteLocations, useListVendors, useListPartners } from "@workspace/api-client-react";
+import { useListVendors, useListPartners } from "@workspace/api-client-react";
 import { siteShiftPlanSchema, shiftMinutes, type SiteShiftPlan, type SiteShiftRow } from "@workspace/api-zod";
 import { Settings2, MapPin, Clock3, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,7 +37,6 @@ function AdminCompanyPlanner({ mode }: { mode: AdministrationMode }) {
 }
 function SitePlanner({ owner, mode }: { owner: WorkHubOwner; mode: AdministrationMode }) {
   const { user } = useAuth();
-  const sites = useListSiteLocations(owner.type === "partner" ? { partnerId: owner.id } : undefined);
   const scopedSites = useQuery({ queryKey: ["work-hub", "staffing-sites", user?.userId, user?.activeMembershipId, owner.type, owner.id], retry: false,
     queryFn: async () => {
       try { return (await workHubRequest<{ sites: { id: number; name: string }[] }>(`/site-shift-plans?type=${owner.type}&id=${owner.id}`)).sites; }
@@ -50,15 +49,15 @@ function SitePlanner({ owner, mode }: { owner: WorkHubOwner; mode: Administratio
       }
     },
   });
-  const availableSites = scopedSites.data ?? sites.data ?? [];
+  const availableSites = scopedSites.data ?? [];
   const [siteId, setSiteId] = useState("");
   if (mode === "gaps") return <CoverageGaps owner={owner} />;
   return <div className="hub-shift-admin">
     <section className="hub-shift-panel"><h3><MapPin aria-hidden="true" />Site</h3>
       <label>Site location<BrandedSelect aria-label="Site location" value={siteId} onChange={event => setSiteId(event.target.value)}><option value="">Select a site</option>{availableSites.map(site => <option key={site.id} value={site.id}>{site.name}</option>)}</BrandedSelect></label>
-      {sites.isLoading && <p role="status">Loading sites…</p>}
-      {sites.isError && <p role="alert">Sites could not load. Refresh the page to try again.</p>}
-      {!sites.isLoading && !scopedSites.isPending && !availableSites.length && <p role="status">No sites are currently available for this company.</p>}
+      {scopedSites.isPending && <p role="status">Loading sites…</p>}
+      {scopedSites.isError && <p role="alert">{scopedSites.data ? "Sites could not refresh. Showing the last loaded list." : "Sites could not load."} <button type="button" disabled={scopedSites.isFetching} onClick={() => void scopedSites.refetch()}>Retry</button></p>}
+      {scopedSites.isSuccess && !availableSites.length && <p role="status">No sites are currently available for this company.</p>}
       <p>Times use the site’s local clock. Selected days are the days each shift starts. An end time earlier than the start ends the following day.</p>
     </section>
     {siteId ? mode === "define" ? <PlanEditor key={siteId} siteId={Number(siteId)} owner={owner} /> : <ShiftAssignments key={`${siteId}:${mode}`} siteId={Number(siteId)} owner={owner} mode={mode} /> : <section className="hub-shift-panel"><h3><Clock3 aria-hidden="true" />Coverage &amp; shifts</h3><p>Choose a site to {mode === "define" ? "define or edit its weekly staffing" : mode === "assign" ? "assign its recurring shifts" : "review its coverage gaps"}.</p></section>}

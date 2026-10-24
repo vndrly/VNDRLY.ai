@@ -20,11 +20,12 @@ function recordTime(item: Row) {
 }
 
 /** The iOS month/day layout, using the web calendar's existing authorized records. */
-export default function WorkCalendar({ month, selectedDay, items, onSelectDay, onOpenDay, onSchedule, scheduling, loading, unavailable, filters }: {
+export default function WorkCalendar({ month, selectedDay, items, onSelectDay, onOpenDay, onSchedule, scheduling, loading, unavailable, filters, personalShifts }: {
   month: Date; selectedDay: string; items: Row[];
   onSelectDay: (day: string) => void; onOpenDay: () => void;
   onSchedule?: () => void; scheduling: boolean; loading: boolean; unavailable: boolean;
   filters: ReactNode;
+  personalShifts?: ReactNode;
 }) {
   const selected = items.filter(item => dayKey(item.startsAt) === selectedDay);
   const move = (offset: number) => onSelectDay(localDateKey(new Date(month.getFullYear(), month.getMonth() + offset, 1)));
@@ -34,7 +35,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     { kind: "Task", title: "Tasks", icon: CheckSquare2 },
     { kind: "Field Ticket", title: "Field work", icon: ClipboardList },
     { kind: "Fleet Run", title: "Fleet runs", icon: Truck },
-  ].map(group => ({ ...group, rows: selected.filter(item => item.kind === group.kind) })).filter(group => group.rows.length);
+  ].map(group => ({ ...group, rows: selected.filter(item => item.kind === group.kind) })).filter(group => group.rows.length && !(personalShifts && group.kind==='Shift'));
   return <><section className="hub-work-calendar" aria-label="Work calendar">
     <div className="hub-calendar-heading"><h2>Work calendar</h2>{onSchedule && <BrandPillButton tone="brand" aria-expanded={scheduling} onClick={onSchedule}>{scheduling ? "Close scheduling" : "Schedule"}</BrandPillButton>}</div>
     <p className="hub-calendar-muted">Daily company work across shifts, meetings, tasks, and scheduled operations. Scheduling reserves planned time; it does not start work.</p>
@@ -61,7 +62,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     {loading && <p role="status" className="hub-calendar-muted">Loading schedules…</p>}
     {unavailable && <p role="status" className="hub-calendar-muted">Some schedules could not load. Counts reflect available records.</p>}
     {!loading && !selected.length && <p className="hub-calendar-muted">{unavailable ? "No records available for this day from the schedules that loaded." : "No scheduled records for this day."}</p>}
-    <div className="hub-calendar-day-panels" key={selectedDay}>{groups.map(({kind,title,icon:Icon,rows}) => <details className="hub-calendar-day-panel" key={kind}>
+    <div className="hub-calendar-day-panels" key={selectedDay}>{personalShifts}{groups.map(({kind,title,icon:Icon,rows}) => <details className="hub-calendar-day-panel" key={kind}>
       <summary><Icon aria-hidden="true" /><span>{title}</span><small>{rows.length}</small></summary>
       <div className="hub-calendar-day-list">{rows.map(item => <article className="hub-calendar-day-row" key={`${item.kind}-${item.id}`}>
       <h3>{item.route ? <a href={item.route}>{item.title}</a> : <button type="button" onClick={onOpenDay}>{item.title}</button>}</h3>

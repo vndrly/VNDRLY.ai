@@ -613,6 +613,24 @@ export const NativePhotoUploadInputSchema = z
   })
   .strict();
 export const nativeOperationsService = {
+  pickupShifts: (s: SessionPayload, raw?: unknown) => transaction(s, async (c) => {
+    const a = await current(c, s);
+    if (a.owner.type !== "vendor") throw new NativeOperationError("native.worker_company_required", 403);
+    const gatekeeper = await c.query(`SELECT p.id FROM vendor_people p WHERE p.user_id=$1 AND p.vendor_id=$2
+      AND p.is_active=true AND p.deleted_at IS NULL AND
+      (EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id AND r.is_active=true AND r.role='gatekeeper')
+       OR (NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id) AND p.vendor_role='gatekeeper')) FOR SHARE`, [s.userId, a.owner.id]);
+    if (!gatekeeper.rows.length) throw new NativeOperationError("native.gatekeeper_required", 403);
+    await lock(c, s.userId!, a.owner.id);
+    const st = await state(c, s.userId!, a.owner.id);
+    if (raw !== undefined) {
+      const input = z.object({ active: z.boolean(), consent: z.literal(true) }).strict().parse(raw);
+      st.pickupShifts = input.active;
+      await saveState(c, s.userId!, a.owner.id, st);
+      await event(c, s.userId!, a.owner.id, { action: "pickup_shifts.saved", active: input.active });
+    }
+    return { active: st.pickupShifts === true };
+  }),
   shiftResponse: (s: SessionPayload, shiftId: string, raw: unknown) =>
     transaction(s, async (c) => {
       const input = z

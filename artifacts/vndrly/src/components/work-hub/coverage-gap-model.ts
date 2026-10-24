@@ -1,10 +1,10 @@
 import type { ScheduleShift } from "./shift-assignment-model";
 export const coverageCategories = [
-  "New / Unassigned Recurring Shifts",
-  "Temporary coverage",
-  "Permanent vacancies",
-  "Coverage requests",
   "Urgent gaps",
+  "New / Unassigned Recurring Shifts",
+  "Needs temporary coverage",
+  "Shift requested off",
+  "Awaiting acknowledgment",
 ] as const;
 export type CoverageCategory = (typeof coverageCategories)[number];
 export type CoverageGap = {
@@ -17,13 +17,17 @@ export type CoverageGap = {
   detail: string;
   originalUserId?: number;
   requestId?: string;
+  requestStatus?: "pending"|"approved";
+  awaitingAcknowledgment?: {notificationId:number;name:string};
   required: number;
 };
 export type CoverageFacts = {
+  awaitingAcknowledgment?: {notificationId:number;shiftId:string;userId:number;name:string}[];
   unavailable: { userId: number; startsAt: string; endsAt: string }[];
   workers: { userId: number; state: "active" | "hold" | "inactive" }[];
-  requests: { id: string; shiftId: string; userId: number }[];
+  requests: { id: string; shiftId: string; userId: number;status?:"pending"|"approved" }[];
   urgentShiftIds: string[];
+  incidents?: {shiftId:string; userId?:number; reason:"No-show"|"Abandoned shift"}[];
   readOnly: boolean;
 };
 export function classifyCoverage(
@@ -31,9 +35,12 @@ export function classifyCoverage(
   siteName: string,
   shifts: ScheduleShift[],
   facts: CoverageFacts,
+  now = Date.now(),
 ): CoverageGap[] {
   const gaps: CoverageGap[] = [];
   for (const shift of shifts) {
+    if (Date.parse(shift.endsAt) <= now) continue;
+    const firstGap = gaps.length;
     const base = { siteId, siteName, shift, title: shift.pattern, required: 1 };
     const requests = facts.requests.filter(
       (r) => r.shiftId === shift.id && shift.assignees.includes(r.userId),
@@ -49,7 +56,20 @@ export function classifyCoverage(
         ),
     );
     const affected = new Set<number>();
+    for(const r of requests){
+      affected.add(r.userId);
+      gaps.push({...base,id:`request:${r.id}`,category:'Shift requested off',originalUserId:r.userId,requestId:r.id,requestStatus:r.status??'pending',
+        detail:r.status==='approved'?'Shift off approved — needs replacement':'Shift off requested — awaiting approval'});
+    }
+    for (const pending of facts.awaitingAcknowledgment ?? []) {
+      if(pending.shiftId !== shift.id || !shift.assignees.includes(pending.userId)||affected.has(pending.userId)) continue;
+      affected.add(pending.userId);
+      gaps.push({...base,id:`ack:${pending.notificationId}`,category:"Awaiting acknowledgment",
+        originalUserId:pending.userId,awaitingAcknowledgment:pending,
+        detail:`Awaiting acknowledgment · ${pending.name}`});
+    }
     for (const userId of unavailable) {
+      if(affected.has(userId)) continue;
       affected.add(userId);
       const inactive = facts.workers.some(
         (w) => w.userId === userId && w.state === "inactive",
@@ -57,46 +77,41 @@ export function classifyCoverage(
       gaps.push({
         ...base,
         id: `worker:${shift.id}:${userId}`,
-        category: inactive ? "Permanent vacancies" : "Temporary coverage",
+        category: inactive ? "New / Unassigned Recurring Shifts" : "Needs temporary coverage",
         originalUserId: userId,
         requestId: requests.find((r) => r.userId === userId)?.id,
         detail: inactive
-          ? "Assigned worker is no longer active; review permanent coverage."
+          ? "Needs gatekeeper — previous gatekeeper is no longer active."
           : "Assigned worker is on hold or has recorded unavailability.",
       });
     }
-    for (const r of requests)
-      if (!affected.has(r.userId)) {
-        affected.add(r.userId);
-        gaps.push({
-          ...base,
-          id: `request:${r.id}`,
-          category: "Coverage requests",
-          originalUserId: r.userId,
-          requestId: r.id,
-          detail: "Gatekeeper requested coverage for this dated shift.",
-        });
-      }
     const needed = Math.max(0, shift.required - shift.assignees.length);
     if (needed)
       gaps.push({
         ...base,
         id: `vacancy:${shift.id}`,
-        category: facts.urgentShiftIds.includes(shift.id)
-          ? "Urgent gaps"
-          : "New / Unassigned Recurring Shifts",
+        category: "New / Unassigned Recurring Shifts",
         required: needed,
-        detail: `${needed} unassigned position(s).`,
+        detail: `Needs gatekeeper — ${needed} unassigned position(s).`,
       });
-    else if (facts.urgentShiftIds.includes(shift.id) && !affected.size)
-      for (const userId of shift.assignees)
-        gaps.push({
-          ...base,
-          id: `urgent:${shift.id}:${userId}`,
-          category: "Urgent gaps",
-          originalUserId: userId,
-          detail: `Recorded coverage alert. Review ${shift.assigneeNames?.[String(userId)] ?? "the assigned gatekeeper"}'s responsibility before replacing them.`,
-        });
+    const incidents = (facts.incidents ?? []).filter(i => i.shiftId === shift.id);
+    const soon = Date.parse(shift.startsAt) <= now + 24 * 60 * 60 * 1000;
+    const shiftGaps = gaps.slice(firstGap);
+    for (const gap of shiftGaps) {
+      const incident = incidents.find(i => i.userId === undefined || i.userId === gap.originalUserId);
+      const uncovered = gap.category !== "Awaiting acknowledgment" && gap.requestStatus !== "pending";
+      if (uncovered && (soon || incident)) gaps.push({...gap, id:`urgent:${gap.id}`, category:"Urgent gaps",
+        detail: incident ? `${incident.reason} — needs coverage.` : gap.detail});
+    }
+    for (const incident of incidents) {
+      const users = incident.userId === undefined ? shift.assignees : shift.assignees.filter(id => id === incident.userId);
+      for (const userId of users) {
+        if (gaps.slice(firstGap).some(g => g.category === "Urgent gaps" && g.originalUserId === userId)) continue;
+        const existing = shiftGaps.find(g => g.originalUserId === userId);
+        gaps.push({...base, ...existing, id:`urgent:incident:${shift.id}:${userId}`, category:"Urgent gaps",
+          originalUserId:userId, detail:`${incident.reason} — needs coverage.`});
+      }
+    }
   }
   return gaps;
 }

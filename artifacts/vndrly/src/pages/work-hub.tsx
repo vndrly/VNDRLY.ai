@@ -1,6 +1,7 @@
 import AssignedCards from "@/components/work-hub/library/assigned-cards";
 import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
+import WorkdayControls from "@/components/workday-controls";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
 import { ManagedCrews } from "@/components/implementation-a/managed-crews";
@@ -29,6 +30,7 @@ import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-h
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
 import SiteShiftAdministration from "@/components/work-hub/site-shift-administration";
 import {RequestShiftCoverage} from "@/components/work-hub/request-shift-coverage";
+import {CoverageAcknowledgments} from "@/components/work-hub/coverage-acknowledgments";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
 import CalendarCreateCards from "@/components/work-hub/calendar-create-cards";
 import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
@@ -584,6 +586,7 @@ function CalendarModule() {
   const { user } = useAuth();
   const search = useSearch(), employeeLink = calendarWorkerFromSearch(search), employeeView = employeeLink.requested;
   const canManage = isWorkHubScheduler(user) && !employeeView;
+  const personalGatekeeper = !isWorkHubAdmin(user) && (user?.vendorRole === "gatekeeper" || user?.role === "field_employee");
   const context = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
   const clockOwner = ownerForUser(user);
   const employeeContext = useQuery({
@@ -618,10 +621,10 @@ function CalendarModule() {
     enabled: calendarReady,
     queryFn: () =>
       workHubRequest(
-        `/calendar?start=${start.toISOString()}&end=${end.toISOString()}${employeeView ? `&workerUserId=${employeeLink.userId}` : ""}`,
+        `/calendar?start=${start.toISOString()}&end=${end.toISOString()}${employeeView || personalGatekeeper ? `&workerUserId=${employeeView ? employeeLink.userId : user?.userId}` : ""}`,
       ),
   });
-  const operations = useOperationalCalendar(start.toISOString(), end.toISOString(), !employeeView);
+  const operations = useOperationalCalendar(start.toISOString(), end.toISOString(), !employeeView && !personalGatekeeper);
   const recordedHours = useQuery({
     queryKey: ["work-hub", "calendar-recorded-shifts", ...context, clockWorkerId, start.toISOString(), end.toISOString()],
     queryFn: ({ signal }) => readDashboardShiftHours({ userId: clockWorkerId!, owner: clockOwner!, start: start.toISOString(), end: end.toISOString() }, path => workHubRequest(path, { signal, cache: "no-store" })),
@@ -665,7 +668,7 @@ function CalendarModule() {
     () =>
       [
         ...(calendarReady ? recordedHours.data?.shifts ?? [] : []).map(shift => ({ id: `workday-${shift.id}`, workdayId: shift.id, ...(employeeView ? { workerUserId: clockWorkerId } : {}), recordedShift: true, title: employeeView ? `${employeeContext.data?.employee.name} — recorded shift` : "My recorded shift", kind: "Shift", startsAt: shift.startedAt, endsAt: shift.endedAt, timezone: shift.timezone, status: shift.state, recordedMilliseconds: shift.milliseconds })),
-        ...(!employeeView ? operations.data?.items ?? [] : []).map(item => ({ ...item, kind: item.kind === "field_ticket" ? "Field Ticket" : "Fleet Run" })),
+        ...(!employeeView && !personalGatekeeper ? operations.data?.items ?? [] : []).map(item => ({ ...item, kind: item.kind === "field_ticket" ? "Field Ticket" : "Fleet Run" })),
         ...(calendarReady ? calendar.data?.shifts ?? [] : []).map((x: Row) => ({
           ...x.item,
           kind: "Shift",
@@ -681,7 +684,7 @@ function CalendarModule() {
           kind: "Meeting",
         })),
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
-    [calendar.data, operations.data, recordedHours.data, calendarReady, employeeView, clockWorkerId, employeeContext.data],
+    [calendar.data, operations.data, recordedHours.data, calendarReady, employeeView, personalGatekeeper, clockWorkerId, employeeContext.data],
   );
   const filteredItems = useMemo(() => {
     const needle = calendarFilters.search.trim().toLowerCase();
@@ -709,9 +712,12 @@ function CalendarModule() {
   return (
     <Shell module="calendar">
       <div className="hub-calendar-page" data-testid="work-hub-calendar-layout">
+        {!employeeView && <WorkdayControls />}
+        {user?.vendorId && <CoverageAcknowledgments owner={{type:"vendor",id:user.vendorId}} userId={user.userId} />}
         {employeeView && <p role={employeeContext.isError || !employeeLink.userId ? "alert" : "status"}>{employeeContext.isError || !employeeLink.userId ? "Employee calendar is unavailable or your access has changed." : employeeContext.data ? `${employeeContext.data.employee.name} — employee calendar` : "Loading employee calendar…"}</p>}
         {!employeeView && <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />}
         <WorkCalendar month={month} selectedDay={selectedDay} items={filteredItems}
+          personalShifts={personalGatekeeper && !employeeView && user?.vendorId ? <RequestShiftCoverage key={`${user.userId}:${selectedDay}`} userId={user.userId} owner={{type:"vendor",id:user.vendorId}} day={selectedDay} /> : undefined}
           onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}
           onOpenDay={() => setAgendaOpen(true)}
           onSchedule={canManage ? () => setScheduling(current => !current) : undefined}
@@ -950,7 +956,6 @@ function CalendarModule() {
           <WorkHubAvailability />
           {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} />}
         </div>}
-        {!employeeView && user?.vendorId && <RequestShiftCoverage key={`${user.userId}:${selectedDay}`} userId={user.userId} owner={{type:"vendor",id:user.vendorId}} day={selectedDay} />}
         {!employeeView && <SiteShiftAdministration />}
       </div>
     </Shell>

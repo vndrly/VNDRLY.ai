@@ -13,6 +13,7 @@ const databaseUrl = new URL(process.env.DATABASE_URL!);
 if(!writesEnabled) databaseUrl.searchParams.set("options", "-c default_transaction_read_only=on");
 process.env.DATABASE_URL = databaseUrl.toString();
 const { default: routes } = await import("../src/routes/workHubSiteShiftPlans");
+const { default: nativeRoutes } = await import("../src/routes/nativeOperations");
 const { pool } = await import("@workspace/db");
 // Transaction poolers may ignore connection startup options. Enforce read-only
 // on every actual query/connection, rather than trusting the URL option.
@@ -37,9 +38,11 @@ app.use(async (req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   res.on("finish", () => console.log("Coverage request", req.path, res.statusCode));
   if(req.method !== "GET") {
-    if(!writesEnabled || req.method !== "POST" || !/^\/api\/work-hub\/site-shift-plans\/(?:coverage-resolution|request-coverage)$/.test(req.path)) return res.status(405).json({message:"This local operation is not enabled"});
+    const coverageWrite = req.method === "POST" && /^\/api\/work-hub\/site-shift-plans\/(?:coverage-resolution|request-coverage|acknowledge-coverage|decide-shift-off)$/.test(req.path);
+    const pickupWrite = req.method === "PUT" && req.path === "/api/native-operations/pickup-shifts";
+    if(!writesEnabled || !(coverageWrite || pickupWrite)) return res.status(405).json({message:"This local operation is not enabled"});
     if(!["http://127.0.0.1:5173","http://localhost:5173"].includes(req.headers.origin??"") || !req.is("application/json")) return res.sendStatus(403);
-  } else if (!/^\/api\/work-hub\/site-shift-plans(?:\/(?:coverage-facts|my-coverage|\d+(?:\/schedule)?))?$/.test(req.path)) return res.sendStatus(404);
+  } else if (req.path !== "/api/native-operations/pickup-shifts" && !/^\/api\/work-hub\/site-shift-plans(?:\/(?:coverage-facts|coverage-candidates|my-coverage|my-coverage-acknowledgments|\d+(?:\/schedule)?))?$/.test(req.path)) return res.sendStatus(404);
   if (!req.headers.cookie) return res.sendStatus(401);
   try {
     // Validate the existing session with its issuer, including revocation/context.
@@ -57,6 +60,7 @@ app.use(async (req, res, next) => {
   } catch { return res.status(503).json({ message: "Session verification is temporarily unavailable" }); }
 });
 app.use("/api", routes);
+app.use("/api", nativeRoutes);
 app.use((_error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => res.status(500).json({ message: "Local coverage preview unavailable" }));
 app.listen(8098, "127.0.0.1", () => console.log(`Coverage API listening on 127.0.0.1:8098 (${writesEnabled?"reviewed coverage saves enabled":"read-only"})`));
 

@@ -4,6 +4,14 @@ This is the canonical agent workflow after implementation is complete and the
 exact release tree has passed its required validation. Development, debugging,
 and TestFlight build time are measured separately from commit/push/web deploy.
 
+## Deploy command boundary — updated 2026-10-24
+
+John explicitly prohibits using the long `verify-release.yml` cycle as the deployment pathway. Batch necessary validation during development and reuse valid evidence for unchanged code. A deploy command uses the optimized publication and live-verification path; it must not launch a serial, duplicate whole-repository verification cycle as its normal prerequisite. Keep heavy validation in the cloud and run independent checks concurrently where safe.
+
+If readiness is incomplete or a known failure blocks release, immediately identify the specific blocker and required affected checks. Do not bypass a known failure. Save progress independently. Report completed/total stages and running/pending stages, and include total time since the deploy request alongside publication time so verification delays are not hidden.
+
+For ordinary web/API deploys, monitor only those requested tracks. The additional mobile and plugin tracks below apply to an explicit full ship or separate authorization.
+
 ## Work Hub release checks
 
 - Confirm the public root renders the commercial homepage while login, signup, legal, portal, and deep links remain direct.

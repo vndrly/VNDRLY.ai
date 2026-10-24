@@ -36,12 +36,17 @@ function Controls({identity,userId,membershipId,owner,watchControl,onShiftChange
  return <section aria-label={es?"Jornada laboral":"Workday"} className="shift-card">
  <div className="shift-card-left"><WorkdayStatusSwitch accessibilityLabel={es?"Turno":"Shift"} active={state?.onShift===true} disabled={busy||!state||state.held} label={state?.onShift?(es?"Finalizar turno":"End Shift"):(es?"Iniciar turno":"Start Shift")} onClick={()=>void record()}/></div>
  <div className="shift-card-center">{watchControl}</div>
- <OnCallControl identity={identity}/>
+ <ShiftAvailabilityControl identity={identity}/>
  <div className="shift-card-feedback">
  {state?.priorPending?<div><p>{state.priorPending} {es?"originales de sesiones anteriores":"originals from earlier sign-ins"}</p><input aria-label={es?"Motivo de recuperación":"Recovery reason"} value={recoveryReason} onChange={e=>setRecoveryReason(e.target.value)}/><TogglePillButton disabled={busy||!recoveryReason.trim()} onClick={()=>void recover()}>{es?"Recuperar originales":"Recover originals"}</TogglePillButton></div>:null}
  {state?.pending?<span role="status">{state.pending} {es?"pendientes de sincronizar":"pending sync"}</span>:null}{state?.held?<span role="alert">{es?"Revisión necesaria; registros conservados":"Review needed; originals retained"}</span>:null}
  {message&&!state?.pending?<span role="status" style={{fontSize:12}}>{message}</span>:null}
  </div>
  </section>;
+}
+
+function ShiftAvailabilityControl({identity}:{identity:string}) {
+ const {user}=useAuth();
+ return <OnCallControl identity={identity} pickup={user?.vendorRole === "gatekeeper"}/>;
 }
 

@@ -5,10 +5,11 @@ import type { requireChangeOverAccess } from "../services/gate-change-over";
 const id = "00000000-0000-4000-8000-000000000001";
 const session = { userId: 17, role: "vendor", vendorId: 4, activeMembershipId: 8, membershipRole: "admin", sv: 2 };
 const shift = { id, version: 1, site_id: 392, starts_at: "2026-10-08T08:00:00Z", ends_at: "2026-10-08T16:00:00Z", qualification_codes: ["Site training"], required_count: 2, assigned_count: 1, actual_count: 0, coverage_state: "understaffed" };
-function harness(options: { cert?: boolean; available?: boolean; conflict?: boolean; person?: boolean; contract?: boolean; missingExpiry?: boolean; expiry?: string | Date } = {}) {
+function harness(options: { pickup?: boolean; adjacent?: boolean; cert?: boolean; available?: boolean; conflict?: boolean; person?: boolean; contract?: boolean; missingExpiry?: boolean; expiry?: string | Date } = {}) {
   const query = vi.fn(async (text: string) => ({ rows: text.includes("FROM work_hub_shifts s JOIN gate_stations") ? [shift]
     : text.startsWith("SELECT a.id FROM site_work_assignments") ? options.contract === false ? [] : [{ id: 1 }]
-    : text.startsWith("SELECT p.id") ? options.person === false ? [] : [{ id: 9, user_id: 18, first_name: "Synthetic", last_name: "Gate" }]
+    : text.startsWith("SELECT p.id") ? options.person === false ? [] : [{ id: 9, user_id: 18, first_name: "Synthetic", last_name: "Gate", pickup_shifts: options.pickup === true }]
+    : text.startsWith("SELECT s.starts_at") ? options.adjacent ? [{starts_at:"2026-10-08T00:00:00Z",ends_at:shift.starts_at}] : []
     : text.startsWith("SELECT id,name") ? options.cert ? [{ id: 5, name: "Site training", expiration_date: options.missingExpiry ? null : options.expiry ?? "2026-12-31", vendor_verified_at: new Date() }] : []
     : text.startsWith("SELECT s.id,s.starts_at") ? options.conflict ? [{ id, starts_at: shift.starts_at, ends_at: shift.ends_at }] : []
     : text.startsWith("SELECT id,starts_at") ? options.available ? [{ id, starts_at: shift.starts_at, ends_at: shift.ends_at, available: true, recurrence: null }] : [] : [] }));
@@ -16,6 +17,15 @@ function harness(options: { cert?: boolean; available?: boolean; conflict?: bool
   const authorize = vi.fn(async () => ({ supervisor: true, site: { id: 392 }, user: { id: 17 } })) as unknown as typeof requireChangeOverAccess;
   return { query, database, authorize, release, read: () => readGateStaffingCandidates({ shiftId: id }, session, ["gate:read", "workforce:read"], database, authorize, new Date("2026-10-07T12:00:00Z")) };
 }
+it("exposes pickup preference separately from per-shift eligibility and blocks an adjacent watch", async () => {
+  expect((await harness({cert:true,available:true}).read()).candidates[0].pickupShifts).toEqual({optedIn:false,eligible:false});
+  expect((await harness({cert:true,available:true,pickup:true}).read()).candidates[0].pickupShifts).toEqual({optedIn:true,eligible:true});
+  const adjacent=harness({cert:true,available:true,pickup:true,adjacent:true});
+  expect((await adjacent.read()).candidates[0].pickupShifts).toEqual({optedIn:true,eligible:false});
+  const query=adjacent.query.mock.calls.find(([text])=>text.startsWith("SELECT s.starts_at"))![0];
+  expect(query).toContain("FROM gate_shifts");
+  expect(query).not.toContain("owner_org_id=$2");
+});
 it("returns recorded configured qualifications/availability with unknown reachability and no assignment", async () => {
   const h = harness({ cert: true, available: true }), result = await h.read();
   expect(result).toMatchObject({ shiftVersion: 1, assignmentMade: false, messageSent: false, candidates: [{ qualificationState: "recorded_requirements_verified", availability: "recorded_available", contact: { workHubUserId: 18, reachability: "unknown" } }] });

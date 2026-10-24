@@ -1,4 +1,5 @@
 import {submitAssignedLibrary} from "../work-hub/training-service";
+import {calendarWorkerScope} from "../work-hub/calendar-worker-scope";
 import { CampaignError, respondCampaign } from "../work-hub/form-campaign-service";
 import { setWorkHubShiftOpening, readWorkHubShiftOpening } from "../services/work-hub-shift-opening";
 import { requireRoomAdmission } from "../work-hub/live-meetings";
@@ -1668,7 +1669,9 @@ router.get("/work-hub/calendar", async (req, res) => {
     );
   const workerInput = z.coerce.number().int().positive().optional().safeParse(req.query.workerUserId);
   if (!workerInput.success) return sendApiError(res, 400, "work_hub.invalid_worker", "Invalid employee identity");
-  const workerUserId = workerInput.data;
+  let workerUserId:number|undefined;
+  try { workerUserId=calendarWorkerScope(session,workerInput.data); }
+  catch { return sendApiError(res,403,"work_hub.forbidden","Own calendar only"); }
   let employeeContext: Awaited<ReturnType<typeof workdayService.employeeCalendarContext>> | undefined;
   if (workerUserId) {
     try { employeeContext = await workdayService.employeeCalendarContext(session, workerUserId); }
@@ -1741,7 +1744,7 @@ router.get("/work-hub/calendar", async (req, res) => {
           shiftOwner,
           projectVisibility,
           employeeContext ? and(eq(workHubShiftsTable.ownerOrgType, employeeContext.owner.type), eq(workHubShiftsTable.ownerOrgId, employeeContext.owner.id),
-            sql`exists(select 1 from ${workHubShiftAssignmentsTable} worker_assignment where worker_assignment.shift_id=${workHubShiftsTable.id} and worker_assignment.user_id=${workerUserId} and worker_assignment.status<>'cancelled')`) : undefined,
+            sql`exists(select 1 from ${workHubShiftAssignmentsTable} worker_assignment where worker_assignment.shift_id=${workHubShiftsTable.id} and worker_assignment.user_id=${workerUserId} and worker_assignment.status NOT IN ('cancelled','declined'))`) : undefined,
           session.managedSubcontractor ? sql`(${workHubShiftsTable.createdById} = ${session.userId} or exists (select 1 from ${workHubShiftAssignmentsTable} assignment where assignment.shift_id = ${workHubShiftsTable.id} and assignment.user_id = ${session.userId}) or ${workHubShiftsTable.sharedWithUserIds} @> ${JSON.stringify([session.userId])}::jsonb)` : undefined,
           lte(workHubShiftsTable.startsAt, end),
           gte(workHubShiftsTable.endsAt, start),

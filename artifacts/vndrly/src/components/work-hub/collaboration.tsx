@@ -109,7 +109,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [name, setName] = useState("");
-  const [person, setPerson] = useState("");
+  const [person, setPerson] = useState(() => chat ? new URLSearchParams(window.location.search).get("person") ?? "" : "");
   const [memberEmail, setMemberEmail] = useState("");
   const [visibility, setVisibility] = useState("crew");
   const [tab, setTab] = useState("conversation");

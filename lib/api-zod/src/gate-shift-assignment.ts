@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 export const GateShiftStaffingCandidateEvidenceSchema = z.object({
   shiftId: z.uuid(), shiftVersion: z.number().int().positive(), siteId: z.number().int().positive(), startsAt: z.iso.datetime(), endsAt: z.iso.datetime(), observedAt: z.iso.datetime(),
   candidates: z.array(z.object({
+    pickupShifts: z.object({ optedIn: z.boolean(), eligible: z.boolean() }).strict().optional(),
     vendorPeopleId: z.number().int().positive(), userId: z.number().int().positive(), name: z.string().max(401),
     requirements: z.array(z.object({ code: z.string().max(100), currentRecorded: z.boolean(), vendorVerified: z.boolean(), sourceIds: z.array(z.number().int().positive()).max(100) }).strict()).max(50),
     qualificationState: z.enum(["recorded_requirements_verified", "missing_or_unverified", "unknown_no_configured_requirements"]),

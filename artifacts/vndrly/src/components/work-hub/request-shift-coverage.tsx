@@ -1,155 +1,44 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays } from "lucide-react";
-import { WorkspacePanel } from "./workspace-panel";
+import { Clock3 } from "lucide-react";
 import { PngPillButton } from "@/components/png-pill-rollover";
-import {
-  commandEnvelope,
-  workHubRequest,
-  type WorkHubOwner,
-} from "@/lib/work-hub-client";
+import { commandEnvelope, workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
 
-type MyShift = {
-  id: string;
-  version: number;
-  title: string;
-  siteName: string;
-  startsAt: string;
-  endsAt: string;
-  timezone: string;
-  requested: boolean;
-};
-export function RequestShiftCoverage({
-  owner,
-  day,
-  userId,
-}: {
-  owner: WorkHubOwner;
-  day: string;
-  userId?: number;
-}) {
-  const [selected, setSelected] = useState<MyShift | null>(null),
-    [message, setMessage] = useState(""),
-    [saving, setSaving] = useState(false);
-  const [attempt, setAttempt] = useState<ReturnType<
-    typeof commandEnvelope
-  > | null>(null);
-  const query = useQuery({
-    queryKey: ["my-shift-coverage", userId, owner.type, owner.id, day],
-    retry: false,
-    queryFn: () =>
-      workHubRequest<{ shifts: MyShift[]; readOnly: boolean }>(
-        `/site-shift-plans/my-coverage?from=${day}&through=${day}`,
-      ),
-  });
-  const time = (s: MyShift, value: string) =>
-    new Date(value).toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone: s.timezone,
-    });
-  async function submit() {
-    if (!selected || saving || query.data?.readOnly) return;
+type MyShift={id:string;version:number;title:string;siteName:string;startsAt:string;endsAt:string;timezone:string;requested:boolean;requestStatus?:string|null};
+/** Personal shifts live inside the selected-day view, not a separate card. */
+export function RequestShiftCoverage({owner,day,userId}:{owner:WorkHubOwner;day:string;userId?:number}) {
+  const [selected,setSelected]=useState<MyShift|null>(null),[message,setMessage]=useState(''),[saving,setSaving]=useState(false);
+  const [attempt,setAttempt]=useState<ReturnType<typeof commandEnvelope>|null>(null);
+  const query=useQuery({queryKey:['my-shift-coverage',userId,owner.type,owner.id,day],retry:false,refetchInterval:15000,
+    queryFn:()=>workHubRequest<{shifts:MyShift[];readOnly:boolean}>(`/site-shift-plans/my-coverage?from=${day}&through=${day}`)});
+  async function submit(){
+    if(!selected||saving||query.data?.readOnly)return;
     setSaving(true);
-    const envelope =
-      attempt ??
-      commandEnvelope(owner, {
-        shiftId: selected.id,
-        expectedVersion: selected.version,
-      });
-    setAttempt(envelope);
-    try {
-      await workHubRequest("/site-shift-plans/request-coverage", {
-        method: "POST",
-        body: JSON.stringify(envelope),
-      });
-      setSelected(null);
-      setAttempt(null);
-      setMessage(
-        "Coverage requested. Your assignment remains in place until a replacement is confirmed.",
-      );
-      await query.refetch();
-    } catch {
-      setMessage(
-        "Request not confirmed. Retry the same request to avoid duplicates.",
-      );
-    } finally {
-      setSaving(false);
-    }
+    const envelope=attempt??commandEnvelope(owner,{shiftId:selected.id,expectedVersion:selected.version});setAttempt(envelope);
+    try{
+      await workHubRequest('/site-shift-plans/request-coverage',{method:'POST',body:JSON.stringify(envelope)});
+      setSelected(null);setAttempt(null);setMessage('Shift off requested — awaiting approval.');await query.refetch();
+    }catch{setMessage('Request not confirmed. Retry the same request.');}finally{setSaving(false);}
   }
-  return (
-    <WorkspacePanel
-      title="My shift coverage"
-      subtitle={`Request a replacement for ${day}`}
-      icon={CalendarDays}
-    >
-      <div className="hub-shift-panel">
-        {query.isPending ? (
-          <p>Loading your shifts…</p>
-        ) : query.isError ? (
-          <p role="alert">
-            Your shifts could not load.{" "}
-            <button onClick={() => void query.refetch()}>Retry</button>
-          </p>
-        ) : !query.data.shifts.length ? (
-          <p>
-            No upcoming assigned shifts on this day. Select another day on your
-            calendar.
-          </p>
-        ) : (
-          query.data.shifts.map((s) => (
-            <div key={s.id}>
-              <h4>
-                {s.siteName} · {s.title}
-              </h4>
-              <p>
-                {time(s, s.startsAt)}–{time(s, s.endsAt)} · {s.timezone}
-              </p>
-              {s.requested ? (
-                <p>Coverage requested — awaiting replacement</p>
-              ) : (
-                <PngPillButton
-                  color="brand"
-                  disabled={saving || Boolean(attempt)}
-                  onClick={() => {
-                    setSelected(s);
-                    setMessage("");
-                  }}
-                >
-                  Request coverage
-                </PngPillButton>
-              )}
-            </div>
-          ))
-        )}
-        {selected && (
-          <section aria-label="Review coverage request">
-            <h4>Request coverage for {selected.title}?</h4>
-            <p>
-              This requests cover for this one dated shift. You remain
-              responsible until a replacement is confirmed.
-            </p>
-            <PngPillButton
-              color="brand"
-              disabled={saving || Boolean(attempt)}
-              onClick={() => setSelected(null)}
-            >
-              Cancel
-            </PngPillButton>
-            <PngPillButton
-              color="brand"
-              disabled={saving || query.data?.readOnly}
-              onClick={() => void submit()}
-            >
-              {attempt ? "Retry request" : "Submit coverage request"}
-            </PngPillButton>
-          </section>
-        )}
-        {query.data?.readOnly && (
-          <p>Local read-only preview: requests are not submitted.</p>
-        )}
-        {message && <p role="status">{message}</p>}
+  if(query.isPending)return <p>Loading your shift…</p>;
+  if(query.isError)return <p role="alert">Your shift could not load. <button onClick={()=>void query.refetch()}>Retry</button></p>;
+  return <>
+    {!query.data.shifts.length&&<p>No shift today</p>}
+    {query.data.shifts.map(s=><details className="hub-calendar-day-panel" key={s.id}>
+      <summary><Clock3 aria-hidden="true"/><span>{s.title}</span></summary>
+      <div className="hub-calendar-day-list">
+        <p>{new Date(s.startsAt).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',timeZone:s.timezone})}–{new Date(s.endsAt).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',timeZone:s.timezone})} · {s.timezone}</p>
+        {s.requested?<p>{s.requestStatus==='approved'?'Shift off approved — awaiting replacement':'Shift off requested — awaiting approval'}</p>:<>
+          {s.requestStatus==='declined'&&<p>Your previous request was declined.</p>}
+          {Date.parse(s.startsAt)>Date.now()&&<PngPillButton color="brand" disabled={saving||Boolean(attempt)||query.data.readOnly} onClick={()=>{setSelected(s);setMessage('');}}>Request shift off</PngPillButton>}
+        </>}
+        {selected?.id===s.id&&<section aria-label="Request shift off dialog">
+          <p>Request this shift off? You remain assigned until a replacement is assigned.</p>
+          <PngPillButton color="brand" disabled={saving||Boolean(attempt)} onClick={()=>setSelected(null)}>Cancel</PngPillButton>
+          <PngPillButton color="brand" disabled={saving||query.data.readOnly} onClick={()=>void submit()}>{attempt?'Retry request':'Submit request'}</PngPillButton>
+        </section>}
       </div>
-    </WorkspacePanel>
-  );
+    </details>)}
+    {message&&<p role="status">{message}</p>}
+  </>;
 }

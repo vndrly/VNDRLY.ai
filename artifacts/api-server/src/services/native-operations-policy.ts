@@ -81,6 +81,7 @@ export type NativeState = {
   duty: NativeDuty;
   lastLocation?: LocationObservation;
   onCallActive?: boolean;
+  pickupShifts?: boolean;
   onCallWindows?: { startsAt: string; endsAt: string; consent: true }[];
 };
 export type LocationObservation = {
