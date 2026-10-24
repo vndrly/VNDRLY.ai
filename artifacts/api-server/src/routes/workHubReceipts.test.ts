@@ -16,7 +16,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("receipts on 
   const url = () => `/work-hub/channels/${channel}/receipts`;
   beforeAll(async () => {
     const suffix = randomUUID();
-    const companies = await db.insert(vendorsTable).values(["Mock Receipt Co", "Mock Other Co"].map(name => ({ name: `${name} ${suffix}` }))).returning();
+    const companies = await db.insert(vendorsTable).values(["Mock Receipt Co", "Mock Other Co"].map(name => ({ name: `${name} ${suffix}`, contactName: "Mock Contact", contactEmail: "receipt@example.invalid", contactPhone: "0000000000" }))).returning();
     org = companies[0]!.id;
     const users = await db.insert(usersTable).values(["Owner", "Peer", "Other"].map(n => ({ username: `${n}-${suffix}`, displayName: n, passwordHash: "unused-test-hash", role: "vendor" }))).returning();
     memberId = users[0]!.id;

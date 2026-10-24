@@ -41,7 +41,7 @@ const app = express();
 app.get("/healthz", (_req, res) => res.json({ ok: true, readOnly: !writesEnabled }));
 app.use("/api", (req, res, next) => {
   if (writesEnabled && req.method === "PUT" && /^\/storage\/upload\/[\da-f-]+$/.test(req.path)) return storageRoutes(req, res, next);
-  next();
+  return next();
 });
 app.use(express.json({limit:"2mb"}));
 app.use(async (req, res, next) => {
