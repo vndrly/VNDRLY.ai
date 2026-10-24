@@ -38,6 +38,7 @@ import {
   getAdminGateWatchOperation,
   listAvailableGateWatchStanders,
   getShiftNotes,
+  markShiftNoteViewed,
 } from "../services/gate-change-over";
 import {
   assumeGateDuty,
@@ -240,6 +241,8 @@ router.get("/gate-change-over/:stationId/notes", async (req, res) => {
       days: z.coerce.number().int().min(1).max(3650).optional(),
       before: z.string().datetime().optional(),
       search: z.string().max(200).optional(),
+      limit: z.coerce.number().int().min(1).max(50).optional(),
+      handoffId: uuid.optional(),
     })
     .parse(req.query);
   res.json(
@@ -248,6 +251,9 @@ router.get("/gate-change-over/:stationId/notes", async (req, res) => {
       stationId: uuid.parse(req.params.stationId),
     }),
   );
+});
+router.post("/gate-change-over/:stationId/notes/:handoffId/viewed", async (req, res) => {
+  res.json(await markShiftNoteViewed(sessionFor(req), uuid.parse(req.params.stationId), uuid.parse(req.params.handoffId)));
 });
 router.post("/gate-change-over/:stationId/start", async (req, res) => {
   res.json(

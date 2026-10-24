@@ -40,6 +40,15 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-panel-disclosure > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .gate-panel-detail { padding: 0 0 12px 30px; font-size: 13px; display: grid; gap: 8px; overflow-wrap: anywhere; }
 .gate-panel-detail p { color: #b3b3b3; }
+.gate-recent-notes { gap: 0; }
+.gate-recent-note { display: grid; gap: 3px; padding: 10px 0; border-top: 1px solid #3a3a3a; color: #ececec; }
+.gate-recent-note > span { font-size: 12px; }
+.gate-recent-note[data-viewed=true] { color: #a3a3a3; }
+.gate-recent-note[data-own=true] { color: #4ade80; }
+.gate-recent-note:hover { background: color-mix(in srgb, var(--brand-primary) 8%, transparent); }
+.gate-all-shift-notes { display: block; border-top: 1px solid #3a3a3a; padding: 10px 0; color: #b3b3b3; font-weight: 600; }
+.gate-all-shift-notes:hover { color: var(--brand-primary); }
+.gate-recent-note:focus-visible, .gate-all-shift-notes:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .gate-panel-body { border-top: 1px solid #3a3a3a; padding: 12px 0; font-size: 13px; }
 .gate-panel-body textarea { min-height: 64px; }
 .gate-panel-body textarea, .gate-panel-body input:not([type=checkbox]) { background: #303034; color: #ececec; border-width: 1px; }

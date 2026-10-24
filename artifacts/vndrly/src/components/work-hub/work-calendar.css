@@ -29,4 +29,27 @@ section:has(> .hub-calendar-page) > header p { color: #b3b3b3; }
 .hub-calendar-page input, .hub-calendar-page select, .hub-calendar-page textarea { color-scheme: dark !important; color: #ececec !important; background: #242426 !important; }
 .hub-calendar-page select option { color: #ececec !important; background: #242426 !important; }
 .hub-calendar-extras { display: grid; gap: 18px; }
+.hub-calendar-selected-day .hub-home-card { padding: 12px 14px; }
+.hub-calendar-selected-day .hub-card-heading { padding-bottom: 10px; }
+.hub-calendar-selected-day .hub-card-heading h2 { font-size: 17px; }
+.hub-calendar-selected-day > .hub-home-card > p { padding-block: 6px; }
+.hub-calendar-day-panels { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 18px; align-items: start; }
+.hub-calendar-day-panel { min-width: 0; }
+.hub-calendar-day-panel > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 0; border-top: 1px solid #3a3a3a; list-style: none; cursor: pointer; }
+.hub-calendar-day-panel > summary::-webkit-details-marker { display: none; }
+.hub-calendar-day-panel > summary svg { width: 17px; height: 17px; color: var(--brand-primary); }
+.hub-calendar-day-panel > summary > span { font-size: 14px; font-weight: 600; }
+.hub-calendar-day-panel > summary > small { margin-left: auto; color: #b3b3b3; font-size: 12px; }
+.hub-calendar-day-panel > summary::after { content: '›'; color: #a3a3a3; font-size: 20px; }
+.hub-calendar-day-panel[open] > summary::after { transform: rotate(90deg); }
+.hub-calendar-day-panel > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.hub-calendar-day-list { max-height: 360px; overflow-y: auto; }
+.hub-calendar-day-row { display: grid; gap: 3px; padding: 10px 0; border-bottom: 1px solid #3a3a3a; overflow-wrap: anywhere; }
+.hub-calendar-day-row:last-child { border-bottom: 0; }
+.hub-calendar-day-row h3 { font-size: 13px; }
+.hub-calendar-day-row :is(a,button) { display: block; width: 100%; text-align: left; min-height: 28px; }
+.hub-calendar-day-row :is(a,button):hover { color: var(--brand-primary); }
+.hub-calendar-day-row :is(a,button):focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.hub-calendar-day-status { color: #a3a3a3; font-size: 11px; }
+@media (max-width: 767px) { .hub-calendar-day-panels { grid-template-columns: minmax(0,1fr); } }
 @media (max-width: 600px) { .hub-work-calendar { padding: 12px; } .hub-month-day { min-height: 54px; } .hub-month-navigation { gap: 6px; } }

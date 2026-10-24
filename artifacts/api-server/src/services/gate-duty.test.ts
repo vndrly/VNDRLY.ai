@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import {workdayService} from "./workday";
-import {startGateShift,prepareGateHandoff,transferGateShift,getShiftNotes,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
+import {startGateShift,prepareGateHandoff,transferGateShift,getShiftNotes,markShiftNoteViewed,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
 import {
   assumeGateDuty,
   endGateDuty,
@@ -103,6 +103,38 @@ async function fixture(policy: "on_site" | "paid_travel" = "on_site") {
 const key = () => randomUUID();
 
 describe("Gate duty teams", () => {
+  it("returns the latest ten filed notes and exact older notes with isolated, idempotent viewing", async () => {
+    const f = await fixture(), author = f.workers[0]!, viewer = f.workers[1]!, other = f.workers[2]!;
+    const ids: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      const filed = new Date(Date.now() - (40 - i) * 86400000);
+      const shift = (await pool.query("INSERT INTO gate_shifts(station_id,operator_id,started_at,ended_at) VALUES($1,$2,$3,$4) RETURNING id", [f.stationId, author.userId, new Date(+filed - 12 * 3600000), filed])).rows[0].id;
+      const prep = (await pool.query("INSERT INTO gate_preparations(shift_id,prepared_by,snapshot,notes,summary,created_at) VALUES($1,$2,$3,$4,$5,$6) RETURNING id", [shift, author.userId, JSON.stringify({openItems:[]}), `Historical note ${i}`, JSON.stringify({facts:[]}), filed])).rows[0].id;
+      const incomingShift = (await pool.query("INSERT INTO gate_shifts(station_id,operator_id,started_at,ended_at) VALUES($1,$2,$3,$4) RETURNING id", [f.stationId, viewer.userId, filed, new Date(+filed + 12 * 3600000)])).rows[0].id;
+      const id = key(); ids.push(id);
+      await pool.query("INSERT INTO gate_handovers(id,preparation_id,incoming_shift_id,incoming_user_id,outgoing_name,incoming_name,acknowledged_at) VALUES($1,$2,$3,$4,'Author','Viewer',$5)", [id, prep, incomingShift, viewer.userId, filed]);
+    }
+    expect((await getShiftNotes(viewer, {stationId:f.stationId})).rows).toHaveLength(0);
+    const recent = await getShiftNotes(viewer, {stationId:f.stationId,limit:10});
+    expect(recent.rows.map(row=>row.id)).toEqual(ids.slice(2).reverse());
+    expect(recent.rows[0]).toMatchObject({outgoing_user_id:author.userId,site_id:f.site,viewed_at:null});
+    expect(recent.rows[0].filed_at).toBeTruthy();
+    const before = await getShiftNotes(viewer,{stationId:f.stationId,handoffId:ids[0]});
+    expect(before.rows.map(row=>row.id)).toEqual([ids[0]]);
+    expect(before.rows[0].viewed_at).toBeNull();
+    await markShiftNoteViewed(viewer,f.stationId,ids[0]!);
+    await markShiftNoteViewed(viewer,f.stationId,ids[0]!);
+    expect((await getShiftNotes(viewer,{stationId:f.stationId,handoffId:ids[0]})).rows[0].viewed_at).toBeTruthy();
+    expect((await getShiftNotes(other,{stationId:f.stationId,handoffId:ids[0]})).rows[0].viewed_at).toBeNull();
+    expect((await pool.query("SELECT count(*)::int AS n FROM gate_shift_actions WHERE station_id=$1 AND kind='note_viewed'",[f.stationId])).rows[0].n).toBe(1);
+    const anotherGate=(await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,'Another gate') RETURNING id",[f.site])).rows[0].id;
+    await expect(markShiftNoteViewed(viewer,anotherGate,ids[0]!)).rejects.toMatchObject({status:404});
+    await expect(getShiftNotes(viewer,{stationId:anotherGate,handoffId:ids[0]})).rejects.toMatchObject({status:404});
+    const foreign = await fixture();
+    await expect(markShiftNoteViewed(foreign.workers[0]!,f.stationId,ids[0]!)).rejects.toMatchObject({status:403});
+    expect((await workdayService.current(viewer)).workday).toBeNull();
+    expect((await pool.query("SELECT * FROM gate_shift_actions WHERE station_id=$1 AND kind IN ('open','resolve','reopen')",[f.stationId])).rowCount).toBe(0);
+  });
   it("keeps paid clocks and sessions unchanged while saving the exact acknowledged watch facts and original notes", async () => {
     const f = await fixture(), outgoing=f.workers[0]!, incoming=f.workers[1]!;
     await assumeGateWatch(outgoing,{stationId:f.stationId,source:"web",operationId:key()});

@@ -5754,6 +5754,8 @@
     "range": "History range",
     "days": "days",
     "noNotes": "No completed handoffs in this range.",
+    "allShiftNotes": "All shift notes",
+    "selectedNoteIntro": "Saved notes for the selected watch.",
     "acknowledged": "Acknowledged by the authenticated incoming gatekeeper",
     "carryForward": "Carry-forward items",
     "shiftFollowUps": "Shift follow-ups",

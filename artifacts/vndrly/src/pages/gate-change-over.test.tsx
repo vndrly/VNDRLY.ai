@@ -94,6 +94,33 @@ beforeEach(() => {
 });
 const caches: QueryClient[] = [];
 afterEach(() => { cleanup(); for (const cache of caches.splice(0)) cache.clear(); });
+it("opens an exact historical note independently of the date filter and marks only a visible note viewed", async () => {
+  const oldUrl = window.location.href;
+  const observe = vi.fn(), disconnect = vi.fn();
+  let intersect: IntersectionObserverCallback = () => {};
+  vi.stubGlobal("IntersectionObserver", class {
+    constructor(callback: IntersectionObserverCallback) { intersect = callback; }
+    observe = observe; disconnect = disconnect;
+  });
+  window.history.replaceState({}, "", "/gate/shift-notes?siteId=1&stationId=gate&handoffId=old-note");
+  const base = api.getMockImplementation()!;
+  api.mockImplementation(async (path: string, body?: unknown) => path === "/gate/notes?handoffId=old-note" ? {
+    rows: [{ id: "old-note", outgoing_name: "Past gatekeeper", incoming_name: "Relief", filed_at: "2026-08-01T10:00:00Z", acknowledged_at: "2026-08-02T10:00:00Z", notes: "Exact old shift note", summary: { facts: [] }, snapshot, viewed_at: null }], actions: [],
+  } : path.endsWith("/viewed") ? { viewed: true } : base(path, body));
+  try {
+    mount(true);
+    expect(await screen.findByText("Exact old shift note")).toBeTruthy();
+    expect(api).toHaveBeenCalledWith("/gate/notes?handoffId=old-note");
+    expect(screen.queryByLabelText("changeOver.range")).toBeNull();
+    expect(screen.getByRole("link", { name: "changeOver.allShiftNotes" }).getAttribute("href")).toBe("/gate/shift-notes?siteId=1&stationId=gate");
+    expect(api.mock.calls.some(([path]) => path.endsWith("/viewed"))).toBe(false);
+    act(() => intersect([{ isIntersecting: true }] as IntersectionObserverEntry[], {} as IntersectionObserver));
+    await waitFor(() => expect(api).toHaveBeenCalledWith("/gate/notes/old-note/viewed", {}));
+  } finally {
+    window.history.replaceState({}, "", oldUrl);
+    vi.unstubAllGlobals();
+  }
+});
 it.each([
   ["gatekeeper", true, true],
   ["gate_supervisor", true, true],

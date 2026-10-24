@@ -5,7 +5,8 @@ import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-pa
 import "@/components/gate-dashboard.css";
 import GateWatchSummary from "@/components/gate-watch-summary";
 import GateGpsSelector from "@/components/gate-gps-selector";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, useSearch } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ClipboardList, LayoutDashboard, LogIn, LogOut, Users, UserCheck, Car, Clock3, AlertTriangle, Shield } from "lucide-react";
@@ -13,6 +14,7 @@ import {
   type ChangeOverState,
   type ChangeOverSnapshot,
   type ShiftNotesResponse,
+  type ShiftNote,
   evaluateGpsFence,
 } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,6 +25,26 @@ import { GateReportToolbar, type GateReportRange } from "@/components/gate-repor
 import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest as request } from "@/lib/change-over-api";
+
+function ViewedShiftNote({ stationId, note, children }: { stationId: string; note: ShiftNote; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null), cache = useQueryClient();
+  const { user } = useAuth();
+  useEffect(() => {
+    if (!ref.current || note.viewed_at || !user?.userId || typeof IntersectionObserver === "undefined") return;
+    let pending = false, active = true;
+    const observer = new IntersectionObserver(entries => {
+      if (pending || !entries.some(entry => entry.isIntersecting)) return;
+      pending = true;
+      void request(`/${stationId}/notes/${note.id}/viewed`, {}).then(() => {
+        observer.disconnect();
+        if (active) void cache.invalidateQueries({ queryKey: ["gate-recent-shift-notes", user.userId, user.activeMembershipId, user.vendorId, user.partnerId, stationId] });
+      }).catch(() => { pending = false; });
+    }, { threshold: 0.1 });
+    observer.observe(ref.current);
+    return () => { active = false; observer.disconnect(); };
+  }, [stationId, note.id, note.viewed_at, user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, cache]);
+  return <div ref={ref} id={`shift-note-${note.id}`}>{children}</div>;
+}
 
 export function ShiftSnapshotView({
   snapshot,
@@ -124,6 +146,8 @@ export default function GateChangeOverPage({
   const { t } = useTranslation();
   const { user } = useAuth();
   const cache = useQueryClient();
+  const routeSearch = useSearch();
+  const linkedNote = history ? new URLSearchParams(routeSearch).get("handoffId") : null;
   const [onDuty, setOnDuty] = useState(false);
   const [selectedSite, setSelectedSite] = useState(
     () => new URLSearchParams(window.location.search).get("siteId") ?? "",
@@ -183,13 +207,14 @@ export default function GateChangeOverPage({
     networkMode: "always",
   });
   const log = useQuery({
-    queryKey: ["shift-notes", user?.userId, stationId, search, days, before],
+    queryKey: ["shift-notes", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, stationId, search, days, before, linkedNote],
     queryFn: () =>
       request<ShiftNotesResponse>(
-        `/${stationId}/notes?${new URLSearchParams({ days: String(days), search, ...(before ? { before } : {}) })}`,
+        `/${stationId}/notes?${new URLSearchParams(linkedNote ? { handoffId: linkedNote } : { days: String(days), search, ...(before ? { before } : {}) })}`,
       ),
     enabled: Boolean(stationId) && history,
     retry: false,
+    throwOnError: false,
     networkMode: "always",
   });
   const current = state.data;
@@ -373,7 +398,7 @@ export default function GateChangeOverPage({
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t(history ? linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
       </div>
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
@@ -397,7 +422,7 @@ export default function GateChangeOverPage({
       )}
       {history ? (
         <>
-          <GateReportToolbar
+          {!linkedNote && <GateReportToolbar
             reportKind="shift_notes"
             filters={siteId ? {
               siteId: Number(siteId),
@@ -407,8 +432,9 @@ export default function GateChangeOverPage({
               ...(search.trim() ? { search: search.trim() } : {}),
             } : null}
             disabled={log.isLoading}
-          />
-          <div className="flex flex-wrap gap-3">
+          />}
+          {linkedNote && <Link className="text-sm underline" href={`/gate/shift-notes?${new URLSearchParams({ siteId, stationId })}`}>{t("changeOver.allShiftNotes")}</Link>}
+          {!linkedNote && <div className="flex flex-wrap gap-3">
             <BrandedInput
               aria-label={t("changeOver.search")}
               placeholder={t("changeOver.search")}
@@ -434,11 +460,12 @@ export default function GateChangeOverPage({
                 </option>
               ))}
             </BrandedSelect>
-          </div>
+          </div>}
           {log.data?.rows.length === 0 && <p>{t("changeOver.noNotes")}</p>}
           <div className="gate-notes-records">
           {log.data?.rows.map((row) => (
-            <WorkspacePanel key={row.id} title={new Date(row.acknowledged_at).toLocaleString()} subtitle={`${row.outgoing_name} → ${row.incoming_name}`} icon={ClipboardList}>
+            <ViewedShiftNote key={row.id} stationId={stationId} note={row}>
+            <WorkspacePanel title={new Date(row.filed_at ?? row.created_at ?? row.acknowledged_at).toLocaleString()} subtitle={`${row.outgoing_name} → ${row.incoming_name}`} icon={ClipboardList}>
               <div className="gate-panel-body">
                 <p>{t("changeOver.acknowledged")}</p>
                 <ul>
@@ -458,6 +485,7 @@ export default function GateChangeOverPage({
                 </details>
               </div>
             </WorkspacePanel>
+            </ViewedShiftNote>
           ))}
           </div>
           {log.data?.nextBefore && (

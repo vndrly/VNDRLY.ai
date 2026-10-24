@@ -28,6 +28,7 @@ describe("iOS-style web work calendar", () => {
   });
   it("opens canonical scheduled records and keeps dispatch time distinct from work", () => {
     render(<WorkCalendar {...props} items={[{ id: "r1", kind: "Fleet Run", title: "Test haul", startsAt: new Date(2026, 9, 22, 9).toISOString(), endsAt: null, route: "/fleet/runs/r1", timeBasis: "dispatch_recorded", employeeName: "Test driver", linkedTicketId: 8 }]} />);
+    fireEvent.click(screen.getByText("Fleet runs"));
     expect(screen.getByRole("link", { name: "Test haul" }).getAttribute("href")).toBe("/fleet/runs/r1");
     expect(screen.getByText(/Test driver · Ticket #8 · Dispatch recorded · no planned time/)).toBeTruthy();
     expect(screen.getByRole("button", { name: /Thursday, October 22, 2026, 1 scheduled records/ }).getAttribute("aria-pressed")).toBe("true");
@@ -41,10 +42,35 @@ describe("iOS-style web work calendar", () => {
   });
   it("shows actual recorded shift hours without treating an open shift as clocked out", () => {
     render(<WorkCalendar {...props} items={[{ id: "workday-1", workdayId: "clock-1", recordedShift: true, title: "My recorded shift", kind: "Shift", startsAt: new Date(2026, 9, 22, 9).toISOString(), endsAt: null, recordedMilliseconds: 9900000, status: "on_shift" }]} />);
+    fireEvent.click(screen.getByText("Shifts"));
     expect(screen.getByText("Recorded hours: 2h 45m · running")).toBeTruthy();
     expect(screen.getByText(/Recorded shift.*Shift in progress/)).toBeTruthy();
     expect(screen.queryByText(/End time unspecified/)).toBeNull();
-    expect(screen.getByRole("button", { name: "View recorded shift" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "My recorded shift" }));
+    expect(props.onOpenDay).toHaveBeenCalled();
+  });
+  it("groups the selected day into expandable panels with clickable records and resets for another day", () => {
+    const onOpenDay = vi.fn();
+    const items = [
+      {id:"s1",kind:"Shift",title:"Night gate",startsAt:new Date(2026,9,22,18).toISOString(),endsAt:new Date(2026,9,23,6).toISOString()},
+      {id:"m1",kind:"Meeting",title:"Safety briefing",startsAt:new Date(2026,9,22,10).toISOString()},
+      {id:"t1",kind:"Task",title:"Check barriers",startsAt:new Date(2026,9,22,11).toISOString()},
+      {id:"other",kind:"Task",title:"Tomorrow only",startsAt:new Date(2026,9,23,11).toISOString()},
+    ];
+    const view=render(<WorkCalendar {...props} items={items} onOpenDay={onOpenDay}/>);
+    const shifts=screen.getByText("Shifts").closest("details")!;
+    expect(shifts.open).toBe(false);
+    fireEvent.click(screen.getByText("Shifts"));
+    fireEvent.click(screen.getByRole("button",{name:"Night gate"}));
+    expect(onOpenDay).toHaveBeenCalledOnce();
+    expect(screen.getByText("Meetings").closest("details")?.open).toBe(false);
+    expect(screen.queryByText("Tomorrow only")).toBeNull();
+    view.rerender(<WorkCalendar {...props} selectedDay="2026-10-23" items={items} onOpenDay={onOpenDay}/>);
+    expect(screen.queryByText("Shifts")).toBeNull();
+    const tasks=screen.getByText("Tasks").closest("details")!;
+    expect(tasks.open).toBe(false);
+    fireEvent.click(screen.getByText("Tasks"));
+    expect(screen.getByRole("button",{name:"Tomorrow only"})).toBeTruthy();
   });
   it("only offers scheduling when authorized and retains filters on demand", () => {
     const view = render(<WorkCalendar {...props} />);

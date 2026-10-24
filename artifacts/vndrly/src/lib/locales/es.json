@@ -5754,6 +5754,8 @@
     "range": "Período del historial",
     "days": "días",
     "noNotes": "No hay entregas completadas en este período.",
+    "allShiftNotes": "Todas las notas del turno",
+    "selectedNoteIntro": "Notas guardadas de la vigilancia seleccionada.",
     "acknowledged": "Reconocido por el portero entrante autenticado",
     "carryForward": "Acciones pendientes",
     "shiftFollowUps": "Seguimiento del turno",

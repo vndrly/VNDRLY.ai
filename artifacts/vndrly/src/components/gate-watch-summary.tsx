@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock3, NotebookPen, UserCheck, ClipboardList } from "lucide-react";
-import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
+import { Clock3, NotebookPen, UserCheck } from "lucide-react";
+import { WorkspacePanel } from "@/components/work-hub/workspace-panel";
 import { useTranslation } from "react-i18next";
 import type { ChangeOverState, ShiftNotesResponse } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import { changeOverRequest } from "@/lib/change-over-api";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import MyWatchSchedule from "./gate-my-watch-schedule";
+import GateRecentShiftNotes from "./gate-recent-shift-notes";
 
 type Watch = {userId:number;name:string;stationId:string;siteName:string;gateName:string;startedAt:string;watchId?:string|null;canManage?:boolean};
 type AdminCommand = {stationId:string;body:{operationId:string;expectedShiftId:string;action:"assume"|"assign";targetMembershipId?:number}};
@@ -23,7 +24,6 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
   const standers=useQuery({queryKey:["gate-watch-standers",user?.userId,user?.activeMembershipId,assignGate],queryFn:()=>changeOverRequest<{operators:{userId:number;membershipId:number;name:string;companyName:string}[]}>(`/${assignGate}/watch/standers`),enabled:Boolean(assignGate),retry:false,staleTime:0});
   const ownsWatch=current?.shift?.operator_id===user?.userId;
   const previous = notes.data?.rows?.[0];
-  const followUps = previous?.snapshot.openItems.filter(item => item.status === "open") ?? [];
   const c = (en: string, spanish: string) => es ? spanish : en;
   const saved=async(receipt:{action:string;workerName:string})=>{
     setPendingAdmin(null);setAssignGate(null);setAdminMessage(receipt.action==="assume"?c("You assumed the watch.","Has asumido la vigilancia."):c(`Assigned to ${receipt.workerName}. Notification queued.`,`Asignado a ${receipt.workerName}. Notificación en cola.`));
@@ -73,6 +73,6 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
         </> : <p>{c("No recorded handoff in the last 30 days.", "No hay relevos registrados en los últimos 30 días.")}</p>}
       </div>
     </details>
-    <WorkspaceRow icon={ClipboardList} label={c("Read shift notes", "Leer notas del turno")} value={notes.isSuccess ? String(followUps.length) + c(" carried forward", " pendientes transferidos") : c("Unavailable", "No disponible")} href={`/gate/shift-notes?stationId=${stationId}`} />
+    <GateRecentShiftNotes key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${stationId}`} stationId={stationId} siteId={current?.site?.id} />
   </WorkspacePanel>;
 }

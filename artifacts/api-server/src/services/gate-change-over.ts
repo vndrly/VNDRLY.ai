@@ -1046,39 +1046,67 @@ export async function assumeGateWatch(session: SessionPayload, input: {
 
 export async function getShiftNotes(
   session: SessionPayload,
-  input: { stationId: string; days?: number; before?: string; search?: string },
+  input: { stationId: string; days?: number; before?: string; search?: string; limit?: number; handoffId?: string },
 ) {
-  await stationAccess(pool, session, input.stationId);
+  const access = await stationAccess(pool, session, input.stationId);
   const days = input.days ?? 7;
   if (!Number.isInteger(days) || days < 1 || days > 3650)
     return fail(400, "invalid_range", "Choose between 1 and 3650 days");
   const before = input.before ? new Date(input.before) : new Date();
   if (!Number.isFinite(before.getTime()))
     return fail(400, "invalid_cursor", "Invalid notes cursor");
-  const from = new Date(Date.now() - days * 86400000);
+  const limit = input.limit ?? 50;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50)
+    return fail(400, "invalid_range", "Choose between 1 and 50 notes");
+  // The compact latest-notes list and exact-note links must reach older notes,
+  // independently of the history page's selected date range.
+  const from = input.handoffId || (input.limit !== undefined && input.days === undefined)
+    ? new Date(0) : new Date(Date.now() - days * 86400000);
   const result = await pool.query(
-    `SELECT h.*, p.snapshot, p.notes, p.summary, s.started_at, s.ended_at, s.station_id
+    `SELECT h.*, p.snapshot, p.notes, p.summary, p.created_at AS filed_at,
+      s.operator_id AS outgoing_user_id, s.started_at, s.ended_at, s.station_id,
+      (SELECT min(a.created_at) FROM gate_shift_actions a WHERE a.station_id=s.station_id
+       AND a.item_id=h.id AND a.actor_id=$5 AND a.kind='note_viewed') AS viewed_at
     FROM gate_handovers h JOIN gate_preparations p ON p.id=h.preparation_id JOIN gate_shifts s ON s.id=p.shift_id
     WHERE s.station_id=$1 AND h.acknowledged_at >= $2 AND h.acknowledged_at < $3
+    AND ($6::uuid IS NULL OR h.id=$6)
     AND position(lower($4) in lower(p.notes || ' ' || p.snapshot::text || ' ' || h.outgoing_name || ' ' || h.incoming_name)) > 0
-    ORDER BY h.acknowledged_at DESC, h.id DESC LIMIT 51`,
-    [input.stationId, from, before, (input.search ?? "").slice(0, 200)],
+    ORDER BY ${input.limit !== undefined ? "p.created_at" : "h.acknowledged_at"} DESC, h.id DESC LIMIT $7`,
+    [input.stationId, from, before, (input.search ?? "").slice(0, 200), session.userId, input.handoffId ?? null, limit + 1],
   );
-  const rows = result.rows.slice(0, 50);
-  const actions = (
+  if (input.handoffId && !result.rows.length) return fail(404, "not_found", "Shift note not found at this gate");
+  const rows = result.rows.slice(0, limit).map(row => ({ ...row, site_id: access.station.site_id }));
+  const actions = input.limit !== undefined || input.handoffId ? [] : (
     await pool.query(
-      "SELECT a.*, u.display_name AS actor_name FROM gate_shift_actions a JOIN users u ON u.id=a.actor_id WHERE station_id=$1 AND a.created_at >= $2 ORDER BY a.created_at DESC LIMIT 100",
+      "SELECT a.*, u.display_name AS actor_name FROM gate_shift_actions a JOIN users u ON u.id=a.actor_id WHERE station_id=$1 AND a.created_at >= $2 AND a.kind <> 'note_viewed' ORDER BY a.created_at DESC LIMIT 100",
       [input.stationId, from],
     )
   ).rows;
   return {
     rows,
     nextBefore:
-      result.rows.length > 50
-        ? new Date(rows[49].acknowledged_at).toISOString()
+      input.limit === undefined && result.rows.length > limit
+        ? new Date(rows[limit - 1].acknowledged_at).toISOString()
         : null,
     actions,
     from: from.toISOString(),
     retention: "History is retained; this date range is a display filter.",
   };
+}
+
+/** Viewing notes is separate from acknowledging a handoff or assuming a watch. */
+export async function markShiftNoteViewed(session: SessionPayload, stationId: string, handoffId: string) {
+  return changeOverTransaction(async client => {
+    await stationAccess(client, session, stationId);
+    await lockStation(client, stationId);
+    const note = await client.query(`SELECT h.id FROM gate_handovers h
+      JOIN gate_preparations p ON p.id=h.preparation_id JOIN gate_shifts s ON s.id=p.shift_id
+      WHERE h.id=$1 AND s.station_id=$2`, [handoffId, stationId]);
+    if (!note.rowCount) return fail(404, "not_found", "Shift note not found at this gate");
+    await client.query(`INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text)
+      SELECT $1,$2,$3,'note_viewed','Shift note viewed'
+      WHERE NOT EXISTS(SELECT 1 FROM gate_shift_actions WHERE station_id=$1 AND actor_id=$2 AND item_id=$3 AND kind='note_viewed')`,
+      [stationId, session.userId, handoffId]);
+    return { viewed: true };
+  });
 }

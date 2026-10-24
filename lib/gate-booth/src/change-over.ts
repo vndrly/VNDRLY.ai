@@ -53,6 +53,10 @@ export interface ChangeOverState {
   items: { id: string; text: string; status: string }[];
 }
 export interface ShiftNote extends ChangeOverPreparation {
+  filed_at?: string;
+  outgoing_user_id?: number;
+  site_id?: number;
+  viewed_at?: string | null;
   acknowledged_at: string;
   outgoing_name: string;
   incoming_name: string;
