@@ -948,7 +948,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   data-work-hub-card
                   className={`w-full min-h-[18rem] space-y-4 p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
-                  <WorkHubFiles key={active} fixedChannelId={active} initialFile={attachment?.channelId === active ? attachment.file : undefined} onInitialFileConsumed={() => setAttachment(null)} />
+                  <WorkHubFiles key={active} fixedChannelId={active} initialFile={attachment && attachment.channelId === active ? attachment.file : undefined} onInitialFileConsumed={() => setAttachment(null)} />
                 </div>
               )}
               {tab === "people" && (

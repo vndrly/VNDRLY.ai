@@ -46,7 +46,7 @@ it("allows manual entry after OCR fails without inventing receipt amounts", asyn
 });
 it("opens the receipt link, exports by receipt ID, and edits with version checking", async () => {
   show("receipt-1"); await waitFor(() => expect((screen.getByLabelText("Merchant") as HTMLInputElement).value).toBe("Mock Fuel"));
-  expect(screen.getByRole("link", { name: "EXCEL", exact: true }).getAttribute("href")).toBe("/api/work-hub/channels/chat-1/receipts/export?format=xlsx&id=receipt-1");
+  expect(screen.getByRole("link", { name: "EXCEL" }).getAttribute("href")).toBe("/api/work-hub/channels/chat-1/receipts/export?format=xlsx&id=receipt-1");
   fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Fuel" } });
   fireEvent.click(screen.getByRole("checkbox")); fireEvent.click(screen.getByRole("button", { name: "Save receipt" }));
   await screen.findByText("Receipt saved. Its link is in the conversation.");

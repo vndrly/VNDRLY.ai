@@ -10,7 +10,7 @@ it("stages a composer attachment for explicit upload to the selected conversatio
   const file = new File(["mock photo"], "mock-photo.jpg", { type: "image/jpeg" });
   render(<QueryClientProvider client={new QueryClient()}><WorkHubFiles fixedChannelId="shared-1" initialFile={file} onInitialFileConsumed={consumed} /></QueryClientProvider>);
   expect(await screen.findByText("mock-photo.jpg")).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Upload", exact: true })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Upload" })).toBeTruthy();
   expect(consumed).toHaveBeenCalledOnce();
 });
 it("opens the invited channel upload audience from a conversation deep link", async () => {
