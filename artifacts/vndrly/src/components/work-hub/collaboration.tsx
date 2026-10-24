@@ -1,4 +1,9 @@
+import { NoteEditor } from "./note-editor";
+import { NoteMessage } from "./note-message";
+import { ReceiptEditor } from "./receipt-editor";
 import { ConversationTitle } from "./conversation-title";
+import { ConversationAttachments } from "./conversation-attachments";
+import { ConversationTranscript } from "./conversation-transcript";
 import { NewChat } from "./new-chat";
 import { WorkHubFiles } from "./files";
 import { ChatParticipants } from "./chat-participants";
@@ -7,7 +12,7 @@ import "./collaboration.css";
 import { useEffect, useRef, useState } from "react";
 import { useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Hash, Star, Search, Users, Paperclip, StickyNote, Trash2 } from "lucide-react";
+import { MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import {
@@ -129,12 +134,26 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [memberEmail, setMemberEmail] = useState("");
   const [visibility, setVisibility] = useState("crew");
   const [tab, setTab] = useState("conversation");
+  const linkedReceiptId = new URLSearchParams(searchParams).get("receipt");
+  useEffect(() => { if (linkedReceiptId) setTab("receipts"); }, [linkedReceiptId]);
+  const [attachment, setAttachment] = useState<{ channelId: string; file: File } | null>(null);
   const [thread, setThread] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<Row | null>(null);
-  const [note, setNote] = useState({ title: "", body: "" });
-  const [editingNote, setEditingNote] = useState<Row | null>(null);
+
+
   const list = !chat && crew ? crewChannels.data : channels.data;
+  const conversationLayout = useRef<HTMLDivElement>(null);
+  const conversationList = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!list || !conversationList.current || !conversationLayout.current) return;
+    const panel = conversationList.current;
+    // Use the list's original natural height, not a smaller viewport cap.
+    panel.style.height = "auto";
+    const height = Math.ceil(panel.getBoundingClientRect().height);
+    panel.style.height = "";
+    conversationLayout.current.style.setProperty("--conversation-panel-height", `${height}px`);
+  }, [list?.length, !!list]);
   const active = selected || list?.[0]?.id;
   const channel =
     list?.find((c) => c.id === active) ??
@@ -207,17 +226,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         channelOwner,
         {
           body,
-          mentionUserIds: [
-            ...new Set(
-              [...body.matchAll(/@\[(\d+)\]/g)]
-                .map((m) => Number(m[1]))
-                .concat(
-                  (members.data ?? [])
-                    .filter((member) => body.includes(`@${member.displayName}`))
-                    .map((member) => Number(member.userId ?? member.id)),
-                ),
-            ),
-          ],
+          mentionUserIds: [],
           ...(thread && !editing
             ? { rootMessageId: thread, parentMessageId: thread }
             : {}),
@@ -436,8 +445,9 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   return (
     <section className="hub-chat-page w-full space-y-4 p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
       <WorkHubPageHeading module="chat" title={`${brand.name || "Company"} Conversations`} compact />
-      <div className="grid min-h-[calc(100vh-12rem)] gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
+      <div ref={conversationLayout} className="hub-conversation-layout grid gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
       <aside
+        ref={conversationList}
         aria-label="Conversations panel"
         data-work-hub-card
         className={`min-w-0 space-y-4 p-4 ${WORK_HUB_CARD_CLASS}`}
@@ -730,9 +740,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             <section
               aria-label="Selected channel"
               data-work-hub-card
-              className={`flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 ${WORK_HUB_CARD_CLASS}`}
+              className={`flex w-full flex-col items-stretch gap-2 px-4 py-3 ${WORK_HUB_CARD_CLASS}`}
             >
               {channel ? <ConversationTitle key={active} channel={{ id: channel.id, name: channel.name, version: channel.version }} canRename={channel.contextKind === "chat" ? (channel.createdById === user?.userId || canAdministerChannels) : canAdministerChannels} /> : <h2>Conversation</h2>}
+              <div className="flex w-full items-center justify-end gap-1">
+              <ConversationTranscript key={active} channelId={active} />
               {channel?.contextKind !== "chat" && canAdministerChannels && (
                 <div className="order-last">
                   <button
@@ -762,14 +774,15 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 </div>
               )}
               <div className="flex items-center gap-1" role="tablist" aria-label="Conversation tools">
-                {([{ id: "conversation", label: "History", icon: MessageSquare }, { id: "shared", label: "Files", icon: Paperclip },
+                {([{ id: "conversation", label: "History", icon: MessageSquare }, { id: "shared", label: "Files", icon: Folder },
                   { id: "people", label: channel?.contextKind === "chat" ? "People" : "People and groups", icon: Users },
-                  { id: "notes", label: "Notes", icon: StickyNote }]).map(({ id, label, icon: Icon }) => (
+                  { id: "notes", label: "Notes", icon: StickyNote }, { id: "receipts", label: "Receipts", icon: ReceiptText }]).map(({ id, label, icon: Icon }) => (
                   <button key={id} type="button" role="tab" aria-label={label} title={label} aria-selected={tab === id}
                     className="hub-conversation-tool" onClick={() => setTab(id)}>
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </button>
                 ))}
+              </div>
               </div>
             </section>
             <div className="contents">
@@ -809,7 +822,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                           <p className="mt-1 whitespace-pre-wrap break-words text-sm">
                             {m.deletedAt
                               ? "Message deleted"
-                              : displayMentionText(m.body, members.data ?? [])}
+                              : <NoteMessage body={displayMentionText(m.body, members.data ?? [])} />}
                           </p>
                           {!m.deletedAt && (
                             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -883,7 +896,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                         </button>
                       </p>
                     )}
+                    <div className="hub-inline-composer flex min-w-0 items-center gap-0 rounded-xl border-2 border-[color:var(--brand-primary)] px-0.5">
+                      <ConversationAttachments key={active} onSelect={file => { setAttachment({ channelId: active, file }); setTab("shared"); }} />
                     <Textarea
+                      className="min-w-0 flex-1"
                       aria-label="Message"
                       placeholder={
                         thread ? "Reply in thread…" : "Write a message…"
@@ -899,40 +915,22 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                           });
                       }}
                     />
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <button type="button" className="hub-conversation-tool" aria-label="Add a file" title="Add a file" onClick={() => setTab("shared")}><Paperclip className="h-4 w-4" aria-hidden="true" /></button>
-                      <BrandedSelect
-                        aria-label="Mention teammate"
-                        className="max-w-48 text-sm"
-                        value=""
-                        onChange={(e) =>
-                          setDrafts((d) => ({
-                            ...d,
-                            [active]: `${displayMentionText(body, members.data ?? [])} @${members.data?.find((member) => String(member.userId ?? member.id) === e.target.value)?.displayName ?? "teammate"} `,
-                          }))
-                        }
-                      >
-                        <option value="">Mention teammate</option>
-                        {members.data?.map((m) => (
-                          <option
-                            key={m.userId ?? m.id}
-                            value={m.userId ?? m.id}
-                          >
-                            {m.displayName}
-                          </option>
-                        ))}
-                      </BrandedSelect>
-                      <BrandPillButton
-                        tone="blue"
+                      <button
+                        className="hub-conversation-tool disabled:cursor-not-allowed disabled:opacity-40"
                         type="submit"
+                        aria-label={editing ? "Save edit" : "Send message"}
+                        title={editing ? "Save edit" : "Send message"}
                         disabled={!body.trim() || mutation.isPending}
                       >
-                        {editing ? "Save edit" : "Send message"}
-                      </BrandPillButton>
+                        {editing ? <Check className="h-5 w-5" aria-hidden="true" /> : <ChevronRight className="h-5 w-5" aria-hidden="true" />}
+                      </button>
                     </div>
                   </form>
                 </>
               )}
+              {tab === "receipts" && channelOwner && <div role="region" aria-label="Channel content" className="w-full space-y-3 p-4 md:p-6">
+                <ReceiptEditor key={active} channelId={active} owner={channelOwner} initialReceiptId={linkedChannelId === active ? linkedReceiptId : null} />
+              </div>}
               {tab === "notes" && (
                 <div
                   role="region"
@@ -940,68 +938,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   data-work-hub-card
                   className={`grid w-full min-h-[18rem] gap-4 p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
-                  {notes.data?.map((n) => (
-                    <article key={n.id} className="rounded border p-4">
-                      <h3 className="font-semibold">{n.title}</h3>
-                      <p className="whitespace-pre-wrap text-sm">{n.body}</p>
-                      <BrandPillButton
-                        tone="blue"
-                        onClick={() => {
-                          setEditingNote(n);
-                          setNote({ title: n.title, body: n.body });
-                        }}
-                      >
-                        Edit note
-                      </BrandPillButton>
-                    </article>
-                  ))}
-                  <form
-                    className="grid gap-3"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      mutation
-                        .mutateAsync({
-                          path: `/channels/${active}/notes${editingNote ? `/${editingNote.id}` : ""}`,
-                          method: editingNote ? "PATCH" : "POST",
-                          data: commandEnvelope(
-                            channelOwner!,
-                            note,
-                            undefined,
-                            editingNote?.version,
-                          ),
-                        })
-                        .then(() => {
-                          setNote({ title: "", body: "" });
-                          setEditingNote(null);
-                        })
-                        .catch(() => undefined);
-                    }}
-                  >
-                    <Input
-                      aria-label="Note title"
-                      placeholder="Note title"
-                      required
-                      value={note.title}
-                      onChange={(e) =>
-                        setNote({ ...note, title: e.target.value })
-                      }
-                    />
-                    <Textarea
-                      aria-label="Note body"
-                      required
-                      value={note.body}
-                      onChange={(e) =>
-                        setNote({ ...note, body: e.target.value })
-                      }
-                    />
-                    <BrandPillButton
-                      tone="blue"
-                      type="submit"
-                      disabled={mutation.isPending}
-                    >
-                      Save note
-                    </BrandPillButton>
-                  </form>
+                  {channelOwner && <NoteEditor key={active} channelId={active} owner={channelOwner} legacyNotes={notes.data?.map(n => ({ id: String(n.id), title: String(n.title ?? ""), body: String(n.body ?? "") }))} />}
                 </div>
               )}
               {tab === "shared" && (
@@ -1011,7 +948,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   data-work-hub-card
                   className={`w-full min-h-[18rem] space-y-4 p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
-                  <WorkHubFiles key={active} fixedChannelId={active} />
+                  <WorkHubFiles key={active} fixedChannelId={active} initialFile={attachment?.channelId === active ? attachment.file : undefined} onInitialFileConsumed={() => setAttachment(null)} />
                 </div>
               )}
               {tab === "people" && (

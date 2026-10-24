@@ -57,7 +57,7 @@ describe("Work Hub conversations", () => {
     expect(screen.getByRole("button", { name: "Start Chat" }).className).toContain("w-fit");
     fireEvent.click(await screen.findByText("Reply in thread"));
     fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Reply content" } });
-    fireEvent.click(screen.getByText("Send message"));
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages", expect.objectContaining({ method: "POST" })));
     const call = mocks.request.mock.calls.find(([path, init]) => path === "/channels/c1/messages" && init?.method === "POST")!;
     expect(JSON.parse(call[1].body).payload).toMatchObject({ body: "Reply content", rootMessageId: "m1", parentMessageId: "m1" });
@@ -126,11 +126,14 @@ describe("Work Hub conversations", () => {
     });
     mount();
     await screen.findByDisplayValue("Saved draft");
-    fireEvent.click(screen.getByText("Send message"));
+    expect(screen.queryByLabelText("Mention teammate")).toBeNull();
+    fireEvent.change(screen.getByDisplayValue("Saved draft"), { target: { value: "Hello @[7] @Casey Example" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
     await screen.findByText("Connection interrupted");
-    fireEvent.click(screen.getByText("Send message"));
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
     await waitFor(() => expect(sent).toHaveLength(2));
     expect(sent[0].operationId).toBe(sent[1].operationId);
+    expect(sent[0].payload.mentionUserIds).toEqual([]);
   });
   it("renders mention display names without exposing user IDs", () => {
     expect(displayMentionText("Review @[7] and @[99]", [{ userId: 7, displayName: "Casey Example" }])).toBe("Review @Casey Example and @teammate");

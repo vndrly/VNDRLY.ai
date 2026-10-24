@@ -49,7 +49,7 @@ type UploadReservation = {
   finalizeOperationId: string;
   resource: { documentId: string; fileId: string; uploadURL: string };
 };
-export function WorkHubFiles({ fixedChannelId }: { fixedChannelId?: string } = {}) {
+export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsumed }: { fixedChannelId?: string; initialFile?: File; onInitialFileConsumed?: () => void } = {}) {
   const { user } = useAuth();
   const owner = ownerForUser(user);
   const cache = useQueryClient();
@@ -79,6 +79,12 @@ export function WorkHubFiles({ fixedChannelId }: { fixedChannelId?: string } = {
     setVersions(null);
     if (input.current) input.current.value = "";
   }, [user?.userId, user?.activeMembershipId, owner?.type, owner?.id]);
+  useEffect(() => {
+    if (!initialFile || !fixedChannelId) return;
+    setPendingFile(initialFile);
+    setPendingOperationId(createWorkHubOperationId());
+    onInitialFileConsumed?.();
+  }, [initialFile, fixedChannelId, onInitialFileConsumed]);
   useEffect(() => { if (!fixedChannelId && meetingSession?.occurrenceId && !pendingFile && !replace) setScope("meeting"); }, [fixedChannelId, meetingSession?.occurrenceId, pendingFile, replace]);
   const queryKey = ["work-hub-file-library", user?.userId, user?.activeMembershipId, owner?.type, owner?.id];
   const query = useQuery({

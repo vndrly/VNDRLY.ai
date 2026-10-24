@@ -1,0 +1,63 @@
+import { randomUUID } from "node:crypto";
+import express from "express";
+import cookieParser from "cookie-parser";
+import request from "supertest";
+import { and, eq } from "drizzle-orm";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubChannelsTable, workHubChannelMembersTable, workHubFilesTable, workHubFileLibraryTable as library, workHubMessagesTable } from "@workspace/db";
+import receipts from "./workHubReceipts";
+import { buildTestCookie } from "../test-utils/session";
+vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
+const app = express().use(express.json()).use(cookieParser()).use(receipts);
+describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("receipts on an isolated database", () => {
+  let org: number, memberId: number, member: string, outsider: string, otherMember: string, channel: string, photo: string;
+  const fields = { merchant: "Mock receipt only", date: "2026-10-24", subtotal: "10", tax: "1", tip: "0", total: "11", currency: "USD", category: "Fuel", siteProject: "Mock gate", note: "" };
+  const envelope = (payload: unknown, operationId = randomUUID(), expectedVersion: number | null = null) => ({ owner: { type: "vendor", id: org }, context: { kind: "organization", id: org }, payloadVersion: 1, expectedVersion, operationId, payload });
+  const url = () => `/work-hub/channels/${channel}/receipts`;
+  beforeAll(async () => {
+    const suffix = randomUUID();
+    const companies = await db.insert(vendorsTable).values(["Mock Receipt Co", "Mock Other Co"].map(name => ({ name: `${name} ${suffix}` }))).returning();
+    org = companies[0]!.id;
+    const users = await db.insert(usersTable).values(["Owner", "Peer", "Other"].map(n => ({ username: `${n}-${suffix}`, displayName: n, passwordHash: "unused-test-hash", role: "vendor" }))).returning();
+    memberId = users[0]!.id;
+    for (const [index, user] of users.entries()) await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "vendor", vendorId: index === 2 ? companies[1]!.id : org, role: "member" });
+    member = buildTestCookie({ userId: memberId, role: "vendor", vendorId: org, membershipRole: "member" });
+    otherMember = buildTestCookie({ userId: users[1]!.id, role: "vendor", vendorId: org, membershipRole: "member" });
+    outsider = buildTestCookie({ userId: users[2]!.id, role: "vendor", vendorId: companies[1]!.id, membershipRole: "member" });
+    const [chat] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: org, contextKind: "chat", contextId: suffix, name: "Mock receipt chat", visibility: "private", createdById: memberId }).returning();
+    channel = chat!.id;
+    await db.insert(workHubChannelMembersTable).values(users.slice(0, 2).map(u => ({ userId: u.id, channelId: channel, mode: "member" })));
+    const [image] = await db.insert(workHubFilesTable).values({ ownerOrgType: "vendor", ownerOrgId: org, channelId: channel, uploadedById: memberId, storageKey: `/objects/mock/${suffix}`, fileName: "mock.jpg", contentType: "image/jpeg", byteSize: 40, checksumSha256: "0".repeat(64), state: "managed" }).returning();
+    const [doc] = await db.insert(library).values({ orgType: "vendor", orgId: org, kind: "document", recordKey: suffix, createdBy: memberId, data: { scope: "channel", channelId: channel, state: "active", currentFileId: image!.id } }).returning(); photo = doc!.id;
+  });
+  it("saves one receipt and one message across retries; refuses a changed replay", async () => {
+    const body = envelope({ fields, photoDocumentId: photo, reviewed: true });
+    const first = await request(app).post(url()).set("Cookie", member).send(body);
+    expect(first.status).toBe(201);
+    const replay = await request(app).post(url()).set("Cookie", member).send(body);
+    expect(replay.status).toBe(200); expect(replay.body.resource.id).toBe(first.body.resource.id);
+    const messages = await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.clientOperationId, body.operationId));
+    expect(messages).toHaveLength(1); expect(messages[0]!.body).toContain(`receipt=${first.body.resource.id}`);
+    const changed = await request(app).post(url()).set("Cookie", member).send({ ...body, payload: { ...body.payload as object, fields: { ...fields, total: "12" } } });
+    expect(changed.status).toBe(403);
+  });
+  it("requires review and blocks a photo from another conversation", async () => {
+    expect((await request(app).post(url()).set("Cookie", member).send(envelope({ fields, photoDocumentId: photo, reviewed: false }))).status).toBe(400);
+    const [other] = await db.insert(library).values({ orgType: "vendor", orgId: org, kind: "document", recordKey: randomUUID(), createdBy: memberId, data: { scope: "channel", channelId: randomUUID(), state: "active", currentFileId: randomUUID() } }).returning();
+    expect((await request(app).post(url()).set("Cookie", member).send(envelope({ fields, photoDocumentId: other!.id, reviewed: true }))).status).toBe(404);
+  });
+  it("isolates receipt reads and exports; records revisions and rejects stale edits", async () => {
+    const first = await request(app).post(url()).set("Cookie", member).send(envelope({ fields, photoDocumentId: photo, reviewed: true }));
+    const id = first.body.resource.id;
+    for (const suffix of ["", `/${id}`, "/export?format=csv", "/export?format=xlsx"]) expect((await request(app).get(url() + suffix).set("Cookie", outsider)).status).toBe(404);
+    const edit = envelope({ fields: { ...fields, category: "Meals" }, photoDocumentId: photo, reviewed: true }, randomUUID(), 1);
+    expect((await request(app).patch(`${url()}/${id}`).set("Cookie", otherMember).send(edit)).status).toBe(403);
+    expect((await request(app).patch(`${url()}/${id}`).set("Cookie", member).send(edit)).status).toBe(200);
+    expect((await request(app).patch(`${url()}/${id}`).set("Cookie", member).send({ ...edit, operationId: randomUUID() })).status).toBe(409);
+    const revisions = await db.select().from(library).where(and(eq(library.kind, "receipt_revision"), eq(library.recordKey, `${id}:1`)));
+    expect(revisions).toHaveLength(1);
+    const csv = await request(app).get(`${url()}/export?format=csv&id=${id}`).set("Cookie", member);
+    expect(csv.status).toBe(200); expect(csv.text).toContain("Meals");
+    expect((await request(app).get(`${url()}/export?format=xlsx&id=${id}`).set("Cookie", member)).status).toBe(200);
+  });
+});

@@ -65,7 +65,7 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
 .hub-chat-page .hub-communications-window [aria-label="Channel content"],
 .hub-chat-page .hub-communications-window [aria-label="Message composer"] { border: 0; border-radius: 0; box-shadow: none; }
 .hub-chat-page .hub-communications-window [aria-label="Selected channel"] { border-bottom: 1px solid #454548; }
-.hub-chat-page .hub-communications-window [aria-label="Message composer"] { border-top: 1px solid #454548; }
+.hub-chat-page .hub-communications-window [aria-label="Message composer"] { border-top: 0; }
 .hub-chat-page .hub-chat-message { justify-content: flex-start; border: 0; padding-top: 0; }
 .hub-chat-page .hub-chat-message[data-message-tone=self] { flex-direction: row-reverse; }
 .hub-chat-page .hub-chat-bubble { max-width: 82%; padding: 12px 16px; border-radius: 16px; background: #454548; color: #fff; }
@@ -74,3 +74,40 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
 .hub-chat-page .hub-chat-message:not([data-message-tone=self]) .hub-chat-bubble { border-bottom-left-radius: 4px; }
 .hub-chat-page .hub-chat-bubble .text-muted-foreground { color: #e2e2e2; }
 @media (max-width: 600px) { .hub-chat-page { padding: 12px; } }
+.hub-chat-page .hub-inline-composer textarea {
+  padding-left: 2px;
+  padding-right: 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  resize: vertical;
+}
+.hub-inline-composer > :first-child,
+.hub-inline-composer > button { flex-shrink: 0; }
+.hub-conversation-layout { --conversation-panel-height: auto; }
+.hub-chat-page [aria-label="Conversations panel"] {
+  height: var(--conversation-panel-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.hub-chat-page [aria-label="Selected conversation workspace"] {
+  height: var(--conversation-panel-height);
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+.hub-chat-page .hub-communications-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.hub-chat-page .hub-communications-window [aria-label="Selected channel"],
+.hub-chat-page .hub-communications-window [aria-label="Message composer"] { flex-shrink: 0; }
+.hub-chat-page .hub-communications-window [aria-label="Channel content"] {
+  flex: 1 1 0%;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

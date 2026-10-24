@@ -4,6 +4,7 @@ import { db, usersTable, userOrgMembershipsTable, workHubChannelsTable, workHubC
 import type { SessionPayload } from "../lib/session";
 import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
 import { WorkHubAccessError } from "./context-access";
+import { resolveWorkHubInviteEligibility } from "./people-directory";
 
 export const startChatPayload = z.object({
   participantUserIds: z.array(z.number().int().positive()).min(1).max(100),
@@ -22,11 +23,14 @@ export async function startChat(actor: SessionPayload & { userId: number }, raw:
     const ownerId = actor.vendorId || actor.partnerId;
     if (!ownerId) throw new WorkHubAccessError("forbidden");
     const members = await tx.select({ userId: userOrgMembershipsTable.userId }).from(userOrgMembershipsTable).where(and(
-      inArray(userOrgMembershipsTable.userId, [actor.userId, ...ids]),
+      eq(userOrgMembershipsTable.userId, actor.userId),
       eq(userOrgMembershipsTable.orgType, type),
       type === "vendor" ? eq(userOrgMembershipsTable.vendorId, ownerId) : eq(userOrgMembershipsTable.partnerId, ownerId),
     )).for("share");
-    if ([actor.userId, ...ids].some(id => !members.some(m => m.userId === id))) throw new WorkHubAccessError("forbidden");
+    if (!members.some(m => m.userId === actor.userId)) throw new WorkHubAccessError("forbidden");
+    // Match the people picker: company colleagues, approved relationships and
+    // existing collaboration peers. Starting a chat never requires admin status.
+    await Promise.all(ids.map(id => resolveWorkHubInviteEligibility(actor, id)));
     const contextId = `chat:${actor.userId}:${input.operationId}`;
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${contextId}))`);
     const [existing] = await tx.select().from(workHubChannelsTable).where(and(

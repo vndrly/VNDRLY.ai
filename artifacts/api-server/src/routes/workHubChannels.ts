@@ -8,7 +8,7 @@ import { assertMessageMutationReceipt, assertMessageMutationTarget, type Message
 import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
 import { applyAwayRepliesForIncoming } from "../services/work-hub-away-responder-repository";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, desc, eq, gt, lt, ne, sql, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, ne, sql, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
@@ -388,6 +388,25 @@ router.post("/work-hub/channels/:channelId/members", async (req, res) => {
   } catch (error) {
     return fail(res, error);
   }
+});
+
+router.get("/work-hub/channels/:channelId/transcript", async (req, res) => {
+  const actor = session(req);
+  if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const { channel } = await resolveChannelAccess(actor, uuid.parse(req.params.channelId), "channel.read");
+    const messages = await db.select({
+      id: workHubMessagesTable.id,
+      createdAt: workHubMessagesTable.createdAt,
+      authorName: usersTable.displayName,
+      body: sql<string>`CASE WHEN ${workHubMessagesTable.deletedAt} IS NULL THEN ${workHubMessagesTable.body} ELSE '[Message deleted]' END`,
+      parentMessageId: workHubMessagesTable.parentMessageId,
+    }).from(workHubMessagesTable).leftJoin(usersTable, eq(usersTable.id, workHubMessagesTable.authorUserId))
+      .where(eq(workHubMessagesTable.channelId, channel.id))
+      .orderBy(asc(workHubMessagesTable.createdAt), asc(workHubMessagesTable.id));
+    res.setHeader("Cache-Control", "private, no-store");
+    return res.json({ title: channel.name, messages });
+  } catch (error) { return fail(res, error); }
 });
 
 router.get("/work-hub/channels/:channelId/messages", async (req, res) => {

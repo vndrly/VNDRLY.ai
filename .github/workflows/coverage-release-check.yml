@@ -44,7 +44,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Verify affected web behavior
-        run: pnpm --filter @workspace/vndrly exec vitest run src/components/work-hub/collaboration.test.tsx src/components/work-hub/new-chat.test.tsx src/components/work-hub/chat-participants.test.tsx src/components/work-hub/conversation-title.test.tsx src/components/work-hub/files-deeplink.test.tsx src/components/work-hub/share-file-to-channel.test.tsx src/components/work-hub/calendar-summary-cards.test.tsx src/components/work-hub/unread-chat-preview.test.tsx --maxWorkers=1
+        run: pnpm --filter @workspace/vndrly exec vitest run src/components/work-hub/receipt-editor.test.tsx src/components/work-hub/note-editor.test.tsx src/components/work-hub/conversation-attachments.test.tsx src/components/work-hub/conversation-transcript.test.tsx src/components/work-hub/collaboration.test.tsx src/components/work-hub/new-chat.test.tsx src/components/work-hub/chat-participants.test.tsx src/components/work-hub/conversation-title.test.tsx src/components/work-hub/files-deeplink.test.tsx src/components/work-hub/share-file-to-channel.test.tsx src/components/work-hub/calendar-summary-cards.test.tsx src/components/work-hub/unread-chat-preview.test.tsx --maxWorkers=1
       - name: Start a new runner-local PostgreSQL cluster
         shell: bash
         run: |
@@ -59,4 +59,4 @@ jobs:
           "$pg_bin/initdb" --pgdata="$pg_data" --username=postgres --auth=trust
           "$pg_bin/pg_ctl" --pgdata="$pg_data" --log="$RUNNER_TEMP/vndrly-postgres.log" --options="-h 127.0.0.1 -p 55439 -k '$RUNNER_TEMP'" --wait start
       - name: Verify affected API behavior on a new isolated database
-        run: pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run src/routes/workHubFileLibrary.test.ts src/routes/workHubFileLibrary.contract.test.ts src/routes/workHubUnread.test.ts src/work-hub/channel-file-reference.test.ts src/work-hub/start-chat.test.ts src/work-hub/chat-participants.test.ts src/work-hub/channel-members.test.ts src/work-hub/collaboration-access.test.ts src/work-hub/queries.test.ts --no-file-parallelism --maxWorkers=1
+        run: pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run src/work-hub/receipts.test.ts src/routes/workHubReceipts.test.ts src/routes/workHubFileLibrary.test.ts src/routes/workHubFileLibrary.contract.test.ts src/routes/workHubUnread.test.ts src/work-hub/channel-file-reference.test.ts src/work-hub/start-chat.test.ts src/work-hub/chat-participants.test.ts src/work-hub/channel-members.test.ts src/work-hub/collaboration-access.test.ts src/work-hub/queries.test.ts --no-file-parallelism --maxWorkers=1

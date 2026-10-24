@@ -102,6 +102,10 @@ export default defineConfig({
       ? {
           proxy: {
             ...(process.env.VITE_COVERAGE_API_PROXY_TARGET ? {
+                "/api/storage/upload/": {
+                  target: process.env.VITE_COVERAGE_API_PROXY_TARGET,
+                  changeOrigin: true,
+                },
                 "^/api/work-hub/(?:channels|file-library)(?:/|\\?|$)": {
                   target: process.env.VITE_COVERAGE_API_PROXY_TARGET,
                   changeOrigin: true,

@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const mock = vi.hoisted(() => ({ results: [] as any[], inserts: [] as any[], validate: vi.fn() }));
+const mock = vi.hoisted(() => ({ results: [] as any[], inserts: [] as any[], validate: vi.fn(), eligible: vi.fn() }));
 vi.mock("@workspace/db", async () => {
   const tx = {
     execute: vi.fn(),
@@ -9,10 +9,11 @@ vi.mock("@workspace/db", async () => {
   return { ...await import("@workspace/db/schema"), db: { transaction: (fn: any) => fn(tx) } };
 });
 vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: mock.validate }));
+vi.mock("./people-directory", () => ({ resolveWorkHubInviteEligibility: mock.eligible }));
 import { startChat } from "./start-chat";
 const actor = { userId: 7, role: "vendor", vendorId: 4 } as const;
 const operationId = "370d6c0c-0800-4d94-91c7-b88cb8810371";
-beforeEach(() => { mock.inserts = []; mock.results = []; mock.validate.mockReset().mockResolvedValue(actor); });
+beforeEach(() => { mock.inserts = []; mock.results = []; mock.validate.mockReset().mockResolvedValue(actor); mock.eligible.mockReset().mockResolvedValue({ sameCompany: true, relationshipScoped: false }); });
 it.each([{ ids: [8] }, { ids: [8,9] }])("atomically creates the exact members $ids and creator without messages", async ({ ids }) => {
   mock.results = [[{ userId: 7 }, { userId: 8 }, { userId: 9 }], [], [{ id: 8, displayName: "Isaac" }]];
   await startChat(actor, { participantUserIds: ids, name: "Watch", operationId });
@@ -25,8 +26,18 @@ it("reuses a retried operation without adding anyone", async () => {
   expect(await startChat(actor, { participantUserIds: [8], operationId })).toEqual({ channel: { id: "existing" } });
   expect(mock.inserts).toHaveLength(0);
 });
-it("rejects non-company participants before writes", async () => {
+it("rejects people outside the directory before writes", async () => {
   mock.results = [[{ userId: 7 }]];
+  mock.eligible.mockRejectedValue(new Error("forbidden"));
   await expect(startChat(actor, { participantUserIds: [8], operationId })).rejects.toThrow();
   expect(mock.inserts).toHaveLength(0);
+});
+it("lets a non-admin start a private chat with approved external directory contacts", async () => {
+  mock.results = [[{ userId: 7 }], [], [{ id: 8, displayName: "Partner contact" }]];
+  mock.eligible.mockResolvedValue({ sameCompany: false, relationshipScoped: true });
+  await startChat(actor, { participantUserIds: [8, 9, 10, 11], operationId });
+  expect(mock.eligible).toHaveBeenCalledTimes(4);
+  expect(mock.inserts[0]).toMatchObject({ contextKind: "chat", visibility: "private", createdById: 7 });
+  expect(mock.inserts[2].map((member: any) => member.userId)).toEqual([7, 8, 9, 10, 11]);
+  expect(mock.inserts).toHaveLength(3);
 });
