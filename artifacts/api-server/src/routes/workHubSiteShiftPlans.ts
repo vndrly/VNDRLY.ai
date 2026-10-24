@@ -11,6 +11,7 @@ import { isWorkHubEnabled } from "../work-hub/feature-access";
 import { createWorkHubAccess, requireWorkHubCapability } from "../work-hub/context-access";
 import { executeWorkHubCommand } from "../work-hub/commands";
 import { appendWorkHubAudit } from "../work-hub/audit";
+import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
 
 const router = Router();
 import coverageWorkflow from "./coverageWorkflow";
@@ -39,7 +40,7 @@ router.use("/work-hub/site-shift-plans", async (req, res, next) => {
 });
 
 async function authorize(req: Parameters<typeof getSessionFromRequest>[0], owner: WorkHubOwner, siteId?: number) {
-  const session = getSessionFromRequest(req)!;
+  const session = await validateAssistantSession(getSessionFromRequest(req)!,db);
   requireWorkHubCapability(createWorkHubAccess({ session: { ...session, userId: session.userId! }, owner, context: { kind: "organization", id: owner.id }, participant: true }), "shift.manage");
   const sites = await db.select({ id: siteLocationsTable.id, name: siteLocationsTable.name }).from(siteLocationsTable).where(and(
     siteId ? eq(siteLocationsTable.id, siteId) : undefined,
