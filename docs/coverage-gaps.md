@@ -17,8 +17,11 @@ All resolutions require review. The API rechecks current access, versions, site 
 
 ## Local verification and storage
 
-The local preview on port 8098 allows GET requests only and uses read-only database transactions. It must stay that way for testing against the shared database. UI tests and API tests mock saves; do not run database reset or seeding scripts.
+The local preview on port 8098 defaults to read-only database transactions. Set `VNDRLY_COVERAGE_WRITES=1` deliberately to enable only the reviewed coverage-resolution and own-shift coverage-request POST endpoints. Write requests require an allowed localhost origin, JSON, and a current session validated by the production issuer. Other writes remain disabled. No application background workers run in this preview.
 
-`lib/db/drizzle/coverage_resolutions.sql` adds durable exception/ownership records. It is intentionally not applied on server startup. This change was prepared locally and has not been applied to Supabase. Resolution saving fails closed until that table is deliberately provisioned in the intended environment. Nothing in this feature authorizes deployment or altering existing assignments during testing.
+Run `pnpm --filter @workspace/api-server run migrate:coverage-resolutions` with the intended database environment to provision coverage storage. The migration applies additive pattern metadata and durable exception/ownership records transactionally; it does not modify shifts or assignments. Production API deployment runs this replay-safe migration explicitly. It is not an application-startup migration. Coverage saving requires the storage to exist.
 
-Focused checks: coverage-gaps.test.tsx, shift-assignments.test.tsx, shift-assignment-model.test.ts, coverageWorkflow.test.ts, coverage-rules.test.ts, workHubSiteShiftPlans.test.ts, and site-schedule-policy.test.ts. Full API typecheck was stopped because it made the local machine unresponsive; it is not claimed as passing.
+Tests must not submit changes to existing shifts or assignments. The persistence integration suite requires a fresh isolated loopback database and verifies temporary saves, idempotency, permanent future ownership, and transaction rollback. Never point reset or seed scripts at the shared database. Local browser verification may prepare and review a resolution, but must leave it unsaved.
+
+Focused checks: coverage-gaps.test.tsx, shift-assignments.test.tsx, shift-assignment-model.test.ts, site-shift-administration.test.tsx, coverageWorkflow.test.ts, coverageWorkflow.integration.test.ts, coverage-rules.test.ts, workHubSiteShiftPlans.test.ts, and site-schedule-policy.test.ts. Run the required release gates before deployment.
+
