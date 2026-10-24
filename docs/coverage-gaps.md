@@ -24,4 +24,3 @@ Run `pnpm --filter @workspace/api-server run migrate:coverage-resolutions` with 
 Tests must not submit changes to existing shifts or assignments. The persistence integration suite requires a fresh isolated loopback database and verifies temporary saves, idempotency, permanent future ownership, and transaction rollback. Never point reset or seed scripts at the shared database. Local browser verification may prepare and review a resolution, but must leave it unsaved.
 
 Focused checks: coverage-gaps.test.tsx, shift-assignments.test.tsx, shift-assignment-model.test.ts, site-shift-administration.test.tsx, coverageWorkflow.test.ts, coverageWorkflow.integration.test.ts, coverage-rules.test.ts, workHubSiteShiftPlans.test.ts, and site-schedule-policy.test.ts. Run the required release gates before deployment.
-
