@@ -6,6 +6,7 @@ import {
   workHubCrewMembersTable,
   userOrgMembershipsTable,
   workHubCrewsTable,
+  workHubChannelsTable,
 } from "@workspace/db";
 import { canReadCollaborationChannel } from "./collaboration-policy";
 import { WorkHubAccessError } from "./context-access";
@@ -21,6 +22,15 @@ export async function collaborationChannelScope(
     .where(eq(workHubCollaborationChannelsTable.channelId, channelId))
     .limit(1);
   if (!scope) return null;
+  if (scope.kind === "chat") {
+    const [channel] = await database.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channelId)).limit(1);
+    const [admin] = channel ? await database.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(and(
+      eq(userOrgMembershipsTable.userId, userId), eq(userOrgMembershipsTable.orgType, channel.ownerOrgType),
+      eq(userOrgMembershipsTable.role, "admin"),
+      channel.ownerOrgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, channel.ownerOrgId) : eq(userOrgMembershipsTable.partnerId, channel.ownerOrgId),
+    )).limit(1) : [];
+    if (admin) return { ...scope, readable: true, manager: true };
+  }
   const [member] = await database
     .select()
     .from(workHubChannelMembersTable)

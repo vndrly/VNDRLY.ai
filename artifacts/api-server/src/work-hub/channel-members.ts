@@ -104,9 +104,15 @@ export async function readChannelMembers(actor: Actor, channelId: string) {
 
 export async function readChannelMemberAccess(actor: Actor, channelId: string) {
   return db.transaction(async (tx) => {
-    await currentChannel(tx, actor, channelId);
+    const { channel } = await currentChannel(tx, actor, channelId);
     const scope = await collaborationChannelScope(actor.userId, channelId, tx);
-    if (scope?.kind === "chat") return { canManage: false };
+    if (scope?.kind === "chat") {
+      const [admin] = await tx.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(and(
+        eq(userOrgMembershipsTable.userId, actor.userId), eq(userOrgMembershipsTable.orgType, channel.ownerOrgType), eq(userOrgMembershipsTable.role, "admin"),
+        channel.ownerOrgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, channel.ownerOrgId) : eq(userOrgMembershipsTable.partnerId, channel.ownerOrgId),
+      )).limit(1);
+      return { canManage: channel.createdById === actor.userId || Boolean(admin) };
+    }
     try {
       await resolveChannelAccess(actor, channelId, "channel.manage", tx);
       return { canManage: true };

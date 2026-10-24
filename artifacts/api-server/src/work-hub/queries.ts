@@ -57,6 +57,11 @@ export async function resolveChannelAccess(
 ): Promise<{ channel: typeof workHubChannelsTable.$inferSelect; access: WorkHubAccess }> {
   const [channel] = await database.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channelId)).limit(1);
   if (!channel || channel.status !== "active") throw new (await import("./context-access")).WorkHubAccessError("not_found");
+  if (capability === "channel.manage" && channel.contextKind !== "chat") {
+    const ownsCompany = channel.ownerOrgType === "vendor" ? session.vendorId === channel.ownerOrgId : session.partnerId === channel.ownerOrgId;
+    if (session.managedSubcontractor || !(session.role === "admin" || (ownsCompany && session.membershipRole === "admin")))
+      throw new (await import("./context-access")).WorkHubAccessError("forbidden");
+  }
   if (await collaborationChannelAccess(session.userId, channel.id, database) === false) throw new (await import("./context-access")).WorkHubAccessError("not_found");
   const participant = await isWorkHubParticipant(session, channel, database);
   if (!participant) throw new (await import("./context-access")).WorkHubAccessError("not_found");
@@ -119,7 +124,14 @@ function listedChannelAccess(session: SessionPayload & { userId: number }): SQL 
         ))
       )
   )`;
-  return sql`(${legacyAccess} OR ${collaborationAccess})`;
+  const chatAdminAccess = sql`(${workHubChannelsTable.contextKind} = 'chat' AND EXISTS (
+    SELECT 1 FROM user_org_memberships admin_membership
+    WHERE admin_membership.user_id = ${session.userId} AND admin_membership.role = 'admin'
+    AND admin_membership.org_type = ${workHubChannelsTable.ownerOrgType}
+    AND ((${workHubChannelsTable.ownerOrgType} = 'vendor' AND admin_membership.vendor_id = ${workHubChannelsTable.ownerOrgId})
+      OR (${workHubChannelsTable.ownerOrgType} = 'partner' AND admin_membership.partner_id = ${workHubChannelsTable.ownerOrgId}))
+  ))`;
+  return sql`(${legacyAccess} OR ${collaborationAccess} OR ${chatAdminAccess})`;
 }
 
 const ChannelCursorSchema = z.object({ updatedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/), id: z.uuid() });

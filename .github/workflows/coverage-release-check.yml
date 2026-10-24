@@ -23,3 +23,37 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck:libs
       - run: pnpm --filter @workspace/api-server run typecheck
+      - run: pnpm --filter @workspace/vndrly run typecheck
+      - run: pnpm lint:i18n
+  conversations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 55439:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      VNDRLY_TEST_DB_MODE: fresh-local
+      VNDRLY_TEST_DB_MAINTENANCE_URL: postgresql://postgres@127.0.0.1:55439/postgres
+      VNDRLY_LOAD_ENV_LOCAL: '0'
+      VITEST_MAX_WORKERS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify affected web behavior
+        run: pnpm --filter @workspace/vndrly exec vitest run src/components/work-hub/collaboration.test.tsx src/components/work-hub/new-chat.test.tsx src/components/work-hub/chat-participants.test.tsx src/components/work-hub/conversation-title.test.tsx src/components/work-hub/files-deeplink.test.tsx src/components/work-hub/share-file-to-channel.test.tsx src/components/work-hub/calendar-summary-cards.test.tsx src/components/work-hub/unread-chat-preview.test.tsx --maxWorkers=1
+      - name: Verify affected API behavior on a new isolated database
+        run: pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run src/routes/workHubFileLibrary.test.ts src/routes/workHubFileLibrary.contract.test.ts src/routes/workHubUnread.test.ts src/work-hub/channel-file-reference.test.ts src/work-hub/start-chat.test.ts src/work-hub/chat-participants.test.ts src/work-hub/channel-members.test.ts src/work-hub/collaboration-access.test.ts src/work-hub/queries.test.ts --no-file-parallelism --maxWorkers=1

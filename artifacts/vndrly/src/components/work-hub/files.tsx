@@ -1,3 +1,4 @@
+import { ShareFileToChannel, type FileShareChannel } from "./share-file-to-channel";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,7 +22,7 @@ import {
   Share2,
   Upload,
 } from "lucide-react";
-import { WorkHubCardTitle } from "./chrome";
+import { BrandedSelect, WorkHubCardTitle } from "./chrome";
 import { useMeetingSession } from "@/components/meeting-session-provider";
 import { withRequestDeadline } from "@/lib/request-deadline";
 type Document = {
@@ -48,14 +49,14 @@ type UploadReservation = {
   finalizeOperationId: string;
   resource: { documentId: string; fileId: string; uploadURL: string };
 };
-export function WorkHubFiles() {
+export function WorkHubFiles({ fixedChannelId }: { fixedChannelId?: string } = {}) {
   const { user } = useAuth();
   const owner = ownerForUser(user);
   const cache = useQueryClient();
   const meetingSession = useMeetingSession();
   const input = useRef<HTMLInputElement>(null);
-  const [scope, setScope] = useState(() => new URLSearchParams(window.location.search).get("channel") ? "channel" : meetingSession?.occurrenceId ? "meeting" : "personal");
-  const [channelId, setChannelId] = useState(() => new URLSearchParams(window.location.search).get("channel") ?? "");
+  const [scope, setScope] = useState(() => fixedChannelId || new URLSearchParams(window.location.search).get("channel") ? "channel" : meetingSession?.occurrenceId ? "meeting" : "personal");
+  const [channelId, setChannelId] = useState(() => fixedChannelId ?? new URLSearchParams(window.location.search).get("channel") ?? "");
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [replace, setReplace] = useState<Document | null>(null);
@@ -78,7 +79,7 @@ export function WorkHubFiles() {
     setVersions(null);
     if (input.current) input.current.value = "";
   }, [user?.userId, user?.activeMembershipId, owner?.type, owner?.id]);
-  useEffect(() => { if (meetingSession?.occurrenceId && !pendingFile && !replace) setScope("meeting"); }, [meetingSession?.occurrenceId, pendingFile, replace]);
+  useEffect(() => { if (!fixedChannelId && meetingSession?.occurrenceId && !pendingFile && !replace) setScope("meeting"); }, [fixedChannelId, meetingSession?.occurrenceId, pendingFile, replace]);
   const queryKey = ["work-hub-file-library", user?.userId, user?.activeMembershipId, owner?.type, owner?.id];
   const query = useQuery({
     queryKey,
@@ -93,8 +94,8 @@ export function WorkHubFiles() {
     enabled: !!owner,
     queryFn: () =>
       workHubRequest<
-        { id: string; name: string; ownerOrgType: string; ownerOrgId: number }[]
-      >("/channels"),
+        FileShareChannel[]
+      >("/channels?limit=100"),
   });
   const change = useMutation({
     mutationFn: async ({
@@ -218,6 +219,7 @@ export function WorkHubFiles() {
   if (!owner) return <p>Select a company to open your files.</p>;
   const rows = (query.data ?? []).filter(
     (doc) =>
+      (!fixedChannelId || doc.data.channelId === fixedChannelId) &&
       (filter === "recycle"
         ? doc.data.state === "recycled"
         : doc.data.state === "active") &&
@@ -228,36 +230,38 @@ export function WorkHubFiles() {
   );
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <label>
-          Show{" "}
-          <select
-            className="bg-background border rounded p-2"
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_125px] items-center gap-2">
+        <label className="order-last min-w-0">
+          <BrandedSelect
+            aria-label="File filter"
+            style={{ backgroundColor: "#242426", color: "#ececec", colorScheme: "dark" }}
+            className="w-full text-sm"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="all">All files</option>
-            <option value="personal">Personal</option>
-            <option value="shared">Company & channel</option>
+            {!fixedChannelId && <option value="personal">Personal</option>}
+            {!fixedChannelId && <option value="shared">Company & channel</option>}
             <option value="favorites">Favorites</option>
             <option value="recycle">Recycle bin</option>
-          </select>
+          </BrandedSelect>
         </label>
         <Input
-          className="max-w-sm"
+          className="min-w-0 w-full"
           placeholder="Search files"
           aria-label="Search files"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <Card>
-        <CardHeader>
+      <Card className={fixedChannelId ? "border-0 shadow-none !bg-transparent" : undefined}>
+        {!fixedChannelId && <CardHeader>
           <CardTitle><WorkHubCardTitle icon={Upload}>Upload a file</WorkHubCardTitle></CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+        </CardHeader>}
+        <CardContent className={fixedChannelId ? "!p-0 space-y-2" : "space-y-3"}>
+          {!fixedChannelId && <>
           <p>
-            Files stay private to the chosen audience. Replacement uploads
+            Files are visible to the chosen audience and authorized administrators. Replacement uploads
             preserve earlier versions. Word and Excel files can be downloaded;
             edit them in their own applications.
           </p>
@@ -267,7 +271,7 @@ export function WorkHubFiles() {
               aria-label="File audience"
               className="bg-background border rounded p-2"
               value={scope}
-              disabled={upload.isPending || reservationStarted}
+              disabled={!!fixedChannelId || upload.isPending || reservationStarted}
               onChange={(e) => setScope(e.target.value)}
             >
               <option value="personal">Only me</option>
@@ -284,7 +288,7 @@ export function WorkHubFiles() {
                 aria-label="File channel"
                 className="bg-background border rounded p-2"
                 value={channelId}
-                disabled={upload.isPending || reservationStarted}
+                disabled={!!fixedChannelId || upload.isPending || reservationStarted}
                 onChange={(e) => setChannelId(e.target.value)}
               >
                 <option value="">Choose channel</option>
@@ -296,7 +300,11 @@ export function WorkHubFiles() {
               </select>
             </label>
           )}
+          </>}
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {fixedChannelId && <BrandPillButton type="button" tone="brand" disabled={upload.isPending || reservationStarted} onClick={() => input.current?.click()}><Upload className="mr-1 h-4 w-4" />Choose file</BrandPillButton>}
           <input
+            className={fixedChannelId ? "hidden" : "max-w-full"}
             ref={input}
             type="file"
             aria-label="Choose file to upload"
@@ -311,7 +319,7 @@ export function WorkHubFiles() {
               setReservedUpload(null);
             }}
           />
-          <BrandPillButton
+          {(!fixedChannelId || pendingFile) && <BrandPillButton
             type="button"
             tone="brand"
             className="w-fit"
@@ -322,8 +330,10 @@ export function WorkHubFiles() {
             }
             onClick={() => pendingFile && upload.mutate(pendingFile)}
           >
-            Upload File
-          </BrandPillButton>
+            Upload
+          </BrandPillButton>}
+          {fixedChannelId && pendingFile && <span className="min-w-0 truncate text-sm" title={pendingFile.name}>{pendingFile.name}</span>}
+          </div>
           {replace && (
             <p>
               Replacing {replace.data.name}.{" "}
@@ -421,6 +431,7 @@ export function WorkHubFiles() {
                       <History className="mr-1 h-4 w-4" />
                       Versions
                     </Button>
+                    {doc.canManage && doc.data.currentFileId && <ShareFileToChannel key={doc.id} source={doc} channels={channels.data ?? []} onShare={channelId => change.mutateAsync({ action: "share-to-channel", payload: { id: doc.id, channelId } })} />}
                     {doc.canManage && (
                       <>
                         <Button

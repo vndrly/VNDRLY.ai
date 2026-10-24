@@ -1,0 +1,27 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { expect, it, vi, beforeEach } from "vitest";
+const request = vi.hoisted(() => vi.fn());
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7 } }) }));
+vi.mock("@/components/brand-pill-button", () => ({ default: ({ children, tone, ...props }: any) => <button {...props}>{children}</button> }));
+vi.mock("@/lib/work-hub-client", async original => ({ ...await original<any>(), workHubRequest: request }));
+import { NewChat } from "./new-chat";
+beforeEach(() => request.mockReset().mockImplementation(async (_path, init) => init ? { channel: { id: "new" } } : [{ id: 7, displayName: "Me" }, { id: 8, displayName: "Isaac" }, { id: 9, displayName: "Taylor" }]));
+it.each([1, 2])("starts with exactly %i people after removable selections and optional naming", async count => {
+  const created = vi.fn();
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><NewChat onCreated={created} /></QueryClientProvider>);
+  expect((screen.getByText("Start Chat") as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(await screen.findByLabelText("Isaac"));
+  fireEvent.click(screen.getByLabelText("Taylor"));
+  fireEvent.click(screen.getByLabelText("Remove Taylor"));
+  if (count === 2) fireEvent.click(screen.getByLabelText("Taylor"));
+  fireEvent.change(screen.getByLabelText("Chat name (optional)"), { target: { value: count === 2 ? "Night crew" : "" } });
+  expect(request.mock.calls.some(([, init]) => init)).toBe(false);
+  fireEvent.click(screen.getByText("Start Chat"));
+  await waitFor(() => expect(created).toHaveBeenCalledWith("new"));
+  const [path, init] = request.mock.calls.find(([, init]) => init)!;
+  expect(path).toBe("/channels/start-chat");
+  expect(JSON.parse(init.body)).toMatchObject({ participantUserIds: count === 2 ? [8,9] : [8] });
+  expect(JSON.parse(init.body).name).toBe(count === 2 ? "Night crew" : undefined);
+  expect(screen.queryByLabelText("Remove Isaac")).toBeNull();
+});

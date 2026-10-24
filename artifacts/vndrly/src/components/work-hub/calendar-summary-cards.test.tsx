@@ -1,3 +1,4 @@
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, activeMembershipId: 1 } }) }));
 import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
@@ -33,7 +34,6 @@ describe("CalendarSummaryCards flyouts", () => {
     "My next shift",
     "Next meeting",
     "Tasks due soon",
-    "Unread conversations",
   ])("uses the Ask V-style header controls and square company logo for %s", (title) => {
     const view = renderCards();
     fireEvent.click(screen.getByRole("button", { name: `Open ${title}` }));
@@ -73,5 +73,29 @@ describe("CalendarSummaryCards flyouts", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open Tasks due soon" }));
 
     expect(screen.getAllByTestId("calendar-summary-item")[0]?.textContent).toContain("Urgent · Safety task");
+  });
+  it("expands unread chats with individual counters and collapses without marking them read", () => {
+    renderCards({ channels: [{ id: "crew", name: "Gate crew", unreadCount: 4 }, { id: "office", name: "Office", unreadCount: 2 }, { id: "read", name: "Already read", unreadCount: 0 }] });
+    const toggle = screen.getByRole("button", { name: /Unread conversations\s*6/ });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("link", { name: /Gate crew/ })).toBeNull();
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    const chat = screen.getByRole("button", { name: /Gate crew\s*4 unread messages/ });
+    expect(chat.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.getByRole("button", { name: /Office\s*2 unread messages/ })).toBeTruthy();
+    expect(screen.queryByText("Already read")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(toggle);
+    expect(screen.queryByRole("link", { name: /Gate crew/ })).toBeNull();
+  });
+  it("shows an empty unread list distinctly from a failed source", () => {
+    const view = renderCards();
+    fireEvent.click(screen.getByRole("button", { name: /Unread conversations\s*0/ }));
+    expect(screen.getByRole("status").textContent).toBe("No unread conversations.");
+    view.unmount();
+    renderCards({ channelsUnavailable: true });
+    fireEvent.click(screen.getByRole("button", { name: /Unread conversations\s*Unavailable/ }));
+    expect(screen.getByRole("status").textContent).toBe("Conversations could not load.");
   });
 });

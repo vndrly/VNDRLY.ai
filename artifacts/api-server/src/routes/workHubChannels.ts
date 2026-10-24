@@ -1,3 +1,6 @@
+import unreadRoutes, { unreadFor } from "./workHubUnread";
+import { changeChatParticipants } from "../work-hub/chat-participants";
+import { startChat } from "../work-hub/start-chat";
 import { addChannelMember, readChannelMemberAccess, readChannelMembers } from "../work-hub/channel-members";
 import { messageReactionPayload, reactionActive, assertReactionReceipt, type ReactionIntent } from "../work-hub/message-reaction";
 import { resolveMessageThread } from "../work-hub/message-thread";
@@ -14,6 +17,7 @@ import {
   workHubChannelMembersTable,
   workHubChannelsTable,
   workHubMessagesTable,
+  workHubMessageMetadataTable,
   workHubClientOperationsTable,
   workHubMessageVersionsTable,
   workHubMentionsTable,
@@ -135,6 +139,39 @@ router.use("/work-hub", async (_req, res, next) => {
   next();
 });
 
+router.use(unreadRoutes);
+
+router.patch("/work-hub/channels/:channelId", async (req, res) => {
+  const actor = session(req);
+  if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const id = uuid.parse(req.params.channelId);
+    const input = z.object({ name: z.string().trim().min(1).max(120), expectedName: z.string() }).strict().parse(req.body);
+    const channel = await db.transaction(async tx => {
+      await validateAssistantSession(actor, tx);
+      const { channel } = await resolveChannelAccess(actor, id, "channel.manage", tx);
+      const [admin] = await tx.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(and(
+        eq(userOrgMembershipsTable.userId, actor.userId), eq(userOrgMembershipsTable.role, "admin"),
+        eq(userOrgMembershipsTable.orgType, channel.ownerOrgType),
+        channel.ownerOrgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, channel.ownerOrgId) : eq(userOrgMembershipsTable.partnerId, channel.ownerOrgId),
+      )).limit(1);
+      if (!admin && !(channel.contextKind === "chat" && channel.createdById === actor.userId)) throw new WorkHubAccessError("forbidden");
+      const [updated] = await tx.update(workHubChannelsTable).set({ name: input.name, updatedAt: new Date() })
+        .where(and(eq(workHubChannelsTable.id, id), eq(workHubChannelsTable.name, input.expectedName))).returning();
+      if (!updated) throw new Error("work_hub.version_conflict");
+      return updated;
+    });
+    return res.json({ channel });
+  } catch (error) { return fail(res, error); }
+});
+
+router.post("/work-hub/channels/start-chat", async (req, res) => {
+  const actor = session(req);
+  if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try { return res.status(201).json(await startChat(actor, req.body)); }
+  catch (error) { fail(res, error); }
+});
+
 router.get("/work-hub/channels", async (req, res) => {
   const actor = session(req);
   if (!actor)
@@ -164,28 +201,8 @@ router.get("/work-hub/channels", async (req, res) => {
   );
   const enriched = await Promise.all(
     channels.map(async (channel) => {
-      const [cursor] = await db
-        .select({ seenAt: workHubReadCursorsTable.seenAt })
-        .from(workHubReadCursorsTable)
-        .where(
-          and(
-            eq(workHubReadCursorsTable.channelId, channel.id),
-            eq(workHubReadCursorsTable.userId, actor.userId),
-          ),
-        )
-        .limit(1);
-      const [row] = await db
-        .select({ unreadCount: sql<number>`count(*)::int` })
-        .from(workHubMessagesTable)
-        .where(
-          and(
-            eq(workHubMessagesTable.channelId, channel.id),
-            ne(workHubMessagesTable.authorUserId, actor.userId),
-            cursor?.seenAt
-              ? gt(workHubMessagesTable.createdAt, cursor.seenAt)
-              : undefined,
-          ),
-        );
+      const [row] = await db.select({ unreadCount: sql<number>`count(*)::int` })
+        .from(workHubMessagesTable).where(unreadFor(channel.id, actor.userId));
       return { ...channel, unreadCount: row?.unreadCount ?? 0 };
     }),
   );
@@ -332,6 +349,13 @@ router.get("/work-hub/channels/:channelId/member-access", async (req, res) => {
   catch (error) { return fail(res, error); }
 });
 
+router.patch("/work-hub/channels/:channelId/chat-participants", async (req, res) => {
+  const actor = session(req);
+  if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try { return res.json(await changeChatParticipants(actor, uuid.parse(req.params.channelId), req.body)); }
+  catch (error) { return fail(res, error); }
+});
+
 router.get("/work-hub/channels/:channelId/members", async (req, res) => {
   const actor = session(req);
   if (!actor)
@@ -376,12 +400,16 @@ router.get("/work-hub/channels/:channelId/messages", async (req, res) => {
       "Authentication required",
     );
   try {
-    await resolveChannelAccess(actor, req.params.channelId, "channel.read");
+    const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.read");
     const before = typeof req.query.before === "string" ? new Date(req.query.before) : undefined;
     const rows = await db.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.channelId, req.params.channelId), before && !Number.isNaN(before.getTime()) ? lt(workHubMessagesTable.createdAt, before) : undefined)).orderBy(desc(workHubMessagesTable.createdAt), desc(workHubMessagesTable.id)).limit(Math.min(100, Number(req.query.limit) || 50));
     const reactions = rows.length ? await db.select().from(workHubReactionsTable).where(inArray(workHubReactionsTable.messageId, rows.map(r => r.id))) : [];
     const authors = rows.length ? await db.select({ id: usersTable.id, displayName: usersTable.displayName }).from(usersTable).where(inArray(usersTable.id, [...new Set(rows.map(r => r.authorUserId))])) : [];
-    return res.json(rows.map(row => ({ ...row, body: row.deletedAt ? "" : row.body, authorName: authors.find(a => a.id === row.authorUserId)?.displayName ?? "", reactions: row.deletedAt ? [] : reactions.filter(r => r.messageId === row.id) })));
+    const admins = rows.length ? await db.select({ userId: userOrgMembershipsTable.userId }).from(userOrgMembershipsTable).where(and(
+      inArray(userOrgMembershipsTable.userId, rows.map(r => r.authorUserId)), eq(userOrgMembershipsTable.role, "admin"),
+      eq(userOrgMembershipsTable.orgType, channel.ownerOrgType), channel.ownerOrgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, channel.ownerOrgId) : eq(userOrgMembershipsTable.partnerId, channel.ownerOrgId),
+    )) : [];
+    return res.json(rows.map(row => ({ ...row, body: row.deletedAt ? "" : row.body, authorIsAdmin: admins.some(a => a.userId === row.authorUserId), authorName: authors.find(a => a.id === row.authorUserId)?.displayName ?? "", reactions: row.deletedAt ? [] : reactions.filter(r => r.messageId === row.id) })));
   } catch (error) { return fail(res, error); }
 });
 

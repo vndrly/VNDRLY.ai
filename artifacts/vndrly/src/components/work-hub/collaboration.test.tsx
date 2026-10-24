@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ActivityWorkspace, CollaborationWorkspace, displayMentionText } from "./collaboration";
+import { ActivityWorkspace, CollaborationWorkspace, displayMentionText, conversationCategory } from "./collaboration";
 const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   save: vi.fn(),
@@ -14,21 +14,47 @@ vi.mock("./navigation", () => ({ useHubPreferences: () => ({ preferences: { favo
 vi.mock("@/lib/work-hub-client", async importOriginal => ({ ...await importOriginal<any>(), workHubRequest: mocks.request }));
 function mount(chat = true) { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><CollaborationWorkspace chat={chat}/></QueryClientProvider>); }
 describe("Work Hub conversations", () => {
+  it("groups site channels, crew conversations, and chats without duplicate entries", () => {
+    expect(conversationCategory({ contextKind: "gate" })).toBe("Channels");
+    expect(conversationCategory({ contextKind: "crew" })).toBe("Channels");
+    expect(conversationCategory({ contextKind: "chat", contextId: "group:crew" })).toBe("Channels");
+    expect(conversationCategory({ contextKind: "chat", contextId: "7:8" })).toBe("Chats");
+  });
+  it("lets ordinary users start chats while hiding channel creation", async () => {
+    mocks.user.membershipRole = "member";
+    mount(); await screen.findByText("Original message");
+    expect(screen.getByText("New Chat")).toBeTruthy();
+    expect(screen.queryByText("New channel")).toBeNull();
+  });
   beforeEach(() => {
+    window.history.replaceState(null, "", "/work-hub/chat");
     mocks.request.mockReset(); mocks.save.mockReset();
     mocks.user = { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "admin" };
     mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
       if (init) return { resource: {} };
-      if (path === "/chats") return [{ id: "c1", name: "Operations", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 2 }, { id: "c2", name: "Dispatch", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 0 }];
+      if (path === "/channels?limit=100") return [{ id: "c1", name: "Operations", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 2 }, { id: "c2", name: "Dispatch", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 0 }];
       if (path === "/channels/c1/messages") return [{ id: "m1", body: "Original message", authorUserId: 7, createdAt: "2026-09-09T12:00:00Z", version: 2 }];
       return [];
     });
   });
+  it("opens a linked gate channel even when it is absent from the chat-only list", async () => {
+    window.history.replaceState(null, "", "/work-hub/chat?channel=gate");
+    mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (init) return {};
+      if (path === "/channels?limit=100") return [{ id: "gate", name: "GasGo Gate", ownerOrgType: "vendor", ownerOrgId: 1 }];
+      if (path === "/channels/gate/messages") return [{ id: "gate-message", body: "Mock gate conversation", authorUserId: 8, createdAt: "2026-10-24T12:00:00Z" }];
+      return [];
+    });
+    mount();
+    expect(await screen.findByRole("heading", { name: "GasGo Gate" })).toBeTruthy();
+    expect(await screen.findByText("Mock gate conversation")).toBeTruthy();
+    window.history.replaceState(null, "", "/work-hub/chat");
+  });
   it("loads saved drafts and sends a reply with its thread root", async () => {
     mount();
     expect(await screen.findByDisplayValue("Saved draft")).toBeTruthy();
-    expect(screen.getByLabelText("Person").className).toContain("text-sm");
-    expect(screen.getByRole("button", { name: "Send Invite" }).className).toContain("w-fit");
+    expect(screen.getByLabelText("Find chat participants")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Start Chat" }).className).toContain("w-fit");
     fireEvent.click(await screen.findByText("Reply in thread"));
     fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Reply content" } });
     fireEvent.click(screen.getByText("Send message"));
@@ -64,7 +90,7 @@ describe("Work Hub conversations", () => {
     await screen.findByText("Original message");
     const panel = screen.getByRole("complementary", { name: "Conversations panel" });
     expect(panel.parentElement?.className).toContain("minmax(340px,380px)");
-    const chatHeading = screen.getByRole("heading", { name: "MidCon Solutions Chat" });
+    const chatHeading = screen.getByRole("heading", { name: "MidCon Solutions Conversations" });
     expect(chatHeading.className).toContain("text-black");
     expect(panel.contains(chatHeading)).toBe(false);
     expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
@@ -76,7 +102,7 @@ describe("Work Hub conversations", () => {
   });
   it("keeps the Company Chat empty-state icon branded and its heading black", async () => {
     mocks.request.mockImplementation(async (path: string) => {
-      if (path === "/chats" || path === "/crews") return [];
+      if (path === "/channels?limit=100" || path === "/crews") return [];
       return [];
     });
 
@@ -87,29 +113,6 @@ describe("Work Hub conversations", () => {
     expect(heading.className).toContain("text-black");
     expect(heading.className).not.toContain("text-[var(--brand-primary)]");
     expect(emptyState?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--brand-primary)]");
-  });
-  it("waits for the explicit action and keeps Group and Person selection mutually exclusive", async () => {
-    mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
-      if (init) return { channel: { id: "group-chat" } };
-      if (path === "/chats") return [];
-      if (path === "/crews") return [{ id: "group-1", name: "Gate Group" }];
-      if (path.startsWith("/people")) return [{ id: 42, displayName: "Taylor", organizationName: "Flywheel", role: "Operator" }];
-      return [];
-    });
-    mount(true);
-    const group = await screen.findByLabelText("Select Group");
-    const person = screen.getByLabelText("Person");
-    await screen.findByRole("option", { name: "Gate Group" });
-    fireEvent.change(group, { target: { value: "group-1" } });
-    expect((person as HTMLSelectElement).value).toBe("");
-    expect(mocks.request.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
-    fireEvent.click(screen.getByRole("button", { name: "Start Chat" }));
-    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/chats/groups", expect.objectContaining({ method: "POST" })));
-
-    fireEvent.change(person, { target: { value: "42" } });
-    expect((group as HTMLSelectElement).value).toBe("");
-    expect(screen.getByRole("button", { name: "Send Invite" })).toBeTruthy();
-    expect(screen.getByRole("option", { name: "Taylor · Flywheel · Operator" })).toBeTruthy();
   });
   it("retries an interrupted send with the original operation ID", async () => {
     const original = mocks.request.getMockImplementation()!;

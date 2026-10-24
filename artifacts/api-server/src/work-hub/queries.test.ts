@@ -59,6 +59,9 @@ describe("bounded Work Hub channel listing", () => {
 
 describe("collaboration note capabilities", () => {
   beforeEach(() => { state.member = true; state.collaboration = true; });
+  it("denies non-admin channel management even to channel owners", async () => {
+    await expect(resolveChannelAccess({ userId: 1, role: "vendor", vendorId: 10, membershipRole: "member" }, "channel", "channel.manage")).rejects.toMatchObject({ status: 403 });
+  });
   it("lets a channel member create and edit notes subject to per-note ownership", async () => {
     const session = { userId: 1, role: "vendor" as const, vendorId: 10, membershipRole: "member" as const };
     expect((await resolveChannelAccess(session, "00000000-0000-4000-8000-000000000001", "note.create")).access.capabilities.has("note.create")).toBe(true);

@@ -1,7 +1,13 @@
+import { ConversationTitle } from "./conversation-title";
+import { NewChat } from "./new-chat";
+import { WorkHubFiles } from "./files";
+import { ChatParticipants } from "./chat-participants";
 import { MessageReactions } from "./message-reactions";
+import "./collaboration.css";
 import { useEffect, useRef, useState } from "react";
+import { useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Hash, Star, Search, Users } from "lucide-react";
+import { MessageSquare, Hash, Star, Search, Users, Paperclip, StickyNote, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import {
@@ -26,6 +32,10 @@ import {
 } from "./chrome";
 
 type Row = Record<string, any>;
+export function conversationCategory(channel: Row): "Channels" | "Chats" {
+  if (channel.contextKind === "crew" || String(channel.contextId ?? "").startsWith("group:")) return "Channels";
+  return channel.contextKind === "chat" ? "Chats" : "Channels";
+}
 export function displayMentionText(body: string, people: Row[]) {
   return body.replace(
     /@\[(\d+)\]/g,
@@ -94,12 +104,18 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const owner = ownerForUser(user);
   const qc = useQueryClient();
   const { preferences, save } = useHubPreferences();
-  const channels = useRows(chat ? "/chats" : "/channels", chat);
+  const channels = useRows("/channels?limit=100", chat);
   const crews = useRows("/crews");
   const invitations = useRows("/invitations", chat);
   const [selected, setSelected] = useState(
     () => new URLSearchParams(window.location.search).get("channel") ?? "",
   );
+  const searchParams = useSearch();
+  const linkedChannelId = new URLSearchParams(searchParams).get("channel");
+  const linkedChannels = useRows("/channels?limit=100", chat && !!linkedChannelId);
+  useEffect(() => {
+    if (linkedChannelId) setSelected(linkedChannelId);
+  }, [linkedChannelId]);
   const [crew, setCrew] = useState("");
   const [crewEditor, setCrewEditor] = useState<Row | null>(null);
   const [crewName, setCrewName] = useState("");
@@ -118,7 +134,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [editing, setEditing] = useState<Row | null>(null);
   const [note, setNote] = useState({ title: "", body: "" });
   const [editingNote, setEditingNote] = useState<Row | null>(null);
-  const list = crew ? crewChannels.data : channels.data;
+  const list = !chat && crew ? crewChannels.data : channels.data;
   const active = selected || list?.[0]?.id;
   const channel =
     list?.find((c) => c.id === active) ??
@@ -418,8 +434,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     );
   }
   return (
-    <section className="w-full space-y-4 bg-background p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
-      <WorkHubPageHeading module="chat" title={`${brand.name || "Company"} Chat`} compact />
+    <section className="hub-chat-page w-full space-y-4 p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
+      <WorkHubPageHeading module="chat" title={`${brand.name || "Company"} Conversations`} compact />
       <div className="grid min-h-[calc(100vh-12rem)] gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
       <aside
         aria-label="Conversations panel"
@@ -471,17 +487,24 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         <HubError error={channels.error ?? crews.error} />
         {channels.isLoading && <p role="status">Loading conversations…</p>}
         <nav aria-label="Conversations" className="space-y-1">
-          {visible?.map((c) => (
+          {(["Channels", "Chats"] as const).map(category => {
+            const entries = visible?.filter(c => conversationCategory(c) === category) ?? [];
+            const Icon = category === "Chats" ? MessageSquare : Hash;
+            return <details key={category} open className="hub-conversation-category">
+              <summary><Icon className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />{category}<span>{entries.length}</span></summary>
+              {entries.length === 0 && <p className="pb-3 text-xs text-muted-foreground">No {category.toLowerCase()} in this view.</p>}
+              {entries.map((c) => (
             <div
               key={c.id}
-              className={`flex items-center rounded-lg ${active === c.id ? "bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)]" : "hover:bg-muted"}`}
+              data-selected={active === c.id}
+              className="hub-chat-conversation flex items-center rounded-lg"
             >
               <button
                 className="min-w-0 flex-1 p-3 text-left"
                 onClick={() => setSelected(c.id)}
               >
                 <span className="flex items-center gap-2 font-medium">
-                  <Hash className="h-4 w-4" />
+                  <Icon className="h-4 w-4" aria-label={category === "Chats" ? "Chat" : "Channel"} />
                   {c.name}
                 </span>
                 <span className="block truncate text-xs text-muted-foreground">
@@ -508,7 +531,9 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 />
               </button>
             </div>
-          ))}
+              ))}
+            </details>;
+          })}
         </nav>
         {!visible?.length && !channels.isLoading && (
           <p className="text-sm text-muted-foreground">
@@ -664,46 +689,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         <details className="border-t pt-4">
           <summary className="cursor-pointer text-sm font-semibold">New Chat</summary>
           <div className="mt-3 grid gap-3">
-            <BrandedSelect
-              aria-label="Select Group"
-              value={crew}
-              onChange={(event) => {
-                setCrew(event.target.value);
-                if (event.target.value) setPerson("");
-              }}
-            >
-              <option value="">Select a group</option>
-              {crews.data?.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </BrandedSelect>
-            <PeoplePicker
-              value={person}
-              onChange={(value) => {
-                setPerson(value);
-                if (value) setCrew("");
-              }}
-            />
-            <BrandPillButton
-              className="w-fit max-w-full justify-self-start"
-              tone="brand"
-              disabled={(!crew && !person) || mutation.isPending}
-              onClick={() => {
-                const request = crew
-                  ? { path: "/chats/groups", data: { crewId: crew } }
-                  : { path: "/chats", data: { recipientUserId: Number(person) } };
-                mutation
-                  .mutateAsync(request)
-                  .then((result) => {
-                    if (result.channel) setSelected(result.channel.id);
-                    setCrew("");
-                    setPerson("");
-                  })
-                  .catch(() => undefined);
-              }}
-            >
-              {crew ? "Start Chat" : "Send Invite"}
-            </BrandPillButton>
+            <NewChat onCreated={setSelected} />
             {invitations.data
               ?.filter(
                 (invitation) =>
@@ -740,19 +726,20 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         className="grid min-w-0 content-start gap-4"
       >
         {active ? (
-          <>
+          <div className={`hub-communications-window ${WORK_HUB_CARD_CLASS}`}>
             <section
               aria-label="Selected channel"
               data-work-hub-card
-              className={`w-full px-6 py-4 ${WORK_HUB_CARD_CLASS}`}
+              className={`flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 ${WORK_HUB_CARD_CLASS}`}
             >
-              <h2 className="text-xl font-semibold">
-                {channel?.name ?? "Conversation"}
-              </h2>
-              {!chat && canAdministerChannels && (
-                <div className="mt-2">
-                  <BrandPillButton
-                    tone="red"
+              {channel ? <ConversationTitle key={active} channel={{ id: channel.id, name: channel.name, version: channel.version }} canRename={channel.contextKind === "chat" ? (channel.createdById === user?.userId || canAdministerChannels) : canAdministerChannels} /> : <h2>Conversation</h2>}
+              {channel?.contextKind !== "chat" && canAdministerChannels && (
+                <div className="order-last">
+                  <button
+                    type="button"
+                    className="hub-conversation-tool"
+                    aria-label="Delete channel"
+                    title="Delete channel"
                     disabled={mutation.isPending}
                     onClick={() => {
                       if (
@@ -770,23 +757,18 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                           .catch(() => undefined);
                     }}
                   >
-                    Delete channel
-                  </BrandPillButton>
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 </div>
               )}
-              <div className="mt-3 flex flex-wrap gap-2" role="tablist">
-                {["conversation", "notes", "shared", "people"].map((x) => (
-                  <BrandPillButton
-                    key={x}
-                    type="button"
-                    tone="brand"
-                    role="tab"
-                    aria-selected={tab === x}
-                    className="w-fit capitalize"
-                    onClick={() => setTab(x)}
-                  >
-                    {x}
-                  </BrandPillButton>
+              <div className="flex items-center gap-1" role="tablist" aria-label="Conversation tools">
+                {([{ id: "conversation", label: "History", icon: MessageSquare }, { id: "shared", label: "Files", icon: Paperclip },
+                  { id: "people", label: channel?.contextKind === "chat" ? "People" : "People and groups", icon: Users },
+                  { id: "notes", label: "Notes", icon: StickyNote }]).map(({ id, label, icon: Icon }) => (
+                  <button key={id} type="button" role="tab" aria-label={label} title={label} aria-selected={tab === id}
+                    className="hub-conversation-tool" onClick={() => setTab(id)}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 ))}
               </div>
             </section>
@@ -812,11 +794,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   )}
                   <div className="min-h-48 space-y-4">
                     {shownMessages.map((m) => (
-                      <article key={m.id} className="flex gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted font-semibold">
+                      <article key={m.id} data-message-tone={m.authorUserId === user?.userId ? "self" : m.authorIsAdmin ? "admin" : "other"} className="hub-chat-message flex gap-3">
+                        <div className="hub-chat-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold">
                           {String(m.authorName ?? m.authorUserId).slice(0, 2)}
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="hub-chat-bubble min-w-0">
                           <p className="text-sm font-semibold">
                             {m.authorName ?? `User ${m.authorUserId}`}{" "}
                             <time className="ml-2 text-xs font-normal text-muted-foreground">
@@ -838,7 +820,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                               >
                                 Reply in thread
                               </button>
-                              <MessageReactions channel={channel!} message={m} onSaved={() => qc.invalidateQueries({ queryKey: ["work-hub"] })} />
+                              {channel && <MessageReactions channel={channel} message={m} onSaved={() => qc.invalidateQueries({ queryKey: ["work-hub"] })} />}
                               {m.authorUserId === user?.userId && (
                                 <>
                                   <button
@@ -880,7 +862,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   <form
                     aria-label="Message composer"
                     data-work-hub-card
-                    className={`sticky bottom-4 grid w-full gap-3 p-4 ${WORK_HUB_CARD_CLASS}`}
+                    className={`grid w-full gap-3 p-4 ${WORK_HUB_CARD_CLASS}`}
                     onSubmit={(e) => {
                       e.preventDefault();
                       void send().catch(() => undefined);
@@ -918,9 +900,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                       }}
                     />
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <select
+                      <button type="button" className="hub-conversation-tool" aria-label="Add a file" title="Add a file" onClick={() => setTab("shared")}><Paperclip className="h-4 w-4" aria-hidden="true" /></button>
+                      <BrandedSelect
                         aria-label="Mention teammate"
-                        className="max-w-48 rounded-lg border-2 border-[color:var(--brand-primary)] bg-background p-2 text-sm"
+                        className="max-w-48 text-sm"
                         value=""
                         onChange={(e) =>
                           setDrafts((d) => ({
@@ -938,7 +921,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                             {m.displayName}
                           </option>
                         ))}
-                      </select>
+                      </BrandedSelect>
                       <BrandPillButton
                         tone="blue"
                         type="submit"
@@ -1028,23 +1011,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   data-work-hub-card
                   className={`w-full min-h-[18rem] space-y-4 p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
-                  <h3 className="font-semibold">Shared content</h3>
-                  <a
-                    href={`/work-hub/files?channel=${active}`}
-                    className="text-[var(--brand-primary)] underline"
-                  >
-                    Open channel files and upload attachments
-                  </a>
-                  {messages.data
-                    ?.filter((m) => /https?:\/\//.test(m.body))
-                    .map((m) => (
-                      <p
-                        key={m.id}
-                        className="whitespace-pre-wrap rounded border p-3 text-sm"
-                      >
-                        {m.body}
-                      </p>
-                    ))}
+                  <WorkHubFiles key={active} fixedChannelId={active} />
                 </div>
               )}
               {tab === "people" && (
@@ -1054,7 +1021,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   data-work-hub-card
                   className={`w-full min-h-[18rem] divide-y p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
-                  {members.data?.map((m) => (
+                  {channel?.contextKind === "chat" ? <ChatParticipants key={active} channelId={active} creatorId={channel.createdById} members={(members.data ?? []).map(m => ({ userId: m.userId, displayName: m.displayName, mode: m.mode }))} /> : members.data?.map((m) => (
                     <div key={m.userId ?? m.id} className="py-3">
                       <strong>{m.displayName}</strong>
                       <p className="text-sm text-muted-foreground">
@@ -1063,8 +1030,13 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     </div>
                   ))}
                   <HubError error={members.error} />
-                  {!chat && canManageChannel && (
-                    <details className="pt-4">
+                  {channel?.contextKind !== "chat" && canAdministerChannels && (
+                    <div className="space-y-4 pt-4">
+                    <details>
+                      <summary className="cursor-pointer text-sm font-semibold">Manage groups</summary>
+                      <CollaborationWorkspace />
+                    </details>
+                    <details>
                       <summary className="cursor-pointer text-sm font-semibold">
                         Manage channel participants
                       </summary>
@@ -1109,16 +1081,17 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                           </>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          Channel owners and company administrators manage
+                          Company administrators manage
                           participants. Shared invitations require acceptance.
                         </p>
                       </div>
                     </details>
+                    </div>
                   )}
                 </div>
               )}
             </div>
-          </>
+          </div>
         ) : (
           <section
             aria-label="Channel content"

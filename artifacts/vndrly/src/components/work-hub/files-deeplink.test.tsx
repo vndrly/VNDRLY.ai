@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, expect, it, vi } from "vitest";
 import { WorkHubFiles } from "./files";
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, role: "vendor", vendorId: 1, partnerId: null, activeMembershipId: 1 } }) }));
-vi.mock("@/lib/work-hub-client", async original => ({ ...await original<any>(), workHubRequest: async (path: string) => path === "/channels" ? [{ id: "shared-1", name: "Shared operations", ownerOrgType: "partner", ownerOrgId: 2 }] : [] }));
+vi.mock("@/lib/work-hub-client", async original => ({ ...await original<any>(), workHubRequest: async (path: string) => path === "/channels?limit=100" ? [{ id: "shared-1", name: "Shared operations", ownerOrgType: "partner", ownerOrgId: 2 }] : [] }));
 afterEach(() => window.history.replaceState({}, "", "/"));
 it("opens the invited channel upload audience from a conversation deep link", async () => {
   window.history.replaceState({}, "", "/work-hub/files?channel=shared-1");
@@ -12,4 +12,12 @@ it("opens the invited channel upload audience from a conversation deep link", as
   await screen.findByRole("option", { name: "Shared operations" });
   await waitFor(() => expect((screen.getByLabelText("File channel") as HTMLSelectElement).value).toBe("shared-1"));
   expect((screen.getByLabelText("Choose file to upload") as HTMLInputElement).disabled).toBe(false);
+});
+it("keeps an embedded Files pane locked to its selected conversation", async () => {
+  window.history.replaceState({}, "", "/work-hub/chat?channel=another-chat");
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubFiles fixedChannelId="shared-1" /></QueryClientProvider>);
+  expect(screen.queryByLabelText("File audience")).toBeNull();
+  expect(screen.queryByLabelText("File channel")).toBeNull();
+  expect(screen.getByRole("button", { name: "Choose file" })).toBeTruthy();
+  expect(screen.queryByText("Upload a file")).toBeNull();
 });

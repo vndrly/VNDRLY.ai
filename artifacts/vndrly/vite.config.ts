@@ -102,6 +102,10 @@ export default defineConfig({
       ? {
           proxy: {
             ...(process.env.VITE_COVERAGE_API_PROXY_TARGET ? {
+                "^/api/work-hub/(?:channels|file-library)(?:/|\\?|$)": {
+                  target: process.env.VITE_COVERAGE_API_PROXY_TARGET,
+                  changeOrigin: true,
+                },
               "/api/native-operations/pickup-shifts": {
                 target: process.env.VITE_COVERAGE_API_PROXY_TARGET,
                 changeOrigin: true,

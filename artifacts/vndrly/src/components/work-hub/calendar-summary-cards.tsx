@@ -1,11 +1,13 @@
 import { CalendarClock, CheckSquare2, ChevronRight, MessageSquare, Users } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { WorkspacePanel } from "./workspace-panel";
+
+import UnreadChatPreview from "./unread-chat-preview";
 
 type Row = Record<string, any>;
 type Range = "next" | "week" | "month";
@@ -39,6 +41,8 @@ export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks
   const { i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es");
   const [open, setOpen] = useState<Summary | null>(null);
+  const [messagesExpanded, setMessagesExpanded] = useState(false);
+  const messagesId = useId();
   const [ranges, setRanges] = useState<Record<string, Range>>({});
   const now = Date.now();
   const upcomingShifts = shifts.filter((item) => new Date(item.startsAt).getTime() >= now).sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt)));
@@ -88,6 +92,20 @@ export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks
     <WorkspacePanel title={es ? "De un vistazo" : "At a glance"} subtitle={es ? "Turnos, reuniones, tareas y conversaciones" : "Shifts, meetings, tasks, and conversations"} icon={CalendarClock}>
       {summaries.map((summary) => {
         const unavailable = summary.key === "messages" ? channelsUnavailable : scheduleUnavailable;
+        if (summary.key === "messages") return <div key={summary.key}>
+          <button type="button" className="hub-home-row" aria-expanded={messagesExpanded} aria-controls={messagesId} onClick={() => setMessagesExpanded(value => !value)}>
+            <MessageSquare aria-hidden="true" className="hub-row-icon" />
+            <span className="hub-row-label">{summary.title}</span>
+            <span className="hub-row-value">{unavailable ? "Unavailable" : summary.value}</span>
+            <ChevronRight aria-hidden="true" className={cn("hub-chevron", messagesExpanded && "rotate-90")} />
+          </button>
+          {messagesExpanded && <div id={messagesId} className="pl-7">
+            {unavailable ? <p role="status" className="py-3 text-sm text-muted-foreground">Conversations could not load.</p>
+              : unreadChannels.length ? <ul>{unreadChannels.map(channel => <li key={channel.id}>
+                <UnreadChatPreview channel={channel as { id: string; name?: string; unreadCount?: number }} />
+              </li>)}</ul> : <p role="status" className="py-3 text-sm text-muted-foreground">No unread conversations.</p>}
+          </div>}
+        </div>;
         return <button key={summary.key} type="button" className="hub-home-row" onClick={() => setOpen(summary)} aria-label={`Open ${summary.title}`} aria-haspopup="dialog">
           <summary.icon aria-hidden="true" className="hub-row-icon" />
           <span className="hub-row-label">{summary.title}{!unavailable && <small className="mt-1 block text-xs font-normal text-[#b3b3b3]">{summary.detail}</small>}</span>

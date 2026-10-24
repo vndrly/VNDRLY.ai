@@ -14,6 +14,8 @@ if(!writesEnabled) databaseUrl.searchParams.set("options", "-c default_transacti
 process.env.DATABASE_URL = databaseUrl.toString();
 const { default: routes } = await import("../src/routes/workHubSiteShiftPlans");
 const { default: nativeRoutes } = await import("../src/routes/nativeOperations");
+const { default: channelRoutes } = await import("../src/routes/workHubChannels");
+const { default: fileRoutes } = await import("../src/routes/workHubFileLibrary");
 const { pool } = await import("@workspace/db");
 // Transaction poolers may ignore connection startup options. Enforce read-only
 // on every actual query/connection, rather than trusting the URL option.
@@ -40,9 +42,13 @@ app.use(async (req, res, next) => {
   if(req.method !== "GET") {
     const coverageWrite = req.method === "POST" && /^\/api\/work-hub\/site-shift-plans\/(?:coverage-resolution|request-coverage|acknowledge-coverage|decide-shift-off)$/.test(req.path);
     const pickupWrite = req.method === "PUT" && req.path === "/api/native-operations/pickup-shifts";
-    if(!writesEnabled || !(coverageWrite || pickupWrite)) return res.status(405).json({message:"This local operation is not enabled"});
+    const messageRead = req.method === "PUT" && /^\/api\/work-hub\/channels\/[\da-f-]+\/messages\/[\da-f-]+\/read$/.test(req.path);
+    const participantWrite = req.method === "PATCH" && /^\/api\/work-hub\/channels\/[\da-f-]+\/chat-participants$/.test(req.path);
+    const channelWrite = ["POST", "PATCH", "PUT", "DELETE"].includes(req.method) && /^\/api\/work-hub\/channels(?:\/[\da-f-]+(?:\/(?:members|read-cursor|notes|messages)(?:\/[\da-f-]+(?:\/reactions)?)?)?)?$/.test(req.path);
+    const fileWrite = req.method === "POST" && /^\/api\/work-hub\/file-library\/[a-z-]+$/.test(req.path);
+    if(!writesEnabled || !(coverageWrite || pickupWrite || messageRead || participantWrite || channelWrite || (req.method === "POST" && req.path === "/api/work-hub/channels/start-chat") || fileWrite)) return res.status(405).json({message:"This local operation is not enabled"});
     if(!["http://127.0.0.1:5173","http://localhost:5173"].includes(req.headers.origin??"") || !req.is("application/json")) return res.sendStatus(403);
-  } else if (req.path !== "/api/native-operations/pickup-shifts" && !/^\/api\/work-hub\/site-shift-plans(?:\/(?:coverage-facts|coverage-candidates|my-coverage|my-coverage-acknowledgments|\d+(?:\/schedule)?))?$/.test(req.path)) return res.sendStatus(404);
+  } else if (req.path !== "/api/native-operations/pickup-shifts" && !/^\/api\/work-hub\/(?:channels|file-library)(?:\/.*)?$/.test(req.path) && !/^\/api\/work-hub\/site-shift-plans(?:\/(?:coverage-facts|coverage-candidates|my-coverage|my-coverage-acknowledgments|\d+(?:\/schedule)?))?$/.test(req.path)) return res.sendStatus(404);
   if (!req.headers.cookie) return res.sendStatus(401);
   try {
     // Validate the existing session with its issuer, including revocation/context.
@@ -61,6 +67,8 @@ app.use(async (req, res, next) => {
 });
 app.use("/api", routes);
 app.use("/api", nativeRoutes);
+app.use("/api", channelRoutes);
+app.use("/api", fileRoutes);
 app.use((_error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => res.status(500).json({ message: "Local coverage preview unavailable" }));
 app.listen(8098, "127.0.0.1", () => console.log(`Coverage API listening on 127.0.0.1:8098 (${writesEnabled?"reviewed coverage saves enabled":"read-only"})`));
 

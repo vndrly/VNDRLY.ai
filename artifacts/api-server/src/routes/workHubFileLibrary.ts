@@ -17,6 +17,7 @@ import { appendWorkHubAudit } from "../work-hub/audit";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
+import { channelFileReference } from "../work-hub/channel-file-reference";
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
 const ownerSchema = z.object({
@@ -410,6 +411,10 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
     if (replayDocumentId) {
       const replayDocument = await loadDocument(replayDocumentId);
       await documentAccess(actor, replayDocument, action !== "favorite");
+      if (action === "share-to-channel") {
+        const { channel } = await resolveChannelAccess(actor, z.string().uuid().parse(replayPayload.channelId), "file.upload");
+        channelFileReference(replayDocument, channel, actor.userId);
+      }
       if (
         replayDocument.orgId !== owner.id ||
         replayDocument.orgType !== owner.type
@@ -534,6 +539,7 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
             active: z.boolean().optional(),
             expiresInDays: z.number().int().min(1).max(30).optional(),
             shareId: z.string().uuid().optional(),
+            channelId: z.string().uuid().optional(),
           })
           .strict()
           .parse(envelope.payload);
@@ -542,7 +548,19 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
         if (doc.orgId !== owner.id || doc.orgType !== owner.type)
           throw new FileError(403, "File owner mismatch");
         let data = { ...doc.data };
-        if (action === "finalize") {
+        if (action === "share-to-channel") {
+          const { channel } = await resolveChannelAccess(actor, z.string().uuid().parse(p.channelId), "file.upload", tx);
+          const reference = channelFileReference(doc, channel, actor.userId);
+          const [saved] = await tx.insert(library).values(reference).onConflictDoNothing().returning();
+          if (!saved) {
+            const [existing] = await tx.select().from(library).where(and(scope(owner), eq(library.kind, "document"), eq(library.recordKey, reference.recordKey))).limit(1);
+            if (!existing || existing.data.state !== "active") throw new FileError(409, "This channel's shared file is recycled; restore it before sharing again");
+            return existing;
+          }
+          await appendWorkHubAudit({ actorUserId: actor.userId, owner, action: "file.shared_to_channel", subjectType: "file", subjectId: saved.id,
+            source: "web", operationId: envelope.operationId, metadata: { documentId: doc.id, channelId: channel.id, fileId: doc.data.currentFileId } }, tx);
+          return saved;
+        } else if (action === "finalize") {
           if (data.state !== "active" || !p.fileId)
             throw new FileError(409, "Active file and upload required");
           const [file] = await tx

@@ -23,6 +23,18 @@ describe("collaboration access database boundaries", () => {
   beforeEach(() => {
     state.results = [];
   });
+  it("gives a chat's company admin visibility and management without participant membership", async () => {
+    state.results = [[{ kind: "chat", crewId: null }], [{ ownerOrgType: "vendor", ownerOrgId: 1 }], [{ id: 99 }]];
+    expect(await collaborationChannelScope(7, "chat")).toMatchObject({ readable: true, manager: true });
+  });
+  it("hides chats from nonparticipants without an owning-company admin membership", async () => {
+    state.results = [[{ kind: "chat", crewId: null }], [{ ownerOrgType: "vendor", ownerOrgId: 1 }], [], []];
+    expect(await collaborationChannelScope(7, "chat")).toMatchObject({ readable: false, manager: false });
+  });
+  it("keeps an added chat participant visible but not a manager", async () => {
+    state.results = [[{ kind: "chat", crewId: null }], [{ ownerOrgType: "vendor", ownerOrgId: 1 }], [], [{ mode: "member" }]];
+    expect(await collaborationChannelScope(7, "chat")).toMatchObject({ readable: true, manager: false });
+  });
   it("preserves legacy channel behavior", async () => {
     state.results = [[]];
     expect(await collaborationChannelScope(7, "legacy")).toBeNull();
