@@ -38,6 +38,11 @@ it("opens a selected employee's calendar and clock history as office, filtering 
   expect((await f.service.list(officeSession, f.worker.userId!, { start: query.start, end: query.end })).items).toHaveLength(1);
   expect((await f.service.read(officeSession, shiftId)).summary.reportedWorkMilliseconds).toBe(10800000);
   expect((await request(app).get("/work-hub/calendar").query(query).set("Cookie", buildTestCookie(officeSession))).body.shifts.map((row: any) => row.item.title)).toEqual(["Worker shift"]);
+  const { emptyFleetState } = await import("./fleet-repository");
+  const fleetState = { ...emptyFleetState(), enabled: true, grants: [{ userId: f.other.userId!, fleetIds: [], siteIds: [], roles: ["fleet_manager"], safetyRelease: false, financeRead: false }] };
+  await f.pool.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1", [f.other.vendorId, JSON.stringify(fleetState)]);
+  const saved = await f.service.read(officeSession, shiftId);
+  await expect(f.service.adjust(officeSession, shiftId, { operationId: randomUUID(), expectedVersion: saved.version, adjustmentMinutes: "60", reason: "Read access must not broaden adjustment scope" })).rejects.toMatchObject({ status: 403 });
   await f.pool.query("UPDATE vendor_people SET is_active=false WHERE user_id=$1", [f.other.userId]);
   await expect(f.service.employeeCalendarContext(officeSession, f.worker.userId!)).rejects.toMatchObject({ status: 403 });
 });

@@ -198,10 +198,11 @@ async function authorizeRead(
   session: SessionPayload,
   scope: WorkdayScope,
   workerUserId: number,
+  allowOfficeRead = true,
 ) {
   if (scope.userId === workerUserId || session.membershipRole === "admin")
     return;
-  if (await canReadCompanyHours(client, session, scope)) return;
+  if (allowOfficeRead && await canReadCompanyHours(client, session, scope)) return;
   if (scope.owner.type === "vendor") {
     const result = await client.query(
         "SELECT fleet_ops_state FROM vendors WHERE id=$1 FOR SHARE",
@@ -438,7 +439,7 @@ export function createWorkdayService(run: typeof transaction = transaction) { re
   adjust:(session:SessionPayload,rawId:string,raw:unknown)=>run(session,async(client,scope)=>{
     if(session.realm==="demo"||session.publicDemo)throw new WorkdayError("workday.read_only",403);
     const id=z.uuid().parse(rawId),input=WorkdayAdjustmentInputSchema.parse(raw),saved=await snapshot(client,scope,id);
-    await authorizeRead(client,session,scope,saved.workerUserId);
+    await authorizeRead(client,session,scope,saved.workerUserId,false);
     if(session.membershipRole!=="admin"){
       if(scope.owner.type!=="vendor")throw new WorkdayError("workday.office_required",403);
       const config=FleetStateSchema.safeParse((await client.query("SELECT fleet_ops_state FROM vendors WHERE id=$1 FOR SHARE",[scope.owner.id])).rows[0]?.fleet_ops_state);
