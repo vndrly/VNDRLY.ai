@@ -12,7 +12,7 @@ const AGENDA_KINDS = ["Meeting", "Shift", "Task", "Event"] as const;
 type AgendaKind = (typeof AGENDA_KINDS)[number];
 
 export function calendarItemHref(item: Row) {
-  if (item.recordedShift) return recordedShiftCalendarHref({ id: item.workdayId, startedAt: item.startsAt });
+  if (item.recordedShift) return recordedShiftCalendarHref({ id: item.workdayId, startedAt: item.startsAt }, item.workerUserId);
   if (item.kind === "Meeting") return `/work-hub/meetings/${item.id}`;
   if (item.kind === "Task") return `/work-hub/tasks/${item.id}`;
   return `/work-hub/calendar?shift=${item.id}`;

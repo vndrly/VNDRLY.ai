@@ -148,6 +148,13 @@ describe("Work Hub home", () => {
     mocks.user = { ...mocks.user, vendorRole: mode === "office" ? "office" : null, availableMemberships: [{ id: 3, role: mode === "admin" ? "admin" : "member" }] };
     const original = mocks.request.getMockImplementation()!;
     mocks.request.mockImplementation(async (path: string) => {
+      if (path.startsWith("/workday/workers/8?")) {
+        const query = new URL(path, "https://example.test").searchParams, now = new Date();
+        const id = "88888888-8888-4888-8888-888888888888", owner = { type: "vendor" as const, id: 1 };
+        const times = [new Date(now.getFullYear(), now.getMonth(), 1, 8).toISOString(), new Date(now.getFullYear(), now.getMonth(), 1, 13).toISOString()];
+        const events: WorkdayEvent[] = times.map((at, index) => ({ id: index ? "99999999-9999-4999-8999-999999999999" : id, shiftId: id, owner, workerUserId: 8, source: "worker_report", kind: index ? "end_shift" : "start_shift", capturedAt: at, receivedAt: at }));
+        return { items: [{ id, owner, workerUserId: 8, version: 2, timezone: "America/Chicago", summary: summarizeWorkday(events), reportedWorkMillisecondsInRange: 18000000 }], range: { start: query.get("start"), end: query.get("end") }, nextCursor: null };
+      }
       if (!path.startsWith("/workday/dashboard-hours?")) return original(path);
       const query = new URL(path, "https://example.test").searchParams;
       return { owner: { type: "vendor", id: 1 }, viewerUserId: 7, observedAt: new Date().toISOString(), range: { start: query.get("start"), end: query.get("end") }, mineMilliseconds: 9000000, totalMilliseconds: 27000000,
@@ -164,6 +171,16 @@ describe("Work Hub home", () => {
     expect(within(details).getByText("5h 0m")).toBeTruthy();
     expect(within(details).getByText("0h 0m")).toBeTruthy();
     expect(mocks.request.mock.calls.some(([path]) => String(path).startsWith("/workday/workers/"))).toBe(false);
+    const employee = within(details).getByRole("button", { name: /Alex Gate.*5h 0m/ });
+    expect(employee.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(employee);
+    const shifts = await within(details).findByRole("region", { name: "Alex Gate shifts" });
+    const shift = await within(shifts).findByRole("link", { name: /5h 0m/ });
+    const now = new Date(), day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    expect(shift.getAttribute("href")).toBe(`/work-hub/calendar?day=${day}&workday=88888888-8888-4888-8888-888888888888&worker=8`);
+    expect(employee.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(employee);
+    expect(within(details).queryByRole("region", { name: "Alex Gate shifts" })).toBeNull();
     fireEvent.click(row);
     expect(screen.queryByRole("region", { name: "Employee shift hours" })).toBeNull();
   });

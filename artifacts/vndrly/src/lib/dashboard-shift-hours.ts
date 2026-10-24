@@ -30,6 +30,12 @@ export async function readCompanyDashboardHours(scope: Scope, request: (path: st
     result.employees.find(person => person.userId === scope.userId)?.milliseconds !== result.mineMilliseconds) throw Error("Workday totals do not reconcile");
   return result;
 }
+export async function readEmployeeCalendarContext(scope: { userId: number; owner: WorkdayOwner }, workerUserId: number, request: (path: string) => Promise<unknown>) {
+  const result = z.object({ owner: CompanyHoursSchema.shape.owner, viewerUserId: z.number().int().positive(),
+    employee: z.object({ userId: z.number().int().positive(), name: z.string() }) }).parse(await request(`/workday/workers/${workerUserId}/calendar-context`));
+  if (result.viewerUserId !== scope.userId || result.employee.userId !== workerUserId || !sameWorkdayOwner(result.owner, scope.owner)) throw Error("Employee calendar context changed");
+  return result;
+}
 
 /** Read only the worker's canonical clock. Open time is a running total, never a saved clock-out. */
 export async function readDashboardShiftHours(scope: Scope, request: (path: string) => Promise<unknown>, now = Date.now()) {

@@ -23,8 +23,8 @@ import { WorkHubAwaySettings } from "@/components/work-hub/away-settings";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
 import WorkCalendar, { monthCalendarDays } from "@/components/work-hub/work-calendar";
 import { localDateKey } from "@/components/work-hub/calendar-views";
-import { calendarDayFromSearch } from "@/lib/calendar-day-link";
-import { readDashboardShiftHours } from "@/lib/dashboard-shift-hours";
+import { calendarDayFromSearch, calendarWorkerFromSearch } from "@/lib/calendar-day-link";
+import { readDashboardShiftHours, readEmployeeCalendarContext } from "@/lib/dashboard-shift-hours";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
@@ -580,18 +580,26 @@ function Channels() {
 
 function CalendarModule() {
   const { user } = useAuth();
-  const canManage = isWorkHubScheduler(user);
+  const search = useSearch(), employeeLink = calendarWorkerFromSearch(search), employeeView = employeeLink.requested;
+  const canManage = isWorkHubScheduler(user) && !employeeView;
   const context = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
+  const clockOwner = ownerForUser(user);
+  const employeeContext = useQuery({
+    queryKey: ["work-hub", "employee-calendar-context", ...context, employeeLink.userId],
+    queryFn: ({ signal }) => readEmployeeCalendarContext({ userId: user!.userId, owner: clockOwner! }, employeeLink.userId!, path => workHubRequest(path, { signal, cache: "no-store" })),
+    enabled: Boolean(employeeView && employeeLink.userId && user && clockOwner), retry: false, refetchInterval: 15000,
+  });
+  const calendarReady = !employeeView || Boolean(employeeContext.data && !employeeContext.isError && employeeLink.userId);
+  const clockWorkerId = employeeView ? employeeLink.userId : user?.userId;
   const hoursCompanies = useQuery<{ items: { id: string; name: string }[] }>({
     queryKey: ["managed-subcontractor-hours-access", ...context],
-    enabled: Boolean(user?.vendorId),
+    enabled: Boolean(user?.vendorId && !employeeView),
     queryFn: async () => {
       const response = await fetch(`/api/vendors/${user!.vendorId}/managed-subcontractors/hours-access`, { credentials: "include" });
       if (!response.ok) return { items: [] };
       return response.json();
     },
   });
-  const search = useSearch();
   const linkedDay = calendarDayFromSearch(search);
   const [month, setMonth] = useState(() => { const date = linkedDay ? new Date(`${linkedDay}T12:00:00`) : new Date(); return new Date(date.getFullYear(), date.getMonth(), 1); });
   const [selectedDay, setSelectedDay] = useState(() => linkedDay ?? localDateKey(new Date()));
@@ -604,21 +612,22 @@ function CalendarModule() {
   const start = visibleDays[0];
   const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 42);
   const calendar = useQuery<Row>({
-    queryKey: ["work-hub", "calendar", ...context, start.toISOString(), end.toISOString()],
+    queryKey: ["work-hub", "calendar", ...context, employeeLink.userId, start.toISOString(), end.toISOString()],
+    enabled: calendarReady,
     queryFn: () =>
       workHubRequest(
-        `/calendar?start=${start.toISOString()}&end=${end.toISOString()}`,
+        `/calendar?start=${start.toISOString()}&end=${end.toISOString()}${employeeView ? `&workerUserId=${employeeLink.userId}` : ""}`,
       ),
   });
-  const operations = useOperationalCalendar(start.toISOString(), end.toISOString());
-  const clockOwner = ownerForUser(user);
+  const operations = useOperationalCalendar(start.toISOString(), end.toISOString(), !employeeView);
   const recordedHours = useQuery({
-    queryKey: ["work-hub", "calendar-recorded-shifts", ...context, start.toISOString(), end.toISOString()],
-    queryFn: ({ signal }) => readDashboardShiftHours({ userId: user!.userId, owner: clockOwner!, start: start.toISOString(), end: end.toISOString() }, path => workHubRequest(path, { signal, cache: "no-store" })),
-    enabled: Boolean(user && clockOwner), retry: false, refetchInterval: 15000,
+    queryKey: ["work-hub", "calendar-recorded-shifts", ...context, clockWorkerId, start.toISOString(), end.toISOString()],
+    queryFn: ({ signal }) => readDashboardShiftHours({ userId: clockWorkerId!, owner: clockOwner!, start: start.toISOString(), end: end.toISOString() }, path => workHubRequest(path, { signal, cache: "no-store" })),
+    enabled: Boolean(user && clockOwner && calendarReady && clockWorkerId), retry: false, refetchInterval: 15000,
   });
   const channelSummary = useQuery<Row[]>({
     queryKey: ["work-hub", "channels", ...context],
+    enabled: !employeeView,
     queryFn: () => workHubRequest("/channels"),
   });
   const { owner, command } = useCommand("/shifts", ["work-hub", "calendar"]);
@@ -653,24 +662,24 @@ function CalendarModule() {
   const items = useMemo(
     () =>
       [
-        ...(recordedHours.data?.shifts ?? []).map(shift => ({ id: `workday-${shift.id}`, workdayId: shift.id, recordedShift: true, title: "My recorded shift", kind: "Shift", startsAt: shift.startedAt, endsAt: shift.endedAt, timezone: shift.timezone, status: shift.state, recordedMilliseconds: shift.milliseconds })),
-        ...(operations.data?.items ?? []).map(item => ({ ...item, kind: item.kind === "field_ticket" ? "Field Ticket" : "Fleet Run" })),
-        ...(calendar.data?.shifts ?? []).map((x: Row) => ({
+        ...(calendarReady ? recordedHours.data?.shifts ?? [] : []).map(shift => ({ id: `workday-${shift.id}`, workdayId: shift.id, ...(employeeView ? { workerUserId: clockWorkerId } : {}), recordedShift: true, title: employeeView ? `${employeeContext.data?.employee.name} — recorded shift` : "My recorded shift", kind: "Shift", startsAt: shift.startedAt, endsAt: shift.endedAt, timezone: shift.timezone, status: shift.state, recordedMilliseconds: shift.milliseconds })),
+        ...(!employeeView ? operations.data?.items ?? [] : []).map(item => ({ ...item, kind: item.kind === "field_ticket" ? "Field Ticket" : "Fleet Run" })),
+        ...(calendarReady ? calendar.data?.shifts ?? [] : []).map((x: Row) => ({
           ...x.item,
           kind: "Shift",
         })),
-        ...(calendar.data?.tasks ?? []).map((x: Row) => ({
+        ...(calendarReady ? calendar.data?.tasks ?? [] : []).map((x: Row) => ({
           ...x.item,
           startsAt: x.item.dueAt,
           kind: "Task",
         })),
-        ...(calendar.data?.meetings ?? []).map((x: Row) => ({
+        ...(calendarReady ? calendar.data?.meetings ?? [] : []).map((x: Row) => ({
           ...x.item.occurrence,
           title: x.item.meeting.title,
           kind: "Meeting",
         })),
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
-    [calendar.data, operations.data, recordedHours.data],
+    [calendar.data, operations.data, recordedHours.data, calendarReady, employeeView, clockWorkerId, employeeContext.data],
   );
   const filteredItems = useMemo(() => {
     const needle = calendarFilters.search.trim().toLowerCase();
@@ -698,13 +707,14 @@ function CalendarModule() {
   return (
     <Shell module="calendar">
       <div className="hub-calendar-page" data-testid="work-hub-calendar-layout">
-        <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
+        {employeeView && <p role={employeeContext.isError || !employeeLink.userId ? "alert" : "status"}>{employeeContext.isError || !employeeLink.userId ? "Employee calendar is unavailable or your access has changed." : employeeContext.data ? `${employeeContext.data.employee.name} — employee calendar` : "Loading employee calendar…"}</p>}
+        {!employeeView && <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />}
         <WorkCalendar month={month} selectedDay={selectedDay} items={filteredItems}
           onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}
           onOpenDay={() => setAgendaOpen(true)}
           onSchedule={canManage ? () => setScheduling(current => !current) : undefined}
-          scheduling={scheduling} loading={calendar.isPending || (Boolean(user?.vendorId) && operations.isPending) || (Boolean(clockOwner) && recordedHours.isPending)}
-          unavailable={calendar.isError || operations.isError || Boolean(operations.data?.unavailable.length) || recordedHours.isError}
+          scheduling={scheduling} loading={(employeeView && Boolean(employeeLink.userId) && employeeContext.isPending) || (calendarReady && (calendar.isPending || (!employeeView && Boolean(user?.vendorId) && operations.isPending) || (Boolean(clockOwner) && recordedHours.isPending)))}
+          unavailable={(employeeView && (employeeContext.isError || !employeeLink.userId)) || calendar.isError || (!employeeView && (operations.isError || Boolean(operations.data?.unavailable.length))) || recordedHours.isError}
           filters={<>
       <Card className="border-0 bg-white shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -933,11 +943,11 @@ function CalendarModule() {
           {scheduling && canManage && <CalendarCreateCards owner={owner} />}
         </div>
         <DayAgendaDialog open={agendaOpen} onOpenChange={setAgendaOpen} day={selectedDay} items={selectedItems} />
-        <ProjectTimeline unavailable={calendar.isError || calendar.isPending} items={filteredItems} canManage={canManage} onCreate={() => { setScheduling(true); setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />
-        <div className="hub-calendar-extras">
+        {!employeeView && <ProjectTimeline unavailable={calendar.isError || calendar.isPending} items={filteredItems} canManage={canManage} onCreate={() => { setScheduling(true); setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />}
+        {!employeeView && <div className="hub-calendar-extras">
           <WorkHubAvailability />
           {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} />}
-        </div>
+        </div>}
       </div>
     </Shell>
   );

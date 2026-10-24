@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import { summarizeWorkday, type WorkdayEvent } from "@workspace/api-zod";
-import { monthlyShiftHoursRange, readDashboardShiftHours, readCompanyDashboardHours } from "./dashboard-shift-hours";
+import { monthlyShiftHoursRange, readDashboardShiftHours, readCompanyDashboardHours, readEmployeeCalendarContext } from "./dashboard-shift-hours";
 
 const owner = { type: "vendor" as const, id: 1 }, userId = 7;
 const scope = { owner, userId, start: "2026-10-23T05:00:00.000Z", end: "2026-10-24T05:00:00.000Z" };
@@ -11,6 +11,13 @@ function events(rows: Array<[WorkdayEvent["kind"], string]>): WorkdayEvent[] {
 function snapshot(history: WorkdayEvent[]) { return { id: shiftId, version: history.length, owner, workerUserId: userId, timezone: "America/Chicago", summary: summarizeWorkday(history) }; }
 function page(items: unknown[], nextCursor: string | null = null) { return { items, range: { start: scope.start, end: scope.end }, nextCursor }; }
 const closed = { ...snapshot(events([["start_shift", "2026-10-23T12:00:00Z"], ["end_shift", "2026-10-23T14:30:00Z"]])), reportedWorkMillisecondsInRange: 9000000 };
+it("binds an employee calendar to the actual viewer, employer and selected employee", async () => {
+  const result = { owner, viewerUserId: userId, employee: { userId: 8, name: "Alex" } };
+  expect(await readEmployeeCalendarContext(scope, 8, vi.fn().mockResolvedValue(result))).toEqual(result);
+  for (const bad of [{ ...result, viewerUserId: 8 }, { ...result, owner: { type: "partner", id: 1 } }, { ...result, employee: { ...result.employee, userId: 9 } }]) {
+    await expect(readEmployeeCalendarContext(scope, 8, vi.fn().mockResolvedValue(bad))).rejects.toThrow();
+  }
+});
 
 it("rolls the displayed period on the first without touching recorded clock data", () => {
   expect(monthlyShiftHoursRange(new Date(2026, 9, 31, 23, 59))).toEqual({ start: new Date(2026, 9, 1).toISOString(), end: new Date(2026, 10, 1).toISOString() });

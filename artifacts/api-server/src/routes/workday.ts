@@ -51,6 +51,10 @@ router.get(
   ),
 );
 router.get(
+  "/work-hub/workday/workers/:workerUserId/calendar-context",
+  endpoint((session, req) => workdayService.employeeCalendarContext(session, z.coerce.number().int().positive().parse(req.params.workerUserId))),
+);
+router.get(
   "/work-hub/workday/workers/:workerUserId",
   endpoint((session, req) =>
     workdayService.list(

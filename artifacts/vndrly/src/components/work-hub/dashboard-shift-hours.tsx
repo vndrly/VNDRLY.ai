@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import type { WorkdayOwner } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { ChevronRight, Clock3 } from "lucide-react";
@@ -7,6 +9,30 @@ import { isWorkHubAdmin, ownerForUser, workHubRequest } from "@/lib/work-hub-cli
 import { readDashboardShiftHours, readCompanyDashboardHours, formatRecordedHours, monthlyShiftHoursRange } from "@/lib/dashboard-shift-hours";
 import { recordedShiftCalendarHref } from "@/lib/calendar-day-link";
 import { WorkspaceRow } from "./workspace-panel";
+
+function EmployeeShiftHours({ person, owner, range }: { person: { userId: number; name: string; milliseconds: number }; owner: WorkdayOwner; range: { start: string; end: string } }) {
+  const { user } = useAuth(), { i18n } = useTranslation(), [open, setOpen] = useState(false);
+  const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en, mine = person.userId === user?.userId;
+  const shifts = useQuery({
+    queryKey: ["work-hub", "employee-shift-hours", user?.userId, user?.activeMembershipId, owner.type, owner.id, person.userId, range.start, range.end],
+    queryFn: ({ signal }) => readDashboardShiftHours({ userId: person.userId, owner, ...range }, path => workHubRequest(path, { signal, cache: "no-store" })),
+    enabled: open, retry: false, refetchInterval: open ? 15000 : false,
+  });
+  return <div className="hub-hours-employee">
+    <button type="button" className={`hub-mini-record hub-hours-person${mine ? " hub-hours-mine" : ""}`} onClick={() => setOpen(value => !value)} aria-expanded={open}>
+      <div><strong>{person.name}</strong>{mine && <small>{c("Me", "Yo")}</small>}</div><span>{formatRecordedHours(person.milliseconds)}</span><ChevronRight aria-hidden="true" className={open ? "hub-hours-chevron-open" : ""} />
+    </button>
+    {open && <div className="hub-hours-employee-shifts" role="region" aria-label={`${person.name} ${c("shifts", "turnos")}`}>
+      {shifts.isError ? <p role="status">{c("Shift records are unavailable.", "Los registros de turnos no están disponibles.")}</p> : shifts.isPending ? <p role="status">{c("Loading shifts…", "Cargando turnos…")}</p> : <>
+        {shifts.data.shifts.map(shift => <Link className={`hub-mini-record${mine ? " hub-hours-mine hub-hours-person" : ""}`} key={shift.id} href={recordedShiftCalendarHref(shift, person.userId)}>
+          <div><strong>{new Date(shift.startedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</strong><small>{shift.endedAt ? `${c("Ended", "Finalizó")} ${new Date(shift.endedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}` : shift.state === "on_break" ? c("On unpaid break", "En descanso no remunerado") : c("Shift in progress", "Turno en curso")}</small></div>
+          <span>{formatRecordedHours(shift.milliseconds)}</span><ChevronRight aria-hidden="true" />
+        </Link>)}
+        {!shifts.data.shifts.length && <p>{c("No recorded shifts in these dates.", "No hay turnos registrados en estas fechas.")}</p>}
+      </>}
+    </div>}
+  </div>;
+}
 
 export default function DashboardShiftHours({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
   const { user } = useAuth(), { i18n } = useTranslation(), owner = ownerForUser(user);
@@ -35,9 +61,7 @@ export default function DashboardShiftHours({ expanded, onToggle }: { expanded: 
       <p>{new Date(range.start).toLocaleDateString(undefined, { dateStyle: "medium" })} – {lastDay.toLocaleDateString(undefined, { dateStyle: "medium" })}</p>
       {company ? companyHours.isError ? <p role="status">{c("Employee hours are unavailable.", "Las horas de los empleados no están disponibles.")}</p> : companyHours.isPending ? <p role="status">{c("Loading employee hours…", "Cargando horas de empleados…")}</p> : <>
         <div className="hub-hours-shifts">
-          {companyHours.data.employees.map(person => <div className={`hub-mini-record hub-hours-person${person.userId === user?.userId ? " hub-hours-mine" : ""}`} key={person.userId}>
-            <div><strong>{person.name}</strong>{person.userId === user?.userId && <small>{c("Me", "Yo")}</small>}</div><span>{formatRecordedHours(person.milliseconds)}</span>
-          </div>)}
+          {companyHours.data.employees.map(person => <EmployeeShiftHours key={person.userId} person={person} owner={companyHours.data.owner} range={range} />)}
         </div>
         <p>{c("Recorded hours this month, including active shift time and excluding unpaid breaks. Total includes your hours.", "Horas registradas este mes, incluido el turno activo y sin descansos no remunerados. El total incluye sus horas.")}</p>
       </> : hours.isError ? <p role="status">{c("Shift records are unavailable.", "Los registros de turnos no están disponibles.")}</p> : hours.isPending ? <p role="status">{c("Loading shifts…", "Cargando turnos…")}</p> : <>

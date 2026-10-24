@@ -37,4 +37,8 @@ describe("DayAgendaDialog", () => {
     expect(link.getAttribute("href")).toBe("/work-hub/calendar?day=2026-10-08&workday=clock-1");
     expect(link.textContent).toContain("Recorded hours: 2h 45m");
   });
+  it("retains the selected employee when reopening a recorded shift from the day agenda", () => {
+    render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2026-10-08" items={[{ id: "workday-clock-8", workdayId: "clock-8", workerUserId: 8, recordedShift: true, kind: "Shift", title: "Alex — recorded shift", startsAt: new Date(2026, 9, 8, 9).toISOString(), recordedMilliseconds: 18000000 }]} />);
+    expect(screen.getByRole("link", { name: /Alex — recorded shift/ }).getAttribute("href")).toBe("/work-hub/calendar?day=2026-10-08&workday=clock-8&worker=8");
+  });
 });

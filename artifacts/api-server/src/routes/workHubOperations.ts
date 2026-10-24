@@ -97,6 +97,7 @@ import { validateVoiceNoteMetadata } from "../work-hub/file-policy";
 import { notifyUsers } from "./notifications";
 import { currentNotificationRecipients } from "../work-hub/notification-recipients";
 import { dashboardTaskTiming } from "../work-hub/dashboard-task-timing";
+import { workdayService, WorkdayError } from "../services/workday";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import { findAvailableMeetingTimes, getParticipantBusyIntervals, requestedMeetingAvailability } from "../work-hub/meeting-availability";
@@ -1664,6 +1665,14 @@ router.get("/work-hub/calendar", async (req, res) => {
       "auth.unauthenticated",
       "Authentication required",
     );
+  const workerInput = z.coerce.number().int().positive().optional().safeParse(req.query.workerUserId);
+  if (!workerInput.success) return sendApiError(res, 400, "work_hub.invalid_worker", "Invalid employee identity");
+  const workerUserId = workerInput.data;
+  let employeeContext: Awaited<ReturnType<typeof workdayService.employeeCalendarContext>> | undefined;
+  if (workerUserId) {
+    try { employeeContext = await workdayService.employeeCalendarContext(session, workerUserId); }
+    catch (error) { if (error instanceof WorkdayError) return res.status(error.status).json({ code: error.code }); throw error; }
+  }
   const start = new Date(String(req.query.start));
   const end = new Date(String(req.query.end));
   if (
@@ -1730,6 +1739,8 @@ router.get("/work-hub/calendar", async (req, res) => {
         and(
           shiftOwner,
           projectVisibility,
+          employeeContext ? and(eq(workHubShiftsTable.ownerOrgType, employeeContext.owner.type), eq(workHubShiftsTable.ownerOrgId, employeeContext.owner.id),
+            sql`exists(select 1 from ${workHubShiftAssignmentsTable} worker_assignment where worker_assignment.shift_id=${workHubShiftsTable.id} and worker_assignment.user_id=${workerUserId} and worker_assignment.status<>'cancelled')`) : undefined,
           session.managedSubcontractor ? sql`(${workHubShiftsTable.createdById} = ${session.userId} or exists (select 1 from ${workHubShiftAssignmentsTable} assignment where assignment.shift_id = ${workHubShiftsTable.id} and assignment.user_id = ${session.userId}) or ${workHubShiftsTable.sharedWithUserIds} @> ${JSON.stringify([session.userId])}::jsonb)` : undefined,
           lte(workHubShiftsTable.startsAt, end),
           gte(workHubShiftsTable.endsAt, start),
@@ -1741,6 +1752,7 @@ router.get("/work-hub/calendar", async (req, res) => {
       .where(
         and(
           ownerFilter(session),
+          employeeContext ? and(eq(workHubTasksTable.ownerOrgType, employeeContext.owner.type), eq(workHubTasksTable.ownerOrgId, employeeContext.owner.id), eq(workHubTasksTable.assigneeUserId, workerUserId!)) : undefined,
           gte(workHubTasksTable.dueAt, start),
           lte(workHubTasksTable.dueAt, end),
         ),
@@ -1758,7 +1770,8 @@ router.get("/work-hub/calendar", async (req, res) => {
       .where(
         and(
           meetingOwner,
-          sql`exists (select 1 from ${workHubMeetingParticipantsTable} mp where mp.occurrence_id = ${workHubMeetingOccurrencesTable.id} and mp.user_id = ${session.userId})`,
+          employeeContext ? and(eq(workHubMeetingsTable.ownerOrgType, employeeContext.owner.type), eq(workHubMeetingsTable.ownerOrgId, employeeContext.owner.id)) : undefined,
+          sql`exists (select 1 from ${workHubMeetingParticipantsTable} mp where mp.occurrence_id = ${workHubMeetingOccurrencesTable.id} and mp.user_id = ${workerUserId ?? session.userId})`,
           lte(workHubMeetingOccurrencesTable.startsAt, end),
           or(
             isNull(workHubMeetingOccurrencesTable.endsAt),

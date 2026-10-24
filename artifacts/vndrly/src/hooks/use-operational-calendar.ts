@@ -9,11 +9,11 @@ async function read<T>(path: string): Promise<T> {
 }
 
 /** Each source remains permission scoped; failure never becomes an empty schedule. */
-export function useOperationalCalendar(start: string, end: string) {
+export function useOperationalCalendar(start: string, end: string, enabled = true) {
   const { user } = useAuth();
   return useQuery({
     queryKey: ["operational-calendar", user?.userId, user?.activeMembershipId, user?.vendorId, start, end],
-    enabled: !!user?.vendorId,
+    enabled: !!user?.vendorId && enabled,
     queryFn: async () => {
       const { categories } = await read<{ categories: string[] }>("/api/company-operations");
       const jobs: [keyof UnifiedCalendarSources, Promise<unknown>][] = [];

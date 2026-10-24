@@ -175,6 +175,24 @@ async function append(
     ],
   );
 }
+async function canReadCompanyHours(client: PoolClient, session: SessionPayload, scope: WorkdayScope) {
+  if (session.managedSubcontractor) return false;
+  if (session.role === "admin") return true;
+  if (["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")) return false;
+  if (session.membershipRole === "admin") return true;
+  return scope.owner.type === "vendor" && Boolean((await client.query(`SELECT id FROM vendor_people WHERE user_id=$1 AND vendor_id=$2
+    AND is_active=true AND deleted_at IS NULL AND vendor_role IN ('office','both') FOR SHARE`, [scope.userId, scope.owner.id])).rows.length);
+}
+async function employeeCalendarContext(client: PoolClient, session: SessionPayload, scope: WorkdayScope, workerUserId: number) {
+  if (workerUserId !== scope.userId && !await canReadCompanyHours(client, session, scope)) throw new WorkdayError("workday.office_required", 403);
+  const { own, other } = columns(scope);
+  const result = await client.query(`SELECT u.id AS "userId",coalesce(nullif(u.display_name,''),u.username) AS name FROM users u
+    WHERE u.id=$2 AND (u.id=$3 OR EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=u.id AND m.org_type=$4 AND m.${own}=$1)
+      OR EXISTS(SELECT 1 FROM assistant_action_audit a WHERE a.${own}=$1 AND a.${other} IS NULL AND a.target_type='workday' AND a.tool_output->>'workerUserId'=u.id::text))`,
+    [scope.owner.id, workerUserId, scope.userId, scope.owner.type]);
+  if (!result.rows.length) throw new WorkdayError("workday.not_found", 404);
+  return { owner: scope.owner, viewerUserId: scope.userId, employee: { userId: workerUserId, name: result.rows[0].name as string } };
+}
 async function authorizeRead(
   client: PoolClient,
   session: SessionPayload,
@@ -183,6 +201,7 @@ async function authorizeRead(
 ) {
   if (scope.userId === workerUserId || session.membershipRole === "admin")
     return;
+  if (await canReadCompanyHours(client, session, scope)) return;
   if (scope.owner.type === "vendor") {
     const result = await client.query(
         "SELECT fleet_ops_state FROM vendors WHERE id=$1 FOR SHARE",
@@ -258,16 +277,12 @@ async function openWorkday(client: PoolClient, scope: WorkdayScope) {
 /** A single organization/worker workday for every portal and client. Domain
  * assignment, duty/contact policy, GPS and billable work remain separate facts. */
 export function createWorkdayService(run: typeof transaction = transaction) { return {
+  employeeCalendarContext: (session: SessionPayload, workerUserId: number) => run(session, (client, scope) =>
+    employeeCalendarContext(client, session, scope, z.number().int().positive().parse(workerUserId))),
   dashboardHours: (session: SessionPayload, raw: unknown) => run(session, async (client, scope) => {
     const input = z.object({ start: z.iso.datetime(), end: z.iso.datetime() }).strict()
       .refine(value => Date.parse(value.start) < Date.parse(value.end)).parse(raw);
-    let company = !session.managedSubcontractor && (session.role === "admin" ||
-      !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "") && session.membershipRole === "admin");
-    if (!company && !session.managedSubcontractor && scope.owner.type === "vendor" && !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")) {
-      company = Boolean((await client.query(`SELECT id FROM vendor_people WHERE user_id=$1 AND vendor_id=$2
-        AND is_active=true AND deleted_at IS NULL AND vendor_role IN ('office','both') FOR SHARE`, [scope.userId, scope.owner.id])).rows.length);
-    }
-    if (!company) throw new WorkdayError("workday.office_required", 403);
+    if (!await canReadCompanyHours(client, session, scope)) throw new WorkdayError("workday.office_required", 403);
     const { own, other } = columns(scope), at = new Date();
     // One database snapshot reads each latest clock and its exact events together.
     // No row limit: totals must include every recorded shift in the selected period.
