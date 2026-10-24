@@ -33,9 +33,21 @@ Baseline: `bd08504b`, `main` tracking `origin/main` at `https://github.com/vndrl
 - PASS: AskV iOS engine v1.12.29 restored with the existing pinned preparation script; archive and installed device/simulator framework hashes verified. Used the existing bundled Python 3.12.14 through ASKV_PYTHON. Generated libraries are ignored by Git.
 - PASS: iOS JavaScript/Hermes export completed (4500 modules, 128 assets, 16.3 MB Hermes bundle) in `artifacts/vndrly-mobile/.expo-smoke-export`, using one worker and a 4 GB Node heap. Sentry organization/project metadata was not configured; uploads were disabled for validation.
 - WARN: `C:\Users\john\Dev\API Keys and Secrets\Massive-API-Key.env` is absent. This optional market-data integration was not provisioned or substituted.
-- WARN: native iOS compilation/signing requires macOS/Xcode or an EAS cloud build. No cloud build, submission, deployment, database operation, or live message send was performed.
+- PASS: native iOS compilation/signing subsequently verified through EAS; see the signed-build record below. No TestFlight submission, deployment, database operation, or live message send was performed.
 - Historical docs and explicit legacy secret-directory fallback candidates remain; they are not active checkout paths. `/api/users/...` search matches are API routes, not filesystem paths.
 - Existing ACLs grant John, Administrators, and SYSTEM control plus inherited Codex sandbox access. Permissions were inspected, not changed.
 - Full application/database test suites were not run as part of this move/build audit.
 
 This report records validation of the repairs before commit. No credentials were rewritten, rotated, or copied into the repository. Restart existing Codex/terminal sessions to inherit the corrected user-level secrets-folder setting.
+
+## Signed EAS build verification
+
+- PASS: production iOS device build **1.0.4 (252)**, STORE distribution, status **FINISHED**.
+- Built repair commit: `7493df09c66fdb2cab111798d18739c690eb7ed6`.
+- [EAS build 544a02f5-59a0-4a35-8c1f-0a172de00cd2](https://expo.dev/accounts/vndrlyadmin/projects/vndrly-mobile/builds/544a02f5-59a0-4a35-8c1f-0a172de00cd2).
+- Xcode logs confirm `ARCHIVE SUCCEEDED` and signing operations; EAS completed archive upload and credential cleanup.
+- IPA artifact availability verified with HTTP 200; artifact size 74,492,348 bytes. Signed download URLs and log-access URLs are not recorded here.
+- Existing remote signing credentials used for the main app and WorkActivity extension. Build ran with `--non-interactive --freeze-credentials`, `EXPO_NO_CAPABILITY_SYNC=1`, and no auto-submit flag. No secret files, signing keys, or provisioning profiles were changed.
+- EAS build record: created 2026-10-24 04:45:33 UTC, completed 04:54:56 UTC (2026-10-23 in America/Chicago).
+- EAS reported monthly included build credits exhausted; pay-as-you-go billing applies.
+- Repair commit remains local; no GitHub push or TestFlight submission was requested.
