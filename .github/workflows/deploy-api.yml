@@ -202,6 +202,7 @@ jobs:
           (cd /var/www/vndrly/artifacts/api-server && sudo -u vndrly env HOME=/home/vndrly node --env-file=/var/www/vndrly/.env.production --import tsx scripts/seed-companygo-fleet-workflows.ts --apply)
           demo_database_url="$(sudo sed -n 's/^DEMO_DATABASE_URL=//p' .env.production | head -n 1)"
           if [ -n "$demo_database_url" ]; then
+            sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$demo_database_url" pnpm --filter @workspace/api-server run migrate:admin-pin
             sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" DEMO_DATABASE_URL="$demo_database_url" pnpm --filter @workspace/db run migrate:ios-parity-demo
           fi
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:stripe-billing
