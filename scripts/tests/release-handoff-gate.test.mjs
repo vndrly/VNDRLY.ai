@@ -18,6 +18,18 @@ function blockPlugin(state) {
       alternativesConsidered: ['Other supported browser has no authenticated session'], requiredExternalChange: 'Restore an authenticated upload-capable session' } };
 }
 
+test('rejects narrowed, expanded, or duplicated authorization scope', () => {
+  for (const scope of [TRACKS.slice(0, 7), [...TRACKS, 'personal-install'], [...TRACKS.slice(0, 7), 'commit']]) {
+    const state = ledger(); state.authorization.scope = scope;
+    assert.ok(checkHandoff(state, 'complete').some(error => error.includes('exactly all eight')));
+  }
+});
+test('rejects an invented personal installation track even when labeled verified', () => {
+  const state = ledger();
+  state.tracks['personal-install'] = { status: 'verified', canProceed: false, nextAction: 'Done', evidence: proof() };
+  assert.ok(checkHandoff(state, 'complete').some(error => error.includes('not a full-ship manifest track')));
+});
+
 test('requires all eight verified tracks for completion', () => {
   assert.deepEqual(checkHandoff(ledger(), 'complete'), []);
   for (const id of TRACKS) {

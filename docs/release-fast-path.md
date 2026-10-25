@@ -63,10 +63,10 @@ or unfinished implementation is development time, not web deployment time.
 6. When the deploy job succeeds, verify the public route and confirm that the
    deployed bundle belongs to the intended commit when the change affects
    client assets.
-7. After API deployment, update the existing VNDRLY ChatGPT plugin, refresh
-   tools, preserve its linked accounts and verify its live workflows as below.
+7. After API deployment, rebuild and submit the updated VNDRLY ChatGPT plugin
+   using its existing identity, as explicitly directed by John.
 8. Report the commit, all workflow results, public checks, Expo update group,
-   TestFlight submission, plugin version and live evidence, public plugin
+   TestFlight submission, plugin version and submission evidence, public plugin
    review status, and commit-to-live elapsed time. A web-live update may be
    reported immediately, but is not full-ship completion.
 
@@ -95,20 +95,17 @@ test database described in `AGENTS.md`.
 
 - Release the matching MCP tools, embedded views, skills, manifest, branding
   and package. Record the package version and source commit.
-- Update the existing installed VNDRLY entry; do not create duplicate plugins
-  or catalogue entries as a release shortcut.
-- After the live API is healthy, refresh ChatGPT's cached tool definitions.
-  Preserve connected accounts and current grants. New scopes still require
-  explicit consent; a release must not silently expand permissions.
-- Verify an actual role-scoped read, the affected embedded views, and a harmless
-  synthetic prepared action through authorization and independent canonical
-  readback. A package upload or healthy API alone does not prove this track.
-- Update the public draft/submission when applicable. Report installed,
-  submitted, approved and publicly available status separately. OpenAI review
-  is an external gate; report a pending gate rather than claim public release.
-- Full ship requires both TestFlight submission and the matching installed
-  ChatGPT plugin update with live verification, together with the other
-  mandatory tracks in AGENTS.md.
+- Rebuild and submit the updated plugin to ChatGPT using its existing identity.
+  Do not create duplicate catalogue entries. Preserve existing permissions.
+- John's explicit correction excludes updating his personal installed instance
+  or reconnecting its account. Do not make those steps release prerequisites.
+- Record the package version, release commit, and actual submission result.
+  A built ZIP or healthy API is not a completed submission.
+- Distinguish submitted, approved and publicly available status. OpenAI review
+  is external; pending approval does not mean publicly available and is not
+  an additional full-ship completion requirement.
+- Full ship requires TestFlight submission and the matching plugin submission,
+  together with all other mandatory tracks in AGENTS.md.
 
 ## Failure handling
 

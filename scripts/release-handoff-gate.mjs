@@ -11,6 +11,15 @@ export function checkHandoff(state, mode) {
   if (!['complete', 'blocked'].includes(mode)) errors.push('Mode must be complete or blocked.');
   if (!state || typeof state !== 'object') return [...errors, 'Missing release ledger.'];
   const auth = state.authorization;
+  const scope = auth?.scope;
+  if (!Array.isArray(scope) || scope.length !== TRACKS.length
+      || new Set(scope).size !== TRACKS.length
+      || TRACKS.some(id => !scope.includes(id))) {
+    errors.push('Full ship scope must contain exactly all eight manifest tracks, without additions, omissions, or duplicates.');
+  }
+  for (const id of Object.keys(state.tracks ?? {})) {
+    if (!TRACKS.includes(id)) errors.push(`${id}: not a full-ship manifest track; do not add substitute requirements.`);
+  }
   if (!text(auth?.instruction) || !strings(auth?.scope) || !strings(auth?.restrictions)
       || !strings(auth?.completionCriteria) || !timestamp(auth?.requestedAt)) {
     errors.push('Preserve the original authorization, scope, restrictions, criteria, and request time.');

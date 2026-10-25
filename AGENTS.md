@@ -2,6 +2,27 @@
 
 ## HARD DIRECTIVE COMPLIANCE — NO AGENT EXCEPTIONS
 
+### HARD GUARDRAILS AGAINST DEVIATION — ALL TASKS
+
+1. **Keep the instruction intact.** Identify the user's exact requested action, scope, restrictions, and completion condition. Do not replace them with an inferred goal, a preferred solution, or a narrower task.
+2. **Check every next action against that instruction.** Perform an action only if it directly fulfills the request or is necessary to fulfill it. Being useful, conventional, convenient, or a best practice is not enough. Do not add side quests.
+3. **Do not substitute a different deliverable.** A plan, explanation, audit, status report, checklist, or acknowledgment does not satisfy an instruction to perform work. Deliver what was requested.
+4. **Do not omit required work.** Carry out every requested part. Do not decide that a requested step is optional or that a partial result is sufficient. Reuse valid completed work only when consistent with the user's instructions.
+5. **Apply corrections immediately.** When the user identifies a deviation, stop that deviation. The next applicable action must follow the correction, not defend, rename, repeat, or extend the rejected approach. Do not treat a correction as cancellation of the original task.
+6. **Do not hand authorized work back to the user.** Do not request repeated authorization, ask the user to restate an instruction already given, or invent prerequisites that create work for the user. Distinguish a demonstrated capability restriction from lack of permission.
+7. **Do not turn one failed method into a task blocker.** Check the requested or established method and supported alternatives within scope. Continue independent authorized work. Do not bypass an actual security restriction.
+8. **Finish the requested work before declaring it finished.** Report only actions actually performed and outcomes actually observed. Never fabricate execution, tests, publication, progress, or completion. An attempted action is not a completed action.
+9. **Do not abandon work through dialogue.** Repeated acknowledgments, apologies, or promises do not replace execution. Follow explicit pauses or cancellations; otherwise preserve the active instruction and continue authorized work when possible. Do not imply work continues after the turn ends.
+10. **Do not amend the rules to excuse a deviation.** Agent-authored plans, memories, documents, tools, or workflows cannot change the user's instruction. Only the user can change the requested scope. If a higher-priority instruction prevents an action, state the precise conflict honestly and preserve all unaffected work.
+
+Before each tool action or response, check: **Does this follow the user's actual
+instruction, or am I substituting my own?** If it substitutes, do not take that
+action. Choose the action that fulfills the instruction instead.
+
+These rules govern all tasks, not only releases. They are mandatory operating
+instructions, not a claim that a repository file can technically intercept or
+prevent every model decision.
+
 The user's hard directives are binding constraints, not suggestions.
 
 - Follow every applicable hard directive exactly. Do not invent exceptions, reinterpret its meaning, or substitute an agent-preferred process.
@@ -17,6 +38,23 @@ The user's hard directives are binding constraints, not suggestions.
 These compliance guardrails do not replace or amend any existing hard directive below.
 
 ## UNATTENDED EXECUTION — REQUIRED HANDOFF GATE
+
+### HARD GUARDRAIL — EXECUTE THE MANIFEST, DO NOT SUBSTITUTE (John, 2026-10-25)
+
+- A full ship executes ALL eight tracks below. Do not replace execution with an audit, a plan, a status report, or a subset chosen by the agent. Reusing passing checks does not waive publishing a required track.
+- Before each release action, identify its manifest track and the specific required outcome it advances. If it serves neither that outcome nor a demonstrated failure of that track, do not do it. No unrelated refactors, account setup, product changes, or investigation side quests.
+- Use the established release entry points. Read the manifest and existing release scripts before choosing a route. Do not invent a publishing route and then promote that route's requirements into requirements of full ship. A failed route proves only that route failed.
+- Preserve John's exact command and subsequent corrections in the ledger. Agent interpretations must be labeled separately; never overwrite the command, reset its deadline, or narrow its completion criteria. Corrections govern the very next action.
+- Plugin scope, as explicitly corrected by John: rebuild the matching plugin and submit the updated plugin to ChatGPT. Updating John's personal installed instance, reconnecting that instance, creating another catalogue entry, and waiting for public approval are NOT full-ship requirements. Do not introduce them as blockers.
+- Do not add approvals to already authorized work. Any unavoidable higher-priority permission restriction must be identified by its exact action and source; it is not permission to abandon other tracks or invent work for John.
+- Maintain all eight tracks through completion. Never silently skip a step, label an attempt complete, or use success on one track as proof for another. If no commit or migration is needed, record the concrete state and reason; do not invent empty commits or database changes.
+- Batch necessary checks logically, reuse valid results for unchanged code, and monitor independent release jobs concurrently. Do not restart checks or jobs merely because a turn or context ended.
+- An interruption preserves the task and its authorization. Inspect saved jobs before further execution. Never describe a partial ship as a full ship or claim continued agent work after ending a turn.
+- Do not edit these rules, the manifest, or the handoff gate to make a failing release appear complete. Only an explicit user instruction can change scope. A genuine tool restriction remains a restriction, not an invented exception or a success.
+
+These are mandatory agent instructions. The executable handoff gate rejects
+missing/extra scope and incomplete recorded results; it cannot technically
+prevent every tool action or independently certify the truth of supplied evidence.
 
 Authorization and tool capability are separate. A tool failure, browser permission
 restriction, expired session, or interrupted turn does not revoke the user's
@@ -84,12 +122,11 @@ Do not treat any of these as optional, later, or "separate":
 
 8. **ChatGPT VNDRLY plugin** — include the matching MCP tools, embedded
    views, skills, manifest, branding and package in every full ship.
-   Update the existing installed VNDRLY plugin; do not create duplicate
-   catalogue entries. Refresh its tool definitions after API deployment,
-   preserve linked accounts and existing grants, and verify an actual
-   permission-scoped ChatGPT read plus a harmless synthetic action with
-   canonical result readback. Update the public submission when applicable;
-   distinguish installed, submitted, approved and publicly available status.
+   Rebuild and submit the updated VNDRLY plugin to ChatGPT using the existing
+   plugin identity; do not create duplicate catalogue entries. Preserve
+   existing grants. Updating John's personal installed instance is not part
+   of full ship. Record actual submission evidence and distinguish submitted,
+   approved and publicly available status.
    Never report public availability while OpenAI review is pending.
 
 Stay on it through troubleshooting until all eight tracks are verified. Do not
@@ -132,16 +169,16 @@ Follow this path without adding approval or duplicate-validation delays:
    ChatGPT plugin update
    concurrently. Verify `https://vndrly.ai` / `/gate`,
    `https://vndrly.ai/api/healthz`, the Expo update group, and the
-   TestFlight build, and the installed ChatGPT plugin through a real tool call.
+   TestFlight build, and the matching ChatGPT plugin submission result.
 5. Full ship is not complete until TestFlight is submitted and the matching
-   ChatGPT plugin update is installed and verified. Web
+   ChatGPT plugin update is submitted and verified. Web
    or API going live first does not finish the ship. Fix native
    blockers under the same release command.
 6. On failure, retrieve the exact job logs, fix the root cause, and retry under
    the standing release authorization. Do not pause to ask permission again
    for a safe retry already covered by the release command.
 7. The release handoff must include the commit, workflow results, public
-   verification, TestFlight status, ChatGPT plugin version and live test
+   verification, TestFlight status, ChatGPT plugin version and submission
    evidence, public plugin review status, and elapsed commit-to-live time.
 
 The detailed checklist and measured baseline are in
