@@ -5376,6 +5376,9 @@
     "history": "Registro de acceso",
     "gateMode": "Modo de portería",
     "returnToAdmin": "Volver a administración",
+    "returnToGate": "Volver a acceso",
+    "enterPin": "Introduce el PIN de cuatro dígitos",
+    "incorrectPin": "PIN incorrecto. Inténtalo de nuevo.",
     "aria": "Navegación del portal de portería"
   },
   "plateStatePicker": {
@@ -5726,7 +5729,7 @@
     "textFallback": "Usar texto en lugar de voz"
   },
   "changeOver": {
-    "title": "Panel de acceso",
+    "title": "Panel",
     "shiftNotes": "Notas de turno",
     "intro": "Vea quién está en el sitio, revise los asuntos pendientes y mantenga informado al siguiente turno.",
     "historyIntro": "Entregas completadas en los últimos 7 días, más recientes primero. Consulte registros anteriores con el filtro de fechas.",

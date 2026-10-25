@@ -1,5 +1,7 @@
 import "./gate-portal-workspace.css";
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { useLocation } from "wouter";
+import { ReturnToAdminPinDialog } from "@/components/return-to-admin-pin-dialog";
 import { ArrowLeft, BriefcaseBusiness, History, MapPin, Mic, Shield } from "lucide-react";
 import { FieldOpsPortalShell, type FieldOpsTabDef } from "@/components/field-ops-portal-shell";
 
@@ -51,9 +53,13 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
 ];
 
 export function GatePortalLayout({ children, returnToAdmin = false }: { children: ReactNode; returnToAdmin?: boolean }) {
+  const [location] = useLocation();
+  const [pinOpen, setPinOpen] = useState(false);
   const tabs = returnToAdmin ? [
     ...GATE_PORTAL_TABS,
-    { href: "/", icon: ArrowLeft, labelKey: "gateNav.returnToAdmin", testId: "tab-gate-return-admin", match: () => false },
+    { href: "/", icon: ArrowLeft, labelKey: "gateNav.returnToAdmin", testId: "tab-gate-return-admin", match: () => false,
+      ...(location === "/gate/change-over" ? { onSelect: () => { setPinOpen(true); } } : {}),
+    },
   ] : GATE_PORTAL_TABS;
   return (
     <FieldOpsPortalShell
@@ -62,6 +68,7 @@ export function GatePortalLayout({ children, returnToAdmin = false }: { children
       navAriaKey="gateNav.aria"
     >
       <div className="gate-portal-workspace">{children}</div>
+      <ReturnToAdminPinDialog open={pinOpen} onOpenChange={setPinOpen} />
     </FieldOpsPortalShell>
   );
 }

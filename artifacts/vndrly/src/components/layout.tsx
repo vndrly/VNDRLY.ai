@@ -73,7 +73,8 @@ import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { orderPortalNavigation } from "@/lib/portal-nav-order";
-import { workHubIcons, getWorkHubNavItems, getWorkHubReturnPath, isWorkHubPath } from "@/lib/work-hub-nav";
+import { workHubIcons, getWorkHubNavItems, isWorkHubPath } from "@/lib/work-hub-nav";
+import { ReturnToAdminPinDialog } from "@/components/return-to-admin-pin-dialog";
 
 import { WorkHubNavigation } from "@/components/work-hub/navigation";
 
@@ -231,6 +232,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
   const fleetText = fleetCopy(i18n.language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminPinOpen, setAdminPinOpen] = useState(false);
   const fleetIdentity = `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`;
   const currentFleetIdentity = useRef<string | null>(fleetIdentity);
   currentFleetIdentity.current = fleetIdentity;
@@ -441,7 +443,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             FIXED_APP_CHROME && "min-h-0 overflow-y-auto",
           )}
         >
-          {inWorkHub && <Link href={getWorkHubReturnPath(sessionStorage.getItem("vndrly.workHub.returnPath"))} onClick={() => setSidebarOpen(false)}><SidebarButton isActive={false} activeOnHover testId="nav-back-to-vndrly" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}><ArrowLeft className="h-4 w-4"/>Back to VNDRLY</SidebarButton></Link>}
+          {inWorkHub && <Link href="/gate/change-over" onClick={() => setSidebarOpen(false)}><SidebarButton isActive={false} activeOnHover testId="nav-return-to-gate" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}><ArrowLeft className="h-4 w-4"/>{t("gateNav.returnToGate")}</SidebarButton></Link>}
           {inWorkHub ? <WorkHubNavigation onNavigate={() => setSidebarOpen(false)} /> : navItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && item.href !== "/fleet" && location.startsWith(item.href));
             const Icon = item.icon;
@@ -483,6 +485,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </SidebarButton>
             </div>
           )}
+          {inWorkHub && <div className="pt-3"><SidebarButton isActive={false} activeOnHover testId="nav-return-to-admin" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent} onClick={() => setAdminPinOpen(true)}><ArrowLeft className="h-4 w-4"/>{t("gateNav.returnToAdmin")}</SidebarButton></div>}
         </nav>
       </aside>
 
@@ -546,6 +549,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    {inWorkHub && <ReturnToAdminPinDialog open={adminPinOpen} onOpenChange={setAdminPinOpen} />}
     </MeetingSessionProvider>
     </>
   );

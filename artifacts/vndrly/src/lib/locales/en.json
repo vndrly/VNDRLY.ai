@@ -5376,6 +5376,9 @@
     "history": "Gate Log",
     "gateMode": "Gate Mode",
     "returnToAdmin": "Return to Admin",
+    "returnToGate": "Return to Gate",
+    "enterPin": "Enter the four-digit PIN",
+    "incorrectPin": "Incorrect PIN. Try again.",
     "aria": "Gate portal navigation"
   },
   "plateStatePicker": {
@@ -5726,7 +5729,7 @@
     "textFallback": "Use text instead of voice"
   },
   "changeOver": {
-    "title": "Gate Dashboard",
+    "title": "Dashboard",
     "shiftNotes": "Shift Notes",
     "intro": "See who's on site, review open items, and keep the next shift informed.",
     "historyIntro": "Completed handoffs from the last 7 days, newest first. Older records remain available through the date filter.",

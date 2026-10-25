@@ -55,6 +55,7 @@ export interface FieldOpsTabDef {
   testId: string;
   match: (path: string) => boolean;
   voiceEntry?: boolean;
+  onSelect?: () => void;
 }
 
 interface FieldOpsPortalShellProps {
@@ -236,7 +237,14 @@ export function FieldOpsPortalShell({
               return <GateVoiceEntryCircle key={tab.href} testId={tab.testId} />;
             }
             return (
-              <Link key={tab.href} href={tab.href} onClick={() => setSidebarOpen(false)}>
+              <Link key={tab.href} href={tab.href} onClick={(event) => {
+                if (tab.onSelect) {
+                  event.preventDefault();
+                  tab.onSelect();
+                  return;
+                }
+                setSidebarOpen(false);
+              }}>
                 <SidebarButton
                   isActive={isActive}
                   testId={tab.testId}
