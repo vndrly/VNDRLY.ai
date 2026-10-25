@@ -11,14 +11,34 @@ const message = { id: "message-a", version: 2, reactions: [] };
 const receipt = (options: any) => { const body = JSON.parse(options.body); return { operationId: body.operationId, resource: { actorUserId: 17, channelId: channel.id, messageId: message.id, expectedVersion: body.expectedVersion, ...body.payload, active: body.payload.action === "add" } }; };
 beforeEach(() => { env.request.mockReset(); env.user = { userId: 17, activeMembershipId: 8, vendorId: 4 }; });
 afterEach(cleanup);
+it.each([["React 👍", "👍"], ["React ❤️", "❤️"], ["React ✅", "✅"], ["Question", "❓"], ["Needs attention", "⚠️"]])("saves %s through its flat icon without duplicate clicks", async (label, emoji) => {
+  const onSaved = vi.fn().mockResolvedValue(undefined);
+  env.request.mockImplementation((_path, options) => Promise.resolve(receipt(options)));
+  render(<MessageReactions channel={channel} message={message} onSaved={onSaved} />);
+  const button = screen.getByRole("button", { name: label });
+  fireEvent.click(button);
+  fireEvent.click(button);
+  await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  expect(env.request).toHaveBeenCalledTimes(1);
+  expect(JSON.parse(env.request.mock.calls[0][1].body).payload).toEqual({ emoji, action: "add" });
+  expect(screen.queryByText("Reaction saved.")).toBeNull();
+});
+it("rejects an incorrect save receipt instead of displaying success", async () => {
+  const onSaved = vi.fn();
+  env.request.mockResolvedValue({ operationId: "wrong", resource: {} });
+  render(<MessageReactions channel={channel} message={message} onSaved={onSaved} />);
+  fireEvent.click(screen.getByRole("button", { name: "Question" }));
+  await screen.findByRole("button", { name: "Retry original request" });
+  expect(onSaved).not.toHaveBeenCalled();
+});
 it("retains exact desired state and UUID after a dropped response and denied retry", async () => {
   env.request.mockRejectedValueOnce(Error("Dropped")).mockRejectedValueOnce(Object.assign(Error("Denied"), { status: 403 })).mockImplementation((_path, options) => Promise.resolve(receipt(options)));
   render(<MessageReactions channel={channel} message={message} onSaved={async () => {}} />);
   fireEvent.click(screen.getByLabelText("React 👍"));
-  fireEvent.click(await screen.findByText("Retry original request"));
+  fireEvent.click(await screen.findByRole("button", { name: "Retry original request" }));
   await waitFor(() => expect(env.request).toHaveBeenCalledTimes(2));
-  fireEvent.click(screen.getByText("Retry original request"));
-  await screen.findByText("Reaction saved.");
+  fireEvent.click(screen.getByRole("button", { name: "Retry original request" }));
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Retry original request" })).toBeNull());
   expect(env.request.mock.calls[1]).toEqual(env.request.mock.calls[0]);
   expect(env.request.mock.calls[2]).toEqual(env.request.mock.calls[0]);
   expect(JSON.parse(env.request.mock.calls[0][1].body)).toMatchObject({ expectedVersion: 2, payload: { emoji: "👍", action: "add" } });
@@ -29,7 +49,7 @@ it("uses remove for the caller's saved reaction and keeps verified save separate
   fireEvent.click(screen.getByLabelText("React 👍"));
   await screen.findByText("Saved. Refresh the conversation.");
   expect(JSON.parse(env.request.mock.calls[0][1].body).payload.action).toBe("remove");
-  expect(screen.queryByText("Retry original request")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Retry original request" })).toBeNull();
   expect((screen.getByLabelText("React 👍") as HTMLButtonElement).disabled).toBe(true);
 });
 it("fences a late old-account result and permits no stale retry on the new identity", async () => {
@@ -41,5 +61,5 @@ it("fences a late old-account result and permits no stale retry on the new ident
   view.rerender(<MessageReactions channel={channel} message={message} onSaved={async () => {}} />);
   await act(async () => finish(receipt(env.request.mock.calls[0][1])));
   expect(screen.queryByText("Reaction saved.")).toBeNull();
-  expect(screen.queryByText("Retry original request")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Retry original request" })).toBeNull();
 });

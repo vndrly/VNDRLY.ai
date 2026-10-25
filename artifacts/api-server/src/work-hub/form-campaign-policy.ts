@@ -70,9 +70,12 @@ export function campaignResultsVisible(
 
 export function requireCampaignPublicationContent(config: {
   kind: string;
+  question?: string;
   policyText?: string;
   policyAttachmentId?: string | null;
 }) {
+  if (config.kind === "poll" && !config.question?.trim())
+    throw Error("A poll question is required before publication");
   if (
     config.kind === "acknowledgement" &&
     !config.policyText?.trim() &&

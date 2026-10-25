@@ -5,6 +5,8 @@ import { ConversationTitle } from "./conversation-title";
 import { ConversationAttachments } from "./conversation-attachments";
 import { ConversationTranscript } from "./conversation-transcript";
 import { NewChat } from "./new-chat";
+import { NewChannel } from "./new-channel";
+import { NewPoll, PollWorkspace, usePollCampaigns } from "./polls";
 import { WorkHubFiles } from "./files";
 import { ChatParticipants } from "./chat-participants";
 import { MessageReactions } from "./message-reactions";
@@ -12,7 +14,7 @@ import "./collaboration.css";
 import { useEffect, useRef, useState } from "react";
 import { useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check } from "lucide-react";
+import { MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check, Reply, Pencil, Vote } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import {
@@ -140,20 +142,13 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [thread, setThread] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<Row | null>(null);
+  const [createPanel, setCreatePanel] = useState<"channel" | "chat" | "poll">("chat");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [selectedPollId, setSelectedPollId] = useState("");
+  const pollCampaigns = usePollCampaigns();
 
 
   const list = !chat && crew ? crewChannels.data : channels.data;
-  const conversationLayout = useRef<HTMLDivElement>(null);
-  const conversationList = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (!list || !conversationList.current || !conversationLayout.current) return;
-    const panel = conversationList.current;
-    // Use the list's original natural height, not a smaller viewport cap.
-    panel.style.height = "auto";
-    const height = Math.ceil(panel.getBoundingClientRect().height);
-    panel.style.height = "";
-    conversationLayout.current.style.setProperty("--conversation-panel-height", `${height}px`);
-  }, [list?.length, !!list]);
   const active = selected || list?.[0]?.id;
   const channel =
     list?.find((c) => c.id === active) ??
@@ -246,6 +241,14 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         (filter === "unread" && c.unreadCount > 0) ||
         (filter === "favorites" && preferences.favorites.includes(c.id)) ||
         (filter === "drafts" && !!(drafts[c.id] ?? preferences.drafts[c.id]))),
+  );
+  const visiblePolls = (pollCampaigns.polls ?? []).filter(
+    (poll) =>
+      poll.title.toLowerCase().includes(search.toLowerCase()) &&
+      (filter === "all" || (filter === "unread" && !poll.completed)),
+  );
+  const selectedPoll = pollCampaigns.polls?.find(
+    (poll) => poll.campaignId === selectedPollId,
   );
   const shownMessages = [...(messages.data ?? [])]
     .reverse()
@@ -445,9 +448,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   return (
     <section className="hub-chat-page w-full space-y-4 p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
       <WorkHubPageHeading module="chat" title={`${brand.name || "Company"} Conversations`} compact />
-      <div ref={conversationLayout} className="hub-conversation-layout grid gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
+      <div className="hub-conversation-layout grid gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
       <aside
-        ref={conversationList}
         aria-label="Conversations panel"
         data-work-hub-card
         className={`min-w-0 space-y-4 p-4 ${WORK_HUB_CARD_CLASS}`}
@@ -506,12 +508,15 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               {entries.map((c) => (
             <div
               key={c.id}
-              data-selected={active === c.id}
+              data-selected={!selectedPollId && active === c.id}
               className="hub-chat-conversation flex items-center rounded-lg"
             >
               <button
                 className="min-w-0 flex-1 p-3 text-left"
-                onClick={() => setSelected(c.id)}
+                onClick={() => {
+                  setSelected(c.id);
+                  setSelectedPollId("");
+                }}
               >
                 <span className="flex items-center gap-2 font-medium">
                   <Icon className="h-4 w-4" aria-label={category === "Chats" ? "Chat" : "Channel"} />
@@ -544,8 +549,45 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               ))}
             </details>;
           })}
+          <details open className="hub-conversation-category">
+            <summary>
+              <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
+              Polls
+              <span>{visiblePolls.length}</span>
+            </summary>
+            {visiblePolls.length === 0 && (
+              <p className="pb-3 text-xs text-muted-foreground">No polls in this view.</p>
+            )}
+            {visiblePolls.map((poll) => (
+              <div
+                key={poll.campaignId}
+                data-selected={selectedPollId === poll.campaignId}
+                className="hub-chat-conversation flex items-center rounded-lg"
+              >
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 p-3 text-left"
+                  onClick={() => setSelectedPollId(poll.campaignId)}
+                >
+                  <span className="flex items-center gap-2 font-medium">
+                    <Vote className="h-4 w-4" aria-label="Poll" />
+                    {poll.title}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {poll.completed
+                      ? "Response saved"
+                      : poll.state.status === "draft"
+                        ? "Draft"
+                        : poll.state.deadline
+                          ? `Closes ${new Date(poll.state.deadline).toLocaleString()}`
+                          : poll.state.status}
+                  </span>
+                </button>
+              </div>
+            ))}
+          </details>
         </nav>
-        {!visible?.length && !channels.isLoading && (
+        {!visible?.length && !visiblePolls.length && !channels.isLoading && (
           <p className="text-sm text-muted-foreground">
             No conversations match this view.
           </p>
@@ -696,11 +738,74 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </Dialog>
           </>
         )}
-        <details className="border-t pt-4">
-          <summary className="cursor-pointer text-sm font-semibold">New Chat</summary>
-          <div className="mt-3 grid gap-3">
-            <NewChat onCreated={setSelected} />
-            {invitations.data
+        <section
+          aria-label="Create a channel, chat, or poll"
+          className={`hub-create-panel border-t ${WORK_HUB_SUBCARD_CLASS}`}
+        >
+          <div className="flex items-center gap-2 px-3 pt-3">
+            <p className="shrink-0 text-sm font-semibold">Create New:</p>
+            <button
+              type="button"
+              className="hub-create-toggle ml-auto"
+              aria-expanded={createOpen}
+              aria-label={createOpen ? "Collapse creation controls" : "Expand creation controls"}
+              onClick={() => setCreateOpen((open) => !open)}
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-1 px-3 pb-3 pt-2" role="tablist" aria-label="Create new">
+            {(["channel", "chat", "poll"] as const).map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                role="tab"
+                aria-selected={createPanel === kind}
+                className="hub-create-tab"
+                onClick={() => {
+                  setCreatePanel(kind);
+                  setCreateOpen(true);
+                }}
+              >
+                {kind[0].toUpperCase() + kind.slice(1)}
+              </button>
+            ))}
+          </div>
+          {createOpen && <div
+            role="tabpanel"
+            aria-label={`New ${createPanel}`}
+            className="hub-create-content mx-3 mb-3 grid gap-3 rounded-xl border p-3"
+          >
+            {createPanel === "channel" &&
+              (canAdministerChannels ? (
+                <NewChannel
+                  onCreated={(id) => {
+                    setSelected(id);
+                    setSelectedPollId("");
+                  }}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  A company administrator can create a channel.
+                </p>
+              ))}
+            {createPanel === "chat" && (
+              <NewChat
+                onCreated={(id) => {
+                  setSelected(id);
+                  setSelectedPollId("");
+                }}
+              />
+            )}
+            {createPanel === "poll" && (
+              <NewPoll
+                onCreated={(id) => {
+                  setSelectedPollId(id);
+                  void pollCampaigns.query.refetch();
+                }}
+              />
+            )}
+            {createPanel === "chat" && invitations.data
               ?.filter(
                 (invitation) =>
                   invitation.status === "pending" &&
@@ -727,15 +832,23 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   </div>
                 </div>
               ))}
-          </div>
-        </details>
+          </div>}
+        </section>
         <HubError error={mutation.error ?? save.error} />
       </aside>
       <main
         aria-label="Selected conversation workspace"
         className="grid min-w-0 content-start gap-4"
       >
-        {active ? (
+        {selectedPollId ? (
+          selectedPoll ? (
+            <PollWorkspace poll={selectedPoll} />
+          ) : (
+            <section className={`p-6 ${WORK_HUB_CARD_CLASS}`}>
+              <p role="status">Loading poll…</p>
+            </section>
+          )
+        ) : active ? (
           <div className={`hub-communications-window ${WORK_HUB_CARD_CLASS}`}>
             <section
               aria-label="Selected channel"
@@ -808,35 +921,25 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   <div className="min-h-48 space-y-4">
                     {shownMessages.map((m) => (
                       <article key={m.id} data-message-tone={m.authorUserId === user?.userId ? "self" : m.authorIsAdmin ? "admin" : "other"} className="hub-chat-message flex gap-3">
-                        <div className="hub-chat-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold">
-                          {String(m.authorName ?? m.authorUserId).slice(0, 2)}
-                        </div>
                         <div className="hub-chat-bubble min-w-0">
-                          <p className="text-sm font-semibold">
-                            {m.authorName ?? `User ${m.authorUserId}`}{" "}
-                            <time className="ml-2 text-xs font-normal text-muted-foreground">
-                              {new Date(m.createdAt).toLocaleString()}
-                              {m.editedAt ? " · Edited" : ""}
-                            </time>
-                          </p>
-                          <p className="mt-1 whitespace-pre-wrap break-words text-sm">
-                            {m.deletedAt
-                              ? "Message deleted"
-                              : <NoteMessage body={displayMentionText(m.body, members.data ?? [])} />}
-                          </p>
+                          <header className="mb-2 flex items-center gap-2">
+                            <div className="hub-chat-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold">
+                              {String(m.authorName ?? m.authorUserId).slice(0, 2)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="break-words text-sm font-semibold">{m.authorName ?? `User ${m.authorUserId}`}</p>
+                              <time dateTime={m.createdAt} className="block text-xs font-normal text-muted-foreground">
+                                {new Date(m.createdAt).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit" })}{" "}
+                                {new Date(m.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                                {m.editedAt ? " · Edited" : ""}
+                              </time>
+                            </div>
                           {!m.deletedAt && (
-                            <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                              <button
-                                onClick={() =>
-                                  setThread(m.rootMessageId ?? m.id)
-                                }
-                              >
-                                Reply in thread
-                              </button>
-                              {channel && <MessageReactions channel={channel} message={m} onSaved={() => qc.invalidateQueries({ queryKey: ["work-hub"] })} />}
+                            <div className="ml-auto -mt-1 flex shrink-0 self-start items-center gap-0.5 text-xs text-muted-foreground">
+
                               {m.authorUserId === user?.userId && (
                                 <>
-                                  <button
+                                  <button type="button" className="hub-message-action" title="Edit" aria-label="Edit"
                                     onClick={() => {
                                       setEditing(m);
                                       setDrafts((d) => ({
@@ -844,10 +947,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                                         [active]: m.body,
                                       }));
                                     }}
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
+                                  ><Pencil className="h-4 w-4" aria-hidden="true" /></button>
+                                  <button type="button" className="hub-message-action" title="Delete" aria-label="Delete"
                                     onClick={() =>
                                       mutation.mutate({
                                         path: `/channels/${active}/messages/${m.id}`,
@@ -860,11 +961,25 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                                         ),
                                       })
                                     }
-                                  >
-                                    Delete
-                                  </button>
+                                  ><Trash2 className="h-4 w-4" aria-hidden="true" /></button>
                                 </>
                               )}
+                            </div>
+                          )}
+                          </header>
+                          <p className="mt-1 whitespace-pre-wrap break-words text-sm">
+                            {m.deletedAt
+                              ? "Message deleted"
+                              : <NoteMessage body={displayMentionText(m.body, members.data ?? [])} />}
+                          </p>
+                          {!m.deletedAt && channel && (
+                            <div className="mt-2 flex flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground">
+                              <button type="button" className="hub-message-action" title="Reply in thread" aria-label="Reply in thread"
+                                onClick={() =>
+                                  setThread(m.rootMessageId ?? m.id)
+                                }
+                              ><Reply className="h-4 w-4" aria-hidden="true" /></button>
+                              {channel && <MessageReactions channel={channel} message={m} onSaved={() => qc.invalidateQueries({ queryKey: ["work-hub"] })} />}
                             </div>
                           )}
                         </div>

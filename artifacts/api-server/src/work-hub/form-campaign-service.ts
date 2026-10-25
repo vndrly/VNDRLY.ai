@@ -182,7 +182,7 @@ export function campaignDefinition(config: FormCampaignConfig) {
       ? [
           {
             id: "choices",
-            label: config.title,
+            label: config.question || config.title,
             type: "choice",
             required: true,
             choices: config.choices,
@@ -771,6 +771,7 @@ export async function getCampaignInstance(
     kind,
     title,
     description,
+    question,
     policyText,
     policyVersion,
     policyAttachmentId,
@@ -800,6 +801,7 @@ export async function getCampaignInstance(
       kind,
       title,
       description,
+      question,
       policyText,
       policyVersion,
       policyAttachmentId,

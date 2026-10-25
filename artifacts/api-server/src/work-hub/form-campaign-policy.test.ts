@@ -86,6 +86,18 @@ it("keeps an empty security policy draft unpublished", () => {
   ).not.toThrow();
 });
 
+it("requires a poll question before notifying its audience", () => {
+  expect(() =>
+    requireCampaignPublicationContent({ kind: "poll", question: "" }),
+  ).toThrow("poll question");
+  expect(() =>
+    requireCampaignPublicationContent({
+      kind: "poll",
+      question: "Where should the crew meet?",
+    }),
+  ).not.toThrow();
+});
+
 import { validateGeneralCampaignValues } from "./form-campaign-policy";
 it("requires known typed fields for general campaigns", () => {
   const fields = [

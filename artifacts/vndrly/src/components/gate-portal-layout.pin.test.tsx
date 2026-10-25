@@ -1,3 +1,4 @@
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { role: "admin" } }) }));
 import React from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -33,4 +34,14 @@ it("leaves Return to Admin unchanged on other gate pages", () => {
   fireEvent.click(screen.getByText("tab-gate-return-admin"));
   expect(state.navigate).toHaveBeenCalledWith("/");
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("removes the microphone from Dashboard navigation but keeps it on the Gate page", () => {
+  state.path = "/gate/change-over";
+  const view = render(<GatePortalLayout>Dashboard</GatePortalLayout>);
+  expect(screen.queryByText("button-gate-voice")).toBeNull();
+  expect(screen.getAllByRole("button")[0].textContent).toBe("tab-gate-work-hub");
+  state.path = "/gate";
+  view.rerender(<GatePortalLayout>Gate</GatePortalLayout>);
+  expect(screen.getByText("button-gate-voice")).toBeTruthy();
 });

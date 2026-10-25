@@ -1,3 +1,4 @@
+import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import WorkforcePanel from "./workforce-panel";
 import { useEffect, useState } from "react";
@@ -74,7 +75,7 @@ export function WorkHubHome() {
   ];
 
   return <section className="work-hub-home" aria-label="Work Hub workspace" data-testid="work-hub-activity">
-    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact />
+    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact actions={<LanguageToggle />} />
     <WorkdayControls />
     {home.isPending && <p role="status">{c("Loading Work Hub…", "Cargando Work Hub…")}</p>}
     {home.isError && <p role="alert">{c("Work Hub summaries are unavailable. Open a row to check its records.", "Los resúmenes no están disponibles. Abra una fila para consultar sus registros.")}</p>}

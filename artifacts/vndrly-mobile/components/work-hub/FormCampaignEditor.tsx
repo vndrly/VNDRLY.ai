@@ -56,6 +56,7 @@ export default function FormCampaignEditor({
     [sourceTemplateId, setSourceTemplateId] = useState<string | null>(null),
     [title, setTitle] = useState(t("formCampaignLabels.e001")),
     [description, setDescription] = useState(""),
+    [question, setQuestion] = useState(""),
     [policy, setPolicy] = useState(""),
     [policyVersion, setPolicyVersion] = useState("1"),
     [attachmentId, setAttachmentId] = useState<string | null>(null),
@@ -87,6 +88,7 @@ export default function FormCampaignEditor({
       setKind("acknowledgement");
       setTitle(t("formCampaignLabels.e001"));
       setDescription("");
+      setQuestion("");
       setPolicy("");
       setPolicyVersion("1");
       setAttachmentId(null);
@@ -110,6 +112,7 @@ export default function FormCampaignEditor({
     setSourceTemplateId(initial.sourceTemplateId);
     setTitle(initial.title);
     setDescription(initial.description);
+    setQuestion(initial.question);
     setPolicy(initial.policyText);
     setPolicyVersion(initial.policyVersion);
     setAttachmentId(initial.policyAttachmentId);
@@ -187,6 +190,7 @@ export default function FormCampaignEditor({
         sourceTemplateId,
         title,
         description,
+        question: kind === "poll" ? question : "",
         policyText: kind === "acknowledgement" ? policy : "",
         policyVersion,
         policyAttachmentId: kind === "acknowledgement" ? attachmentId : null,
@@ -367,6 +371,16 @@ export default function FormCampaignEditor({
                   onChangeText={setDescription}
                   style={field}
                 />
+                {kind === "poll" && (
+                  <TextInput
+                    accessibilityLabel="Poll question"
+                    placeholder="Question"
+                    multiline
+                    value={question}
+                    onChangeText={setQuestion}
+                    style={field}
+                  />
+                )}
                 {kind === "acknowledgement" ? (
                   <>
                     <TextInput

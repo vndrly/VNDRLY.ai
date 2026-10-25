@@ -28,6 +28,8 @@ export function NewChat({ onCreated }: { onCreated: (id: string) => void }) {
   });
   const changed = () => { setOperationId(createWorkHubOperationId()); create.reset(); };
   return <div className="grid gap-3">
+    <BrandedInput aria-label="Chat name (optional)" placeholder="Chat name (optional)" maxLength={120} value={name} disabled={create.isPending}
+      onChange={e => { setName(e.target.value); changed(); }} />
     <BrandedInput aria-label="Find chat participants" placeholder="Search people by name or email" value={search} onChange={e => setSearch(e.target.value)} disabled={create.isPending} />
     {selected.length > 0 && <div className="flex flex-wrap gap-x-3 gap-y-1" aria-label="Selected chat participants">
       {selected.map(p => <span key={p.id} className="inline-flex items-center gap-1 text-sm">
@@ -45,8 +47,6 @@ export function NewChat({ onCreated }: { onCreated: (id: string) => void }) {
       {people.isPending && <p className="text-sm text-muted-foreground">Loading people…</p>}
       {people.data?.length === 0 && <p className="text-sm text-muted-foreground">No people found.</p>}
     </div>
-    <BrandedInput aria-label="Chat name (optional)" placeholder="Chat name (optional)" maxLength={120} value={name} disabled={create.isPending}
-      onChange={e => { setName(e.target.value); changed(); }} />
     <BrandPillButton tone="brand" className="w-fit max-w-full justify-self-start" disabled={!selected.length || create.isPending} onClick={() => create.mutate()}>
       {create.isPending ? "Starting…" : "Start Chat"}
     </BrandPillButton>

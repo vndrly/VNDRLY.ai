@@ -74,7 +74,6 @@ import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-feature
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { orderPortalNavigation } from "@/lib/portal-nav-order";
 import { workHubIcons, getWorkHubNavItems, isWorkHubPath } from "@/lib/work-hub-nav";
-import { ReturnToAdminPinDialog } from "@/components/return-to-admin-pin-dialog";
 
 import { WorkHubNavigation } from "@/components/work-hub/navigation";
 
@@ -232,7 +231,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
   const fleetText = fleetCopy(i18n.language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [adminPinOpen, setAdminPinOpen] = useState(false);
   const fleetIdentity = `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`;
   const currentFleetIdentity = useRef<string | null>(fleetIdentity);
   currentFleetIdentity.current = fleetIdentity;
@@ -444,7 +442,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
         >
           {inWorkHub && <Link href="/gate/change-over" onClick={() => setSidebarOpen(false)}><SidebarButton isActive={false} activeOnHover testId="nav-return-to-gate" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}><ArrowLeft className="h-4 w-4"/>{t("gateNav.returnToGate")}</SidebarButton></Link>}
-          {inWorkHub ? <WorkHubNavigation onNavigate={() => setSidebarOpen(false)} /> : navItems.map((item) => {
+          {inWorkHub ? <WorkHubNavigation onNavigate={() => setSidebarOpen(false)} footer={user ? <SidebarButton isActive={false} activeOnHover onClick={() => { logout(); }} testId="nav-sign-out-sidebar" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}><LogOut className="w-4 h-4" />{t("nav.signOut")}</SidebarButton> : null} /> : navItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && item.href !== "/fleet" && location.startsWith(item.href));
             const Icon = item.icon;
             return (
@@ -463,12 +461,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               nav has no analytics entry) never saw them. Render once
               after the nav loop so every role — admin / vendor /
               partner / field — gets the same toggles in the sidebar. */}
-          <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-
+          {!inWorkHub && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
             <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
-          </div>
-          {user && (
-            <div className="pt-3">
+          </div>}
+          {user && !inWorkHub && (
+            <div>
               <SidebarButton
                 isActive={false}
                 activeOnHover
@@ -485,7 +482,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </SidebarButton>
             </div>
           )}
-          {inWorkHub && <div className="pt-3"><SidebarButton isActive={false} activeOnHover testId="nav-return-to-admin" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent} onClick={() => setAdminPinOpen(true)}><ArrowLeft className="h-4 w-4"/>{t("gateNav.returnToAdmin")}</SidebarButton></div>}
         </nav>
       </aside>
 
@@ -509,16 +505,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {showAskVPane && (
         <div
           style={{ backgroundColor: ASKV_PANE_BG }}
-          className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
+          className="flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
           data-testid="askv-pane"
         >
-          <AskVStatusIndicator placement="top-strip" />
-          <EnergyMarketTicker />
-          <div className="ml-auto flex shrink-0 items-center gap-3 overflow-visible">
-            <Suspense fallback={null}>
-              <AssistantLauncher placement="askv-pane" />
-            </Suspense>
+          <div className="flex shrink-0 items-center gap-0 overflow-visible">
+            <div className="relative top-[3px] flex items-center">
+              <Suspense fallback={null}>
+                <AssistantLauncher placement="askv-pane" />
+              </Suspense>
+            </div>
+            <div className="-ml-[10.8px]"><AskVStatusIndicator placement="top-strip" /></div>
           </div>
+          <EnergyMarketTicker />
           <ReferToVndrlyDialog
             trigger={
               <button
@@ -549,7 +547,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
-    {inWorkHub && <ReturnToAdminPinDialog open={adminPinOpen} onOpenChange={setAdminPinOpen} />}
     </MeetingSessionProvider>
     </>
   );

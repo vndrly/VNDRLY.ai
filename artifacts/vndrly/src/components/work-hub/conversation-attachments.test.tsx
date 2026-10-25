@@ -3,6 +3,24 @@ import { afterEach, expect, it, vi } from "vitest";
 import { ConversationAttachments } from "./conversation-attachments";
 vi.mock("@/components/brand-pill-button", () => ({ default: ({ children, ...props }: any) => <button {...props}>{children}</button> }));
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+it("captures a synthetic camera frame as a JPEG and releases the camera", async () => {
+  const stop = vi.fn(), drawImage = vi.fn(), selected = vi.fn();
+  vi.stubGlobal("navigator", { mediaDevices: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) } });
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage } as any);
+  vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(callback => callback(new Blob(["mock"], { type: "image/jpeg" })));
+  render(<ConversationAttachments onSelect={selected} />);
+  fireEvent.click(screen.getByRole("button", { name: "Add attachment" }));
+  fireEvent.click(screen.getByRole("button", { name: "Take photo" }));
+  const video = screen.getByLabelText("Camera preview");
+  await waitFor(() => expect((video as HTMLVideoElement).srcObject).toBeTruthy());
+  Object.defineProperties(video, { videoWidth: { value: 640 }, videoHeight: { value: 480 } });
+  fireEvent.loadedData(video);
+  fireEvent.click(screen.getByRole("button", { name: "Take photo" }));
+  expect(drawImage).toHaveBeenCalledWith(video, 0, 0);
+  expect(selected).toHaveBeenCalledTimes(1);
+  expect(selected.mock.calls[0][0].type).toBe("image/jpeg");
+  await waitFor(() => expect(stop).toHaveBeenCalledOnce());
+});
 it("offers all three choices and selects synthetic files without uploading", async () => {
   const selected = vi.fn();
   render(<ConversationAttachments onSelect={selected} />);

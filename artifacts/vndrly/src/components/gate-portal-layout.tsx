@@ -1,8 +1,10 @@
+import { useAuth } from "@/hooks/use-auth";
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import "./gate-portal-workspace.css";
 import { type ReactNode, useState } from "react";
 import { useLocation } from "wouter";
 import { ReturnToAdminPinDialog } from "@/components/return-to-admin-pin-dialog";
-import { ArrowLeft, BriefcaseBusiness, History, MapPin, Mic, Shield } from "lucide-react";
+import { ArrowLeft, History, MapPin, Mic, Shield } from "lucide-react";
 import { FieldOpsPortalShell, type FieldOpsTabDef } from "@/components/field-ops-portal-shell";
 
 export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
@@ -15,18 +17,18 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
     match: () => false,
   },
   {
+    href: "/work-hub",
+    icon: ArrowLeft,
+    labelKey: "gateNav.goToWorkHub",
+    testId: "tab-gate-work-hub",
+    match: (p) => p.startsWith("/work-hub"),
+  },
+  {
     href: "/gate/change-over",
     icon: Shield,
     labelKey: "changeOver.title",
     testId: "tab-gate-change-over",
     match: (p) => p === "/gate/change-over",
-  },
-  {
-    href: "/work-hub",
-    icon: BriefcaseBusiness,
-    labelKey: "managedSubcontractors.workHub",
-    testId: "tab-gate-work-hub",
-    match: (p) => p.startsWith("/work-hub"),
   },
   {
     href: "/gate",
@@ -54,13 +56,17 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
 
 export function GatePortalLayout({ children, returnToAdmin = false }: { children: ReactNode; returnToAdmin?: boolean }) {
   const [location] = useLocation();
+  const { user } = useAuth();
   const [pinOpen, setPinOpen] = useState(false);
-  const tabs = returnToAdmin ? [
-    ...GATE_PORTAL_TABS,
+  const pageTabs = location === "/gate/change-over"
+    ? GATE_PORTAL_TABS.filter(tab => !tab.voiceEntry)
+    : GATE_PORTAL_TABS;
+  const tabs = returnToAdmin && canUseOfficeNavigation(user) ? [
+    ...pageTabs,
     { href: "/", icon: ArrowLeft, labelKey: "gateNav.returnToAdmin", testId: "tab-gate-return-admin", match: () => false,
       ...(location === "/gate/change-over" ? { onSelect: () => { setPinOpen(true); } } : {}),
     },
-  ] : GATE_PORTAL_TABS;
+  ] : pageTabs;
   return (
     <FieldOpsPortalShell
       tabs={tabs}

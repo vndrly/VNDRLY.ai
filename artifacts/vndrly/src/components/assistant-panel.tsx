@@ -1490,39 +1490,13 @@ export function AssistantLauncher({
   /** `floating` = bottom-left FAB; `askv-pane` = main layout AskV pane. */
   placement?: "floating" | "askv-pane" | "onboarding";
 } = {}) {
-  const [launcherLocation] = useLocation();
-  const hasInlineConversation = launcherLocation.split(/[?#]/)[0].replace(/\/$/, "") === "/work-hub/askv";
-  const [open, setOpen] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem("vndrly.askv.panelOpen") === "true";
-  });
+  const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [voiceState, setVoiceState] = useState("idle");
-  const [resultsReady, setResultsReady] = useState(false);
-  useEffect(() => {
-    window.sessionStorage.setItem("vndrly.askv.panelOpen", String(open));
-  }, [open]);
   useEffect(() => {
     const changed = (event: Event) => setVoiceState((event as CustomEvent<{ state: string }>).detail.state);
     window.addEventListener("askv:voice-state", changed);
     return () => window.removeEventListener("askv:voice-state", changed);
-  }, []);
-  useEffect(() => {
-    const showResults = () => {
-      // The AskV page already displays these results through the shared conversation.
-      // Keep explicit launcher clicks available, but do not open a duplicate surface.
-      if (hasInlineConversation) return;
-      setResultsReady(true);
-      setOpen(true);
-      window.setTimeout(() => setResultsReady(false), 1200);
-    };
-    window.addEventListener("askv:show-results", showResults);
-    return () => window.removeEventListener("askv:show-results", showResults);
-  }, [hasInlineConversation]);
-  useEffect(() => {
-    const openPanel = () => setOpen(true);
-    window.addEventListener("askv:open-panel", openPanel);
-    return () => window.removeEventListener("askv:open-panel", openPanel);
   }, []);
   const voiceActive = voiceState === "listening" || voiceState === "running";
   const engaged = voiceActive || (hovered && !open);
@@ -1538,7 +1512,6 @@ export function AssistantLauncher({
         onBlur={() => setHovered(false)}
         className={cn(
           "inline-flex items-center justify-center overflow-visible transition-transform",
-          resultsReady && "animate-pulse",
           placement === "floating"
             ? "fixed bottom-5 left-5 z-[1100] hover:scale-[1.03]"
             : "relative z-[1100]",

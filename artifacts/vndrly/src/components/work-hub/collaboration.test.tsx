@@ -23,7 +23,8 @@ describe("Work Hub conversations", () => {
   it("lets ordinary users start chats while hiding channel creation", async () => {
     mocks.user.membershipRole = "member";
     mount(); await screen.findByText("Original message");
-    expect(screen.getByText("New Chat")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Chat" }));
+    expect(screen.getByLabelText("Find chat participants")).toBeTruthy();
     expect(screen.queryByText("New channel")).toBeNull();
   });
   beforeEach(() => {
@@ -34,6 +35,8 @@ describe("Work Hub conversations", () => {
       if (init) return { resource: {} };
       if (path === "/channels?limit=100") return [{ id: "c1", name: "Operations", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 2 }, { id: "c2", name: "Dispatch", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 0 }];
       if (path === "/channels/c1/messages") return [{ id: "m1", body: "Original message", authorUserId: 7, createdAt: "2026-09-09T12:00:00Z", version: 2 }];
+      if (path === "/form-campaigns") return { campaigns: [] };
+      if (path === "/form-campaigns/options") return { people: [] };
       return [];
     });
   });
@@ -53,14 +56,76 @@ describe("Work Hub conversations", () => {
   it("loads saved drafts and sends a reply with its thread root", async () => {
     mount();
     expect(await screen.findByDisplayValue("Saved draft")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Chat" }));
     expect(screen.getByLabelText("Find chat participants")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Start Chat" }).className).toContain("w-fit");
-    fireEvent.click(await screen.findByText("Reply in thread"));
+    fireEvent.click(await screen.findByRole("button", { name: "Reply in thread" }));
     fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Reply content" } });
     fireEvent.click(screen.getByRole("button", { name: "Send message" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages", expect.objectContaining({ method: "POST" })));
     const call = mocks.request.mock.calls.find(([path, init]) => path === "/channels/c1/messages" && init?.method === "POST")!;
     expect(JSON.parse(call[1].body).payload).toMatchObject({ body: "Reply content", rootMessageId: "m1", parentMessageId: "m1" });
+  });
+  it("keeps the branded creation subcard collapsible and swaps its three panels", async () => {
+    mount();
+    await screen.findByText("Original message");
+    const region = screen.getByRole("region", { name: "Create a channel, chat, or poll" });
+    const toggle = screen.getByRole("button", { name: "Expand creation controls" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("tabpanel")).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Channel" }));
+    expect(screen.getByRole("tabpanel", { name: "New channel" })).toBeTruthy();
+    expect(screen.getByLabelText("New channel name")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Poll" }));
+    expect(screen.getByRole("tabpanel", { name: "New poll" })).toBeTruthy();
+    expect(await screen.findByLabelText("Poll question")).toBeTruthy();
+    expect(region.className).toContain("hub-create-panel");
+    fireEvent.click(screen.getByRole("button", { name: "Collapse creation controls" }));
+    expect(screen.queryByRole("tabpanel")).toBeNull();
+  });
+  it("starts a poll with its question, choices, expiry, and selected notification audience", async () => {
+    const campaignId = "11111111-1111-4111-8111-111111111111";
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (path === "/form-campaigns/options" && !init) {
+        return { people: [{ userId: 8, name: "Casey Example", role: "member" }] };
+      }
+      if (path === "/form-campaigns" && !init) return { campaigns: [] };
+      if (path === "/form-campaigns" && init?.method === "POST") {
+        const body = JSON.parse(String(init.body));
+        return { operationId: body.operationId, appliedAt: "2026-10-25T12:00:00.000Z", replayed: false, resource: { campaignId, state: { status: "draft", version: 0 } } };
+      }
+      if (path === `/form-campaigns/${campaignId}/publish` && init?.method === "POST") {
+        const body = JSON.parse(String(init.body));
+        return { operationId: body.operationId, appliedAt: "2026-10-25T12:00:01.000Z", replayed: false, resource: { campaignId, state: { status: "published", version: 1 } } };
+      }
+      return original(path, init);
+    });
+    mount();
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("tab", { name: "Poll" }));
+    fireEvent.change(await screen.findByLabelText("Poll title"), { target: { value: "Crew lunch" } });
+    fireEvent.change(screen.getByLabelText("Poll description"), { target: { value: "Choose today" } });
+    fireEvent.change(screen.getByLabelText("Poll question"), { target: { value: "Where should we eat?" } });
+    fireEvent.change(screen.getByLabelText("Poll possible answers"), { target: { value: "Diner\nTacos\nBBQ" } });
+    fireEvent.change(screen.getByLabelText("Poll expiration"), { target: { value: "72" } });
+    fireEvent.change(screen.getByLabelText("Who should be notified"), { target: { value: "selected" } });
+    const audience = await screen.findByLabelText("Select people to notify");
+    fireEvent.click(audience.querySelector("input")!);
+    const start = screen.getByRole("button", { name: "Start Poll" });
+    await waitFor(() => expect(start.hasAttribute("disabled")).toBe(false));
+    fireEvent.click(start);
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith(`/form-campaigns/${campaignId}/publish`, expect.objectContaining({ method: "POST" })));
+    const create = mocks.request.mock.calls.find(([path, init]) => path === "/form-campaigns" && init?.method === "POST")!;
+    const createBody = JSON.parse(create[1].body);
+    expect(createBody.payload).toMatchObject({
+      title: "Crew lunch",
+      description: "Choose today",
+      question: "Where should we eat?",
+      durationHours: 72,
+      audience: { mode: "selected", userIds: [8] },
+      choices: [{ label: "Diner" }, { label: "Tacos" }, { label: "BBQ" }],
+    });
   });
   it("filters conversations by unread state and persists a favorite", async () => {
     mount();
@@ -69,6 +134,40 @@ describe("Work Hub conversations", () => {
     expect(screen.queryByText("Dispatch")).toBeNull();
     fireEvent.click(screen.getByLabelText("Favorite Operations"));
     expect(mocks.save).toHaveBeenCalledWith({ favorites: ["c1"] });
+  });
+  it("requires confirmation before deleting the selected channel", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mount();
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Delete channel" }));
+    expect(mocks.request.mock.calls.some(([, init]) => init?.method === "DELETE")).toBe(false);
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: "Delete channel" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1", expect.objectContaining({ method: "DELETE" })));
+    confirm.mockRestore();
+  });
+  it("does not expose edit or delete on another person's message", async () => {
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation((path, init) => path === "/channels/c1/messages" && !init
+      ? Promise.resolve([{ id: "other", body: "Other person's message", authorUserId: 9, version: 1 }])
+      : original(path, init));
+    mount();
+    await screen.findByText("Other person's message");
+    expect(screen.queryByRole("button", { name: "Edit", exact: true })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Delete", exact: true })).toBeNull();
+    expect(screen.getByRole("button", { name: "Reply in thread" })).toBeTruthy();
+  });
+  it("edits and deletes only the selected message using its current version", async () => {
+    mount();
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Edit", exact: true }));
+    fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Edited mock message" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save edit" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages/m1", expect.objectContaining({ method: "PATCH" })));
+    const edit = mocks.request.mock.calls.find(([path, init]) => path === "/channels/c1/messages/m1" && init?.method === "PATCH")!;
+    expect(JSON.parse(edit[1].body)).toMatchObject({ expectedVersion: 2, payload: { body: "Edited mock message" } });
+    fireEvent.click(screen.getByRole("button", { name: "Delete", exact: true }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages/m1", expect.objectContaining({ method: "DELETE" })));
   });
   it("separates the channel list, header, content, and composer into aligned cards", async () => {
     mount();

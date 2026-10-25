@@ -98,6 +98,11 @@ export default function FormCampaignResponse({
           {c.title}
         </Text>
         {!!c.description && <Text style={label}>{c.description}</Text>}
+        {c.kind === "poll" && !!c.question && (
+          <Text style={{ ...label, fontSize: 17, fontWeight: "600" }}>
+            {c.question}
+          </Text>
+        )}
         <Text style={label}>
           {c.kind === "poll" ? "Closes" : "Due"}:{" "}
           {deadline

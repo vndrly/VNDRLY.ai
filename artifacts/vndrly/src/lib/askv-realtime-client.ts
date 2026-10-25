@@ -1,3 +1,4 @@
+import { observeAskVAudio, observeAskVPcm } from "./askv-audio-waveform";
 import { askVMicrophone, encodePcm16Base64, PcmResampler, type WakeAudioSource } from '@workspace/askv-wake';
 import { captureAskVMicrophone, meterAskVMicrophone } from './askv-microphone';
 import { realtimeConnectionMessage } from './askv-voice-availability';
@@ -38,6 +39,8 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
   const controller = new AbortController(), audio = document.createElement('audio'); audio.autoplay = true;
   let stream: MediaStream | undefined, closed = false, connected = false, playing = false;
   let unsubscribe: (() => void) | undefined, release: (() => Promise<void>) | undefined;
+  let stopInputWave: (() => void) | undefined, stopOutputWave: (() => void) | undefined;
+  let pcmWave: ReturnType<typeof observeAskVPcm> | undefined;
   let meter: ReturnType<typeof meterAskVMicrophone> | undefined;
   let rejectOpen: ((reason: Error) => void) | undefined, openTimer: ReturnType<typeof setTimeout> | undefined;
   let pendingContext: Parameters<AskVRealtimeClient['updateContext']>[0] | undefined;
@@ -77,6 +80,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
     if (closed) return;
     closed = true; connected = false; controller.abort(); args.signal?.removeEventListener('abort', close);
     clearTimeout(openTimer); rejectOpen?.(new DOMException('Cancelled', 'AbortError')); rejectOpen = undefined;
+    stopInputWave?.(); stopOutputWave?.(); pcmWave?.stop();
     meter?.stop(); unsubscribe?.(); void args.audioSource?.stop(); stream?.getTracks().forEach(track => { track.onended = null; track.stop(); }); void release?.();
     channel.onmessage = null; channel.onopen = null; channel.onclose = null; channel.onerror = null;
     if (channel.readyState !== 'closed') channel.close();
@@ -88,6 +92,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
   pc.ontrack = event => {
     if (closed) return;
     audio.srcObject = event.streams[0] ?? new MediaStream([event.track]);
+    stopOutputWave?.(); stopOutputWave = observeAskVAudio(audio.srcObject as MediaStream);
     void audio.play().catch(() => fail('Tap AskV to enable voice playback.'));
   };
   pc.onconnectionstatechange = () => { if (['failed', 'disconnected'].includes(pc.connectionState)) fail('AskV voice disconnected. Please open it again.'); };
@@ -141,6 +146,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
           if (closed) stream.getTracks().forEach(track => track.stop());
           ensureActive(); stream.getTracks().forEach(track => pc.addTrack(track, stream!));
           meter = meterAskVMicrophone(capture, true);
+          stopInputWave = observeAskVAudio(stream);
           stream.getTracks().forEach(track => { track.onended = () => fail('The microphone disconnected. Please open AskV again.'); });
         }
         const offer = await pc.createOffer(); ensureActive(); await pc.setLocalDescription(offer); ensureActive();
@@ -169,8 +175,10 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
           type: 'message', role: message.role, content: [{ type: message.role === 'user' ? 'input_text' : 'output_text', text: message.content }],
         } });
         if (args.greeting && !args.audioSource) send({ type: 'response.create', response: { instructions: `Greet the user once by saying exactly: ${args.greeting}` } });
+        if (args.audioSource) pcmWave = observeAskVPcm();
         if (args.audioSource) unsubscribe = args.audioSource.subscribe(samples => {
           if (!connected || closed) return;
+          pcmWave?.push(samples);
           const pcm = resampler.push(samples);
           try {
             for (let offset = 0; offset < pcm.length;) {

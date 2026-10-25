@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
+import { ReturnToAdminPinDialog } from "@/components/return-to-admin-pin-dialog";
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
-import { Pin, ArrowUp, ArrowDown, MoreHorizontal } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -48,10 +51,16 @@ export function useHubPreferences(enabled = true) {
   });
   return { ...query, preferences: { ...defaults, ...query.data }, save };
 }
-export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
+export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => void; footer?: ReactNode }) {
   const [location] = useLocation();
   const brand = useBrand();
-  const [customize, setCustomize] = useState(false);
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const office = canUseOfficeNavigation(user);
+  const [unlocked, setCustomize] = useState(false);
+  const customize = office && unlocked;
+  const [pinAction, setPinAction] = useState<"admin" | "more" | null>(null);
+  useEffect(() => { setCustomize(false); setPinAction(null); }, [user?.userId, user?.activeMembershipId, office]);
   const { preferences, save } = useHubPreferences();
   const items = orderWorkHubItems(
     getWorkHubNavItems(undefined, brand.name),
@@ -132,11 +141,16 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
       {(customize
         ? items
         : items.filter((item) => preferences.pinned.includes(item.key))
-      ).map(render)}
+      ).filter(item => item.key !== "askv").map(render)}
+      {(customize || preferences.pinned.includes("askv")) && items.filter(item => item.key === "askv").map(render)}
+      {office && <>
+      <button type="button" className="block w-full text-left" onClick={() => setPinAction("admin")} data-testid="nav-go-to-admin">
+        <SidebarButton isActive={false}><ArrowLeft className="h-4 w-4" />{t("gateNav.returnToAdmin")}</SidebarButton>
+      </button>
       <button
         type="button"
         className="block w-full text-left"
-        onClick={() => setCustomize(!customize)}
+        onClick={() => customize ? setCustomize(false) : setPinAction("more")}
         aria-expanded={customize}
       >
         <SidebarButton isActive={false}>
@@ -144,6 +158,11 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
           {customize ? "Done" : "More"}
         </SidebarButton>
       </button>
+      <ReturnToAdminPinDialog open={pinAction !== null} onOpenChange={open => { if (!open) setPinAction(null); }}
+        titleKey={pinAction === "more" ? "gateNav.more" : "gateNav.returnToAdmin"}
+        onVerified={pinAction === "more" ? () => setCustomize(true) : undefined} />
+      </>}
+      {footer}
       {save.error && (
         <p role="alert" className="text-xs text-red-500">
           Navigation could not be saved. Try again.

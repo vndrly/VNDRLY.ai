@@ -258,12 +258,11 @@ export function FieldOpsPortalShell({
               </Link>
             );
           })}
-          <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-
+          {!tabs.some(tab => tab.href === "/gate/change-over") && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
             <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
-          </div>
+          </div>}
           {user && (
-            <div className="pt-3">
+            <div>
               <SidebarButton
                 isActive={false}
                 activeOnHover
@@ -306,16 +305,18 @@ export function FieldOpsPortalShell({
       >
         <div
           style={{ backgroundColor: ASKV_PANE_BG }}
-          className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
+          className="flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
           data-testid="askv-pane"
         >
-          <AskVStatusIndicator placement="top-strip" />
-          <EnergyMarketTicker />
-          <div className="ml-auto flex shrink-0 items-center gap-3 overflow-visible">
-            <Suspense fallback={null}>
-              <AssistantLauncher placement="askv-pane" />
-            </Suspense>
+          <div className="flex shrink-0 items-center gap-0 overflow-visible">
+            <div className="relative top-[3px] flex items-center">
+              <Suspense fallback={null}>
+                <AssistantLauncher placement="askv-pane" />
+              </Suspense>
+            </div>
+            <div className="-ml-[10.8px]"><AskVStatusIndicator placement="top-strip" /></div>
           </div>
+          <EnergyMarketTicker />
           <ReferToVndrlyDialog
             trigger={
               <button

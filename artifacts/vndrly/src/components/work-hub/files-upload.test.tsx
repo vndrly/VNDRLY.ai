@@ -20,11 +20,12 @@ vi.mock("@/components/meeting-session-provider", () => ({ useMeetingSession: () 
 
 describe("Work Hub explicit file upload", () => {
   beforeEach(() => {
+    window.history.replaceState(null, "", "/work-hub/files");
     mocks.meeting = null;
     mocks.request.mockReset();
     mocks.request.mockImplementation(async (path: string) => {
       if (path === "/file-library?orgType=vendor&orgId=1") return [];
-      if (path === "/channels") return [];
+      if (path === "/channels?limit=100") return [];
       return {};
     });
   });
@@ -35,7 +36,7 @@ describe("Work Hub explicit file upload", () => {
     expect(screen.getByText("Sharing to: Morning Operations")).toBeTruthy();
     const file = new File(["receipt"], "receipt.pdf", { type: "application/pdf" });
     fireEvent.change(screen.getByLabelText("Choose file to upload"), { target: { files: [file] } });
-    fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
+    fireEvent.click(screen.getByRole("button", { name: "Upload" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting-one/files/operation-1", expect.objectContaining({ method: "PUT", body: file })));
     fireEvent.change(screen.getByLabelText("File audience"), { target: { value: "personal" } });
     expect(screen.queryByText("Sharing to: Morning Operations")).toBeNull();
@@ -43,13 +44,13 @@ describe("Work Hub explicit file upload", () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it("stages the chosen file until the branded Upload File action is pressed", async () => {
+  it("stages the chosen file until the branded Upload action is pressed", async () => {
     render(
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
         <WorkHubFiles />
       </QueryClientProvider>,
     );
-    const upload = screen.getByRole("button", { name: "Upload File" }) as HTMLButtonElement;
+    const upload = screen.getByRole("button", { name: "Upload" }) as HTMLButtonElement;
     expect(upload.disabled).toBe(true);
     const file = new File(["field notes"], "notes.txt", { type: "text/plain" });
     fireEvent.change(screen.getByLabelText("Choose file to upload"), { target: { files: [file] } });
@@ -61,7 +62,7 @@ describe("Work Hub explicit file upload", () => {
   it("keeps the staged file available for retry after an upload failure", async () => {
     mocks.request.mockImplementation(async (path: string) => {
       if (path === "/file-library?orgType=vendor&orgId=1") return [];
-      if (path === "/channels") return [];
+      if (path === "/channels?limit=100") return [];
       if (path === "/file-library/reserve") {
         return { resource: { documentId: "doc-1", fileId: "file-1", uploadURL: "https://upload.invalid/file" } };
       }
@@ -81,7 +82,7 @@ describe("Work Hub explicit file upload", () => {
     const file = new File(["field notes"], "notes.txt", { type: "text/plain" });
     Object.defineProperty(file, "arrayBuffer", { value: async () => new TextEncoder().encode("field notes").buffer });
     fireEvent.change(screen.getByLabelText("Choose file to upload"), { target: { files: [file] } });
-    const upload = screen.getByRole("button", { name: "Upload File" }) as HTMLButtonElement;
+    const upload = screen.getByRole("button", { name: "Upload" }) as HTMLButtonElement;
     fireEvent.click(upload);
     await screen.findByRole("alert");
     expect(upload.disabled).toBe(false);
@@ -96,7 +97,7 @@ describe("Work Hub explicit file upload", () => {
     let finalizeAttempts = 0;
     mocks.request.mockImplementation(async (path: string) => {
       if (path === "/file-library?orgType=vendor&orgId=1") return [];
-      if (path === "/channels") return [];
+      if (path === "/channels?limit=100") return [];
       if (path === "/file-library/reserve") {
         return { resource: { documentId: "doc-1", fileId: "file-1", uploadURL: "https://upload.invalid/file" } };
       }
@@ -116,7 +117,7 @@ describe("Work Hub explicit file upload", () => {
     const file = new File(["field notes"], "notes.txt", { type: "text/plain" });
     Object.defineProperty(file, "arrayBuffer", { value: async () => new TextEncoder().encode("field notes").buffer });
     fireEvent.change(screen.getByLabelText("Choose file to upload"), { target: { files: [file] } });
-    const upload = screen.getByRole("button", { name: "Upload File" }) as HTMLButtonElement;
+    const upload = screen.getByRole("button", { name: "Upload" }) as HTMLButtonElement;
     fireEvent.click(upload);
     await screen.findByRole("alert");
     fireEvent.click(upload);
@@ -149,7 +150,7 @@ describe("Work Hub explicit file upload", () => {
           canManage: true,
         }];
       }
-      if (path === "/channels") return [];
+      if (path === "/channels?limit=100") return [];
       return {};
     });
 
@@ -162,9 +163,9 @@ describe("Work Hub explicit file upload", () => {
     const replacement = new File(["replacement"], "replacement.txt", { type: "text/plain" });
     fireEvent.change(screen.getByLabelText("Choose file to upload"), { target: { files: [replacement] } });
     expect(screen.getByText(/Replacing existing\.txt/)).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Upload File" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Upload" }) as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Cancel replacement" }));
     expect(screen.queryByText(/Replacing existing\.txt/)).toBeNull();
-    expect((screen.getByRole("button", { name: "Upload File" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Upload" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

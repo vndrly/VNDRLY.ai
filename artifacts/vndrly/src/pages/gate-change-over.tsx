@@ -1,3 +1,4 @@
+import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import GateHandoffDesk from "@/components/gate-handoff-desk";
 import DashboardTasks from "@/components/work-hub/dashboard-tasks";
@@ -400,6 +401,7 @@ export default function GateChangeOverPage({
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
+        {!history && <LanguageToggle className="ml-auto shrink-0" />}
       </div>
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
       {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}

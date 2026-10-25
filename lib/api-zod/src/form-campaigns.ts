@@ -17,6 +17,7 @@ export const FormCampaignConfigSchema = z
     sourceTemplateId: z.uuid().nullable().default(null),
     title: z.string().trim().min(1).max(200),
     description: z.string().max(20000).default(""),
+    question: z.string().trim().max(2000).default(""),
     policyText: z.string().max(50000).default(""),
     policyVersion: z.string().trim().max(80).default("1"),
     policyAttachmentId: z.uuid().nullable().default(null),
@@ -155,6 +156,7 @@ export const FormCampaignPublicConfigSchema = z.object(
       "kind",
       "title",
       "description",
+      "question",
       "policyText",
       "policyVersion",
       "policyAttachmentId",
@@ -175,6 +177,7 @@ export const FormCampaignPublicConfigSchema = z.object(
     | "kind"
     | "title"
     | "description"
+    | "question"
     | "policyText"
     | "policyVersion"
     | "policyAttachmentId"

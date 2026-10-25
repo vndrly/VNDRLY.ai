@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { PngPillButton } from "@/components/png-pill-rollover";
 
-export function ReturnToAdminPinDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function ReturnToAdminPinDialog({ open, onOpenChange, onVerified, titleKey = "gateNav.returnToAdmin" }: { open: boolean; onOpenChange: (open: boolean) => void; onVerified?: () => void; titleKey?: string }) {
   const [, navigate] = useLocation();
   const { t } = useTranslation();
   const [pin, setPin] = useState("");
@@ -16,12 +16,12 @@ export function ReturnToAdminPinDialog({ open, onOpenChange }: { open: boolean; 
   function close() { setPin(""); setPinError(false); onOpenChange(false); }
   return <Dialog open={open} onOpenChange={(next) => { if (!next) close(); else onOpenChange(true); }}>
     <DialogContent className="sm:max-w-sm">
-      <DialogHeader><DialogTitle>{t("gateNav.returnToAdmin")}</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{t(titleKey)}</DialogTitle></DialogHeader>
       <form className="space-y-4" onSubmit={async (event) => {
         event.preventDefault();
         if (saving) return;
         setSaving(true);
-        try { await saveOrVerifyPin({ action: "verify", pin }); close(); navigate("/"); }
+        try { await saveOrVerifyPin({ action: "verify", pin }); close(); if (onVerified) onVerified(); else navigate("/"); }
         catch (e) { setPinError(true); setErrorMessage((e as Error).message); }
         finally { setSaving(false); }
       }}>
@@ -30,7 +30,7 @@ export function ReturnToAdminPinDialog({ open, onOpenChange }: { open: boolean; 
           value={pin} onChange={(event) => { setPin(event.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(false); }}
           aria-invalid={pinError} aria-describedby={pinError ? "gate-return-pin-error" : undefined} />
         {pinError && <p id="gate-return-pin-error" role="alert" className="text-sm text-destructive">{errorMessage || t("gateNav.incorrectPin")}</p>}
-        <PngPillButton type="submit" disabled={saving || pin.length !== 4}>{t("gateNav.returnToAdmin")}</PngPillButton>
+        <PngPillButton type="submit" disabled={saving || pin.length !== 4}>{t(titleKey)}</PngPillButton>
       </form>
     </DialogContent>
   </Dialog>;

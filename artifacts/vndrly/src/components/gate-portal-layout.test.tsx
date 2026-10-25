@@ -6,8 +6,8 @@ describe("Gate portal navigation", () => {
   it("keeps Gate Map separate from Dashboard in navigation", () => {
     expect(GATE_PORTAL_TABS.map((tab) => tab.testId)).toEqual([
       "button-gate-voice",
-      "tab-gate-change-over",
       "tab-gate-work-hub",
+      "tab-gate-change-over",
       "tab-gate-home",
       "tab-gate-map",
       "tab-gate-history",

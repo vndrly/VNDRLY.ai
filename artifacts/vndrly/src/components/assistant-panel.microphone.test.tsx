@@ -48,12 +48,18 @@ it.each(['/work-hub/askv', '/work-hub/askv/'])('keeps automatic results inline o
   sessionStorage.clear();
 });
 
-it('still opens result panels on other pages', () => {
-  sessionStorage.clear();
+it('ignores automatic open events and saved open state until the icon is clicked', () => {
+  sessionStorage.setItem('vndrly.askv.panelOpen', 'true');
   const client = new QueryClient();
-  render(<Router hook={() => ['/work-hub/finance', () => {}]}><QueryClientProvider client={client}><AssistantLauncher /></QueryClientProvider></Router>);
-  act(() => window.dispatchEvent(new CustomEvent('askv:show-results')));
+  render(<Router hook={() => ['/gate/change-over', () => {}]}><QueryClientProvider client={client}><AssistantLauncher /></QueryClientProvider></Router>);
+  expect(screen.queryByTestId('assistant-panel')).toBeNull();
+  act(() => { window.dispatchEvent(new CustomEvent('askv:show-results')); window.dispatchEvent(new CustomEvent('askv:open-panel')); });
+  expect(screen.queryByTestId('assistant-panel')).toBeNull();
+  fireEvent.click(screen.getByRole('button', {name:'Open Ask V'}));
   expect(screen.getByTestId('assistant-panel')).not.toBeNull();
+  fireEvent.click(screen.getByRole('button', {name:'Close Ask V'}));
+  act(() => window.dispatchEvent(new CustomEvent('askv:show-results')));
+  expect(screen.queryByTestId('assistant-panel')).toBeNull();
   sessionStorage.clear();
 });
 
@@ -141,8 +147,8 @@ it('groups microphone and across-VNDRLY controls under one recognizable settings
   fireEvent.click(screen.getByRole('button', { name: 'Ask V settings' }));
   expect(screen.getByTestId('askv-microphone-settings')).not.toBeNull();
   expect(screen.getByRole('button', { name: /Enable AskV across VNDRLY/ })).not.toBeNull();
-  expect(screen.getAllByRole('button', { name: 'AskV is Unavailable' })).toHaveLength(1);
-  expect(within(screen.getByTestId('assistant-brand-controls')).getByRole('button', { name: 'AskV is Unavailable' })).not.toBeNull();
+  expect(screen.getAllByRole('switch', { name: 'AskV is Unavailable' })).toHaveLength(1);
+  expect(within(screen.getByTestId('assistant-brand-controls')).getByRole('switch', { name: 'AskV is Unavailable' })).not.toBeNull();
 });
 
 it('keeps mandatory privacy consent current and offers no skip action', async () => {

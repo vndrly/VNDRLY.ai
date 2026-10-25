@@ -241,6 +241,14 @@ function CampaignEditor({
               value={config.description}
               onChange={(e) => edit({ description: e.target.value })}
             />
+            {config.kind === "poll" && (
+              <Textarea
+                aria-label="Poll question"
+                placeholder="Question"
+                value={config.question}
+                onChange={(e) => edit({ question: e.target.value })}
+              />
+            )}
             {config.kind === "acknowledgement" ? (
               <>
                 <Input
@@ -477,7 +485,7 @@ function CampaignEditor({
     </Dialog>
   );
 }
-function EmployeeForm({ id }: { id: string }) {
+export function EmployeeForm({ id }: { id: string }) {
   const { t } = useTranslation();
 
   const api = useCampaign(`/form-campaigns/instances/${id}`, (v) =>
@@ -520,6 +528,9 @@ function EmployeeForm({ id }: { id: string }) {
     <section className={card}>
       <h3 className="font-bold text-lg">{c.title}</h3>
       <p>{c.description}</p>
+      {c.kind === "poll" && c.question && (
+        <p className="text-base font-semibold">{c.question}</p>
+      )}
       <p>
         {c.kind === "poll" ? "Closes" : "Due"}:{" "}
         {deadline
@@ -707,12 +718,12 @@ function EmployeeForm({ id }: { id: string }) {
     </section>
   );
 }
-function OwnerProgress({
+export function OwnerProgress({
   id,
   onEdit,
 }: {
   id: string;
-  onEdit: (c: FormCampaignConfig, version: number) => void;
+  onEdit?: (c: FormCampaignConfig, version: number) => void;
 }) {
   const { t } = useTranslation();
 
@@ -738,6 +749,10 @@ function OwnerProgress({
   return (
     <section className={card}>
       <h3 className="font-bold text-lg">{d.config.title}</h3>
+      {d.config.description && <p>{d.config.description}</p>}
+      {d.config.kind === "poll" && d.config.question && (
+        <p className="font-semibold">{d.config.question}</p>
+      )}
       <p>
         {d.state.status} ·{" "}
         {d.state.deadline
@@ -754,9 +769,11 @@ function OwnerProgress({
       </p>
       {d.state.status === "draft" && (
         <>
-          <BrandPillButton onClick={() => onEdit(d.config, d.state.version)}>
-            {t("formCampaignLabels.c047")}
-          </BrandPillButton>
+          {onEdit && (
+            <BrandPillButton onClick={() => onEdit(d.config, d.state.version)}>
+              {t("formCampaignLabels.c047")}
+            </BrandPillButton>
+          )}
           <BrandPillButton tone="brand" onClick={() => setReview(true)}>
             {t("formCampaignLabels.c048")}
           </BrandPillButton>
