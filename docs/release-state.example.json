@@ -1,0 +1,76 @@
+{
+  "authorization": {
+    "instruction": "REPLACE with the exact user authorization",
+    "scope": [
+      "commit",
+      "push",
+      "web",
+      "api",
+      "supabase",
+      "ota",
+      "testflight",
+      "plugin"
+    ],
+    "restrictions": [
+      "REPLACE with actual restrictions"
+    ],
+    "completionCriteria": [
+      "REPLACE with actual completion criteria"
+    ],
+    "requestedAt": null,
+    "deadline": null
+  },
+  "releaseCommit": null,
+  "updatedAt": null,
+  "activeJobs": [],
+  "tracks": {
+    "commit": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    },
+    "push": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    },
+    "web": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    },
+    "api": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    },
+    "supabase": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    },
+    "ota": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    },
+    "testflight": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    },
+    "plugin": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Inspect existing work and record the next authorized action",
+      "evidence": []
+    }
+  }
+}

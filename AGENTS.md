@@ -16,6 +16,45 @@ The user's hard directives are binding constraints, not suggestions.
 
 These compliance guardrails do not replace or amend any existing hard directive below.
 
+## UNATTENDED EXECUTION — REQUIRED HANDOFF GATE
+
+Authorization and tool capability are separate. A tool failure, browser permission
+restriction, expired session, or interrupted turn does not revoke the user's
+authorization and does not justify stopping independent work.
+
+- Before unattended release work, save the user's exact authorization, scope,
+  restrictions, requested deadline, and completion criteria in
+  `.local/release-state.json`. Preserve them across retries and interruptions;
+  only a subsequent user instruction changes them. Store no credentials.
+- Track all eight full-ship tracks separately using the ledger and gate described
+  in `docs/release-fast-path.md`. A blocked track must not stop runnable tracks
+  or monitoring of active jobs. Investigate supported alternatives without
+  bypassing security restrictions or expanding the authorized scope.
+- Before asking for approval, identify the specific action outside existing
+  authorization or the higher-priority restriction that requires it. If neither
+  exists, do not ask. A capability problem is not an approval problem.
+- On recovery, read the ledger and inspect saved job/session IDs before starting
+  anything again. Resume existing work; never duplicate a build because context
+  was lost. Corrections govern immediately; a status question alone does not
+  cancel the active task.
+- Before a voluntary full-ship completion or blocked handoff, run
+  `node scripts/release-handoff-gate.mjs .local/release-state.json complete`
+  or `blocked`. A nonzero exit forbids that handoff. Continue authorized work.
+  A blocked handoff requires evidence for EVERY unfinished track and no active
+  job or runnable next step. One failed attempt is not sufficient evidence.
+- Never mark a track verified from dispatch, an uninspected background process,
+  a version label alone, or another track's success. Record actual evidence for
+  the intended release commit and the time it was inspected.
+- Never imply the assistant will continue working after ending its turn. Report
+  an independently running job as such, not as continued assistant supervision.
+- User-requested pauses/cancellation and unavoidable platform interruptions are
+  exceptions to the voluntary handoff gate, not completion. Save the checkpoint,
+  including exact next steps and active processes, and resume when directed.
+
+This gate validates the recorded evidence and exit decision; it cannot prove
+external claims or technically intercept an assistant's final response. Agents
+must inspect the evidence honestly and run it as a mandatory workflow step.
+
 ## Overview
 VNDRLY is a full-stack web application designed to streamline oil & gas field operations by facilitating interactions and workflows among Partners, Vendors, Field Employees, and VNDRLY Admins. The system enables Partners to manage drilling Site Locations, Vendors to assign Field Employees, and Field Employees to track work via QR code-initiated Tickets with GPS monitoring. Its core purpose is to enhance efficiency, transparency, and accountability in field operations, providing a comprehensive solution for managing complex logistics and personnel across multiple stakeholders, ultimately driving better business outcomes and market penetration in the oil & gas sector.
 

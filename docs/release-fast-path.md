@@ -119,3 +119,49 @@ subsystems, or ask the user to approve the same release again.
 
 If public verification has not succeeded by 15 minutes, provide a concise
 status update naming the blocked stage while continuing the authorized repair.
+
+## Mandatory unattended handoff gate
+
+Keep `.local/release-state.json` as the single recovery checkpoint. Start from
+`docs/release-state.example.json`; never overwrite an existing checkpoint on
+recovery. Record the exact user authorization and restrictions, request time,
+deadline (if supplied), release commit, actual verification evidence, each
+track's next action, and active workflow/session IDs. Do not store secrets or
+raw credential-bearing logs. An unknown deadline must remain null, not invented.
+
+The eight track IDs are `commit`, `push`, `web`, `api`, `supabase`, `ota`,
+`testflight`, and `plugin`. Each is `pending`, `running`, `blocked`, or `verified`.
+Evidence entries contain `source` (workflow URL, report path, or live check),
+`observedAt` (ISO timestamp), `commit`, and `result` (what was actually confirmed).
+For verified tracks, the evidence must prove that track's completion criteria
+in the full-ship checklist above, not merely that work started.
+
+For a blocked track record `reason`, `attempts` (evidence),
+`alternativesConsidered`, and `requiredExternalChange`. Record why each supported
+alternative cannot proceed within the existing authorization. A prerequisite
+block must name that prerequisite and its evidence. Do not mark a running build
+blocked just because it is taking time. Keep working on every independent track.
+
+Before a voluntary final release handoff:
+
+```sh
+node scripts/release-handoff-gate.mjs .local/release-state.json complete
+# Only if all remaining work genuinely cannot proceed:
+node scripts/release-handoff-gate.mjs .local/release-state.json blocked
+```
+
+Both commands fail closed on missing records/evidence, wrong release commits,
+active jobs, pending/running tracks, or runnable next steps. `complete` requires
+8/8 verified. `blocked` requires at least one documented blocker and every other
+track verified or independently blocked. A passed blocked gate is NOT success.
+Do not change status merely to pass the gate. Verify external facts first.
+
+Recovery order: read authorization and scope; inspect every active job; record
+new results; continue the next authorized action. Do not repeat approval requests
+or rebuild an existing release. Record total elapsed request-to-now time as well
+as commit-to-live time. Do not hide an exceeded deadline by restarting the clock.
+
+The validator is a local workflow guard, not a platform-level ban on ending a
+turn. It does not grant permissions, execute releases, poll jobs, or validate
+remote evidence automatically. User pauses and involuntary interruptions retain
+the checkpoint and do not require a false blocked/completed status.
