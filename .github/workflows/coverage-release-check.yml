@@ -3,6 +3,11 @@ on:
   push:
     branches: ['release/coverage-*']
   workflow_dispatch:
+    inputs:
+      compile_only:
+        description: Reuse passing functional checks and rerun compilation only
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -26,6 +31,7 @@ jobs:
       - run: pnpm --filter @workspace/vndrly run typecheck
       - run: pnpm lint:i18n
   conversations:
+    if: ${{ inputs.compile_only != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:

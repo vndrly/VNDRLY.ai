@@ -153,20 +153,20 @@ describe("Work Hub conversations", () => {
       : original(path, init));
     mount();
     await screen.findByText("Other person's message");
-    expect(screen.queryByRole("button", { name: "Edit", exact: true })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Delete", exact: true })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
     expect(screen.getByRole("button", { name: "Reply in thread" })).toBeTruthy();
   });
   it("edits and deletes only the selected message using its current version", async () => {
     mount();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Edit", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Edited mock message" } });
     fireEvent.click(screen.getByRole("button", { name: "Save edit" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages/m1", expect.objectContaining({ method: "PATCH" })));
     const edit = mocks.request.mock.calls.find(([path, init]) => path === "/channels/c1/messages/m1" && init?.method === "PATCH")!;
     expect(JSON.parse(edit[1].body)).toMatchObject({ expectedVersion: 2, payload: { body: "Edited mock message" } });
-    fireEvent.click(screen.getByRole("button", { name: "Delete", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages/m1", expect.objectContaining({ method: "DELETE" })));
   });
   it("separates the channel list, header, content, and composer into aligned cards", async () => {
