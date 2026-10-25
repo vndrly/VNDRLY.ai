@@ -64,7 +64,7 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   setPreferredLanguage: (lng: "en" | "es") => void;
   switchContext: (membershipId: number) => Promise<void>;
@@ -242,6 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const next = fromResponse(data);
     setUser(next);
     applyLanguage(next.preferredLanguage);
+    return next;
   }, []);
 
   const logout = useCallback(async () => {

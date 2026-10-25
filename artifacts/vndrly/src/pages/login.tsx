@@ -22,7 +22,7 @@ import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
 import { cn } from "@/lib/utils";
-import { gateDashboardRouteFor } from "@/lib/gate-dashboard-route";
+import { gateDashboardRouteFor, isGateGoUser } from "@/lib/gate-dashboard-route";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -122,8 +122,8 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
     setDemoLoginUsername(account.username);
     setIsSubmitting(true);
     try {
-      await login(account.username, account.password);
-      navigate("/", { replace: true });
+      const signedIn = await login(account.username, account.password);
+      navigate(gateDashboardRouteFor(signedIn), { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),
@@ -194,8 +194,8 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
     setIsSubmitting(true);
     const destination = allowAccountSwitch ? "/" : loginWorkflowDestination(location, window.location.search);
     try {
-      await login(username, password);
-      navigate(destination, { replace: true });
+      const signedIn = await login(username, password);
+      navigate(isGateGoUser(signedIn) ? "/gate/change-over" : destination, { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),
