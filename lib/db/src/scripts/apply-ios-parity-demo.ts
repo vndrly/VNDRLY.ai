@@ -17,6 +17,7 @@ try {
   else {
   await owner.query("BEGIN");
   for (const statement of [
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_pin_hash text",
     "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS native_operations_policy jsonb NOT NULL DEFAULT '{}'::jsonb",
     "ALTER TABLE partners ADD COLUMN IF NOT EXISTS native_operations_policy jsonb NOT NULL DEFAULT '{}'::jsonb",
     "ALTER TABLE work_hub_device_preferences ADD COLUMN IF NOT EXISTS native_operations jsonb NOT NULL DEFAULT '{}'::jsonb",
