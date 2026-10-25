@@ -29,6 +29,8 @@ import { revokeStaffSession } from "../lib/staff-session-revocation";
 import { loginBrandQueryFromContext } from "../lib/loginBrandQuery";
 import { requireIsolatedFixtureContext } from "../lib/isolated-fixture-guard";
 
+import { needsAdminPin, adminPinAction } from "../lib/admin-pin";
+
 const router = Router();
 
 const COOKIE_NAME = "vndrly_session";
@@ -688,6 +690,26 @@ router.get("/auth/me", async (req, res) => {
       code: "auth.invalid_session",
     });
   }
+});
+
+// PINs are per user, never returned to clients, and never replace account permissions.
+router.all("/auth/admin-pin", async (req, res) => {
+  const session = readSession(req);
+  if (!session?.userId) return res.status(401).json({ message: "Not authenticated" });
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId)).limit(1);
+  if (!user) return res.status(401).json({ message: "Not authenticated" });
+  const ctx = await resolveContext(user);
+  const eligible = needsAdminPin(ctx);
+  const result = await db.execute(sql`SELECT admin_pin_hash FROM users WHERE id = ${user.id}`);
+  const hash = (result.rows[0] as { admin_pin_hash: string | null }).admin_pin_hash;
+  const outcome = await adminPinAction({ method: req.method, eligible, hash, body: req.body }, {
+    attempts: async () => (await getDefaultBucketStore().increment("admin-pin", String(user.id), 15 * 60_000, Date.now())).count,
+    create: async nextHash => {
+      const saved = await db.execute(sql`UPDATE users SET admin_pin_hash = ${nextHash} WHERE id = ${user.id} AND admin_pin_hash IS NULL RETURNING id`);
+      return saved.rows.length > 0;
+    },
+  });
+  return res.status(outcome.status).json(outcome.body);
 });
 
 router.get("/auth/memberships", async (req, res) => {

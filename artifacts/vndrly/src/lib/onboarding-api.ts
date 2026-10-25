@@ -56,10 +56,10 @@ async function ojson<T>(method: string, path: string, body?: unknown): Promise<T
 }
 
 export const onboardingApi = {
-  startPartner: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string }) =>
+  startPartner: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string; adminPin?: string; confirmPin?: string }) =>
     ojson<OnboardingStartResp>("POST", "/api/onboarding/partner", body),
 
-  startVendor: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string }) =>
+  startVendor: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string; adminPin?: string; confirmPin?: string }) =>
     ojson<OnboardingStartResp>("POST", "/api/onboarding/vendor", body),
 
   getProgress: (orgType: "partner" | "vendor", orgId: number) =>

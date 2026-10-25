@@ -1,3 +1,4 @@
+import { validAdminPin, hashAdminPin } from "../lib/admin-pin";
 import { Router, type IRouter, type Request, type Response } from "express";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
@@ -188,6 +189,7 @@ async function issueAndEmailVerification(args: {
 // POST /onboarding/partner — public, creates org + admin user
 // ─────────────────────────────────────────────────────────────────
 router.post("/onboarding/partner", async (req: Request, res: Response): Promise<void> => {
+  if (req.body.adminPin !== undefined && (!validAdminPin(req.body.adminPin) || req.body.adminPin !== req.body.confirmPin)) { res.status(400).json({ message: "Enter matching four-digit PINs." }); return; }
   const parsed = CreatePartnerOnboardingBody.safeParse(req.body);
   if (!parsed.success) {
     sendValidationFailed(res, parsed.error, { code: "validation.invalid_input" });
@@ -225,6 +227,7 @@ router.post("/onboarding/partner", async (req: Request, res: Response): Promise<
 
   try {
     const passwordHash = await bcrypt.hash(password, 10);
+    const pinHash = req.body.adminPin === undefined ? null : await hashAdminPin(req.body.adminPin);
     const result = await db.transaction(async (tx) => {
       const [partner] = await tx
         .insert(partnersTable)
@@ -240,6 +243,7 @@ router.post("/onboarding/partner", async (req: Request, res: Response): Promise<
           displayName: contactName,
         })
         .returning();
+      if (pinHash) await tx.execute(sql`UPDATE users SET admin_pin_hash = ${pinHash} WHERE id = ${user.id}`);
       // Insert the membership row in the same transaction so a brand-
       // new user is never visible without the matching
       // `user_org_memberships` row.
@@ -301,6 +305,7 @@ router.post("/onboarding/partner", async (req: Request, res: Response): Promise<
 // POST /onboarding/vendor — public, creates org + admin user
 // ─────────────────────────────────────────────────────────────────
 router.post("/onboarding/vendor", async (req: Request, res: Response): Promise<void> => {
+  if (req.body.adminPin !== undefined && (!validAdminPin(req.body.adminPin) || req.body.adminPin !== req.body.confirmPin)) { res.status(400).json({ message: "Enter matching four-digit PINs." }); return; }
   const parsed = CreateVendorOnboardingBody.safeParse(req.body);
   if (!parsed.success) {
     sendValidationFailed(res, parsed.error, { code: "validation.invalid_input" });
@@ -352,6 +357,7 @@ router.post("/onboarding/vendor", async (req: Request, res: Response): Promise<v
 
   try {
     const passwordHash = await bcrypt.hash(password, 10);
+    const pinHash = req.body.adminPin === undefined ? null : await hashAdminPin(req.body.adminPin);
     const result = await db.transaction(async (tx) => {
       const [vendor] = await tx
         .insert(vendorsTable)
@@ -367,6 +373,7 @@ router.post("/onboarding/vendor", async (req: Request, res: Response): Promise<v
           displayName: contactName,
         })
         .returning();
+      if (pinHash) await tx.execute(sql`UPDATE users SET admin_pin_hash = ${pinHash} WHERE id = ${user.id}`);
       // Insert the membership row in the same transaction so a brand-
       // new user is never visible without the matching
       // `user_org_memberships` row.

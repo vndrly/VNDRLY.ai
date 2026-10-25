@@ -5370,6 +5370,14 @@
     "purposeFilter": "Motivo de la visita"
   },
   "gateNav": {
+    "createPin": "Crear PIN",
+    "confirmPin": "Confirmar PIN",
+    "pinIntro": "Elige cuatro dígitos para volver a administración.",
+    "pinMismatch": "Introduce dos PIN de cuatro dígitos iguales.",
+    "savePin": "Guardar PIN",
+    "checkingPin": "Comprobando cuenta…",
+    "pinLoadError": "No se pudo cargar la configuración del PIN. Reintenta.",
+    "retryPin": "Reintentar",
     "map": "Mapa de acceso",
     "voice": "Entrada por voz",
     "gate": "Portería",

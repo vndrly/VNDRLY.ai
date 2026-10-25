@@ -5,6 +5,8 @@ const isProduction = process.env.NODE_ENV === "production";
 export const logger = pino({
   level: process.env.LOG_LEVEL ?? "info",
   redact: [
+    "req.body.pin", "req.body.adminPin", "req.body.confirmPin",
+    "pin", "adminPin", "confirmPin", "admin_pin_hash",
     "req.headers.authorization",
     "req.headers.cookie",
     "res.headers['set-cookie']",

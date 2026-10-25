@@ -1,3 +1,4 @@
+import { AdminPinSetup } from "@/components/admin-pin-setup";
 import LibraryEntryNotice from "@/components/work-hub/library/entry-notice";
 import { Redirect, Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
@@ -485,7 +486,7 @@ function App() {
             <ThemeProvider>
               <NotificationsModalProvider>
                 <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                  <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>
+                  <AdminPinSetup><AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary></AdminPinSetup>
                 </WouterRouter>
               </NotificationsModalProvider>
               <Toaster />

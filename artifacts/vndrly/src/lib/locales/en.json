@@ -5370,6 +5370,14 @@
     "purposeFilter": "Visit purpose"
   },
   "gateNav": {
+    "createPin": "Create PIN",
+    "confirmPin": "Confirm PIN",
+    "pinIntro": "Choose four digits for Return to Admin.",
+    "pinMismatch": "Enter matching four-digit PINs.",
+    "savePin": "Save PIN",
+    "checkingPin": "Checking account…",
+    "pinLoadError": "Unable to load PIN setup. Please retry.",
+    "retryPin": "Retry",
     "map": "Gate Map",
     "voice": "Voice entry",
     "gate": "Gate",
