@@ -1,6 +1,7 @@
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import {recordGateWorkday, endGateWorkdayForRecovery} from "./gate-workday";
 import {WorkdayError} from "./workday";
+import { GateTaskError, mutateGateTaskInTransaction } from "./gate-task-hopper";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
@@ -41,6 +42,7 @@ export async function changeOverTransaction<T>(
       return result;
     } catch (error) {
       await client.query("ROLLBACK");
+      if(error instanceof GateTaskError)throw new ChangeOverError(error.status,"gate_task.rejected",error.message);
       if(error instanceof WorkdayError)throw new ChangeOverError(error.status,error.code,"Your shift clock could not be updated. Check your current company and retry; no Gate handoff was committed.");
       // PostgreSQL aborts a deadlock victim's entire transaction. Re-evaluate
       // authorization and the handoff revision after rollback; retain every
@@ -368,9 +370,24 @@ async function releasedWatch(client: Queryable, stationId:string) {
     AND p.summary->>'watchReleased'='true' AND NOT EXISTS(SELECT 1 FROM gate_handovers h JOIN gate_preparations hp ON hp.id=h.preparation_id WHERE h.preparation_id=p.id OR hp.summary->>'originalPreparationId'=p.id::text)
     ORDER BY s.ended_at DESC LIMIT 1`,[stationId])).rows[0]??null;
 }
+/** Keep the shared site revision while hiding another vendor's task content.
+ * Persisted handoff JSON is never rewritten by a viewer's projection. */
+async function projectGateTaskItems(client: Queryable, value: any, vendorId?: number) {
+  if (!value || !vendorId) return value;
+  const ids = [...new Set<string>([...(value.openItems ?? []).map((item: ShiftItem) => item.id), ...(value.facts ?? []).filter((fact: ShiftFact) => fact.id.startsWith("item:")).map((fact: ShiftFact) => fact.id.slice(5))])].filter(id => /^[0-9a-f-]{36}$/i.test(id));
+  if (!ids.length) return value;
+  const foreign = new Set((await client.query("SELECT id FROM work_hub_tasks WHERE id=ANY($1::uuid[]) AND gate_hopper IS NOT NULL AND owner_org_id<>$2", [ids, vendorId])).rows.map(row => row.id));
+  return { ...value, ...(value.openItems ? { openItems: value.openItems.filter((item: ShiftItem) => !foreign.has(item.id)) } : {}),
+    ...(value.facts ? { facts: value.facts.filter((fact: ShiftFact) => !fact.id.startsWith("item:") || !foreign.has(fact.id.slice(5))) } : {}) };
+}
+async function projectGatePreparation(client: Queryable, preparation: any, vendorId?: number) {
+  if (!preparation || !vendorId) return preparation;
+  return { ...preparation, snapshot: await projectGateTaskItems(client, preparation.snapshot, vendorId), summary: await projectGateTaskItems(client, preparation.summary, vendorId) };
+}
 async function currentItems(
   client: Queryable,
   stationId: string,
+  vendorId?: number,
 ): Promise<ShiftItem[]> {
   const rows = (
     await client.query(
@@ -380,7 +397,8 @@ async function currentItems(
       [stationId],
     )
   ).rows;
-  return rows.map((r) => ({ id: r.id, text: r.text, status: r.status }));
+  const items = rows.map((r) => ({ id: r.id, text: r.text, status: r.status }));
+  return (await projectGateTaskItems(client, { openItems: items }, vendorId)).openItems as ShiftItem[];
 }
 async function snapshot(
   client: Queryable,
@@ -568,12 +586,12 @@ export async function getChangeOverState(
       supervisor: access.supervisor,
       shift,
       releasedWatch: released,
-      preparation,
-      snapshot: current,
+      preparation: await projectGatePreparation(c, preparation, session.vendorId),
+      snapshot: await projectGateTaskItems(c, current, session.vendorId),
       // Elapsed time alone does not invalidate saved notes. The incoming
       // operation still checks the exact current facts revision transactionally.
       stale: Boolean(preparation && !released && preparation.snapshot.revision !== current?.revision),
-      items: await currentItems(c, stationId),
+      items: await currentItems(c, stationId, session.vendorId),
       roster: await activeRoster(c, stationId),
     };
   });
@@ -802,6 +820,12 @@ export async function actOnShiftItem(
   text: string,
 ) {
   return changeOverTransaction(async (c) => {
+    const task = (await c.query("SELECT id,version,gate_hopper FROM work_hub_tasks WHERE id=$1", [itemId])).rows[0];
+    if (kind === "open" && task) return fail(409, "item_exists", "Item already exists");
+    if (kind === "open" || task?.gate_hopper?.stationId === stationId) {
+      return (await mutateGateTaskInTransaction(c, session, { operationId: randomUUID(), action: kind === "open" ? "create" : kind === "resolve" ? "complete" : "reopen",
+        taskId: itemId, expectedVersion: task?.version, vendorId: session.vendorId, stationId, text, note: text })).task;
+    }
     const access = await stationAccess(c, session, stationId);
     await lockStation(c, stationId);
     const shift = await activeShift(c, stationId);
@@ -1075,11 +1099,11 @@ export async function getShiftNotes(
     [input.stationId, from, before, (input.search ?? "").slice(0, 200), session.userId, input.handoffId ?? null, limit + 1],
   );
   if (input.handoffId && !result.rows.length) return fail(404, "not_found", "Shift note not found at this gate");
-  const rows = result.rows.slice(0, limit).map(row => ({ ...row, site_id: access.station.site_id }));
+  const rows = await Promise.all(result.rows.slice(0, limit).map(async row => ({ ...await projectGatePreparation(pool, row, session.vendorId), site_id: access.station.site_id })));
   const actions = input.limit !== undefined || input.handoffId ? [] : (
     await pool.query(
-      "SELECT a.*, u.display_name AS actor_name FROM gate_shift_actions a JOIN users u ON u.id=a.actor_id WHERE station_id=$1 AND a.created_at >= $2 AND a.kind <> 'note_viewed' ORDER BY a.created_at DESC LIMIT 100",
-      [input.stationId, from],
+      "SELECT a.*, u.display_name AS actor_name FROM gate_shift_actions a JOIN users u ON u.id=a.actor_id WHERE station_id=$1 AND a.created_at >= $2 AND a.kind <> 'note_viewed' AND ($3::int IS NULL OR NOT EXISTS(SELECT 1 FROM work_hub_tasks t WHERE t.id=a.item_id AND t.gate_hopper IS NOT NULL AND t.owner_org_id<>$3)) ORDER BY a.created_at DESC LIMIT 100",
+      [input.stationId, from, session.vendorId ?? null],
     )
   ).rows;
   return {

@@ -1,0 +1,26 @@
+.gate-task-hopper { min-width: 0; color: #ececec; }
+details.gate-task-hopper { border-top: 1px solid #3a3a3a; }
+details.gate-task-hopper > summary { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; }
+details.gate-task-hopper > summary::-webkit-details-marker { display: none; }
+details.gate-task-hopper > summary > svg { width: 19px; height: 19px; color: var(--brand-primary); }
+details.gate-task-hopper > summary > small { margin-left: auto; color: #b3b3b3; font-size: 12px; font-weight: 400; }
+details.gate-task-hopper > summary::after { content: '›'; color: #a3a3a3; }
+details.gate-task-hopper[open] > summary::after { transform: rotate(90deg); }
+.gate-hopper-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.gate-hopper-title svg { width: 17px; height: 17px; color: var(--brand-primary); }
+.gate-hopper-body { display: grid; gap: 8px; padding-block: 8px; }
+.gate-hopper-task { border: 1px solid #414145; border-radius: 8px; background: #2b2b2f; }
+.gate-hopper-task > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; padding: 8px 10px; min-height: 44px; cursor: pointer; }
+.gate-hopper-task > summary > span { flex: 1; min-width: 100px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.gate-hopper-task time { color: #b3b3b3; font-size: 12px; }
+.gate-hopper-task-detail { display: grid; gap: 8px; padding: 0 10px 10px; font-size: 13px; overflow-wrap: anywhere; }
+.gate-hopper-task-detail > p { margin: 0; white-space: pre-wrap; }
+.gate-hopper-task-detail > a { color: var(--brand-primary); }
+.gate-hopper-add { display: grid; gap: 8px; border-top: 1px solid #414145; padding-top: 8px; }
+.gate-hopper-admin { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.gate-task-hopper textarea,.gate-task-hopper select { width: 100%; min-width: 0; padding: 8px 10px; color: #ececec; background: #303034; border: 1px solid var(--brand-primary); border-radius: 7px; font: inherit; }
+.gate-task-hopper select { color-scheme: dark; }
+.gate-hopper-admin select { flex: 1 1 180px; }
+.gate-hopper-task-detail > button,.gate-hopper-add > button { justify-self: start; }
+.gate-task-hopper textarea { resize: vertical; }
+.gate-hopper-task > summary:focus-visible,.gate-task-hopper textarea:focus-visible,.gate-task-hopper select:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }

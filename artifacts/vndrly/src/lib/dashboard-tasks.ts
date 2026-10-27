@@ -1,12 +1,14 @@
 export type DashboardTask = {
   id: string; title: string; status: string; assigneeUserId?: number | null;
   assigneeName?: string | null; createdAt: string; assignedAt?: string | null; completedAt?: string | null;
+  gateHopper?: { completedById?: number; completedAt?: string; clearedAt?: string } | null;
 };
 export type DashboardTaskPage = { tasks: DashboardTask[]; scope: "self" | "company"; nextCursor: string | null };
 export type DashboardTaskGroup = "new" | "unstarted" | "progress" | "stale" | "completed";
 const HOUR = 3600000;
 
 export function dashboardTaskGroup(task: DashboardTask, company: boolean, now: number): DashboardTaskGroup | null {
+  if (task.gateHopper && !task.assigneeUserId && task.status !== "completed") return null;
   if (task.status === "completed") return "completed";
   const unstarted = ["new", "open", "assigned", "pending"].includes(task.status);
   const progress = ["in_progress", "started", "active"].includes(task.status);

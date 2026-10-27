@@ -275,6 +275,17 @@ async function openWorkday(client: PoolClient, scope: WorkdayScope) {
     : null;
 }
 
+/** Shares the canonical clock lock with End Shift. Watch custody is irrelevant. */
+export async function requireActiveGateTaskWorkday(client: PoolClient, session: SessionPayload) {
+  return withVerifiedWorkdayClient(session, client, async (connection, scope) => {
+    await lock(connection, scope);
+    const current = await openWorkday(connection, scope);
+    if (!current) throw new WorkdayError("gate_task.on_shift_required", 403);
+    verify(current, await events(connection, scope, [current.id]));
+    return current.id;
+  });
+}
+
 /** A single organization/worker workday for every portal and client. Domain
  * assignment, duty/contact policy, GPS and billable work remain separate facts. */
 export function createWorkdayService(run: typeof transaction = transaction) { return {

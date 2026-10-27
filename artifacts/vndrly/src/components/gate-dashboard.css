@@ -3,9 +3,9 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-dashboard h1, .gate-dashboard h2, .gate-dashboard h3, .hub-home-card h2 { color: #ececec; }
 .hub-home-card h2 { font-size: 17px; font-weight: 700; }
 .gate-dashboard .text-muted-foreground { color: #b3b3b3; }
-.gate-dashboard-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
-.gate-dashboard .hub-home-card { border-radius: 14px; padding: 12px 14px 0; }
-.gate-dashboard .hub-card-heading { padding-bottom: 10px; }
+.gate-dashboard-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.gate-dashboard .hub-home-card { border-radius: 14px; padding: 10px 12px 0; }
+.gate-dashboard .hub-card-heading { padding-bottom: 8px; }
 .gate-dashboard .hub-card-icon { width: 34px; height: 34px; border-radius: 10px; }
 .gate-dashboard .hub-home-row { min-height: 44px; padding-block: 10px; }
 .gate-dashboard .hub-row-label { font-size: 14px; }
@@ -60,4 +60,11 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-dashboard-location-select:focus { outline: 2px solid color-mix(in srgb, var(--brand-primary) 70%, white); outline-offset: 2px; }
 .gate-dashboard-location-select option { background: #242426; color: #b3b3b3; }
 .gate-dashboard-location-select option:checked { background: #6b7280; color: #fff; }
+.gate-dashboard .shift-card-feedback:empty { display: none; }
+@media (min-width: 768px) {
+  main:has(.gate-dashboard) { padding-block: 16px; }
+  .gate-dashboard .hub-home-row { min-height: 36px; padding-block: 6px; }
+  .gate-dashboard .gate-panel-disclosure > summary { min-height: 36px; }
+  .gate-dashboard .gate-watch-text-action { min-height: 36px; }
+}
 @media (max-width: 767px) { .gate-dashboard-panels { grid-template-columns: minmax(0, 1fr); } }

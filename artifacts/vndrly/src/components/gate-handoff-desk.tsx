@@ -5,9 +5,11 @@ import type { ChangeOverState } from "@workspace/gate-booth";
 import { useBrand } from "@/hooks/use-brand";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import WatchPassControl from "@/components/watch-pass-control";
+import GateTaskHopper from "@/components/gate-task-hopper";
 import "./gate-handoff-desk.css";
 
 export interface GateHandoffDeskProps {
+  stationId?: string;
   current: ChangeOverState;
   ownWatch: boolean;
   gatekeeperOnDuty?: boolean;
@@ -34,7 +36,7 @@ export interface GateHandoffDeskProps {
 /** Saving records the handoff. Only the incoming operator's explicit review action changes watch custody. */
 export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const {
-    current, ownWatch, gatekeeperOnDuty = false, busy, online, readError, notes, onNotesChange,
+    current, stationId, ownWatch, gatekeeperOnDuty = false, busy, online, readError, notes, onNotesChange,
     itemText, onItemTextChange, itemNotes, onItemNoteChange, onItemAction,
     onAddItem, onSave, onAssumeReviewed, pendingWatch, onRecoverWatch,
     reason, onReasonChange, onWithdraw,
@@ -102,19 +104,25 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       <span>{t("handoffDesk.savedAt")} <time dateTime={preparation.created_at}>{new Date(preparation.created_at).toLocaleString()}</time></span>
       <span>{t("changeOver.asOf")} <time dateTime={preparation.snapshot.generatedAt}>{new Date(preparation.snapshot.generatedAt).toLocaleString()}</time></span>
     </div>
-    <div className="handoff-review-panels">
-      <section className="handoff-panel" aria-label={t("handoffDesk.savedFacts")}>
-        <h3><ClipboardCheck aria-hidden="true" />{t("handoffDesk.savedFacts")}</h3>
+    <div className="handoff-review-tree">
+      <details className="handoff-review-branch" aria-label={t("handoffDesk.savedFacts")}>
+        <summary><ClipboardCheck aria-hidden="true" /><h3>{t("handoffDesk.savedFacts")}</h3><small>{preparation.summary.facts.length}</small></summary>
+        <div className="handoff-review-content">
         {preparation.summary.facts.length ? <ul className="handoff-facts">{preparation.summary.facts.map((fact) => <li key={fact.id}>{fact.text}</li>)}</ul> : <p className="handoff-muted">{t("changeOver.none")}</p>}
-      </section>
-      <section className="handoff-panel" aria-label={t("handoffDesk.savedActions")}>
-        <h3><ClipboardList aria-hidden="true" />{t("handoffDesk.savedActions")}</h3>
+        </div>
+      </details>
+      <details className="handoff-review-branch" aria-label={t("handoffDesk.savedActions")}>
+        <summary><ClipboardList aria-hidden="true" /><h3>{t("handoffDesk.savedActions")}</h3><small>{preparation.snapshot.openItems.length}</small></summary>
+        <div className="handoff-review-content">
         {preparation.snapshot.openItems.length ? <ul className="handoff-facts">{preparation.snapshot.openItems.map((item) => <li key={item.id} className="handoff-preserve">{item.text}</li>)}</ul> : <p className="handoff-muted">{t("changeOver.none")}</p>}
-      </section>
-      <section className="handoff-panel" aria-label={t("handoffDesk.savedNotes")}>
-        <h3><NotebookPen aria-hidden="true" />{t("handoffDesk.savedNotes")}</h3>
+        </div>
+      </details>
+      <details className="handoff-review-branch" aria-label={t("handoffDesk.savedNotes")}>
+        <summary><NotebookPen aria-hidden="true" /><h3>{t("handoffDesk.savedNotes")}</h3></summary>
+        <div className="handoff-review-content">
         <p className="handoff-preserve">{preparation.notes || t("changeOver.none")}</p>
-      </section>
+        </div>
+      </details>
     </div>
   </div>;
 
@@ -136,7 +144,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       <div className="handoff-compose-panels">
         <section className="handoff-panel" aria-label={t("changeOver.carryForward")}>
           <h3><ClipboardList aria-hidden="true" />{t("changeOver.carryForward")}</h3>
-          {itemEditor}
+          {stationId ? <GateTaskHopper stationId={stationId} showTitle={false} /> : itemEditor}
         </section>
         <section className="handoff-panel" aria-label={t("changeOver.outgoingNotes")}>
           <h3><NotebookPen aria-hidden="true" />{t("changeOver.outgoingNotes")}</h3>
@@ -173,8 +181,8 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       <p>{t("handoffDesk.pendingWatch")}</p>
       <PngPillButton type="button" color="brand" disabled={busy || !online} onClick={onRecoverWatch}>{t("handoffDesk.checkRequest")}</PngPillButton>
     </div>}
-    {!ownWatch && current.supervisor && <details className="handoff-disclosure">
-      <summary>{t("handoffDesk.manageActions")}</summary>{itemEditor}
+    {!ownWatch && (stationId || current.supervisor) && <details className="handoff-disclosure">
+      <summary>{t(stationId ? "changeOver.carryForward" : "handoffDesk.manageActions")}</summary>{stationId ? <GateTaskHopper stationId={stationId} showTitle={false} /> : itemEditor}
     </details>}
     {preparation && (ownWatch || current.supervisor) && <details className="handoff-disclosure handoff-withdraw">
       <summary>{t("handoffDesk.withdraw")}</summary>

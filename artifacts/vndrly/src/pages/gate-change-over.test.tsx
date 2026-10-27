@@ -16,6 +16,9 @@ vi.mock("@/components/workday-controls", () => ({ default: ({watchControl,onShif
   return <section aria-label="Workday"><button type="button" role="switch" aria-label="Shift" aria-checked={duty.onShift} /><button type="button" role="switch" aria-label="On Call" aria-checked="false" />{watchControl}</section>;
 } }));
 const api = vi.hoisted(() => vi.fn());
+vi.mock("@/components/gate-task-hopper", () => ({ default: ({ stationId, collapsed }: { stationId?: string; collapsed?: boolean }) => collapsed
+  ? <details><summary>Unassigned Tasks</summary></details>
+  : <section aria-label="Unassigned Task Hopper" data-testid="shared-gate-hopper" data-station={stationId} /> }));
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: api }));
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({ user: { userId: 1, vendorRole: duty.vendorRole, ...(duty.managedSiteId?{managedSubcontractor:{siteGrants:[{siteId:duty.managedSiteId,role:"gatekeeper"}]}}:{}) } }),
@@ -177,25 +180,11 @@ it("keeps Save handoff gray at rest and branded on hover without requiring notes
   expect(sources).toContain(PILL_IDLE);
   expect(sources).toContain(PILL_BRAND.midcon);
 });
-it("shows open carry-forward items separately from resolved history", async () => {
-  const base = api.getMockImplementation()!;
-  api.mockImplementation((path, body) => path.endsWith("/state")
-    ? {
-        ...state(),
-        items: [
-          { id: "open-item", text: "Identify driver for OK ABC123", status: "open" },
-          { id: "resolved-item", text: "North barrier inspected", status: "resolved" },
-        ],
-      }
-    : base(path, body));
+it("delegates live actions to the shared current-gate task hopper", async () => {
   mount();
-  expect(await screen.findByRole("region", { name: "handoffDesk.title" })).not.toBeNull();
-  expect(screen.getByRole("tab", { name: "changeOver.openItems" })).not.toBeNull();
-  expect(await screen.findByText("Identify driver for OK ABC123")).not.toBeNull();
-  expect(screen.queryByText("North barrier inspected")).toBeNull();
-  fireEvent.click(screen.getByRole("tab", { name: "changeOver.resolvedItems" }));
-  expect(screen.getByText("North barrier inspected")).not.toBeNull();
-  expect(screen.queryByText("Identify driver for OK ABC123")).toBeNull();
+  const hopper = await screen.findByTestId("shared-gate-hopper");
+  expect(hopper.getAttribute("data-station")).toBe("gate");
+  expect(screen.queryByRole("tab", { name: "changeOver.openItems" })).toBeNull();
 });
 it("combines outgoing actions and notes in one handoff card with an optional saved preview", async () => {
   mount();
@@ -211,41 +200,14 @@ it("combines outgoing actions and notes in one handoff card with an optional sav
   expect(screen.queryByRole("region", { name: "changeOver.review" })).toBeNull();
   expect(screen.getAllByRole("region", { name: "handoffDesk.title" })).toHaveLength(1);
 });
-it("moves an item out of the open list only after a resolution note, and can reopen it", async () => {
-  const base = api.getMockImplementation()!;
-  let item = { id: "truck", text: "Identify driver for OK ABC123", status: "open" };
-  api.mockImplementation(async (path, body) => {
-    if (path.endsWith("/state")) return { ...state(), items: [item] };
-    if (path.endsWith("/items")) {
-      const action = body as { itemId: string; kind: string; text: string };
-      if (action.itemId === item.id && action.kind === "resolve") {
-        item = { ...item, text: `${item.text}\nResolution: ${action.text}`, status: "resolved" };
-      } else if (action.itemId === item.id && action.kind === "reopen") {
-        item = { ...item, text: `${item.text}\nReopened: ${action.text}`, status: "open" };
-      }
-      return {};
-    }
-    return base(path, body);
-  });
+it("offers the task hopper to an incoming on-shift worker without owning the watch", async () => {
+  duty.onShift = true;
+  useIncoming();
   mount();
-  const openItem = await screen.findByTestId("carry-forward-item-truck");
-  const resolve = within(openItem).getByRole("button", { name: "changeOver.markResolved" });
-  expect((resolve as HTMLButtonElement).disabled).toBe(true);
-  fireEvent.change(within(openItem).getByRole("textbox", { name: "changeOver.resolutionNote" }), {
-    target: { value: "Driver is Jack Smith, Grady Farms" },
-  });
-  fireEvent.click(resolve);
-  await waitFor(() => expect(screen.queryByTestId("carry-forward-item-truck")).toBeNull());
-  fireEvent.click(screen.getByRole("tab", { name: "changeOver.resolvedItems" }));
-  const resolvedItem = screen.getByTestId("carry-forward-item-truck");
-  expect(resolvedItem.textContent).toContain("Driver is Jack Smith, Grady Farms");
-  fireEvent.change(within(resolvedItem).getByRole("textbox", { name: "changeOver.reopenNote" }), {
-    target: { value: "Driver details need rechecking" },
-  });
-  fireEvent.click(within(resolvedItem).getByRole("button", { name: "changeOver.reopen" }));
-  await waitFor(() => expect(screen.queryByTestId("carry-forward-item-truck")).toBeNull());
-  fireEvent.click(screen.getByRole("tab", { name: "changeOver.openItems" }));
-  expect(await screen.findByTestId("carry-forward-item-truck")).not.toBeNull();
+  await screen.findByRole("heading", { name: "handoffDesk.title" });
+  fireEvent.click(screen.getByText("changeOver.carryForward"));
+  expect(screen.getByRole("region", { name: "Unassigned Task Hopper" }).getAttribute("data-station")).toBe("gate");
+  expect(api.mock.calls.some(([path]) => path.endsWith("/items"))).toBe(false);
 });
 it("outlines each live snapshot counter in the organization brand", async () => {
   mount();

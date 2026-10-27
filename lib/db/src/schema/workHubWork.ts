@@ -3,10 +3,12 @@ import { usersTable } from "./users";
 import { workHubChannelsTable } from "./workHubChannels";
 
 const ownership = { ownerOrgType: text("owner_org_type").notNull(), ownerOrgId: integer("owner_org_id").notNull() };
+export type GateTaskContext = { stationId: string; siteId: number; legacy?: boolean; completedById?: number; completedAt?: string; completionNote?: string; clearedAt?: string };
 export const workHubTasksTable = pgTable("work_hub_tasks", {
   id: uuid("id").primaryKey().defaultRandom(), ...ownership, channelId: uuid("channel_id").references(() => workHubChannelsTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(), description: text("description"), status: text("status").notNull().default("open"), priority: text("priority").notNull().default("normal"),
   assigneeUserId: integer("assignee_user_id").references(() => usersTable.id), createdById: integer("created_by_id").notNull().references(() => usersTable.id), dueAt: timestamp("due_at", { withTimezone: true }),
+  gateHopper: jsonb("gate_hopper").$type<GateTaskContext>(),
   recurrence: jsonb("recurrence").$type<Record<string, unknown>>(), version: integer("version").notNull().default(1), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({ assigneeIdx: index("work_hub_tasks_assignee_idx").on(t.assigneeUserId, t.status, t.dueAt), ownerIdx: index("work_hub_tasks_owner_idx").on(t.ownerOrgType, t.ownerOrgId, t.updatedAt) }));
 export const workHubTaskEventsTable = pgTable("work_hub_task_events", { id: uuid("id").primaryKey().defaultRandom(), taskId: uuid("task_id").notNull().references(() => workHubTasksTable.id, { onDelete: "cascade" }), actorUserId: integer("actor_user_id").references(() => usersTable.id), eventType: text("event_type").notNull(), detail: jsonb("detail").$type<Record<string, unknown>>(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow() });

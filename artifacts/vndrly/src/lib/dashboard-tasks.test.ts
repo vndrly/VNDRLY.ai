@@ -3,6 +3,12 @@ import { dashboardTaskGroup, taskElapsed, readDashboardTasks, type DashboardTask
 const now = Date.parse("2026-10-23T12:00:00Z"), hour = 3600000;
 const task = (hours: number, status = "open"): DashboardTask => ({ id: "t", title: "Inspect", status, createdAt: new Date(now - hours * hour).toISOString() });
 describe("Dashboard task age and elapsed time", () => {
+  it("keeps unassigned gate hopper work out of assigned counts and includes it after assignment or completion", () => {
+    const hopper = { ...task(4), gateHopper: {} };
+    expect(dashboardTaskGroup(hopper, true, now)).toBeNull();
+    expect(dashboardTaskGroup({ ...hopper, assigneeUserId: 9 }, true, now)).toBe("new");
+    expect(dashboardTaskGroup({ ...hopper, status: "completed", gateHopper: { completedById: 9 } }, false, now)).toBe("completed");
+  });
   it("moves unstarted work out of New at exactly 48 hours for every viewer", () => {
     for (const company of [true, false]) {
       expect(dashboardTaskGroup(task(47.99), company, now)).toBe("new");

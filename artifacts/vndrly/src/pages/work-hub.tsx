@@ -2,6 +2,7 @@ import AssignedCards from "@/components/work-hub/library/assigned-cards";
 import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
 import WorkdayControls from "@/components/workday-controls";
+import GateTaskHopper from "@/components/gate-task-hopper";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
 import { ManagedCrews } from "@/components/implementation-a/managed-crews";
@@ -675,7 +676,9 @@ function CalendarModule() {
         })),
         ...(calendarReady ? calendar.data?.tasks ?? [] : []).map((x: Row) => ({
           ...x.item,
-          startsAt: x.item.dueAt,
+          startsAt: x.item.gateHopper?.completedAt ?? x.item.dueAt,
+          description: x.item.gateHopper?.completionNote ?? x.item.description,
+          employeeName: x.item.employeeName,
           kind: "Task",
         })),
         ...(calendarReady ? calendar.data?.meetings ?? [] : []).map((x: Row) => ({
@@ -1317,6 +1320,7 @@ function TasksModule() {
   });
   return (
     <Shell module="tasks">
+      {(!linkedTask || tasks.data?.some(row => row.id === linkedTask && row.gateHopper)) && <GateTaskHopper taskId={linkedTask ?? undefined} allowCreate={!linkedTask} />}
       {isWorkHubAdmin(user)&&<BrandPillButton tone="brand" href="/work-hub/library">{t("workHubLibrary.manage")}</BrandPillButton>}
       <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>
       <AssignedCards completed={showCompleted}/>
@@ -1327,7 +1331,7 @@ function TasksModule() {
             <CardTitle><WorkHubCardTitle icon={ClipboardList}>{t("workHubLibrary.myAssignments")}</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            {tasks.data?.filter(row=>showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status)).map((row) => (
+            {tasks.data?.filter(row=>(!row.gateHopper || row.assigneeUserId || row.status === "completed") && (showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status))).map((row) => (
               <article key={row.id} ref={row.id === linkedTask ? focusedTask : undefined} tabIndex={row.id === linkedTask ? -1 : undefined} className="rounded-lg border-2 border-primary bg-card p-4">
                 <div className="flex justify-between gap-3">
                   <div>
@@ -1342,7 +1346,8 @@ function TasksModule() {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    {row.status === "open" && !isWorkPlanDescription(row.description) && (
+                    {row.gateHopper && <a href={`/work-hub/tasks?task=${row.id}`}>Open gate task</a>}
+                    {row.status === "open" && !row.gateHopper && !isWorkPlanDescription(row.description) && (
                       <BrandPillButton
                         tone="brand"
                         onClick={() =>
@@ -1352,7 +1357,7 @@ function TasksModule() {
                         Start
                       </BrandPillButton>
                     )}
-                    {row.status !== "completed" && !isWorkPlanDescription(row.description) && (
+                    {row.status !== "completed" && !row.gateHopper && !isWorkPlanDescription(row.description) && (
                       <BrandPillButton
                         tone="green"
                         onClick={() =>

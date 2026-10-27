@@ -337,7 +337,7 @@ function ownerFilter(session: Actor) {
   if (session.role !== "admin" && !session.vendorId && !session.partnerId) return sql`false`;
   if (session.managedSubcontractor) return and(
     eq(workHubTasksTable.ownerOrgType, "vendor"), eq(workHubTasksTable.ownerOrgId, session.vendorId ?? -1),
-    or(eq(workHubTasksTable.assigneeUserId, session.userId), eq(workHubTasksTable.createdById, session.userId)),
+    or(eq(workHubTasksTable.assigneeUserId, session.userId), eq(workHubTasksTable.createdById, session.userId), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`),
   );
   return session.role === "admin"
     ? undefined
@@ -591,7 +591,7 @@ router.get("/work-hub/tasks", async (req, res) => {
       (session.membershipRole === "admin" || ["office", "both"].includes(session.vendorRole ?? "")));
     const rows = await db.select({ ...getTableColumns(workHubTasksTable), assigneeName: usersTable.displayName })
       .from(workHubTasksTable).leftJoin(usersTable, eq(usersTable.id, workHubTasksTable.assigneeUserId))
-      .where(and(ownerFilter(session), company ? undefined : eq(workHubTasksTable.assigneeUserId, session.userId),
+      .where(and(ownerFilter(session), company ? undefined : or(eq(workHubTasksTable.assigneeUserId, session.userId), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`),
         cursor.data ? gt(workHubTasksTable.id, cursor.data) : undefined))
       .orderBy(asc(workHubTasksTable.id)).limit(101);
     const page = rows.slice(0, 100);
@@ -1484,6 +1484,7 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           !sessionCanSeeOwner(session, current.ownerOrgType, current.ownerOrgId)
         )
           throw new WorkHubAccessError("not_found");
+        if (current.gateHopper) throw new ChangeOverError(409, "gate_task.controls_required", "Use the Gate task controls to preserve shift verification and completion notes");
         if (
           current.assigneeUserId !== session.userId &&
           current.createdById !== session.userId &&
@@ -1756,9 +1757,9 @@ router.get("/work-hub/calendar", async (req, res) => {
       .where(
         and(
           ownerFilter(session),
-          employeeContext ? and(eq(workHubTasksTable.ownerOrgType, employeeContext.owner.type), eq(workHubTasksTable.ownerOrgId, employeeContext.owner.id), eq(workHubTasksTable.assigneeUserId, workerUserId!)) : undefined,
-          gte(workHubTasksTable.dueAt, start),
-          lte(workHubTasksTable.dueAt, end),
+          employeeContext ? and(eq(workHubTasksTable.ownerOrgType, employeeContext.owner.type), eq(workHubTasksTable.ownerOrgId, employeeContext.owner.id), or(eq(workHubTasksTable.assigneeUserId, workerUserId!), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(workerUserId)}`)) : undefined,
+          gte(sql`coalesce((${workHubTasksTable.gateHopper}->>'completedAt')::timestamptz,${workHubTasksTable.dueAt})`, start),
+          lte(sql`coalesce((${workHubTasksTable.gateHopper}->>'completedAt')::timestamptz,${workHubTasksTable.dueAt})`, end),
         ),
       ),
     db
@@ -1785,7 +1786,7 @@ router.get("/work-hub/calendar", async (req, res) => {
       ),
   ]);
   const canViewProjectFinancials = session.role === "admin" || session.membershipRole === "admin";
-  const ownerUserIds = [...new Set(shifts.map((item) => item.ownerUserId).filter((id): id is number => id != null))];
+  const ownerUserIds = [...new Set([...shifts.map((item) => item.ownerUserId), ...tasks.map(item => item.gateHopper?.completedById)].filter((id): id is number => id != null))];
   const ownerUsers = ownerUserIds.length
     ? await db
         .select({ id: usersTable.id, displayName: usersTable.displayName })
@@ -1793,6 +1794,10 @@ router.get("/work-hub/calendar", async (req, res) => {
         .where(inArray(usersTable.id, ownerUserIds))
     : [];
   const ownerDisplayNames = new Map(ownerUsers.map((user) => [user.id, user.displayName]));
+  const taskGateIds = [...new Set(tasks.flatMap(item => item.gateHopper ? [item.gateHopper.stationId] : []))];
+  const taskGates = taskGateIds.length ? await db.select({ id: gateStationsTable.id, gateName: gateStationsTable.name, siteName: siteLocationsTable.name })
+    .from(gateStationsTable).innerJoin(siteLocationsTable, eq(siteLocationsTable.id, gateStationsTable.siteId)).where(inArray(gateStationsTable.id, taskGateIds)) : [];
+  const taskGateNames = new Map(taskGates.map(gate => [gate.id, gate]));
   return res.json({
     shifts: (await Promise.all(shifts.map(async (item) => {
       if (!session.managedSubcontractor || item.createdById !== session.userId) return item;
@@ -1817,7 +1822,8 @@ router.get("/work-hub/calendar", async (req, res) => {
     tasks: tasks.map((item) => ({
       source: "vndrly",
       authority: "work_hub_task",
-      item,
+      item: { ...item, employeeName: item.gateHopper?.completedById ? ownerDisplayNames.get(item.gateHopper.completedById) ?? null : null,
+        ...(item.gateHopper ? { siteName: taskGateNames.get(item.gateHopper.stationId)?.siteName ?? null, gateName: taskGateNames.get(item.gateHopper.stationId)?.gateName ?? null } : {}) },
     })),
     meetings: meetings.map((item) => ({
       source: "vndrly",

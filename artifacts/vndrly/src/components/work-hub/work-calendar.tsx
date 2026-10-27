@@ -16,6 +16,7 @@ export function monthCalendarDays(month: Date) {
 const dayKey = (value: unknown) => value ? localDateKey(new Date(String(value))) : "";
 function recordTime(item: Row) {
   const options: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short", ...(item.timezone ? { timeZone: item.timezone } : {}) };
+  if (item.gateHopper?.completedAt) return `Completed ${new Date(item.gateHopper.completedAt).toLocaleString(undefined, options)}`;
   return `${new Date(item.startsAt).toLocaleString(undefined, options)}${item.endsAt ? ` – ${new Date(item.endsAt).toLocaleString(undefined, options)}` : item.recordedShift ? " · Shift in progress" : " · End time unspecified"}${item.timezone ? ` · ${item.timezone}` : ""}`;
 }
 
@@ -71,6 +72,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
       {item.kind === "Fleet Run" && <p className="hub-calendar-muted">{item.employeeName ? `${item.employeeName} · ` : ""}{item.linkedTicketId ? `Ticket #${item.linkedTicketId} · ` : ""}{item.timeBasis === "dispatch_recorded" ? "Dispatch recorded · no planned time" : "Planned run time"}</p>}
       {(item.employeeName || item.siteName || item.locationName || item.crewName) && item.kind !== "Fleet Run" && <p className="hub-calendar-muted">{[item.employeeName, item.crewName, item.siteName ?? item.locationName].filter(Boolean).join(" · ")}</p>}
       {item.status && <p className="hub-calendar-day-status">{String(item.status).replaceAll("_", " ")}</p>}
+      {item.gateHopper?.completionNote && <p className="hub-calendar-muted">{item.gateName ? `${item.gateName} · ` : ""}{item.gateHopper.completionNote}</p>}
     </article>)}</div>
     </details>)}</div>
     </WorkspacePanel>

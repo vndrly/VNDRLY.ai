@@ -388,7 +388,7 @@ export default function GateChangeOverPage({
     </div>
   );
   return (
-    <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5 ${history ? "" : "gate-dashboard"}`}>
+    <div className={history ? `${FIELD_OPS_PAGE_CLASS} space-y-5` : "gate-dashboard w-full space-y-3"}>
       <div className="flex items-center gap-3">
         {history
           ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />
@@ -405,7 +405,7 @@ export default function GateChangeOverPage({
       </div>
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
       {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
-      <div
+      {(history || !online || loading || error || loadError || sites.data?.sites.length === 0) && <div
         className={history
           ? `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`
           : "space-y-5"}
@@ -510,13 +510,13 @@ export default function GateChangeOverPage({
           )}
         </>
       ) : null}
-      </div>
+      </div>}
       {!history && current && (
           <div className="gate-dashboard-panels">
             <GateWatchSummary stationId={stationId} current={current} onAssume={openWatch} onHandoff={()=>void act(releaseWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} />
             <DashboardTasks />
             <ShiftSnapshotView snapshot={current.snapshot} activityWindow={current.shift ? undefined : "24h"} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: current.shift ? "current_shift" : "24h" })}`} />
-            <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} current={current} ownWatch={ownShift} gatekeeperOnDuty={onDuty && (user?.vendorRole === "gatekeeper" || user?.vendorRole === "gate_supervisor" || Boolean(user?.managedSubcontractor?.siteGrants.some(grant=>grant.siteId===Number(siteId))))} busy={busy} online={online} readError={state.isError}
+            <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} stationId={stationId} current={current} ownWatch={ownShift} gatekeeperOnDuty={onDuty && (user?.vendorRole === "gatekeeper" || user?.vendorRole === "gate_supervisor" || Boolean(user?.managedSubcontractor?.siteGrants.some(grant=>grant.siteId===Number(siteId))))} busy={busy} online={online} readError={state.isError}
               notes={notes} onNotesChange={setNotes} itemText={itemText} onItemTextChange={setItemText}
               itemNotes={itemNotes} onItemNoteChange={(id, text) => setItemNotes(value => ({ ...value, [id]: text }))}
               onItemAction={(itemId, kind) => void act(async () => {
