@@ -2,6 +2,7 @@ export type DashboardTask = {
   id: string; title: string; status: string; assigneeUserId?: number | null;
   assigneeName?: string | null; createdAt: string; assignedAt?: string | null; completedAt?: string | null;
   siteName?: string; gateName?: string;
+  version?: number; ownerOrgType?: "vendor" | "partner"; ownerOrgId?: number;
   gateHopper?: { completedById?: number; completedAt?: string; clearedAt?: string } | null;
 };
 export type DashboardTaskPage = { tasks: DashboardTask[]; scope: "self" | "company"; nextCursor: string | null };

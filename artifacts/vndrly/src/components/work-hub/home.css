@@ -37,6 +37,24 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-row-icon { width: 19px; height: 19px; color: var(--brand-primary); flex-shrink: 0; }
 .hub-row-label { flex: 1; min-width: 0; font-weight: 600; font-size: 15px; }
 .hub-row-value { color: #b3b3b3; font-size: 13px; max-width: 45%; overflow-wrap: anywhere; text-align: right; }
+.hub-task-group-stale .hub-row-value { max-width: 60%; }
+.hub-task-unassigned-total { color: #fbbf24; }
+.hub-task-record { border-bottom: 1px solid #343434; padding-bottom: 9px; }
+.hub-task-record > .hub-mini-record { border-bottom: 0; padding-bottom: 2px; }
+.hub-task-footer { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: 11px; }
+.hub-task-elapsed { color: #a3a3a3; font-size: 11px; }
+.hub-task-record.hub-task-mine .hub-task-elapsed { color: #4ade80; }
+.hub-task-record.hub-task-stale .hub-task-elapsed { color: #fbbf24; }
+.hub-task-assignment { flex-shrink: 0; margin-left: auto; color: #a3a3a3; font-size: 11px; }
+.hub-task-assignment button:hover:not(:disabled),.hub-task-assignment button:focus-visible { color: var(--brand-primary); }
+.hub-task-assignment button:disabled { opacity: .45; cursor: default; }
+.hub-task-assignment-flyout { background: #2b2b2f; color: #ececec; border-color: var(--brand-primary); padding: 10px; }
+.hub-task-assignment-people { display: grid; max-height: 280px; overflow-y: auto; margin-top: 6px; }
+.hub-task-assignment-people > button { text-align: left; padding: 7px; border-top: 1px solid #414145; }
+.hub-task-assignment-people > button:hover:not(:disabled) { background: #343438; }
+.hub-task-assignment-people small { display: block; color: #b3b3b3; font-size: 11px; }
+.hub-task-assignment-people button:disabled { opacity: .45; }
+.hub-task-assignment-error { display: block; max-width: 220px; white-space: normal; color: #fbbf24; }
 .hub-chevron { width: 18px; height: 18px; color: #a3a3a3; flex-shrink: 0; }
 .hub-gate-rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
 .hub-home-tools { display: flex; flex-wrap: wrap; gap: 10px; }

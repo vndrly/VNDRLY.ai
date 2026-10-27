@@ -115,6 +115,7 @@ import { lockShiftSchedulingRows, authorizeGateSchedulingSite, executeGateShiftC
 import {coverageOwners} from "../work-hub/coverage-rules";
 import workHubMeetingReplayRouter from "./workHubMeetingReplay";
 import { assertOwnerMatchesChannel, assertOwnerUsers } from "../work-hub/owner-users";
+import { canManageTaskAssignments, currentTaskAssignmentSession, taskAssignmentPeople } from "../work-hub/task-assignment";
 import {
   recordTrackingException,
   resolveAttendanceException,
@@ -1445,9 +1446,23 @@ router.post("/work-hub/tasks", async (req, res) => {
     return failure(res, error);
   }
 });
+router.get("/work-hub/tasks/:id/assignment-options", async (req, res) => {
+  const saved = actor(req);
+  if (!saved) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  res.setHeader("Cache-Control", "no-store");
+  try {
+    const session = await currentTaskAssignmentSession(saved);
+    if (!canManageTaskAssignments(session)) throw new WorkHubAccessError("forbidden");
+    const taskId = z.uuid().parse(req.params.id);
+    const [task] = await db.select().from(workHubTasksTable).where(eq(workHubTasksTable.id, taskId)).limit(1);
+    if (!task || !sessionCanSeeOwner(session, task.ownerOrgType, task.ownerOrgId)) throw new WorkHubAccessError("not_found");
+    const owner = { type: task.ownerOrgType as WorkHubOwner["type"], id: task.ownerOrgId };
+    return res.json({ owner, people: await taskAssignmentPeople(owner) });
+  } catch (error) { return failure(res, error); }
+});
 router.patch("/work-hub/tasks/:id", async (req, res) => {
-  const session = actor(req);
-  if (!session)
+  const savedSession = actor(req);
+  if (!savedSession)
     return sendApiError(
       res,
       401,
@@ -1467,6 +1482,9 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
         status: z.enum(["open", "in_progress", "completed", "cancelled"]).optional(),
       })
       .parse(envelope.payload);
+    const session = payload.assigneeUserId !== undefined ? await currentTaskAssignmentSession(savedSession) as Actor : savedSession;
+    const assignmentManager = canManageTaskAssignments(session);
+    let assignmentChanged = false;
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       "task.update",
@@ -1476,7 +1494,7 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           .select()
           .from(workHubTasksTable)
           .where(eq(workHubTasksTable.id, req.params.id))
-          .limit(1);
+          .limit(1).for("update");
         if (!current) throw new WorkHubAccessError("not_found");
         if (
           current.ownerOrgType !== envelope.owner.type ||
@@ -1489,13 +1507,17 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           current.assigneeUserId !== session.userId &&
           current.createdById !== session.userId &&
           session.role !== "admin" &&
-          session.membershipRole !== "admin"
+          session.membershipRole !== "admin" &&
+          !(assignmentManager && Object.keys(payload).every(key => key === "assigneeUserId"))
         )
           throw new WorkHubAccessError("forbidden");
         if (current.version !== envelope.expectedVersion)
           throw new Error("work_hub.version_conflict");
-        if (payload.assigneeUserId !== undefined)
+        if (payload.assigneeUserId !== undefined) {
+          if (["completed", "cancelled"].includes(current.status)) throw new ChangeOverError(409, "work_hub.task_closed", "Only active tasks can be reassigned");
           await assertOwnerUsers(envelope.owner, payload.assigneeUserId ? [payload.assigneeUserId] : []);
+          if (payload.assigneeUserId && !(await taskAssignmentPeople(envelope.owner)).some(person => person.userId === payload.assigneeUserId)) throw new WorkHubAccessError("forbidden");
+        }
         const status = payload.action === "cancel" ? "cancelled" : payload.status;
         const [updated] = await tx
           .update(workHubTasksTable)
@@ -1517,12 +1539,17 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           eventType: status && status !== current.status ? `status.${status}` : "updated",
         });
         if (payload.assigneeUserId !== undefined && payload.assigneeUserId !== current.assigneeUserId) {
+          assignmentChanged = true;
           await tx.insert(workHubTaskEventsTable).values({ taskId: current.id, actorUserId: session.userId,
             eventType: "assigned", detail: { assigneeUserId: payload.assigneeUserId } });
         }
         return updated;
       },
     );
+    if (assignmentChanged && payload.assigneeUserId && !result.replayed) await notifyUsers([payload.assigneeUserId], {
+      type: "work_hub_task_assigned", category: "work_hub_tasks", title: "Work Hub task assigned", body: result.resource.title,
+      link: `/work-hub/tasks?task=${result.resource.id}`, dedupeKey: `work-hub-task:${envelope.operationId}:assigned`,
+    });
     return res.json(result);
   } catch (error) {
     return failure(res, error);
