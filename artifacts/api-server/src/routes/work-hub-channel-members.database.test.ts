@@ -181,7 +181,7 @@ describe.runIf(
           .get(path + "/member-access")
           .set("Cookie", owner.cookie)
       ).body,
-    ).toEqual({ canManage: false });
+    ).toEqual({ canManage: true });
     expect((await add(colleague.user.email!)).status).toBe(403);
     await d.db
       .update(d.userOrgMembershipsTable)

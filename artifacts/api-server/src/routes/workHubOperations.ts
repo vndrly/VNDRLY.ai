@@ -1707,7 +1707,9 @@ router.get("/work-hub/calendar", async (req, res) => {
   try { workerUserId=calendarWorkerScope(session,workerInput.data); }
   catch { return sendApiError(res,403,"work_hub.forbidden","Own calendar only"); }
   let employeeContext: Awaited<ReturnType<typeof workdayService.employeeCalendarContext>> | undefined;
-  if (workerUserId) {
+  // Managed workers have scoped sponsorship grants rather than vendor_people rows.
+  // Their own calendar is filtered by those grants and explicit participation below.
+  if (workerUserId && !session.managedSubcontractor) {
     try { employeeContext = await workdayService.employeeCalendarContext(session, workerUserId); }
     catch (error) { if (error instanceof WorkdayError) return res.status(error.status).json({ code: error.code }); throw error; }
   }

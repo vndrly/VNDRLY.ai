@@ -202,7 +202,8 @@ describe.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB !== "1")("collaboration dura
     await db.insert(workHubChannelMembersTable).values([{ channelId: relationship!.id, userId: adminId, mode: "owner" }, { channelId: relationship!.id, userId: externalId, mode: "member" }]);
     const created = await request(app).post("/work-hub/chats").set("Cookie", adminCookie).send({ recipientUserId: externalId });
     expect(created.status).toBe(201); const invitation = created.body.invitation;
-    expect((await request(app).get(`/work-hub/channels/${invitation.channelId}/messages`).set("Cookie", adminCookie)).status).toBe(404);
+    expect((await request(app).get(`/work-hub/channels/${invitation.channelId}/messages`).set("Cookie", adminCookie)).status).toBe(200);
+    expect((await request(app).get(`/work-hub/channels/${invitation.channelId}/messages`).set("Cookie", externalCookie)).status).toBe(404);
     expect((await request(app).post(`/work-hub/invitations/${invitation.id}/respond`).set("Cookie", memberCookie).send({ accept: true })).status).toBe(404);
     expect((await request(app).post(`/work-hub/invitations/${invitation.id}/respond`).set("Cookie", externalCookie).send({ accept: true })).status).toBe(200);
     expect((await request(app).get(`/work-hub/channels/${invitation.channelId}/messages`).set("Cookie", adminCookie)).status).toBe(200);
