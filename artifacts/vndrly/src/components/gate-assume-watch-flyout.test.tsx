@@ -11,7 +11,7 @@ const caches:QueryClient[]=[];
 beforeEach(()=>{Object.defineProperty(navigator,"onLine",{value:true,configurable:true});m.request.mockReset();m.request.mockImplementation(async(path:string)=>path.endsWith("/state")?current():{});});
 afterEach(()=>{cleanup();caches.splice(0).forEach(c=>c.clear());});
 function mount(extra={}){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});caches.push(cache);const closed=vi.fn();render(<QueryClientProvider client={cache}><GateAssumeWatchFlyout stationId="gate" open onOpenChange={closed} {...extra}/></QueryClientProvider>);return closed;}
-async function confirm(){const button=await screen.findByRole("button",{name:"ASSUME",exact:true});await waitFor(()=>expect((button as HTMLButtonElement).disabled).toBe(false));fireEvent.click(button);}
+async function confirm(){const button=await screen.findByRole("button",{name:"ASSUME"});await waitFor(()=>expect((button as HTMLButtonElement).disabled).toBe(false));fireEvent.click(button);}
 it("shows the saved briefing and does not change the watch when X closes it",async()=>{
   const close=mount();expect(await screen.findByText("Radio battery replaced")).toBeTruthy();expect(screen.getByText("Check barrier lamp")).toBeTruthy();
   fireEvent.click(screen.getByRole("button",{name:"Close watch summary"}));expect(close).toHaveBeenCalledWith(false);

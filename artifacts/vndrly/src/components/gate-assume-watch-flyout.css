@@ -1,6 +1,7 @@
 .gate-assume-flyout{width:460px!important;padding:18px;gap:12px;background:#242424!important;color:#eee!important;border-color:var(--brand-primary)!important;}
 .gate-assume-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;}
-.gate-assume-heading h2{font-size:18px;font-weight:700;}
+.gate-assume-heading h2{font-size:18px;font-weight:700;color:#eee!important;}
+.gate-assume-flyout>p{color:#c8c8c8!important;}
 .gate-assume-heading button{padding:4px;color:#b3b3b3;}
 .gate-assume-heading button:hover{color:var(--brand-primary);}
 .gate-assume-summary{display:grid;gap:10px;overflow-y:auto;min-height:0;max-height:55vh;font-size:14px;overflow-wrap:anywhere;}

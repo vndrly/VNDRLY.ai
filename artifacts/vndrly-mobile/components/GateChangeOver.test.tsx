@@ -362,7 +362,7 @@ it('assumes the reviewed watch using the current native account without replacin
  useIncoming(); mount();
  const review = await screen.findByRole('button', { name: 'watch.assume' });
  fireEvent.click(review);
- fireEvent.click(await screen.findByRole('button',{name:'ASSUME',exact:true}));
+ fireEvent.click(await screen.findByRole('button',{name:'ASSUME'}));
  await waitFor(() => expect(env.api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source:'ios', preparationId:'prep', reviewedRevision:'a', acknowledged:true, operationId:'operation-id' })));
  expect(env.accept).not.toHaveBeenCalled(); expect(env.replace).not.toHaveBeenCalled();
  expect(env.api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);

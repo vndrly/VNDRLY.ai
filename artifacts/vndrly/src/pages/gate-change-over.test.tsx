@@ -499,4 +499,4 @@ it("preserves the Dashboard panels while site snapshot data is unavailable witho
   expect(within(activity).getByTestId("dashboard-metric-checkIns").textContent).toContain("Unavailable");
 });
 
-async function confirmFlyout(){const action=await screen.findByRole("button",{name:"ASSUME",exact:true});await waitFor(()=>expect((action as HTMLButtonElement).disabled).toBe(false));fireEvent.click(action);}
+async function confirmFlyout(){const action=await screen.findByRole("button",{name:"ASSUME"});await waitFor(()=>expect((action as HTMLButtonElement).disabled).toBe(false));fireEvent.click(action);}

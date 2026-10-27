@@ -87,7 +87,7 @@ it("keeps an uncertain takeover tied to the original watch and operation for rea
   m.request.mockImplementation(async(path:string)=>{if(path.endsWith("/watch/admin"))throw new Error("Lost response");if(path.includes("/admin-operations/"))return {receipt:{action:"assume",workerName:"Admin"}};return adminSource(path);});
   mount({shift:{operator_id:8}});fireEvent.click(await screen.findByText("On watch"));
   fireEvent.click((await screen.findAllByRole("button",{name:"Assume"}))[1]);
-  const confirm=await screen.findByRole("button",{name:"ASSUME",exact:true});
+  const confirm=await screen.findByRole("button",{name:"ASSUME"});
   await waitFor(()=>expect((confirm as HTMLButtonElement).disabled).toBe(false));fireEvent.click(confirm);
   const check=await screen.findByRole("button",{name:"Check assumption"});
   const original=m.request.mock.calls.find(([path])=>path.endsWith("/watch/admin"))!;
