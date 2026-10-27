@@ -60,7 +60,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("Dashboard ta
   it("requires Resolution for the Dashboard completion action, stores actor/time once and exposes the saved resolution", async () => {
     const f = await fixture();
     const body = { operationId: randomUUID(), owner: { type: "vendor", id: f.vendor }, context: { kind: "organization", id: f.vendor }, payloadVersion: 1, expectedVersion: 1, payload: { action: "complete", resolution: "Radio replaced and verified" } };
-    const patch = (value: unknown) => request(app).patch(`/work-hub/tasks/${f.task.id}`).set("Cookie", f.people[1].cookie).send(value);
+    const patch = (value: object) => request(app).patch(`/work-hub/tasks/${f.task.id}`).set("Cookie", f.people[1].cookie).send(value);
     expect((await patch({ ...body, payload: { action: "complete" } })).status).toBe(400);
     expect((await pool.query("SELECT status,version FROM work_hub_tasks WHERE id=$1", [f.task.id])).rows[0]).toEqual({ status: "open", version: 1 });
     expect((await patch(body)).status).toBe(200);
