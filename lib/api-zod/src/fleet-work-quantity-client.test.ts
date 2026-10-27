@@ -10,7 +10,7 @@ import {serializeFleetWorkCommand} from "./fleet-work-state";
 async function device(extra:Partial<Parameters<typeof openFleetWorkSession>[0]>={}){
  const rows=new Map<string,string>(),storage:FleetJournalStore={transaction:async work=>work({get:async(k,id)=>rows.get(`${k}:${id}`)??null,set:async(k,id,v)=>{rows.set(`${k}:${id}`,v)},values:async k=>[...rows].filter(([key])=>key.startsWith(`${k}:`)).map(([,v])=>v)})};
  const account={userId:2,companyId:7,membershipId:3,sessionVersion:1},scope={owner:{type:"vendor" as const,id:7},userId:2,membershipId:3,sessionVersion:1,deviceId:randomUUID(),provisioningId:randomUUID()};
- await storage.transaction(tx=>tx.set("work-session",JSON.stringify(account),JSON.stringify({scope,expiresAt:"2026-10-24T18:00:00Z"})));
+ await storage.transaction(tx=>tx.set("work-session",JSON.stringify(account),JSON.stringify({scope,expiresAt:new Date(Date.now()+86400000).toISOString()})));
  const journal=createDurableFleetWorkJournal({scope,storage,isCurrent:()=>true,digest:async s=>createHash("sha256").update(s).digest("hex")});
  const client=await openFleetWorkSession({account,index:storage,openJournal:async()=>journal,isCurrent:()=>true,uuid:randomUUID,http:async path=>{if(path.endsWith("capabilities"))return {enabled:true};throw Error("offline");},...extra});
  const run={id:randomUUID(),companyId:7,driverUserId:2,version:4,ticketReference:{id:12,version:3},schedule:{timezone:"America/Chicago"},resourceAssignment:{snapshot:{detail:{driverUserId:2}}}} as unknown as FleetRun;
