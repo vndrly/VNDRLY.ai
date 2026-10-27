@@ -40,6 +40,7 @@ import {
   listAvailableGateWatchStanders,
   getShiftNotes,
   markShiftNoteViewed,
+  appendGateShiftNote,
 } from "../services/gate-change-over";
 import {
   assumeGateDuty,
@@ -103,7 +104,7 @@ router.get("/gate-change-over/:stationId/watch/standers",async(req,res)=>res.jso
 router.get("/gate-change-over/:stationId/watch/admin-operations/:operationId",async(req,res)=>res.json(await getAdminGateWatchOperation(sessionFor(req),uuid.parse(req.params.stationId),uuid.parse(req.params.operationId))));
 router.post("/gate-change-over/:stationId/watch/admin",async(req,res)=>{
   const common={expectedShiftId:uuid,operationId:uuid};
-  const input=z.discriminatedUnion("action",[z.object({...common,action:z.literal("assume")}).strict(),z.object({...common,action:z.literal("assign"),targetMembershipId:z.number().int().positive()}).strict()]).parse(req.body);
+  const input=z.discriminatedUnion("action",[z.object({...common,action:z.literal("assume"),preparationId:uuid.nullable().optional(),reviewedRevision:z.string().length(64).optional(),acknowledged:z.boolean().optional(),allowUnprepared:z.boolean().optional()}).strict(),z.object({...common,action:z.literal("assign"),targetMembershipId:z.number().int().positive()}).strict()]).parse(req.body);
   res.json(await administerGateWatch(sessionFor(req),{...input,stationId:uuid.parse(req.params.stationId)}));
 });
 router.post("/gate-change-over/:stationId/watch/release",async(req,res)=>{
@@ -114,7 +115,7 @@ router.get("/gate-change-over/:stationId/watch/operations/:operationId", async (
   res.json(await getGateWatchOperation(sessionFor(req), uuid.parse(req.params.stationId), uuid.parse(req.params.operationId)));
 });
 router.post("/gate-change-over/:stationId/watch/assume", async (req, res) => {
-  const input = z.object({ operationId: uuid, source: z.enum(["web", "ios"]), preparationId: uuid.nullable().optional(), reviewedRevision: z.string().length(64).optional(), acknowledged: z.boolean().optional() }).strict().parse(req.body);
+  const input = z.object({ operationId: uuid, source: z.enum(["web", "ios"]), expectedWatchId:uuid.nullable().optional(),allowUnprepared:z.boolean().optional(),preparationId: uuid.nullable().optional(), reviewedRevision: z.string().length(64).optional(), acknowledged: z.boolean().optional() }).strict().parse(req.body);
   res.json(await assumeGateWatch(sessionFor(req), { ...input, stationId: uuid.parse(req.params.stationId) }));
 });
 router.get("/gate-change-over/sites", async (req, res) => {
@@ -253,6 +254,10 @@ router.get("/gate-change-over/:stationId/notes", async (req, res) => {
       stationId: uuid.parse(req.params.stationId),
     }),
   );
+});
+router.post("/gate-change-over/:stationId/notes/add",async(req,res)=>{
+  const input=z.object({operationId:uuid,expectedWatchId:uuid,text:z.string().trim().min(1).max(2000)}).strict().parse(req.body);
+  res.json(await appendGateShiftNote(sessionFor(req),{...input,stationId:uuid.parse(req.params.stationId)}));
 });
 router.post("/gate-change-over/:stationId/notes/:handoffId/viewed", async (req, res) => {
   res.json(await markShiftNoteViewed(sessionFor(req), uuid.parse(req.params.stationId), uuid.parse(req.params.handoffId)));

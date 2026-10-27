@@ -5,6 +5,7 @@ import DashboardTasks from "@/components/work-hub/dashboard-tasks";
 import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
 import "@/components/gate-dashboard.css";
 import GateWatchSummary from "@/components/gate-watch-summary";
+import GateAssumeWatchFlyout from "@/components/gate-assume-watch-flyout";
 import GateGpsSelector from "@/components/gate-gps-selector";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearch } from "wouter";
@@ -229,7 +230,8 @@ export default function GateChangeOverPage({
   const revision = current?.snapshot?.revision ?? "";
   const ownShift = current?.shift?.operator_id === user?.userId;
   useEffect(() => {
-    setPendingWatch(null);
+    setPendingWatch(false);
+    setAssumeOpen(false);
     setNotes("");
     setItemText("");
     setItemNotes({});
@@ -278,40 +280,15 @@ export default function GateChangeOverPage({
     await request(`/${stationId}/${path}`, body);
     await state.refetch();
   };
-  const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios"; preparationId?:string; reviewedRevision?:string; acknowledged?:boolean}} | null>(null);
-  const assumeWatch = async (reviewed = false) => {
-    const command = pendingWatch ?? { stationId, body: { operationId: crypto.randomUUID(), source: "web" as const, ...((current?.shift && !ownShift)||current?.releasedWatch ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged: reviewed } : {}) } };
-    setPendingWatch(command);
-    try { await request(`/${command.stationId}/watch/assume`, command.body); }
-    catch (error) {
-      const status = (error as {status?:number}).status;
-      if (status && status >= 400 && status < 500) { setPendingWatch(null); void state.refetch(); }
-      throw error;
-    }
-    await watchSaved();
-  };
+  const [pendingWatch, setPendingWatch] = useState(false);
+  const [assumeOpen, setAssumeOpen] = useState(false);
   const watchSaved = async () => {
-    setPendingWatch(null);
+    setPendingWatch(false);
     await cache.invalidateQueries({ queryKey: ["gate-watch-own-duty"] });
     await cache.invalidateQueries({ queryKey: ["gate-watch-timeline"] });
     await cache.invalidateQueries({ queryKey: ["gate-active-watches"] });
     await state.refetch();
   };
-  const recoverWatch = async () => {
-    if (!pendingWatch) return;
-    const result = await request<{ receipt: unknown }>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`);
-    if (result.receipt) await watchSaved();
-    else if (result.receipt === null) await assumeWatch();
-    else throw new Error(t("handoffDesk.outcomeUnknown"));
-  };
-  useEffect(() => {
-    if (!pendingWatch || !online) return;
-    let active = true;
-    void request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`).then(result => {
-      if (active && result.receipt) void watchSaved();
-    }).catch(() => { /* Retain the immutable original command for explicit retry. */ });
-    return () => { active = false; };
-  }, [pendingWatch, online, state.dataUpdatedAt]);
   const recoverAbandonedWatch = async () => {
     if ((!current?.shift && !pendingRecovery) || pendingWatch) return;
     const command = pendingRecovery ?? { stationId, body: {
@@ -336,10 +313,7 @@ export default function GateChangeOverPage({
     await request(`/${stationId}/watch/release`,{expectedShiftId:current.shift.id,notes});
     await watchSaved();
   };
-  const openWatch=()=>{
-    if(current?.shift||current?.releasedWatch)document.querySelector(".gate-handoff-desk")?.scrollIntoView({behavior:"smooth",block:"start"});
-    else void act(assumeWatch);
-  };
+  const openWatch=()=>setAssumeOpen(true);
   const loading =
     sites.isLoading ||
     stations.isLoading ||
@@ -403,6 +377,7 @@ export default function GateChangeOverPage({
         </div>
         {!history && <LanguageToggle className="ml-auto shrink-0" />}
       </div>
+      {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
       {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
       {(history || !online || loading || error || loadError || sites.data?.sites.length === 0) && <div
@@ -528,8 +503,10 @@ export default function GateChangeOverPage({
                 setItemText("");
               })}
               onSave={() => void act(() => mutate("prepare", { notes }))}
-              onAssumeReviewed={() => void act(() => assumeWatch(true))}
-              pendingWatch={Boolean(pendingWatch)} onRecoverWatch={() => void act(recoverWatch)}
+              onEditSave={async text=>{await mutate("prepare",{notes:text});await cache.invalidateQueries({queryKey:["gate-watch-timeline"]});}}
+              onAddNote={async input=>{await request(`/${stationId}/notes/add`,input);await state.refetch({throwOnError:true});await cache.invalidateQueries({queryKey:["gate-watch-timeline"]});}}
+              onAssumeReviewed={openWatch}
+              pendingWatch={Boolean(pendingWatch)} onRecoverWatch={openWatch}
               reason={reason} onReasonChange={setReason} onWithdraw={() => void act(() => mutate("cancel", { reason }))}
             />
             {current.supervisor && current.shift && !ownShift && (

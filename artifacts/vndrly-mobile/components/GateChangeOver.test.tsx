@@ -83,6 +83,7 @@ const state = () => ({
   site: { id: 1, name: "Site" },
   supervisor: false,
   shift: {
+    id:"old-watch",
     operator_id: 1,
     operator_name: "Outgoing",
     started_at: new Date().toISOString(),
@@ -359,10 +360,9 @@ function useIncoming() {
 }
 it('assumes the reviewed watch using the current native account without replacing the session', async () => {
  useIncoming(); mount();
- const acknowledge = await screen.findByLabelText('changeOver.acknowledge');
- const confirm = await screen.findByRole('button', { name: 'watch.assume' });
- expect(confirm.hasAttribute('disabled')).toBe(true);
- fireEvent.click(acknowledge); fireEvent.click(confirm);
+ const review = await screen.findByRole('button', { name: 'watch.assume' });
+ fireEvent.click(review);
+ fireEvent.click(await screen.findByRole('button',{name:'ASSUME',exact:true}));
  await waitFor(() => expect(env.api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source:'ios', preparationId:'prep', reviewedRevision:'a', acknowledged:true, operationId:'operation-id' })));
  expect(env.accept).not.toHaveBeenCalled(); expect(env.replace).not.toHaveBeenCalled();
  expect(env.api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);
@@ -397,7 +397,7 @@ it("uses the static gray pill for the requested dashboard actions", async () => 
 it("preserves cached watch facts on network failure but clears acknowledgment and requires refresh", async () => {
   useIncoming();
   const cache = mount();
-  fireEvent.click(await screen.findByLabelText("changeOver.acknowledge"));
+  await screen.findByRole("button",{name:"watch.assume"});
   const base = env.api.getMockImplementation()!;
   env.api.mockImplementation((path, body) =>
     path.endsWith("/state")

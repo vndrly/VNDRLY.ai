@@ -205,7 +205,7 @@ it("offers the task hopper to an incoming on-shift worker without owning the wat
   useIncoming();
   mount();
   await screen.findByRole("heading", { name: "handoffDesk.title" });
-  fireEvent.click(screen.getByText("changeOver.carryForward"));
+  fireEvent.click(screen.getByText("handoffDesk.addTaskToHopper"));
   expect(screen.getByRole("region", { name: "Unassigned Task Hopper" }).getAttribute("data-station")).toBe("gate");
   expect(api.mock.calls.some(([path]) => path.endsWith("/items"))).toBe(false);
 });
@@ -264,13 +264,14 @@ it('uses one explicit reviewed-assumption action bound to the saved handoff and 
   expect(screen.queryByRole('checkbox', { name: 'changeOver.acknowledge' })).toBeNull();
   expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
   fireEvent.click(assume);
+  await confirmFlyout();
   await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source: 'web', preparationId: 'prep', reviewedRevision: 'a', acknowledged: true, operationId: expect.any(String) })));
 });
-it('requires a fresh saved briefing after watch activity changes before one-click review', async () => {
+it('opens review after watch activity changes without assuming immediately', async () => {
   useIncoming(); const cache = mount();
   await screen.findByRole('button', { name: 'handoffDesk.assume' });
   cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), stale: true, snapshot: { ...snapshot, revision: 'b' } });
-  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true));
+  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume', hidden:true }) as HTMLButtonElement).disabled).toBe(false));
   expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
 });
 it('assumes a reviewed watch using the signed-in account without credentials or a session switch', async () => {
@@ -280,14 +281,15 @@ it('assumes a reviewed watch using the signed-in account without credentials or 
   expect(screen.queryByLabelText('changeOver.password')).toBeNull();
   expect(screen.queryByRole('checkbox')).toBeNull();
   fireEvent.click(review);
+  await confirmFlyout();
   await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source: 'web', preparationId: 'prep', reviewedRevision: 'a', acknowledged: true, operationId: expect.any(String) })));
   expect(api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);
 });
-it('blocks review when the current revision differs from the saved handoff even without a stale flag', async () => {
+it('allows opening review when the saved and live revisions differ', async () => {
   useIncoming(); const cache = mount();
   await screen.findByRole('button', { name: 'handoffDesk.assume' });
   await act(async () => { cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), snapshot: { ...snapshot, revision: 'b' } }); });
-  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true));
+  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume', hidden:true }) as HTMLButtonElement).disabled).toBe(false));
   expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
 });
 it('disables explicit reviewed watch assumption when offline', async () => {
@@ -296,7 +298,7 @@ it('disables explicit reviewed watch assumption when offline', async () => {
   Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
   fireEvent(window, new Event('offline'));
   await waitFor(() => expect(screen.getAllByText('changeOver.offline').length).toBeGreaterThan(0));
-  expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true);
+  expect((screen.getByRole('button', { name: 'handoffDesk.assume', hidden:true }) as HTMLButtonElement).disabled).toBe(true);
   expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
 });
 it('keeps the top Workday card limited to shift and on-call controls', async () => {
@@ -329,9 +331,10 @@ it('does not duplicate the original watch command while canonical recovery is pe
   });
   const cache=mount();
   fireEvent.click(await screen.findByRole('button',{name:'handoffDesk.assume'}));
+  await confirmFlyout();
   await screen.findByText('Lost response');
   await cache.invalidateQueries({queryKey:['change-over-state']});
-  await waitFor(()=>expect(api.mock.calls.some(([path])=>path.includes('/watch/operations/'))).toBe(true));
+  expect(screen.getByRole('button',{name:'Check assumption'})).toBeTruthy();
   const writes=api.mock.calls.filter(([path])=>path.endsWith('/watch/assume'));
   expect(writes).toHaveLength(1);
 });
@@ -352,20 +355,21 @@ it('retries the immutable original watch command only after an explicit null-rec
   });
   const cache = mount();
   fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.assume' }));
+  await confirmFlyout();
   await screen.findByText('Lost original response');
   const original = structuredClone(api.mock.calls.find(([path]) => path.endsWith('/watch/assume'))!);
   current = { ...incomingState(), preparation: { ...state().preparation, id: 'later-preparation', notes: 'Later notes' }, snapshot: { ...snapshot, revision: 'later-revision' }, stale: true };
   await act(async () => { await cache.invalidateQueries({ queryKey: ['change-over-state'] }); });
-  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true));
+  await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume', hidden:true }) as HTMLButtonElement).disabled).toBe(true));
   expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
   const beforeRetry = api.mock.calls.length;
-  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Check assumption' }));
   await waitFor(() => expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(2));
   const retries = api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'));
   expect(retries[1]).toEqual(original);
   expect(retries[1][1]).toEqual(expect.objectContaining({ preparationId: 'prep', reviewedRevision: 'a', acknowledged: true }));
   expect(api.mock.calls.slice(beforeRetry)[0][0]).toBe(`/gate/watch/operations/${original[1].operationId}`);
-  await waitFor(() => expect(screen.queryByRole('button', { name: 'handoffDesk.checkRequest' })).toBeNull());
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Check assumption' })).toBeNull());
 });
 
 it('does not resend an uncertain watch command when canonical readback fails', async () => {
@@ -378,14 +382,15 @@ it('does not resend an uncertain watch command when canonical readback fails', a
   });
   mount();
   fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.assume' }));
+  await confirmFlyout();
   await screen.findByText('Lost response');
   const beforeCheck = api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length;
-  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Check assumption' }));
   await screen.findByText('Cannot read watch receipt');
   expect(api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length).toBeGreaterThan(beforeCheck);
   expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
-  expect(screen.getByRole('button', { name: 'handoffDesk.checkRequest' })).toBeTruthy();
-  expect((screen.getByRole('button', { name: 'handoffDesk.assume' }) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByRole('button', { name: 'Check assumption' })).toBeTruthy();
+  expect((screen.getByRole('button', { name: 'handoffDesk.assume', hidden:true }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it('keeps initial no-watch assumption disabled after a lost response and failed receipt readback', async () => {
@@ -400,20 +405,21 @@ it('keeps initial no-watch assumption disabled after a lost response and failed 
   const assume = await screen.findByRole('button', { name: 'Assume Watch' }) as HTMLButtonElement;
   expect(assume.disabled).toBe(false);
   fireEvent.click(assume);
+  await confirmFlyout();
   await screen.findByText('Lost initial watch response');
   await waitFor(() => expect(assume.disabled).toBe(true));
   const original = api.mock.calls.find(([path]) => path.endsWith('/watch/assume'))!;
-  expect(original[1]).toEqual({ operationId: expect.any(String), source: 'web' });
+  expect(original[1]).toMatchObject({ operationId: expect.any(String), source: 'web', expectedWatchId:null,allowUnprepared:true });
   fireEvent.click(assume);
   expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
 
   const beforeCheck = api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length;
-  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Check assumption' }));
   await screen.findByText('Cannot verify initial watch request');
   expect(api.mock.calls.filter(([path]) => path.includes('/watch/operations/')).length).toBeGreaterThan(beforeCheck);
   expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
   expect(assume.disabled).toBe(true);
-  expect(screen.getByRole('button', { name: 'handoffDesk.checkRequest' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Check assumption' })).toBeTruthy();
 });
 
 it('accepts an existing canonical receipt without resending the watch command', async () => {
@@ -427,12 +433,12 @@ it('accepts an existing canonical receipt without resending the watch command', 
   });
   mount();
   fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.assume' }));
+  await confirmFlyout();
   await screen.findByText('Lost response');
-  await waitFor(() => expect(api.mock.calls.some(([path]) => path.includes('/watch/operations/'))).toBe(true));
   receipt = { id: 'saved-watch-receipt' };
   const beforeCheck = api.mock.calls.length;
-  fireEvent.click(screen.getByRole('button', { name: 'handoffDesk.checkRequest' }));
-  await waitFor(() => expect(screen.queryByRole('button', { name: 'handoffDesk.checkRequest' })).toBeNull());
+  fireEvent.click(screen.getByRole('button', { name: 'Check assumption' }));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Check assumption' })).toBeNull());
   expect(api.mock.calls.slice(beforeCheck).some(([path]) => path.includes('/watch/operations/'))).toBe(true);
   expect(api.mock.calls.filter(([path]) => path.endsWith('/watch/assume'))).toHaveLength(1);
   expect(api.mock.calls.slice(beforeCheck).some(([path]) => path.endsWith('/state'))).toBe(true);
@@ -492,3 +498,5 @@ it("preserves the Dashboard panels while site snapshot data is unavailable witho
   expect(screen.getByRole("region", { name: "On site" })).toBeTruthy();
   expect(within(activity).getByTestId("dashboard-metric-checkIns").textContent).toContain("Unavailable");
 });
+
+async function confirmFlyout(){const action=await screen.findByRole("button",{name:"ASSUME",exact:true});await waitFor(()=>expect((action as HTMLButtonElement).disabled).toBe(false));fireEvent.click(action);}

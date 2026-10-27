@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import {workdayService} from "./workday";
-import {startGateShift,prepareGateHandoff,transferGateShift,getShiftNotes,markShiftNoteViewed,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
+import {startGateShift,prepareGateHandoff,appendGateShiftNote,transferGateShift,getShiftNotes,markShiftNoteViewed,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
 import {
   assumeGateDuty,
   endGateDuty,
@@ -135,12 +135,66 @@ describe("Gate duty teams", () => {
     expect((await workdayService.current(viewer)).workday).toBeNull();
     expect((await pool.query("SELECT * FROM gate_shift_actions WHERE station_id=$1 AND kind IN ('open','resolve','reopen')",[f.stationId])).rowCount).toBe(0);
   });
+  it("allows explicit assumption without a prepared handover, records it once, and preserves paid clocks and sessions", async () => {
+    const f=await fixture(),outgoing=f.workers[0]!,incoming=f.workers[1]!;
+    await startGateShift(outgoing,f.stationId);
+    const before=await workdayService.current(outgoing),current=await getChangeOverState(incoming,f.stationId);
+    const input={stationId:f.stationId,source:"web" as const,operationId:key(),expectedWatchId:current.shift!.id,preparationId:null,reviewedRevision:current.snapshot!.revision,acknowledged:true,allowUnprepared:true};
+    const saved=await assumeGateWatch(incoming,input);
+    expect((await getChangeOverState(incoming,f.stationId)).shift?.operator_id).toBe(incoming.userId);
+    expect((await assumeGateWatch(incoming,input)).id).toBe(saved.id);
+    expect((await getGateWatchOperation(incoming,f.stationId,input.operationId)).receipt.id).toBe(saved.id);
+    const prep=(await pool.query("SELECT summary FROM gate_preparations WHERE id=$1",[input.operationId])).rows[0];
+    expect(prep.summary.handoverPrepared).toBe(false);
+    expect((await pool.query("SELECT id FROM gate_shift_actions WHERE station_id=$1 AND kind='assume_without_handoff'",[f.stationId])).rows).toHaveLength(1);
+    expect((await workdayService.current(outgoing)).workday).toEqual(before.workday);
+    expect((await workdayService.current(incoming)).workday).toBeNull();
+    expect((await pool.query("SELECT session_version FROM users WHERE id=ANY($1::int[])",[[outgoing.userId,incoming.userId]])).rows.map(row=>row.session_version)).toEqual([1,1]);
+  });
+  it("rejects a changed watch, a newly prepared handover, and unacknowledged missing-handover assumption",async()=>{
+    const f=await fixture(),outgoing=f.workers[0]!,incoming=f.workers[1]!;
+    await assumeGateWatch(outgoing,{stationId:f.stationId,source:"web",operationId:key()});
+    const current=await getChangeOverState(incoming,f.stationId);
+    const input={stationId:f.stationId,source:"web" as const,operationId:key(),expectedWatchId:current.shift!.id,preparationId:null,reviewedRevision:current.snapshot!.revision,acknowledged:true,allowUnprepared:true};
+    await expect(assumeGateWatch(incoming,{...input,expectedWatchId:null})).rejects.toMatchObject({code:"change_over.shift_changed"});
+    await expect(assumeGateWatch(incoming,{...input,allowUnprepared:false})).rejects.toMatchObject({code:"change_over.acknowledgment_required"});
+    await prepareGateHandoff(outgoing,f.stationId,"Saved after flyout opened",async facts=>({source:"facts",facts}));
+    await expect(assumeGateWatch(incoming,input)).rejects.toMatchObject({code:"change_over.stale"});
+    expect((await getChangeOverState(incoming,f.stationId)).shift?.operator_id).toBe(outgoing.userId);
+  });
+  it("lets a current supervisor amend the saved handoff without changing watch custody",async()=>{
+    const f=await fixture(),outgoing=f.workers[0]!,other=f.workers[1]!,supervisor={...f.workers[2]!,vendorRole:"gate_supervisor"};
+    await pool.query("UPDATE vendor_people SET vendor_role='gate_supervisor' WHERE user_id=$1 AND vendor_id=$2",[supervisor.userId,supervisor.vendorId]);
+    await assumeGateWatch(outgoing,{stationId:f.stationId,source:"web",operationId:key()});
+    const first=await prepareGateHandoff(outgoing,f.stationId,"Original notes",async facts=>({source:"facts",facts}));
+    await expect(prepareGateHandoff(other,f.stationId,"Not allowed",async facts=>({source:"facts",facts}))).rejects.toMatchObject({status:403});
+    const edited=await prepareGateHandoff(supervisor,f.stationId,"Revised by supervisor",async facts=>({source:"facts",facts}));
+    expect(edited.id).not.toBe(first.id);expect(edited.notes).toBe("Revised by supervisor");
+    expect((await pool.query("SELECT notes FROM gate_preparations WHERE id=$1",[first.id])).rows[0].notes).toBe("Original notes");
+    expect((await getChangeOverState(outgoing,f.stationId)).shift?.operator_id).toBe(outgoing.userId);
+    expect((await pool.query("SELECT actor_id FROM gate_shift_actions WHERE station_id=$1 AND kind='edit_handoff'",[f.stationId])).rows[0].actor_id).toBe(supervisor.userId);
+  });
+  it("appends concurrent new shift notes without losing prior notes or duplicating a retry",async()=>{
+    const f=await fixture(),outgoing=f.workers[0]!,other=f.workers[1]!;
+    await assumeGateWatch(outgoing,{stationId:f.stationId,source:"web",operationId:key()});
+    const old=await prepareGateHandoff(outgoing,f.stationId,"Existing saved note",async facts=>({source:"facts",facts}));
+    const watch=(await getChangeOverState(outgoing,f.stationId)).shift!;
+    const input={stationId:f.stationId,expectedWatchId:watch.id,operationId:key(),text:"Delivery moved to east gate"};
+    await expect(appendGateShiftNote(other,input)).rejects.toMatchObject({status:403});
+    await Promise.all([appendGateShiftNote(outgoing,input),appendGateShiftNote(outgoing,{...input,operationId:key(),text:"Radio batteries charged"})]);
+    await appendGateShiftNote(outgoing,input);
+    const current=await getChangeOverState(outgoing,f.stationId);
+    expect(current.preparation!.notes).toContain("Existing saved note");expect(current.preparation!.notes).toContain("Radio batteries charged");
+    expect(current.preparation!.notes.split(input.text)).toHaveLength(2);expect(current.shift!.id).toBe(watch.id);
+    expect((await pool.query("SELECT notes FROM gate_preparations WHERE id=$1",[old.id])).rows[0].notes).toBe("Existing saved note");
+    expect((await pool.query("SELECT id FROM gate_shift_actions WHERE station_id=$1 AND kind='shift_note'",[f.stationId])).rows).toHaveLength(2);
+  });
   it("keeps paid clocks and sessions unchanged while saving the exact acknowledged watch facts and original notes", async () => {
     const f = await fixture(), outgoing=f.workers[0]!, incoming=f.workers[1]!;
     await assumeGateWatch(outgoing,{stationId:f.stationId,source:"web",operationId:key()});
     expect((await workdayService.current(outgoing)).workday).toBeNull();
     const prep=await prepareGateHandoff(outgoing,f.stationId,"Original durable notes",async facts=>({source:"facts",facts}));
-    await actOnShiftItem(outgoing,f.stationId,key(),"open","Activity after preparation");
+    await pool.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'open','Activity after preparation')",[f.stationId,outgoing.userId,key()]);
     const current=await getChangeOverState(incoming,f.stationId);
     expect(current.snapshot!.revision).not.toBe(prep.snapshot.revision);
     const input={stationId:f.stationId,source:"ios" as const,operationId:key(),preparationId:prep.id,reviewedRevision:current.snapshot!.revision,acknowledged:true};

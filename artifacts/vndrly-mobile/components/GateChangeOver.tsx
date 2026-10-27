@@ -1,4 +1,5 @@
 import WatchPassControl from "@/components/WatchPassControl";
+import GateAssumeWatchFlyout from "@/components/GateAssumeWatchFlyout";
 import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
@@ -9,7 +10,6 @@ import {
   TextInput,
   useWindowDimensions,
   View,
-  Switch,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Crypto from "expo-crypto";
@@ -137,7 +137,7 @@ export default function GateChangeOver({
   const [recoveryTarget, setRecoveryTarget] = useState("self");
   const [recoveryMenuOpen, setRecoveryMenuOpen] = useState(false);
   const [pendingRecovery, setPendingRecovery] = useState<{ stationId: string; body: { expectedShiftId: string; reason: string; acknowledged: true; targetMembershipId?: number } } | null>(null);
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [assumeOpen,setAssumeOpen]=useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -240,9 +240,8 @@ export default function GateChangeOver({
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
   const online = !loadError;
-  const resetReview = () => { setAcknowledged(false); };
   useEffect(() => {
-    resetReview();
+
     setPendingWatch(null);
     setPendingRecovery(null);
     setRecoveryReason("");
@@ -256,7 +255,7 @@ export default function GateChangeOver({
     notesPageRequest.current = null;
   }, [stationId, user?.id]);
   useEffect(() => {
-    resetReview();
+
   }, [revision, prep?.id, current?.stale, online]);
   useEffect(() => {
     if (prep) setNotes(prep.notes);
@@ -264,7 +263,7 @@ export default function GateChangeOver({
   useEffect(() => {
     const sub = AppState.addEventListener("change", (value) => {
       if (value === "active") {
-        resetReview();
+
         void state.refetch();
         if (history) void log.refetch();
       }
@@ -285,14 +284,14 @@ export default function GateChangeOver({
             : e.message
           : t("changeOver.failed"),
       );
-      resetReview();
+
     } finally {
       setBusy(false);
     }
   };
   const mutate = async (path: string, body: unknown) => {
     await request(`/${stationId}/${path}`, body);
-    resetReview();
+
     await state.refetch();
   };
   const fieldStyle = {
@@ -362,17 +361,17 @@ export default function GateChangeOver({
     await apiFetch("/api/gate-report/email", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format: reportFormat, recipientUserIds: reportRecipientIds, filters: reportFilters }) });
     setError(t("gateHistory.emailed"));
   };
-  const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios"; preparationId?:string; reviewedRevision?:string; acknowledged?:boolean}} | null>(null);
+  const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios";expectedWatchId:string|null;allowUnprepared:boolean;preparationId:string|null; reviewedRevision?:string; acknowledged:boolean}} | null>(null);
   const assumeWatch = async () => {
-    const command = pendingWatch ?? { stationId, body: { operationId: Crypto.randomUUID(), source: "ios" as const, ...(current?.shift && !ownShift ? { preparationId: prep?.id, reviewedRevision: revision, acknowledged } : {}) } };
+    const command = pendingWatch ?? { stationId, body: { operationId: Crypto.randomUUID(), source: "ios" as const,expectedWatchId:(current?.shift??current?.releasedWatch)?.id??null,allowUnprepared:!prep,preparationId:prep?.id??null,reviewedRevision:revision,acknowledged:true } };
     setPendingWatch(command);
     try { await request(`/${command.stationId}/watch/assume`, command.body); }
     catch (error) {
       const status = (error as {status?:number}).status;
-      if (status && status >= 400 && status < 500) { setPendingWatch(null); resetReview(); void state.refetch(); }
+      if (status && status >= 400 && status < 500) { setPendingWatch(null);  void state.refetch(); }
       throw error;
     }
-    setPendingWatch(null); resetReview();
+    setPendingWatch(null); setAssumeOpen(false);
     await state.refetch();
   };
   const recoverAbandonedWatch = async () => {
@@ -391,7 +390,7 @@ export default function GateChangeOver({
     setPendingRecovery(null);
     setRecoveryReason("");
     setRecoveryTarget("self");
-    resetReview();
+
     await state.refetch();
     await cache.invalidateQueries({ queryKey: ["gate-watch-own-duty"] });
     await cache.invalidateQueries({ queryKey: ["work-hub-workforce"] });
@@ -400,13 +399,18 @@ export default function GateChangeOver({
     if (!pendingWatch || !online) return;
     let active = true;
     void request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`).then(result => {
-      if (active && result.receipt) { setPendingWatch(null); resetReview(); void state.refetch(); }
+      if (active && result.receipt) { setPendingWatch(null);  void state.refetch(); }
     }).catch(() => { /* Retain the immutable original command for explicit retry. */ });
     return () => { active = false; };
   }, [pendingWatch, online, state.dataUpdatedAt]);
   const scroll = useRef<ScrollView>(null), reviewY = useRef(0);
+  const confirmAssume=()=>void act(async()=>{
+    if(pendingWatch){const result=await request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`);if(result.receipt){setPendingWatch(null);setAssumeOpen(false);await state.refetch();return;}if(result.receipt!==null)throw Error("The watch change could not be confirmed.");}
+    await assumeWatch();
+  });
   return (
     <ScreenSafeArea>
+      {!history&&assumeOpen&&<GateAssumeWatchFlyout open={assumeOpen} current={current} busy={busy} blocked={!online||state.isError||state.isFetching||!current||ownShift} pending={Boolean(pendingWatch)} error={error} onClose={()=>setAssumeOpen(false)} onAssume={confirmAssume}/>}
       <ScrollView ref={scroll}
         contentContainerStyle={{ padding: 20, gap: 16 }}
         keyboardShouldPersistTaps="handled"
@@ -428,7 +432,7 @@ export default function GateChangeOver({
           </View>
           <AskVVoiceIndicator inline />
         </View>
-        {!history && <WorkdayControls watchControl={<WatchPassControl active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError || (!pendingWatch && Boolean(current.shift && !ownShift && !prep))} onPress={() => { if (pendingWatch) void act(assumeWatch); else if (ownShift) void act(() => mutate("prepare", { notes })); else if (current?.shift && !acknowledged) scroll.current?.scrollTo({ y: reviewY.current, animated: true }); else void act(assumeWatch); }} />} />}
+        {!history && <WorkdayControls watchControl={<WatchPassControl active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError} onPress={() => { if (ownShift&&!pendingWatch) void act(() => mutate("prepare", { notes })); else setAssumeOpen(true); }} />} />}
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
         {params.gateMode === "1" && (
           <TogglePillButton compactOnTablet onPress={() => router.replace("/(tabs)" as never)}>
@@ -530,7 +534,7 @@ export default function GateChangeOver({
           </Text>
         )}
         {button(t("changeOver.refresh"), async () => {
-          resetReview();
+
           await sites.refetch();
           if (siteId) await stations.refetch();
           if (stationId) {
@@ -725,7 +729,7 @@ export default function GateChangeOver({
                     value={notes}
                     onChangeText={(value) => {
                       setNotes(value);
-                      resetReview();
+
                     }}
                   />
                   {button(
@@ -761,8 +765,7 @@ export default function GateChangeOver({
                   ))}
 
                   {ownShift ? label(t("watch.ready")) : <View style={{gap:10}}>
-                    <View style={{flexDirection:"row",alignItems:"center",gap:8}}><Switch accessibilityLabel={t("changeOver.acknowledge")} value={acknowledged} onValueChange={setAcknowledged}/><Text style={{color:colors.foreground,flex:1}}>{t("changeOver.acknowledge")}</Text></View>
-                    {button(t("watch.assume"), assumeWatch, !online || !acknowledged || state.isError)}
+                    {button(t("watch.assume"), async()=>setAssumeOpen(true), !online || state.isError)}
                   </View>}
                   {label(t("watch.independent"))}
                   {(ownShift || current.supervisor) &&

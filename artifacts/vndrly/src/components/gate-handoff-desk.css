@@ -12,6 +12,10 @@
 }
 .handoff-heading { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
 .handoff-heading > div { flex: 1; min-width: 0; }
+.handoff-edit-mini-card{flex-shrink:0;align-self:flex-start;border:1px solid #515156;border-radius:8px;padding:8px 12px;background:#2b2b2f;color:#d1d1d1;font:inherit;font-weight:600;}
+.handoff-edit-mini-card:hover{border-color:var(--brand-primary);color:var(--brand-primary);}.handoff-edit-mini-card:disabled{opacity:.45;}
+.handoff-edit-dialog{padding:20px;gap:14px;background:#242426!important;color:#ececec!important;border-color:var(--brand-primary)!important;}
+.handoff-edit-dialog label{display:grid;gap:8px;}.handoff-edit-dialog textarea{padding:10px;border:1px solid var(--brand-primary);border-radius:8px;background:#303034;color:#ececec;resize:vertical;}
 .handoff-next-actions { flex: 0 1 370px; padding: 9px 12px; border: 1px solid #414145; border-left: 3px solid var(--brand-primary); border-radius: 9px; background: #2b2b2f; }
 .handoff-next-actions h3 { margin: 0; color: #ececec; font-size: 14px; font-weight: 700; }
 .handoff-next-actions p { color: #d1d1d1; }

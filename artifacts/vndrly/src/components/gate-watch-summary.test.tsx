@@ -61,6 +61,7 @@ it("expands the all-gates watch count and uses a text Handoff action for the own
 
 const activeWatches=[{userId:8,name:"Tasha Greene",stationId:"gate-1",siteName:"Antelope Draw",gateName:"Main Gate",watchId:"watch-1",canManage:true},{userId:9,name:"Nadia Farouk",stationId:"gate-2",siteName:"Coyote Ridge",gateName:"East Gate",watchId:"watch-2",canManage:true}];
 function adminSource(path:string) {
+  if(path.endsWith("/state"))return {site:{id:1,name:"Coyote Ridge"},station:{id:"gate-2",name:"East Gate"},shift:{id:"watch-2",operator_id:9,operator_name:"Nadia Farouk",started_at:new Date().toISOString()},preparation:null,snapshot:{revision:"a"},stale:false};
   if(path==="/watches")return {watches:activeWatches};
   if(path.endsWith("/standers"))return {operators:[{userId:10,membershipId:20,name:"Connie Marsh",companyName:"GateGo"}]};
   if(path.endsWith("/roster"))return {roster:[]};return {rows:[]};
@@ -86,11 +87,13 @@ it("keeps an uncertain takeover tied to the original watch and operation for rea
   m.request.mockImplementation(async(path:string)=>{if(path.endsWith("/watch/admin"))throw new Error("Lost response");if(path.includes("/admin-operations/"))return {receipt:{action:"assume",workerName:"Admin"}};return adminSource(path);});
   mount({shift:{operator_id:8}});fireEvent.click(await screen.findByText("On watch"));
   fireEvent.click((await screen.findAllByRole("button",{name:"Assume"}))[1]);
-  const check=await screen.findByRole("button",{name:"Check assignment"});
+  const confirm=await screen.findByRole("button",{name:"ASSUME",exact:true});
+  await waitFor(()=>expect((confirm as HTMLButtonElement).disabled).toBe(false));fireEvent.click(confirm);
+  const check=await screen.findByRole("button",{name:"Check assumption"});
   const original=m.request.mock.calls.find(([path])=>path.endsWith("/watch/admin"))!;
   expect(original[0]).toBe("/gate-2/watch/admin");expect(original[1]).toMatchObject({expectedShiftId:"watch-2",action:"assume"});
-  expect(screen.getAllByRole("button",{name:"Assign"}).every(button=>(button as HTMLButtonElement).disabled)).toBe(true);
-  fireEvent.click(check);expect(await screen.findByText("You assumed the watch.")).toBeTruthy();
+  expect(screen.getAllByRole("button",{name:"Assign",hidden:true}).every(button=>(button as HTMLButtonElement).disabled)).toBe(true);
+  fireEvent.click(check);await waitFor(()=>expect(screen.queryByRole("dialog",{name:"Assume Watch"})).toBeNull());
   expect(m.request).toHaveBeenCalledWith(`/gate-2/watch/admin-operations/${original[1].operationId}`);
   expect(m.request.mock.calls.filter(([path])=>path.endsWith("/watch/admin"))).toHaveLength(1);
 });

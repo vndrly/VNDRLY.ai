@@ -271,7 +271,7 @@ export async function listAvailableGateWatchStanders(session:SessionPayload,stat
   return {operators:(await availableWatchStanders(pool,session,stationId)).map(({session:_session,...person})=>person)};
 }
 
-type AdminWatchInput={stationId:string;expectedShiftId:string;operationId:string;action:"assume"|"assign";targetMembershipId?:number};
+type AdminWatchInput={stationId:string;expectedShiftId:string;operationId:string;action:"assume"|"assign";targetMembershipId?:number;preparationId?:string|null;reviewedRevision?:string;acknowledged?:boolean;allowUnprepared?:boolean};
 async function adminWatchReceipt(client:Queryable,session:SessionPayload,stationId:string,operationId:string) {
   const row=(await client.query("SELECT result_json FROM work_hub_client_operations WHERE user_id=$1 AND command_kind='gate.watch.admin' AND operation_id=$2",[session.userId,operationId])).rows[0];
   if(row&&row.result_json.stationId!==stationId)return fail(409,"operation_conflict","Operation belongs to a different gate");
@@ -306,8 +306,12 @@ export async function administerGateWatch(session:SessionPayload,input:AdminWatc
     await requireChangeOverAccess(c,incoming,access.station.site_id);
     if(input.action==="assume"&&session.userId&&(session.vendorId||session.partnerId))await assertRequiredWorkClear(c,session.userId,session.partnerId?{type:"partner",id:session.partnerId}:{type:"vendor",id:session.vendorId!});
     const facts=await snapshot(c,access.station.site_id,input.stationId,shift.started_at),now=new Date();
+    if(input.action==="assume"&&input.acknowledged!==undefined) {
+      if(!input.acknowledged||(shift.preparation_id??null)!==(input.preparationId??null)||(!shift.preparation_id&&!input.allowUnprepared))return fail(409,"stale","The handover changed. Review it again before assuming the watch.");
+      if(facts.revision!==input.reviewedRevision)return fail(409,"stale","Gate activity changed. Review it again before assuming the watch.");
+    }
     const oldNotes=shift.preparation_id?(await c.query("SELECT notes FROM gate_preparations WHERE id=$1",[shift.preparation_id])).rows[0]?.notes??"":"";
-    await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6)",[input.operationId,shift.id,session.userId,JSON.stringify(facts),oldNotes,JSON.stringify({source:"structured_facts",facts:facts.facts,administrativeTransfer:{actorId:session.userId,action:input.action,assignedUserId:incoming.userId,assigneeAcknowledged:input.action==="assume",physicalAttendanceVerified:false}})]);
+    await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6)",[input.operationId,shift.id,session.userId,JSON.stringify(facts),oldNotes,JSON.stringify({source:"structured_facts",facts:facts.facts,handoverPrepared:Boolean(shift.preparation_id),administrativeTransfer:{actorId:session.userId,action:input.action,assignedUserId:incoming.userId,assigneeAcknowledged:input.action==="assume",physicalAttendanceVerified:false}})]);
     const scheduled=(await c.query(`SELECT s.id,s.title,s.ends_at FROM work_hub_shifts s WHERE s.gate_station_id=$1 AND s.owner_org_type='vendor' AND s.owner_org_id=$2 AND s.starts_at<=$3 AND s.ends_at>$3 AND s.milestone_status<>'cancelled' ORDER BY s.starts_at DESC LIMIT 1 FOR UPDATE`,[input.stationId,incoming.vendorId??null,now])).rows[0];
     if(scheduled) {
       await c.query("UPDATE work_hub_shift_assignments SET status='cancelled' WHERE shift_id=$1 AND user_id=$2 AND status IN ('assigned','accepted','claimed')",[scheduled.id,shift.operator_id]);
@@ -636,7 +640,7 @@ export async function prepareGateHandoff(
   const state = await getChangeOverState(session, stationId);
   if (
     !state.shift ||
-    (state.shift.operator_id !== session.userId &&
+    (state.shift.operator_id !== session.userId && !state.supervisor &&
       !(await activeDutyMember(pool, stationId, session.userId)))
   )
     return fail(
@@ -647,13 +651,13 @@ export async function prepareGateHandoff(
   // Never hold database locks while waiting for an external AI provider.
   const summary = await summarize(state.snapshot!.facts);
   return changeOverTransaction(async (c) => {
-    await stationAccess(c, session, stationId);
+    const access=await stationAccess(c, session, stationId);
     await lockStation(c, stationId);
     const shift = await activeShift(c, stationId);
     if (
       !shift ||
       shift.id !== state.shift.id ||
-      (shift.operator_id !== session.userId &&
+      (shift.operator_id !== session.userId && !access.supervisor &&
         !(await activeDutyMember(c, stationId, session.userId)))
     )
       return fail(409, "shift_changed", "Shift changed; refresh Change Over");
@@ -673,7 +677,28 @@ export async function prepareGateHandoff(
       preparation.id,
       shift.id,
     ]);
+    if(shift.operator_id!==session.userId&&access.supervisor)await c.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'edit_handoff','Handoff amended by supervisor; watch responsibility, paid shifts, and sign-ins unchanged.')",[stationId,session.userId,preparation.id]);
     return preparation;
+  });
+}
+export async function appendGateShiftNote(session:SessionPayload,input:{stationId:string;expectedWatchId:string;operationId:string;text:string}) {
+  const text=input.text.trim();
+  if(!text||text.length>2000)return fail(400,"invalid_note","Enter a note of up to 2,000 characters.");
+  return changeOverTransaction(async c=>{
+    const access=await stationAccess(c,session,input.stationId);await lockStation(c,input.stationId);
+    const prior=(await c.query("SELECT a.*,p.notes FROM gate_shift_actions a JOIN gate_preparations p ON p.id=a.id WHERE a.id=$1",[input.operationId])).rows[0];
+    if(prior){if(prior.station_id!==input.stationId||prior.actor_id!==session.userId||prior.item_id!==input.expectedWatchId||prior.kind!=="shift_note"||prior.text!==text)return fail(409,"operation_conflict","This note request belongs to another note.");return {id:prior.id,notes:prior.notes};}
+    const shift=await activeShift(c,input.stationId);
+    if(!shift||shift.id!==input.expectedWatchId)return fail(409,"shift_changed","The watch changed. Refresh before adding a note.");
+    if(shift.operator_id!==session.userId&&!access.supervisor&&!(await activeDutyMember(c,input.stationId,session.userId)))return fail(403,"owner_required","Current gatekeeper or supervisor required to add shift notes.");
+    const previous=shift.preparation_id?(await c.query("SELECT notes FROM gate_preparations WHERE id=$1 AND shift_id=$2",[shift.preparation_id,shift.id])).rows[0]?.notes??"":"";
+    const now=new Date(),entry=`${now.toISOString()} · ${access.user.display_name??"Gatekeeper"}\n${text}`,notes=[previous,entry].filter(Boolean).join("\n\n");
+    if(notes.length>8000)return fail(400,"notes_full","These shift notes have reached the 8,000-character limit.");
+    const live=await snapshot(c,access.station.site_id,input.stationId,shift.started_at);
+    await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6)",[input.operationId,shift.id,session.userId,JSON.stringify(live),notes,JSON.stringify({source:"structured_facts",facts:live.facts,addedNote:{id:input.operationId,text,authorId:session.userId,createdAt:now.toISOString()}})]);
+    await c.query("UPDATE gate_shifts SET preparation_id=$2 WHERE id=$1",[shift.id,input.operationId]);
+    await c.query("INSERT INTO gate_shift_actions(id,station_id,actor_id,item_id,kind,text,created_at) VALUES($1,$2,$3,$4,'shift_note',$5,$6)",[input.operationId,input.stationId,session.userId,shift.id,text,now]);
+    return {id:input.operationId,notes};
   });
 }
 export async function cancelGateHandoff(
@@ -990,6 +1015,11 @@ export async function transferGateShift(
 }
 
 async function watchReceipt(c: Pick<PoolClient, "query">, session: SessionPayload, stationId: string, operationId: string) {
+  const saved=(await c.query("SELECT result_json FROM work_hub_client_operations WHERE user_id=$1 AND command_kind='gate.watch.assume' AND operation_id=$2",[session.userId,operationId])).rows[0]?.result_json;
+  if(saved) {
+    if(saved.stationId!==stationId||saved.vendorId!==(session.vendorId??null)||saved.partnerId!==(session.partnerId??null))return fail(409,"operation_conflict","Operation belongs to another watch");
+    return saved;
+  }
   const handover = (await c.query(`SELECT h.*, s.station_id, p.summary->>'originalPreparationId' AS original_preparation_id
     FROM gate_handovers h JOIN gate_preparations p ON p.id=h.preparation_id
     JOIN gate_shifts s ON s.id=p.shift_id WHERE h.id=$1`, [operationId])).rows[0];
@@ -1009,11 +1039,12 @@ export async function getGateWatchOperation(session: SessionPayload, stationId: 
   return { receipt: await watchReceipt(pool, session, stationId, operationId) };
 }
 
-/** A worker assumes a prepared watch from their own signed-in device.
+/** A worker explicitly reviews and assumes a watch from their own signed-in device.
  * Authentication, paid shifts, and watch custody are separate boundaries. */
 export async function assumeGateWatch(session: SessionPayload, input: {
   stationId: string; operationId: string; source: "web" | "ios";
   preparationId?: string | null; reviewedRevision?: string; acknowledged?: boolean;
+  expectedWatchId?:string|null;allowUnprepared?:boolean;
 }) {
   return changeOverTransaction(async c => {
     await c.query("LOCK TABLE site_visits, ticket_check_ins, tickets, vendor_people, users, user_org_memberships, site_work_assignments, managed_subcontractor_worker_sponsorships, managed_subcontractor_role_grants IN SHARE ROW EXCLUSIVE MODE");
@@ -1023,6 +1054,10 @@ export async function assumeGateWatch(session: SessionPayload, input: {
     // Check receipts before the current watch: a retry must not assume a later watch.
     const receipt = await watchReceipt(c, session, input.stationId, input.operationId);
     if (receipt) {
+      if(receipt.command) {
+        if(receipt.command!==JSON.stringify(input))return fail(409,"operation_conflict","Operation already used");
+        return receipt;
+      }
       if (receipt.incoming_user_id && (receipt.original_preparation_id ?? receipt.preparation_id) !== input.preparationId) return fail(409, "operation_conflict", "Operation already used");
       return receipt;
     }
@@ -1032,35 +1067,51 @@ export async function assumeGateWatch(session: SessionPayload, input: {
     const active = await activeShift(c, input.stationId);
     const released = !active ? await releasedWatch(c,input.stationId) : null;
     const shift=active??released;
+    const explicitReview=input.expectedWatchId!==undefined;
+    if(explicitReview) {
+      if(!input.acknowledged||(shift?.id??null)!==input.expectedWatchId)return fail(409,"shift_changed","The watch changed. Review it again before assuming.");
+      if((shift?.preparation_id??null)!==(input.preparationId??null))return fail(409,"stale","The handover changed. Review it again before assuming.");
+      if(!shift?.preparation_id&&!input.allowUnprepared)return fail(409,"acknowledgment_required","Confirm that no handover was prepared before assuming.");
+      await c.query("SELECT id FROM users WHERE id=$1 FOR UPDATE",[session.userId]);
+      if((await c.query("SELECT id FROM gate_shifts WHERE operator_id=$1 AND ended_at IS NULL AND station_id<>$2 LIMIT 1",[session.userId,input.stationId])).rowCount)return fail(409,"operator_on_watch","End your current watch before assuming another watch.");
+    }
+    const saveReceipt=async(result:Record<string,unknown>)=>{
+      if(!explicitReview)return result;
+      const saved={...result,stationId:input.stationId,vendorId:session.vendorId??null,partnerId:session.partnerId??null,command:JSON.stringify(input)};
+      await c.query("INSERT INTO work_hub_client_operations(user_id,command_kind,operation_id,owner_org_type,owner_org_id,result_json,applied_at) VALUES($1,'gate.watch.assume',$2,$3,$4,$5::jsonb,now())",[session.userId,input.operationId,session.vendorId?"vendor":"partner",session.vendorId??access.site.partner_id,JSON.stringify(saved)]);
+      return saved;
+    };
     if (shift && (released || shift.operator_id !== session.userId)) {
-      if (!input.acknowledged || !input.preparationId || input.preparationId !== shift.preparation_id) return fail(409, "acknowledgment_required", "The outgoing worker must prepare the handover. Review and acknowledge its notes before assuming this watch.");
-      const prep = (await c.query("SELECT * FROM gate_preparations WHERE id=$1 AND shift_id=$2", [input.preparationId, shift.id])).rows[0];
+      const unprepared=explicitReview&&!shift.preparation_id&&input.allowUnprepared;
+      if (!unprepared&&(!input.acknowledged || !input.preparationId || input.preparationId !== shift.preparation_id)) return fail(409, "acknowledgment_required", "Review the handover before assuming this watch.");
+      const prep = unprepared?null:(await c.query("SELECT * FROM gate_preparations WHERE id=$1 AND shift_id=$2", [input.preparationId, shift.id])).rows[0];
       const live = await snapshot(c, access.station.site_id, input.stationId, shift.started_at);
       // Notes survive sign-out and elapsed time. Incoming review must still match
       // the live site revision, rather than silently acknowledge new activity.
-      if (!prep || live.revision !== input.reviewedRevision) return fail(409, "stale", "Activity changed. Review the current watch and handover notes again.");
+      if ((!unprepared&&!prep) || live.revision !== input.reviewedRevision) return fail(409, "stale", "Activity changed. Review the current watch and handover notes again.");
       if (session.userId && (session.vendorId || session.partnerId)) await assertRequiredWorkClear(c, session.userId, session.partnerId ? { type: "partner", id: session.partnerId } : { type: "vendor", id: session.vendorId! });
       const now = new Date();
       // Keep outgoing notes immutable and save exactly the live facts acknowledged.
       await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6)",
-        [input.operationId, shift.id, prep.prepared_by, live, prep.notes, { source: "structured_facts", facts: live.facts, originalPreparationId: prep.id, acknowledgedBy: session.userId }]);
+        [input.operationId, shift.id, prep?.prepared_by??session.userId, live, prep?.notes??"", { source: "structured_facts", facts: live.facts, originalPreparationId: prep?.id??null, handoverPrepared:!unprepared,acknowledgedBy: session.userId }]);
       await c.query("UPDATE gate_shifts SET ended_at=$1 WHERE id=$2 AND ended_at IS NULL", [now, shift.id]);
       const next = (await c.query("INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING id", [input.stationId, session.userId, now])).rows[0];
       const handover = (await c.query(`INSERT INTO gate_handovers(id,preparation_id,incoming_shift_id,incoming_user_id,outgoing_name,incoming_name,acknowledged_at)
         VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [input.operationId, input.operationId, next.id, session.userId, shift.operator_name ?? "Gatekeeper", access.user.display_name ?? "Gatekeeper", now])).rows[0];
-      await c.query("UPDATE gate_duty_sessions SET ended_at=$3,ended_by_user_id=$2,end_reason='Completed acknowledged watch handover' WHERE station_id=$1 AND user_id=$4 AND ended_at IS NULL", [input.stationId, session.userId, now, shift.operator_id]);
+      await c.query("UPDATE gate_duty_sessions SET ended_at=$3,ended_by_user_id=$2,end_reason=$5 WHERE station_id=$1 AND user_id=$4 AND ended_at IS NULL", [input.stationId, session.userId, now, shift.operator_id,unprepared?"Watch assumed without a prepared handover":"Completed acknowledged watch handover"]);
       await c.query(`INSERT INTO gate_duty_sessions(station_id,user_id,started_at,source,idempotency_key,post_coverage)
         SELECT $1,$2,$3,$4,$5,$6::jsonb WHERE NOT EXISTS (SELECT 1 FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL)`, [input.stationId, session.userId, now, input.source, input.operationId, JSON.stringify(session.vendorId ? { vendorId: session.vendorId } : {})]);
-      return handover;
+      if(unprepared)await c.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'assume_without_handoff','No handover prepared; incoming operator explicitly assumed watch responsibility. Paid shifts and sign-ins unchanged.')",[input.stationId,session.userId,input.operationId]);
+      return saveReceipt(handover);
     }
     if (!shift) {
       if (input.preparationId) return fail(409, "stale", "The watch changed. Refresh before assuming it.");
       if (session.userId && (session.vendorId || session.partnerId)) await assertRequiredWorkClear(c, session.userId, session.partnerId ? { type: "partner", id: session.partnerId } : { type: "vendor", id: session.vendorId! });
       await c.query("INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING id", [input.stationId, session.userId, new Date()]);
     }
-    if (own) return own;
-    return (await c.query(`INSERT INTO gate_duty_sessions(station_id,user_id,started_at,source,idempotency_key,post_coverage)
-      VALUES($1,$2,$3,$4,$5,$6::jsonb) RETURNING *`, [input.stationId, session.userId, new Date(), input.source, input.operationId, JSON.stringify(session.vendorId ? { vendorId: session.vendorId } : {})])).rows[0];
+    if (own) return saveReceipt(own);
+    return saveReceipt((await c.query(`INSERT INTO gate_duty_sessions(station_id,user_id,started_at,source,idempotency_key,post_coverage)
+      VALUES($1,$2,$3,$4,$5,$6::jsonb) RETURNING *`, [input.stationId, session.userId, new Date(), input.source, input.operationId, JSON.stringify({... (session.vendorId ? { vendorId: session.vendorId } : {}),handoverPrepared:Boolean(shift?.preparation_id)})])).rows[0]);
   });
 }
 

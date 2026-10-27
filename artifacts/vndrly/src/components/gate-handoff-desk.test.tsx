@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ChangeOverState } from "@workspace/gate-booth";
 import GateHandoffDesk, { type GateHandoffDeskProps } from "./gate-handoff-desk";
 
@@ -44,7 +44,34 @@ it("reviews saved facts, actions and notes through one explicit custody action",
   expect(callbacks.onSave).not.toHaveBeenCalled();
 });
 
-it.each(["offline", "readError", "stale", "mismatchedRevision", "pending", "busy"])("blocks incoming assumption for %s", (condition) => {
+it("replaces withdrawal with a top-right Edit Shift control that saves revised notes",async()=>{
+  const current=state();current.supervisor=true;
+  const onEditSave=vi.fn().mockResolvedValue(undefined);
+  render(<GateHandoffDesk {...props({current,onEditSave})}/>);
+  expect(screen.queryByText("handoffDesk.withdraw")).toBeNull();
+  expect(screen.getByRole("button",{name:"handoffDesk.editShift"}).closest("header")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button",{name:"handoffDesk.editShift"}));
+  const editor=screen.getByRole("textbox",{name:"handoffDesk.savedNotes"});expect((editor as HTMLTextAreaElement).value).toBe("Saved notes");
+  fireEvent.change(editor,{target:{value:"Revised shift notes"}});fireEvent.click(screen.getByRole("button",{name:"handoffDesk.save"}));
+  await waitFor(()=>expect(onEditSave).toHaveBeenCalledWith("Revised shift notes"));
+  await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());
+});
+it("adds a new note and expands Shift Notes with the saved entry above the composer",async()=>{
+  let current=state();current.supervisor=true;
+  const onAddNote=vi.fn().mockImplementation(async input=>{
+    current={...current,preparation:{...current.preparation!,id:input.operationId,notes:`Saved notes\n\nNew operator note: ${input.text}`}};
+    view.rerender(<GateHandoffDesk {...props({current,onAddNote})}/>);
+  });
+  const view=render(<GateHandoffDesk {...props({current,onAddNote})}/>);
+  fireEvent.click(screen.getByText("handoffDesk.addNewNote"));fireEvent.change(screen.getByRole("textbox",{name:"handoffDesk.newNote"}),{target:{value:"Delivery moved to the east gate"}});
+  fireEvent.click(screen.getByRole("button",{name:"handoffDesk.addNote"}));
+  await waitFor(()=>expect(onAddNote).toHaveBeenCalledWith({operationId:expect.any(String),expectedWatchId:"watch",text:"Delivery moved to the east gate"}));
+  const branch=screen.getByRole("group",{name:"handoffDesk.savedNotes"}) as HTMLDetailsElement;
+  await waitFor(()=>expect(branch.open).toBe(true));expect(within(branch).getByText(/Delivery moved to the east gate/)).toBeTruthy();
+  expect((screen.getByRole("textbox",{name:"handoffDesk.newNote"}) as HTMLTextAreaElement).value).toBe("");
+});
+
+it.each(["offline", "readError", "pending", "busy"])("blocks incoming assumption for %s", (condition) => {
   const current = state();
   if (condition === "stale") current.stale = true;
   if (condition === "mismatchedRevision") current.snapshot = { ...current.snapshot!, revision: "later" };
@@ -88,7 +115,7 @@ it("identifies the actual operator while incoming waits for a saved handoff", ()
   render(<GateHandoffDesk {...props({ current: { ...state(), preparation: null } })} />);
   expect(screen.getByText("handoffDesk.waiting: Actual operator")).toBeTruthy();
   expect(screen.queryByRole("textbox")).toBeNull();
-  expect(screen.queryByRole("button", { name: "handoffDesk.assume" })).toBeNull();
+  expect((screen.getByRole("button", { name: "handoffDesk.assume" }) as HTMLButtonElement).disabled).toBe(false);
 });
 
 it("keeps a released watch's saved notes reviewable before the next operator assumes",()=>{
