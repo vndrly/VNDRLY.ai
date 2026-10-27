@@ -13,7 +13,9 @@ it("opens a flyout with other admins and office staff, then uses the current ver
   expect(await screen.findByRole("button", { name: /Office colleague/ })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: /Other admin/ }));
   await waitFor(() => expect(mocks.request.mock.calls.some(([path, init]) => path === "/tasks/task-id" && init?.method === "PATCH")).toBe(true));
-  const body = JSON.parse(mocks.request.mock.calls.find(([path]) => path === "/tasks/task-id")[1].body);
+  const assignmentCall = mocks.request.mock.calls.find(([path]) => path === "/tasks/task-id");
+  expect(assignmentCall).toBeDefined();
+  const body = JSON.parse(assignmentCall![1].body);
   expect(body).toMatchObject({ expectedVersion: 4, owner: { type: "vendor", id: 1 }, payload: { assigneeUserId: 9 } });
   expect(body.operationId).toBeTruthy();
 });
