@@ -1,5 +1,5 @@
 name: Deploy API
-# Full-ship API verification: 2026-09-04
+# Full-ship API verification: 2026-10-27
 
 on:
   push:

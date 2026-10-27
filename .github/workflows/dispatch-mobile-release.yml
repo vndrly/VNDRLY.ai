@@ -1,5 +1,7 @@
 name: Dispatch mobile release
 
+# Full-ship dispatch trigger: 2026-10-27T08:10Z
+
 # The cloud-agent GitHub token cannot call workflow_dispatch. This
 # workflow runs only when this file changes and starts the iOS OTA and
 # TestFlight tracks for the current main commit. GITHUB_TOKEN is
