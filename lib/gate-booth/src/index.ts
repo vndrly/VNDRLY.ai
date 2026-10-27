@@ -160,3 +160,4 @@ export function onSiteDwell(input: {
   };
 }
 export * from "./change-over";
+export type { GateWatchTimeline } from "./watch-timeline";

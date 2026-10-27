@@ -293,7 +293,7 @@ export default function GateChangeOverPage({
   const watchSaved = async () => {
     setPendingWatch(null);
     await cache.invalidateQueries({ queryKey: ["gate-watch-own-duty"] });
-    await cache.invalidateQueries({ queryKey: ["gate-watch-previous-notes"] });
+    await cache.invalidateQueries({ queryKey: ["gate-watch-timeline"] });
     await cache.invalidateQueries({ queryKey: ["gate-active-watches"] });
     await state.refetch();
   };

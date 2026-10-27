@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import GateWatchSummary from "./gate-watch-summary";
@@ -8,21 +8,45 @@ vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, vendor
 beforeEach(() => { m.request.mockReset(); });
 afterEach(cleanup);
 function mount(current: any) { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateWatchSummary stationId="gate-1" current={current} /></QueryClientProvider>); }
-it("shows personal scheduled watches and the actual previous handoff", async () => {
-  const startedAt = new Date(Date.now() - 90 * 60000).toISOString();
-  m.request.mockImplementation(async (path: string) => path.endsWith("/roster") ? { roster: [{ userId: 7, startedAt }] } : { rows: [{ outgoing_name: "Previous operator", acknowledged_at: new Date().toISOString(), notes: "West lane needs attention", snapshot: { openItems: [{ status: "open" }] } }] });
+it("expands the last completed watch and its notes at each site, plus the next scheduled watch", async () => {
+  const startedAt = new Date(Date.now() - 90 * 60000).toISOString(), endedAt = new Date().toISOString();
+  m.request.mockImplementation(async (path: string) => path === "/watch-timeline" ? { sites: [
+    { siteId: 21, siteName: "West site", previous: { watchId: "watch-1", stationId: "gate-2", name: "Previous operator", gateName: "West Gate", startedAt, endedAt, notes: "West lane needs attention", filedAt: endedAt, handoffId: "handoff-1" }, next: { shiftId: "shift-1", stationId: "gate-2", gateName: "West Gate", startsAt: endedAt, endsAt: endedAt, timezone: "America/Chicago", people: [{ userId: 8, name: "Next operator" }] } },
+    { siteId: 22, siteName: "East site", previous: { watchId: "watch-2", stationId: "gate-3", name: "Released operator", gateName: "East Gate", startedAt, endedAt, notes: "Saved before next watch arrives", filedAt: endedAt, handoffId: null }, next: { shiftId: "shift-2", stationId: "gate-3", gateName: "East Gate", startsAt: endedAt, endsAt: endedAt, timezone: "America/Chicago", people: [] } },
+  ] } : { watches: [] });
   mount({ shift: { operator_id: 7, started_at: new Date(Date.now() - 90 * 60000).toISOString() } });
   expect(await screen.findByText("My Watch")).toBeTruthy();
   expect(screen.queryByText("1h 30m")).toBeNull();
+  const previous = screen.getByText("Previous watch").closest("details")!;
+  expect(previous.open).toBe(false); fireEvent.click(screen.getByText("Previous watch"));
+  await waitFor(() => expect(within(previous).getByText("2")).toBeTruthy());
   expect(await screen.findByText("West lane needs attention")).toBeTruthy();
-  expect(m.request).toHaveBeenCalledWith("/gate-1/notes?days=30");
+  expect(screen.getByText("Saved before next watch arrives")).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Open shift notes" }).getAttribute("href")).toBe("/gate/shift-notes?siteId=21&stationId=gate-2&handoffId=handoff-1");
+  expect(within(previous).getAllByText(/^Notes filed/)).toHaveLength(2);
+  const next = screen.getByText("Next Watch").closest("details")!;
+  expect(next.open).toBe(false); fireEvent.click(screen.getByText("Next Watch"));
+  expect(within(next).getByText("Next operator")).toBeTruthy(); expect(within(next).getByText("Unassigned")).toBeTruthy();
+  expect(m.request).toHaveBeenCalledWith("/watch-timeline");
+  expect(m.request).not.toHaveBeenCalledWith("/gate-1/notes?days=30");
 });
 it("does not count another operator's hours or turn failed notes into an empty handoff", async () => {
   m.request.mockImplementation(async (path: string) => { if (path.endsWith("/roster")) return { roster: [{ userId: 8, startedAt: new Date().toISOString() }] }; throw new Error("offline"); });
   mount({ shift: { operator_id: 8, started_at: new Date(Date.now() - 60 * 60000).toISOString() } });
   expect(await screen.findByText("Schedule unavailable")).toBeTruthy();
-  expect(await screen.findByText("Handoff notes unavailable.")).toBeTruthy();
-  expect(screen.queryByText("No recorded handoff in the last 30 days.")).toBeNull();
+  expect(await screen.findAllByText("Watch history and schedule unavailable.")).toHaveLength(2);
+  expect(screen.queryByText("No completed watch recorded.")).toBeNull();
+});
+it("keeps sites with missing history or schedules visible without inventing notes", async () => {
+  m.request.mockImplementation(async (path: string) => path === "/watch-timeline" ? { sites: [
+    { siteId: 21, siteName: "New site", previous: null, next: null },
+    { siteId: 22, siteName: "West site", previous: { watchId: "watch-1", stationId: "gate-2", gateName: "West Gate", name: "Previous operator", endedAt: new Date().toISOString(), notes: null, filedAt: null, handoffId: null }, next: null },
+  ] } : { watches: [] });
+  mount({ shift: { operator_id: 7 } });
+  expect(await screen.findByText("No saved shift notes for this watch.")).toBeTruthy();
+  expect(screen.getByText("No completed watch recorded.")).toBeTruthy();
+  expect(screen.getAllByText("No upcoming watch scheduled.")).toHaveLength(2);
+  expect(screen.queryByRole("link", { name: "Open shift notes", hidden: true })).toBeNull();
 });
 it("expands the all-gates watch count and uses a text Handoff action for the owner",async()=>{
   const onHandoff=vi.fn(),onAssume=vi.fn();

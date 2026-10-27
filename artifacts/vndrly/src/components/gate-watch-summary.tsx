@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock3, NotebookPen, UserCheck } from "lucide-react";
+import { Clock3, UserCheck } from "lucide-react";
 import { WorkspacePanel } from "@/components/work-hub/workspace-panel";
 import { useTranslation } from "react-i18next";
-import type { ChangeOverState, ShiftNotesResponse } from "@workspace/gate-booth";
+import type { ChangeOverState } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import { changeOverRequest } from "@/lib/change-over-api";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import MyWatchSchedule from "./gate-my-watch-schedule";
 import GateRecentShiftNotes from "./gate-recent-shift-notes";
+import GateWatchTimeline from "./gate-watch-timeline";
 
 type Watch = {userId:number;name:string;stationId:string;siteName:string;gateName:string;startedAt:string;watchId?:string|null;canManage?:boolean};
 type AdminCommand = {stationId:string;body:{operationId:string;expectedShiftId:string;action:"assume"|"assign";targetMembershipId?:number}};
@@ -19,15 +20,13 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
   const [assignGate,setAssignGate]=useState<string|null>(null),[pendingAdmin,setPendingAdmin]=useState<AdminCommand|null>(null),[adminBusy,setAdminBusy]=useState(false),[adminMessage,setAdminMessage]=useState("");
   const [assignWatchId,setAssignWatchId]=useState<string|null>(null);
   useEffect(()=>{setAssignGate(null);setPendingAdmin(null);setAdminMessage("");},[user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId]);
-  const notes = useQuery({ queryKey: ["gate-watch-previous-notes", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, stationId], queryFn: () => changeOverRequest<ShiftNotesResponse>(`/${stationId}/notes?days=30`), enabled: Boolean(stationId), retry: false, throwOnError: false });
   const watches=useQuery({queryKey:["gate-active-watches",user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId],queryFn:()=>changeOverRequest<{watches:Watch[]}>("/watches"),retry:false,refetchInterval:15000});
   const standers=useQuery({queryKey:["gate-watch-standers",user?.userId,user?.activeMembershipId,assignGate],queryFn:()=>changeOverRequest<{operators:{userId:number;membershipId:number;name:string;companyName:string}[]}>(`/${assignGate}/watch/standers`),enabled:Boolean(assignGate),retry:false,staleTime:0});
   const ownsWatch=current?.shift?.operator_id===user?.userId;
-  const previous = notes.data?.rows?.[0];
   const c = (en: string, spanish: string) => es ? spanish : en;
   const saved=async(receipt:{action:string;workerName:string})=>{
     setPendingAdmin(null);setAssignGate(null);setAdminMessage(receipt.action==="assume"?c("You assumed the watch.","Has asumido la vigilancia."):c(`Assigned to ${receipt.workerName}. Notification queued.`,`Asignado a ${receipt.workerName}. Notificación en cola.`));
-    await Promise.all(["gate-active-watches","gate-watch-own-duty","gate-watch-previous-notes","change-over-state","gate-recovery-operators","work-hub-workforce","gate-watch-standers"].map(key=>cache.invalidateQueries({queryKey:[key]})));
+    await Promise.all(["gate-active-watches","gate-watch-own-duty","gate-watch-timeline","change-over-state","gate-recovery-operators","work-hub-workforce","gate-watch-standers"].map(key=>cache.invalidateQueries({queryKey:[key]})));
   };
   const administer=async(command:AdminCommand)=>{
     if(adminBusy)return;setAdminBusy(true);setPendingAdmin(command);setAdminMessage("");
@@ -64,15 +63,7 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
     </div>
     {adminMessage&&<p role="status" className="gate-watch-admin-message">{adminMessage}</p>}
     {pendingAdmin&&!adminBusy&&<button type="button" className="gate-watch-text-action" onClick={()=>void checkAssignment()}>{c("Check assignment","Comprobar asignación")}</button>}
-    <details className="gate-panel-disclosure">
-      <summary><NotebookPen aria-hidden="true" /> <span>{c("Previous watch", "Vigilancia anterior")}</span><small>{previous?.outgoing_name ?? c("Notes", "Notas")}</small></summary>
-      <div className="gate-panel-detail">
-        {notes.isPending ? <p>{c("Loading handoff notes…", "Cargando notas del relevo…")}</p> : notes.isError ? <p role="status">{c("Handoff notes unavailable.", "Notas del relevo no disponibles.")}</p> : previous ? <>
-          <p>{previous.outgoing_name} · {new Date(previous.acknowledged_at).toLocaleString()}</p>
-          <p className="whitespace-pre-wrap">{previous.notes || c("No written notes in this handoff.", "Este relevo no tiene notas escritas.")}</p>
-        </> : <p>{c("No recorded handoff in the last 30 days.", "No hay relevos registrados en los últimos 30 días.")}</p>}
-      </div>
-    </details>
+    <GateWatchTimeline />
     <GateRecentShiftNotes key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${stationId}`} stationId={stationId} siteId={current?.site?.id} />
   </WorkspacePanel>;
 }

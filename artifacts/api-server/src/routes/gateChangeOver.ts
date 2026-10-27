@@ -15,6 +15,7 @@ import {
 } from "../services/gate-change-over-auth";
 import { summarizeShiftFacts } from "../services/gate-change-over-summary";
 import { listMyScheduledWatches, respondToScheduledWatch } from "../services/gate-watch-schedule";
+import { listGateWatchTimeline } from "../services/gate-watch-timeline";
 import {
   ChangeOverError,
   listChangeOverSites,
@@ -97,6 +98,7 @@ router.post("/gate-change-over/my-scheduled-watches/:shiftId/response", async(re
 const sessionFor = (req: Parameters<typeof getSessionFromRequest>[0]) =>
   getSessionFromRequest(req)!;
 router.get("/gate-change-over/watches",async(req,res)=>res.json(await listActiveGateWatches(sessionFor(req))));
+router.get("/gate-change-over/watch-timeline",async(req,res)=>res.json(await listGateWatchTimeline(sessionFor(req))));
 router.get("/gate-change-over/:stationId/watch/standers",async(req,res)=>res.json(await listAvailableGateWatchStanders(sessionFor(req),uuid.parse(req.params.stationId))));
 router.get("/gate-change-over/:stationId/watch/admin-operations/:operationId",async(req,res)=>res.json(await getAdminGateWatchOperation(sessionFor(req),uuid.parse(req.params.stationId),uuid.parse(req.params.operationId))));
 router.post("/gate-change-over/:stationId/watch/admin",async(req,res)=>{
