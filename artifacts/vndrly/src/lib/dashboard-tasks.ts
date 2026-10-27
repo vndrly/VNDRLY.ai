@@ -3,7 +3,8 @@ export type DashboardTask = {
   assigneeName?: string | null; createdAt: string; assignedAt?: string | null; completedAt?: string | null;
   siteName?: string; gateName?: string;
   version?: number; ownerOrgType?: "vendor" | "partner"; ownerOrgId?: number;
-  gateHopper?: { completedById?: number; completedAt?: string; clearedAt?: string } | null;
+  completionResolution?: string | null;
+  gateHopper?: { completedById?: number; completedAt?: string; completionNote?: string; clearedAt?: string } | null;
 };
 export type DashboardTaskPage = { tasks: DashboardTask[]; scope: "self" | "company"; nextCursor: string | null };
 export type DashboardTaskGroup = "new" | "unassigned" | "unstarted" | "progress" | "stale" | "completed";

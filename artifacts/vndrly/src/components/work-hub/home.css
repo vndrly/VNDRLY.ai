@@ -41,11 +41,26 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-task-unassigned-total { color: #fbbf24; }
 .hub-task-record { border-bottom: 1px solid #343434; padding-bottom: 9px; }
 .hub-task-record > .hub-mini-record { border-bottom: 0; padding-bottom: 2px; }
+.hub-task-record > .hub-mini-record > div { flex: 1; min-width: 0; }
+.hub-task-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.hub-task-meta > .hub-task-elapsed { flex-shrink: 0; text-align: right; }
 .hub-task-footer { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: 11px; }
 .hub-task-elapsed { color: #a3a3a3; font-size: 11px; }
 .hub-task-record.hub-task-mine .hub-task-elapsed { color: #4ade80; }
 .hub-task-record.hub-task-stale .hub-task-elapsed { color: #fbbf24; }
-.hub-task-assignment { flex-shrink: 0; margin-left: auto; color: #a3a3a3; font-size: 11px; }
+.hub-task-assignment { flex-shrink: 0; color: #a3a3a3; font-size: 11px; }
+.hub-task-completion { margin-left: auto; flex-shrink: 0; }
+.hub-task-complete-control { display: inline-flex; align-items: center; gap: 7px; min-height: 28px; color: #a3a3a3; font-size: 11px; }
+.hub-task-complete-line { display: inline-block; position: relative; width: 30px; height: 2px; background: #777; margin-inline: 4px; }
+.hub-task-complete-line > span { position: absolute; left: -4px; top: -4px; height: 10px; width: 10px; border-radius: 50%; background: #a3a3a3; }
+.hub-task-complete-control.is-complete { color: #4ade80; }
+.hub-task-complete-control.is-complete .hub-task-complete-line,.hub-task-complete-control.is-complete .hub-task-complete-line > span { background: #4ade80; }
+.hub-task-complete-control.is-complete .hub-task-complete-line > span { left: 24px; }
+.hub-task-complete-control:hover,.hub-task-complete-control:focus-visible { color: var(--brand-primary); }
+.hub-task-complete-control:focus-visible { outline: 1px solid var(--brand-primary); outline-offset: 3px; }
+.hub-task-resolution form { display: grid; gap: 10px; }
+.hub-task-resolution textarea { display: block; margin-top: 5px; width: 100%; padding: 7px; border: 1px solid var(--brand-primary); border-radius: 6px; background: #303034; color: #ececec; font: inherit; font-size: 13px; }
+.hub-task-resolution p { font-size: 12px; white-space: pre-wrap; }
 .hub-task-assignment button:hover:not(:disabled),.hub-task-assignment button:focus-visible { color: var(--brand-primary); }
 .hub-task-assignment button:disabled { opacity: .45; cursor: default; }
 .hub-task-assignment-flyout { background: #2b2b2f; color: #ececec; border-color: var(--brand-primary); padding: 10px; }

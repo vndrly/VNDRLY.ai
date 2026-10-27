@@ -1473,16 +1473,19 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     const payload = z
       .object({
-        action: z.enum(["update", "reschedule", "cancel"]).optional(),
+        action: z.enum(["update", "reschedule", "cancel", "complete"]).optional(),
         title: z.string().trim().min(1).max(200).optional(),
         description: z.string().max(20_000).nullable().optional(),
         assigneeUserId: z.number().int().positive().nullable().optional(),
         dueAt: z.iso.datetime().nullable().optional(),
         priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
         status: z.enum(["open", "in_progress", "completed", "cancelled"]).optional(),
+        resolution: z.string().trim().min(1).max(2000).optional(),
       })
+      .refine(value => value.action !== "complete" || Boolean(value.resolution), "Resolution is required before completing this task")
       .parse(envelope.payload);
-    const session = payload.assigneeUserId !== undefined ? await currentTaskAssignmentSession(savedSession) as Actor : savedSession;
+    const session = payload.assigneeUserId !== undefined || payload.action === "complete" ? await currentTaskAssignmentSession(savedSession) as Actor : savedSession;
+    if (!sessionCanSeeOwner(session, envelope.owner.type, envelope.owner.id)) throw new WorkHubAccessError("not_found");
     const assignmentManager = canManageTaskAssignments(session);
     let assignmentChanged = false;
     const result = await executeWorkHubCommand(
@@ -1508,7 +1511,8 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           current.createdById !== session.userId &&
           session.role !== "admin" &&
           session.membershipRole !== "admin" &&
-          !(assignmentManager && Object.keys(payload).every(key => key === "assigneeUserId"))
+          !(assignmentManager && (payload.assigneeUserId !== undefined && Object.keys(payload).every(key => key === "assigneeUserId") ||
+            payload.action === "complete" && Object.keys(payload).every(key => ["action", "resolution"].includes(key))))
         )
           throw new WorkHubAccessError("forbidden");
         if (current.version !== envelope.expectedVersion)
@@ -1518,7 +1522,8 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           await assertOwnerUsers(envelope.owner, payload.assigneeUserId ? [payload.assigneeUserId] : []);
           if (payload.assigneeUserId && !(await taskAssignmentPeople(envelope.owner)).some(person => person.userId === payload.assigneeUserId)) throw new WorkHubAccessError("forbidden");
         }
-        const status = payload.action === "cancel" ? "cancelled" : payload.status;
+        if (payload.action === "complete" && ["completed", "cancelled"].includes(current.status)) throw new ChangeOverError(409, "work_hub.task_closed", "Task is no longer active");
+        const status = payload.action === "complete" ? "completed" : payload.action === "cancel" ? "cancelled" : payload.status;
         const [updated] = await tx
           .update(workHubTasksTable)
           .set({
@@ -1537,6 +1542,7 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           taskId: current.id,
           actorUserId: session.userId,
           eventType: status && status !== current.status ? `status.${status}` : "updated",
+          ...(payload.action === "complete" ? { detail: { resolution: payload.resolution!, completedById: session.userId } } : {}),
         });
         if (payload.assigneeUserId !== undefined && payload.assigneeUserId !== current.assigneeUserId) {
           assignmentChanged = true;

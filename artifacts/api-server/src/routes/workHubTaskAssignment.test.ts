@@ -57,4 +57,19 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("Dashboard ta
     expect(results.map(result => result.status).sort()).toEqual([200, 409]);
     expect(notify).toHaveBeenCalledTimes(1);
   });
+  it("requires Resolution for the Dashboard completion action, stores actor/time once and exposes the saved resolution", async () => {
+    const f = await fixture();
+    const body = { operationId: randomUUID(), owner: { type: "vendor", id: f.vendor }, context: { kind: "organization", id: f.vendor }, payloadVersion: 1, expectedVersion: 1, payload: { action: "complete", resolution: "Radio replaced and verified" } };
+    const patch = (value: unknown) => request(app).patch(`/work-hub/tasks/${f.task.id}`).set("Cookie", f.people[1].cookie).send(value);
+    expect((await patch({ ...body, payload: { action: "complete" } })).status).toBe(400);
+    expect((await pool.query("SELECT status,version FROM work_hub_tasks WHERE id=$1", [f.task.id])).rows[0]).toEqual({ status: "open", version: 1 });
+    expect((await patch(body)).status).toBe(200);
+    expect((await patch(body)).body.replayed).toBe(true);
+    const events = (await pool.query("SELECT actor_user_id,created_at,detail FROM work_hub_task_events WHERE task_id=$1 AND event_type='status.completed'", [f.task.id])).rows;
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ actor_user_id: f.people[1].id, detail: { completedById: f.people[1].id, resolution: "Radio replaced and verified" } });
+    expect(events[0].created_at).toBeInstanceOf(Date);
+    const dashboard = await request(app).get('/work-hub/tasks?dashboard=1').set('Cookie', f.people[1].cookie);
+    expect(dashboard.body.tasks.find((row: { id: string }) => row.id === f.task.id)).toMatchObject({ status: "completed", completionResolution: "Radio replaced and verified", completedAt: events[0].created_at.toISOString() });
+  });
 });

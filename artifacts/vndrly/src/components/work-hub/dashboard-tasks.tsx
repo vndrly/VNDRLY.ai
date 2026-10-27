@@ -8,6 +8,7 @@ import { workHubRequest } from "@/lib/work-hub-client";
 import { dashboardTasksForGroup, isStaleDashboardTask, isUnassignedDashboardTask, readDashboardTasks, readDashboardUnassigned, taskElapsed, type DashboardTaskGroup } from "@/lib/dashboard-tasks";
 import DashboardShiftHours from "./dashboard-shift-hours";
 import DashboardTaskAssignment from "./dashboard-task-assignment";
+import DashboardTaskCompletion from "./dashboard-task-completion";
 import { WorkspacePanel, WorkspaceRow } from "./workspace-panel";
 
 /** The server returns personal tasks or the authorized company's complete task list. */
@@ -50,11 +51,13 @@ export default function DashboardTasks() {
             const elapsed = taskElapsed(task, now), own = company && (task.gateHopper?.completedById ?? task.assigneeUserId) === user?.userId;
             const staleUnassigned = isUnassignedDashboardTask(task) && isStaleDashboardTask(task, now);
             return <div className={`hub-task-record${own ? " hub-task-mine" : ""}${staleUnassigned ? " hub-task-stale" : ""}`} key={task.id}><Link className={`hub-mini-record${own ? " hub-task-mine" : ""}${staleUnassigned ? " hub-task-stale" : ""}`} href={`/work-hub/tasks?task=${encodeURIComponent(task.id)}`}>
-              <div><strong>{task.title}</strong><small>{task.assigneeName ?? (task.assigneeUserId ? `${c("Employee", "Empleado")} ${task.assigneeUserId}` : c("Unassigned", "Sin asignar"))} · {task.status.replaceAll("_", " ")}</small>
+              <div><strong>{task.title}</strong><div className="hub-task-meta"><small>{task.assigneeName ?? (task.assigneeUserId ? `${c("Employee", "Empleado")} ${task.assigneeUserId}` : c("Unassigned", "Sin asignar"))} · {task.status.replaceAll("_", " ")}</small>
+                <small className="hub-task-elapsed">{elapsed ? task.status === "completed" ? `${c("Completed in", "Completada en")} ${elapsed}` : `${isUnassignedDashboardTask(task) ? c("Created", "Creada hace") : c("Assigned", "Asignada hace")} ${elapsed}${es ? "" : " ago"}` : c("Elapsed time unavailable", "Tiempo transcurrido no disponible")}{staleUnassigned && ` · ${c("Over 30 days", "Más de 30 días")}`}</small></div>
                 {task.siteName && <small>{task.siteName}{task.gateName ? ` · ${task.gateName}` : ""}</small>}
                 </div><ChevronRight aria-hidden="true" />
-            </Link><div className="hub-task-footer"><small className="hub-task-elapsed">{elapsed ? task.status === "completed" ? `${c("Completed in", "Completada en")} ${elapsed}` : `${isUnassignedDashboardTask(task) ? c("Created", "Creada hace") : c("Assigned", "Asignada hace")} ${elapsed}${es ? "" : " ago"}` : c("Elapsed time unavailable", "Tiempo transcurrido no disponible")}{staleUnassigned && ` · ${c("Over 30 days", "Más de 30 días")}`}</small>
+            </Link><div className="hub-task-footer">
               {company && !["completed", "cancelled"].includes(task.status) && <DashboardTaskAssignment task={task} />}
+              <DashboardTaskCompletion task={task} />
             </div></div>;
           })}
           {failed ? <p role="status">{c("Task records are unavailable.", "Los registros de tareas no están disponibles.")}</p> : group?.length === 0 && <p>{c("No tasks in this status.", "No hay tareas con este estado.")}</p>}
