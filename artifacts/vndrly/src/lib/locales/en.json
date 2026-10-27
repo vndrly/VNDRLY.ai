@@ -6387,9 +6387,7 @@
     "noWatch": "Start a watch to prepare a handoff.",
     "pendingWatch": "Your watch request is being checked. Keep this handoff open.",
     "checkRequest": "Check saved watch request",
-    "manageActions": "Unassigned Task Hopper",
     "withdraw": "Withdraw saved handoff",
-    "independent": "Saving a handoff keeps watch custody and paid shift unchanged. Sign-in and sign-out remain independent.",
-    "outcomeUnknown": "The saved watch request could not be verified. Check it again before retrying."
+    "independent": "Saving a handoff keeps watch custody and paid shift unchanged. Sign-in and sign-out remain independent."
   }
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
+import { AppModalHeader } from "@/components/app-modal-header";
 import type { ChangeOverState } from "@workspace/gate-booth";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
@@ -53,8 +54,7 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
     finally{lock.current=false;setBusy(false);}
   }
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent bare hideClose className="gate-assume-flyout" accentHeaderStyle={{display:"none"}}>
-    <div className="gate-assume-heading"><DialogTitle>{c("Assume Watch","Asumir vigilancia")}</DialogTitle><button type="button" aria-label={c("Close watch summary","Cerrar resumen de guardia")} onClick={()=>onOpenChange(false)}><X aria-hidden="true"/></button></div>
-    <DialogDescription>{c("Review the watch, then select ASSUME to take responsibility.","Revisa la guardia y selecciona ASUMIR para aceptar la responsabilidad.")}</DialogDescription>
+    <AppModalHeader compact title={<DialogTitle>{c("Assume Watch","Asumir vigilancia")}</DialogTitle>} description={<DialogDescription>{c("Review the watch, then select ASSUME to take responsibility.","Revisa la guardia y selecciona ASUMIR para aceptar la responsabilidad.")}</DialogDescription>} closeControl={<button type="button" aria-label={c("Close watch summary","Cerrar resumen de guardia")} onClick={()=>onOpenChange(false)}><X aria-hidden="true"/></button>}/>
     <div className="gate-assume-summary">
       {state.isPending||state.isFetching?<p role="status">{c("Loading watch summary…","Cargando resumen de guardia…")}</p>:state.isError?<><p role="alert">{c("The watch summary could not be loaded.","No se pudo cargar el resumen de guardia.")}</p><button type="button" onClick={()=>void state.refetch()}>{c("Retry","Reintentar")}</button></>:current?<>
         <strong>{current.site.name} · {current.station.name}</strong>

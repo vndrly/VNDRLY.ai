@@ -4,6 +4,10 @@ on:
     branches: ['release/coverage-*']
   workflow_dispatch:
     inputs:
+      required_checks:
+        description: JSON list of required components to run; reuse passing checks for unchanged components
+        type: string
+        default: '["types","libraries","web","mobile","api","browser"]'
       full_required:
         description: Run all required validation components in parallel before full ship
         type: boolean
@@ -80,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        check: [types, libraries, web, mobile, api, browser]
+        check: ${{ fromJSON(inputs.required_checks || '["types","libraries","web","mobile","api","browser"]') }}
     env:
       NODE_OPTIONS: --max-old-space-size=6144
       VITEST_MAX_WORKERS: '2'

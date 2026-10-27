@@ -6387,9 +6387,7 @@
     "noWatch": "Inicia una guardia para preparar una entrega.",
     "pendingWatch": "Se está comprobando tu solicitud de guardia. Mantén abierta esta entrega.",
     "checkRequest": "Comprobar solicitud de guardia guardada",
-    "manageActions": "Bandeja de tareas sin asignar",
     "withdraw": "Retirar entrega guardada",
-    "independent": "Guardar una entrega mantiene la custodia de la guardia y el turno remunerado. La entrada y la salida siguen siendo independientes.",
-    "outcomeUnknown": "No se pudo verificar la solicitud de guardia guardada. Compruébala de nuevo antes de reintentar."
+    "independent": "Guardar una entrega mantiene la custodia de la guardia y el turno remunerado. La entrada y la salida siguen siendo independientes."
   }
 }

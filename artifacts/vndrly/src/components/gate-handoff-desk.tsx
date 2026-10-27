@@ -7,6 +7,7 @@ import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover
 import WatchPassControl from "@/components/watch-pass-control";
 import GateTaskHopper from "@/components/gate-task-hopper";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AppModalHeader } from "@/components/app-modal-header";
 import "./gate-handoff-desk.css";
 
 export interface GateHandoffDeskProps {
@@ -155,7 +156,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     </header>
     {signError&&<p role="alert">{signError}</p>}
     <Dialog open={editing} onOpenChange={setEditing}><DialogContent bare className="handoff-edit-dialog" accentHeaderStyle={{display:"none"}}>
-      <DialogTitle>{t("handoffDesk.editShift")}</DialogTitle><DialogDescription>{t("handoffDesk.saveExplanation")}</DialogDescription>
+      <AppModalHeader compact title={<DialogTitle>{t("handoffDesk.editShift")}</DialogTitle>} description={<DialogDescription>{t("handoffDesk.saveExplanation")}</DialogDescription>}/>
       <label>{t("handoffDesk.savedNotes")}<textarea aria-label={t("handoffDesk.savedNotes")} rows={6} maxLength={8000} value={editNotes} disabled={editBusy||blocked} onChange={event=>setEditNotes(event.target.value)}/></label>
       {editError&&<p role="alert">{editError}</p>}
       <PngPillButton type="button" color="brand" activeSrc={pillSrc} disabled={editBusy||blocked||(editNotes===(preparation?.notes??notes)&&freshSaved)} onClick={()=>void (async()=>{setEditBusy(true);setEditError("");try{await props.onEditSave?.(editNotes);setEditing(false);}catch(error){setEditError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setEditBusy(false);}})()}>{t("handoffDesk.save")}</PngPillButton>
