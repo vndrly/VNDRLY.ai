@@ -202,28 +202,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, isLoading]);
 
   useEffect(() => {
-    if (initialAuthRef.current.authChecked) return;
-    const generation=authGeneration.current;
-    fetch(`${BASE}/api/auth/me`, { credentials: "include" })
+    let active = true;
+    let checking = false;
+    const checkSession = () => {
+      if (checking) return;
+      checking = true;
+      const generation=authGeneration.current;
+      void fetch(`${BASE}/api/auth/me`, { credentials: "include", cache: "no-store" })
       .then(async (r) => {
         if (r.ok) return r.json();
         const body = await readAuthErrorBody(r);
         throw new AuthApiError(r.status, body, "Not authenticated");
       })
       .then((data) => {
-        if(authGeneration.current!==generation)return;
+        if(!active || authGeneration.current!==generation)return;
         const next = fromResponse(data);
         setUser(next);
         applyLanguage(next.preferredLanguage);
       })
       .catch(async error=>{
-        if(authGeneration.current!==generation)return;
+        if(!active || authGeneration.current!==generation)return;
         if(error instanceof AuthApiError&&error.status<500){deactivateWebFleetOffline();setUser(null);return;}
         const retained=/^\/fleet(?:\/|$)/.test(window.location.pathname)?await readWebFleetOfflineAuth():null;
-        if(authGeneration.current!==generation)return;
-        setUser(retained?{...fromResponse(retained),offlineOnly:true}:null);
+        if(!active || authGeneration.current!==generation)return;
+        setUser(current => retained ? {...fromResponse(retained),offlineOnly:true} : current);
       })
-      .finally(() => {if(authGeneration.current===generation)setIsLoading(false);});
+      .finally(() => {
+        checking = false;
+        if(active && authGeneration.current===generation)setIsLoading(false);
+      });
+    };
+    // A late failed request must not sign out a newer valid session. Re-read
+    // the canonical session before changing the authenticated UI.
+    const checkVisibleSession = () => {
+      if (document.visibilityState === "visible") checkSession();
+    };
+    window.addEventListener("vndrly:authentication-required", checkSession);
+    window.addEventListener("focus", checkVisibleSession);
+    document.addEventListener("visibilitychange", checkVisibleSession);
+    if (!initialAuthRef.current.authChecked) checkSession();
+    return () => {
+      active = false;
+      window.removeEventListener("vndrly:authentication-required", checkSession);
+      window.removeEventListener("focus", checkVisibleSession);
+      document.removeEventListener("visibilitychange", checkVisibleSession);
+    };
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {

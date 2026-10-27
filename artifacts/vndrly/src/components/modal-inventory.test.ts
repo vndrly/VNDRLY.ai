@@ -37,7 +37,7 @@ describe("production modal inventory", () => {
     }
   });
 
-  it("limits hand-authored dialog roles to the two documented non-modal helpers", () => {
+  it("limits hand-authored dialog roles to the documented helpers and notification preview", () => {
     const actual = productionTsxFiles()
       .filter((file) => /role=["']dialog["']/.test(readFileSync(file, "utf8")))
       .map(relativePath)
@@ -46,6 +46,7 @@ describe("production modal inventory", () => {
     expect(actual).toEqual([
       "components/plate-state-picker.tsx",
       "components/public-askv.tsx",
+      "components/work-hub/notification-tree.tsx",
     ]);
     expect(sourceFor("components/public-askv.tsx")).toContain('aria-modal="false"');
     expect(sourceFor("components/plate-state-picker.tsx")).toContain('aria-haspopup="dialog"');

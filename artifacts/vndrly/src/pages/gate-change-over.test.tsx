@@ -21,7 +21,7 @@ vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({ user: { userId: 1, vendorRole: duty.vendorRole, ...(duty.managedSiteId?{managedSubcontractor:{siteGrants:[{siteId:duty.managedSiteId,role:"gatekeeper"}]}}:{}) } }),
 }));
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({ t: (k: string) => k, i18n: { language: "en" } }),
 }));
 vi.mock("@/hooks/use-brand", () => ({
   useBrand: () => ({ primary: "#0095a8", name: "MidCon Solutions" }),

@@ -258,11 +258,11 @@ function AuthenticatedRouter() {
         <Route path="/operations-display/:displayId/:monitorId">{params => <OperationsDisplayViewer displayId={params.displayId} monitorId={params.monitorId} />}</Route>
         <Route path="/operations-display" component={OperationsDisplayDirectory} />
         <Route path="/organization-subscription" component={OrganizationSubscription} />
-        <Route path="/work-hub/administration/displays" component={OperationsDisplayDirectory} />
-        <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>
-        <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>
-        <Route path="/work-hub/meeting/:occurrenceId" component={MeetingLinkRedirect}/>
-        <Route path="/work-hub/meetings/:occurrenceId" component={MeetingLinkRedirect}/>
+        {user && <Route path="/work-hub/administration/displays" component={OperationsDisplayDirectory} />}
+        {user && <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>}
+        {user && <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>}
+        {user && <Route path="/work-hub/meeting/:occurrenceId" component={MeetingLinkRedirect}/>}
+        {user && <Route path="/work-hub/meetings/:occurrenceId" component={MeetingLinkRedirect}/>}
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
@@ -292,14 +292,14 @@ function AuthenticatedRouter() {
         {user && <Route path="/fleet/equipment/:id"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet/:section"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet"><Layout><FleetPage /></Layout></Route>}
-        <Route path="/work-hub/assignment/:instanceId">{params=><Layout><WorkHubLibraryPage kind="assignment" id={params.instanceId}/></Layout>}</Route>
-        <Route path="/work-hub/library/:itemId">{params=><Layout><WorkHubLibraryPage id={params.itemId}/></Layout>}</Route>
-        <Route path="/work-hub/bundle/:itemId">{params=><Layout><WorkHubLibraryPage kind="bundle" id={params.itemId}/></Layout>}</Route>
-        <Route path="/work-hub/training/:instanceId">{params=><Layout><WorkHubLibraryPage kind="training" id={params.instanceId}/></Layout>}</Route>
-        <Route path="/work-hub/checklist/:instanceId">{params=><Layout><WorkHubLibraryPage kind="checklist" id={params.instanceId}/></Layout>}</Route>
-        <Route path="/work-hub/library"><Layout><WorkHubLibraryPage/></Layout></Route>
-        <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>
-        <Route path="/work-hub"><Layout><WorkHubPage /></Layout></Route>
+        {user && <Route path="/work-hub/assignment/:instanceId">{params=><Layout><WorkHubLibraryPage kind="assignment" id={params.instanceId}/></Layout>}</Route>}
+        {user && <Route path="/work-hub/library/:itemId">{params=><Layout><WorkHubLibraryPage id={params.itemId}/></Layout>}</Route>}
+        {user && <Route path="/work-hub/bundle/:itemId">{params=><Layout><WorkHubLibraryPage kind="bundle" id={params.itemId}/></Layout>}</Route>}
+        {user && <Route path="/work-hub/training/:instanceId">{params=><Layout><WorkHubLibraryPage kind="training" id={params.instanceId}/></Layout>}</Route>}
+        {user && <Route path="/work-hub/checklist/:instanceId">{params=><Layout><WorkHubLibraryPage kind="checklist" id={params.instanceId}/></Layout>}</Route>}
+        {user && <Route path="/work-hub/library"><Layout><WorkHubLibraryPage/></Layout></Route>}
+        {user && <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>}
+        {user && <Route path="/work-hub"><Layout><WorkHubPage /></Layout></Route>}
         {!user && <Route path="/" component={MarketingHome} />}
         {!user ? (
           <>

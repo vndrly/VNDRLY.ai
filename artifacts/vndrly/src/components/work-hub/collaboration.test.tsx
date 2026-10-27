@@ -159,7 +159,7 @@ describe("Work Hub conversations", () => {
     expect(screen.getByRole("toolbar", { name: "Conversation controls drawer" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
   });
-  it("opens the chooser on first visit with Search, Polls, Channels, then Chats and remembers a selection", async () => {
+  it("opens the chooser with Polls, Channels, Chats, then collapsed Notifications and remembers a selection", async () => {
     mocks.preferences.lastConversationId = null;
     mount();
     const chooser = await screen.findByRole("region", { name: "Conversation chooser" });
@@ -172,6 +172,9 @@ describe("Work Hub conversations", () => {
     const chats = screen.getByText("Chats");
     expect(polls.compareDocumentPosition(channels) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(channels.compareDocumentPosition(chats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const notifications = screen.getByRole("group", { name: "Notifications" });
+    expect(chats.compareDocumentPosition(notifications) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(notifications.hasAttribute("open")).toBe(false);
     fireEvent.click(screen.getByText("Operations"));
     expect(await screen.findByText("Original message")).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Conversation chooser" })).toBeNull();
@@ -187,6 +190,7 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
 
     const tree = await screen.findByRole("group", { name: "Notifications" });
+    fireEvent.click(tree.querySelector("summary")!);
     expect(tree.querySelector("details[aria-label='Tickets notifications']")).toBeTruthy();
     expect(tree.querySelector("details[aria-label='Safety Incidents notifications']")).toBeTruthy();
     expect(screen.getByLabelText("1 unread Tickets notification")).toBeTruthy();
@@ -201,6 +205,7 @@ describe("Work Hub conversations", () => {
     await screen.findByText("Original message");
     fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
     const tree = await screen.findByRole("group", { name: "Notifications" });
+    fireEvent.click(tree.querySelector("summary")!);
     const row = screen.getByRole("button", { name: "Assigned inspection: Inspect Pump 14 before noon." });
 
     fireEvent.click(row);

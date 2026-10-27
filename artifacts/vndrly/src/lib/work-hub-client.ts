@@ -132,6 +132,9 @@ export async function workHubRequest<T>(
     signal,
   });
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("vndrly:authentication-required"));
+    }
     const body = await response.json().catch(() => null);
     throw Object.assign(new Error(
       (typeof body?.error === "string" ? body.error : body?.error?.message) ??

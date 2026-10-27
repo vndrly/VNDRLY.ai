@@ -650,7 +650,6 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         <HubError error={channels.error ?? crews.error} />
         {channels.isLoading && <p role="status">Loading conversations…</p>}
         <nav aria-label="Conversations" className="space-y-1">
-          <NotificationTree />
           <details open className="hub-conversation-category">
             <summary>
               <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
@@ -735,6 +734,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               ))}
             </details>;
           })}
+          <NotificationTree />
         </nav>
         {!visible?.length && !visiblePolls.length && !channels.isLoading && (
           <p className="text-sm text-muted-foreground">

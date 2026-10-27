@@ -17,11 +17,11 @@ describe("Work Hub navigation", () => {
     }
   });
 
-  it("places Calendar under Activity and company Chat under Groups", () => {
+  it("places Calendar under Activity and Conversations under Groups", () => {
     expect(getWorkHubNavItems(undefined, "MidCon Solutions").slice(1, 4).map(({ key, label }) => ({ key, label }))).toEqual([
       { key: "calendar", label: "Calendar" },
       { key: "channels", label: "Groups" },
-      { key: "chat", label: "MidCon Solutions Chat" },
+      { key: "chat", label: "Conversations" },
     ]);
   });
 

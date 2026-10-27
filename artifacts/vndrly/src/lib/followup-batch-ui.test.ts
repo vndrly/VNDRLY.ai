@@ -34,12 +34,13 @@ describe("follow-up batch UI contracts", () => {
     expect(employees).not.toContain("img-edit-office-vendor-logo");
   });
 
-  it("keeps Ask V persistent and leaves the page interactive", () => {
+  it("keeps Ask V controlled by its owner and leaves the page interactive", () => {
     const assistant = source("../components/assistant-panel.tsx");
     expect(assistant).toContain('modal={false}');
     expect(assistant).toContain("hideOverlay");
     expect(assistant).toContain("setOpen((value) => !value)");
-    expect(assistant).toContain('sessionStorage.getItem("vndrly.askv.panelOpen")');
+    expect(assistant).toContain("open: boolean;");
+    expect(assistant).toContain("onOpenChange: (v: boolean) => void;");
     expect(assistant).toContain("onPointerDownOutside");
     expect(assistant).toContain("steps.filter((step) => completed.has(step) || skipped.has(step)).length");
   });

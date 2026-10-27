@@ -50,7 +50,7 @@ export function NotificationTree() {
   });
 
   return (
-    <details open role="group" aria-label="Notifications" className="hub-conversation-category">
+    <details role="group" aria-label="Notifications" className="hub-conversation-category">
       <summary>
         <BellRing className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
         {t("notifications.heading")}
