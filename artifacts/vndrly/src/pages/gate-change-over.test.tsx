@@ -174,11 +174,9 @@ it("keeps Save handoff gray at rest and branded on hover without requiring notes
     ? { ...state(), preparation: null }
     : base(path, body));
   mount();
-  const button = await screen.findByRole("button", { name: "handoffDesk.save" });
+  const button = await screen.findByRole("button", { name: "handoffDesk.signHandoff" });
   expect((button as HTMLButtonElement).disabled).toBe(false);
-  const sources = Array.from(button.querySelectorAll("img"), (image) => image.getAttribute("src"));
-  expect(sources).toContain(PILL_IDLE);
-  expect(sources).toContain(PILL_BRAND.midcon);
+  expect(button.className).toContain("handoff-edit-mini-card");
 });
 it("delegates live actions to the shared current-gate task hopper", async () => {
   mount();
@@ -195,7 +193,7 @@ it("combines outgoing actions and notes in one handoff card with an optional sav
   expect(handoff.contains(notesPanel)).toBe(true);
   expect(within(notesPanel).getByRole("heading", { level: 3, name: "changeOver.outgoingNotes" })).not.toBeNull();
   expect(within(notesPanel).getByRole("textbox", { name: "changeOver.outgoingNotes" })).not.toBeNull();
-  expect(within(handoff).getByText("handoffDesk.independent")).not.toBeNull();
+  expect(within(handoff).queryByText("handoffDesk.independent")).toBeNull();
   expect(within(handoff).getByText("handoffDesk.previewSaved").parentElement?.tagName).toBe("DETAILS");
   expect(screen.queryByRole("region", { name: "changeOver.review" })).toBeNull();
   expect(screen.getAllByRole("region", { name: "handoffDesk.title" })).toHaveLength(1);
@@ -254,8 +252,8 @@ it('saves a concise handoff without assuming a watch or ending a paid shift', as
   api.mockImplementation((path, body) => path.endsWith('/state') ? { ...state(), preparation: null } : base(path, body));
   mount();
   fireEvent.change(await screen.findByRole('textbox', { name: 'changeOver.outgoingNotes' }), { target: { value: 'Barrier inspection due before the next delivery.' } });
-  fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.save' }));
-  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/prepare', { notes: 'Barrier inspection due before the next delivery.' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.signHandoff' }));
+  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/handoff/sign', expect.objectContaining({notes: 'Barrier inspection due before the next delivery.',expectedWatchId:'watch-outgoing',operationId:expect.any(String)})));
   expect(api.mock.calls.some(([path]) => /\/(watch\/assume|transfer|logout|start|end)$/.test(path))).toBe(false);
 });
 it('uses one explicit reviewed-assumption action bound to the saved handoff and current revision', async () => {

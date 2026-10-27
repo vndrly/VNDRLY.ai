@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ClipboardCheck, ClipboardList, NotebookPen } from "lucide-react";
 import type { ChangeOverState } from "@workspace/gate-booth";
@@ -27,6 +27,7 @@ export interface GateHandoffDeskProps {
   onAddItem: () => void;
   onSave: () => void;
   onEditSave?: (notes:string) => Promise<void>;
+  onSignHandoff?: (input:{operationId:string;expectedWatchId:string;expectedPreparationId:string|null;notes:string}) => Promise<void>;
   onAddNote?: (input:{operationId:string;expectedWatchId:string;text:string}) => Promise<void>;
   onAssumeReviewed: () => void;
   pendingWatch: boolean;
@@ -50,7 +51,12 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const [newNote,setNewNote]=useState(""),[noteBusy,setNoteBusy]=useState(false),[noteError,setNoteError]=useState(""),[notesExpanded,setNotesExpanded]=useState(false);
   const [noteCommand,setNoteCommand]=useState<{operationId:string;expectedWatchId:string;text:string}|null>(null);
   const [reviewExpanded,setReviewExpanded]=useState(false);
+  useEffect(()=>{const show=(event:Event)=>{if((event as CustomEvent<{name?:string}>).detail?.name==="manage_gate_shift"){setNotesExpanded(true);setReviewExpanded(true);}};window.addEventListener("askv:data-changed",show);return()=>window.removeEventListener("askv:data-changed",show);},[]);
+  const [editingSigned,setEditingSigned]=useState(false),[signing,setSigning]=useState(false),[signError,setSignError]=useState("");
+  const [signCommand,setSignCommand]=useState<{operationId:string;expectedWatchId:string;expectedPreparationId:string|null;notes:string}|null>(null);
   const preparation = current.preparation;
+  const signature=preparation?.summary.signature;
+  useEffect(()=>{if(signature)setEditingSigned(false);},[preparation?.id]);
   const revision = current.snapshot?.revision;
   const freshSaved = Boolean(preparation && !current.stale && revision && revision === preparation.snapshot.revision);
   const ready = freshSaved && notes === preparation?.notes;
@@ -109,6 +115,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       </span>
       <span>{t("handoffDesk.savedAt")} <time dateTime={preparation.created_at}>{new Date(preparation.created_at).toLocaleString()}</time></span>
       <span>{t("changeOver.asOf")} <time dateTime={preparation.snapshot.generatedAt}>{new Date(preparation.snapshot.generatedAt).toLocaleString()}</time></span>
+      {signature&&<span>{t("handoffDesk.signedBy",{name:signature.name})} · <time dateTime={signature.signedAt}>{new Date(signature.signedAt).toLocaleString()}</time></span>}
     </div>
     <div className="handoff-review-tree">
       <details className="handoff-review-branch" aria-label={t("handoffDesk.savedFacts")}>
@@ -140,8 +147,13 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
         <h3>{t("handoffDesk.nextActions")}</h3>
         <p>{t(!ownWatch ? "handoffDesk.nextReview" : notes.trim() ? "handoffDesk.nextHandoff" : "handoffDesk.nextPrepare")}</p>
       </aside>}
-      {current.shift&&(ownWatch||current.supervisor)&&props.onEditSave&&<button type="button" className="handoff-edit-mini-card" disabled={blocked} onClick={()=>{setEditNotes(preparation?.notes??notes);setEditError("");setEditing(true);}}>{t("handoffDesk.editShift")}</button>}
+      {current.shift&&ownWatch&&props.onSignHandoff?<button type="button" className="handoff-edit-mini-card" disabled={blocked||signing} onClick={()=>void (async()=>{
+        if(signature&&!editingSigned){setEditingSigned(true);return;}
+        const command=signCommand??{operationId:crypto.randomUUID(),expectedWatchId:current.shift!.id,expectedPreparationId:preparation?.id??null,notes};setSignCommand(command);setSigning(true);setSignError("");
+        try{await props.onSignHandoff!(command);setSignCommand(null);setEditingSigned(false);}catch(error){const status=(error as {status?:number}).status;if(status&&status>=400&&status<500)setSignCommand(null);setSignError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setSigning(false);}
+      })()}>{t(signature&&!editingSigned?"handoffDesk.editShift":"handoffDesk.signHandoff")}</button>:current.shift&&current.supervisor&&props.onEditSave&&<button type="button" className="handoff-edit-mini-card" disabled={blocked} onClick={()=>{setEditNotes(preparation?.notes??notes);setEditError("");setEditing(true);}}>{t("handoffDesk.editShift")}</button>}
     </header>
+    {signError&&<p role="alert">{signError}</p>}
     <Dialog open={editing} onOpenChange={setEditing}><DialogContent bare className="handoff-edit-dialog" accentHeaderStyle={{display:"none"}}>
       <DialogTitle>{t("handoffDesk.editShift")}</DialogTitle><DialogDescription>{t("handoffDesk.saveExplanation")}</DialogDescription>
       <label>{t("handoffDesk.savedNotes")}<textarea aria-label={t("handoffDesk.savedNotes")} rows={6} maxLength={8000} value={editNotes} disabled={editBusy||blocked} onChange={event=>setEditNotes(event.target.value)}/></label>
@@ -153,7 +165,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       {t(!online ? "changeOver.offline" : readError ? "handoffDesk.refreshRequired" : "handoffDesk.changed")}
     </p>}
 
-    {ownWatch ? <>
+    {ownWatch&&(!signature||editingSigned) ? <>
       <div className="handoff-compose-panels">
         <section className="handoff-panel" aria-label={t("changeOver.carryForward")}>
           <h3><ClipboardList aria-hidden="true" />{t("changeOver.carryForward")}</h3>
@@ -164,13 +176,13 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
           <textarea aria-label={t("changeOver.outgoingNotes")} placeholder={t("handoffDesk.notesHint")}
             rows={4} maxLength={8000} value={notes} disabled={blocked}
             onChange={(event) => onNotesChange(event.target.value)} />
-          <div className="handoff-save-row">
+          {!props.onSignHandoff&&<div className="handoff-save-row">
             <PngPillButton type="button" color="brand" activeSrc={pillSrc}
               disabled={blocked || !current.shift || !revision || ready} onClick={onSave}>
               {t("handoffDesk.save")}
             </PngPillButton>
             <p className="handoff-muted">{t("handoffDesk.saveExplanation")}</p>
-          </div>
+          </div>}
         </section>
       </div>
       <details className="handoff-disclosure" open={reviewExpanded} onToggle={event=>setReviewExpanded(event.currentTarget.open)}>
@@ -182,11 +194,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       </details>
     </> : preparation ? <>
       {savedReview}
-      <div className="handoff-assume" id="watch-review">
-        <p>{t("handoffDesk.reviewExplanation")}</p>
-        <WatchPassControl active={false} label={t("handoffDesk.assume")} disabled={!mayAssume} onClick={onAssumeReviewed} />
-      </div>
-    </> : <div className="handoff-assume"><p className="handoff-waiting" role="status">{t(current.shift ? "handoffDesk.waiting" : "handoffDesk.noWatch", { name: current.shift?.operator_name })}</p><WatchPassControl active={false} label={t("handoffDesk.assume")} disabled={!mayAssume} onClick={onAssumeReviewed}/></div>}
+    </> : <p className="handoff-waiting" role="status">{t(current.shift ? "handoffDesk.waiting" : "handoffDesk.noWatch", { name: current.shift?.operator_name })}</p>}
 
     {pendingWatch && <div className="handoff-recovery" role="status">
       <p>{t("handoffDesk.pendingWatch")}</p>
@@ -205,6 +213,6 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
         try{await props.onAddNote!(command);setNewNote("");setNoteCommand(null);setNotesExpanded(true);setReviewExpanded(true);}catch(error){const status=(error as {status?:number}).status;if(status&&status>=400&&status<500)setNoteCommand(null);setNoteError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setNoteBusy(false);}
       })()}>{t("handoffDesk.addNote")}</PngPillButton></div>
     </details>}
-    <p className="handoff-independence">{t("handoffDesk.independent")}</p>
+    {!ownWatch&&<div className="handoff-assume" id="watch-review"><p>{t("handoffDesk.reviewExplanation")}</p><WatchPassControl active={false} label={t("handoffDesk.assume")} disabled={!mayAssume} onClick={onAssumeReviewed}/></div>}
   </section>;
 }

@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import {workdayService} from "./workday";
-import {startGateShift,prepareGateHandoff,appendGateShiftNote,transferGateShift,getShiftNotes,markShiftNoteViewed,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
+import {startGateShift,prepareGateHandoff,appendGateShiftNote,signGateHandoff,releaseGateWatch,transferGateShift,getShiftNotes,markShiftNoteViewed,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
 import {
   assumeGateDuty,
   endGateDuty,
@@ -188,6 +188,23 @@ describe("Gate duty teams", () => {
     expect(current.preparation!.notes.split(input.text)).toHaveLength(2);expect(current.shift!.id).toBe(watch.id);
     expect((await pool.query("SELECT notes FROM gate_preparations WHERE id=$1",[old.id])).rows[0].notes).toBe("Existing saved note");
     expect((await pool.query("SELECT id FROM gate_shift_actions WHERE station_id=$1 AND kind='shift_note'",[f.stationId])).rows).toHaveLength(2);
+  });
+  it("binds a gatekeeper signature to exact notes and invalidates it when another note is added",async()=>{
+    const f=await fixture(),outgoing=f.workers[0]!,other=f.workers[1]!;
+    await assumeGateWatch(outgoing,{stationId:f.stationId,source:"web",operationId:key()});
+    const current=await getChangeOverState(outgoing,f.stationId);
+    const input={stationId:f.stationId,expectedWatchId:current.shift!.id,expectedPreparationId:null,operationId:key(),notes:"Barrier damaged at 5:15"};
+    await expect(signGateHandoff(other,input)).rejects.toMatchObject({status:403});
+    const signed=await signGateHandoff(outgoing,input);expect(signed.summary.signature).toMatchObject({userId:outgoing.userId,contentHash:expect.stringMatching(/^[a-f0-9]{64}$/)});
+    expect((await signGateHandoff(outgoing,input)).id).toBe(signed.id);
+    expect((await getChangeOverState(outgoing,f.stationId)).shift?.id).toBe(current.shift!.id);
+    await appendGateShiftNote(outgoing,{stationId:f.stationId,expectedWatchId:current.shift!.id,operationId:key(),text:"Supervisor notified"});
+    expect((await getChangeOverState(outgoing,f.stationId)).preparation?.summary.signature).toBeUndefined();
+    expect((await pool.query("SELECT summary FROM gate_preparations WHERE id=$1",[signed.id])).rows[0].summary.signature.userId).toBe(outgoing.userId);
+    const beforeRelease=await getChangeOverState(outgoing,f.stationId);
+    const resigned=await signGateHandoff(outgoing,{...input,operationId:key(),expectedPreparationId:beforeRelease.preparation!.id,notes:beforeRelease.preparation!.notes});
+    await releaseGateWatch(outgoing,{stationId:f.stationId,expectedShiftId:current.shift!.id,notes:beforeRelease.preparation!.notes});
+    const released=await getChangeOverState(other,f.stationId);expect(released.preparation?.summary.signature?.contentHash).toBe(resigned.summary.signature.contentHash);
   });
   it("keeps paid clocks and sessions unchanged while saving the exact acknowledged watch facts and original notes", async () => {
     const f = await fixture(), outgoing=f.workers[0]!, incoming=f.workers[1]!;

@@ -29,7 +29,7 @@ beforeEach(()=>{
     else if(sql.startsWith("SELECT result_json"))rows=receipt?[{result_json:receipt}]:[];
     else if(sql.startsWith("SELECT s.*, u.display_name"))rows=[{id:currentId,station_id:"gate",operator_id:9,operator_name:"Outgoing",started_at:"2026-10-23T06:00:00Z",preparation_id:"old-prep"}];
     else if(sql.startsWith("SELECT id FROM gate_shifts WHERE operator_id"))rows=occupied?[{id:"other-watch"}]:[];
-    else if(sql.startsWith("SELECT notes FROM gate_preparations"))rows=[{notes:"East lane inspection due"}];
+    else if(sql.startsWith("SELECT notes,summary FROM gate_preparations"))rows=[{notes:"East lane inspection due"}];
     else if(sql.startsWith("SELECT s.id,s.title,s.ends_at"))rows=[{id:"scheduled-post",title:"Day gate post",ends_at:"2026-10-23T23:00:00Z"}];
     else if(sql.startsWith("INSERT INTO gate_shifts")){currentId="new-watch";rows=[{id:currentId}];}
     else if(sql.startsWith("INSERT INTO notifications"))rows=[{id:99,userId:8,type:"gate_watch_assigned",title:args[1],body:args[2],link:args[3],createdAt:new Date().toISOString()}];

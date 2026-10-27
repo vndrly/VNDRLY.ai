@@ -94,6 +94,12 @@ describe("resolveWorkHubToolRequest", () => {
       for (const bad of [{ itemId: "../other" }, { text: " " }, { text: "x".repeat(2001) }, { stationId: "../foreign" }]) expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", { ...input, ...bad }, true, actor)).toHaveProperty("error");
     }
   });
+  it("routes a dictated shift note to append-only notes with the reviewed watch and existing confirmation",()=>{
+    const input={action:"add_shift_note",stationId:"00000000-0000-4000-8000-000000000001",expectedWatchId:"00000000-0000-4000-8000-000000000002",operationId:"00000000-0000-4000-8000-000000000003",text:"Physical gate barrier damage by truck at 5:15"};
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift",input,false,{userId:17,role:"vendor"})).toMatchObject({requiresConfirmation:true});
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift",input,true,{userId:17,role:"vendor"})).toMatchObject({method:"POST",path:`/gate-change-over/${input.stationId}/notes/add`,body:{expectedWatchId:input.expectedWatchId,operationId:input.operationId,text:input.text}});
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift",{...input,expectedWatchId:undefined},true)).toHaveProperty("error");
+  });
   it("acknowledges only the caller's assignment after trusted authorization", () => {
     const input = { ticketId: 12, status: "confirmed", note: "I will be there", employeeId: 999, vendorId: 888 };
     const actor = { userId: 17, role: "field_employee" };

@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.8
+
+Gate handoff candidate: shift notes can be appended through the existing authorized Ask V action flow, including dictated incident times. The responsible gatekeeper signs the exact note version in the trusted handoff screen; edits and appended notes require a new signature. The Gate dashboard uses a shared assumption review, per-site watch history and task hopper. Existing plugin/app identity, five service skills, embedded views and grants are retained. Package validation does not establish submission, review approval or public availability.
+
 # VNDRLY plugin 1.22.4
 
 Rollback package restoring the 1.22.2 skills and operation guidance alongside the source rollback of d72b4259. The version advances only to support updating the same installed plugin; it does not retain the 1.22.3 iOS parity guidance. Existing plugin/app identity, all five service labels, branding, linked accounts and grants remain unchanged. No new tools, views or scopes are introduced. Package validation does not establish installation or public review status.

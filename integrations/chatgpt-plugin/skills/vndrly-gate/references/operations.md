@@ -101,3 +101,10 @@ An inbound row needs a current canonical ticketed in-progress Fleet run whose ne
 Read details only for the exact returned run and selected site. Describe the whitelisted stops, loads, operational timing and explicitly linked Gate visit records that the authorized response actually returns. Keep private billing, documents, unrelated stops and restricted identity evidence out of conversation. An unavailable detail or missing historical link is unknown, not an empty or complete history.
 
 These reads do not check in a driver, check out a visit, update a Fleet run, assume watch or start a paid shift. An interrupted read may be refreshed for the same exact authorized selection. Re-read after a site, account or membership change; do not retain another context's details. For a separately instructed mutation, use the advertised exact action, preserve its original reference after uncertainty, recover with v_action_status and independently read its canonical result before reporting completion.
+
+
+## Shift notes and gatekeeper signature
+
+For spoken or typed "add shift note", resolve the signed-in worker current watch with query_gate_change_over. Use manage_gate_shift action add_shift_note, that exact expectedWatchId, a fresh operationId UUID, and the dictated text. Preserve incident times in the text; author and filing time come from the server. Use the existing confirmation-bound action flow. This appends a note without replacing earlier notes or creating a task. Reuse the original operation after an uncertain response.
+
+Save Shift Handoff is the responsible gatekeeper signature on the exact note version in the trusted handoff screen. Never sign for someone else or claim a voice append signed the notes. New notes or edits create an unsigned version for the gatekeeper to sign again. Existing signatures remain in the immutable history. Incoming watch assumption is a separate explicit review action.

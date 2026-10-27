@@ -134,3 +134,20 @@ it("keeps an uncertain watch request recoverable without issuing a new assumptio
   expect(callbacks.onRecoverWatch).toHaveBeenCalledTimes(1);
   expect(callbacks.onAssumeReviewed).not.toHaveBeenCalled();
 });
+it("puts reviewed assumption last and removes the independence footer",()=>{
+  const view=render(<GateHandoffDesk {...props()}/>);
+  expect(screen.queryByText("handoffDesk.independent")).toBeNull();
+  expect(view.container.querySelector(".gate-handoff-desk")?.lastElementChild?.id).toBe("watch-review");
+});
+it("signs exact notes from the top control, then toggles signed handoff back to editing",async()=>{
+  let current=state();let signedInput:unknown;
+  const onSignHandoff=vi.fn().mockImplementation(async input=>{
+    signedInput=input;current={...current,preparation:{...current.preparation!,id:input.operationId,summary:{...current.preparation!.summary,signature:{userId:7,name:"Actual operator",signedAt:new Date().toISOString(),contentHash:"signed-hash"}}}};
+    view.rerender(<GateHandoffDesk {...props({current,ownWatch:true,onSignHandoff})}/>);
+  });
+  const view=render(<GateHandoffDesk {...props({current,ownWatch:true,onSignHandoff})}/>);
+  fireEvent.click(screen.getByRole("button",{name:"handoffDesk.signHandoff"}));
+  await waitFor(()=>expect(onSignHandoff).toHaveBeenCalledOnce());expect(signedInput).toEqual({operationId:expect.any(String),expectedWatchId:"watch",expectedPreparationId:"prep",notes:"Saved notes"});
+  const edit=await screen.findByRole("button",{name:"handoffDesk.editShift"});fireEvent.click(edit);
+  expect(screen.getByRole("button",{name:"handoffDesk.signHandoff"})).toBeTruthy();expect(screen.getByRole("textbox",{name:"changeOver.outgoingNotes"})).toBeTruthy();
+});

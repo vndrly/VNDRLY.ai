@@ -32,7 +32,7 @@ export interface ChangeOverPreparation {
   id: string;
   notes: string;
   snapshot: ChangeOverSnapshot;
-  summary: { source: string; facts: ChangeOverFact[] };
+  summary: { source: string; facts: ChangeOverFact[]; signature?: { userId:number; name:string; signedAt:string; contentHash:string } };
   created_at: string;
 }
 export interface ChangeOverState {

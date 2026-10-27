@@ -220,6 +220,11 @@ export default function GateChangeOverPage({
     networkMode: "always",
   });
   const current = state.data;
+  useEffect(()=>{
+    if(history)return;
+    const refresh=(event:Event)=>{const detail=(event as CustomEvent<{name?:string}>).detail;if(detail?.name==="manage_gate_shift")void cache.invalidateQueries({queryKey:["change-over-state"]});};
+    window.addEventListener("askv:data-changed",refresh);return()=>window.removeEventListener("askv:data-changed",refresh);
+  },[history,cache]);
   const replacements = useQuery({
     queryKey: ["gate-recovery-operators", user?.userId, user?.activeMembershipId, stationId],
     queryFn: () => request<{ operators: { userId: number; membershipId: number; name: string; companyName: string }[] }>(`/${stationId}/recovery-operators`),
@@ -504,6 +509,7 @@ export default function GateChangeOverPage({
               })}
               onSave={() => void act(() => mutate("prepare", { notes }))}
               onEditSave={async text=>{await mutate("prepare",{notes:text});await cache.invalidateQueries({queryKey:["gate-watch-timeline"]});}}
+              onSignHandoff={async input=>{await request(`/${stationId}/handoff/sign`,input);await state.refetch({throwOnError:true});}}
               onAddNote={async input=>{await request(`/${stationId}/notes/add`,input);await state.refetch({throwOnError:true});await cache.invalidateQueries({queryKey:["gate-watch-timeline"]});}}
               onAssumeReviewed={openWatch}
               pendingWatch={Boolean(pendingWatch)} onRecoverWatch={openWatch}

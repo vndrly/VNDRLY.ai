@@ -173,6 +173,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     if (!uuid(input.stationId)) return { error: "Read the exact authorized Gate station first." };
     const base = `/gate-change-over/${input.stationId}`;
+    if(input.action==="add_shift_note") {
+      if(!uuid(input.expectedWatchId)||!uuid(input.operationId)||typeof input.text!=="string"||!input.text.trim()||input.text.trim().length>2000)return {error:"Read the current watch and supply its exact ID, a fresh operationId UUID and the worker's shift note."};
+      return request("POST",`${base}/notes/add`,{expectedWatchId:input.expectedWatchId,operationId:input.operationId,text:input.text.trim()});
+    }
     const itemKind = ({ open_item: "open", resolve_item: "resolve", reopen_item: "reopen" } as Record<string, string>)[String(input.action)];
     if (itemKind) {
       if (!uuid(input.itemId) || typeof input.text !== "string" || !input.text.trim() || input.text.trim().length > 2000) return { error: "Supply an exact Gate item ID and a note of 1 to 2000 characters." };

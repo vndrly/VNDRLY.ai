@@ -41,6 +41,7 @@ import {
   getShiftNotes,
   markShiftNoteViewed,
   appendGateShiftNote,
+  signGateHandoff,
 } from "../services/gate-change-over";
 import {
   assumeGateDuty,
@@ -258,6 +259,10 @@ router.get("/gate-change-over/:stationId/notes", async (req, res) => {
 router.post("/gate-change-over/:stationId/notes/add",async(req,res)=>{
   const input=z.object({operationId:uuid,expectedWatchId:uuid,text:z.string().trim().min(1).max(2000)}).strict().parse(req.body);
   res.json(await appendGateShiftNote(sessionFor(req),{...input,stationId:uuid.parse(req.params.stationId)}));
+});
+router.post("/gate-change-over/:stationId/handoff/sign",async(req,res)=>{
+  const input=z.object({operationId:uuid,expectedWatchId:uuid,expectedPreparationId:uuid.nullable(),notes:z.string().max(8000)}).strict().parse(req.body);
+  res.json(await signGateHandoff(sessionFor(req),{...input,stationId:uuid.parse(req.params.stationId)}));
 });
 router.post("/gate-change-over/:stationId/notes/:handoffId/viewed", async (req, res) => {
   res.json(await markShiftNoteViewed(sessionFor(req), uuid.parse(req.params.stationId), uuid.parse(req.params.handoffId)));
