@@ -17,6 +17,7 @@ describe("Work Hub home", () => {
     mocks.user = { userId: 7, role: "field_employee", vendorId: 1, activeMembershipId: 3, vendorRole: "gatekeeper" };
     mocks.request.mockReset(); mocks.fetch.mockReset();
     mocks.request.mockImplementation(async (path: string) => {
+      if (path.startsWith("/gate-task-hopper")) return { tasks: [], nextBefore: null };
       if (path.startsWith("/tasks?dashboard=1")) return { scope: "self", nextCursor: null, tasks: [
         { id: "t1", title: "Inspect gate camera", status: "open", assigneeUserId: 7, createdAt: new Date(Date.now() - 3600000).toISOString() },
         { id: "done", title: "Finished", status: "completed", assigneeUserId: 7, createdAt: "2026-10-21T22:00:00Z", completedAt: "2026-10-22T00:00:00Z" },
@@ -73,6 +74,44 @@ describe("Work Hub home", () => {
       expect(row.getAttribute("aria-expanded")).toBe("false");
       expect(screen.queryByRole("region", { name: "Assigned task details" })).toBeNull();
     }
+  });
+  it("puts Unassigned above Unstarted, includes every page once and marks old unassigned tasks amber in both views", async () => {
+    const original = mocks.request.getMockImplementation()!;
+    const old = { id: "old-hopper", title: "Old lamp inspection", status: "open", assigneeUserId: null, createdAt: new Date(Date.now() - 31 * 86400000).toISOString(), gateHopper: {} };
+    mocks.request.mockImplementation(async (path: string) => {
+      if (path.startsWith("/gate-task-hopper")) return path.includes("before=") ? { tasks: [old], nextBefore: null } : { tasks: [{ ...old, id: "fresh-hopper", title: "New hopper task", createdAt: new Date().toISOString() }], nextBefore: "next" };
+      if (path.startsWith("/tasks?dashboard=1")) return { scope: "company", nextCursor: null, tasks: [old, { ...old, id: "assigned-old", title: "My old task", assigneeUserId: 7 }] };
+      return original(path);
+    });
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><DashboardTasks /></QueryClientProvider>);
+    const unassigned = await screen.findByRole("button", { name: /Unassigned.*2 total/ });
+    const rows = screen.getAllByRole("button");
+    expect(rows.indexOf(screen.getByRole("button", { name: /Unstarted/ }))).toBe(rows.indexOf(unassigned) + 1);
+    expect(unassigned.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(unassigned);
+    const detail = screen.getByRole("region", { name: "Assigned task details" });
+    expect(detail.previousElementSibling).toBe(unassigned);
+    expect(within(detail).getAllByRole("link")).toHaveLength(2);
+    const oldLink = within(detail).getByRole("link", { name: /Old lamp inspection/ });
+    expect(oldLink.classList.contains("hub-task-stale")).toBe(true);
+    expect(oldLink.getAttribute("href")).toBe("/work-hub/tasks?task=old-hopper");
+    expect(within(detail).getByRole("link", { name: /New hopper task/ }).classList.contains("hub-task-stale")).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: /Stale.*1 mine.*2 total.*1 unassigned/ }));
+    const stale = screen.getByRole("region", { name: "Assigned task details" });
+    expect(within(stale).getAllByRole("link")).toHaveLength(2);
+    expect(within(stale).getByRole("link", { name: /My old task/ }).classList.contains("hub-task-mine")).toBe(true);
+    expect(within(stale).getByRole("link", { name: /Old lamp inspection/ }).classList.contains("hub-task-stale")).toBe(true);
+  });
+  it("does not show a zero unassigned total when hopper records fail", async () => {
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string) => {
+      if (path.startsWith("/gate-task-hopper")) throw Object.assign(new Error("Unavailable"), { status: 503 });
+      return original(path);
+    });
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><DashboardTasks /></QueryClientProvider>);
+    expect(await screen.findByRole("button", { name: /Unassigned.*Unavailable/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Stale.*Unavailable/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /New.*1/ })).toBeTruthy();
   });
   it("expands Hours under its row, reads this month's period, and links each recorded shift to its calendar day", async () => {
     const original = mocks.request.getMockImplementation()!;
