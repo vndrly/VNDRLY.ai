@@ -9,15 +9,15 @@ import { notifyUsers } from "./notifications";
 
 const router = Router();
 const filter = z.object({ stationId: z.uuid().optional(), taskId: z.uuid().optional(), before: z.uuid().optional() }).strict();
-const command = z.object({ operationId: z.uuid(), action: z.enum(["create", "import", "complete", "assign", "clear", "delete"]),
+const command = z.object({ operationId: z.uuid(), actorUserId: z.number().int().positive(), action: z.enum(["create", "import", "complete", "assign", "clear", "delete"]),
   taskId: z.uuid().optional(), expectedVersion: z.number().int().positive().optional(), vendorId: z.number().int().positive().optional(), stationId: z.uuid().optional(),
   text: z.string().trim().min(1).max(2000).optional(), note: z.string().trim().min(1).max(2000).optional(), assigneeUserId: z.number().int().positive().nullable().optional(),
-}).strict().refine(value => value.action === "create" ? Boolean(value.stationId && value.text) : value.action === "import" ? Boolean(value.stationId && value.taskId) : Boolean(value.taskId && value.expectedVersion), "Task identity and current version are required");
+}).strict().refine(value => value.action === "create" ? Boolean(value.vendorId && value.stationId && value.text && !value.taskId) : value.action === "import" ? Boolean(value.vendorId && value.stationId && value.taskId) : Boolean(value.taskId && value.expectedVersion && !value.stationId && !value.vendorId), "Task identity and current version are required");
 router.use("/work-hub/gate-task-hopper", async (req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   if (!await isWorkHubEnabled()) return sendApiError(res, 404, "work_hub.not_found", "Not found");
   if (!getSessionFromRequest(req)?.userId) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-  next();
+  return next();
 });
 function failure(res: Parameters<typeof sendApiError>[0], error: unknown) {
   if (error instanceof z.ZodError) return sendApiError(res, 400, "gate_task.invalid", "Check task details and try again");

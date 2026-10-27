@@ -1757,7 +1757,8 @@ router.get("/work-hub/calendar", async (req, res) => {
       .where(
         and(
           ownerFilter(session),
-          employeeContext ? and(eq(workHubTasksTable.ownerOrgType, employeeContext.owner.type), eq(workHubTasksTable.ownerOrgId, employeeContext.owner.id), or(eq(workHubTasksTable.assigneeUserId, workerUserId!), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(workerUserId)}`)) : undefined,
+          employeeContext ? and(eq(workHubTasksTable.ownerOrgType, employeeContext.owner.type), eq(workHubTasksTable.ownerOrgId, employeeContext.owner.id),
+            or(and(sql`${workHubTasksTable.gateHopper}->>'completedById' IS NULL`, eq(workHubTasksTable.assigneeUserId, workerUserId!)), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(workerUserId)}`)) : undefined,
           gte(sql`coalesce((${workHubTasksTable.gateHopper}->>'completedAt')::timestamptz,${workHubTasksTable.dueAt})`, start),
           lte(sql`coalesce((${workHubTasksTable.gateHopper}->>'completedAt')::timestamptz,${workHubTasksTable.dueAt})`, end),
         ),
@@ -1850,7 +1851,7 @@ router.get("/work-hub/calendar/items/:kind/:id", async (req, res) => {
     if (kind === "task") {
       const [item] = await db.select().from(workHubTasksTable).where(eq(workHubTasksTable.id, itemId)).limit(1);
       if (!item || !sessionCanSeeOwner(session, item.ownerOrgType, item.ownerOrgId)) throw new WorkHubAccessError("not_found");
-      if (session.managedSubcontractor && item.assigneeUserId !== session.userId && item.createdById !== session.userId) throw new WorkHubAccessError("not_found");
+      if (session.managedSubcontractor && item.assigneeUserId !== session.userId && item.createdById !== session.userId && item.gateHopper?.completedById !== session.userId) throw new WorkHubAccessError("not_found");
       return res.json({ source: "vndrly", authority: "work_hub_task", item });
     }
     const [item] = await db.select({ occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable })

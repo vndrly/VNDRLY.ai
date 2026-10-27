@@ -372,7 +372,7 @@ async function releasedWatch(client: Queryable, stationId:string) {
 }
 /** Keep the shared site revision while hiding another vendor's task content.
  * Persisted handoff JSON is never rewritten by a viewer's projection. */
-async function projectGateTaskItems(client: Queryable, value: any, vendorId?: number) {
+async function projectGateTaskItems(client: Queryable, value: any, vendorId?: number | null) {
   if (!value || !vendorId) return value;
   const ids = [...new Set<string>([...(value.openItems ?? []).map((item: ShiftItem) => item.id), ...(value.facts ?? []).filter((fact: ShiftFact) => fact.id.startsWith("item:")).map((fact: ShiftFact) => fact.id.slice(5))])].filter(id => /^[0-9a-f-]{36}$/i.test(id));
   if (!ids.length) return value;
@@ -380,14 +380,14 @@ async function projectGateTaskItems(client: Queryable, value: any, vendorId?: nu
   return { ...value, ...(value.openItems ? { openItems: value.openItems.filter((item: ShiftItem) => !foreign.has(item.id)) } : {}),
     ...(value.facts ? { facts: value.facts.filter((fact: ShiftFact) => !fact.id.startsWith("item:") || !foreign.has(fact.id.slice(5))) } : {}) };
 }
-async function projectGatePreparation(client: Queryable, preparation: any, vendorId?: number) {
+async function projectGatePreparation(client: Queryable, preparation: any, vendorId?: number | null) {
   if (!preparation || !vendorId) return preparation;
   return { ...preparation, snapshot: await projectGateTaskItems(client, preparation.snapshot, vendorId), summary: await projectGateTaskItems(client, preparation.summary, vendorId) };
 }
 async function currentItems(
   client: Queryable,
   stationId: string,
-  vendorId?: number,
+  vendorId?: number | null,
 ): Promise<ShiftItem[]> {
   const rows = (
     await client.query(
@@ -824,7 +824,7 @@ export async function actOnShiftItem(
     if (kind === "open" && task) return fail(409, "item_exists", "Item already exists");
     if (kind === "open" || task?.gate_hopper?.stationId === stationId) {
       return (await mutateGateTaskInTransaction(c, session, { operationId: randomUUID(), action: kind === "open" ? "create" : kind === "resolve" ? "complete" : "reopen",
-        taskId: itemId, expectedVersion: task?.version, vendorId: session.vendorId, stationId, text, note: text })).task;
+        taskId: itemId, expectedVersion: task?.version, vendorId: session.vendorId ?? undefined, stationId, text, note: text })).task;
     }
     const access = await stationAccess(c, session, stationId);
     await lockStation(c, stationId);
@@ -838,9 +838,7 @@ export async function actOnShiftItem(
     const existing = (await currentItems(c, stationId)).find(
       (i) => i.id === itemId,
     );
-    if (kind === "open" && existing)
-      return fail(409, "item_exists", "Item already exists");
-    if (kind !== "open" && !existing)
+    if (!existing)
       return fail(404, "item_missing", "Item not found");
     if (
       (kind === "resolve" && existing?.status === "resolved") ||
@@ -855,9 +853,7 @@ export async function actOnShiftItem(
           session.userId,
           itemId,
           kind,
-          kind === "open"
-            ? text
-            : `${existing!.text}\n${kind === "resolve" ? "Resolution" : "Reopened"}: ${text}`,
+          `${existing.text}\n${kind === "resolve" ? "Resolution" : "Reopened"}: ${text}`,
         ],
       )
     ).rows[0];

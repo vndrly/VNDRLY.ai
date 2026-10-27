@@ -46,14 +46,14 @@ const taskSelect = `SELECT t.*,s.name AS site_name,g.name AS gate_name,u.display
 export async function readGateTaskHopper(session: SessionPayload, filter: { stationId?: string; taskId?: string; before?: string }) {
   return transaction(async c => {
     const actor = await gateTaskActor(c, session, filter.taskId);
-    const rows = (await c.query(`${taskSelect} WHERE t.gate_hopper IS NOT NULL AND ($1::int IS NULL OR t.owner_org_id=$1)
+    const rows = (await c.query(`${taskSelect} WHERE t.owner_org_type='vendor' AND t.gate_hopper IS NOT NULL AND ($1::int IS NULL OR t.owner_org_id=$1)
       AND ($2::text IS NULL OR t.gate_hopper->>'stationId'=$2) AND ($3::uuid IS NULL OR t.id=$3)
       AND ($3::uuid IS NOT NULL OR (t.assignee_user_id IS NULL AND t.status IN ('open','in_progress') AND t.gate_hopper->>'clearedAt' IS NULL))
       AND ($4::uuid IS NULL OR (t.created_at,t.id)<(SELECT created_at,id FROM work_hub_tasks WHERE id=$4))
       ORDER BY t.created_at DESC,t.id DESC LIMIT 101`, [actor.platform ? actor.vendorId : actor.vendorId, filter.stationId ?? null, filter.taskId ?? null, filter.before ?? null])).rows;
     // An exact-task request is subject to the same vendor boundary as the hopper.
     const tasks = rows.slice(0, 100).map(gateTaskProjection);
-    const total = (await c.query(`SELECT count(*)::int AS count FROM work_hub_tasks t WHERE t.gate_hopper IS NOT NULL AND ($1::int IS NULL OR t.owner_org_id=$1)
+    const total = (await c.query(`SELECT count(*)::int AS count FROM work_hub_tasks t WHERE t.owner_org_type='vendor' AND t.gate_hopper IS NOT NULL AND ($1::int IS NULL OR t.owner_org_id=$1)
       AND ($2::text IS NULL OR t.gate_hopper->>'stationId'=$2) AND t.assignee_user_id IS NULL AND t.status IN ('open','in_progress') AND t.gate_hopper->>'clearedAt' IS NULL`, [actor.vendorId, filter.stationId ?? null])).rows[0].count;
     const unimported = actor.hopper && !filter.taskId ? (await c.query(`WITH latest AS (
       SELECT DISTINCT ON(a.item_id) a.* FROM gate_shift_actions a WHERE a.kind IN ('open','resolve','reopen') ORDER BY a.item_id,a.created_at DESC,a.id DESC
@@ -81,7 +81,7 @@ export async function gateTaskOptions(session: SessionPayload, taskId?: string) 
   });
 }
 export type GateTaskCommand = { operationId: string; action: "create" | "import" | "complete" | "assign" | "clear" | "delete" | "reopen";
-  taskId?: string; expectedVersion?: number; vendorId?: number; stationId?: string; text?: string; note?: string; assigneeUserId?: number | null };
+  actorUserId?: number; taskId?: string; expectedVersion?: number; vendorId?: number; stationId?: string; text?: string; note?: string; assigneeUserId?: number | null };
 export async function mutateGateTask(session: SessionPayload, command: GateTaskCommand) {
   if (session.realm === "demo" || session.publicDemo) throw new GateTaskError(403, "This session is read only");
   return transaction(async c => mutateGateTaskInTransaction(c, session, command));
@@ -89,9 +89,11 @@ export async function mutateGateTask(session: SessionPayload, command: GateTaskC
 export async function mutateGateTaskInTransaction(c: PoolClient, session: SessionPayload, command: GateTaskCommand) {
   if (session.realm === "demo" || session.publicDemo) throw new GateTaskError(403, "This session is read only");
   // Match Gate handoff's station -> task/clock order before taking user locks.
-  const stationId = command.stationId ?? (await c.query("SELECT gate_hopper->>'stationId' AS id FROM work_hub_tasks WHERE id=$1", [command.taskId])).rows[0]?.id;
+  const stationId = command.action === "create" || command.action === "import" ? command.stationId : (await c.query("SELECT gate_hopper->>'stationId' AS id FROM work_hub_tasks WHERE id=$1", [command.taskId])).rows[0]?.id;
   if (stationId) await c.query("SELECT id FROM gate_stations WHERE id=$1 FOR UPDATE", [stationId]);
   const actor = await gateTaskActor(c, session, command.action === "create" || command.action === "import" ? undefined : command.taskId);
+  if (command.actorUserId !== undefined && command.actorUserId !== actor.userId) throw new GateTaskError(409, "Account changed; refresh before acting");
+  if (!actor.platform && command.vendorId !== undefined && command.vendorId !== actor.vendorId) throw new GateTaskError(409, "Vendor context changed; refresh before acting");
   const fingerprint = createHash("sha256").update(JSON.stringify(command)).digest("hex");
   await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`gate-task:${actor.userId}:${command.operationId}`]);
   const receipt = (await c.query(`SELECT detail FROM work_hub_task_events WHERE actor_user_id=$1 AND detail->>'operationId'=$2 LIMIT 1`, [actor.userId, command.operationId])).rows[0]?.detail;
@@ -104,6 +106,7 @@ export async function mutateGateTaskInTransaction(c: PoolClient, session: Sessio
   if (command.action === "create" || command.action === "import") {
     if (command.action === "import" && !actor.manager) throw new GateTaskError(403, "Office or admin must select the original task's vendor");
     if (!actor.manager) await requireActiveGateTaskWorkday(c, session);
+    if (command.action === "create" && (await c.query("SELECT id FROM gate_shift_actions WHERE item_id=$1 LIMIT 1", [command.taskId ?? command.operationId])).rows.length) throw new GateTaskError(409, "An original action with this identity requires office attribution");
     const vendorId = actor.platform ? command.vendorId ?? actor.vendorId : actor.vendorId;
     const gate = (await c.query(`SELECT g.id,g.site_id FROM gate_stations g JOIN site_locations s ON s.id=g.site_id WHERE g.id=$1 AND g.active=true AND s.is_active=true AND s.hidden IS DISTINCT FROM true AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=g.site_id AND a.vendor_id=$2 AND a.is_gate_contractor=true)`, [command.stationId, vendorId])).rows[0];
     if (!gate || !vendorId) throw new GateTaskError(403, "Choose a gate served by this vendor");
@@ -134,6 +137,7 @@ export async function mutateGateTaskInTransaction(c: PoolClient, session: Sessio
         LEFT JOIN vendor_people p ON p.id=m.vendor_people_id WHERE m.user_id=$1 AND m.vendor_id=$2 AND m.org_type='vendor' AND (m.role='admin' OR (p.is_active=true AND p.deleted_at IS NULL))`, [command.assigneeUserId, task.owner_org_id])).rows.length) throw new GateTaskError(403, "Choose a current employee of this vendor");
       task.assignee_user_id = command.assigneeUserId ?? null; eventType = "assigned";
     } else if (command.action === "reopen") {
+      if (task.assignee_user_id && task.assignee_user_id !== actor.userId && !actor.manager) throw new GateTaskError(403, "This task is assigned to another employee");
       await requireActiveGateTaskWorkday(c, session);
       if (task.status !== "completed") throw new GateTaskError(409, "Only completed tasks can be reopened");
       delete context.completedById; delete context.completedAt; delete context.completionNote;

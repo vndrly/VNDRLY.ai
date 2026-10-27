@@ -70,6 +70,8 @@ it("rejects off-shift completion, foreign vendors and forged gatekeeper roles; c
   await start(foreign.worker);
   await expect(mutateGateTask(foreign.worker, command)).rejects.toMatchObject({ status: 404 });
   expect((await readGateTaskHopper(foreign.worker, { taskId: made.task.id })).tasks).toHaveLength(0);
+  await expect(mutateGateTask(f.office, { operationId: randomUUID(), actorUserId: f.worker.userId, action: "create", stationId: f.gates[0]!.id, vendorId: f.vendor, text: "Old account draft" })).rejects.toMatchObject({ status: 409 });
+  await expect(mutateGateTask(f.office, { operationId: randomUUID(), actorUserId: f.office.userId, action: "create", stationId: f.gates[0]!.id, vendorId: foreign.vendor, text: "Old vendor draft" })).rejects.toMatchObject({ status: 409 });
   await pool.query("UPDATE vendor_people SET vendor_role='field' WHERE id=$1", [f.worker.vendorPeopleId]);
   await expect(readGateTaskHopper({ ...f.worker, vendorRole: "gatekeeper" }, {})).rejects.toMatchObject({ status: 403 });
 });
@@ -92,7 +94,7 @@ it("imports open legacy actions once, leaves resolved and ambiguous ownership un
   for (const id of [open, resolved]) await pool.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'open','Legacy action')", [f.gates[0]!.id, f.worker.userId, id]);
   await pool.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'resolve','Legacy resolution')", [f.gates[0]!.id, f.worker.userId, resolved]);
   const c = await pool.connect();
-  try { await migrateGateTaskHopper(c); await migrateGateTaskHopper(c); } finally { c.release(); }
+  try { await c.query("BEGIN"); await migrateGateTaskHopper(c); await migrateGateTaskHopper(c); await c.query("COMMIT"); } finally { c.release(); }
   expect((await readGateTaskHopper(f.worker, {})).tasks.map(task => task.id)).toContain(open);
   expect((await pool.query("SELECT id FROM work_hub_tasks WHERE id=$1", [resolved])).rows).toHaveLength(0);
   expect((await pool.query("SELECT id FROM work_hub_task_events WHERE task_id=$1", [open])).rows).toHaveLength(1);
@@ -109,6 +111,8 @@ it("lets an explicitly assigned non-gate employee complete their task, but not b
   expect((await gateTaskOptions(employee, made.task.id)).canComplete).toBe(true);
   const completed = await mutateGateTask(employee, { operationId: randomUUID(), action: "complete", taskId: made.task.id, expectedVersion: assigned.task.version, note: "Repaired the lamp" });
   expect(completed.task.gateHopper.completedById).toBe(employee.userId);
+  await start(f.worker);
+  await expect(mutateGateTask(f.worker, { operationId: randomUUID(), action: "reopen", taskId: made.task.id, expectedVersion: completed.task.version })).rejects.toMatchObject({ status: 403, message: "This task is assigned to another employee" });
   await expect(create(f, employee)).rejects.toMatchObject({ status: 403 });
 });
 it("keeps private vendor hopper text out of another contractor's Gate state and saved facts while preserving the common revision", async () => {
@@ -127,8 +131,10 @@ it("retains ambiguous legacy actions for explicit office attribution and imports
   await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)", [f.gates[0]!.site_id, f.work, other.vendor]);
   await pool.query("INSERT INTO user_org_memberships(user_id,org_type,vendor_id,role) VALUES($1,'vendor',$2,'member')", [f.worker.userId, other.vendor]);
   await pool.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'open','Original ambiguous action')", [f.gates[0]!.id, f.worker.userId, id]);
-  const c = await pool.connect(); try { await migrateGateTaskHopper(c); } finally { c.release(); }
+  const c = await pool.connect(); try { await c.query("BEGIN"); await migrateGateTaskHopper(c); await c.query("COMMIT"); } finally { c.release(); }
   expect((await readGateTaskHopper(f.worker, { stationId: f.gates[0]!.id })).unimported.some(item => item.id === id)).toBe(true);
+  await start(f.worker);
+  await expect(mutateGateTask(f.worker, { operationId: id, action: "create", stationId: f.gates[0]!.id, text: "Replace original without attribution" })).rejects.toMatchObject({ status: 409 });
   await expect(mutateGateTask(f.worker, { operationId: randomUUID(), action: "import", taskId: id, stationId: f.gates[0]!.id })).rejects.toMatchObject({ status: 403 });
   const adopted = await mutateGateTask(f.office, { operationId: randomUUID(), action: "import", taskId: id, stationId: f.gates[0]!.id });
   expect(adopted.task.ownerOrgId).toBe(f.vendor);
@@ -137,11 +143,38 @@ it("retains ambiguous legacy actions for explicit office attribution and imports
 });
 it("waits for the station lock used by handoff preparation before recording a task change", async () => {
   const f = await fixture(), holder = await pool.connect();
+  const made = await create(f); await start(f.worker);
   await holder.query("BEGIN"); await holder.query("SELECT id FROM gate_stations WHERE id=$1 FOR UPDATE", [f.gates[1]!.id]);
   let finished = false;
-  const pending = create(f).then(result => { finished = true; return result; });
+  const pending = mutateGateTask(f.worker, { operationId: randomUUID(), action: "complete", taskId: made.task.id, expectedVersion: made.task.version,
+    stationId: f.gates[0]!.id, note: "Canonical station lock must win over caller input" }).then(result => { finished = true; return result; });
   await new Promise(resolve => setTimeout(resolve, 60));
   expect(finished).toBe(false);
   await holder.query("COMMIT"); holder.release();
   expect((await pending).task.title).toBe("Inspect west gate lamp");
+});
+it("serializes legacy backfill with an in-flight station action instead of importing a stale open state", async () => {
+  const f = await fixture(), id = randomUUID(), holder = await pool.connect(), migration = await pool.connect();
+  await pool.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'open','Legacy pending action')", [f.gates[0]!.id, f.worker.userId, id]);
+  await holder.query("BEGIN"); await holder.query("SELECT id FROM gate_stations WHERE id=$1 FOR UPDATE", [f.gates[0]!.id]);
+  await holder.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'resolve','Old client resolution')", [f.gates[0]!.id, f.worker.userId, id]);
+  await migration.query("BEGIN"); let finished = false;
+  const pending = migrateGateTaskHopper(migration).then(() => { finished = true; });
+  await new Promise(resolve => setTimeout(resolve, 60)); expect(finished).toBe(false);
+  await holder.query("COMMIT"); holder.release();
+  await pending; await migration.query("COMMIT"); migration.release();
+  expect((await pool.query("SELECT id FROM work_hub_tasks WHERE id=$1", [id])).rows).toHaveLength(0);
+});
+it("puts a manager-completed assigned task on the completing employee's calendar rather than attributing it to the assignee", async () => {
+  const f = await fixture(); await start(f.office); const made = await create(f);
+  const assigned = await mutateGateTask(f.office, { operationId: randomUUID(), action: "assign", taskId: made.task.id, expectedVersion: made.task.version, assigneeUserId: f.relief.userId });
+  await mutateGateTask(f.office, { operationId: randomUUID(), action: "complete", taskId: made.task.id, expectedVersion: assigned.task.version, note: "Office employee completed the inspection" });
+  const { default: routes } = await import("../routes/workHubOperations"), app = express().use(cookieParser()).use(routes);
+  const range = { start: new Date(Date.now() - 86400000).toISOString(), end: new Date(Date.now() + 86400000).toISOString() };
+  const relief = await request(app).get("/work-hub/calendar").query(range).set("Cookie", buildTestCookie(f.relief));
+  expect(relief.status).toBe(200); expect(relief.body.tasks.some((row: any) => row.item.id === made.task.id)).toBe(false);
+  const performer = await request(app).get("/work-hub/calendar").query({ ...range, workerUserId: f.office.userId }).set("Cookie", buildTestCookie(f.office));
+  const record = performer.body.tasks.find((row: any) => row.item.id === made.task.id);
+  expect(performer.status).toBe(200); expect(record.item.employeeName).toBe("office fixture");
+  expect(record.item.siteName).toContain("West"); expect(record.item.gateName).toBe("Main gate");
 });

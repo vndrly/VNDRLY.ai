@@ -1320,7 +1320,7 @@ function TasksModule() {
   });
   return (
     <Shell module="tasks">
-      {(!linkedTask || tasks.data?.some(row => row.id === linkedTask && row.gateHopper)) && <GateTaskHopper taskId={linkedTask ?? undefined} allowCreate={!linkedTask} />}
+      <GateTaskHopper taskId={linkedTask ?? undefined} allowCreate={!linkedTask} />
       {isWorkHubAdmin(user)&&<BrandPillButton tone="brand" href="/work-hub/library">{t("workHubLibrary.manage")}</BrandPillButton>}
       <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>
       <AssignedCards completed={showCompleted}/>

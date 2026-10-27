@@ -19,11 +19,14 @@ it("completes an unassigned task using its current version, completion note and 
   mount(); fireEvent.click(await screen.findByText("Check lamp"));
   const complete = screen.getByRole("button", { name: "Complete task" });
   expect((complete as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.change(screen.getByLabelText("Unassigned task"), { target: { value: "Draft for a different hopper task" } });
   fireEvent.change(screen.getByLabelText("Completion note"), { target: { value: "Replaced and tested" } });
   fireEvent.click(complete);
   await waitFor(() => expect(mocks.request.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
   const call = mocks.request.mock.calls.find(([, init]) => init?.method === "POST")!;
-  expect(JSON.parse(call[1].body)).toMatchObject({ action: "complete", taskId: "task", expectedVersion: 3, note: "Replaced and tested", operationId: expect.any(String) });
+  expect(JSON.parse(call[1].body)).toMatchObject({ actorUserId: 9, action: "complete", taskId: "task", expectedVersion: 3, note: "Replaced and tested", operationId: expect.any(String) });
+  await waitFor(() => expect((screen.getByRole("button", { name: "Complete task" }) as HTMLButtonElement).disabled).toBe(false));
+  expect((screen.getByLabelText("Unassigned task") as HTMLTextAreaElement).value).toBe("Draft for a different hopper task");
   expect(screen.queryByRole("button", { name: /Assume|Handoff|End Shift/ })).toBeNull();
 });
 it("shows completion disabled when the canonical shift options say the worker is off shift", async () => {

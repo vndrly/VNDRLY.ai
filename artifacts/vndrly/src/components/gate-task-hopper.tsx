@@ -14,42 +14,53 @@ type Options = { gates: { stationId: string; siteId: number; siteName: string; g
   people: { userId: number; name: string; vendorId: number }[]; canManage: boolean; canComplete: boolean };
 type LegacyItem = { id: string; stationId: string; text: string; createdAt: string; siteName: string; gateName: string };
 type Page = { tasks: GateHopperTask[]; unimported?: LegacyItem[]; canManage: boolean; total: number; nextBefore: string | null };
-type Command = { operationId: string; action: "create" | "import" | "complete" | "assign" | "clear" | "delete"; taskId?: string; expectedVersion?: number; text?: string; note?: string; stationId?: string; vendorId?: number; assigneeUserId?: number | null };
+type Command = { operationId: string; actorUserId?: number; action: "create" | "import" | "complete" | "assign" | "clear" | "delete"; taskId?: string; expectedVersion?: number; text?: string; note?: string; stationId?: string; vendorId?: number; assigneeUserId?: number | null };
 export function useGateHopperOptions(enabled = true, taskId?: string) {
   const { user } = useAuth();
-  return useQuery<Options>({ queryKey: ["gate-task-hopper-options", user?.userId, user?.activeMembershipId, taskId], queryFn: () => workHubRequest(`/gate-task-hopper/options${taskId ? `?taskId=${encodeURIComponent(taskId)}` : ""}`), enabled: Boolean(user) && enabled, retry: false, refetchInterval: 15000 });
+  return useQuery<Options>({ queryKey: ["gate-task-hopper-options", user?.userId, user?.activeMembershipId, user?.vendorId, taskId], queryFn: () => workHubRequest(`/gate-task-hopper/options${taskId ? `?taskId=${encodeURIComponent(taskId)}` : ""}`), enabled: Boolean(user) && enabled, retry: false, refetchInterval: 15000 });
 }
-export default function GateTaskHopper({ stationId, collapsed = false, taskId, allowCreate = true, showTitle = true }: { stationId?: string; collapsed?: boolean; taskId?: string; allowCreate?: boolean; showTitle?: boolean }) {
+type HopperProps = { stationId?: string; collapsed?: boolean; taskId?: string; allowCreate?: boolean; showTitle?: boolean };
+export default function GateTaskHopper(props: HopperProps) {
+  const { user } = useAuth();
+  return <GateTaskHopperContents key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${props.stationId}:${props.taskId}`} {...props} />;
+}
+function GateTaskHopperContents({ stationId, collapsed = false, taskId, allowCreate = true, showTitle = true }: HopperProps) {
   const { user } = useAuth(), { i18n } = useTranslation(), cache = useQueryClient();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   // Server options recognize current normalized gate roles as well as legacy roles.
   const eligible = Boolean(user && (user.role === "admin" || user.vendorId));
   const [before, setBefore] = useState<string | null>(null), [all, setAll] = useState<GateHopperTask[]>([]), [text, setText] = useState(""), [gate, setGate] = useState(""), [error, setError] = useState(""), [busy, setBusy] = useState(false);
   const pending = useRef<Command | null>(null);
+  const identity = `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}`, identityRef = useRef(identity); identityRef.current = identity;
+  useEffect(() => { identityRef.current = identity; return () => { identityRef.current = "unmounted"; }; }, [identity]);
   const options = useGateHopperOptions(eligible, taskId);
   const query = new URLSearchParams({ ...(stationId ? { stationId } : {}), ...(taskId ? { taskId } : {}), ...(before ? { before } : {}) });
-  const tasks = useQuery<Page>({ queryKey: ["gate-task-hopper", user?.userId, user?.activeMembershipId, stationId, taskId, before], queryFn: () => workHubRequest(`/gate-task-hopper?${query}`), enabled: eligible, retry: false, refetchInterval: before ? false : 15000 });
-  useEffect(() => { setBefore(null); setAll([]); setGate(""); setError(""); pending.current = null; }, [user?.userId, user?.activeMembershipId, stationId, taskId]);
+  const tasks = useQuery<Page>({ queryKey: ["gate-task-hopper", user?.userId, user?.activeMembershipId, user?.vendorId, stationId, taskId, before], queryFn: () => workHubRequest(`/gate-task-hopper?${query}`), enabled: eligible, retry: false, refetchInterval: before ? false : 15000 });
+  useEffect(() => { setBefore(null); setAll([]); setGate(""); setError(""); setBusy(false); pending.current = null; }, [user?.userId, user?.activeMembershipId, user?.vendorId, stationId, taskId]);
   useEffect(() => { if (tasks.data) setAll(prior => before ? [...prior.filter(item => !tasks.data!.tasks.some(next => next.id === item.id)), ...tasks.data!.tasks] : tasks.data!.tasks); }, [tasks.data, before]);
   const gates = options.data?.gates.filter(item => !stationId || item.stationId === stationId) ?? [];
   const selected = gates.find(item => `${item.vendorId}:${item.stationId}` === gate) ?? (gates.length === 1 ? gates[0] : undefined);
   const perform = async (command: Omit<Command, "operationId">) => {
     if (busy || pending.current) return;
-    pending.current = { operationId: crypto.randomUUID(), ...command }; await sendPending();
+    pending.current = { operationId: crypto.randomUUID(), ...command, actorUserId: user!.userId }; await sendPending();
   };
   async function sendPending() {
     if (busy || !pending.current) return; setBusy(true); setError("");
+    const sent = pending.current, sourceIdentity = identityRef.current;
     try {
-      await workHubRequest("/gate-task-hopper", { method: "POST", body: JSON.stringify(pending.current) }); pending.current = null; setText(""); setBefore(null);
+      await workHubRequest("/gate-task-hopper", { method: "POST", body: JSON.stringify(sent) });
+      if (sourceIdentity !== identityRef.current) return;
+      pending.current = null; if (sent.action === "create") setText(""); setBefore(null);
       await Promise.all([cache.invalidateQueries({ queryKey: ["gate-task-hopper"] }), cache.invalidateQueries({ queryKey: ["work-hub"] }), cache.invalidateQueries({ queryKey: ["change-over-state"] })]);
     } catch (caught) {
+      if (sourceIdentity !== identityRef.current) return;
       const status = (caught as { status?: number }).status;
       if (status && status < 500) pending.current = null;
       if (status === 409) void cache.invalidateQueries({ queryKey: ["gate-task-hopper"] });
       setError(caught instanceof Error ? caught.message : c("Task change could not be verified", "No se pudo verificar el cambio"));
-    } finally { setBusy(false); }
+    } finally { if (sourceIdentity === identityRef.current) setBusy(false); }
   }
-  if (!eligible || options.isError && (options.error as { status?: number }).status === 403) return null;
+  if (!eligible || options.isError && (options.error as { status?: number }).status === 403 || taskId && tasks.data?.tasks.length === 0) return null;
   const content = <div className="gate-hopper-body">
     {tasks.isError && <p role="alert">{c("Task records could not load.", "No se pudieron cargar las tareas.")}</p>}
     {tasks.isPending && <p role="status">{c("Loading tasks…", "Cargando tareas…")}</p>}

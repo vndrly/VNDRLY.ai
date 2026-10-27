@@ -6,7 +6,14 @@ export const gateTaskHopperStatements = ["ALTER TABLE work_hub_tasks ADD COLUMN 
 /** Existing action IDs become task IDs; ambiguous vendor attribution remains in
  * the original action history and is reported instead of guessing an employer. */
 export async function migrateGateTaskHopper(c: Pick<pg.Client, "query">) {
-  for (const statement of gateTaskHopperStatements) await c.query(statement);
+  // Caller owns the transaction. Freeze gate creation and serialize existing
+  // stations against the old API's action/handoff locks before reading history.
+  await c.query("LOCK TABLE gate_stations IN SHARE MODE");
+  await c.query("SELECT id FROM gate_stations ORDER BY id FOR UPDATE");
+  const existing = await c.query("SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='work_hub_tasks' AND column_name='gate_hopper'");
+  if (existing.rows.length && existing.rows[0].data_type !== "jsonb") throw new Error("Existing gate_hopper column must be jsonb; no data was changed");
+  // Avoid an unnecessary AccessExclusive task-table lock during repeat runs.
+  if (!existing.rows.length) for (const statement of gateTaskHopperStatements) await c.query(statement);
   const result = await c.query(`WITH latest AS (
     SELECT DISTINCT ON(item_id) item_id,station_id,kind FROM gate_shift_actions WHERE kind IN ('open','resolve','reopen') ORDER BY item_id,created_at DESC,id DESC
   ), origins AS (
