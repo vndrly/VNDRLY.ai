@@ -4,6 +4,7 @@ import { ReceiptEditor } from "./receipt-editor";
 import { ConversationTitle } from "./conversation-title";
 import { ConversationAttachments } from "./conversation-attachments";
 import { ConversationTranscript } from "./conversation-transcript";
+import { NotificationTree } from "./notification-tree";
 import { NewChat } from "./new-chat";
 import { NewChannel } from "./new-channel";
 import { NewPoll, PollWorkspace, usePollCampaigns } from "./polls";
@@ -14,10 +15,12 @@ import "./collaboration.css";
 import { useEffect, useRef, useState } from "react";
 import { useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check, Reply, Pencil, Vote } from "lucide-react";
+import { MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check, Reply, Pencil, Vote, Menu, Plus, Layers3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import {
+  canCreateWorkHubChannels,
+  canModerateWorkHubMessages,
   commandEnvelope,
   createWorkHubOperationId,
   ownerForUser,
@@ -25,6 +28,7 @@ import {
   workHubRequest,
 } from "@/lib/work-hub-client";
 import BrandPillButton from "@/components/brand-pill-button";
+import SphereBackButton from "@/components/sphere-back-button";
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -129,7 +133,6 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [channelName, setChannelName] = useState("");
   const [memberRole, setMemberRole] = useState("member");
   const crewChannels = useRows(`/crews/${crew}/channels`, false);
-  const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [name, setName] = useState("");
   const [person, setPerson] = useState(() => chat ? new URLSearchParams(window.location.search).get("person") ?? "" : "");
@@ -144,12 +147,18 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [editing, setEditing] = useState<Row | null>(null);
   const [createPanel, setCreatePanel] = useState<"channel" | "chat" | "poll">("chat");
   const [createOpen, setCreateOpen] = useState(false);
+  const [chooserOpen, setChooserOpen] = useState(!linkedChannelId);
+  const [controlsExpanded, setControlsExpanded] = useState(true);
+  const restoredPreference = useRef(false);
   const [selectedPollId, setSelectedPollId] = useState("");
   const pollCampaigns = usePollCampaigns();
+  useEffect(() => {
+    if (linkedChannelId) setChooserOpen(false);
+  }, [linkedChannelId]);
 
 
   const list = !chat && crew ? crewChannels.data : channels.data;
-  const active = selected || list?.[0]?.id;
+  const active = selected;
   const channel =
     list?.find((c) => c.id === active) ??
     channels.data?.find((c) => c.id === active);
@@ -172,6 +181,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
       (member) => member.userId === user?.userId && member.mode === "owner",
     );
   const canAdministerChannels = isWorkHubAdmin(user);
+  const canCreateChannels = canCreateWorkHubChannels(user);
+  const canModerateMessages = canModerateWorkHubMessages(user);
   const retryOperations = useRef(new Map<string, string>());
   const mutation = useMutation({
     mutationFn: async ({
@@ -206,6 +217,19 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     setEditing(null);
   }, [active]);
   useEffect(() => {
+    if (restoredPreference.current || linkedChannelId || !channels.data) return;
+    restoredPreference.current = true;
+    const remembered = channels.data.find(
+      (item) => item.id === preferences.lastConversationId,
+    );
+    if (remembered) {
+      setSelected(remembered.id);
+      setChooserOpen(false);
+      return;
+    }
+    setChooserOpen(true);
+  }, [channels.data, linkedChannelId, preferences.lastConversationId]);
+  useEffect(() => {
     if (!active || !messages.data?.[0]?.id) return;
     void workHubRequest(`/channels/${active}/read-cursor`, {
       method: "PUT",
@@ -234,18 +258,24 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     setEditing(null);
     save.mutate({ drafts: { ...preferences.drafts, [active]: "" } });
   }
+  function selectConversation(channelId: string) {
+    setSelected(channelId);
+    setSelectedPollId("");
+    setChooserOpen(false);
+    setCreateOpen(false);
+    save.mutate({ lastConversationId: channelId });
+  }
+  function selectPoll(campaignId: string) {
+    setSelectedPollId(campaignId);
+    setChooserOpen(false);
+    setCreateOpen(false);
+  }
   const visible = list?.filter(
     (c) =>
-      `${c.name}`.toLowerCase().includes(search.toLowerCase()) &&
-      (filter === "all" ||
-        (filter === "unread" && c.unreadCount > 0) ||
-        (filter === "favorites" && preferences.favorites.includes(c.id)) ||
-        (filter === "drafts" && !!(drafts[c.id] ?? preferences.drafts[c.id]))),
+      `${c.name}`.toLowerCase().includes(search.toLowerCase()),
   );
   const visiblePolls = (pollCampaigns.polls ?? []).filter(
-    (poll) =>
-      poll.title.toLowerCase().includes(search.toLowerCase()) &&
-      (filter === "all" || (filter === "unread" && !poll.completed)),
+    (poll) => poll.title.toLowerCase().includes(search.toLowerCase()),
   );
   const selectedPoll = pollCampaigns.polls?.find(
     (poll) => poll.campaignId === selectedPollId,
@@ -447,13 +477,145 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   }
   return (
     <section className="hub-chat-page w-full space-y-4 p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
-      <WorkHubPageHeading module="chat" title={`${brand.name || "Company"} Conversations`} compact />
-      <div className="hub-conversation-layout grid gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
+      <WorkHubPageHeading module="chat" title="Conversations" compact />
+      <div className="hub-conversation-layout grid gap-4" data-controls-collapsed={!controlsExpanded}>
       <aside
         aria-label="Conversations panel"
         data-work-hub-card
-        className={`min-w-0 space-y-4 p-4 ${WORK_HUB_CARD_CLASS}`}
+        className={`hub-conversations-panel min-w-0 p-4 ${WORK_HUB_CARD_CLASS}`}
+        style={{ paddingTop: "8px", paddingLeft: "8px", paddingBottom: "9.6px" }}
       >
+        <div
+          className="hub-conversation-header flex items-center gap-1"
+          style={{ position: "absolute", top: "8px", left: "8px", right: "16px", zIndex: 20 }}
+        >
+          <button
+            type="button"
+            className="group inline-flex items-center"
+            aria-expanded={controlsExpanded}
+            aria-label={controlsExpanded ? "Collapse conversation controls" : "Expand conversation controls"}
+            title={controlsExpanded ? "Collapse conversation controls" : "Expand conversation controls"}
+            onClick={() => {
+              setTab("conversation");
+              setCreateOpen(false);
+              setChooserOpen(!controlsExpanded);
+              setControlsExpanded((expanded) => !expanded);
+            }}
+          >
+            <SphereBackButton size={40} overlay={<Layers3 className="lucide-layers-3 h-5 w-5" />} />
+          </button>
+          {controlsExpanded && (
+            <div
+              role="toolbar"
+              aria-label="Conversation controls drawer"
+              aria-orientation="horizontal"
+              className="hub-conversation-drawer flex min-w-0 flex-1 items-center gap-1"
+            >
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  className="hub-conversation-tool"
+                  aria-label="Choose a conversation"
+                  title="Choose a conversation"
+                  aria-expanded={chooserOpen}
+                  onClick={() => {
+                    setChooserOpen((open) => !open);
+                    setCreateOpen(false);
+                    setTab("conversation");
+                  }}
+                >
+                  <Menu className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="hub-conversation-tool"
+                  aria-label="Create new"
+                  title="Create new"
+                  aria-expanded={createOpen}
+                  onClick={() => {
+                    setCreateOpen((open) => !open);
+                    setChooserOpen(false);
+                    setTab("conversation");
+                  }}
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                </button>
+                {active && (
+                  <button
+                    type="button"
+                    role="tab"
+                    className="hub-conversation-tool"
+                    aria-label={channel?.contextKind === "chat" ? "People" : "People and groups"}
+                    title={channel?.contextKind === "chat" ? "People" : "People and groups"}
+                    aria-selected={tab === "people"}
+                    onClick={() => {
+                      setChooserOpen(false);
+                      setCreateOpen(false);
+                      setTab((current) => current === "people" ? "conversation" : "people");
+                    }}
+                  >
+                    <Users className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+                {active && channel?.contextKind !== "chat" && canAdministerChannels && (
+                  <button
+                    type="button"
+                    className="hub-conversation-tool"
+                    aria-label="Delete channel"
+                    title="Delete channel"
+                    disabled={mutation.isPending}
+                    onClick={() => {
+                      if (!window.confirm("Delete this channel? It will be removed from participant views. Audit history is retained.")) return;
+                      mutation
+                        .mutateAsync({
+                          path: `/channels/${active}`,
+                          method: "DELETE",
+                          data: commandEnvelope(channelOwner!, {}),
+                        })
+                        .then(() => {
+                          setSelected("");
+                          setChooserOpen(true);
+                          save.mutate({ lastConversationId: null });
+                        })
+                        .catch(() => undefined);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+              {active && (
+                <>
+                  <div
+                    role="separator"
+                    aria-label="Conversation control groups"
+                    aria-orientation="vertical"
+                    className="mx-1 h-6 w-px shrink-0 bg-[color:var(--brand-primary)]"
+                  />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <ConversationTranscript key={active} channelId={active} />
+                    <div className="flex shrink-0 items-center gap-1" role="tablist" aria-label="Conversation tools">
+                      {([{ id: "conversation", label: "History", icon: MessageSquare }, { id: "shared", label: "Files", icon: Folder },
+                        { id: "notes", label: "Notes", icon: StickyNote }, { id: "receipts", label: "Receipts", icon: ReceiptText }]).map(({ id, label, icon: Icon }) => (
+                        <button key={id} type="button" role="tab" aria-label={label} title={label} aria-selected={tab === id}
+                          className="hub-conversation-tool" onClick={() => {
+                            setChooserOpen(false);
+                            setCreateOpen(false);
+                            setTab((current) => current === id ? "conversation" : id);
+                          }}>
+                          <Icon className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        {controlsExpanded && chooserOpen && (
+        <section role="region" aria-label="Conversation chooser" className="hub-conversation-chooser-card">
+        <div className="hub-conversation-chooser-scroll">
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -464,17 +626,6 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <BrandedSelect
-          aria-label="Conversation filter"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          {["all", "unread", "favorites", "drafts"].map((x) => (
-            <option key={x} value={x}>
-              {x[0].toUpperCase() + x.slice(1)}
-            </option>
-          ))}
-        </BrandedSelect>
         {!chat && (
           <BrandedSelect
             aria-label="Crew"
@@ -499,6 +650,44 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         <HubError error={channels.error ?? crews.error} />
         {channels.isLoading && <p role="status">Loading conversations…</p>}
         <nav aria-label="Conversations" className="space-y-1">
+          <NotificationTree />
+          <details open className="hub-conversation-category">
+            <summary>
+              <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
+              Polls
+              <span>{visiblePolls.length}</span>
+            </summary>
+            {visiblePolls.length === 0 && (
+              <p className="pb-3 text-xs text-muted-foreground">No polls in this view.</p>
+            )}
+            {visiblePolls.map((poll) => (
+              <div
+                key={poll.campaignId}
+                data-selected={selectedPollId === poll.campaignId}
+                className="hub-chat-conversation flex items-center rounded-lg"
+              >
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 p-3 text-left"
+                  onClick={() => selectPoll(poll.campaignId)}
+                >
+                  <span className="flex items-center gap-2 font-medium">
+                    <Vote className="h-4 w-4" aria-label="Poll" />
+                    {poll.title}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {poll.completed
+                      ? "Response saved"
+                      : poll.state.status === "draft"
+                        ? "Draft"
+                        : poll.state.deadline
+                          ? `Closes ${new Date(poll.state.deadline).toLocaleString()}`
+                          : poll.state.status}
+                  </span>
+                </button>
+              </div>
+            ))}
+          </details>
           {(["Channels", "Chats"] as const).map(category => {
             const entries = visible?.filter(c => conversationCategory(c) === category) ?? [];
             const Icon = category === "Chats" ? MessageSquare : Hash;
@@ -513,10 +702,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             >
               <button
                 className="min-w-0 flex-1 p-3 text-left"
-                onClick={() => {
-                  setSelected(c.id);
-                  setSelectedPollId("");
-                }}
+                onClick={() => selectConversation(c.id)}
               >
                 <span className="flex items-center gap-2 font-medium">
                   <Icon className="h-4 w-4" aria-label={category === "Chats" ? "Chat" : "Channel"} />
@@ -549,48 +735,14 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               ))}
             </details>;
           })}
-          <details open className="hub-conversation-category">
-            <summary>
-              <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
-              Polls
-              <span>{visiblePolls.length}</span>
-            </summary>
-            {visiblePolls.length === 0 && (
-              <p className="pb-3 text-xs text-muted-foreground">No polls in this view.</p>
-            )}
-            {visiblePolls.map((poll) => (
-              <div
-                key={poll.campaignId}
-                data-selected={selectedPollId === poll.campaignId}
-                className="hub-chat-conversation flex items-center rounded-lg"
-              >
-                <button
-                  type="button"
-                  className="min-w-0 flex-1 p-3 text-left"
-                  onClick={() => setSelectedPollId(poll.campaignId)}
-                >
-                  <span className="flex items-center gap-2 font-medium">
-                    <Vote className="h-4 w-4" aria-label="Poll" />
-                    {poll.title}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {poll.completed
-                      ? "Response saved"
-                      : poll.state.status === "draft"
-                        ? "Draft"
-                        : poll.state.deadline
-                          ? `Closes ${new Date(poll.state.deadline).toLocaleString()}`
-                          : poll.state.status}
-                  </span>
-                </button>
-              </div>
-            ))}
-          </details>
         </nav>
         {!visible?.length && !visiblePolls.length && !channels.isLoading && (
           <p className="text-sm text-muted-foreground">
             No conversations match this view.
           </p>
+        )}
+        </div>
+        </section>
         )}
         {!chat && (
           <>
@@ -738,69 +890,47 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </Dialog>
           </>
         )}
+        {controlsExpanded && createOpen && (
         <section
+          role="region"
           aria-label="Create a channel, chat, or poll"
-          className={`hub-create-panel border-t ${WORK_HUB_SUBCARD_CLASS}`}
+          className={`hub-create-panel ${WORK_HUB_SUBCARD_CLASS}`}
         >
-          <div className="flex items-center gap-2 px-3 pt-3">
-            <p className="shrink-0 text-sm font-semibold">Create New:</p>
-            <button
-              type="button"
-              className="hub-create-toggle ml-auto"
-              aria-expanded={createOpen}
-              aria-label={createOpen ? "Collapse creation controls" : "Expand creation controls"}
-              onClick={() => setCreateOpen((open) => !open)}
-            >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
+          <p className="px-3 pt-3 text-sm font-semibold">Create New</p>
           <div className="grid grid-cols-3 gap-1 px-3 pb-3 pt-2" role="tablist" aria-label="Create new">
-            {(["channel", "chat", "poll"] as const).map((kind) => (
-              <button
-                key={kind}
-                type="button"
-                role="tab"
-                aria-selected={createPanel === kind}
-                className="hub-create-tab"
-                onClick={() => {
-                  setCreatePanel(kind);
-                  setCreateOpen(true);
-                }}
-              >
-                {kind[0].toUpperCase() + kind.slice(1)}
-              </button>
-            ))}
+            {(["channel", "chat", "poll"] as const).map((kind) => {
+              const disabled = kind === "channel" && !canCreateChannels;
+              return (
+                <button
+                  key={kind}
+                  type="button"
+                  role="tab"
+                  disabled={disabled}
+                  aria-selected={createPanel === kind}
+                  className="hub-create-tab"
+                  title={disabled ? "Only an administrator or office user can create channels" : undefined}
+                  onClick={() => setCreatePanel(kind)}
+                >
+                  {kind[0].toUpperCase() + kind.slice(1)}
+                </button>
+              );
+            })}
           </div>
-          {createOpen && <div
+          <div
             role="tabpanel"
             aria-label={`New ${createPanel}`}
-            className="hub-create-content mx-3 mb-3 grid gap-3 rounded-xl border p-3"
+            className="hub-create-content mx-3 mb-3 grid gap-3 rounded-xl p-3"
           >
-            {createPanel === "channel" &&
-              (canAdministerChannels ? (
-                <NewChannel
-                  onCreated={(id) => {
-                    setSelected(id);
-                    setSelectedPollId("");
-                  }}
-                />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  A company administrator can create a channel.
-                </p>
-              ))}
+            {createPanel === "channel" && canCreateChannels && (
+              <NewChannel onCreated={selectConversation} />
+            )}
             {createPanel === "chat" && (
-              <NewChat
-                onCreated={(id) => {
-                  setSelected(id);
-                  setSelectedPollId("");
-                }}
-              />
+              <NewChat onCreated={selectConversation} />
             )}
             {createPanel === "poll" && (
               <NewPoll
                 onCreated={(id) => {
-                  setSelectedPollId(id);
+                  selectPoll(id);
                   void pollCampaigns.query.refetch();
                 }}
               />
@@ -832,13 +962,14 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   </div>
                 </div>
               ))}
-          </div>}
+          </div>
         </section>
+        )}
         <HubError error={mutation.error ?? save.error} />
-      </aside>
       <main
         aria-label="Selected conversation workspace"
         className="grid min-w-0 content-start gap-4"
+        style={{ paddingTop: "40px" }}
       >
         {selectedPollId ? (
           selectedPoll ? (
@@ -849,54 +980,13 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </section>
           )
         ) : active ? (
-          <div className={`hub-communications-window ${WORK_HUB_CARD_CLASS}`}>
+          <div className={`hub-communications-window ${WORK_HUB_CARD_CLASS}`} style={{ borderWidth: 0 }}>
             <section
               aria-label="Selected channel"
               data-work-hub-card
               className={`flex w-full flex-col items-stretch gap-2 px-4 py-3 ${WORK_HUB_CARD_CLASS}`}
             >
               {channel ? <ConversationTitle key={active} channel={{ id: channel.id, name: channel.name, version: channel.version }} canRename={channel.contextKind === "chat" ? (channel.createdById === user?.userId || canAdministerChannels) : canAdministerChannels} /> : <h2>Conversation</h2>}
-              <div className="flex w-full items-center justify-end gap-1">
-              <ConversationTranscript key={active} channelId={active} />
-              {channel?.contextKind !== "chat" && canAdministerChannels && (
-                <div className="order-last">
-                  <button
-                    type="button"
-                    className="hub-conversation-tool"
-                    aria-label="Delete channel"
-                    title="Delete channel"
-                    disabled={mutation.isPending}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Delete this channel? It will be removed from participant views. Audit history is retained.",
-                        )
-                      )
-                        mutation
-                          .mutateAsync({
-                            path: `/channels/${active}`,
-                            method: "DELETE",
-                            data: commandEnvelope(channelOwner!, {}),
-                          })
-                          .then(() => setSelected(""))
-                          .catch(() => undefined);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-              <div className="flex items-center gap-1" role="tablist" aria-label="Conversation tools">
-                {([{ id: "conversation", label: "History", icon: MessageSquare }, { id: "shared", label: "Files", icon: Folder },
-                  { id: "people", label: channel?.contextKind === "chat" ? "People" : "People and groups", icon: Users },
-                  { id: "notes", label: "Notes", icon: StickyNote }, { id: "receipts", label: "Receipts", icon: ReceiptText }]).map(({ id, label, icon: Icon }) => (
-                  <button key={id} type="button" role="tab" aria-label={label} title={label} aria-selected={tab === id}
-                    className="hub-conversation-tool" onClick={() => setTab(id)}>
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-              </div>
             </section>
             <div className="contents">
               <HubError error={messages.error ?? notes.error} />
@@ -938,31 +1028,31 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                             <div className="ml-auto -mt-1 flex shrink-0 self-start items-center gap-0.5 text-xs text-muted-foreground">
 
                               {m.authorUserId === user?.userId && (
-                                <>
-                                  <button type="button" className="hub-message-action" title="Edit" aria-label="Edit"
-                                    onClick={() => {
-                                      setEditing(m);
-                                      setDrafts((d) => ({
-                                        ...d,
-                                        [active]: m.body,
-                                      }));
-                                    }}
-                                  ><Pencil className="h-4 w-4" aria-hidden="true" /></button>
-                                  <button type="button" className="hub-message-action" title="Delete" aria-label="Delete"
-                                    onClick={() =>
-                                      mutation.mutate({
-                                        path: `/channels/${active}/messages/${m.id}`,
-                                        method: "DELETE",
-                                        data: commandEnvelope(
-                                          channelOwner!,
-                                          {},
-                                          undefined,
-                                          m.version,
-                                        ),
-                                      })
-                                    }
-                                  ><Trash2 className="h-4 w-4" aria-hidden="true" /></button>
-                                </>
+                                <button type="button" className="hub-message-action" title="Edit" aria-label="Edit"
+                                  onClick={() => {
+                                    setEditing(m);
+                                    setDrafts((d) => ({
+                                      ...d,
+                                      [active]: m.body,
+                                    }));
+                                  }}
+                                ><Pencil className="h-4 w-4" aria-hidden="true" /></button>
+                              )}
+                              {(m.authorUserId === user?.userId || canModerateMessages) && (
+                                <button type="button" className="hub-message-action" title="Delete" aria-label="Delete"
+                                  onClick={() =>
+                                    mutation.mutate({
+                                      path: `/channels/${active}/messages/${m.id}`,
+                                      method: "DELETE",
+                                      data: commandEnvelope(
+                                        channelOwner!,
+                                        {},
+                                        undefined,
+                                        m.version,
+                                      ),
+                                    })
+                                  }
+                                ><Trash2 className="h-4 w-4" aria-hidden="true" /></button>
                               )}
                             </div>
                           )}
@@ -991,6 +1081,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     aria-label="Message composer"
                     data-work-hub-card
                     className={`grid w-full gap-3 p-4 ${WORK_HUB_CARD_CLASS}`}
+                    style={{ paddingTop: 0, paddingBottom: "9.6px" }}
                     onSubmit={(e) => {
                       e.preventDefault();
                       void send().catch(() => undefined);
@@ -1044,7 +1135,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 </>
               )}
               {tab === "receipts" && channelOwner && <div role="region" aria-label="Channel content" className="w-full space-y-3 p-4 md:p-6">
-                <ReceiptEditor key={active} channelId={active} owner={channelOwner} initialReceiptId={linkedChannelId === active ? linkedReceiptId : null} />
+                <ReceiptEditor key={active} channelId={active} owner={channelOwner} initialReceiptId={linkedChannelId === active ? linkedReceiptId : null} onCancel={() => setTab("conversation")} />
               </div>}
               {tab === "notes" && (
                 <div
@@ -1158,6 +1249,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
           </section>
         )}
       </main>
+      </aside>
       </div>
     </section>
   );

@@ -28,12 +28,14 @@ interface SphereBackButtonProps {
   size?: number;
   className?: string;
   direction?: "left" | "right" | "up";
+  overlay?: React.ReactNode;
 }
 
 export default function SphereBackButton({
   size = 32,
   className,
   direction = "left",
+  overlay,
 }: SphereBackButtonProps) {
   const maskCommon: React.CSSProperties = {
     WebkitMaskRepeat: "no-repeat",
@@ -73,16 +75,23 @@ export default function SphereBackButton({
         draggable={false}
         className="absolute inset-0 w-full h-full pointer-events-none select-none opacity-0 group-hover:opacity-100 transition-opacity duration-200"
       />
-      {/* 3. White arrow PNG laid on top with `screen` blend so the
-          black background drops out and the white arrow pops at full
-          brightness over the brand sphere. */}
-      <img
-        src={backIcon}
-        alt=""
-        draggable={false}
-        className="absolute inset-0 w-full h-full pointer-events-none select-none"
-        style={{ mixBlendMode: "screen", transform: direction === "up" ? "rotate(90deg)" : direction === "right" ? "rotate(180deg)" : undefined }}
-      />
+      {/* 3. The default arrow or a caller-provided white overlay icon. */}
+      {overlay ? (
+        <span
+          data-testid="sphere-button-overlay"
+          className="pointer-events-none absolute inset-0 flex select-none items-center justify-center text-white"
+        >
+          {overlay}
+        </span>
+      ) : (
+        <img
+          src={backIcon}
+          alt=""
+          draggable={false}
+          className="absolute inset-0 w-full h-full pointer-events-none select-none"
+          style={{ mixBlendMode: "screen", transform: direction === "up" ? "rotate(90deg)" : direction === "right" ? "rotate(180deg)" : undefined }}
+        />
+      )}
     </span>
   );
 }

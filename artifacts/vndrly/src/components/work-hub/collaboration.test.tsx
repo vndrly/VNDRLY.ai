@@ -5,13 +5,27 @@ import { ActivityWorkspace, CollaborationWorkspace, displayMentionText, conversa
 const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   save: vi.fn(),
+  listNotifications: vi.fn(),
+  markNotificationRead: vi.fn(),
   user: { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "admin" } as Record<string, any>,
+  preferences: { favorites: [] as string[], drafts: { c1: "Saved draft" } as Record<string, string>, lastConversationId: "c1" as string | null },
 }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: mocks.user }) }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ name: "MidCon Solutions", primary: "#00a6b2", accent: "#f2b134" }) }));
 vi.mock("@/components/brand-pill-button", () => ({ default: ({ children, tone: _tone, ...props }: any) => <button {...props}>{children}</button> }));
-vi.mock("./navigation", () => ({ useHubPreferences: () => ({ preferences: { favorites: [], drafts: { c1: "Saved draft" } }, save: { mutate: mocks.save } }) }));
+vi.mock("./navigation", () => ({ useHubPreferences: () => ({ preferences: mocks.preferences, save: { mutate: mocks.save, error: null } }) }));
 vi.mock("@/lib/work-hub-client", async importOriginal => ({ ...await importOriginal<any>(), workHubRequest: mocks.request }));
+vi.mock("@/lib/notifications-api", async importOriginal => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    notificationsApi: {
+      ...actual.notificationsApi,
+      list: mocks.listNotifications,
+      markRead: mocks.markNotificationRead,
+    },
+  };
+});
 function mount(chat = true) { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><CollaborationWorkspace chat={chat}/></QueryClientProvider>); }
 describe("Work Hub conversations", () => {
   it("groups site channels, crew conversations, and chats without duplicate entries", () => {
@@ -23,14 +37,21 @@ describe("Work Hub conversations", () => {
   it("lets ordinary users start chats while hiding channel creation", async () => {
     mocks.user.membershipRole = "member";
     mount(); await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Create new" }));
+    const channel = screen.getByRole("tab", { name: "Channel" });
+    expect(channel.hasAttribute("disabled")).toBe(true);
     fireEvent.click(screen.getByRole("tab", { name: "Chat" }));
     expect(screen.getByLabelText("Find chat participants")).toBeTruthy();
-    expect(screen.queryByText("New channel")).toBeNull();
+    expect(screen.getByRole("tab", { name: "Poll" }).hasAttribute("disabled")).toBe(false);
   });
   beforeEach(() => {
     window.history.replaceState(null, "", "/work-hub/chat");
     mocks.request.mockReset(); mocks.save.mockReset();
+    mocks.listNotifications.mockReset(); mocks.markNotificationRead.mockReset();
     mocks.user = { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "admin" };
+    mocks.preferences = { favorites: [], drafts: { c1: "Saved draft" }, lastConversationId: "c1" };
+    mocks.listNotifications.mockResolvedValue([]);
+    mocks.markNotificationRead.mockResolvedValue(undefined);
     mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
       if (init) return { resource: {} };
       if (path === "/channels?limit=100") return [{ id: "c1", name: "Operations", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 2 }, { id: "c2", name: "Dispatch", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 0 }];
@@ -56,6 +77,7 @@ describe("Work Hub conversations", () => {
   it("loads saved drafts and sends a reply with its thread root", async () => {
     mount();
     expect(await screen.findByDisplayValue("Saved draft")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Create new" }));
     fireEvent.click(screen.getByRole("tab", { name: "Chat" }));
     expect(screen.getByLabelText("Find chat participants")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Start Chat" }).className).toContain("w-fit");
@@ -66,22 +88,164 @@ describe("Work Hub conversations", () => {
     const call = mocks.request.mock.calls.find(([path, init]) => path === "/channels/c1/messages" && init?.method === "POST")!;
     expect(JSON.parse(call[1].body).payload).toMatchObject({ body: "Reply content", rootMessageId: "m1", parentMessageId: "m1" });
   });
-  it("keeps the branded creation subcard collapsible and swaps its three panels", async () => {
+  it("moves the full horizontal tool row into a left-card drawer controlled by the round button", async () => {
     mount();
     await screen.findByText("Original message");
-    const region = screen.getByRole("region", { name: "Create a channel, chat, or poll" });
-    const toggle = screen.getByRole("button", { name: "Expand creation controls" });
-    expect(toggle.getAttribute("aria-expanded")).toBe("false");
-    expect(screen.queryByRole("tabpanel")).toBeNull();
+    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
+    const selectedChannel = screen.getByRole("region", { name: "Selected channel" });
+    const drawer = screen.getByRole("toolbar", { name: "Conversation controls drawer" });
+    const masterSelector = screen.getByRole("button", { name: "Collapse conversation controls" });
+    const selectorRow = masterSelector.parentElement!;
+    expect(masterSelector.querySelector(".lucide-layers-3")).toBeTruthy();
+    expect(window.getComputedStyle(panel).paddingTop).toBe("8px");
+    expect(window.getComputedStyle(panel).paddingLeft).toBe("8px");
+    expect(window.getComputedStyle(selectorRow).position).toBe("absolute");
+    expect(window.getComputedStyle(selectorRow).top).toBe("8px");
+    expect(window.getComputedStyle(selectorRow).left).toBe("8px");
+    expect(drawer.getAttribute("aria-orientation")).toBe("horizontal");
+    expect(panel.contains(drawer)).toBe(true);
+    expect(selectedChannel.contains(drawer)).toBe(false);
+    [
+      "Choose a conversation",
+      "Create new",
+      "People and groups",
+      "Delete channel",
+      "Download transcript (.txt)",
+      "History",
+      "Files",
+      "Notes",
+      "Receipts",
+    ].forEach((name) => expect(drawer.contains(screen.getByLabelText(name))).toBe(true));
+    expect(drawer.contains(screen.getByRole("separator", { name: "Conversation control groups" }))).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Collapse conversation controls" }));
+    expect(screen.queryByRole("toolbar", { name: "Conversation controls drawer" })).toBeNull();
+    expect(screen.getByRole("region", { name: "Selected channel" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Expand conversation controls" }));
+    expect(screen.getByRole("toolbar", { name: "Conversation controls drawer" })).toBeTruthy();
+  });
+  it("keeps only one selector or conversation tool open at a time", async () => {
+    mount();
+    await screen.findByText("Original message");
+
+    fireEvent.click(screen.getByRole("button", { name: "Create new" }));
+    expect(screen.getByRole("region", { name: "Create a channel, chat, or poll" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    expect(screen.queryByRole("region", { name: "Create a channel, chat, or poll" })).toBeNull();
+    expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Notes" }));
+    expect(screen.queryByRole("region", { name: "Conversation chooser" })).toBeNull();
+    expect(screen.getByRole("tab", { name: "Notes" }).getAttribute("aria-selected")).toBe("true");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Notes" }));
+    expect(screen.getByRole("tab", { name: "History" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByText("Original message")).toBeTruthy();
+  });
+  it("cancels the active tool when the master selector retracts and reopens at the chooser", async () => {
+    mount();
+    await screen.findByText("Original message");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Receipts" }));
+    expect(screen.getByRole("region", { name: "Receipt editor" })).toBeTruthy();
+    expect(screen.queryByText("Original message")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Collapse conversation controls" }));
+    expect(screen.queryByRole("toolbar", { name: "Conversation controls drawer" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Receipt editor" })).toBeNull();
+    expect(screen.getByText("Original message")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand conversation controls" }));
+    expect(screen.getByRole("toolbar", { name: "Conversation controls drawer" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
+  });
+  it("opens the chooser on first visit with Search, Polls, Channels, then Chats and remembers a selection", async () => {
+    mocks.preferences.lastConversationId = null;
+    mount();
+    const chooser = await screen.findByRole("region", { name: "Conversation chooser" });
+    expect(chooser.className).toContain("hub-conversation-chooser-card");
+    expect(chooser.querySelector(".hub-conversation-chooser-scroll")).toBeTruthy();
+    expect(chooser.contains(screen.getByLabelText("Find conversations"))).toBe(true);
+    expect(screen.queryByRole("option", { name: "All" })).toBeNull();
+    const polls = screen.getByText("Polls");
+    const channels = screen.getByText("Channels");
+    const chats = screen.getByText("Chats");
+    expect(polls.compareDocumentPosition(channels) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(channels.compareDocumentPosition(chats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByText("Operations"));
+    expect(await screen.findByText("Original message")).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Conversation chooser" })).toBeNull();
+    expect(mocks.save).toHaveBeenCalledWith({ lastConversationId: "c1" });
+  });
+  it("shows collapsible notification categories with unread counters and two-line rows", async () => {
+    mocks.listNotifications.mockResolvedValue([
+      { id: 7, userId: 7, type: "ticket_assigned", category: "tickets", dedupeKey: null, title: "Assigned inspection", body: "Inspect Pump 14 before noon.", link: "/tickets/14", isRead: false, createdAt: "2026-10-27T05:00:00.000Z" },
+      { id: 8, userId: 7, type: "safety_event_update", category: "safety", dedupeKey: null, title: "Safety review updated", body: "Supervisor notes are available.", link: "/safety/events/8", isRead: true, createdAt: "2026-10-27T04:00:00.000Z" },
+    ]);
+    mount();
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+
+    const tree = await screen.findByRole("group", { name: "Notifications" });
+    expect(tree.querySelector("details[aria-label='Tickets notifications']")).toBeTruthy();
+    expect(tree.querySelector("details[aria-label='Safety Incidents notifications']")).toBeTruthy();
+    expect(screen.getByLabelText("1 unread Tickets notification")).toBeTruthy();
+    expect(screen.getByLabelText("0 unread Safety Incidents notifications")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Assigned inspection: Inspect Pump 14 before noon." })).toBeTruthy();
+  });
+  it("opens a notification above its tree and closes that layer with X or Mark read", async () => {
+    mocks.listNotifications.mockResolvedValue([
+      { id: 7, userId: 7, type: "ticket_assigned", category: "tickets", dedupeKey: null, title: "Assigned inspection", body: "Inspect Pump 14 before noon.", link: "/tickets/14", isRead: false, createdAt: "2026-10-27T05:00:00.000Z" },
+    ]);
+    mount();
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    const tree = await screen.findByRole("group", { name: "Notifications" });
+    const row = screen.getByRole("button", { name: "Assigned inspection: Inspect Pump 14 before noon." });
+
+    fireEvent.click(row);
+    const detail = screen.getByRole("dialog", { name: "Assigned inspection" });
+    expect(screen.getByRole("region", { name: "Conversation chooser" }).contains(detail)).toBe(true);
+    expect(tree.isConnected).toBe(true);
+    expect(detail.textContent).toContain("Inspect Pump 14 before noon.");
+    expect(mocks.markNotificationRead).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close notification" }));
+    expect(screen.queryByRole("dialog", { name: "Assigned inspection" })).toBeNull();
+    expect(tree.isConnected).toBe(true);
+
+    fireEvent.click(row);
+    fireEvent.click(screen.getByRole("button", { name: "Mark read" }));
+    await waitFor(() => expect(mocks.markNotificationRead).toHaveBeenCalledWith(7));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Assigned inspection" })).toBeNull());
+    expect(screen.getByRole("group", { name: "Notifications" })).toBeTruthy();
+  });
+  it("restores the remembered conversation and lets Menu reopen the chooser", async () => {
+    mocks.preferences.lastConversationId = "c2";
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation((path, init) => path === "/channels/c2/messages" && !init
+      ? Promise.resolve([{ id: "m2", body: "Remembered dispatch", authorUserId: 8, createdAt: "2026-09-09T13:00:00Z", version: 1 }])
+      : original(path, init));
+    mount();
+    expect(await screen.findByText("Remembered dispatch")).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Conversation chooser" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
+  });
+  it("closes Create New and reclaims its space after a channel is created", async () => {
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path, init) => {
+      if (path === "/channels" && init?.method === "POST") return { resource: { id: "c3" } };
+      return original(path, init);
+    });
+    mount();
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Create new" }));
     fireEvent.click(screen.getByRole("tab", { name: "Channel" }));
-    expect(screen.getByRole("tabpanel", { name: "New channel" })).toBeTruthy();
-    expect(screen.getByLabelText("New channel name")).toBeTruthy();
-    fireEvent.click(screen.getByRole("tab", { name: "Poll" }));
-    expect(screen.getByRole("tabpanel", { name: "New poll" })).toBeTruthy();
-    expect(await screen.findByLabelText("Poll question")).toBeTruthy();
-    expect(region.className).toContain("hub-create-panel");
-    fireEvent.click(screen.getByRole("button", { name: "Collapse creation controls" }));
-    expect(screen.queryByRole("tabpanel")).toBeNull();
+    fireEvent.change(screen.getByLabelText("New channel name"), { target: { value: "Safety" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Channel" }));
+    await waitFor(() => expect(screen.queryByRole("region", { name: "Create a channel, chat, or poll" })).toBeNull());
+    expect(mocks.save).toHaveBeenCalledWith({ lastConversationId: "c3" });
   });
   it("starts a poll with its question, choices, expiry, and selected notification audience", async () => {
     const campaignId = "11111111-1111-4111-8111-111111111111";
@@ -103,6 +267,7 @@ describe("Work Hub conversations", () => {
     });
     mount();
     await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Create new" }));
     fireEvent.click(screen.getByRole("tab", { name: "Poll" }));
     fireEvent.change(await screen.findByLabelText("Poll title"), { target: { value: "Crew lunch" } });
     fireEvent.change(screen.getByLabelText("Poll description"), { target: { value: "Choose today" } });
@@ -127,10 +292,12 @@ describe("Work Hub conversations", () => {
       choices: [{ label: "Diner" }, { label: "Tacos" }, { label: "BBQ" }],
     });
   });
-  it("filters conversations by unread state and persists a favorite", async () => {
+  it("filters conversations with Search and persists a favorite", async () => {
     mount();
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
     await screen.findByText("Dispatch");
-    fireEvent.change(screen.getByLabelText("Conversation filter"), { target: { value: "unread" } });
+    fireEvent.change(screen.getByLabelText("Find conversations"), { target: { value: "Operations" } });
     expect(screen.queryByText("Dispatch")).toBeNull();
     fireEvent.click(screen.getByLabelText("Favorite Operations"));
     expect(mocks.save).toHaveBeenCalledWith({ favorites: ["c1"] });
@@ -139,14 +306,30 @@ describe("Work Hub conversations", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     mount();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Delete channel" }));
+    const remove = screen.getByRole("button", { name: "Delete channel" });
+    expect(screen.getByRole("complementary", { name: "Conversations panel" }).contains(remove)).toBe(true);
+    expect(screen.getByRole("region", { name: "Selected channel" }).contains(remove)).toBe(false);
+    fireEvent.click(remove);
     expect(mocks.request.mock.calls.some(([, init]) => init?.method === "DELETE")).toBe(false);
     confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByRole("button", { name: "Delete channel" }));
+    fireEvent.click(remove);
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1", expect.objectContaining({ method: "DELETE" })));
     confirm.mockRestore();
   });
-  it("does not expose edit or delete on another person's message", async () => {
+  it("lets admins delete but not edit another person's message", async () => {
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation((path, init) => path === "/channels/c1/messages" && !init
+      ? Promise.resolve([{ id: "other", body: "Other person's message", authorUserId: 9, version: 1 }])
+      : original(path, init));
+    mount();
+    await screen.findByText("Other person's message");
+    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages/other", expect.objectContaining({ method: "DELETE" })));
+    expect(screen.getByRole("button", { name: "Reply in thread" })).toBeTruthy();
+  });
+  it("does not expose edit or delete on another person's message to a regular user", async () => {
+    mocks.user.membershipRole = "member";
     const original = mocks.request.getMockImplementation()!;
     mocks.request.mockImplementation((path, init) => path === "/channels/c1/messages" && !init
       ? Promise.resolve([{ id: "other", body: "Other person's message", authorUserId: 9, version: 1 }])
@@ -155,7 +338,6 @@ describe("Work Hub conversations", () => {
     await screen.findByText("Other person's message");
     expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Reply in thread" })).toBeTruthy();
   });
   it("edits and deletes only the selected message using its current version", async () => {
     mount();
@@ -169,35 +351,86 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages/m1", expect.objectContaining({ method: "DELETE" })));
   });
-  it("separates the channel list, header, content, and composer into aligned cards", async () => {
+  it("nests the conversation workspace as the bottom layer of the conversations card", async () => {
     mount();
     await screen.findByText("Original message");
 
+    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
     const workspace = screen.getByRole("main", { name: "Selected conversation workspace" });
     const header = screen.getByRole("region", { name: "Selected channel" });
     const content = screen.getByRole("region", { name: "Channel content" });
     const composer = screen.getByRole("form", { name: "Message composer" });
 
-    expect(screen.getByRole("complementary", { name: "Conversations panel" })).toBeTruthy();
+    expect(panel.contains(workspace)).toBe(true);
+    expect(workspace.parentElement).toBe(panel);
+    expect(panel.lastElementChild).toBe(workspace);
     expect(workspace.contains(header)).toBe(true);
     expect(workspace.contains(content)).toBe(true);
     expect(workspace.contains(composer)).toBe(true);
     expect([header, content, composer].every((card) => card.className.includes("w-full"))).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    const chooser = screen.getByRole("region", { name: "Conversation chooser" });
+    expect(chooser.compareDocumentPosition(workspace) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+  it("reclaims the empty band above the selected conversation title", async () => {
+    mount();
+    await screen.findByText("Original message");
+
+    const workspace = screen.getByRole("main", { name: "Selected conversation workspace" });
+    const header = screen.getByRole("region", { name: "Selected channel" });
+    expect(window.getComputedStyle(workspace).paddingTop).toBe("40px");
+    expect(header.style.paddingTop).toBe("");
+    expect(header.style.paddingBottom).toBe("");
+  });
+  it("reduces the composer bottom spacing by forty percent", async () => {
+    mount();
+    await screen.findByText("Original message");
+
+    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
+    const composer = screen.getByRole("form", { name: "Message composer" });
+    const bottomSpacing = Number.parseFloat(window.getComputedStyle(panel).paddingBottom)
+      + Number.parseFloat(window.getComputedStyle(composer).paddingBottom);
+    expect(bottomSpacing).toBeCloseTo(19.2, 5);
+  });
+  it("places the message space directly against the composer border", async () => {
+    mount();
+    await screen.findByText("Original message");
+
+    const content = screen.getByRole("region", { name: "Channel content" });
+    const composer = screen.getByRole("form", { name: "Message composer" });
+    expect(content.nextElementSibling).toBe(composer);
+    expect(window.getComputedStyle(composer).paddingTop).toBe("0px");
+  });
+  it("renders the right conversation card without an outer border", async () => {
+    mount();
+    await screen.findByText("Original message");
+    const selectedChannel = screen.getByRole("region", { name: "Selected channel" });
+    expect(window.getComputedStyle(selectedChannel.parentElement!).borderWidth).toBe("0px");
+  });
+  it("closes the receipt form when Receipts is selected again", async () => {
+    mount();
+    await screen.findByText("Original message");
+    const receipts = screen.getByRole("tab", { name: "Receipts" });
+    fireEvent.click(receipts);
+    expect(await screen.findByRole("region", { name: "Receipt editor" })).toBeTruthy();
+    fireEvent.click(receipts);
+    expect(screen.queryByRole("region", { name: "Receipt editor" })).toBeNull();
+    expect(screen.getByText("Original message")).toBeTruthy();
   });
   it("uses branded conversation headings, contained selectors, and the wider chat setup card", async () => {
     mount();
     await screen.findByText("Original message");
     const panel = screen.getByRole("complementary", { name: "Conversations panel" });
-    expect(panel.parentElement?.className).toContain("minmax(340px,380px)");
-    const chatHeading = screen.getByRole("heading", { name: "MidCon Solutions Conversations" });
+    expect(panel.parentElement?.className).toContain("hub-conversation-layout");
+    expect(panel.parentElement?.getAttribute("data-controls-collapsed")).toBe("false");
+    const chatHeading = screen.getByRole("heading", { name: "Conversations" });
     expect(chatHeading.className).toContain("text-black");
     expect(panel.contains(chatHeading)).toBe(false);
     expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
+    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    expect(screen.getByRole("region", { name: "Conversation chooser" }).className).toContain("hub-conversation-chooser-card");
     expect(screen.getByLabelText("Find conversations").className).toContain("border-[color:var(--brand-primary)]");
     expect(screen.getByLabelText("Find conversations").className).toContain("bg-white");
-    expect(screen.getByLabelText("Conversation filter").className).toContain("bg-white");
-    expect(screen.getByLabelText("Conversation filter").className).toContain("text-sm");
-    expect(screen.getByLabelText("Conversation filter").parentElement?.className).toContain("relative");
   });
   it("keeps the Company Chat empty-state icon branded and its heading black", async () => {
     mocks.request.mockImplementation(async (path: string) => {

@@ -19,6 +19,8 @@ function fixture(t) {
 }
 
 function launch(root, extraEnv = {}) {
+  const env = { ...process.env, ...extraEnv, PORT: "8080", VITE_API_PROXY_TARGET: "http://localhost:8080" };
+  if (!("WORK_HUB_ENABLED" in extraEnv)) delete env.WORK_HUB_ENABLED;
   return spawnSync(process.execPath, ["--input-type=module", "-e", `
     import assert from "node:assert/strict";
     await import("./scripts/dev-local-defaults.mjs");
@@ -29,7 +31,8 @@ function launch(root, extraEnv = {}) {
     assert.equal(process.env.EXPO_PUBLIC_SESSION_SECRET, undefined);
     assert.equal(process.env.PORT, "8080");
     assert.equal(process.env.VITE_API_PROXY_TARGET, "http://localhost:8080");
-  `], { cwd: root, env: { ...process.env, ...extraEnv, PORT: "8080", VITE_API_PROXY_TARGET: "http://localhost:8080" }, encoding: "utf8" });
+    assert.equal(process.env.WORK_HUB_ENABLED, "1");
+  `], { cwd: root, env, encoding: "utf8" });
 }
 
 test("local previews replace an inherited production key and share a stable local key across launches", (t) => {

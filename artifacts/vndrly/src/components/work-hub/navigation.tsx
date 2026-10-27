@@ -21,6 +21,7 @@ export type HubPreferences = {
   favorites: string[];
   muted: string[];
   drafts: Record<string, string>;
+  lastConversationId: string | null;
 };
 const defaults: HubPreferences = {
   pinned: DEFAULT_WORK_HUB_PINS,
@@ -28,6 +29,7 @@ const defaults: HubPreferences = {
   favorites: [],
   muted: [],
   drafts: {},
+  lastConversationId: null,
 };
 export function useHubPreferences(enabled = true) {
   const { user } = useAuth();

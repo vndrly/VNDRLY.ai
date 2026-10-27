@@ -6,4 +6,5 @@ process.env.PORT ??= "8080";
 process.env.BASE_PATH ??= "/";
 process.env.VITE_API_PROXY_TARGET ??= "http://localhost:8080";
 process.env.EXPO_PUBLIC_DOMAIN ??= "https://vndrly.ai";
+process.env.WORK_HUB_ENABLED ??= "1";
 applyLocalSessionSecret();

@@ -24,7 +24,7 @@ beforeEach(() => {
   vi.spyOn(Blob.prototype, "arrayBuffer").mockResolvedValue(new ArrayBuffer(4)); vi.spyOn(crypto.subtle, "digest").mockResolvedValue(new ArrayBuffer(32));
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); request.mockReset(); });
-function show(initialReceiptId?: string) { render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ReceiptEditor channelId="chat-1" owner={{ type: "vendor", id: 1 }} initialReceiptId={initialReceiptId} /></QueryClientProvider>); }
+function show(initialReceiptId?: string, onCancel?: () => void) { render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ReceiptEditor channelId="chat-1" owner={{ type: "vendor", id: 1 }} initialReceiptId={initialReceiptId} onCancel={onCancel} /></QueryClientProvider>); }
 it("reads a mock photo, requires review, and saves the photo and edited fields only after Save", async () => {
   show(); fireEvent.click(screen.getByRole("button", { name: "Mock photo" }));
   await screen.findByDisplayValue("Mock Fuel");
@@ -64,4 +64,15 @@ it("retries an uncertain receipt save without uploading another photo", async ()
   expect(fetch).toHaveBeenCalledOnce();
   const saves = request.mock.calls.filter(c => c[0] === "/channels/chat-1/receipts" && c[1]?.method === "POST");
   expect(saves[0][1].body).toBe(saves[1][1].body);
+});
+it("places Cancel beside Save and exits without saving", async () => {
+  const onCancel = vi.fn();
+  show("receipt-1", onCancel);
+  await waitFor(() => expect((screen.getByLabelText("Merchant") as HTMLInputElement).value).toBe("Mock Fuel"));
+  const save = screen.getByRole("button", { name: "Save receipt" });
+  const cancel = screen.getByRole("button", { name: "Cancel receipt" });
+  expect(save.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  fireEvent.click(cancel);
+  expect(onCancel).toHaveBeenCalledOnce();
+  expect(request.mock.calls.some(([, init]) => init?.method === "PATCH" || init?.method === "POST")).toBe(false);
 });

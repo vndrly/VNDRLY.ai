@@ -1,11 +1,12 @@
 import "../../../scripts/load-env-local.mjs";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../scripts/fresh-test-database.mjs";
 import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
 import * as schema from "./schema";
 import {createRealmDispatcher} from './database-realm';
-
-const { Pool } = pg;
+import {
+  createResilientPostgresPool,
+  type PostgresConnectionFailure,
+} from "./pool-resilience";
 
 if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") {
   assertFreshLocalTestDatabaseEnvironment(process.env);
@@ -17,10 +18,22 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const productionPool = new Pool({ connectionString: process.env.DATABASE_URL });
+function reportConnectionFailure(realm: "production" | "demo") {
+  return ({ scope, error }: PostgresConnectionFailure) => {
+    console.error(`[database:${realm}] ${scope} connection error`, error);
+  };
+}
+
+const productionPool = createResilientPostgresPool(
+  { connectionString: process.env.DATABASE_URL },
+  reportConnectionFailure("production"),
+);
 const productionDb = drizzle(productionPool, { schema });
 const demoPool = process.env.DEMO_DATABASE_URL
-  ? new Pool({connectionString:process.env.DEMO_DATABASE_URL,connectionTimeoutMillis:10000})
+  ? createResilientPostgresPool(
+      {connectionString:process.env.DEMO_DATABASE_URL,connectionTimeoutMillis:10000},
+      reportConnectionFailure("demo"),
+    )
   : null;
 const demoDb = demoPool ? drizzle(demoPool,{schema}) : null;
 let demoReady=false;

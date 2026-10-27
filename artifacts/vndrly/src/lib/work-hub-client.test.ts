@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 import {
+  canCreateWorkHubChannels,
   canManageWorkHubChannels,
+  canModerateWorkHubMessages,
   commandEnvelope,
   createWorkHubOperationId,
   isWorkHubScheduler,
@@ -54,6 +56,25 @@ describe("Work Hub client boundary", () => {
         ],
       }),
     ).toBe(true);
+    const officeUser = {
+        role: "field_employee",
+        vendorId: 22,
+        partnerId: null,
+        membershipRole: "member",
+        vendorRole: "office",
+      } as WorkHubUser;
+    const bothUser = {
+        role: "field_employee",
+        vendorId: 22,
+        partnerId: null,
+        membershipRole: "member",
+        vendorRole: "both",
+      } as WorkHubUser;
+    expect(canManageWorkHubChannels(officeUser)).toBe(false);
+    expect(canManageWorkHubChannels(bothUser)).toBe(false);
+    expect(canCreateWorkHubChannels(officeUser)).toBe(true);
+    expect(canCreateWorkHubChannels(bothUser)).toBe(true);
+    expect(canModerateWorkHubMessages(officeUser)).toBe(false);
   });
 
   it("lets gate supervisors schedule without granting channel administration", () => {

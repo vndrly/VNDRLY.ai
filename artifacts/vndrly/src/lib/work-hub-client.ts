@@ -52,6 +52,28 @@ export function canManageWorkHubChannels(
 
 export const isWorkHubAdmin = canManageWorkHubChannels;
 
+export function canCreateWorkHubChannels(
+  user: WorkHubUser | null | undefined,
+): boolean {
+  return canManageWorkHubChannels(user) ||
+    user?.vendorRole === "office" ||
+    user?.vendorRole === "both";
+}
+
+export function canModerateWorkHubMessages(
+  user: WorkHubUser | null | undefined,
+): boolean {
+  const activeMembershipRole = user?.availableMemberships?.find(
+    (membership) => membership.id === user.activeMembershipId,
+  )?.role;
+  return Boolean(
+    user &&
+    (user.role === "admin" ||
+      user.membershipRole === "admin" ||
+      activeMembershipRole === "admin"),
+  );
+}
+
 export function isWorkHubScheduler(
   user: WorkHubUser | null | undefined,
 ): boolean {

@@ -4,7 +4,14 @@ import { startChat } from "../work-hub/start-chat";
 import { addChannelMember, readChannelMemberAccess, readChannelMembers } from "../work-hub/channel-members";
 import { messageReactionPayload, reactionActive, assertReactionReceipt, type ReactionIntent } from "../work-hub/message-reaction";
 import { resolveMessageThread } from "../work-hub/message-thread";
-import { assertMessageMutationReceipt, assertMessageMutationTarget, type MessageMutationIntent } from "../work-hub/message-mutation";
+import {
+  assertMessageMutationReceipt,
+  assertMessageMutationTarget,
+  canDeleteWorkHubMessage,
+  canManageWorkHubOwner,
+  canModerateWorkHubOwner,
+  type MessageMutationIntent,
+} from "../work-hub/message-mutation";
 import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
 import { applyAwayRepliesForIncoming } from "../services/work-hub-away-responder-repository";
 import { Router, type IRouter, type Request, type Response } from "express";
@@ -32,8 +39,6 @@ import { sendApiError } from "../lib/apiError";
 import { executeWorkHubCommand } from "../work-hub/commands";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import {
-  createWorkHubAccess,
-  requireWorkHubCapability,
   WorkHubAccessError,
 } from "../work-hub/context-access";
 import {
@@ -103,6 +108,13 @@ async function requireOrganizationAdmin(
     )
     .limit(1);
   if (!membership) throw new WorkHubAccessError("forbidden");
+}
+async function requireOrganizationChannelCreator(
+  actor: SessionPayload & { userId: number },
+  owner: { type: "vendor" | "partner"; id: number },
+) {
+  if (canManageWorkHubOwner(actor, owner)) return;
+  await requireOrganizationAdmin(actor, owner);
 }
 function fail(res: Response, error: unknown): void {
   if (error instanceof WorkHubAccessError) {
@@ -221,14 +233,7 @@ router.post("/work-hub/channels", async (req, res) => {
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     const payload = createChannelPayload.parse(envelope.payload);
-    await requireOrganizationAdmin(actor, envelope.owner);
-    const access = createWorkHubAccess({
-      session: actor,
-      owner: envelope.owner,
-      context: envelope.context,
-      participant: true,
-    });
-    requireWorkHubCapability(access, "channel.manage");
+    await requireOrganizationChannelCreator(actor, envelope.owner);
     const result = await executeWorkHubCommand(
       { userId: actor.userId, source: source(req) },
       "channel.create",
@@ -543,11 +548,26 @@ router.delete("/work-hub/channels/:channelId/messages/:messageId", async (req, r
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     z.object({}).strict().parse(envelope.payload);
     if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
-    const intent: MessageMutationIntent = { action: "delete", actorUserId: actor.userId, channelId: channel.id, messageId: req.params.messageId, expectedVersion: envelope.expectedVersion };
+    const channelOwner = {
+      type: channel.ownerOrgType as "vendor" | "partner",
+      id: channel.ownerOrgId,
+    };
+    const intent: MessageMutationIntent = {
+      action: "delete",
+      actorUserId: actor.userId,
+      channelId: channel.id,
+      messageId: req.params.messageId,
+      expectedVersion: envelope.expectedVersion,
+      canDeleteOtherMessages: canModerateWorkHubOwner(actor, channelOwner),
+    };
     const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "message.delete", envelope, async tx => {
       const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, req.params.messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
       if (!current) throw new WorkHubAccessError("not_found");
-      if (current.authorUserId !== actor.userId) throw new WorkHubAccessError("forbidden");
+      if (!canDeleteWorkHubMessage({
+        actorUserId: actor.userId,
+        messageAuthorUserId: current.authorUserId,
+        canModerate: intent.canDeleteOtherMessages === true,
+      })) throw new WorkHubAccessError("forbidden");
       if (current.deletedAt) throw new WorkHubAccessError("forbidden");
       if (envelope.expectedVersion !== current.version) throw new Error("work_hub.version_conflict");
       await tx.insert(workHubMessageVersionsTable).values({ messageId: current.id, version: current.version, body: current.body, editorUserId: actor.userId });

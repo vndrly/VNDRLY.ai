@@ -31,7 +31,7 @@ export async function receiptOcrImage(file: File): Promise<{ imageBase64: string
   } finally { bitmap.close(); }
 }
 
-export function ReceiptEditor({ channelId, owner, initialReceiptId }: { channelId: string; owner: WorkHubOwner; initialReceiptId?: string | null }) {
+export function ReceiptEditor({ channelId, owner, initialReceiptId, onCancel }: { channelId: string; owner: WorkHubOwner; initialReceiptId?: string | null; onCancel?: () => void }) {
   const cache = useQueryClient();
   const [fields, setFields] = useState<Fields>({ ...empty });
   const [selected, setSelected] = useState("");
@@ -132,7 +132,10 @@ export function ReceiptEditor({ channelId, owner, initialReceiptId }: { channelI
         <label className="col-span-2 text-xs">Note<Textarea aria-label="Receipt note" className="mt-1 !min-h-16" maxLength={2000} value={fields.note} onChange={e => { setFields(f => ({ ...f, note: e.target.value })); setReviewed(false); setDirty(true); }} /></label>
       </fieldset>
       {editable && <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={reviewed} disabled={locked} onChange={e => setReviewed(e.target.checked)} />I checked the photo and receipt fields.</label>}
-      {editable && <BrandPillButton tone="brand" type="submit" disabled={busy || reading || !reviewed || (!photo && !receipt) || (success && !dirty)}>{busy ? "Saving…" : retry ? "Retry save" : "Save receipt"}</BrandPillButton>}
+      {editable && <div className="flex items-center gap-2">
+        <BrandPillButton tone="brand" type="submit" disabled={busy || reading || !reviewed || (!photo && !receipt) || (success && !dirty)}>{busy ? "Saving…" : retry ? "Retry save" : "Save receipt"}</BrandPillButton>
+        {onCancel && <BrandPillButton tone="image" aria-label="Cancel receipt" disabled={locked} onClick={onCancel}>Cancel</BrandPillButton>}
+      </div>}
     </form>
     {success && <p role="status" className="text-sm text-green-400">Receipt saved. Its link is in the conversation.</p>}
     {(error || list.error) && <p role="alert" className="text-sm text-red-400">{error || "Saved receipts could not load."}</p>}

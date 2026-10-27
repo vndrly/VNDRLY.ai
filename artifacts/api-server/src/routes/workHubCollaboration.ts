@@ -47,6 +47,7 @@ const preferenceSchema = z.object({
     .record(z.string().max(100), z.string().max(20000))
     .refine((x) => Object.keys(x).length <= 100)
     .default({}),
+  lastConversationId: z.string().uuid().nullable().default(null),
 });
 function owns(a: Actor, type: string, id: number) {
   return type === "vendor" ? a.vendorId === id : a.partnerId === id;
