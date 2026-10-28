@@ -108,7 +108,6 @@ test("gate watch survives sign-out and transfers only after the incoming account
     await expect.poll(async () => (await pool.query(
       "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
     )).rows).toEqual([{ operator_id: incoming.userId }]);
-    await page.getByRole("button", { name: "Edit Shift Handoff", exact: true }).click();
     await expect(page.getByRole("textbox", { name: "Anything the next shift should know?", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Save Shift Handoff", exact: true })).toBeEnabled();
     expect((await pool.query("SELECT session_version FROM users WHERE id=ANY($1::int[]) ORDER BY id",[[outgoing.userId,incoming.userId]])).rows.map(row=>row.session_version)).toEqual([1,1]);

@@ -135,6 +135,7 @@ jobs:
             api) pnpm run test:api ;;
             browser) pnpm run test:e2e ;;
             browser-workspace) pnpm run test:e2e tests/work-hub-workspace.spec.ts ;;
+            browser-gate) pnpm run test:e2e tests/gate-change-over.spec.ts ;;
             browser-*) shard='${{ matrix.check }}'; pnpm run test:e2e --shard="${shard#browser-}/4" ;;
           esac
       - uses: actions/upload-artifact@v4
