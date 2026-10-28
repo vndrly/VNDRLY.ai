@@ -48,7 +48,7 @@ test.describe("Work Hub workspace persisted flow", () => {
   test.afterAll(async () => {
     await pool?.end();
   });
-  test("creates a Group conversation, scheduling page and confirmed CSV task, then opens files and notes", async ({
+  test("creates a Group and channel conversation, scheduling page and confirmed CSV task, then opens files and notes", async ({
     page,
   }, testInfo) => {
     test.setTimeout(240000);
@@ -66,17 +66,12 @@ test.describe("Work Hub workspace persisted flow", () => {
         .getByRole("button", { name: `Edit Review Group ${stamp}`, exact: true }),
     ).toBeVisible();
 
-    await page.getByRole("button", { name: `Edit Review Group ${stamp}`, exact: true }).click();
-    const groupEditor=page.getByRole("dialog");
-    await groupEditor.getByLabel("New channel name", { exact: true }).fill(`Review Group ${stamp}`);
-    const channelSaved=page.waitForResponse(response=>response.url().includes("/crews/")&&response.url().endsWith("/channels")&&response.request().method()==="POST"&&response.ok());
-    await groupEditor.getByRole("button", { name: "Add channel", exact: true }).click();
-    await channelSaved;
-    await groupEditor.getByRole("button", { name: "Close", exact: true }).click();
     await page.goto("/work-hub/chat");
+    await page.getByRole("button", { name: "Create new", exact: true }).click();
+    await page.getByRole("tab", { name: "Channel", exact: true }).click();
+    await page.getByLabel("New channel name", { exact: true }).fill(`Review Group ${stamp}`);
+    await page.getByRole("button", { name: "Create Channel", exact: true }).click();
     const conversations=page.getByRole("navigation", { name: "Conversations" });
-    if (!(await conversations.isVisible())) await page.getByRole("button", { name: "Choose a conversation", exact: true }).click();
-    await conversations.getByRole("button").filter({hasText:`Review Group ${stamp}`}).first().click();
     const message = `Synthetic handover message ${stamp}`;
     await page.getByLabel("Message", { exact: true }).fill(message);
     await page
