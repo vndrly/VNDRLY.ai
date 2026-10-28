@@ -468,7 +468,6 @@
     "gpsMilesTooFar": "{{miles}} mi from {{site}} · must be within {{radius}} mi",
     "gpsNoSite": "Select a location to see distance.",
     "gpsRequiredToSubmit": "GPS is recorded when available. Missing or mismatched GPS is noted in the Gate Log and does not prevent submission.",
-    "gateLocation": "Gate location",
     "selectGateLocation": "Select gate location",
     "gpsEntry": "Entry GPS",
     "gpsExit": "Exit GPS",

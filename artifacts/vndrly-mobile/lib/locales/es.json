@@ -468,7 +468,6 @@
     "gpsMilesTooFar": "{{miles}} mi de {{site}} · debe estar dentro de {{radius}} mi",
     "gpsNoSite": "Seleccione una ubicación para ver la distancia.",
     "gpsRequiredToSubmit": "El GPS se registra cuando está disponible. El registro indica GPS ausente o discrepante sin impedir el envío.",
-    "gateLocation": "Ubicación del acceso",
     "selectGateLocation": "Seleccione el acceso",
     "gpsEntry": "GPS de entrada",
     "gpsExit": "GPS de salida",
