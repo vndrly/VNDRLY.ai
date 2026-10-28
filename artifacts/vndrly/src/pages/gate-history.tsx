@@ -4,6 +4,7 @@ import { History, Loader2, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import ContentPaneBackLink from "@/components/content-pane-back-link";
+import SphereBackButton from "@/components/sphere-back-button";
 import GateSiteGateSelect from "@/components/gate-site-gate-select";
 import "@/components/gate-dashboard.css";
 import { GateArrivalCard, useGateArrivals } from "@/components/gate-arrivals-panel";
@@ -51,6 +52,7 @@ export default function GateHistoryPage() {
   const [trafficView, setTrafficView] = useState<"arrivals" | "on_site" | "departures" | "all">(() => ["on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site"].includes(recordType) ? "on_site" : recordType === "check_outs" ? "departures" : recordType === "arrivals" ? "arrivals" : "all");
   const [recordId, setRecordId] = useState<string | null>(initial.get("recordId"));
   const [runId, setRunId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
   const sites = useQuery({ queryKey: ["change-over-history-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
   const resolvedSiteId = siteId || String(sites.data?.sites[0]?.id ?? "");
   const stations = useQuery({ queryKey: ["change-over-history-stations", resolvedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${resolvedSiteId}&mode=history`), enabled: Boolean(resolvedSiteId), retry: false });
@@ -95,6 +97,12 @@ export default function GateHistoryPage() {
     ...(rows.data ?? []).filter(visit => trafficView === "arrivals" ? visit.admissionStatus === "pending" && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" : trafficView === "on_site" ? visit.admissionStatus !== "pending" && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" : true).map(visit => ({ type: "crossing" as const, visit, time: Date.parse(visit.checkOutTime || visit.checkInTime || "") || 0 })),
     ...((trafficView === "arrivals" || trafficView === "all" && recordType === "all") ? arrivals.data?.arrivals.filter(run => !search.trim() || [run.driverName, run.companyName, run.vehicleLabel, run.ticketNumber, run.title, run.destinationName].some(value => value?.toLowerCase().includes(search.trim().toLowerCase()))).map(run => ({ type: "arrival" as const, run, time: Date.parse(run.observedAt || "") || 0 })) ?? [] : []),
   ].sort((a, b) => b.time - a.time);
+  useEffect(() => setPage(0), [resolvedSiteId, resolvedStationId, range, recordType, trafficView, search]);
+  const pageSize = 25;
+  const lastPage = Math.max(0, Math.ceil(visibleRecords.length / pageSize) - 1);
+  const currentPage = Math.min(page, lastPage);
+  const pageStart = currentPage * pageSize;
+  const pageRecords = visibleRecords.slice(pageStart, pageStart + pageSize);
   const displayPlate = (state?: string | null, plate?: string | null) => formatPlateForDisplay(state, plate, t("gatekeeper.plateStateUnconfirmed"));
   return (
     <div className={FIELD_OPS_PAGE_CLASS} data-testid="gate-history-page">
@@ -130,7 +138,7 @@ export default function GateHistoryPage() {
             {(trafficView === "arrivals" || trafficView === "all" && recordType === "all") && arrivals.isError && <p role="alert" className="text-sm text-destructive">{t("gatekeeper.arrivalsLoadFailed")}</p>}
             {!rows.isLoading && !rows.isError && !visibleRecords.length && !((trafficView === "arrivals" || trafficView === "all" && recordType === "all") && arrivals.isLoading) && <p className="text-sm text-muted-foreground">{t("gatekeeper.historyEmpty")}</p>}
             {(trafficView === "arrivals" || trafficView === "all") && arrivals.preview && <p className="text-xs text-muted-foreground">{c("Sample arrivals · approval preview", "Llegadas de ejemplo · vista previa de aprobación")}</p>}
-            {visibleRecords.map(item => {
+            {pageRecords.map(item => {
               if (item.type === "arrival") return <GateArrivalCard key={`arrival:${item.run.id}`} run={item.run} query={arrivals} onOpen={setRunId} />;
               const visit = item.visit;
               const departed = Boolean(visit.checkOutTime) || visit.reconciliationState === "confirmed_off_site";
@@ -153,6 +161,11 @@ export default function GateHistoryPage() {
             })}
             {(trafficView === "arrivals" || trafficView === "all") && arrivals.data?.truncated && <p className="text-xs text-muted-foreground">{t("gatekeeper.arrivalsTruncated")}</p>}
           </div>}
+          <nav aria-label={c("Gate Log pages", "Páginas del registro de acceso")} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-white/10 pt-3">
+            <button type="button" className="group inline-flex disabled:cursor-default disabled:opacity-35" aria-label={c("Previous records", "Registros anteriores")} disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}><SphereBackButton direction="left" size={32} /></button>
+            <span role="status" className="text-center text-sm text-muted-foreground">{visibleRecords.length ? pageStart + 1 : 0}–{Math.min(pageStart + pageSize, visibleRecords.length)} {c("of", "de")} {visibleRecords.length} {c("Records", "registros")}</span>
+            <button type="button" className="group inline-flex disabled:cursor-default disabled:opacity-35" aria-label={c("Next records", "Registros siguientes")} disabled={currentPage === lastPage} onClick={() => setPage(currentPage + 1)}><SphereBackButton direction="right" size={32} /></button>
+          </nav>
           <GateArrivalDetails siteId={Number(resolvedSiteId)} runId={runId} onClose={() => setRunId(null)} />
         </CardContent>
       </Card>

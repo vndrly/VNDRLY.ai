@@ -40,6 +40,26 @@ beforeEach(() => {
 });
 
 describe("GateHistoryPage plate display", () => {
+  it("pages mixed traffic 25 at a time with branded arrows and resets after filtering", async () => {
+    const records = Array.from({ length: 51 }, (_, index) => ({ id: `visit:${index + 1}`, name: `Driver ${index + 1}`, checkInTime: new Date(Date.UTC(2026, 9, 28, 12, index)).toISOString() }));
+    queryGateReportRows.mockResolvedValue(records);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    await screen.findByText("1–25 of 52 Records");
+    expect(screen.getAllByTestId("gate-history-row")).toHaveLength(25);
+    expect((screen.getByRole("button", { name: "Previous records" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getAllByTestId("sphere-back-circle")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Next records" }));
+    expect(screen.getByText("26–50 of 52 Records")).toBeTruthy();
+    expect(screen.getAllByTestId("gate-history-row")).toHaveLength(25);
+    fireEvent.click(screen.getByRole("button", { name: "Next records" }));
+    expect(screen.getByText("51–52 of 52 Records")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Next records" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("Incoming driver")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "On Site" }));
+    await screen.findByText("1–25 of 51 Records");
+    expect((screen.getByRole("button", { name: "Previous records" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByText("Incoming driver")).toBeNull();
+  });
   it("opens an exact historical record from a dashboard link independently of list filters", async () => {
     window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=check_outs&recordId=visit%3A88");
     queryGateReportRows.mockImplementation(async (_kind, filters) => filters.recordId ? [{ id: "visit:88", name: "Old departed driver", checkInTime: "2026-08-01T12:00:00Z", checkOutTime: "2026-08-01T13:00:00Z", notes: "Original crossing note" }] : []);
