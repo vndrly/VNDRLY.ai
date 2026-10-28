@@ -66,14 +66,15 @@ test.describe("Work Hub workspace persisted flow", () => {
         .getByRole("button", { name: `Edit Review Group ${stamp}`, exact: true }),
     ).toBeVisible();
 
+    await page.getByRole("button", { name: `Edit Review Group ${stamp}`, exact: true }).click();
+    const groupEditor=page.getByRole("dialog");
+    await groupEditor.getByLabel("New channel name", { exact: true }).fill(`Review Group ${stamp}`);
+    await groupEditor.getByRole("button", { name: "Add channel", exact: true }).click();
+    await groupEditor.getByRole("button", { name: `Review Group ${stamp}`, exact: true }).click();
     await page.goto("/work-hub/chat");
-    await page.getByText("New Chat", { exact: true }).click();
-    await page
-      .getByLabel("Select Group", { exact: true })
-      .selectOption({ label: `Review Group ${stamp}` });
-    await page
-      .getByRole("button", { name: "Start Chat", exact: true })
-      .click();
+    const conversations=page.getByRole("navigation", { name: "Conversations" });
+    if (!(await conversations.isVisible())) await page.getByRole("button", { name: "Choose a conversation", exact: true }).click();
+    await conversations.getByRole("button").filter({hasText:`Review Group ${stamp}`}).first().click();
     const message = `Synthetic handover message ${stamp}`;
     await page.getByLabel("Message", { exact: true }).fill(message);
     await page
@@ -81,6 +82,7 @@ test.describe("Work Hub workspace persisted flow", () => {
       .click();
     await expect(page.getByRole("article").getByText(message, { exact: true })).toBeVisible();
     await page.reload();
+    if (!(await conversations.isVisible())) await page.getByRole("button", { name: "Choose a conversation", exact: true }).click();
     await page
       .getByRole("navigation", { name: "Conversations" })
       .getByRole("button")
