@@ -68,7 +68,6 @@ describe("production modal inventory", () => {
       "components/change-password-modal.tsx",
       "components/employee-dialog-content.tsx",
       "components/gate-assume-watch-flyout.tsx",
-      "components/gate-handoff-desk.tsx",
       "components/mini-card-dialog-content.tsx",
       "components/notification-send-to-dialog.tsx",
       "components/notifications-modal.tsx",

@@ -63,6 +63,6 @@ describe("Gate report delivery routes", () => {
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/pdf");
     expect(response.headers["content-disposition"]).toContain("report.pdf");
-    expect(mocks.open).toHaveBeenCalledWith({ token: "a".repeat(32), userId: 1 });
+    expect(mocks.open).toHaveBeenCalledWith({ token: "a".repeat(32), userId: 1, session: { userId: 1, role: "vendor", vendorId: 2 } });
   });
 });

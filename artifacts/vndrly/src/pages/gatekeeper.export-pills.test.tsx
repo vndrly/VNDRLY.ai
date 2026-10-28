@@ -3,8 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PILL_ACTION } from "@/lib/pill-palette-assets";
-
 const { fetchMock, requests } = vi.hoisted(() => {
   const requests: Array<{ url: string; init?: RequestInit }> = [];
   return {
@@ -13,7 +11,7 @@ const { fetchMock, requests } = vi.hoisted(() => {
       requests.push({ url: String(input), init });
       return {
         ok: true,
-        json: async () => ({ rows: [] }),
+        json: async () => ({ rows: [], arrivals: [] }),
         blob: async () => new Blob(["report"]),
       } as Response;
     }),
@@ -54,10 +52,6 @@ function renderPage() {
   );
 }
 
-function pillSrcs(el: HTMLElement): string[] {
-  return Array.from(el.querySelectorAll("img")).map((img) => img.getAttribute("src") ?? "");
-}
-
 afterEach(() => {
   cleanup();
   window.history.replaceState({}, "", "/");
@@ -75,38 +69,28 @@ beforeEach(() => {
   vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
 });
 
-describe("Gate history export pills", () => {
-  it("uses the red palette pill for PDF and the green palette pill for Excel", async () => {
+describe("Gate history Export selector", () => {
+  it("combines PDF, Excel, Word and Email into one selector", async () => {
     renderPage();
-    const pdf = await screen.findByTestId("button-gate-export-pdf");
-    const excel = screen.getByTestId("button-gate-export-excel");
-    const word = screen.getByTestId("button-gate-export-word");
-
-    expect(pdf.textContent).toContain("PDF");
-    expect(excel.textContent).toContain("Excel");
-    expect(word.textContent).toContain("Word");
-
-    expect(pillSrcs(pdf)).toContain(PILL_ACTION.red);
-    expect(pillSrcs(pdf)).not.toContain(PILL_ACTION.blue);
-    expect(pillSrcs(excel)).toContain(PILL_ACTION.green);
-    expect(pillSrcs(excel)).not.toContain(PILL_ACTION.blue);
-    expect(pillSrcs(word)).toContain(PILL_ACTION.blue);
+    const selector = await screen.findByRole("combobox", { name: "Export" });
+    expect(Array.from(selector.querySelectorAll("option")).map(option => option.textContent)).toEqual(["Export", "PDF", "Excel", "Word", "Email"]);
+    expect(screen.queryByTestId("button-gate-export-pdf")).toBeNull();
   });
 
-  it("exports the selected Gate History filters through the server report contract", async () => {
+  it.each(["pdf", "excel", "word"])("immediately exports %s with selected Gate History filters", async (format) => {
     window.history.replaceState({}, "", "/gate/history?siteId=42&stationId=main-gate");
     renderPage();
 
-    const pdf = await screen.findByTestId("button-gate-export-pdf");
-    await waitFor(() => expect(pdf.getAttribute("disabled")).toBeNull());
-    fireEvent.click(pdf);
+    const selector = await screen.findByRole("combobox", { name: "Export" });
+    await waitFor(() => expect(selector.getAttribute("disabled")).toBeNull());
+    fireEvent.change(selector, { target: { value: format } });
 
     await waitFor(() => expect(requests.some(({ url }) => url.endsWith("/api/gate-report/export"))).toBe(true));
     const exportCall = requests.find(({ url }) => url.endsWith("/api/gate-report/export"));
     expect(exportCall).toBeDefined();
     expect(JSON.parse(String(exportCall?.init?.body))).toEqual({
       reportKind: "history",
-      format: "pdf",
+      format,
       filters: {
         siteId: 42,
         stationId: "main-gate",
