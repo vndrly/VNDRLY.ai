@@ -549,8 +549,8 @@ describe("Work Hub home chrome", () => {
     expect(today.compareDocumentPosition(communications) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(communications.compareDocumentPosition(extras) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Work Hub snapshot" })).toBeNull();
-    expect(screen.queryByRole("region", { name: "Needs Attention", exact: true })).toBeNull();
-    expect(screen.queryByRole("region", { name: "Latest activity", exact: true })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Needs Attention" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Latest activity" })).toBeNull();
     expect(screen.queryByRole("search", { name: "Search activity" })).toBeNull();
     expect(screen.getByRole("link", { name: /^Needs Attention/ })).toBeTruthy();
   });
