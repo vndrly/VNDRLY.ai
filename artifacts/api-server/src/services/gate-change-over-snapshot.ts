@@ -44,21 +44,30 @@ export function assembleShiftSnapshot(
   );
   const inWindow = (value: string | null) =>
     value != null && Date.parse(value) >= start && Date.parse(value) <= end;
+  const newest = [...ordered].sort((a, b) => Date.parse(b.checkIn) - Date.parse(a.checkIn));
+  const admittedRows = new Set(admitted), outstandingRows = new Set(outstanding);
+  const vehiclePlates = new Set<string>();
+  const vehicles = [...outstanding].sort((a, b) => Date.parse(b.checkIn) - Date.parse(a.checkIn)).filter(row => {
+    const plate = row.plate?.trim().toUpperCase();
+    if (!plate || vehiclePlates.has(plate)) return false;
+    vehiclePlates.add(plate); return true;
+  });
+  const groups = {
+    checkIns: newest.filter(r => admittedRows.has(r) && inWindow(r.checkIn)),
+    checkOuts: admitted.filter(r => inWindow(r.checkOut)).sort((a, b) => Date.parse(b.checkOut!) - Date.parse(a.checkOut!)),
+    onSiteVisitorRecords: newest.filter(r => outstandingRows.has(r) && r.kind === "visitor"),
+    onSiteEmployeeRecords: newest.filter(r => outstandingRows.has(r) && r.kind === "employee"),
+    onSiteVehicles: vehicles,
+    pendingAdmission: newest.filter(r => r.admission === "pending" && !r.checkOut),
+  };
+  const metricRecordIds = Object.fromEntries(Object.entries(groups).map(([key, rows]) => [key, rows.map(row => row.id)]));
   const metrics = {
-    checkIns: admitted.filter((r) => inWindow(r.checkIn)).length,
-    checkOuts: admitted.filter((r) => inWindow(r.checkOut)).length,
-    onSiteVisitorRecords: outstanding.filter((r) => r.kind === "visitor")
-      .length,
-    onSiteEmployeeRecords: outstanding.filter((r) => r.kind === "employee")
-      .length,
-    onSiteVehicles: new Set(
-      outstanding.flatMap((r) =>
-        r.plate?.trim() ? [r.plate.trim().toUpperCase()] : [],
-      ),
-    ).size,
-    pendingAdmission: ordered.filter(
-      (r) => r.admission === "pending" && !r.checkOut,
-    ).length,
+    checkIns: groups.checkIns.length,
+    checkOuts: groups.checkOuts.length,
+    onSiteVisitorRecords: groups.onSiteVisitorRecords.length,
+    onSiteEmployeeRecords: groups.onSiteEmployeeRecords.length,
+    onSiteVehicles: groups.onSiteVehicles.length,
+    pendingAdmission: groups.pendingAdmission.length,
   };
   const exceptions = ordered.flatMap((r) => {
     const result: { sourceId: string; code: string; text: string }[] = [];
@@ -78,7 +87,7 @@ export function assembleShiftSnapshot(
         text: `${r.id}: reconciliation status is ${r.reconciliation}.`,
       });
     if (
-      outstanding.includes(r) &&
+      outstandingRows.has(r) &&
       end - Date.parse(r.checkIn) > (r.expectedMinutes ?? 720) * 60000
     )
       result.push({
@@ -132,6 +141,8 @@ export function assembleShiftSnapshot(
     startedAt,
     revision,
     metrics,
+    records: newest,
+    metricRecordIds,
     outstanding,
     exceptions,
     openItems,

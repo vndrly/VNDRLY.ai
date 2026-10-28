@@ -323,7 +323,7 @@ describe("GatekeeperPage voice entry", () => {
     renderPage();
     const duration = await screen.findByTestId("input-gate-duration");
     await waitFor(() => expect(mocks.getSiteContext).toHaveBeenCalled());
-    fireEvent.change(duration, { target: { value: "120" } });
+    fireEvent.change(duration, { target: { value: "600" } });
 
     act(() => requestGateVoiceEntry());
     await waitFor(() => expect(FakeMediaRecorder.instances).toHaveLength(1));
@@ -332,7 +332,7 @@ describe("GatekeeperPage voice entry", () => {
     expect((await screen.findByTestId("gate-askv-response")).textContent).toBe(
       "gatekeeper.askvDurationCaptured",
     );
-    expect((duration as HTMLInputElement).value).toBe("120");
+    expect((duration as HTMLSelectElement).value).toBe("600");
     expect(screen.queryByTestId("gate-voice-checkin-confirmation")).toBeNull();
   });
 

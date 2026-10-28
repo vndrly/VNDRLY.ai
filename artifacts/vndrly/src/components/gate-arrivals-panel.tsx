@@ -5,14 +5,19 @@ import { useTranslation } from "react-i18next";
 import type { GateArrival } from "@workspace/api-zod";
 import { useAuth } from "@/hooks/use-auth";
 import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
+import { isGateArrivalPreview, sampleGateArrivals } from "@/lib/gate-arrival-preview";
+import { GateTrafficRecord } from "./gate-traffic-record";
+import { gateRecordFlags } from "@/lib/gate-record-flags";
 
 /** Run identities, rather than location ping identities, trigger a short alert. */
 export function useGateArrivals(siteId?: number) {
   const { user } = useAuth();
+  const [preview] = useState(isGateArrivalPreview);
+  const [previewApprovedIds, setPreviewApprovedIds] = useState<Set<string>>(new Set());
   const scope = `${user?.userId}:${user?.activeMembershipId}:${siteId}`;
   const query = useQuery({
-    queryKey: ["gate-arrivals", user?.userId, user?.activeMembershipId, siteId],
-    queryFn: () => gateArrivalsApi.list(siteId!), enabled: Boolean(siteId),
+    queryKey: ["gate-arrivals", user?.userId, user?.activeMembershipId, siteId, ...(preview ? ["sample"] : [])],
+    queryFn: () => preview ? Promise.resolve(sampleGateArrivals(siteId!)) : gateArrivalsApi.list(siteId!), enabled: Boolean(siteId),
     retry: false, refetchInterval: 30_000,
   });
   const seen = useRef({ scope, ids: new Set<string>() });
@@ -33,28 +38,40 @@ export function useGateArrivals(siteId?: number) {
     const timer = setTimeout(() => setNewInboundIds(new Set()), 5000);
     return () => clearTimeout(timer);
   }, [newInboundIds]);
-  return { ...query, newInboundIds };
+  return { ...query, newInboundIds, preview, previewApprovedIds,
+    approvePreviewArrival: (id: string) => { if (preview) setPreviewApprovedIds(ids => new Set([...ids, id])); } };
 }
 
-export function GateArrivalsPanel({ query, onOpen, limit }: {
-  query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void; limit?: number;
+export function GateArrivalsPanel({ query, onOpen, limit, search = "", hideEmpty = false }: {
+  query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void; limit?: number; search?: string; hideEmpty?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const c = (en: string, es: string) => i18n?.language?.startsWith("es") ? es : en;
   if (query.isLoading) return <Loader2 className="animate-spin" />;
   if (query.isError) return <p role="alert" className="text-sm text-destructive">{t("gatekeeper.arrivalsLoadFailed")}</p>;
-  if (!query.data?.arrivals.length) return <p className="text-sm text-muted-foreground">{t(query.data?.truncated ? "gatekeeper.arrivalsTruncated" : "gatekeeper.noArrivals")}</p>;
+  const arrivals = query.data?.arrivals.filter(run => !search.trim() || [run.driverName, run.title, run.companyName, run.vehicleLabel, run.ticketNumber, run.destinationName].some(value => value?.toLowerCase().includes(search.trim().toLowerCase()))) ?? [];
+  if (!arrivals.length) return hideEmpty && !query.data?.truncated ? null : <p className="text-sm text-muted-foreground">{t(query.data?.truncated ? "gatekeeper.arrivalsTruncated" : "gatekeeper.noArrivals")}</p>;
   return <div className="space-y-2">
-    {query.data.arrivals.slice(0, limit).map((run: GateArrival) => <button type="button" className="gate-record-link gate-arrival-record" key={run.id} onClick={() => onOpen(run.runId)}>
-      <span className="flex items-center justify-between gap-2">
-        <span className="font-semibold">{run.driverName || run.title}</span>
-        <span className={query.newInboundIds.has(run.id) ? "gate-arriving is-new" : "gate-arriving"}>{t("gatekeeper.arriving")}</span>
-      </span>
-      <span className="text-xs text-muted-foreground">{[run.companyName, run.vehicleLabel].filter(Boolean).join(" · ")}</span>
-      <span className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
-        <span>{run.ticketNumber ? `#${run.ticketNumber}` : run.title}</span>
-        <span>{run.etaMinutes == null ? t("gatekeeper.etaUnavailable") : t("gatekeeper.arrivalEta", { minutes: Math.ceil(run.etaMinutes) })}</span>
-      </span>
-    </button>)}
-    {query.data.truncated && <p className="text-xs text-muted-foreground">{t("gatekeeper.arrivalsTruncated")}</p>}
+    {query.preview && <p className="text-xs text-muted-foreground">{c("Sample arrivals · approval preview", "Llegadas de ejemplo · vista previa de aprobación")}</p>}
+    {arrivals.slice(0, limit).map(run => <GateArrivalCard key={run.id} run={run} query={query} onOpen={onOpen} />)}
+    {query.data?.truncated && <p className="text-xs text-muted-foreground">{t("gatekeeper.arrivalsTruncated")}</p>}
   </div>;
+}
+
+export function GateArrivalCard({ run, query, onOpen }: { run: GateArrival; query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void }) {
+  const { t, i18n } = useTranslation();
+  const c = (en: string, es: string) => i18n?.language?.startsWith("es") ? es : en;
+  const approved = query.preview && (run.id.endsWith("-2") || run.id.endsWith("-4") || query.previewApprovedIds.has(run.id));
+  return <GateTrafficRecord name={run.driverName || run.title} onOpen={() => onOpen(run.runId)}
+    flags={gateRecordFlags(run, i18n?.language?.startsWith("es"))}
+    description={[run.companyName, run.vehicleLabel].filter(Boolean).join(" · ")}
+    status={<span className={`gate-arriving${query.newInboundIds.has(run.id) ? " is-new" : ""}${query.preview && !approved ? " gate-arriving-awaiting" : ""}`}>{t("gatekeeper.arriving")}</span>}
+    footer={query.preview && <span className="gate-arrival-approval-status" role="status">{approved ? c("Approved · Drive through", "Aprobado · Pase directo") : c("Waiting on booth approval", "Esperando aprobación de la caseta")}</span>}
+    className={query.preview ? approved ? "gate-traffic-approved" : "gate-traffic-pending" : ""}
+    action={query.preview && !approved && <button type="button" className="gate-history-filter" aria-label={`${c("Approve", "Aprobar")}: ${run.driverName}`} onClick={() => query.approvePreviewArrival(run.id)}>{c("Approve", "Aprobar")}</button>}>
+  <span className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+    <span>{run.ticketNumber ? `#${run.ticketNumber}` : run.title}</span>
+    <span>{run.etaMinutes == null ? t("gatekeeper.etaUnavailable") : t("gatekeeper.arrivalEta", { minutes: Math.ceil(run.etaMinutes) })}</span>
+  </span>
+</GateTrafficRecord>;
 }

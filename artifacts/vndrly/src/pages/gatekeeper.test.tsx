@@ -42,6 +42,8 @@ vi.mock("react-i18next", () => ({
         "gatekeeper.plateStateCorrected": "State corrected: {{state}}",
         "gatekeeper.selectCompany": locale.spanish ? "Seleccionar empresa" : "Select company",
         "gatekeeper.selectSite": locale.spanish ? "Seleccione el sitio asignado" : "Select assigned site",
+        "changeOver.site": locale.spanish ? "Sitio" : "Site",
+        "changeOver.gate": locale.spanish ? "Acceso" : "Gate",
       };
       const template = strings[key] ?? key;
       return template.replace(/\{\{(\w+)\}\}/g, (_, name) =>
@@ -277,7 +279,8 @@ describe("GatekeeperPage plate state", () => {
     expect(records[0].textContent).toContain("Latest");
     expect(records[0].textContent).toContain("gatekeeper.historyCheckedIn");
     expect(records[0].textContent).toContain("gatekeeper.historyCheckedOut");
-    expect(records[0].textContent).toContain("gatekeeper.minutesOnSite");
+    expect(records[0].textContent).toContain("Time On Site: 01:00");
+    expect(records[0].parentElement?.querySelector("a")?.getAttribute("href")).toContain("recordId=visit%3A2");
     expect(records[1].textContent).toContain("Earlier");
   });
 
@@ -300,7 +303,7 @@ describe("GatekeeperPage plate state", () => {
     renderPage();
     expect(screen.queryByTestId("gate-locked-partner")).toBeNull();
     expect(screen.queryByRole("combobox", { name: "Seleccionar empresa" })).toBeNull();
-    expect(screen.getByRole("combobox", { name: "Seleccione el sitio asignado" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Sitio | Acceso" })).toBeTruthy();
   });
   it("associates Gate entry labels and required state with every field", async () => {
     renderPage();
@@ -767,6 +770,7 @@ describe("GatekeeperPage compact branded workspace", () => {
     const icon = screen.getByTestId("gate-header-icon");
     expect(icon.getAttribute("class")).toContain("text-[var(--brand-primary)]");
     expect(icon.getAttribute("class")).not.toContain("card-icon-drop-shadow");
+    expect(screen.queryByTestId("gate-watch-header")).toBeNull();
   });
   it("uses the top selectors and a GPS gauge without a selected-location card", async () => {
     renderPage();
@@ -816,7 +820,7 @@ describe("GatekeeperPage compact branded workspace", () => {
       expect((screen.getByTestId("input-gate-last-name") as HTMLInputElement).value).toBe("Driver");
       expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("Current Hauling");
       expect((screen.getByTestId("input-gate-purpose") as HTMLTextAreaElement).value).toBe("Fresh delivery");
-      expect((screen.getByTestId("input-gate-duration") as HTMLInputElement).value).toBe("120");
+      expect((screen.getByTestId("input-gate-duration") as HTMLInputElement).value).toBe("240");
     });
 
     fireEvent.change(screen.getByTestId("input-gate-company"), { target: { value: "Manual Company" } });
@@ -896,13 +900,15 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(within(card).queryByTestId("gate-checkout-notes-region")).toBeNull();
   });
 
-  it("uses brand-aware pills for Gate actions and keeps history anchored in the on-site card", async () => {
+  it("uses mini-card buttons for Gate actions and keeps history anchored in the on-site card", async () => {
     renderPage();
     const card = await screen.findByTestId("gate-on-site-card");
 
     const history = await within(card).findByTestId("button-gate-full-history");
     expect(history.getAttribute("href")).toBe("/gate/history?siteLocationId=42");
-    expect(history.querySelector("img")).toBeTruthy();
+    expect(history.querySelector("img")).toBeNull();
+    expect(history.querySelector("svg")).toBeTruthy();
+    expect(history.className).toContain("gate-log-text-link");
 
     const refresh = screen.getByTestId("button-gate-refresh");
     expect(refresh.querySelector("img")).toBeNull();
@@ -910,13 +916,11 @@ describe("GatekeeperPage compact branded workspace", () => {
     const actionIds = [
       "button-gate-read-plate",
       "button-gate-vehicle-photo",
-      "button-gate-duration-30m",
-      "button-gate-duration-2h",
-      "button-gate-duration-allDay",
-      "button-gate-duration-overnight",
+      "button-gate-check-in",
     ];
     for (const id of actionIds) {
-      expect(screen.getByTestId(id).querySelector("img")).toBeTruthy();
+      expect(screen.getByTestId(id).querySelector("img")).toBeNull();
+      expect(screen.getByTestId(id).className).toContain("gate-history-filter");
     }
     expect(screen.getByTestId("gate-new-entry-card").getAttribute("data-brand-outline")).toBe("true");
   });
@@ -960,9 +964,7 @@ describe("GatekeeperPage compact branded workspace", () => {
       expect(control.className).not.toContain("rounded-full");
     }
 
-    expect(screen.getByTestId("button-gate-read-plate").style.height).toBe("36px");
-    expect(screen.getByTestId("button-gate-vehicle-photo").style.height).toBe("36px");
-    expect(screen.getByTestId("button-gate-duration-30m").style.height).toBe("36px");
+    expect(screen.getByTestId("input-gate-duration").tagName).toBe("SELECT");
   });
 
   it("does not offer selected-gate history until the selected site context resolves", async () => {
@@ -994,7 +996,7 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(entry.compareDocumentPosition(traffic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("caps on-site traffic at 100 including pending admissions and retains Gate Log", async () => {
+  it("caps on-site traffic at 100 and moves pending admissions to Arrivals", async () => {
     api.list.mockResolvedValue([
       ...Array.from({ length: 5 }, (_, i) => recentVisit({ id: i + 1, checkOutTime: null, admissionStatus: "pending" })),
       ...Array.from({ length: 105 }, (_, i) => recentVisit({ id: i + 10, checkOutTime: null, admissionStatus: "admitted" })),
@@ -1003,7 +1005,9 @@ describe("GatekeeperPage compact branded workspace", () => {
     renderPage();
     const list = await screen.findByTestId("gate-on-site-entries");
     await waitFor(() => expect(within(list).getAllByRole("button", { name: /Oklahoma Visitor/ })).toHaveLength(100));
-    expect(within(list).getAllByTestId(/^button-gate-admit-/)).toHaveLength(5);
+    expect(within(list).queryByTestId("gate-pending-visitors")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "gatekeeper.arrivalsTab" }));
+    expect(within(screen.getByTestId("gate-arrivals")).getAllByTestId(/^button-gate-admit-/)).toHaveLength(5);
     expect((await screen.findByTestId("button-gate-full-history")).getAttribute("href")).toBe("/gate/history?siteLocationId=42");
     expect(list.contains(screen.getByTestId("button-gate-full-history"))).toBe(false);
   });
@@ -1024,16 +1028,16 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(within(card).getByRole("region", { name: "gatekeeper.onSiteTab" })).toBeTruthy();
     expect(within(card).queryByRole("region", { name: "gatekeeper.checkOutNotes" })).toBeNull();
     expect(screen.queryByRole("textbox", { name: "gatekeeper.checkOutNotes" })).toBeNull();
-    expect(screen.getByRole("textbox", { name: "gatekeeper.expectedMinutes" })).toBe(screen.getByTestId("input-gate-duration"));
+    expect(screen.getByRole("combobox", { name: "Expected Time" })).toBe(screen.getByTestId("input-gate-duration"));
   });
 
   it("exposes selected duration and captured-photo states on the branded Gate controls", async () => {
     renderPage();
-    await screen.findByTestId("button-gate-duration-30m");
-    expect(screen.getByTestId("button-gate-duration-2h").getAttribute("aria-pressed")).toBe("false");
-    fireEvent.click(screen.getByTestId("button-gate-duration-2h"));
-    expect(screen.getByTestId("button-gate-duration-2h").getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByTestId("button-gate-duration-30m").getAttribute("aria-pressed")).toBe("false");
+    const duration = await screen.findByRole("combobox", { name: "Expected Time" });
+    expect(Array.from(duration.querySelectorAll("option"), option => option.value)).toEqual(["240", "600", "720"]);
+    expect((duration as HTMLSelectElement).value).toBe("240");
+    fireEvent.change(duration, { target: { value: "720" } });
+    expect((duration as HTMLSelectElement).value).toBe("720");
     expect(screen.getByTestId("button-gate-read-plate").getAttribute("aria-pressed")).toBe("false");
     expect(screen.getByTestId("button-gate-vehicle-photo").getAttribute("aria-pressed")).toBe("false");
   });

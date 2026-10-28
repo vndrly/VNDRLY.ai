@@ -22,6 +22,9 @@ import {
   listGateStationManagementSites,
   listChangeOverStations,
   addChangeOverStation,
+  listGateStationManagementStations,
+  moveGateStation,
+  retireGateStation,
   getChangeOverState,
   startGateShift,
   prepareGateHandoff,
@@ -151,8 +154,22 @@ router.get("/gate-change-over/stations", async (req, res) => {
   });
 });
 router.post("/gate-change-over/stations", async (req, res) => {
-  const b = z.object({ siteId, name: text.max(80) }).parse(req.body);
-  res.json(await addChangeOverStation(sessionFor(req), b.siteId, b.name));
+  const b = z.object({ siteId, name: text.max(80), location: z.object({
+    latitude: z.number().finite().min(-90).max(90),
+    longitude: z.number().finite().min(-180).max(180),
+  }).strict().optional() }).parse(req.body);
+  res.json(await addChangeOverStation(sessionFor(req), b.siteId, b.name, b.location));
+});
+router.get("/gate-change-over/station-management/stations", async (req, res) => {
+  res.json({ stations: await listGateStationManagementStations(sessionFor(req), siteId.parse(req.query.siteId)) });
+});
+router.post("/gate-change-over/stations/:stationId/location", async (req, res) => {
+  const input = z.object({ siteId, name: text.max(80), location: z.object({ latitude: z.number().finite().min(-90).max(90), longitude: z.number().finite().min(-180).max(180) }).strict(), expectedVersion: z.number().int().positive(), operationId: uuid }).strict().parse(req.body);
+  res.json(await moveGateStation(sessionFor(req), { ...input, stationId: uuid.parse(req.params.stationId) }));
+});
+router.post("/gate-change-over/stations/:stationId/retire", async (req, res) => {
+  const input = z.object({ siteId, expectedVersion: z.number().int().positive(), operationId: uuid }).strict().parse(req.body);
+  res.json(await retireGateStation(sessionFor(req), { ...input, stationId: uuid.parse(req.params.stationId) }));
 });
 router.get("/gate-change-over/:stationId/state", async (req, res) => {
   res.json(

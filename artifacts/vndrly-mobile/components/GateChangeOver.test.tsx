@@ -1,3 +1,4 @@
+vi.mock("react-native-svg", () => ({default: ({children}: any) => <svg>{children}</svg>, Defs: ({children}: any) => <defs>{children}</defs>, LinearGradient: ({children}: any) => <linearGradient>{children}</linearGradient>, Stop: () => null, Path: () => null}));
 import React from "react";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import {
@@ -368,22 +369,15 @@ it('assumes the reviewed watch using the current native account without replacin
  expect(env.api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);
  expect(screen.queryByLabelText('changeOver.password')).toBeNull();
 });
-it("keeps eligible sites compact until the operator opens the selector", async () => {
+it("keeps site and gate choices compact until the combined selector opens", async () => {
   const base = env.api.getMockImplementation()!;
-  env.api.mockImplementation((path, body) =>
-    path === "/sites"
-      ? Promise.resolve({ sites: [{ id: 1, name: "Current site" }, { id: 2, name: "Scheduled site" }] })
-      : base(path, body),
-  );
+  env.api.mockImplementation((path, body) => path === "/sites" ? Promise.resolve({ sites: [{id:1,name:"Current site"},{id:2,name:"Scheduled site"}] }) : path === "/map" ? Promise.resolve({gates:[{id:"gate",name:"Main gate",siteId:1},{id:"gate-2",name:"West",siteId:2}]}) : base(path,body));
   mount();
-  expect((await screen.findAllByRole("button", { name: "Current site" }))).toHaveLength(1);
-  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).toContain("min-height: 120px");
-  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).toContain("background-color: rgb(40, 40, 42)");
-  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).not.toContain("opacity");
-  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).not.toContain("filter");
-  expect(screen.queryByRole("button", { name: "Scheduled site" })).toBeNull();
-  fireEvent.click(screen.getAllByRole("button", { name: "Current site" })[0]);
-  expect(screen.getAllByRole("button", { name: "Scheduled site" })).toHaveLength(1);
+  const selector = await screen.findByTestId("site-gate-selector");
+  await waitFor(() => expect(selector.textContent).toContain("Current site | Main gate"));
+  expect(screen.queryByText("Scheduled site | West")).toBeNull();
+  fireEvent.click(selector);
+  expect(await screen.findByText("Scheduled site | West")).toBeTruthy();
 });
 it("uses the static gray pill for the requested dashboard actions", async () => {
   mount();

@@ -9,6 +9,8 @@
 /* Plain status text uses the panel-heading weight, overriding the pill reset. */
 button.workday-status-text { font-weight: 700 !important; }
 .workday-status-switch { min-height: 44px; display: inline-flex; align-items: center; gap: 10px; max-width: 100%; }
+.shift-card .workday-status-switch { flex-direction: column; justify-content: center; gap: 4px; }
+.shift-card .workday-switch-label { text-align: center; }
 .workday-switch-label { white-space: normal; text-align: left; }
 .workday-switch-track { width: 44px; height: 24px; border-radius: 12px; padding: 3px; flex-shrink: 0; background: #6b7280; transition: background-color .15s; }
 .workday-switch-dot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
@@ -28,3 +30,12 @@ button.workday-status-text { font-weight: 700 !important; }
 .workday-status-text:disabled { cursor: default; }
 .workday-status-text:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 4px; }
 @media (max-width: 600px) { .shift-card { padding: 8px; gap: 8px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .shift-card-center { grid-column: 1 / -1; grid-row: 2; } .shift-card-on-call { grid-column: 2; grid-row: 1; } .shift-card button { min-width: 110px; } }
+.shift-card:has(.gate-site-gate-select) { grid-template-columns: minmax(0, 1fr) minmax(0, 387px) minmax(0, 1fr); }
+.shift-card:has(.gate-site-gate-select) .shift-card-center { width: 100%; grid-column: 2; grid-row: 1; }
+.shift-card:has(.gate-site-gate-select) .shift-card-on-call { grid-column: 3; grid-row: 1; min-width: 0; }
+@media (max-width: 767px) { .shift-card:has(.gate-site-gate-select) { grid-template-columns: minmax(0, 1fr) 182px minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .shift-card:has(.gate-site-gate-select) { column-gap: 6px; }
+  .shift-card .workday-status-switch { min-width: 0; font-size: 14px; line-height: 1.2; }
+  .shift-card-on-call small { font-size: 10px; }
+}

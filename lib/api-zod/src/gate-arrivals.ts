@@ -18,6 +18,11 @@ export type GateArrival = {
   physicalProofVerified: false;
 };
 export type GateArrivalsResponse = { arrivals: GateArrival[]; truncated: boolean; generatedAt: string };
+/** A currently shared driver-phone position for an authorized incoming run. */
+export type GateMapVehicle = GateArrival & {
+  latitude: number; longitude: number; accuracyMeters: number | null;
+  speedMph: number | null; headingDegrees: number | null; originName: string | null;
+};
 export type GateArrivalDetail = GateArrival & {
   detailScope: "selected_site";
   runComplete: boolean;

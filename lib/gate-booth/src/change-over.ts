@@ -24,6 +24,9 @@ export interface ChangeOverSnapshot {
     checkIn: string;
     notes: string | null;
   }[];
+  /** Current source records and matching counter memberships; older saved handoffs omit these. */
+  records?: (ChangeOverSnapshot["outstanding"][number] & { checkOut: string | null })[];
+  metricRecordIds?: Partial<Record<keyof ChangeOverSnapshot["metrics"], string[]>>;
   exceptions: { sourceId: string; code: string; text: string }[];
   openItems: { id: string; text: string; status: string }[];
   facts: ChangeOverFact[];

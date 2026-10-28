@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
 import { GateVisitDetails } from "./gate-visit-details";
 import { useState } from "react";
+import { isGateArrivalPreview, sampleGateArrivalDetail } from "@/lib/gate-arrival-preview";
 
 export function GateArrivalDetails({ siteId, runId, onClose }: { siteId?: number; runId: string | null; onClose: () => void }) {
   const { t } = useTranslation();
@@ -13,7 +14,9 @@ export function GateArrivalDetails({ siteId, runId, onClose }: { siteId?: number
   const [visitId, setVisitId] = useState<number | null>(null);
   const record = useQuery({
     queryKey: ["gate-arrival-detail", user?.userId, user?.activeMembershipId, siteId, runId],
-    queryFn: () => gateArrivalsApi.get(siteId!, runId!), enabled: Boolean(siteId && runId), retry: false,
+    queryFn: () => isGateArrivalPreview() && runId?.startsWith("sample-inbound-")
+      ? Promise.resolve(sampleGateArrivalDetail(siteId!, runId!))
+      : gateArrivalsApi.get(siteId!, runId!), enabled: Boolean(siteId && runId), retry: false,
   });
   const run = record.data;
   return <>

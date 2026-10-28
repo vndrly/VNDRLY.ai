@@ -45,3 +45,8 @@ it("removes the microphone from Dashboard navigation but keeps it on the Gate pa
   view.rerender(<GatePortalLayout>Gate</GatePortalLayout>);
   expect(screen.getByText("button-gate-voice")).toBeTruthy();
 });
+it.each(["/gate/history", "/gate/map"])("removes the voice control on %s", path => {
+  state.path = path;
+  render(<GatePortalLayout>Gate page</GatePortalLayout>);
+  expect(screen.queryByText("button-gate-voice")).toBeNull();
+});

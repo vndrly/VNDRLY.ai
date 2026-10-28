@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { pool } from "@workspace/db";
 import { readFileSync } from "node:fs";
 import {
   createMemoryGateReportDependencies,
@@ -7,6 +8,7 @@ import {
   listGateReportRecipients,
   openGateReport,
   parseGateReportFilters,
+  databaseGateReportDependencies,
 } from "./gate-reports";
 
 const filters = {
@@ -17,6 +19,40 @@ const filters = {
 };
 
 describe("Gate reports", () => {
+  it("reads an exact old record within the authorized site and retains company redaction", async () => {
+    const row = { id: "employee:42", name: "Sam", company: "Acme", checkInTime: "2025-01-01T12:00:00Z", checkOutTime: "2025-01-01T13:00:00Z" };
+    const query = vi.spyOn(pool, "query").mockResolvedValue({ rows: [row] } as never);
+    try {
+      const filters = { siteId: 10, range: "current_shift" as const, recordType: "on_site" as const, recordId: "employee:42" };
+      expect(await databaseGateReportDependencies.queryRows(filters, { kind: "company", company: "Acme" }, "history")).toEqual([row]);
+      expect(query).toHaveBeenCalledWith(expect.stringContaining("t.site_location_id=$1"), [10, expect.any(Date), expect.any(Date), "employee:42"]);
+      expect(await databaseGateReportDependencies.queryRows(filters, { kind: "company", company: "Other" }, "history")).toEqual([]);
+      expect(query.mock.calls.every(([sql]) => String(sql).includes("$4::text IS NOT NULL"))).toBe(true);
+    } finally { query.mockRestore(); }
+    expect(() => parseGateReportFilters({ siteId: 10, range: "7d", recordType: "all", recordId: "visit:1 OR true" })).toThrow();
+  });
+  it("moves a corrected missed departure out of On Site without inventing a checkout time", async () => {
+    const corrected = { id: "visit:88", name: "Taylor", checkOutTime: null, reconciliationState: "confirmed_off_site" };
+    const present = { id: "visit:89", name: "Sam", checkOutTime: null, reconciliationState: null };
+    const query = vi.spyOn(pool, "query").mockResolvedValue({ rows: [corrected, present] } as never);
+    try {
+      const base = { siteId: 10, range: "7d" as const };
+      expect(await databaseGateReportDependencies.queryRows({ ...base, recordType: "on_site" }, { kind: "full_site" }, "history")).toEqual([present]);
+      expect(await databaseGateReportDependencies.queryRows({ ...base, recordType: "check_outs" }, { kind: "full_site" }, "history")).toEqual([corrected]);
+      expect(corrected.checkOutTime).toBeNull();
+    } finally { query.mockRestore(); }
+  });
+  it("keeps waiting-to-enter records out of On Site and in pending arrivals", async () => {
+    const pending = { id: "visit:1", admissionStatus: "pending", checkOutTime: null };
+    const admitted = { id: "visit:2", admissionStatus: "admitted", checkOutTime: null };
+    const departed = { id: "visit:3", admissionStatus: "pending", checkOutTime: "2026-10-28T12:00:00Z" };
+    const query = vi.spyOn(pool, "query").mockResolvedValue({ rows: [pending, admitted, departed] } as never);
+    try {
+      const base = { siteId: 10, range: "7d" as const };
+      expect(await databaseGateReportDependencies.queryRows({ ...base, recordType: "on_site" }, { kind: "full_site" }, "history")).toEqual([admitted]);
+      expect(await databaseGateReportDependencies.queryRows({ ...base, recordType: "pending" }, { kind: "full_site" }, "history")).toEqual([pending]);
+    } finally { query.mockRestore(); }
+  });
   it("keeps peer gatekeepers eligible for shift handoff reports", () => {
     const source = readFileSync(new URL("./gate-reports.ts", import.meta.url), "utf8");
     const eligibleRoleClauses = source.match(
@@ -29,6 +65,14 @@ describe("Gate reports", () => {
   it("supports the approved ranges through a full year", () => {
     expect(parseGateReportFilters({ ...filters, range: "1y" })).toMatchObject({ range: "1y" });
     expect(() => parseGateReportFilters({ ...filters, range: "10y" })).toThrow();
+  });
+  it("accepts incoming-arrival and combined on-site report filters", () => {
+    expect(parseGateReportFilters({ ...filters, recordType: "arrivals" }).recordType).toBe("arrivals");
+    expect(parseGateReportFilters({ ...filters, recordType: "on_site" }).recordType).toBe("on_site");
+  });
+  it("does not export live arrivals without a current authenticated session", async () => {
+    await expect(databaseGateReportDependencies.queryRows({ ...filters, recordType: "arrivals" }, {kind:"full_site"}, "history"))
+      .rejects.toMatchObject({status:403,code:"gate_report.current_session_required"});
   });
 
   it("delivers secure links to multiple eligible user ids without accepting addresses", async () => {

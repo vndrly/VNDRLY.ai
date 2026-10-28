@@ -2348,6 +2348,8 @@ router.get("/visits", async (req, res): Promise<void> => {
       autoCheckedOut: siteVisitsTable.autoCheckedOut,
       checkInLatitude: siteVisitsTable.checkInLatitude,
       checkInLongitude: siteVisitsTable.checkInLongitude,
+      checkInGpsEvidence: siteVisitsTable.checkInGpsEvidence,
+      checkOutGpsEvidence: siteVisitsTable.checkOutGpsEvidence,
     })
     .from(siteVisitsTable)
     .leftJoin(

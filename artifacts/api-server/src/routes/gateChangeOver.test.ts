@@ -13,11 +13,15 @@ const duty = vi.hoisted(() => ({
 }));
 
 vi.mock("../services/gate-duty", () => duty);
-const discovery = vi.hoisted(() => ({ sites: vi.fn(), stations: vi.fn() }));
+const discovery = vi.hoisted(() => ({ sites: vi.fn(), stations: vi.fn(), addStation: vi.fn(), managementStations: vi.fn(), moveStation: vi.fn(), retireStation: vi.fn() }));
 vi.mock("../services/gate-change-over", async importOriginal => ({
   ...(await importOriginal<typeof import("../services/gate-change-over")>()),
   listChangeOverSites: discovery.sites,
   listChangeOverStations: discovery.stations,
+  addChangeOverStation: discovery.addStation,
+  listGateStationManagementStations: discovery.managementStations,
+  moveGateStation: discovery.moveStation,
+  retireGateStation: discovery.retireStation,
 }));
 
 import gateChangeOverRouter from "./gateChangeOver";
@@ -44,6 +48,36 @@ const session = buildTestCookie({
 
 describe("Gate duty routes", () => {
   beforeEach(() => vi.clearAllMocks());
+  it("removes a gate through a versioned retirement command without accepting a different actor", async () => {
+    discovery.retireStation.mockResolvedValue({ id: stationId, active: false });
+    const input = { siteId: 22, expectedVersion: 4, operationId: shiftId };
+    expect((await request(app).post(`/gate-change-over/stations/${stationId}/retire`).set("Cookie", session).send(input)).status).toBe(200);
+    expect(discovery.retireStation).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), { ...input, stationId });
+    expect((await request(app).post(`/gate-change-over/stations/${stationId}/retire`).set("Cookie", session).send({ ...input, userId: 99 })).status).toBe(400);
+    expect(discovery.retireStation).toHaveBeenCalledTimes(1);
+  });
+  it("validates gate moves and uses the signed-in staff session", async () => {
+    discovery.managementStations.mockResolvedValue([{ id: stationId, siteId: 22, version: 3 }]);
+    expect((await request(app).get("/gate-change-over/station-management/stations?siteId=22").set("Cookie", session)).status).toBe(200);
+    expect(discovery.managementStations).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), 22);
+    discovery.moveStation.mockResolvedValue({ id: stationId, version: 4 });
+    const input = { siteId: 22, name: "West gate", location: { latitude: 35, longitude: -97 }, expectedVersion: 3, operationId: shiftId };
+    expect((await request(app).post(`/gate-change-over/stations/${stationId}/location`).set("Cookie", session).send(input)).status).toBe(200);
+    expect(discovery.moveStation).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), { ...input, stationId });
+    expect((await request(app).post(`/gate-change-over/stations/${stationId}/location`).set("Cookie", session).send({ ...input, expectedVersion: undefined })).status).toBe(400);
+    expect(discovery.moveStation).toHaveBeenCalledTimes(1);
+  });
+  it("accepts resolved gate coordinates and rejects invalid or incomplete locations", async () => {
+    discovery.addStation.mockResolvedValue({ id: stationId });
+    const result = await request(app).post("/gate-change-over/stations").set("Cookie", session)
+      .send({ siteId: 22, name: "West gate", location: { latitude: 35.1, longitude: -97.2 } });
+    expect(result.status).toBe(200);
+    expect(discovery.addStation).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), 22, "West gate", { latitude: 35.1, longitude: -97.2 });
+    for (const location of [{ latitude: 91, longitude: 0 }, { latitude: 0 }, { latitude: "", longitude: "" }]) {
+      expect((await request(app).post("/gate-change-over/stations").set("Cookie", session).send({ siteId: 22, name: "West gate", location })).status).toBe(400);
+    }
+    expect(discovery.addStation).toHaveBeenCalledTimes(1);
+  });
   it("validates explicit history discovery while defaulting operational requests safely", async () => {
     discovery.sites.mockResolvedValue([{ id: 22, name: "Former gate site" }]);
     discovery.stations.mockResolvedValue([{ id: stationId, name: "Closed gate" }]);

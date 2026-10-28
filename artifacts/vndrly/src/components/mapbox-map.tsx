@@ -15,6 +15,8 @@ export type MapboxPoint = {
   imageUrl?: string | null;
   title?: string;
   popupHtml?: string;
+  popupOnHover?: boolean;
+  popupClassName?: string;
   onClick?: () => void;
   flashing?: boolean;
 };
@@ -48,6 +50,7 @@ type Props = {
   className?: string;
   fitToData?: boolean;
   selectedPointId?: string | null;
+  panToSelectedPoint?: boolean;
   scrollZoom?: boolean;
   onPointDrag?: (id: string, latitude: number, longitude: number) => void;
 };
@@ -133,6 +136,7 @@ export function MapboxMap({
   className,
   fitToData = true,
   selectedPointId,
+  panToSelectedPoint = false,
   scrollZoom = true,
   onPointDrag,
 }: Props) {
@@ -147,6 +151,8 @@ export function MapboxMap({
   const mapRef = useRef<MapboxMapInstance | null>(null);
   const markerRefs = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const clickHandlers = useRef<Map<string, () => void>>(new Map());
+  const hoverPoints = useRef<Map<string, MapboxPoint>>(new Map());
+  const hoverPopup = useRef<mapboxgl.Popup | null>(null);
 
   const initialCenter = useMemo<[number, number]>(() => {
     if (center) return center;
@@ -155,6 +161,8 @@ export function MapboxMap({
   }, [center, points]);
   const initialCenterRef = useRef(initialCenter);
   initialCenterRef.current = initialCenter;
+  const initialZoomRef = useRef(zoom);
+  initialZoomRef.current = zoom;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current || !token) return;
@@ -163,7 +171,7 @@ export function MapboxMap({
       container: containerRef.current,
       style: getMapboxStyleUrl(styleKind),
       center: initialCenterRef.current,
-      zoom,
+      zoom: initialZoomRef.current,
       attributionControl: true,
     });
     if (!scrollZoom) map.scrollZoom.disable();
@@ -205,10 +213,12 @@ export function MapboxMap({
     return () => {
       markerRefs.current.forEach((marker) => marker.remove());
       markerRefs.current.clear();
+      hoverPopup.current?.remove();
+      hoverPopup.current = null;
       map.remove();
       mapRef.current = null;
     };
-  }, [scrollZoom, styleKind, token, zoom]);
+  }, [scrollZoom, styleKind, token]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -260,6 +270,9 @@ export function MapboxMap({
       }
     }
     clickHandlers.current.clear();
+    hoverPopup.current?.remove();
+    hoverPopup.current = null;
+    hoverPoints.current = new Map(points.filter(point => point.popupOnHover && point.popupHtml).map(point => [point.id, point]));
     for (const point of points) {
       if (!isValidLatLng(point.latitude, point.longitude)) continue;
       clickHandlers.current.set(point.id, point.onClick ?? (() => {}));
@@ -270,6 +283,18 @@ export function MapboxMap({
         el.className = "vndrly-mapbox-marker";
         el.dataset.markerId = point.id;
         el.addEventListener("click", () => clickHandlers.current.get(point.id)?.());
+        const showDetails = () => {
+          const current = hoverPoints.current.get(point.id);
+          if (!current?.popupHtml) return;
+          hoverPopup.current?.remove();
+          hoverPopup.current = new mapboxgl.Popup({ offset: 18, closeButton: false, className: current.popupClassName })
+            .setLngLat([current.longitude, current.latitude]).setHTML(current.popupHtml).addTo(map);
+        };
+        const hideDetails = () => { hoverPopup.current?.remove(); hoverPopup.current = null; };
+        el.addEventListener("mouseenter", showDetails);
+        el.addEventListener("mouseleave", hideDetails);
+        el.addEventListener("focus", showDetails);
+        el.addEventListener("blur", hideDetails);
         marker = new mapboxgl.Marker({ element: el, draggable: !!onPointDrag })
           .setLngLat([point.longitude, point.latitude])
           .addTo(map);
@@ -295,10 +320,20 @@ export function MapboxMap({
       }
       el.setAttribute("aria-label", point.title ?? point.label ?? "Map marker");
       if (point.popupHtml) {
-        marker.setPopup(new mapboxgl.Popup({ offset: 18 }).setHTML(point.popupHtml));
+        marker.setPopup(new mapboxgl.Popup({ offset: 18, className: point.popupClassName }).setHTML(point.popupHtml));
       }
     }
   }, [onPointDrag, points, selectedPointId, token, initialCenter, scrollZoom, styleKind, zoom]);
+
+  useEffect(() => {
+    if (!panToSelectedPoint || !selectedPointId) return;
+    const point = points.find(item => item.id === selectedPointId);
+    if (point && isValidLatLng(point.latitude, point.longitude)) mapRef.current?.easeTo({ center: [point.longitude, point.latitude], zoom });
+  }, [panToSelectedPoint, selectedPointId, points, zoom, token]);
+
+  useEffect(() => {
+    if (!panToSelectedPoint || !selectedPointId) mapRef.current?.easeTo({ zoom });
+  }, [zoom, panToSelectedPoint, selectedPointId, token]);
 
   useEffect(() => {
     const map = mapRef.current;

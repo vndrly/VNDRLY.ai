@@ -5,6 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const queryGateReportRows = vi.hoisted(() => vi.fn());
 const changeOverRequest = vi.hoisted(() => vi.fn());
+const incoming = vi.hoisted(() => vi.fn());
+const correctGatePresence = vi.hoisted(() => vi.fn());
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, role: "vendor", vendorRole: "gatekeeper" } }) }));
+vi.mock("@/lib/visits-api", () => ({ visitsApi: { correctGatePresence } }));
+vi.mock("@/lib/gate-arrivals-api", () => ({ gateArrivalsApi: { list: incoming } }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -24,15 +29,115 @@ afterEach(() => {
   window.history.replaceState({}, "", "/");
   queryGateReportRows.mockReset();
   changeOverRequest.mockReset();
+  correctGatePresence.mockReset();
 });
 
 beforeEach(() => {
+  incoming.mockResolvedValue({ arrivals: [{id:"arrival",runId:"run",title:"Inbound run",driverName:"Incoming driver",companyName:"Hauler",vehicleLabel:"Truck 7",ticketNumber:"T7",etaMinutes:10}], truncated:false });
   changeOverRequest.mockImplementation((path: string) => path.startsWith("/sites")
     ? Promise.resolve({ sites: [{ id: 42, name: "Acme HQ" }] })
     : Promise.resolve({ stations: [{ id: "00000000-0000-4000-8000-000000000042", name: "Main gate" }] }));
 });
 
 describe("GateHistoryPage plate display", () => {
+  it("opens an exact historical record from a dashboard link independently of list filters", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=check_outs&recordId=visit%3A88");
+    queryGateReportRows.mockImplementation(async (_kind, filters) => filters.recordId ? [{ id: "visit:88", name: "Old departed driver", checkInTime: "2026-08-01T12:00:00Z", checkOutTime: "2026-08-01T13:00:00Z", notes: "Original crossing note" }] : []);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(dialog.textContent).toContain("Original crossing note"));
+    expect(queryGateReportRows).toHaveBeenCalledWith("history", expect.objectContaining({ siteId: 42, recordId: "visit:88", recordType: "all" }));
+    expect(window.location.search).toContain("recordId=visit%3A88");
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(window.location.search).not.toContain("recordId="));
+    expect(screen.getByRole("button", { name: "Departures" }).getAttribute("aria-pressed")).toBe("true");
+  });
+  it("uses the On Site view for an employee record link", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=employees_on_site&recordId=employee%3A42");
+    queryGateReportRows.mockImplementation(async (_kind, filters) => filters.recordId ? [{ id: "employee:42", kind: "employee", name: "On-site employee" }] : []);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    expect(await screen.findByRole("heading", { name: "On-site employee" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.getByRole("button", { name: "On Site" }).getAttribute("aria-pressed")).toBe("true");
+  });
+  it("corrects a missed checkout in one click and removes the stale truck after refresh", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=on_site");
+    const visit = { id: "visit:88", name: "Taylor Reed", checkOutTime: null };
+    queryGateReportRows.mockResolvedValue([visit]);
+    correctGatePresence.mockImplementation(async () => { queryGateReportRows.mockResolvedValue([]); });
+    const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+    render(<QueryClientProvider client={cache}><GateHistoryPage /></QueryClientProvider>);
+    fireEvent.click(await screen.findByRole("button", { name: "Check out: Taylor Reed" }));
+    await waitFor(() => expect(correctGatePresence).toHaveBeenCalledWith(88, expect.any(String)));
+    await waitFor(() => expect(screen.queryByText("Taylor Reed")).toBeNull());
+  });
+  it("keeps the record on failure and safely retries with the same correction key", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=on_site");
+    queryGateReportRows.mockResolvedValue([{ id: "visit:88", name: "Taylor Reed" }]);
+    correctGatePresence.mockRejectedValue(new Error("Correction not saved"));
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    fireEvent.click(await screen.findByRole("button", { name: "Check out: Taylor Reed" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("Correction not saved");
+    expect(screen.getByText("Taylor Reed")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Check out: Taylor Reed" }));
+    await waitFor(() => expect(correctGatePresence).toHaveBeenCalledTimes(2));
+    expect(correctGatePresence.mock.calls[1]).toEqual(correctGatePresence.mock.calls[0]);
+  });
+  it("never checks out employee field work or records already corrected or departed", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=on_site");
+    queryGateReportRows.mockResolvedValue([
+      { id: "employee:88", name: "Field worker" },
+      { id: "visit:89", name: "Corrected", reconciliationState: "confirmed_off_site" },
+      { id: "visit:90", name: "Departed", checkOutTime: "2026-10-28T12:00:00Z" },
+    ]);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    await screen.findByText("Field worker");
+    expect(screen.queryByText("Corrected")).toBeNull();
+    expect(screen.queryByText("Departed")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Check out:/ })).toBeNull();
+  });
+  it("defaults to All, filters recorded traffic, and shows incoming ETA runs separately", async () => {
+    const onSite = {id:"visit:1",name:"In booth",checkInTime:new Date().toISOString()};
+    const departed = {id:"visit:2",name:"Departed",checkInTime:new Date().toISOString(),checkOutTime:new Date().toISOString()};
+    queryGateReportRows.mockImplementation(async (_kind, filters) => filters.recordType === "on_site" ? [onSite] : filters.recordType === "check_outs" ? [departed] : [onSite,departed]);
+    render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}})}><GateHistoryPage /></QueryClientProvider>);
+    expect(screen.getByRole("button",{name:"All"}).getAttribute("aria-pressed")).toBe("true");
+    await screen.findByText("In booth");
+    expect(await screen.findByText("Incoming driver")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Check out: In booth" }).className).toContain("gate-history-filter");
+    fireEvent.click(screen.getByRole("button", { name: "View: Departed" }));
+    expect(window.location.search).toContain("recordId=visit%3A2");
+    fireEvent.click(await screen.findByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button",{name:"On Site"}));
+    await waitFor(()=>expect(queryGateReportRows).toHaveBeenLastCalledWith("history",expect.objectContaining({recordType:"on_site"})));
+    await waitFor(()=>expect(screen.queryByText("Departed")).toBeNull());
+    fireEvent.click(screen.getByRole("button",{name:"Departures"}));
+    await screen.findByText("Departed");
+    expect(queryGateReportRows).toHaveBeenLastCalledWith("history",expect.objectContaining({recordType:"check_outs"}));
+    fireEvent.click(screen.getByRole("button",{name:"Arrivals"}));
+    expect(await screen.findByText("Incoming driver")).toBeTruthy();
+    expect(incoming).toHaveBeenCalledWith(42);
+    expect(screen.queryByTestId("gate-history-row")).toBeNull();
+    expect(screen.getByRole("combobox",{name:"Export"})).toBeTruthy();
+    expect(screen.queryByTestId("button-gate-export-pdf")).toBeNull();
+  });
+  it("moves waiting-to-enter records to Arrivals and puts flags in the footer", async () => {
+    const pending = { id: "visit:55", name: "Waiting truck", admissionStatus: "pending", checkInTime: "2026-10-28T08:00:00Z" };
+    const present = { id: "visit:56", name: "Admitted truck", admissionStatus: "admitted", checkInTime: "2026-10-01T08:00:00Z", expectedMinutes: 1, checkInGpsEvidence: { status: "unavailable" } };
+    queryGateReportRows.mockResolvedValue([pending, present]);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    const flag = await screen.findByText("Location Flag: No GPS");
+    expect(flag.closest(".gate-traffic-footer")).toBeTruthy();
+    expect(flag.closest("button")).toBeNull();
+    expect(screen.getByText(/Location Flag: Duration Time On Site \d+:\d{2} Overdue/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "On Site" }));
+    await waitFor(() => expect(screen.queryByText("Waiting truck")).toBeNull());
+    expect(await screen.findByText("Admitted truck")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Arrivals" }));
+    expect(await screen.findByText("Waiting truck")).toBeTruthy();
+    expect(screen.queryByText("Admitted truck")).toBeNull();
+    expect(await screen.findByText("Incoming driver")).toBeTruthy();
+  });
   it("requests historical site and station discovery for past gate reports", async () => {
     queryGateReportRows.mockResolvedValue([]);
     const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
@@ -82,10 +187,8 @@ describe("GateHistoryPage plate display", () => {
     const range = screen.getByRole("combobox", { name: "History range" });
     expect(Array.from(range.querySelectorAll("option"), (option) => option.value)).toEqual(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]);
     expect((range as HTMLSelectElement).value).toBe("current_shift");
-    await waitFor(() => expect(queryGateReportRows).toHaveBeenCalledTimes(1));
     fireEvent.change(range, { target: { value: "7d" } });
-    await waitFor(() => expect(queryGateReportRows).toHaveBeenCalledTimes(2));
-    expect(queryGateReportRows.mock.calls[1][1]).toMatchObject({ range: "7d" });
+    await waitFor(() => expect(queryGateReportRows).toHaveBeenLastCalledWith("history", expect.objectContaining({ range: "7d" })));
   });
   it("exports only the rows shown after the active search", async () => {
     queryGateReportRows.mockImplementation((_kind: string, filters: { search?: string }) => Promise.resolve(filters.search

@@ -40,7 +40,7 @@ router.post("/gate-report/deliver", async (req, res) => {
         siteId: z.number().int().positive(),
         stationId: z.string().uuid().optional(),
         range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
-        recordType: z.enum(["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
+        recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
       }),
     }).strict().parse(req.body);
@@ -69,11 +69,12 @@ router.post("/gate-report/email", async (req, res) => {
         siteId: z.number().int().positive(),
         stationId: z.string().uuid().optional(),
         range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
-        recordType: z.enum(["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
+        recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
       }),
     }).strict().parse(req.body);
     const result = await emailGateReportAttachments({
+      session,
       senderUserId: session.userId,
       ...body,
       filters: parseGateReportFilters(body.filters),
@@ -96,11 +97,11 @@ router.post("/gate-report/export", async (req, res) => {
       filters: z.object({
         siteId: z.number().int().positive(), stationId: z.string().uuid().optional(),
         range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
-        recordType: z.enum(["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
+        recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
       }),
     }).strict().parse(req.body);
-    const report = await generateGateReport({ userId: session.userId, ...body, filters: parseGateReportFilters(body.filters) });
+    const report = await generateGateReport({ session, userId: session.userId, ...body, filters: parseGateReportFilters(body.filters) });
     res.setHeader("Cache-Control", "private, no-store");
     res.setHeader("Content-Type", report.contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${report.filename}"`);
@@ -121,8 +122,9 @@ router.post("/gate-report/query", async (req, res) => {
       filters: z.object({
         siteId: z.number().int().positive(), stationId: z.string().uuid().optional(),
         range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
-        recordType: z.enum(["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
+        recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
+        recordId: z.string().max(80).regex(/^(visit|employee):[1-9]\d*$/).optional(),
       }),
     }).strict().parse(req.body);
     const rows = await queryGateHistoryForSession(session, { ...body, filters: parseGateReportFilters(body.filters) });
@@ -154,7 +156,7 @@ router.get("/gate-report/secure", async (req, res) => {
   if (!session?.userId) { res.status(401).json({ code: "auth.required", message: "Login required" }); return; }
   try {
     const token = z.string().min(20).max(200).parse(req.query.token);
-    const report = await openGateReport({ token, userId: session.userId });
+    const report = await openGateReport({ token, userId: session.userId, session });
     res.setHeader("Cache-Control", "private, no-store");
     res.setHeader("Content-Type", report.contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${report.filename}"`);

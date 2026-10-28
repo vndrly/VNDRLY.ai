@@ -234,10 +234,10 @@ export function FieldOpsPortalShell({
             const isActive = tab.match(location);
             const Icon = tab.icon;
             if (tab.voiceEntry) {
-              return <GateVoiceEntryCircle key={tab.href} testId={tab.testId} />;
+              return <GateVoiceEntryCircle key={tab.testId} testId={tab.testId} />;
             }
             return (
-              <Link key={tab.href} href={tab.href} onClick={(event) => {
+              <Link key={tab.testId} href={tab.href} onClick={(event) => {
                 if (tab.onSelect) {
                   event.preventDefault();
                   tab.onSelect();

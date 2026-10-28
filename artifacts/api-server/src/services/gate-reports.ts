@@ -2,9 +2,12 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import PDFDocument from "pdfkit";
 import { pool } from "@workspace/db";
 import { sendGateReportAttachmentEmail, sendNotificationAlertEmail } from "../lib/sendgrid";
+import type { SessionPayload } from "../lib/session";
+import { createGateArrivalsService, GateArrivalsError } from "./gate-arrivals";
+import { OfflineGateError } from "./gate-offline-observation";
 
 export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" | "14d" | "30d" | "90d" | "1y";
-export type GateReportRecordType = "all" | "check_ins" | "check_outs" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
+export type GateReportRecordType = "all" | "arrivals" | "check_ins" | "check_outs" | "on_site" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
 export type GateReportKind = "history" | "shift_notes";
 export type GateReportFormat = "pdf" | "excel" | "word";
 export type GateReportFilters = {
@@ -13,6 +16,7 @@ export type GateReportFilters = {
   range: GateReportRange;
   recordType: GateReportRecordType;
   search?: string;
+  recordId?: string;
 };
 export type GateReportScope = { kind: "full_site" } | { kind: "company"; company: string };
 export type GateReportRow = Record<string, unknown> & {
@@ -54,7 +58,7 @@ export interface GateReportDependencies {
   findDelivery(tokenHash: string): Promise<GateReportDelivery | null>;
   markSent(id: string, at: Date): Promise<void>;
   markOpened(id: string, at: Date): Promise<void>;
-  queryRows(filters: GateReportFilters, scope: GateReportScope, reportKind: GateReportKind): Promise<GateReportRow[]>;
+  queryRows(filters: GateReportFilters, scope: GateReportScope, reportKind: GateReportKind, session?: SessionPayload): Promise<GateReportRow[]>;
   resolveContext(filters: GateReportFilters): Promise<{ siteName: string; stationName: string }>;
   sendLink(input: { recipientUserId: number; url: string; token: string; reportKind: GateReportKind; format: GateReportFormat }): Promise<void>;
   sendAttachment(input: { recipientUserId: number; subject: string; filename: string; contentType: string; body: Buffer }): Promise<void>;
@@ -69,7 +73,7 @@ export interface GateReportDependencies {
 const fail = (status: number, code: string): never => { throw new GateReportsError(status, code); };
 const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
 const ranges: GateReportRange[] = ["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"];
-const recordTypes: GateReportRecordType[] = ["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"];
+const recordTypes: GateReportRecordType[] = ["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"];
 
 function recipientCandidateIsSelectable(candidate: GateReportRecipientCandidate) {
   if (candidate.accountKind === "test" || candidate.relationship === "unrelated") return false;
@@ -88,7 +92,9 @@ export function parseGateReportFilters(input: Partial<Record<keyof GateReportFil
   if (!recordTypes.includes(recordType)) fail(400, "gate_report.invalid_record_type");
   const stationId = typeof input.stationId === "string" && input.stationId.trim() ? input.stationId.trim() : undefined;
   const search = typeof input.search === "string" && input.search.trim() ? input.search.trim().slice(0, 200) : undefined;
-  return { siteId, ...(stationId ? { stationId } : {}), range, recordType, ...(search ? { search } : {}) };
+  const recordId = typeof input.recordId === "string" ? input.recordId.trim() : undefined;
+  if (input.recordId !== undefined && (!recordId || !/^(visit|employee):[1-9]\d*$/.test(recordId))) fail(400, "gate_report.invalid_record_id");
+  return { siteId, ...(stationId ? { stationId } : {}), range, recordType, ...(search ? { search } : {}), ...(recordId ? { recordId } : {}) };
 }
 
 function scopeCanView(viewer: GateReportScope, report: GateReportScope) {
@@ -175,6 +181,7 @@ const rangeLabels: Record<GateReportRange, string> = {
 };
 
 export async function emailGateReportAttachments(input: {
+  session?: SessionPayload;
   senderUserId: number;
   recipientUserIds: number[];
   reportKind: GateReportKind;
@@ -202,7 +209,7 @@ export async function emailGateReportAttachments(input: {
     const rendered = await renderGateReport(
       input.reportKind,
       input.format,
-      await deps.queryRows(filters, reportScope, input.reportKind),
+      await deps.queryRows(filters, reportScope, input.reportKind, input.session),
       await deps.resolveContext(filters),
     );
     await deps.sendAttachment({ recipientUserId, subject, ...rendered });
@@ -211,7 +218,7 @@ export async function emailGateReportAttachments(input: {
 }
 
 export async function openGateReport(
-  input: { token: string; userId: number },
+  input: { token: string; userId: number; session?: SessionPayload },
   deps: GateReportDependencies = databaseGateReportDependencies,
 ) {
   if (!input.token.trim()) fail(404, "gate_report.link_not_found");
@@ -224,13 +231,14 @@ export async function openGateReport(
   if (!currentScope || !scopeCanView(currentScope, delivery.recipientScope))
     throw new GateReportsError(403, "gate_report.access_changed");
   if (delivery.reportKind === "shift_notes" && currentScope.kind !== "full_site") fail(403, "gate_report.access_changed");
-  const rows = await deps.queryRows(delivery.filters, delivery.recipientScope, delivery.reportKind);
+  const rows = await deps.queryRows(delivery.filters, delivery.recipientScope, delivery.reportKind, input.session);
   const rendered = await renderGateReport(delivery.reportKind, delivery.format, rows, await deps.resolveContext(delivery.filters));
   await deps.markOpened(delivery.id, now);
   return rendered;
 }
 
 export async function generateGateReport(input: {
+  session?: SessionPayload;
   userId: number;
   reportKind: GateReportKind;
   format: GateReportFormat;
@@ -241,10 +249,11 @@ export async function generateGateReport(input: {
   if (!scope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && scope.kind !== "full_site")
     fail(403, "gate_report.shift_notes_scope_required");
-  return renderGateReport(input.reportKind, input.format, await deps.queryRows(filters, scope, input.reportKind), await deps.resolveContext(filters));
+  return renderGateReport(input.reportKind, input.format, await deps.queryRows(filters, scope, input.reportKind, input.session), await deps.resolveContext(filters));
 }
 
 export async function queryGateReport(input: {
+  session?: SessionPayload;
   userId: number;
   reportKind: GateReportKind;
   filters: GateReportFilters;
@@ -254,7 +263,7 @@ export async function queryGateReport(input: {
   if (!scope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && scope.kind !== "full_site")
     fail(403, "gate_report.shift_notes_scope_required");
-  return deps.queryRows(filters, scope, input.reportKind);
+  return deps.queryRows(filters, scope, input.reportKind, input.session);
 }
 
 export async function listGateReportRecipients(
@@ -377,9 +386,21 @@ async function resolveDatabaseAccess(userId: number, filters: GateReportFilters,
   return vendor ? { kind: "full_site" } : null;
 }
 
-async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportScope, reportKind: GateReportKind) {
+async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportScope, reportKind: GateReportKind, session?: SessionPayload) {
+  if (reportKind === "history" && filters.recordType === "arrivals") {
+    if (!session?.userId) fail(403, "gate_report.current_session_required");
+    // Use the existing live-arrivals authorization; report access never replaces it.
+    const result = await createGateArrivalsService().list(session!, filters.siteId).catch(error => {
+      if (error instanceof GateArrivalsError || error instanceof OfflineGateError) throw new GateReportsError(error.status, error.code);
+      throw error;
+    });
+    return result.arrivals.filter(row => scope.kind === "full_site" || row.companyName?.toLowerCase() === scope.company.toLowerCase())
+      .map(row => ({ id: row.id, name: row.driverName ?? row.title, company: row.companyName, vehiclePlate: row.vehicleLabel,
+        ticketNumber: row.ticketNumber, destination: row.destinationName, etaMinutes: row.etaMinutes, observedAt: row.observedAt, status: "Incoming" }))
+      .filter(row => !filters.search || Object.values(row).some(value => String(value ?? "").toLowerCase().includes(filters.search!.toLowerCase())));
+  }
   const now = new Date();
-  const { from, to } = await resolveRange(filters, now);
+  const { from, to } = filters.recordId ? { from: new Date(0), to: now } : await resolveRange(filters, now);
   if (reportKind === "shift_notes") {
     const result = await pool.query(
       `SELECT 'handoff:'||h.id AS id,h.outgoing_name AS "outgoingName",h.incoming_name AS "incomingName",
@@ -397,30 +418,35 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
       v.vehicle_plate AS "vehiclePlate",v.plate_state AS "plateState",v.check_in_time AS "checkInTime",
       v.check_out_time AS "checkOutTime",v.admission_status AS "admissionStatus",
       v.reconciliation_state AS "reconciliationState",'visitor' AS kind,
-      v.check_in_gps_evidence AS "checkInGpsEvidence",v.check_out_gps_evidence AS "checkOutGpsEvidence"
-     FROM site_visits v WHERE v.site_location_id=$1 AND v.check_in_time <= $3
-       AND (v.check_out_time IS NULL OR v.check_out_time >= $2)
+      v.check_in_gps_evidence AS "checkInGpsEvidence",v.check_out_gps_evidence AS "checkOutGpsEvidence",
+      concat_ws(E'\n',v.notes,v.check_out_notes,v.conflict_reason) AS notes,v.purpose,v.expected_duration_minutes AS "expectedMinutes"
+     FROM site_visits v WHERE v.site_location_id=$1
+       AND ($4::text IS NULL OR 'visit:'||v.id=$4)
+       AND ($4::text IS NOT NULL OR (v.check_in_time <= $3 AND (v.check_out_time IS NULL OR v.check_out_time >= $2)))
      UNION ALL
-     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::jsonb,NULL::jsonb
+     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::jsonb,NULL::jsonb,NULL::text,NULL::text,NULL::int
      FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id JOIN vendor_people p ON p.id=c.employee_id
-       JOIN vendors ven ON ven.id=t.vendor_id WHERE t.site_location_id=$1 AND c.check_in_at <= $3
-       AND (c.check_out_at IS NULL OR c.check_out_at >= $2)
+       JOIN vendors ven ON ven.id=t.vendor_id WHERE t.site_location_id=$1
+       AND ($4::text IS NULL OR 'employee:'||c.id=$4)
+       AND ($4::text IS NOT NULL OR (c.check_in_at <= $3 AND (c.check_out_at IS NULL OR c.check_out_at >= $2)))
      ORDER BY "checkInTime" DESC LIMIT 25000`,
-    [filters.siteId, from, to],
+    [filters.siteId, from, to, filters.recordId ?? null],
   );
   const search = filters.search?.toLowerCase();
   return (result.rows as GateReportRow[]).filter((row) => {
     if (scope.kind === "company" && String(row.company ?? "").toLowerCase() !== scope.company.toLowerCase()) return false;
+    if (filters.recordId) return row.id === filters.recordId;
     if (search && !Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search))) return false;
-    const checkOut = row.checkOutTime != null;
-    const onSite = !checkOut && row.reconciliationState !== "confirmed_off_site";
+    const checkOut = row.checkOutTime != null || row.reconciliationState === "confirmed_off_site";
+    const onSite = !checkOut && row.admissionStatus !== "pending";
     switch (filters.recordType) {
       case "check_ins": return true;
       case "check_outs": return checkOut;
+      case "on_site": return onSite;
       case "visitors_on_site": return row.kind === "visitor" && onSite;
       case "employees_on_site": return row.kind === "employee" && onSite;
       case "vehicles_on_site": return Boolean(row.vehiclePlate) && onSite;
-      case "pending": return row.admissionStatus === "pending";
+      case "pending": return !checkOut && row.admissionStatus === "pending";
       case "needs_review": return row.reconciliationState === "needs_review";
       default: return true;
     }

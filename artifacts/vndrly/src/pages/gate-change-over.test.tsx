@@ -30,7 +30,7 @@ vi.mock("@/hooks/use-brand", () => ({
   useBrand: () => ({ primary: "#0095a8", name: "MidCon Solutions" }),
 }));
 import { PILL_BRAND, PILL_IDLE } from "@/lib/pill-palette-assets";
-import GateChangeOverPage from "./gate-change-over";
+import GateChangeOverPage, { ShiftSnapshotView } from "./gate-change-over";
 const snapshot = {
   generatedAt: "2026-10-22T12:00:00Z",
   startedAt: "2026-10-22T06:00:00Z",
@@ -70,6 +70,22 @@ const state = () => ({
   snapshot,
   stale: false,
   items: [],
+});
+it("shows two-line counter records and links visitor and employee identities to exact Gate Log records", () => {
+  const visitor = { id: "visit:88", kind: "visitor", name: "Taylor Reed", company: "Acme", plate: "TX:ABC123", checkIn: "2026-10-22T08:00:00Z", checkOut: null, notes: null };
+  const worker = { ...visitor, id: "checkin:42", kind: "employee", name: "Sam Ortiz", plate: null };
+  const detailed = { ...snapshot, records: [visitor, worker], outstanding: [visitor, worker], metricRecordIds: { checkIns: [visitor.id, worker.id], onSiteEmployeeRecords: [worker.id], onSiteVehicles: [visitor.id] } };
+  render(<ShiftSnapshotView snapshot={detailed} historyBaseHref="/gate/history?siteId=1&range=current_shift" />);
+  const arrivals = screen.getByTestId("dashboard-metric-checkIns");
+  fireEvent.click(arrivals.querySelector("summary")!);
+  const record = within(arrivals).getByRole("link", { name: /Taylor Reed/ });
+  expect(record.querySelectorAll("strong,small")).toHaveLength(2);
+  expect(record.getAttribute("href")).toContain("recordType=check_ins&recordId=visit%3A88");
+  const employees = screen.getByTestId("dashboard-metric-onSiteEmployeeRecords");
+  fireEvent.click(employees.querySelector("summary")!);
+  expect(within(employees).getByRole("link", { name: /Sam Ortiz/ }).getAttribute("href")).toContain("recordType=employees_on_site&recordId=employee%3A42");
+  expect(screen.getByTestId("dashboard-metric-exceptions").tagName).toBe("DETAILS");
+  expect(screen.getByTestId("dashboard-metric-outstanding").tagName).toBe("DETAILS");
 });
 beforeEach(() => {
   duty.onShift = false;
@@ -207,14 +223,18 @@ it("offers the task hopper to an incoming on-shift worker without owning the wat
   expect(screen.getByRole("region", { name: "Unassigned Task Hopper" }).getAttribute("data-station")).toBe("gate");
   expect(api.mock.calls.some(([path]) => path.endsWith("/items"))).toBe(false);
 });
-it("outlines each live snapshot counter in the organization brand", async () => {
+it("expands each live snapshot counter in place and retains the matching Gate Log filter", async () => {
   mount();
   await screen.findByText("changeOver.checkIns");
   for (const metric of Object.keys(snapshot.metrics)) {
     const label = screen.getByText(`changeOver.${metric}`);
     const row = screen.getByTestId(`dashboard-metric-${metric}`);
     expect(row.contains(label)).toBe(true);
-    expect(row.getAttribute("href")).toContain("range=current_shift");
+    expect(row.tagName).toBe("DETAILS");
+    expect(row.hasAttribute("open")).toBe(false);
+    fireEvent.click(row.querySelector("summary")!);
+    expect(row.hasAttribute("open")).toBe(true);
+    expect(within(row).getByRole("link", { name: "Open Gate Log" }).getAttribute("href")).toContain("range=current_shift");
   }
 });
 it("limits Shift Notes to one year and uses branded compact fields", async () => {
@@ -304,13 +324,12 @@ it('keeps the top Workday card limited to shift and on-call controls', async () 
   const workday = await screen.findByRole('region', { name: 'Workday' });
   expect(within(workday).getByRole('switch', { name: 'Shift' })).toBeTruthy();
   expect(within(workday).getByRole('switch', { name: 'On Call' })).toBeTruthy();
-  for (const name of ['changeOver.site', 'changeOver.gate']) {
-    const select = within(workday).getByRole('combobox', { name });
-    expect(select.className).toContain('gate-dashboard-location-select');
-  }
+  const select = within(workday).getByRole('combobox', { name: 'changeOver.site | changeOver.gate' });
+  expect(select.className).toContain('gate-dashboard-location-select');
+  expect(within(screen.getByTestId('gate-gps-indicator')).getByRole('combobox')).toBe(select);
   expect(within(workday).queryByRole('button', { name: 'watch.handover' })).toBeNull();
   expect(within(workday).queryByRole('button', { name: 'watch.assume' })).toBeNull();
-  expect(screen.getAllByRole('combobox')).toHaveLength(2);
+  expect(screen.getAllByRole('combobox')).toHaveLength(1);
 });
 
 it('returns from the Dashboard to Work Hub through its back link', async () => {
@@ -481,7 +500,7 @@ it("keeps the same Dashboard panels before a company has an active watch", async
   expect(screen.getByRole("region", { name: "On site" })).toBeTruthy();
   expect(screen.getByRole("region", { name: "Watch & handover" })).toBeTruthy();
   expect(within(activity).getByTestId("dashboard-metric-checkIns").textContent).toContain("2");
-  expect(within(activity).getByTestId("dashboard-metric-checkIns").getAttribute("href")).toContain("range=24h");
+  expect(within(within(activity).getByTestId("dashboard-metric-checkIns")).getByRole("link", { name: "Open Gate Log" }).getAttribute("href")).toContain("range=24h");
   const watch = screen.getByRole("region", { name: "Watch & handover" });
   expect(within(watch).getByRole("button", { name: "Assume Watch" })).toBeTruthy();
 });

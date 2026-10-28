@@ -18,12 +18,12 @@ const defaults: Dependencies = {
 /** A gatekeeper's on-screen history uses the same current site authority as Gate Ops.
  * This fallback never grants report delivery, downloads or other company access. */
 export async function queryGateHistoryForSession(session: SessionPayload, input: Input, deps: Dependencies = defaults): Promise<GateReportRow[]> {
- try { return await deps.query({ userId: session.userId!, ...input }); }
+ try { return await deps.query({ userId: session.userId!, session, ...input }); }
  catch (error) {
   if (!(error instanceof GateReportsError) || error.status !== 403 || input.reportKind !== 'history') throw error;
   const filters = parseGateReportFilters(input.filters);
   try { await deps.authorize(session, filters.siteId); }
   catch { throw error; }
-  return deps.rows(filters, { kind: 'full_site' }, 'history');
+  return deps.rows(filters, { kind: 'full_site' }, 'history', session);
  }
 }

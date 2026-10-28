@@ -1,24 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, History, Loader2, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { History, Loader2, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import ContentPaneBackLink from "@/components/content-pane-back-link";
+import GateSiteGateSelect from "@/components/gate-site-gate-select";
+import "@/components/gate-dashboard.css";
+import { GateArrivalCard, useGateArrivals } from "@/components/gate-arrivals-panel";
+import { onSiteDwell } from "@workspace/gate-booth";
+import { GateTrafficRecord } from "@/components/gate-traffic-record";
+import { GateArrivalDetails } from "@/components/gate-arrival-details";
+import "@/components/gate-presence-tabs.css";
 import { GateReportToolbar, queryGateReportRows, type GateReportRange, type GateReportRecordType } from "@/components/gate-report-toolbar";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
 import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest } from "@/lib/change-over-api";
-import { formatMetersAsMiles } from "@workspace/map-utils";
+import { gateRecordFlags, gateDurationHHMM } from "@/lib/gate-record-flags";
 import { formatPlateForDisplay } from "@/lib/plate-display";
+import { visitsApi } from "@/lib/visits-api";
+import { useAuth } from "@/hooks/use-auth";
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
+import GateHistoryRecordDetails, { type GateHistoryRecord } from "@/components/gate-history-record-details";
 
-type GateHistoryRow = {
-  id: string; name?: string; company?: string | null; vehiclePlate?: string | null;
-  plateState?: string | null; checkInTime?: string; checkOutTime?: string | null;
-  reconciliationState?: string | null; kind?: string;
-  checkInGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;
-  checkOutGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;
-};
+type GateHistoryRow = GateHistoryRecord;
 
 const RANGE_OPTIONS: Array<[GateReportRange, string]> = [
   ["current_shift", "Current shift"], ["previous_shift", "Previous shift"], ["24h", "Last 24 hours"],
@@ -31,13 +36,21 @@ const TYPE_OPTIONS: Array<[GateReportRecordType, string]> = [
 ];
 
 export default function GateHistoryPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const c = (en: string, es: string) => i18n?.language?.startsWith("es") ? es : en;
+  const { user } = useAuth(), cache = useQueryClient();
+  const canCorrectPresence = canUseOfficeNavigation(user) || ["gatekeeper", "gate_supervisor"].includes(user?.vendorRole ?? "");
+  const [checkingOut, setCheckingOut] = useState<string | null>(null), [checkoutError, setCheckoutError] = useState("");
+  const checkoutLock = useRef(false), checkoutKeys = useRef(new Map<string, string>());
   const initial = useMemo(() => new URLSearchParams(window.location.search), []);
   const [siteId, setSiteId] = useState(initial.get("siteId") ?? initial.get("siteLocationId") ?? "");
   const [stationId, setStationId] = useState(initial.get("stationId") ?? "");
   const [range, setRange] = useState<GateReportRange>((initial.get("range") as GateReportRange) || "current_shift");
   const [recordType, setRecordType] = useState<GateReportRecordType>((initial.get("recordType") as GateReportRecordType) || "all");
   const [search, setSearch] = useState(initial.get("search") ?? "");
+  const [trafficView, setTrafficView] = useState<"arrivals" | "on_site" | "departures" | "all">(() => ["on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site"].includes(recordType) ? "on_site" : recordType === "check_outs" ? "departures" : recordType === "arrivals" ? "arrivals" : "all");
+  const [recordId, setRecordId] = useState<string | null>(initial.get("recordId"));
+  const [runId, setRunId] = useState<string | null>(null);
   const sites = useQuery({ queryKey: ["change-over-history-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
   const resolvedSiteId = siteId || String(sites.data?.sites[0]?.id ?? "");
   const stations = useQuery({ queryKey: ["change-over-history-stations", resolvedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${resolvedSiteId}&mode=history`), enabled: Boolean(resolvedSiteId), retry: false });
@@ -46,7 +59,26 @@ export default function GateHistoryPage() {
     siteId: Number(resolvedSiteId), ...(resolvedStationId ? { stationId: resolvedStationId } : {}), range, recordType,
     ...(search.trim() ? { search: search.trim() } : {}),
   } : null;
-  const rows = useQuery({ queryKey: ["gate-history-report", filters], queryFn: () => queryGateReportRows<GateHistoryRow>("history", filters!), enabled: Boolean(filters), retry: false });
+  const listFilters = filters && trafficView === "arrivals" ? { ...filters, recordType: "pending" as const } : filters;
+  const rows = useQuery({ queryKey: ["gate-history-report", listFilters], queryFn: () => queryGateReportRows<GateHistoryRow>("history", listFilters!), enabled: Boolean(listFilters), retry: false });
+  const arrivals = useGateArrivals((trafficView === "arrivals" || trafficView === "all" && recordType === "all") ? Number(resolvedSiteId) || undefined : undefined);
+  const selectedRecord = useQuery({
+    queryKey: ["gate-history-record", user?.userId, user?.activeMembershipId, resolvedSiteId, recordId],
+    queryFn: () => queryGateReportRows<GateHistoryRow>("history", { siteId: Number(resolvedSiteId), range, recordType: "all", recordId: recordId! }),
+    enabled: Boolean(resolvedSiteId && recordId), retry: false,
+  });
+  async function correctPresence(visit: GateHistoryRow) {
+    if (checkoutLock.current || !canCorrectPresence || !/^visit:[1-9]\d*$/.test(visit.id)) return;
+    checkoutLock.current = true; setCheckingOut(visit.id); setCheckoutError("");
+    let key = checkoutKeys.current.get(visit.id);
+    if (!key) { key = crypto.randomUUID(); checkoutKeys.current.set(visit.id, key); }
+    try {
+      await visitsApi.correctGatePresence(Number(visit.id.slice(6)), key);
+      await Promise.all(["gate-history-report", "gate-history-record", "gatekeeper-visits", "gatekeeper-recent-visits", "gatekeeper-departures", "change-over-state"].map(query => cache.invalidateQueries({ queryKey: [query] })));
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : c("Checkout correction could not be saved.", "No se pudo guardar la corrección de salida."));
+    } finally { checkoutLock.current = false; setCheckingOut(null); }
+  }
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -54,9 +86,15 @@ export default function GateHistoryPage() {
     if (resolvedStationId) params.set("stationId", resolvedStationId);
     params.set("range", range); params.set("recordType", recordType);
     if (search.trim()) params.set("search", search.trim());
+    if (recordId) params.set("recordId", recordId);
+    if (import.meta.env.DEV && initial.get("sampleArrivals") === "1") params.set("sampleArrivals", "1");
     window.history.replaceState(null, "", `${window.location.pathname}?${params}`);
-  }, [range, recordType, resolvedSiteId, resolvedStationId, search]);
+  }, [range, recordType, resolvedSiteId, resolvedStationId, search, recordId]);
 
+  const visibleRecords = [
+    ...(rows.data ?? []).filter(visit => trafficView === "arrivals" ? visit.admissionStatus === "pending" && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" : trafficView === "on_site" ? visit.admissionStatus !== "pending" && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" : true).map(visit => ({ type: "crossing" as const, visit, time: Date.parse(visit.checkOutTime || visit.checkInTime || "") || 0 })),
+    ...((trafficView === "arrivals" || trafficView === "all" && recordType === "all") ? arrivals.data?.arrivals.filter(run => !search.trim() || [run.driverName, run.companyName, run.vehicleLabel, run.ticketNumber, run.title, run.destinationName].some(value => value?.toLowerCase().includes(search.trim().toLowerCase()))).map(run => ({ type: "arrival" as const, run, time: Date.parse(run.observedAt || "") || 0 })) ?? [] : []),
+  ].sort((a, b) => b.time - a.time);
   const displayPlate = (state?: string | null, plate?: string | null) => formatPlateForDisplay(state, plate, t("gatekeeper.plateStateUnconfirmed"));
   return (
     <div className={FIELD_OPS_PAGE_CLASS} data-testid="gate-history-page">
@@ -67,27 +105,58 @@ export default function GateHistoryPage() {
       </div>
       <Card className={`min-h-[24rem] ${CARD_SURFACE_CLASS}`}>
         <CardContent className="space-y-4 p-5">
-          <div className="flex flex-wrap gap-3">
-            <label className="min-w-44 space-y-1 text-sm font-medium">Site<BrandedSelect value={resolvedSiteId} onChange={(event) => { setSiteId(event.target.value); setStationId(""); }}>{sites.data?.sites.map((site) => <option key={site.id} value={site.id}>{site.name}</option>)}</BrandedSelect></label>
-            <label className="min-w-44 space-y-1 text-sm font-medium">Gate<BrandedSelect value={resolvedStationId} onChange={(event) => setStationId(event.target.value)}>{stations.data?.stations.map((station) => <option key={station.id} value={station.id}>{station.name}</option>)}</BrandedSelect></label>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0 max-w-full"><GateSiteGateSelect history showGps={false} sites={sites.data?.sites ?? []} siteId={Number(resolvedSiteId)}
+              gate={stations.data?.stations.find(row => row.id === resolvedStationId)}
+              onChange={(nextSite, nextGate) => { setSiteId(String(nextSite)); setStationId(nextGate); setRecordId(null); }} /></div>
+            <GateReportToolbar dropdown reportKind="history" filters={filters} disabled={rows.isLoading} />
           </div>
-          <GateReportToolbar reportKind="history" filters={filters} disabled={rows.isLoading} />
+          <div className="gate-history-filters" aria-label="Gate activity filters">
+            {([['arrivals','Arrivals'],['on_site','On Site'],['departures','Departures'],['all','All']] as const).map(([type,label]) =>
+              <button type="button" key={type} className="gate-history-filter" aria-pressed={trafficView === type} onClick={() => {
+                setTrafficView(type); setRunId(null);
+                setRecordType(type === 'on_site' ? 'on_site' : type === 'departures' ? 'check_outs' : type === 'arrivals' ? 'arrivals' : 'all');
+              }}>{label}</button>)}
+          </div>
           <div className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_12rem_13rem]">
             <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><BrandedInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("gatekeeper.historySearch")} aria-label={t("gatekeeper.historySearch")} className="pl-9" data-testid="input-gate-history-search" /></div>
             <BrandedSelect aria-label="History range" value={range} onChange={(event) => setRange(event.target.value as GateReportRange)}>{RANGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</BrandedSelect>
-            <BrandedSelect aria-label="Record type" value={recordType} onChange={(event) => setRecordType(event.target.value as GateReportRecordType)}>{TYPE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</BrandedSelect>
+            <BrandedSelect aria-label="Record type" value={recordType} disabled={trafficView === 'arrivals'} onChange={(event) => setRecordType(event.target.value as GateReportRecordType)}>{TYPE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}<option value="on_site">On site</option><option value="arrivals">Incoming arrivals</option></BrandedSelect>
           </div>
-          {rows.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : rows.isError ? <p className="text-sm text-destructive">{t("gatekeeper.historyLoadFailed")}</p> : !rows.data?.length ? <p className="text-sm text-muted-foreground">{t("gatekeeper.historyEmpty")}</p> : rows.data.map((visit) => (
-            <div key={visit.id} className="gate-log-record" data-testid="gate-history-row">
-              {(["checkInGpsEvidence", "checkOutGpsEvidence"] as const).map(key => visit[key] && <p key={key} className={`flex flex-wrap items-center gap-1 text-xs font-semibold ${visit[key]!.status === "verified" ? "text-green-700 dark:text-green-400" : "border-l-2 border-amber-500 pl-2 text-amber-700 dark:text-amber-400"}`} data-testid={`gps-${key}`} data-location-flagged={visit[key]!.status !== "verified"}>
-                {visit[key]!.status !== "verified" && <><AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" /><span>{t("gatekeeper.gpsLogFlagged")} · </span></>}
-                {key === "checkInGpsEvidence" ? t("gatekeeper.gpsEntry") : t("gatekeeper.gpsExit")}: {t(`gatekeeper.gpsEvidence.${visit[key]!.status}`, { defaultValue: t("gatekeeper.gpsEvidence.unavailable") })}{visit[key]!.gateName ? ` · ${visit[key]!.gateName}` : ""}{visit[key]!.distanceMeters != null ? ` · ${formatMetersAsMiles(visit[key]!.distanceMeters!)} mi` : ""}
-              </p>)}
-              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold text-foreground">{visit.name || "Gate record"}</p><p className="truncate text-xs text-muted-foreground">{[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}</p><p className="text-xs text-muted-foreground">{visit.checkInTime ? new Date(visit.checkInTime).toLocaleString() : ""}{visit.checkOutTime ? ` → ${new Date(visit.checkOutTime).toLocaleString()}` : ""}</p></div><span className="shrink-0 text-xs font-semibold text-muted-foreground">{visit.reconciliationState === "needs_review" ? "Needs review" : visit.checkOutTime ? t("gatekeeper.historyCheckedOut") : t("gatekeeper.historyOnSite")}</span></div>
-            </div>
-          ))}
+          {checkoutError && <p role="alert" className="text-sm text-destructive">{checkoutError}</p>}
+          {<div className="space-y-3" aria-label="Gate traffic records">
+            {rows.isLoading && <Loader2 className="animate-spin text-muted-foreground" />}
+            {rows.isError && <p role="alert" className="text-sm text-destructive">{t("gatekeeper.historyLoadFailed")}</p>}
+            {(trafficView === "arrivals" || trafficView === "all" && recordType === "all") && arrivals.isError && <p role="alert" className="text-sm text-destructive">{t("gatekeeper.arrivalsLoadFailed")}</p>}
+            {!rows.isLoading && !rows.isError && !visibleRecords.length && !((trafficView === "arrivals" || trafficView === "all" && recordType === "all") && arrivals.isLoading) && <p className="text-sm text-muted-foreground">{t("gatekeeper.historyEmpty")}</p>}
+            {(trafficView === "arrivals" || trafficView === "all") && arrivals.preview && <p className="text-xs text-muted-foreground">{c("Sample arrivals · approval preview", "Llegadas de ejemplo · vista previa de aprobación")}</p>}
+            {visibleRecords.map(item => {
+              if (item.type === "arrival") return <GateArrivalCard key={`arrival:${item.run.id}`} run={item.run} query={arrivals} onOpen={setRunId} />;
+              const visit = item.visit;
+              const departed = Boolean(visit.checkOutTime) || visit.reconciliationState === "confirmed_off_site";
+              const pending = visit.admissionStatus === "pending" && !departed;
+              const dwell = onSiteDwell({ checkInTime: visit.checkInTime || "", expectedDurationMinutes: visit.expectedMinutes });
+              const elapsed = visit.checkInTime && visit.checkOutTime ? Math.max(0, Math.floor((Date.parse(visit.checkOutTime) - Date.parse(visit.checkInTime)) / 60000)) : null;
+              return <div key={visit.id} data-testid="gate-history-row"><GateTrafficRecord
+                name={visit.name || c("Gate record", "Registro de acceso")} description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}
+                onOpen={() => setRecordId(visit.id)} overdue={!departed && !pending && dwell.overdue}
+                flags={gateRecordFlags(visit, i18n?.language?.startsWith("es"))}
+                status={departed ? c("Departures", "Salidas") : pending ? t("gatekeeper.pendingAdmit") : t("gatekeeper.onSiteTab")}
+                footer={visit.reconciliationState === "confirmed_off_site" ? c("Checked out · departure time unknown", "Salida registrada · hora de salida desconocida") : pending ? t("gatekeeper.pendingAdmit") : null}
+                action={canCorrectPresence && /^visit:[1-9]\d*$/.test(visit.id) && !departed && !pending
+                  ? <button type="button" className="gate-history-filter" disabled={checkingOut !== null} onClick={() => void correctPresence(visit)} aria-label={`${c("Check out", "Registrar salida")}: ${visit.name || visit.vehiclePlate || visit.id}`} title={c("Correct a missed checkout; the actual departure time remains unknown.", "Corregir una salida omitida; la hora real de salida sigue siendo desconocida.")}>{checkingOut === visit.id ? c("Saving…", "Guardando…") : t("gatekeeper.checkOut")}</button>
+                  : <button type="button" className="gate-history-filter" aria-label={`${c("View", "Ver")}: ${visit.name || visit.id}`} onClick={() => setRecordId(visit.id)}>{c("View", "Ver")}</button>}>
+                {visit.checkInTime && <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</span>}
+                {visit.checkOutTime && <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedOut")} · {new Date(visit.checkOutTime).toLocaleString()}</span>}
+                {departed && elapsed != null && <span className="text-xs text-muted-foreground">{c("Time On Site", "Tiempo en el sitio")}: {gateDurationHHMM(elapsed * 60000)}</span>}
+              </GateTrafficRecord></div>;
+            })}
+            {(trafficView === "arrivals" || trafficView === "all") && arrivals.data?.truncated && <p className="text-xs text-muted-foreground">{t("gatekeeper.arrivalsTruncated")}</p>}
+          </div>}
+          <GateArrivalDetails siteId={Number(resolvedSiteId)} runId={runId} onClose={() => setRunId(null)} />
         </CardContent>
       </Card>
+      <GateHistoryRecordDetails open={recordId !== null} record={selectedRecord.data?.[0]} loading={selectedRecord.isLoading} failed={selectedRecord.isError} onClose={() => setRecordId(null)} />
     </div>
   );
 }

@@ -27,6 +27,12 @@ function fixture() {
 }
 const session={role:"vendor",vendorId:20,userId:3,sv:1,activeMembershipId:4,membershipRole:"admin"};
 describe("Gate arrivals operational boundary",()=>{
+  it("projects map details only from the fresh, authorized incoming phone observation",async()=>{
+    const f=fixture();Object.assign(f.observation,{speedMetersPerSecond:10,speedAccuracyMetersPerSecond:0.5,headingDegrees:135});
+    expect((await f.service.map(session,9)).vehicles[0]).toMatchObject({latitude:35.1,longitude:-97.1,speedMph:expect.closeTo(22.369,2),headingDegrees:135,etaMinutes:12,originName:null,vehicleLabel:"Truck"});
+    f.estimate.mockImplementationOnce(async()=>{f.revoke();return {ok:true,provider:"mapbox",trafficAware:true,distanceMiles:7,durationMinutes:12,routeConfidence:"medium"};});
+    expect((await f.service.map(session,9)).vehicles).toEqual([]);
+  });
   it("recognizes legacy physical sites but never treats explicit destination billing IDs as the destination",()=>{
     const {run}=fixture(),stop=run.stops[0];
     expect(gateIncomingStop(run,site)?.id).toBe(stop.id);

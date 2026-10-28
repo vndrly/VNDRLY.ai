@@ -29,6 +29,7 @@ import { useColors } from "@/hooks/useColors";
 import NativeGateJournal from "@/components/work-hub/NativeGateJournal";
 import NativeJournal from "@/components/work-hub/NativeJournal";
 import GateIdentityDocument from "@/components/work-hub/GateIdentityDocument";
+import GateSiteGateSelect from "@/components/GateSiteGateSelect";
 import { assignedReadWithOfflineFallback } from "@/lib/native-assigned-cache";
 import { enqueueNativeOperation } from "@/lib/native-operation-journal-runtime";
 import { isOfflineWorkHubFailure } from "@/lib/work-hub-queue-runtime";
@@ -37,7 +38,6 @@ import { translateApiError } from "@/lib/apiErrors";
 import { changeOverRequest } from "@/lib/change-over-api";
 import {
   pickDefaultGateHostKey,
-  groupAssignedGateSitesByPartner,
   pickNearestAssignedGateSite,
   pickPreferredGateDefaultSite,
   resolveAssignedGateSites,
@@ -189,8 +189,6 @@ export default function GatekeeperScreen() {
   const [voiceCheckoutMatches, setVoiceCheckoutMatches] = useState<ActiveVisit[]>([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
   const [partnerMenuOpen, setPartnerMenuOpen] = useState(false);
-  const [siteMenuOpen, setSiteMenuOpen] = useState(false);
-  const [gateMenuOpen, setGateMenuOpen] = useState(false);
   const [gateLocationId, setGateLocationId] = useState("");
 
   const activeVisits = useQuery({
@@ -242,7 +240,6 @@ export default function GatekeeperScreen() {
     retry: false,
   });
   const assignedSites = assigned.data?.sites ?? [];
-  const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
   const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
   useEffect(() => {
     if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
@@ -275,7 +272,7 @@ export default function GatekeeperScreen() {
     enabled: Boolean(selectedSiteId), retry: false,
   });
   const selectedGate = gateLocations.data?.stations.find(g => g.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
-  useEffect(() => { setGateLocationId(""); setGateMenuOpen(false); }, [selectedSiteId]);
+  useEffect(() => { if (gateLocations.data) setGateLocationId(current => gateLocations.data.stations.some(gate => gate.id === current) ? current : ""); }, [gateLocations.data]);
   useEffect(() => {
     if (!selectedSiteId) return;
     return gateEventPoller.start(selectedSiteId, () => {
@@ -1139,50 +1136,14 @@ export default function GatekeeperScreen() {
             <View testID="gate-locked-partner" style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
               <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.partnerName ?? "Current lease"}</Text>
             </View>
-            <View testID={selectedAssignedSite ? `gate-site-option-${selectedAssignedSite.siteCode}` : undefined}>
-              <TouchableOpacity testID="gate-site-selector" onPress={() => setSiteMenuOpen((open) => !open)} style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
-                <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.name ?? "Select site"}</Text>
-              </TouchableOpacity>
-            </View>
-            {siteMenuOpen && assignedSites.map((site) => {
-              const selected = confirmedCode === site.siteCode;
-              return (
-                <TouchableOpacity
-                  key={site.siteCode}
-                  testID={`gate-site-option-${site.siteCode}`}
-                  onPress={() => {
-                    appliedDefault.current = true;
-                    setSiteCode(site.siteCode);
-                    setConfirmedCode(site.siteCode);
-                    setHostKey(null);
-                    setSiteMenuOpen(false);
-                  }}
-                  style={[
-                    styles.siteOption,
-                    {
-                      borderColor: selected ? colors.primary : colors.border,
-                      backgroundColor: colors.card,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.siteOptionName,
-                      { color: colors.foreground, fontSize: 20 },
-                    ]}
-                  >
-                    {site.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-            {!!gateLocations.data?.stations.length && <View style={{ gap: 6 }}>
-              <Text style={[styles.label, { color: colors.foreground }]}>{t("gatekeeper.gateLocation")}</Text>
-              <TouchableOpacity testID="gate-location-selector" accessibilityRole="button" onPress={() => setGateMenuOpen(open => !open)} style={[styles.siteOption, { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.card }]}>
-                <Text style={{ color: colors.foreground }}>{selectedGate?.name ?? t("gatekeeper.selectGateLocation")}</Text>
-              </TouchableOpacity>
-              {gateMenuOpen && gateLocations.data.stations.map(gate => <TouchableOpacity key={gate.id} testID={`gate-location-${gate.id}`} onPress={() => { setGateLocationId(gate.id); setGateMenuOpen(false); }} style={[styles.siteOption, { borderColor: selectedGate?.id === gate.id ? colors.primary : colors.border, backgroundColor: colors.card }]}><Text style={{ color: colors.foreground }}>{gate.name}</Text></TouchableOpacity>)}
-            </View>}
+            <GateSiteGateSelect sites={assignedSites} siteId={selectedSiteId ?? undefined} gate={selectedGate} origin={origin}
+              onChange={(nextSiteId, nextGateId) => {
+                const nextSite = assignedSites.find(row => row.id === nextSiteId);
+                if (!nextSite) return;
+                appliedDefault.current = true; setSiteCode(nextSite.siteCode); setConfirmedCode(nextSite.siteCode);
+                setGateLocationId(nextGateId);
+                if (confirmedCode !== nextSite.siteCode) setHostKey(null);
+              }} />
             {ctxQuery.isLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.primary} />

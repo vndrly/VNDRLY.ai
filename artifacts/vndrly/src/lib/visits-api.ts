@@ -1,4 +1,5 @@
 import type { PlateStateCode } from "@workspace/plate-state";
+import type { GateGpsEvidence } from "./gate-record-flags";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -33,11 +34,13 @@ export type VisitorRow = {
   observedArrivalAt?: string | null;
   observedDepartureAt?: string | null;
   observationSource?: "camera" | "gatekeeper" | "geofence" | "driver" | null;
-  reconciliationState?: "not_required" | "observed" | "reconciled" | "needs_supervisor_review";
+  reconciliationState?: "not_required" | "observed" | "reconciled" | "needs_supervisor_review" | "confirmed_off_site";
   conflictReason?: string | null;
   reconciledAt?: string | null;
   checkInLatitude: number | null;
   checkInLongitude: number | null;
+  checkInGpsEvidence?: GateGpsEvidence | null;
+  checkOutGpsEvidence?: GateGpsEvidence | null;
 };
 
 export type AssignedGateSite = {
@@ -296,6 +299,11 @@ export const visitsApi = {
     jf<VisitorRow>(`/api/visits/gate/${id}/check-out`, {
       method: "POST",
       body: JSON.stringify({ latitude, longitude, notes, gateStationId }),
+    }),
+  correctGatePresence: (id: number, idempotencyKey: string) =>
+    jf(`/api/visits/gate/${id}/resolve-stale`, {
+      method: "POST",
+      body: JSON.stringify({ reason: "Manual Gate Log checkout correction: confirmed no longer on site; actual departure time unknown.", idempotencyKey }),
     }),
   setEntryCategory: (id: number, entryCategory: VisitorRow["entryCategory"]) =>
     jf<{ id: number; entryCategory: VisitorRow["entryCategory"] }>(`/api/visits/${id}/entry-category`, { method: "PATCH", body: JSON.stringify({ entryCategory }) }),

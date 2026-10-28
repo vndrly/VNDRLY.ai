@@ -21,6 +21,20 @@ const visit = (id: number, extra = {}) => ({
   ...extra,
 });
 describe("Change Over factual snapshot", () => {
+  it("backs each counter with matching record identities and one newest record per vehicle", () => {
+    const s = assembleShiftSnapshot([
+      visit(1, { checkIn: "2026-09-19T23:00:00Z" }),
+      visit(2, { checkIn: "2026-09-20T09:00:00Z" }),
+      visit(3, { kind: "employee", plate: null }),
+      visit(4, { admission: "pending" }),
+      visit(5, { checkOut: "2026-09-20T10:00:00Z" }),
+    ], [], start, at);
+    for (const [key, count] of Object.entries(s.metrics)) expect(s.metricRecordIds[key]).toHaveLength(count);
+    expect(s.metricRecordIds.onSiteVehicles).toEqual(["visit:2"]);
+    expect(s.metricRecordIds.pendingAdmission).toEqual(["visit:4"]);
+    expect(s.metricRecordIds.checkOuts).toEqual(["visit:5"]);
+    expect(s.records.map(row => row.id)).toContain("visit:5");
+  });
   it("counts shift events separately from occupancy carried from earlier shifts", () => {
     const s = assembleShiftSnapshot(
       [

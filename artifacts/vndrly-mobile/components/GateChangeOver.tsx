@@ -28,6 +28,7 @@ import GateDutyCard from "@/components/GateDutyCard";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import WorkdayControls from "@/components/WorkdayControls";
+import GateSiteGateSelect from "@/components/GateSiteGateSelect";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
@@ -439,69 +440,10 @@ export default function GateChangeOver({
             {t("gateDuty.returnToAdmin")}
           </TogglePillButton>
         )}
-        {!history ? (
-          <View
-            testID="dashboard-blank-card"
-            style={[cardStyle, { backgroundColor: "#28282a", minHeight: 120 }]}
-          >
-            <View testID="dashboard-site-gate-layout" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>
-            <View style={{ flex: 1, gap: 8 }}>
-            {sectionHeading(t("changeOver.site"))}
-            {sites.data?.sites.filter((site) => site.id === siteId).map((s) => (
-              <TogglePillButton compactOnTablet
-                key={`blank-site-${s.id}`}
-                solid
-                accessibilityState={{ expanded: siteMenuOpen }}
-                onPress={() => {
-                  if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open);
-                }}
-              >
-                {s.name}
-              </TogglePillButton>
-            ))}
-            {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((s) => (
-              <TogglePillButton compactOnTablet
-                key={`blank-site-option-${s.id}`}
-                onPress={() => {
-                  setSite(s.id);
-                  setGate("");
-                  setSiteMenuOpen(false);
-                  setGateMenuOpen(false);
-                }}
-              >
-                {s.name}
-              </TogglePillButton>
-            ))}
-            </View>
-            <View style={{ flex: 1, gap: 8 }}>
-            {sectionHeading(t("changeOver.gate"))}
-            {stations.data?.stations.filter((station) => station.id === stationId).map((s) => (
-              <TogglePillButton compactOnTablet
-                key={`blank-gate-${s.id}`}
-                solid
-                accessibilityState={{ expanded: gateMenuOpen }}
-                onPress={() => {
-                  if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open);
-                }}
-              >
-                {s.name}
-              </TogglePillButton>
-            ))}
-            {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((s) => (
-              <TogglePillButton compactOnTablet
-                key={`blank-gate-option-${s.id}`}
-                onPress={() => {
-                  setGate(s.id);
-                  setGateMenuOpen(false);
-                }}
-              >
-                {s.name}
-              </TogglePillButton>
-            ))}
-            </View>
-            </View>
-          </View>
-        ) : null}
+        {!history ? <View testID="dashboard-blank-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
+          <GateSiteGateSelect sites={sites.data?.sites ?? []} siteId={siteId} gate={stations.data?.stations.find(row => row.id === stationId)}
+            onChange={(nextSite, nextGate) => { setSite(nextSite); setGate(nextGate); }} />
+        </View> : null}
         {history ? <View testID="shift-notes-browser-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
           {sectionHeading(t("changeOver.shiftNotes"))}
           {!log.isLoading && noteRows.length === 0 && label(t("changeOver.noNotes"))}

@@ -1,4 +1,4 @@
-import { FleetRunSchema, FleetLocationObservationSchema, type FleetRun, type FleetLocationObservation, type GateArrival, type GateArrivalDetail, type GateArrivalsResponse } from "@workspace/api-zod";
+import { FleetRunSchema, FleetLocationObservationSchema, type FleetRun, type FleetLocationObservation, type GateArrival, type GateArrivalDetail, type GateArrivalsResponse, type GateMapVehicle } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import type { Pool } from "pg";
 import type { SessionPayload } from "../lib/session";
@@ -189,6 +189,21 @@ export function createGateArrivalsService(
     return {arrivals,after,truncated:before.truncated || before.candidates.filter(c=>c.observation).length>50};
   };
   return {
+    async map(session: SessionPayload, siteId: number): Promise<{ vehicles: GateMapVehicle[]; truncated: boolean }> {
+      const result = await read(session, siteId);
+      const vehicles = result.arrivals.flatMap(arrival => {
+        const candidate = result.after.candidates.find(row => row.run.id === arrival.runId);
+        if (!candidate?.observation) return [];
+        const { run, observation } = candidate;
+        const origin = [...run.stops].reverse().find(stop => run.visitedStopIds.includes(stop.id));
+        const speed = observation.speedMetersPerSecond;
+        return [{ ...arrival, latitude: observation.latitude, longitude: observation.longitude,
+          accuracyMeters: observation.accuracyMeters,
+          speedMph: speed != null && observation.speedAccuracyMetersPerSecond != null && observation.speedAccuracyMetersPerSecond <= 2 ? speed * 2.2369362921 : null,
+          headingDegrees: observation.headingDegrees ?? null, originName: origin?.destination?.name ?? null }];
+      });
+      return { vehicles, truncated: result.truncated };
+    },
     async visitLinks(session:SessionPayload,siteId:number,visitId:number):Promise<{runs:GateArrivalDetail[]}> {
       const client=await database.connect();
       let ids:string[];

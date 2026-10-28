@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.9
+
+Matches the Gate record cards, exact Gate Log record links, source-based GPS/duration flags, combined Site | Gate selection and Gate Map staff roster. Map reads group authorized app-enabled employees by On Watch, On Call and Everyone else. Current shared locations can be focused on the map; stale, missing or revoked positions remain unavailable. Tracked incoming vehicle details remain limited to authorized runs and current consented driver-phone observations; missing speed, origin or ETA is never invented. Existing MCP tools, embedded view identities, five service skills, branding and permission grants are retained. Submission is separate from approval or public availability.
+
 # VNDRLY plugin 1.22.8
 
 Gate handoff candidate: shift notes can be appended through the existing authorized Ask V action flow, including dictated incident times. The responsible gatekeeper signs the exact note version in the trusted handoff screen; edits and appended notes require a new signature. The Gate dashboard uses a shared assumption review, per-site watch history and task hopper. Existing plugin/app identity, five service skills, embedded views and grants are retained. Package validation does not establish submission, review approval or public availability.

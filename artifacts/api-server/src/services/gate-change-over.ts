@@ -555,15 +555,101 @@ export async function addChangeOverStation(
   session: SessionPayload,
   siteId: number,
   name: string,
+  location?: { latitude: number; longitude: number },
 ) {
+  if (location && (!Number.isFinite(location.latitude) || Math.abs(location.latitude) > 90 || !Number.isFinite(location.longitude) || Math.abs(location.longitude) > 180))
+    return fail(400, "invalid_gate_location", "Enter valid gate coordinates");
   return changeOverTransaction(async (c) => {
     await requireGateStationManagementAccess(c, session, siteId);
+    if (location) {
+      const result = await c.query(
+        "INSERT INTO gate_stations(site_id,name,latitude,longitude) VALUES($1,$2,$3,$4) ON CONFLICT(site_id,name) DO NOTHING RETURNING *",
+        [siteId, name, location.latitude, location.longitude],
+      );
+      if (!result.rows[0]) return fail(409, "gate_already_exists", "A gate with that name already exists at this site. Its location was not changed.");
+      return result.rows[0];
+    }
     return (
       await c.query(
         "INSERT INTO gate_stations(site_id,name) VALUES($1,$2) ON CONFLICT(site_id,name) DO UPDATE SET name=excluded.name RETURNING *",
         [siteId, name],
       )
     ).rows[0];
+  });
+}
+export async function listGateStationManagementStations(session: SessionPayload, siteId: number) {
+  await requireGateStationManagementAccess(pool, session, siteId);
+  return (await pool.query(
+    'SELECT id,site_id AS "siteId",name,latitude,longitude,version,active FROM gate_stations WHERE site_id=$1 AND active IS DISTINCT FROM false ORDER BY name,id', [siteId],
+  )).rows;
+}
+
+export async function moveGateStation(session: SessionPayload, input: {
+  stationId: string; siteId: number; name: string; location: { latitude: number; longitude: number }; expectedVersion: number; operationId: string;
+}) {
+  return changeGateStation(session, { ...input, action: "save" });
+}
+export async function retireGateStation(session: SessionPayload, input: {
+  stationId: string; siteId: number; expectedVersion: number; operationId: string;
+}) {
+  return changeGateStation(session, { ...input, action: "remove" });
+}
+type GateStationChange = { stationId: string; siteId: number; expectedVersion: number; operationId: string } &
+  ({ action: "save"; name: string; location: { latitude: number; longitude: number } } | { action: "remove" });
+async function changeGateStation(session: SessionPayload, input: GateStationChange) {
+  if (input.action === "save" && (!Number.isFinite(input.location.latitude) || Math.abs(input.location.latitude) > 90 || !Number.isFinite(input.location.longitude) || Math.abs(input.location.longitude) > 180))
+    return fail(400, "invalid_gate_location", "Enter valid gate coordinates");
+  const action = input.action === "remove" ? "gate.location.deactivated" : "gate.location.updated";
+  const fingerprint = createHash("sha256").update(JSON.stringify(input)).digest("hex");
+  return changeOverTransaction(async c => {
+    await requireGateStationManagementAccess(c, session, input.siteId);
+    await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`gate-location:${session.userId}:${input.operationId}`]);
+    const before = (await c.query(
+      `SELECT g.id,g.site_id AS "siteId",g.name,g.latitude,g.longitude,g.version,g.active,s.partner_id AS "partnerId"
+       FROM gate_stations g JOIN site_locations s ON s.id=g.site_id WHERE g.id=$1 AND g.site_id=$2 FOR UPDATE OF g`,
+      [input.stationId, input.siteId],
+    )).rows[0];
+    if (!before) return fail(404, "gate_not_found", "Gate not found at the selected site");
+    const ownerType = session.vendorId ? "vendor" : "partner", ownerId = session.vendorId ?? before.partnerId;
+    const prior = (await c.query(
+      `SELECT metadata FROM work_hub_audit_log WHERE actor_user_id=$1 AND operation_id=$2 AND subject_type='gate_location'
+       AND subject_id=$3 AND action=$6 AND owner_org_type=$4 AND owner_org_id=$5`,
+      [session.userId, input.operationId, input.stationId, ownerType, ownerId, action],
+    )).rows[0];
+    if (prior) {
+      if (prior.metadata.fingerprint !== fingerprint) return fail(409, "operation_conflict", "This save belongs to different gate changes");
+      return prior.metadata.result;
+    }
+    if (before.version !== input.expectedVersion) return fail(409, "gate_version_conflict", "This gate changed since you opened it. Select it again after refreshing to load its latest details.");
+    if (input.action === "remove") {
+      if (before.active === false) return fail(409, "gate_inactive", "This gate has already been removed from active use");
+      const activeWatch = await c.query(
+        "SELECT 1 FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL UNION ALL SELECT 1 FROM gate_duty_sessions WHERE station_id=$1 AND ended_at IS NULL LIMIT 1", [input.stationId],
+      );
+      if (activeWatch.rowCount) return fail(409, "gate_in_use", "End the active watch before removing this gate. No gate history was changed.");
+    }
+    let result;
+    try {
+      result = input.action === "remove" ? (await c.query(
+        `UPDATE gate_stations SET active=false,version=version+1 WHERE id=$1 AND site_id=$2 AND version=$3
+         RETURNING id,site_id AS "siteId",name,latitude,longitude,version,active`,
+        [input.stationId, input.siteId, input.expectedVersion],
+      )).rows[0] : (await c.query(
+        `UPDATE gate_stations SET name=$3,latitude=$4,longitude=$5,version=version+1 WHERE id=$1 AND site_id=$2 AND version=$6
+         RETURNING id,site_id AS "siteId",name,latitude,longitude,version,active`,
+        [input.stationId, input.siteId, input.name, input.location.latitude, input.location.longitude, input.expectedVersion],
+      )).rows[0];
+    } catch (error) {
+      if ((error as { code?: string })?.code === "23505") return fail(409, "gate_name_conflict", "Another gate at this site already has that name");
+      throw error;
+    }
+    if (!result) return fail(409, "gate_version_conflict", "This gate changed while you were editing. Refresh its details and try again.");
+    await c.query(
+      `INSERT INTO work_hub_audit_log(actor_user_id,owner_org_type,owner_org_id,action,subject_type,subject_id,prior_version,new_version,source,operation_id,metadata)
+       VALUES($1,$2,$3,$9,'gate_location',$4,$5,$6,'web',$7,$8::jsonb)`,
+      [session.userId, ownerType, ownerId, input.stationId, before.version, result.version, input.operationId, JSON.stringify({ fingerprint, before, result }), action],
+    );
+    return result;
   });
 }
 export async function getChangeOverState(

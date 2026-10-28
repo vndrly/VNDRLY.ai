@@ -58,9 +58,9 @@ export function GatePortalLayout({ children, returnToAdmin = false }: { children
   const [location] = useLocation();
   const { user } = useAuth();
   const [pinOpen, setPinOpen] = useState(false);
-  const pageTabs = location === "/gate/change-over"
-    ? GATE_PORTAL_TABS.filter(tab => !tab.voiceEntry)
-    : GATE_PORTAL_TABS;
+  const pageTabs = location === "/gate" || location === "/"
+    ? GATE_PORTAL_TABS
+    : GATE_PORTAL_TABS.filter(tab => !tab.voiceEntry);
   const tabs = returnToAdmin && canUseOfficeNavigation(user) ? [
     ...pageTabs,
     { href: "/", icon: ArrowLeft, labelKey: "gateNav.returnToAdmin", testId: "tab-gate-return-admin", match: () => false,

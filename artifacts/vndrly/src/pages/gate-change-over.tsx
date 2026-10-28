@@ -2,11 +2,12 @@ import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import GateHandoffDesk from "@/components/gate-handoff-desk";
 import DashboardTasks from "@/components/work-hub/dashboard-tasks";
-import { WorkspacePanel, WorkspaceRow } from "@/components/work-hub/workspace-panel";
+import { WorkspacePanel } from "@/components/work-hub/workspace-panel";
 import "@/components/gate-dashboard.css";
 import GateWatchSummary from "@/components/gate-watch-summary";
 import GateAssumeWatchFlyout from "@/components/gate-assume-watch-flyout";
 import GateGpsSelector from "@/components/gate-gps-selector";
+import GateSiteGateSelect from "@/components/gate-site-gate-select";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearch } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -68,16 +69,35 @@ export function ShiftSnapshotView({
     pendingAdmission: "pending",
   };
   if (historyBaseHref) {
-    const metric = (key: keyof ChangeOverSnapshot["metrics"], icon: typeof LogIn) => <WorkspaceRow key={key} icon={icon} label={t(`changeOver.${key}`)} value={snapshot ? String(snapshot.metrics[key]) : c("Unavailable", "No disponible")} href={`${historyBaseHref}&recordType=${metricRecordType[key]}`} testId={`dashboard-metric-${key}`} />;
     const unavailable = c("Site records unavailable.", "Registros del sitio no disponibles.");
+    type RecordRow = ChangeOverSnapshot["outstanding"][number] & { checkOut?: string | null };
+    const records = new Map<string, RecordRow>([...(snapshot?.records ?? []), ...(snapshot?.outstanding ?? [])].map(row => [row.id, row]));
+    const recordLink = (row: RecordRow, recordType: string, key = row.id, detail?: string) => {
+      const recordId = row.id.replace(/^checkin:/, "employee:");
+      const when = recordType === "check_outs" ? row.checkOut : row.checkIn;
+      const description = detail ?? [row.company, row.plate?.replace(":", " • "), when ? new Date(when).toLocaleString() : ""].filter(Boolean).join(" · ");
+      return <Link key={key} className="gate-metric-record" href={`${historyBaseHref}&recordType=${recordType}&recordId=${encodeURIComponent(recordId)}`}><strong>{row.name || row.id}</strong><small title={description}>{description}</small></Link>;
+    };
+    const metric = (key: keyof ChangeOverSnapshot["metrics"], Icon: typeof LogIn) => {
+      const ids = snapshot?.metricRecordIds?.[key];
+      const matching = ids ? ids.map(id => records.get(id)).filter((row): row is RecordRow => Boolean(row)) :
+        (snapshot?.outstanding ?? []).filter(row => key === "onSiteVisitorRecords" ? row.kind === "visitor" : key === "onSiteEmployeeRecords" ? row.kind === "employee" : false);
+      return <details key={key} className="gate-panel-disclosure" data-testid={`dashboard-metric-${key}`}>
+        <summary><Icon aria-hidden="true" /><span className="flex-1">{t(`changeOver.${key}`)}</span><small>{snapshot ? String(snapshot.metrics[key]) : c("Unavailable", "No disponible")}</small></summary>
+        <div className="gate-panel-detail"><div className="gate-metric-records">{matching.map(row => recordLink(row, metricRecordType[key]))}</div>
+          {!matching.length && <p>{snapshot && snapshot.metrics[key] === 0 ? t("changeOver.none") : unavailable}</p>}
+          <Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=${metricRecordType[key]}`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link>
+        </div>
+      </details>;
+    };
     return <>
       <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={snapshot ? `${activityWindow === "24h" ? c("Last 24 hours", "Últimas 24 horas") + " · " : ""}${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}` : unavailable} icon={LogIn}>
         {metric("checkIns", LogIn)}{metric("checkOuts", LogOut)}{metric("pendingAdmission", Clock3)}
-        <details className="gate-panel-disclosure"><summary><AlertTriangle aria-hidden="true" /><span>{t("changeOver.exceptions")}</span><small>{snapshot?.exceptions.length ?? "—"}</small></summary><div className="gate-panel-detail">{!snapshot ? <p>{unavailable}</p> : snapshot.exceptions.length ? snapshot.exceptions.map(e => <p key={`${e.sourceId}:${e.code}`}>{e.text}</p>) : <p>{t("changeOver.none")}</p>}</div></details>
+        <details className="gate-panel-disclosure" data-testid="dashboard-metric-exceptions"><summary><AlertTriangle aria-hidden="true" /><span className="flex-1">{t("changeOver.exceptions")}</span><small>{snapshot?.exceptions.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.exceptions.map(e => recordLink(records.get(e.sourceId) ?? { id: e.sourceId, name: e.sourceId, kind: "visitor", company: null, plate: null, checkIn: "", notes: null }, "needs_review", `${e.sourceId}:${e.code}`, e.text))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.exceptions.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=needs_review`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
       </WorkspacePanel>
       <WorkspacePanel title={c("On site", "En el sitio")} subtitle={c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
         {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
-        <details className="gate-panel-disclosure"><summary><ClipboardList aria-hidden="true" /><span>{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></summary><div className="gate-panel-detail">{!snapshot ? <p>{unavailable}</p> : snapshot.outstanding.length ? snapshot.outstanding.map(row => <div key={row.id}><strong>{row.name || row.id}</strong><p>{row.company} · {row.plate} · {new Date(row.checkIn).toLocaleString()}</p>{row.notes && <p className="whitespace-pre-wrap">{row.notes}</p>}</div>) : <p>{t("changeOver.none")}</p>}<p>{t("changeOver.coverage")}</p></div></details>
+        <details className="gate-panel-disclosure" data-testid="dashboard-metric-outstanding"><summary><ClipboardList aria-hidden="true" /><span className="flex-1">{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.outstanding.map(row => recordLink(row, "on_site"))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.outstanding.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=on_site`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
       </WorkspacePanel>
     </>;
   }
@@ -325,7 +345,11 @@ export default function GateChangeOverPage({
     (history ? log.isLoading : state.isLoading);
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
-  const locationSelectors = (
+  const locationSelectors = !history ? <GateSiteGateSelect
+    sites={sites.data?.sites ?? []} siteId={Number(siteId)} gate={gpsGate}
+    onChange={(nextSite, nextGate) => { setSelectedSite(String(nextSite)); setSelectedStation(nextGate); }}
+    gpsStatus={gpsStatus} gpsLabel={gpsLabel}
+  /> : (
     <div className={history ? "flex flex-wrap gap-3" : "gate-dashboard-location-selectors"}>
       <label className="min-w-36 space-y-1 text-sm font-medium">
         {t("changeOver.site")}

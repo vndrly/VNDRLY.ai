@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GateArrival } from "@workspace/api-zod";
@@ -17,9 +17,22 @@ const arrival: GateArrival = {
   observedAt: "2026-10-22T12:00:00Z", destinationName: "Big Cs Deep", siteLocationId: 42, physicalProofVerified: false,
 };
 
-afterEach(() => { vi.useRealTimers(); });
+afterEach(() => { vi.useRealTimers(); window.history.replaceState({}, "", "/"); });
 
 describe("Gate incoming runs", () => {
+  it("previews amber-to-green approval without calling the live arrivals service", async () => {
+    window.history.replaceState({}, "", "/gate?sampleArrivals=1");
+    api.list.mockClear();
+    const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+    function Preview() { const query = useGateArrivals(42); return <GateArrivalsPanel query={query} onOpen={vi.fn()} />; }
+    render(<QueryClientProvider client={cache}><Preview /></QueryClientProvider>);
+    const approve = await screen.findByRole("button", { name: "Approve: Mason Cole" });
+    expect(approve.closest(".gate-traffic-record")?.classList.contains("gate-traffic-pending")).toBe(true);
+    fireEvent.click(approve);
+    expect(screen.queryByRole("button", { name: "Approve: Mason Cole" })).toBeNull();
+    expect(screen.getAllByText("Approved · Drive through")).toHaveLength(3);
+    expect(api.list).not.toHaveBeenCalled();
+  });
   it("alerts once per incoming run, not again for each GPS update", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
     api.list.mockResolvedValue({ arrivals: [arrival], truncated: false, generatedAt: "now" });

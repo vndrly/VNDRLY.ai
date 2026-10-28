@@ -40,6 +40,12 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-panel-disclosure > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .gate-panel-detail { padding: 0 0 12px 30px; font-size: 13px; display: grid; gap: 8px; overflow-wrap: anywhere; }
 .gate-panel-detail p { color: #b3b3b3; }
+.gate-metric-records { max-height: 320px; overflow-y: auto; min-width: 0; }
+.gate-metric-record { display: block; min-width: 0; padding: 8px 0; border-bottom: 1px solid #3a3a3a; }
+.gate-metric-record strong,.gate-metric-record small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gate-metric-record strong { font-size: 13px; color: #ececec; }
+.gate-metric-record small { font-size: 11px; color: #b3b3b3; }
+.gate-metric-record:hover strong { color: var(--brand-primary); }
 .gate-recent-notes { gap: 0; }
 .gate-recent-note { display: grid; gap: 3px; padding: 10px 0; border-top: 1px solid #3a3a3a; color: #ececec; }
 .gate-recent-note > span { font-size: 12px; }
@@ -61,6 +67,11 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-dashboard-location-select option { background: #242426; color: #b3b3b3; }
 .gate-dashboard-location-select option:checked { background: #6b7280; color: #fff; }
 .gate-dashboard .shift-card-feedback:empty { display: none; }
+.gate-history-filters { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+.gate-history-filter { min-height: 44px; padding: 8px; border: 1px solid #626268; border-radius: 8px; background: #28282a; color: #b3b3b3; font-size: 14px; font-weight: 600; }
+.gate-history-filter[aria-pressed=true], .gate-history-filter:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
+.gate-history-filter:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.gate-administration .gate-history-filter:disabled { opacity: .45; cursor: default; color: #b3b3b3; border-color: #626268; }
 @media (min-width: 768px) {
   main:has(.gate-dashboard) { padding-block: 16px; }
   .gate-dashboard .hub-home-row { min-height: 36px; padding-block: 6px; }
@@ -68,3 +79,28 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
   .gate-dashboard .gate-watch-text-action { min-height: 36px; }
 }
 @media (max-width: 767px) { .gate-dashboard-panels { grid-template-columns: minmax(0, 1fr); } }
+
+.gate-map-staff-group > ul { max-height: 320px; overflow-y: auto; }
+.gate-map-staff-link { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 8px 0; border: 0; background: transparent; color: #ececec; text-align: left; }
+.gate-map-staff-link > span { font-size: 11px; color: #b3b3b3; }
+.gate-map-staff-link:hover:not(:disabled) strong { color: var(--brand-primary); }
+.gate-map-staff-link:disabled { opacity: .6; cursor: default; }
+.gate-map-staff-link:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.gate-map-vehicle-popup .mapboxgl-popup-content { background: #242426; color: #ececec; border: 1px solid var(--brand-primary); border-radius: 12px; padding: 12px; }
+.gate-map-vehicle-popup .mapboxgl-popup-tip { border-top-color: #242426; border-bottom-color: #242426; }
+.gate-map-vehicle-details { min-width: 220px; font-size: 12px; }
+.gate-map-vehicle-details > strong,.gate-map-vehicle-details > small { display: block; }
+.gate-map-vehicle-details > strong { color: var(--brand-primary); }
+.gate-map-vehicle-details > small { color: #b3b3b3; margin-block: 4px 8px; }
+.gate-map-vehicle-details dl > div { display: grid; grid-template-columns: 85px minmax(0,1fr); gap: 8px; margin-top: 4px; }
+.gate-map-vehicle-details dt { color: #b3b3b3; }
+.gate-map-vehicle-details dd { overflow-wrap: anywhere; }
+
+.gate-map-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.gate-map-control-group { display: inline-flex; align-items: center; gap: 6px; }
+.gate-map-view-controls { margin-left: auto; }
+.gate-map-control,.gate-map-live { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 7px 10px; font-size: 12px; }
+.gate-map-control svg,.gate-map-live svg { width: 15px; height: 15px; flex-shrink: 0; }
+.gate-map-live[data-live=true] { color: #4ade80; border-color: #4ade80; }
+
+@media (max-width: 480px) { .gate-map-control-group { gap: 4px; } .gate-map-controls .gate-map-control { font-size: 10px; padding: 6px; } .gate-map-controls .gate-map-control svg { width: 12px; height: 12px; } }

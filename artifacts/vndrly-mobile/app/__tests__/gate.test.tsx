@@ -1,3 +1,4 @@
+vi.mock("react-native-svg", () => ({default: ({children}: any) => <svg>{children}</svg>, Defs: ({children}: any) => <defs>{children}</defs>, LinearGradient: ({children}: any) => <linearGradient>{children}</linearGradient>, Stop: () => null, Path: () => null}));
 // OS background file handling is outside ordinary Gate check-in/out screen tests.
 vi.mock("@/lib/work-hub-background-upload-native",()=>({discardScannedWorkPages:vi.fn(async()=>{})}));
 import React from "react";
@@ -548,9 +549,9 @@ describe("GatekeeperScreen", () => {
     });
     renderScreen();
     expect(
-      await screen.findByTestId("gate-site-option-SITE-B40D77D2"),
+      await screen.findByTestId("site-gate-selector"),
     ).toBeTruthy();
-    expect(screen.getAllByText("Flywheel Energy Spur").length).toBeGreaterThan(
+    expect((await screen.findAllByText(/Flywheel Energy Spur/)).length).toBeGreaterThan(
       0,
     );
     expect(screen.queryByTestId("gate-site-code")).toBeNull();

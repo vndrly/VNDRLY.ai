@@ -6,7 +6,7 @@ const input = { reportKind: 'history' as const, filters: { siteId: 10, range: '3
 function dependencies() { return { query: vi.fn().mockRejectedValue(new GateReportsError(403, 'gate_report.forbidden')), authorize: vi.fn().mockResolvedValue({}), rows: vi.fn().mockResolvedValue([{id:'visit:1'}]) }; }
 it('reads history only after current operational site authority passes', async () => {
  const deps=dependencies(); expect(await queryGateHistoryForSession(session,input,deps)).toEqual([{id:'visit:1'}]);
- expect(deps.authorize).toHaveBeenCalledWith(session,10); expect(deps.rows).toHaveBeenCalledWith(input.filters,{kind:'full_site'},'history');
+ expect(deps.authorize).toHaveBeenCalledWith(session,10); expect(deps.rows).toHaveBeenCalledWith(input.filters,{kind:'full_site'},'history',session);
 });
 it('denies an unassigned or revoked gatekeeper without reading records', async () => {
  const deps=dependencies(); deps.authorize.mockRejectedValue(new Error('revoked'));

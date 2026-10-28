@@ -9,13 +9,14 @@ import { BrandedSelect } from "@/components/work-hub/chrome";
 import { useAuth } from "@/hooks/use-auth";
 
 export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" | "14d" | "30d" | "90d" | "1y";
-export type GateReportRecordType = "all" | "check_ins" | "check_outs" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
+export type GateReportRecordType = "all" | "arrivals" | "check_ins" | "check_outs" | "on_site" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
 export type GateReportFilters = {
   siteId: number;
   stationId?: string;
   range: GateReportRange;
   recordType: GateReportRecordType;
   search?: string;
+  recordId?: string;
 };
 
 type Recipient = { userId: number; name: string; role: string; scope: string };
@@ -43,10 +44,12 @@ export function GateReportToolbar({
   reportKind,
   filters,
   disabled = false,
+  dropdown = false,
 }: {
   reportKind: "history" | "shift_notes";
   filters: GateReportFilters | null;
   disabled?: boolean;
+  dropdown?: boolean;
 }) {
   const { user } = useAuth();
   const [format, setFormat] = useState<"pdf" | "excel" | "word">("pdf");
@@ -125,12 +128,15 @@ export function GateReportToolbar({
 
   return (
     <div className="space-y-3" data-testid={`gate-${reportKind}-report-toolbar`}>
-      <div className="grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
+      {dropdown ? <div className="w-36"><BrandedSelect aria-label="Export" value="" disabled={disabled || busy || !filters} onChange={event => {
+        if (event.target.value === "email") setShowEmail(true);
+        else if (["pdf", "excel", "word"].includes(event.target.value)) void download(event.target.value as "pdf" | "excel" | "word");
+      }}><option value="" disabled>{busy ? "Exporting…" : "Export"}</option><option value="pdf">PDF</option><option value="excel">Excel</option><option value="word">Word</option><option value="email">Email</option></BrandedSelect></div> : <div className="grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
         <RedButton disabled={disabled || busy || !filters} onClick={() => void download("pdf")} data-testid="button-gate-export-pdf"><FileText className="mr-1 h-4 w-4" />PDF</RedButton>
         <GreenButton disabled={disabled || busy || !filters} onClick={() => void download("excel")} data-testid="button-gate-export-excel"><Sheet className="mr-1 h-4 w-4" />Excel</GreenButton>
         <BlueButton disabled={disabled || busy || !filters} onClick={() => void download("word")} data-testid="button-gate-export-word"><FileText className="mr-1 h-4 w-4" />Word</BlueButton>
         <BrandPillButton disabled={disabled || busy || !filters} onClick={() => setShowEmail((value) => !value)} data-testid="button-gate-email-report"><Mail className="mr-1 h-4 w-4" />Email</BrandPillButton>
-      </div>
+      </div>}
       {showEmail && (
         <div className="max-w-2xl space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 text-gray-800">
           <div className="flex flex-wrap gap-3">
