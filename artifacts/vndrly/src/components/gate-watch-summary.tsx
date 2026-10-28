@@ -11,6 +11,7 @@ import MyWatchSchedule from "./gate-my-watch-schedule";
 import GateRecentShiftNotes from "./gate-recent-shift-notes";
 import GateWatchTimeline from "./gate-watch-timeline";
 import GateAssumeWatchFlyout from "./gate-assume-watch-flyout";
+import GateWatchRadar from "./gate-watch-radar";
 
 type Watch = {userId:number;name:string;stationId:string;siteName:string;gateName:string;startedAt:string;watchId?:string|null;canManage?:boolean};
 type AdminCommand = {stationId:string;body:{operationId:string;expectedShiftId:string;action:"assume"|"assign";targetMembershipId?:number}};
@@ -44,6 +45,7 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
   const commandFor=(w:Watch,action:"assume"|"assign",targetMembershipId?:number):AdminCommand=>({stationId:w.stationId,body:{operationId:crypto.randomUUID(),expectedShiftId:w.watchId!,action,...(targetMembershipId?{targetMembershipId}:{})}});
   const blocked=adminBusy||Boolean(pendingAdmin)||assumePending||assumeDisabled||!navigator.onLine;
   return <WorkspacePanel title={c("Watch & handover", "Vigilancia y relevo")} subtitle={c("Custody, your watch time, and the last handover", "Custodia, tiempo de vigilancia y último relevo")} icon={Clock3}>
+    <GateWatchRadar />
     <MyWatchSchedule />
     {current&&!ownsWatch&&onAssume&&<button type="button" className="gate-watch-text-action" disabled={assumeDisabled} onClick={onAssume}>{c("Assume Watch","Asumir vigilancia")}</button>}
     {assumeTarget&&<GateAssumeWatchFlyout stationId={assumeTarget.stationId} adminWatchId={assumeTarget.watchId!} open={assumeOpen} onOpenChange={setAssumeOpen} onPendingChange={setAssumePending}/>}

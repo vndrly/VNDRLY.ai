@@ -35,7 +35,7 @@ export type GateCoverageRecord = {
 };
 
 export type GateCoverageNotice = {
-  kind: "uncovered" | "understaffed" | "restored";
+  kind: "watch_radar" | "uncovered" | "understaffed" | "restored";
   candidate: GateCoverageCandidate;
   recipientUserIds: number[];
   at: Date;
@@ -50,6 +50,7 @@ export interface GateCoverageDependencies {
 }
 
 const TEN_MINUTES = 10 * 60_000;
+const TWENTY_FOUR_HOURS = 24 * 60 * 60_000;
 
 const fail = (status: number, code: string, message: string): never => {
   throw new ChangeOverError(status, `change_over.${code}`, message);
@@ -135,7 +136,7 @@ async function loadCandidates(at: Date): Promise<GateCoverageCandidate[]> {
        FROM work_hub_shifts s
        JOIN gate_stations g ON g.id=s.gate_station_id
        LEFT JOIN gate_coverage_status c ON c.station_id=s.gate_station_id
-       WHERE s.gate_station_id IS NOT NULL AND s.starts_at <= $1 AND s.ends_at > $1
+       WHERE s.gate_station_id IS NOT NULL AND s.starts_at <= $1 + interval '24 hours' AND s.ends_at > $1
          AND s.milestone_status <> 'cancelled'`,
       [at],
     )
@@ -238,6 +239,18 @@ async function saveRecord(
 async function deliver(notice: GateCoverageNotice) {
   if (!notice.recipientUserIds.length) return;
   const { notifyUsers } = await import("../routes/notifications");
+  if (notice.kind === "watch_radar") {
+    await notifyUsers(notice.recipientUserIds, {
+      type: "gate_watch_radar",
+      category: "crew",
+      title: `${notice.candidate.stationName} watch needs staffing`,
+      body: `${notice.candidate.title} starts within 24 hours and has nobody assigned.`,
+      link: "/work-hub/workforce-coverage",
+      dedupeKey: `gate-watch-radar:${notice.candidate.shiftId}`,
+      forceImmediateDelivery: true,
+    });
+    return;
+  }
   const gap = notice.candidate.requiredCount - notice.candidate.actualCount;
   const restored = notice.kind === "restored";
   await notifyUsers(notice.recipientUserIds, {
@@ -270,6 +283,41 @@ export async function evaluateGateCoverage(
   const results: Array<{ shiftId: string; state: string }> = [];
   for (const candidate of await dependencies.loadCandidates(at)) {
     const prior = await dependencies.getRecord(candidate.shiftId);
+    if (candidate.startsAt.getTime() > at.getTime()) {
+      const startsWithinRadarWindow = candidate.startsAt.getTime() - at.getTime() <= TWENTY_FOUR_HOURS;
+      const needsStaffing = startsWithinRadarWindow && candidate.assignedUserIds.length === 0;
+      if (needsStaffing) {
+        const firstAlert = prior?.state !== "watch_radar";
+        if (firstAlert) await dependencies.deliver({
+          kind: "watch_radar",
+          candidate,
+          recipientUserIds: candidate.recipientUserIds,
+          at,
+        });
+        await dependencies.saveRecord({
+          shiftId: candidate.shiftId,
+          stationId: candidate.stationId,
+          state: "watch_radar",
+          lastReminderAt: firstAlert ? at : prior?.lastReminderAt ?? null,
+          requiredCount: candidate.requiredCount,
+          actualCount: candidate.actualCount,
+          at,
+        });
+        results.push({ shiftId: candidate.shiftId, state: "watch_radar" });
+      } else {
+        if (prior?.state === "watch_radar") await dependencies.saveRecord({
+          shiftId: candidate.shiftId,
+          stationId: candidate.stationId,
+          state: "resolved",
+          lastReminderAt: prior.lastReminderAt,
+          requiredCount: candidate.requiredCount,
+          actualCount: candidate.actualCount,
+          at,
+        });
+        results.push({ shiftId: candidate.shiftId, state: "scheduled" });
+      }
+      continue;
+    }
     if (paused(candidate, at)) {
       await dependencies.saveRecord({
         shiftId: candidate.shiftId,

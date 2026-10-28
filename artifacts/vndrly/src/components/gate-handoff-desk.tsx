@@ -6,8 +6,8 @@ import { useBrand } from "@/hooks/use-brand";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import WatchPassControl from "@/components/watch-pass-control";
 import GateTaskHopper from "@/components/gate-task-hopper";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { AppModalHeader } from "@/components/app-modal-header";
+import { Dialog } from "@/components/ui/dialog";
+import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import "./gate-handoff-desk.css";
 
 export interface GateHandoffDeskProps {
@@ -66,6 +66,12 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const mayAssume = Boolean(!ownWatch && !blocked);
   const pillSrc = brandImagePillSrc(brand.primary, brand.name);
   const selectedItems = current.items.filter((item) => item.status === itemView);
+  const signHandoff=async()=>{
+    if(!current.shift||!props.onSignHandoff)return;
+    const command=signCommand??{operationId:crypto.randomUUID(),expectedWatchId:current.shift.id,expectedPreparationId:preparation?.id??null,notes};
+    setSignCommand(command);setSigning(true);setSignError("");
+    try{await props.onSignHandoff(command);setSignCommand(null);setEditingSigned(false);}catch(error){const status=(error as {status?:number}).status;if(status&&status>=400&&status<500)setSignCommand(null);setSignError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setSigning(false);}
+  };
 
   const itemEditor = (
     <div className="handoff-item-editor">
@@ -148,19 +154,20 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
         <h3>{t("handoffDesk.nextActions")}</h3>
         <p>{t(!ownWatch ? "handoffDesk.nextReview" : notes.trim() ? "handoffDesk.nextHandoff" : "handoffDesk.nextPrepare")}</p>
       </aside>}
-      {current.shift&&ownWatch&&props.onSignHandoff?<button type="button" className="handoff-edit-mini-card" disabled={blocked||signing} onClick={()=>void (async()=>{
-        if(signature&&!editingSigned){setEditingSigned(true);return;}
-        const command=signCommand??{operationId:crypto.randomUUID(),expectedWatchId:current.shift!.id,expectedPreparationId:preparation?.id??null,notes};setSignCommand(command);setSigning(true);setSignError("");
-        try{await props.onSignHandoff!(command);setSignCommand(null);setEditingSigned(false);}catch(error){const status=(error as {status?:number}).status;if(status&&status>=400&&status<500)setSignCommand(null);setSignError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setSigning(false);}
-      })()}>{t(signature&&!editingSigned?"handoffDesk.editShift":"handoffDesk.signHandoff")}</button>:current.shift&&current.supervisor&&props.onEditSave&&<button type="button" className="handoff-edit-mini-card" disabled={blocked} onClick={()=>{setEditNotes(preparation?.notes??notes);setEditError("");setEditing(true);}}>{t("handoffDesk.editShift")}</button>}
+      {current.shift&&ownWatch&&props.onSignHandoff?(
+        signature&&!editingSigned
+          ? <button type="button" className="handoff-edit-mini-card" disabled={blocked||signing} onClick={()=>setEditingSigned(true)}>{t("handoffDesk.edit")}</button>
+          : <button type="button" className="handoff-edit-mini-card" disabled={blocked||signing} onClick={()=>void signHandoff()}>{t("handoffDesk.signHandoff")}</button>
+      ):current.shift&&current.supervisor&&props.onEditSave&&<button type="button" className="handoff-edit-mini-card" disabled={blocked} onClick={()=>{setEditNotes(preparation?.notes??notes);setEditError("");setEditing(true);}}>{t("handoffDesk.editShift")}</button>}
     </header>
     {signError&&<p role="alert">{signError}</p>}
-    <Dialog open={editing} onOpenChange={setEditing}><DialogContent bare className="handoff-edit-dialog" accentHeaderStyle={{display:"none"}}>
-      <AppModalHeader compact title={<DialogTitle>{t("handoffDesk.editShift")}</DialogTitle>} description={<DialogDescription>{t("handoffDesk.saveExplanation")}</DialogDescription>}/>
-      <label>{t("handoffDesk.savedNotes")}<textarea aria-label={t("handoffDesk.savedNotes")} rows={6} maxLength={8000} value={editNotes} disabled={editBusy||blocked} onChange={event=>setEditNotes(event.target.value)}/></label>
-      {editError&&<p role="alert">{editError}</p>}
-      <PngPillButton type="button" color="brand" activeSrc={pillSrc} disabled={editBusy||blocked||(editNotes===(preparation?.notes??notes)&&freshSaved)} onClick={()=>void (async()=>{setEditBusy(true);setEditError("");try{await props.onEditSave?.(editNotes);setEditing(false);}catch(error){setEditError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setEditBusy(false);}})()}>{t("handoffDesk.save")}</PngPillButton>
-    </DialogContent></Dialog>
+    <Dialog open={editing} onOpenChange={setEditing}><MiniCardDialogContent icon={NotebookPen} label={t("handoffDesk.editShift")} definition={t("handoffDesk.saveExplanation")} iconColor="var(--brand-primary)" className="handoff-edit-dialog max-h-[86vh] sm:max-w-lg">
+      <div className="handoff-edit-card" role="group" aria-label={t("handoffDesk.editShift")}>
+        <label>{t("handoffDesk.savedNotes")}<textarea aria-label={t("handoffDesk.savedNotes")} rows={6} maxLength={8000} value={editNotes} disabled={editBusy||blocked} onChange={event=>setEditNotes(event.target.value)}/></label>
+        {editError&&<p role="alert">{editError}</p>}
+        <button type="button" className="handoff-edit-mini-card handoff-edit-save" disabled={editBusy||blocked||(editNotes===(preparation?.notes??notes)&&freshSaved)} onClick={()=>void (async()=>{setEditBusy(true);setEditError("");try{await props.onEditSave?.(editNotes);setEditing(false);}catch(error){setEditError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setEditBusy(false);}})()}>{t("handoffDesk.save")}</button>
+      </div>
+    </MiniCardDialogContent></Dialog>
 
     {(!online || readError || (preparation && !freshSaved)) && <p className="handoff-notice" role="status">
       {t(!online ? "changeOver.offline" : readError ? "handoffDesk.refreshRequired" : "handoffDesk.changed")}

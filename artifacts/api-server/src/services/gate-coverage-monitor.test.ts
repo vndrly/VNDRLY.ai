@@ -8,6 +8,49 @@ import {
 const at = (time: string) => new Date(`2026-09-22T${time}:00.000Z`);
 
 describe("Gate coverage monitoring", () => {
+  it("alerts supervisors and admins once when a shift inside 24 hours has nobody assigned", async () => {
+    let record: GateCoverageRecord | null = null;
+    const delivered: Array<{ kind: string; recipients: number[] }> = [];
+    const candidate = {
+      shiftId: "shift-radar",
+      stationId: "gate-radar",
+      stationName: "Radar gate",
+      title: "Night watch",
+      startsAt: at("20:00"),
+      endsAt: new Date("2026-09-23T08:00:00.000Z"),
+      requiredCount: 1,
+      actualCount: 0,
+      assignedUserIds: [],
+      recipientUserIds: [20, 30],
+      coverageMode: "active" as const,
+    };
+    const deps: GateCoverageDependencies = {
+      loadCandidates: vi.fn(async () => [candidate]),
+      getRecord: vi.fn(async () => record),
+      saveRecord: vi.fn(async (next) => {
+        record = {
+          shiftId: next.shiftId,
+          state: next.state,
+          lastReminderAt: next.lastReminderAt,
+          requiredCount: next.requiredCount,
+          actualCount: next.actualCount,
+        };
+      }),
+      createAttendanceException: vi.fn(async () => undefined),
+      deliver: vi.fn(async (notice) => { delivered.push({ kind: notice.kind, recipients: notice.recipientUserIds }); }),
+    };
+
+    await evaluateGateCoverage(at("08:00"), deps);
+    await evaluateGateCoverage(at("08:01"), deps);
+    expect(delivered).toEqual([{ kind: "watch_radar", recipients: [20, 30] }]);
+    expect((record as GateCoverageRecord | null)?.state).toBe("watch_radar");
+
+    deps.loadCandidates = vi.fn(async () => [{ ...candidate, shiftId: "shift-staffed", assignedUserIds: [10] }]);
+    record = null;
+    await evaluateGateCoverage(at("08:00"), deps);
+    expect(delivered).toHaveLength(1);
+  });
+
   it("alerts after ten minutes, repeats every ten, and sends restoration", async () => {
     let actualCount = 0;
     let state: GateCoverageRecord | null = null;

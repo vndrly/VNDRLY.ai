@@ -1,4 +1,15 @@
 export interface GateWatchTimeline {
+  radar: {
+    shiftId: string;
+    siteId: number;
+    siteName: string;
+    stationId: string;
+    gateName: string;
+    title: string;
+    startsAt: string;
+    endsAt: string;
+    timezone: string;
+  }[];
   sites: {
     siteId: number;
     siteName: string;

@@ -6352,7 +6352,8 @@
   },
   "handoffDesk": {
     "signedBy": "Signed by {{name}}",
-    "signHandoff": "Save Shift Handoff",
+    "signHandoff": "Sign Handoff",
+    "edit": "Edit",
     "saveDraftFirst": "Save your current draft before adding a new note.",
     "addNote": "Add Note",
     "newNote": "New note",

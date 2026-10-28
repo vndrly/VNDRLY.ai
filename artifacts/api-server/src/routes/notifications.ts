@@ -362,6 +362,7 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "gate_watch_confirmed",
   "gate_watch_conflict",
   "gate_watch_conflict_urgent",
+  "gate_watch_radar",
 ]);
 
 export function isHighPriorityNotificationType(type: string): boolean {

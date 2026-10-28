@@ -6352,7 +6352,8 @@
   },
   "handoffDesk": {
     "signedBy": "Firmado por {{name}}",
-    "signHandoff": "Guardar relevo de turno",
+    "signHandoff": "Firmar relevo",
+    "edit": "Editar",
     "saveDraftFirst": "Guarda el borrador actual antes de agregar una nueva nota.",
     "addNote": "Agregar nota",
     "newNote": "Nueva nota",

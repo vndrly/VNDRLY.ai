@@ -10,12 +10,20 @@ afterEach(cleanup);
 function mount(current: any) { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateWatchSummary stationId="gate-1" current={current} /></QueryClientProvider>); }
 it("expands the last completed watch and its notes at each site, plus the next scheduled watch", async () => {
   const startedAt = new Date(Date.now() - 90 * 60000).toISOString(), endedAt = new Date().toISOString();
-  m.request.mockImplementation(async (path: string) => path === "/watch-timeline" ? { sites: [
+  m.request.mockImplementation(async (path: string) => path === "/watch-timeline" ? { radar: [
+    { shiftId: "shift-radar", siteId: 21, siteName: "West site", stationId: "gate-2", gateName: "West Gate", title: "Night watch", startsAt: endedAt, endsAt: endedAt, timezone: "America/Chicago" },
+  ], sites: [
     { siteId: 21, siteName: "West site", previous: { watchId: "watch-1", stationId: "gate-2", name: "Previous operator", gateName: "West Gate", startedAt, endedAt, notes: "West lane needs attention", filedAt: endedAt, handoffId: "handoff-1" }, next: { shiftId: "shift-1", stationId: "gate-2", gateName: "West Gate", startsAt: endedAt, endsAt: endedAt, timezone: "America/Chicago", people: [{ userId: 8, name: "Next operator" }] } },
     { siteId: 22, siteName: "East site", previous: { watchId: "watch-2", stationId: "gate-3", name: "Released operator", gateName: "East Gate", startedAt, endedAt, notes: "Saved before next watch arrives", filedAt: endedAt, handoffId: null }, next: { shiftId: "shift-2", stationId: "gate-3", gateName: "East Gate", startsAt: endedAt, endsAt: endedAt, timezone: "America/Chicago", people: [] } },
   ] } : { watches: [] });
   mount({ shift: { operator_id: 7, started_at: new Date(Date.now() - 90 * 60000).toISOString() } });
-  expect(await screen.findByText("My Watch")).toBeTruthy();
+  const myWatch = await screen.findByText("My Watch");
+  const radar = screen.getByText("Watch Radar");
+  expect(radar.compareDocumentPosition(myWatch) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  fireEvent.click(radar);
+  const radarDetails = radar.closest("details")!;
+  expect(await within(radarDetails).findByText("Night watch")).toBeTruthy();
+  expect(within(radarDetails).getByText("West site · West Gate")).toBeTruthy();
   expect(screen.queryByText("1h 30m")).toBeNull();
   const previous = screen.getByText("Previous watch").closest("details")!;
   expect(previous.open).toBe(false); fireEvent.click(screen.getByText("Previous watch"));

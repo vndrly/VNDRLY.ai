@@ -51,8 +51,12 @@ it("replaces withdrawal with a top-right Edit Shift control that saves revised n
   expect(screen.queryByText("handoffDesk.withdraw")).toBeNull();
   expect(screen.getByRole("button",{name:"handoffDesk.editShift"}).closest("header")).toBeTruthy();
   fireEvent.click(screen.getByRole("button",{name:"handoffDesk.editShift"}));
+  expect(screen.getByTestId("mini-card-dialog-header")).toBeTruthy();
+  const brandedCard=screen.getByRole("group",{name:"handoffDesk.editShift"});
   const editor=screen.getByRole("textbox",{name:"handoffDesk.savedNotes"});expect((editor as HTMLTextAreaElement).value).toBe("Saved notes");
-  fireEvent.change(editor,{target:{value:"Revised shift notes"}});fireEvent.click(screen.getByRole("button",{name:"handoffDesk.save"}));
+  const save=within(brandedCard).getByRole("button",{name:"handoffDesk.save"});
+  expect(save.className).toContain("handoff-edit-mini-card");
+  fireEvent.change(editor,{target:{value:"Revised shift notes"}});fireEvent.click(save);
   await waitFor(()=>expect(onEditSave).toHaveBeenCalledWith("Revised shift notes"));
   await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());
 });
@@ -139,15 +143,30 @@ it("puts reviewed assumption last and removes the independence footer",()=>{
   expect(screen.queryByText("handoffDesk.independent")).toBeNull();
   expect(view.container.querySelector(".gate-handoff-desk")?.lastElementChild?.id).toBe("watch-review");
 });
-it("signs exact notes from the top control, then toggles signed handoff back to editing",async()=>{
-  let current=state();let signedInput:unknown;
+it("locks a signed handoff behind a separate Edit mini-card and requires another signature after edits",async()=>{
+  let current=state(),notes="Saved notes";
+  let view:ReturnType<typeof render>;
   const onSignHandoff=vi.fn().mockImplementation(async input=>{
-    signedInput=input;current={...current,preparation:{...current.preparation!,id:input.operationId,summary:{...current.preparation!.summary,signature:{userId:7,name:"Actual operator",signedAt:new Date().toISOString(),contentHash:"signed-hash"}}}};
-    view.rerender(<GateHandoffDesk {...props({current,ownWatch:true,onSignHandoff})}/>);
+    notes=input.notes;current={...current,preparation:{...current.preparation!,id:input.operationId,notes:input.notes,summary:{...current.preparation!.summary,signature:{userId:7,name:"Actual operator",signedAt:new Date().toISOString(),contentHash:"signed-hash"}}}};
+    rerender();
   });
-  const view=render(<GateHandoffDesk {...props({current,ownWatch:true,onSignHandoff})}/>);
+  const onNotesChange=(value:string)=>{notes=value;rerender();};
+  const rerender=()=>view.rerender(<GateHandoffDesk {...props({current,notes,ownWatch:true,onNotesChange,onSignHandoff})}/>);
+  view=render(<GateHandoffDesk {...props({current,notes,ownWatch:true,onNotesChange,onSignHandoff})}/>);
+  const firstSign=screen.getByRole("button",{name:"handoffDesk.signHandoff"});
+  expect(firstSign.className).toContain("handoff-edit-mini-card");
+  fireEvent.click(firstSign);
+  await waitFor(()=>expect(onSignHandoff).toHaveBeenCalledOnce());
+  expect(onSignHandoff.mock.calls[0][0]).toEqual({operationId:expect.any(String),expectedWatchId:"watch",expectedPreparationId:"prep",notes:"Saved notes"});
+  expect(screen.queryByRole("textbox",{name:"changeOver.outgoingNotes"})).toBeNull();
+  expect(screen.queryByRole("button",{name:"handoffDesk.signHandoff"})).toBeNull();
+  const edit=await screen.findByRole("button",{name:"handoffDesk.edit"});
+  expect(edit.className).toContain("handoff-edit-mini-card");fireEvent.click(edit);
+  const editor=screen.getByRole("textbox",{name:"changeOver.outgoingNotes"});
+  fireEvent.change(editor,{target:{value:"Revised shift notes"}});
   fireEvent.click(screen.getByRole("button",{name:"handoffDesk.signHandoff"}));
-  await waitFor(()=>expect(onSignHandoff).toHaveBeenCalledOnce());expect(signedInput).toEqual({operationId:expect.any(String),expectedWatchId:"watch",expectedPreparationId:"prep",notes:"Saved notes"});
-  const edit=await screen.findByRole("button",{name:"handoffDesk.editShift"});fireEvent.click(edit);
-  expect(screen.getByRole("button",{name:"handoffDesk.signHandoff"})).toBeTruthy();expect(screen.getByRole("textbox",{name:"changeOver.outgoingNotes"})).toBeTruthy();
+  await waitFor(()=>expect(onSignHandoff).toHaveBeenCalledTimes(2));
+  expect(onSignHandoff.mock.calls[1][0]).toEqual({operationId:expect.any(String),expectedWatchId:"watch",expectedPreparationId:onSignHandoff.mock.calls[0][0].operationId,notes:"Revised shift notes"});
+  expect(screen.queryByRole("textbox",{name:"changeOver.outgoingNotes"})).toBeNull();
+  expect(screen.getByRole("button",{name:"handoffDesk.edit"})).toBeTruthy();
 });
