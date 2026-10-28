@@ -196,18 +196,8 @@ test.afterAll(async () => {
     await pool?.end();
     return;
   }
-  // FK-safe cleanup. ticket_line_items has ON DELETE CASCADE from tickets,
-  // user_org_memberships has ON DELETE CASCADE from partners, and tickets
-  // FK back to site_locations + work_types + vendors so we delete in the
-  // child→parent order.
-  await pool.query(`DELETE FROM tickets WHERE id = ANY($1::int[])`, [
-    [seed.ticketId, seed.dispersedTicketId],
-  ]);
-  await pool.query(`DELETE FROM site_locations WHERE id = $1`, [seed.siteId]);
-  await pool.query(`DELETE FROM work_types WHERE id = $1`, [seed.workTypeId]);
-  await pool.query(`DELETE FROM vendors WHERE id = $1`, [seed.vendorId]);
-  await pool.query(`DELETE FROM partners WHERE id = $1`, [seed.partnerId]);
-  await pool.query(`DELETE FROM users WHERE id = $1`, [seed.partnerUserId]);
+  // This run owns a fresh retained test database. Preserve its fixture and
+  // immutable audit actors instead of deleting records referenced by audit history.
   await pool.end();
 });
 

@@ -146,10 +146,10 @@ test.describe("vendor managed subcontractors", () => {
     expect(assigned.ok()).toBe(true);
     expect(JSON.stringify(await assigned.json())).toContain(siteName);
     await expect(
-      workerPage.getByRole("link", { name: "Work Hub", exact: true }).first(),
+      workerPage.getByRole("link", { name: "Go to Work Hub", exact: true }).first(),
     ).toBeVisible();
     await workerPage
-      .getByRole("link", { name: "Work Hub", exact: true })
+      .getByRole("link", { name: "Go to Work Hub", exact: true })
       .first()
       .click();
     expect((await workerPage.request.get("/api/work-hub/home")).ok()).toBe(
