@@ -102,7 +102,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Start isolated runner database
-        if: matrix.check == 'api' || matrix.check == 'browser'
+        if: matrix.check == 'api' || startsWith(matrix.check, 'browser')
         shell: bash
         run: |
           set -euo pipefail
@@ -117,7 +117,7 @@ jobs:
           "$pg_bin/initdb" --pgdata="$pg_data" --username=postgres --auth=trust
           "$pg_bin/pg_ctl" --pgdata="$pg_data" --log="$RUNNER_TEMP/vndrly-postgres.log" --options="-h 127.0.0.1 -p 55439 -k '$RUNNER_TEMP'" --wait start
       - name: Install test browser
-        if: matrix.check == 'browser'
+        if: startsWith(matrix.check, 'browser')
         run: pnpm --filter @workspace/e2e exec playwright install --with-deps chromium
       - name: Run required check
         shell: bash
@@ -134,11 +134,12 @@ jobs:
             mobile) pnpm run test:mobile ;;
             api) pnpm run test:api ;;
             browser) pnpm run test:e2e ;;
+            browser-*) shard='${{ matrix.check }}'; pnpm run test:e2e --shard="${shard#browser-}/4" ;;
           esac
       - uses: actions/upload-artifact@v4
-        if: always() && matrix.check == 'browser'
+        if: always() && startsWith(matrix.check, 'browser')
         with:
-          name: handoff-browser-results
+          name: handoff-${{ matrix.check }}-results
           path: |
             lib/e2e/playwright-report
             lib/e2e/test-results

@@ -36,6 +36,15 @@ export async function login(
   await page.locator('[data-testid="input-password"]').fill(password);
   await page.locator('[data-testid="button-login"]').click();
   await expect(usernameInput).toHaveCount(0, { timeout: 15_000 });
+  const pinStatus = await page.request.get("/api/auth/admin-pin");
+  expect(pinStatus.ok(), await pinStatus.text()).toBe(true);
+  if ((await pinStatus.json()).required) {
+    const setup = page.getByRole("dialog").filter({ has: page.getByRole("heading", { name: "Create PIN", exact: true }) });
+    await setup.getByLabel("Create PIN", { exact: true }).fill("2468");
+    await setup.getByLabel("Confirm PIN", { exact: true }).fill("2468");
+    await setup.getByRole("button", { name: "Save PIN", exact: true }).click();
+    await expect(setup).toHaveCount(0);
+  }
 }
 
 /**

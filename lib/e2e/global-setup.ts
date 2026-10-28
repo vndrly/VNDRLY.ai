@@ -5,6 +5,7 @@ import {
 } from "../../scripts/e2e-isolation.mjs";
 import { Pool } from "pg";
 import bcrypt from "bcryptjs";
+import { ADMIN_PIN_SCHEMA } from "../../artifacts/api-server/src/lib/admin-pin";
 import { readCompanyGoFleetFixtureFingerprint, seedCompanyGoFleetWorkflows, stableCompanyGoUuid, verifyCompanyGoFleetCoverage } from "../../artifacts/api-server/scripts/seed-companygo-fleet-workflows";
 import { emptyFleetState } from "../../artifacts/api-server/src/services/fleet-repository";
 
@@ -137,6 +138,7 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await client.query(ADMIN_PIN_SCHEMA);
     await seedIsolatedCompanyGoPrerequisites(client);
     await seedCompanyGoFleetWorkflows(client);
     const beforeReplay = await readCompanyGoFleetFixtureFingerprint(client);

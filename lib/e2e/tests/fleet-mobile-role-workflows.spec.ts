@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { stableCompanyGoUuid } from "../../../artifacts/api-server/scripts/seed-companygo-fleet-workflows";
+import { loginAsVendor } from "../helpers/auth";
 
 const accounts = [
   { login: "vendor_admin@fleetgo.com", modules: ["summary", "office", "dispatch", "yard", "driver"] },
@@ -9,11 +10,7 @@ const accounts = [
 ] as const;
 
 async function signIn(page: import("@playwright/test").Page, login: string) {
-  await page.goto("/login");
-  await page.getByTestId("input-username").fill(login);
-  await page.getByTestId("input-password").fill("companygo");
-  await page.getByTestId("button-login").click();
-  await expect(page).not.toHaveURL(/\/login(?:\?|$)/);
+  await loginAsVendor(page, { username: login, password: "companygo" });
 }
 
 async function sessionScope(page: import("@playwright/test").Page) {
