@@ -3,7 +3,7 @@ import WorkdayControls from "@/components/workday-controls";
 import WorkforcePanel from "./workforce-panel";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Bell, CalendarDays, Car, CheckCircle2, CheckSquare2, ChevronRight, Clock3, Download, Folder, MapPin, MessageCircle, MessageSquare, Phone, Search, Shield, Sun, Users, ClipboardList, Smartphone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,7 +13,6 @@ import { changeOverRequest } from "@/lib/change-over-api";
 import { visitsApi } from "@/lib/visits-api";
 import { useDailyWork } from "./daily-workspace";
 import { WorkHubPageHeading } from "./chrome";
-import { ActivityDashboard } from "./activity-dashboard";
 import { AccountWorkspace, canUseGateWorkspace } from "./account-workspace";
 import { WorkspacePanel as HomeCard, WorkspaceRow as HomeRow } from "./workspace-panel";
 import DashboardTasks from "./dashboard-tasks";
@@ -32,7 +31,6 @@ export function WorkHubHome() {
   const qc = useQueryClient();
   const identity = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
   const [panel, setPanel] = useState<"work" | "safety" | null>(null);
-  const [search, setSearch] = useState("");
   const home = useQuery<Row>({ queryKey: ["work-hub", "home", ...identity], queryFn: () => workHubRequest("/home"), enabled: !!user, refetchInterval: 15000 });
   const channels = useQuery<Row[]>({ queryKey: ["work-hub", "/channels", ...identity], queryFn: () => workHubRequest("/channels"), enabled: !!user, refetchInterval: 15000 });
   const operations = useQuery({ queryKey: ["work-hub-home-operations", ...identity], queryFn: () => read<{ categories: string[] }>("/api/company-operations"), enabled: !!user?.vendorId });
@@ -41,10 +39,7 @@ export function WorkHubHome() {
   const visits = useQuery({ queryKey: ["work-hub-home-visits", ...identity], queryFn: () => visitsApi.list({ activeOnly: true, limit: 100 }), enabled: gate, retry: false, refetchInterval: 15000 });
   const notices = useQuery({ queryKey: ["work-hub-home-notices", ...identity], queryFn: () => read<Row[] | { items: Row[]; nextCursor?: string }>("/api/notifications?limit=100"), enabled: !!user, refetchInterval: 30000 });
   const { work, safety, pending } = useDailyWork();
-  const acknowledge = useMutationAcknowledgement(qc);
-  const activity = useQuery<Row[]>({ queryKey: ["work-hub", "/activity", ...identity], queryFn: () => workHubRequest("/activity"), enabled: !!user, refetchInterval: 15000 });
-  const people = useQuery<Row[]>({ queryKey: ["work-hub", "/people", ...identity], queryFn: () => workHubRequest("/people"), enabled: !!user });
-  useEffect(() => { setPanel(null); setSearch(""); }, [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId]);
+  useEffect(() => { setPanel(null); }, [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId]);
   useEffect(() => {
     if (typeof EventSource === "undefined") return;
     const source = new EventSource("/api/work-hub/events", { withCredentials: true });
@@ -114,21 +109,6 @@ export function WorkHubHome() {
       </div>
     </HomeCard>}
     <div className="hub-home-tools"><Link className="hub-tool" href="/work-hub/channels"><Users aria-hidden="true" />{brand.name} {c("Groups", "Grupos")}</Link><Link className="hub-tool" href="/work-hub/native-work"><Smartphone aria-hidden="true" />{c("Work phone & on-call", "Teléfono y guardia")}</Link></div>
-    <section id="hub-home-attention" className="hub-home-card hub-detail" aria-label="Needs Attention"><h2>{c("Needs Attention", "Requiere atención")}</h2>
-      <ActivityDashboard home={home.isSuccess ? home.data : undefined} onAcknowledge={id => acknowledge.mutate(id)} acknowledging={acknowledge.isPending} />
-      {acknowledge.isError && <p role="alert">{c("Acknowledgement could not be saved. Please retry.", "No se pudo guardar la confirmación. Inténtelo de nuevo.")}</p>}
-      {attentionNotices?.map(row => <Link key={row.id} href={row.link?.startsWith("/") && !row.link.startsWith("//") ? row.link : "/notifications"} className="hub-record"><Bell aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>)}
-      {pending.map(row => <Link key={`safety:${row.id}`} href={`/safety/${row.id}`} className="hub-record"><Shield aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>)}
-      {activeTasks?.filter(task => Date.parse(task.updatedAt ?? task.createdAt ?? "") < now - 30 * 86400000).map(task => <Link key={task.id} href={`/work-hub/tasks?task=${encodeURIComponent(task.id)}`} className="hub-record">{task.title}<small>{c("No action for 30 days", "Sin actividad durante 30 días")}</small></Link>)}
-      <Link href="/notifications" className="hub-text-link">{c("Open all notifications", "Abrir todas las notificaciones")}</Link>
-      <section aria-label="Upcoming calendar"><h3>{c("Next on your calendar", "Próximo en su calendario")}</h3><ul>{calendar?.slice(0, 5).map(item => <li key={item.id}><Link className="hub-record" href={item.href}>{item.title} · {new Date(item.at).toLocaleString()}</Link></li>)}</ul>{calendar === undefined ? <p>{unavailable}</p> : !calendar.length && <p>{c("No upcoming items.", "No hay próximos elementos.")}</p>}</section>
-      <section aria-label="Documents needing review"><h3>{c("Needs review", "Por revisar")}</h3>{home.data?.reviewItems?.map((item: Row) => <Link className="hub-record" key={item.id} href={item.deepLink ?? "/work-hub/files"}>{item.title ?? item.fileName}</Link>)}{home.data?.reviewItems === undefined ? <Link href="/work-hub/files" className="hub-text-link">{c("Open Files & Notes to check reviews", "Abra Archivos y notas para consultar revisiones")}</Link> : !home.data.reviewItems.length && <p>{c("No documents need review.", "No hay documentos por revisar.")}</p>}</section>
-    </section>
-    <section className="hub-home-card hub-detail" aria-label="Latest activity"><h2>{c("Latest activity", "Actividad reciente")}</h2><div role="search" aria-label="Search activity"><input className="hub-search" aria-label="Filter activity" placeholder={c("Search activity", "Buscar actividad")} value={search} onChange={e => setSearch(e.target.value)} /></div>{activity.isError && <p role="alert">{unavailable}</p>}{activity.isPending && <p role="status">{c("Loading activity…", "Cargando actividad…")}</p>}{activity.data?.filter(row => `${row.body} ${row.channelName}`.toLowerCase().includes(search.toLowerCase())).map(row => <Link key={row.id} href={`/work-hub/chat?channel=${encodeURIComponent(row.channelId)}`} className="hub-record"><MessageSquare aria-hidden="true" /><span><strong>{row.channelName}</strong><small>{String(row.body).replace(/@\[(\d+)\]/g, (_, id) => `@${people.data?.find(person => String(person.userId ?? person.id) === id)?.displayName ?? c("teammate", "compañero")}`)}</small></span><ChevronRight aria-hidden="true" /></Link>)}{activity.isSuccess && !activity.data.length && <p>{c("Your activity will appear here as your team collaborates.", "Su actividad aparecerá aquí cuando su equipo colabore.")}</p>}</section>
     </section>
   </section>;
-}
-
-function useMutationAcknowledgement(qc: ReturnType<typeof useQueryClient>) {
-  return useMutation({ mutationFn: (id: string) => workHubRequest(`/announcements/${id}/acknowledge`, { method: "POST", body: "{}" }), onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "home"] }) });
 }

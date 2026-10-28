@@ -7,6 +7,7 @@ export type GateHistoryRecord = {
   id: string; name?: string; company?: string | null; vehiclePlate?: string | null;
   plateState?: string | null; checkInTime?: string; checkOutTime?: string | null;
   reconciliationState?: string | null; admissionStatus?: string | null; kind?: string;
+  entryClearanceAt?: string | null;
   notes?: string | null; purpose?: string | null; expectedMinutes?: number | null;
   checkInGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;
   checkOutGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;

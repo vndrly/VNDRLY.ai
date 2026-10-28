@@ -58,14 +58,21 @@ describe("Gate arrivals operational boundary",()=>{
   });
   it("uses provider duration only and rechecks consent after routing",async()=>{
     const f=fixture();
-    expect((await f.service.list(session,9)).arrivals[0]).toMatchObject({etaMinutes:12,ticketId:101,physicalProofVerified:false});
+    f.estimate.mockResolvedValue({ok:true,provider:"mapbox",trafficAware:true,distanceMiles:3,durationMinutes:10,routeConfidence:"medium"});
+    expect((await f.service.list(session,9)).arrivals[0]).toMatchObject({etaMinutes:10,ticketId:101,physicalProofVerified:false});
     expect(f.authorize).toHaveBeenCalledTimes(2);
     f.estimate.mockImplementationOnce(async()=>{f.revoke();return {ok:true,provider:"mapbox",trafficAware:true,distanceMiles:7,durationMinutes:12,routeConfidence:"medium"};});
     expect((await f.service.list(session,9)).arrivals).toEqual([]);
   });
   it("reports routing unavailability without fabricating an estimate",async()=>{
     const f=fixture();f.estimate.mockResolvedValue({ok:false,errorCode:"mapbox.no_route",message:"Unavailable"} as never);
-    expect((await f.service.list(session,9)).arrivals[0]).toMatchObject({etaMinutes:null,etaUnavailableReason:"gate_arrivals.route_unavailable"});
+    expect((await f.service.list(session,9)).arrivals).toEqual([]);
+    expect(await f.service.detail(session,9,f.run.id)).toMatchObject({etaMinutes:null,etaUnavailableReason:"gate_arrivals.route_unavailable"});
+  });
+  it("keeps approaches over ten minutes on the map but out of the booth arrivals list",async()=>{
+    const f=fixture();
+    expect((await f.service.list(session,9)).arrivals).toEqual([]);
+    expect((await f.service.map(session,9)).vehicles[0]).toMatchObject({etaMinutes:12});
   });
   it("fails before reading runs when selected-site Gate authority is denied",async()=>{
     const f=fixture();f.authorize.mockRejectedValue(new OfflineGateError("gate.site_no_access",403));

@@ -228,7 +228,9 @@ export function createGateArrivalsService(
     },
     async list(session:SessionPayload,siteId:number):Promise<GateArrivalsResponse> {
       const result = await read(session,siteId);
-      return {arrivals:result.arrivals,truncated:result.truncated,generatedAt:clock().toISOString()};
+      // The booth handles the final approach; the map still shows the full run.
+      const arrivals = result.arrivals.filter(arrival => arrival.etaMinutes !== null && arrival.etaMinutes >= 0 && arrival.etaMinutes <= 10);
+      return {arrivals,truncated:result.truncated,generatedAt:clock().toISOString()};
     },
     async detail(session:SessionPayload,siteId:number,runId:string):Promise<GateArrivalDetail> {
       const result=await read(session,siteId,runId), candidate=result.after.candidates[0], arrival=result.arrivals[0];

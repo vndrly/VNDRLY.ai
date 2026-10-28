@@ -25,8 +25,6 @@
 .gate-portal-workspace .gate-presence-tab[aria-pressed=true] { color: var(--brand-primary); }
 .gate-portal-workspace :is([data-testid=gate-on-site-entries],[data-testid=gate-recent-departures]) > .rounded-xl,
 .gate-portal-workspace [data-testid=gate-pending-visitors] > .rounded-xl { border: 0; border-bottom: 1px solid #414145; border-radius: 0; background: transparent; padding: 10px 0; }
-.gate-portal-workspace [data-testid=gate-on-site-entries] > [data-overdue=true] { background: #f59e0b1a; border-bottom-color: #f59e0b; border-left: 3px solid #f59e0b; padding-inline: 10px; }
-.gate-portal-workspace [data-testid=gate-on-site-entries] > [data-overdue=true] .gate-record-link p { color: #fbbf24; }
 .gate-portal-workspace .gate-log-record { padding: 12px 0; border-top: 1px solid #414145; color: #ececec; }
 .gate-portal-workspace .gate-log-record [data-location-flagged=true] { color: #fbbf24; }
 .gate-portal-workspace .gate-log-record [data-location-flagged=false] { color: #4ade80; }

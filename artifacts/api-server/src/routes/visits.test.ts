@@ -27,7 +27,7 @@ import { formatTooFarFromSiteMessage } from "@workspace/map-utils";
 type Row = Record<string, any>;
 type ColRef = { __table: string; __col: string };
 type CountExpr = { kind: "count" };
-type Selection = Record<string, ColRef | CountExpr>;
+type Selection = Record<string, ColRef | CountExpr | {kind:"entryClearance";col:ColRef}>;
 type Pred =
   | { kind: "eq"; col: ColRef; val: any }
   | { kind: "isNull"; col: ColRef }
@@ -273,6 +273,7 @@ function projectRow(
   return Object.fromEntries(
     Object.entries(selection).map(([key, value]) => {
       if (isCountExpression(value)) return [key, count];
+      if ("kind" in value && value.kind === "entryClearance") return [key, row[value.col.__col]?.entryClearanceAt?.value ?? null];
       if (!value || typeof value !== "object" || !("__col" in value)) {
         throw new Error(`unsupported projection: ${key}`);
       }
@@ -379,7 +380,9 @@ vi.mock("@workspace/db", () => {
           const matching = (fixtures[t.__name] ?? []).filter((r) =>
             evalPred(pred, r),
           );
-          for (const m of matching) Object.assign(m, s);
+          for (const m of matching) for (const [key, value] of Object.entries(s)) {
+            m[key] = value?.kind === "jsonbPrepend" ? { ...value.facts, ...(m[value.col.__col] ?? {}) } : value;
+          }
           return matching;
         };
         const where = (p?: Pred) => {
@@ -433,6 +436,10 @@ vi.mock("drizzle-orm", () => {
   const sqlTag: any = (strings: any, ...values: any[]) => {
     if (Array.isArray(strings) && (strings as any).raw !== undefined) {
       const joined = (strings as string[]).join(" ");
+      if (values.length === 1 && /->'entryClearanceAt'->>'value'/.test(joined)) return { kind: "entryClearance", col: values[0] };
+      if (values.length === 2 && /::jsonb \|\| coalesce\(/.test(joined)) {
+        return { kind: "jsonbPrepend", facts: JSON.parse(values[0]), col: values[1] };
+      }
       if (/^\s*count\(\*\)(?:::\w+)?\s*$/i.test(joined)) {
         return { kind: "count" };
       }
@@ -2122,6 +2129,32 @@ describe("GET /api/visits/sites/:siteId/preferred-plate-states", () => {
 });
 
 describe("gatekeeper visit workflow", () => {
+  it("Admit records repeat-safe entry clearance without recording an arrival or changing other facts", async () => {
+    const { site, vendor } = seedScenario();
+    const originalAt = "2026-10-28T12:00:00.000Z";
+    fixtures.siteVisits.push({ id: 88, siteLocationId: site.id, firstName: "Pat", lastName: "Driver", admissionStatus: "pending", checkInTime: originalAt, checkOutTime: null, observedArrivalAt: null, reconciliationFacts: { plate: { value: "TRK88", source: "observed" } } });
+    const cookie = staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" });
+    const result = await request(app).post("/api/visits/gate/88/admit").set("Cookie", cookie).send({});
+    expectStatus(result, 200);
+    expect(result.body).toMatchObject({ id: 88, admissionStatus: "pending", checkInTime: originalAt, observedArrivalAt: null, reconciliationFacts: { plate: { value: "TRK88", source: "observed" }, entryClearanceAt: { value: expect.any(String), source: "supplied_later" } } });
+    const again = await request(app).post("/api/visits/gate/88/admit").set("Cookie", cookie).send({});
+    expect(again.body.reconciliationFacts.entryClearanceAt).toEqual(result.body.reconciliationFacts.entryClearanceAt);
+    const list = await request(app).get("/api/visits?activeOnly=true").set("Cookie", cookie);
+    expectStatus(list, 200);
+    expect(list.body.find((visit: any) => visit.id === 88)).toMatchObject({admissionStatus:"pending",entryClearanceAt:result.body.reconciliationFacts.entryClearanceAt.value});
+    expect(publishVisitEventMock).not.toHaveBeenCalled();
+  });
+  it("moves a cleared waiting record on site only when its actual entry is checked in", async () => {
+    const { site, vendor } = seedScenario();
+    fixtures.siteVisits.push({ id: 88, siteLocationId: site.id, firstName: "Pat", lastName: "Driver", company: "Hauler", vehiclePlate: "TRK88", plateState: "TX", admissionStatus: "pending", checkInTime: new Date("2026-10-28T12:00:00Z"), checkOutTime: null, observedArrivalAt: null, expectedDurationMinutes: 60, reconciliationFacts: { entryClearanceAt: { value: "2026-10-28T12:01:00Z", source: "supplied_later" } } });
+    const result = await request(app).post("/api/visits/gate/check-in")
+      .set("Cookie", staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" }))
+      .send({ firstName: "Pat", lastName: "Driver", company: "Hauler", siteLocationId: site.id, vehiclePlate: "TRK88", plateState: "TX" });
+    expectStatus(result, 201);
+    expect(result.body).toMatchObject({ id: 88, admissionStatus: "admitted", observedDirection: "entry", observationSource: "gatekeeper" });
+    expect(result.body.observedArrivalAt).toBeTruthy();
+    expect(fixtures.siteVisits).toHaveLength(1);
+  });
   it("records a gate check-in without GPS rather than blocking the entry", async () => {
     const { site, vendor } = seedScenario();
     const response = await request(app).post("/api/visits/gate/check-in")

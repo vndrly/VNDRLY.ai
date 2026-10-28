@@ -14,6 +14,7 @@ import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useBrowserNotifications } from "@/hooks/use-browser-notifications";
 import { useNotificationsModal } from "@/components/notifications-modal-context";
 import { useMessageSound } from "@/hooks/use-message-sound";
+import { subscribeNotificationStream } from "@/lib/shared-notification-stream";
 
 export default function NotificationsBell() {
   const { t } = useTranslation();
@@ -58,12 +59,9 @@ export default function NotificationsBell() {
     if (typeof window === "undefined" || typeof window.EventSource === "undefined") {
       return;
     }
-    let es: EventSource | null = null;
+    let unsubscribe: (() => void) | undefined;
     try {
       const apiBase = import.meta.env.BASE_URL.replace(/\/$/, "");
-      es = new EventSource(`${apiBase}/api/notifications/events`, {
-        withCredentials: true,
-      });
       const refreshBell = () => {
         qc.invalidateQueries({
           queryKey: ["notifications", "count", user?.userId],
@@ -120,16 +118,17 @@ export default function NotificationsBell() {
           /* malformed payload — ignore */
         }
       };
-      es.addEventListener("notification.created", onCreated as EventListener);
-      es.addEventListener("notification.state_changed", refreshBell as EventListener);
-      es.addEventListener("notification.hello", onHello as EventListener);
+      const identity = JSON.stringify([user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId]);
+      unsubscribe = subscribeNotificationStream(`${apiBase}/api/notifications/events`, identity, (type, event) => {
+        if (type === "notification.created") onCreated(event);
+        else if (type === "notification.hello") onHello(event);
+        else refreshBell();
+      });
     } catch {
-      es = null;
+      unsubscribe = undefined;
     }
-    return () => {
-      if (es) es.close();
-    };
-  }, [enabled, qc, user?.userId]);
+    return () => unsubscribe?.();
+  }, [enabled, qc, user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId]);
 
   if (!user) return null;
   const count = countData?.count ?? 0;

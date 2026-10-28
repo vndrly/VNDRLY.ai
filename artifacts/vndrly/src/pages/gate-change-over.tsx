@@ -74,9 +74,13 @@ export function ShiftSnapshotView({
     const records = new Map<string, RecordRow>([...(snapshot?.records ?? []), ...(snapshot?.outstanding ?? [])].map(row => [row.id, row]));
     const recordLink = (row: RecordRow, recordType: string, key = row.id, detail?: string) => {
       const recordId = row.id.replace(/^checkin:/, "employee:");
-      const when = recordType === "check_outs" ? row.checkOut : row.checkIn;
-      const description = detail ?? [row.company, row.plate?.replace(":", " • "), when ? new Date(when).toLocaleString() : ""].filter(Boolean).join(" · ");
-      return <Link key={key} className="gate-metric-record" href={`${historyBaseHref}&recordType=${recordType}&recordId=${encodeURIComponent(recordId)}`}><strong>{row.name || row.id}</strong><small title={description}>{description}</small></Link>;
+      const pending = recordType === "pending" || snapshot?.metricRecordIds?.pendingAdmission?.includes(row.id);
+      const departed = row.checkOut && Date.parse(row.checkOut) <= Date.parse(snapshot?.generatedAt ?? "");
+      const status = pending ? c("Awaiting Admission", "Esperando admisión") : departed ? c("Departed", "Salió") : c("On Site", "En el sitio");
+      const company = row.company?.replace(/\s*\(fictional\)/gi, "").trim();
+      const plate = row.plate?.trim().replace(/\s*[:•·]\s*/, ".");
+      const description = [[company, plate].filter(Boolean).join(" "), status].filter(Boolean).join(" · ");
+      return <Link key={key} className="gate-metric-record" href={`${historyBaseHref}&recordType=${recordType}&recordId=${encodeURIComponent(recordId)}&view=record`}><strong>{row.name || row.id}</strong><small title={detail ?? description}>{description}</small></Link>;
     };
     const metric = (key: keyof ChangeOverSnapshot["metrics"], Icon: typeof LogIn) => {
       const ids = snapshot?.metricRecordIds?.[key];

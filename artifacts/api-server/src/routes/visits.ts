@@ -1118,16 +1118,35 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
       : null;
 
     let visit;
-    if (input.direction === "exit" && input.plate) {
+    if (input.plate) {
       const normalized = input.plate.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
       const candidates = await db.select().from(siteVisitsTable).where(and(
         eq(siteVisitsTable.siteLocationId, site.id),
         isNull(siteVisitsTable.checkOutTime),
       )).orderBy(desc(siteVisitsTable.checkInTime)).limit(100);
-      visit = candidates.find((candidate) =>
+      const matching = candidates.filter((candidate) =>
         (candidate.vehiclePlate ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "") === normalized &&
         (!input.plateState || !candidate.plateState || normalizePlateState(candidate.plateState) === normalizePlateState(input.plateState))
       );
+      if (input.direction === "exit") visit = matching[0];
+      else {
+        const cleared = matching.filter(candidate => candidate.admissionStatus === "pending" && candidate.reconciliationFacts?.entryClearanceAt?.value && candidate.reconciliationState !== "confirmed_off_site");
+        // Ambiguous plates still need reconciliation; never guess a driver.
+        if (cleared.length === 1) visit = cleared[0];
+      }
+    }
+    if (visit && input.direction === "entry") {
+      const duration = visit.expectedDurationMinutes;
+      const [updated] = await db.update(siteVisitsTable).set({
+        admissionStatus: "admitted", checkInTime: observation.observedAt,
+        observedArrivalAt: observation.observedArrivalAt, observedDirection: "entry", observationSource: input.source,
+        provisionalVehicleAssetId: vehicle?.id ?? visit.provisionalVehicleAssetId,
+        reconciliationFacts: { ...(visit.reconciliationFacts ?? {}), ...observation.facts },
+        expiresAt: duration ? new Date(observation.observedAt.getTime() + duration * 60000) : null,
+      }).where(and(eq(siteVisitsTable.id, visit.id), eq(siteVisitsTable.admissionStatus, "pending"), isNull(siteVisitsTable.checkOutTime))).returning();
+      if (!updated) { res.status(409).json({ message: "The visit changed; refresh before recording entry", code: VISIT_INVALID_INPUT }); return; }
+      res.status(201).json(updated);
+      return;
     }
     if (visit) {
       const [updated] = await db.update(siteVisitsTable).set({
@@ -1473,6 +1492,21 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       const same = active.firstName.trim().toLowerCase() === firstName.toLowerCase()
         && active.lastName.trim().toLowerCase() === lastName.toLowerCase()
         && (active.company ?? '').trim().toLowerCase() === String(b.company ?? '').trim().toLowerCase();
+      if (same && active.admissionStatus === "pending") {
+        // This form records an actual entry. Reuse the waiting record rather
+        // than treating prior drive-through clearance as the arrival itself.
+        const arrivedAt = new Date();
+        const duration = expectedDuration ?? active.expectedDurationMinutes;
+        const [arrived] = await tx.update(siteVisitsTable).set({
+          admissionStatus: "admitted", checkInTime: arrivedAt, observedArrivalAt: arrivedAt,
+          observedDirection: "entry", observationSource: "gatekeeper",
+          checkInLatitude: gpsEvidence.latitude, checkInLongitude: gpsEvidence.longitude,
+          checkInGpsEvidence: gpsEvidence,
+          expiresAt: duration ? new Date(arrivedAt.getTime() + duration * 60000) : null,
+          expectedDurationMinutes: duration,
+        }).where(and(eq(siteVisitsTable.id, active.id), eq(siteVisitsTable.admissionStatus, "pending"), isNull(siteVisitsTable.checkOutTime))).returning();
+        return { visit: arrived ?? null, reused: false };
+      }
       return { visit: same ? active : null, reused: true };
     }
     const [created] = await tx
@@ -1693,7 +1727,7 @@ router.post("/visits/gate/:id/admit", async (req, res): Promise<void> => {
     res.status(404).json({ message: "Visit not found", code: VISIT_NOT_FOUND });
     return;
   }
-  if (visit.checkOutTime) {
+  if (visit.checkOutTime || visit.admissionStatus !== "pending") {
     res.json({
       ...visit,
       plateState: normalizePlateState(visit.plateState),
@@ -1703,13 +1737,22 @@ router.post("/visits/gate/:id/admit", async (req, res): Promise<void> => {
   }
   const [updated] = await db
     .update(siteVisitsTable)
-    .set({ admissionStatus: "admitted" })
-    .where(eq(siteVisitsTable.id, id))
+    .set({ reconciliationFacts: sql`${JSON.stringify({
+      entryClearanceAt: { value: new Date().toISOString(), source: "supplied_later" },
+      entryClearanceByUserId: { value: String(session.userId), source: "supplied_later" },
+    })}::jsonb || coalesce(${siteVisitsTable.reconciliationFacts}, '{}'::jsonb)` })
+    .where(and(eq(siteVisitsTable.id, id), eq(siteVisitsTable.admissionStatus, "pending"), isNull(siteVisitsTable.checkOutTime)))
     .returning();
+  // A concurrent actual entry or checkout wins over this clearance request.
+  if (!updated) {
+    const [current] = await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id, id));
+    res.json({ ...current, plateState: normalizePlateState(current?.plateState), admissionStatus: admissionStatusOf(current?.admissionStatus) });
+    return;
+  }
   res.json({
     ...updated,
     plateState: normalizePlateState(updated.plateState),
-    admissionStatus: "admitted",
+    admissionStatus: "pending",
   });
 });
 
@@ -2334,6 +2377,7 @@ router.get("/visits", async (req, res): Promise<void> => {
       purpose: siteVisitsTable.purpose,
       entryCategory: siteVisitsTable.entryCategory,
       admissionStatus: siteVisitsTable.admissionStatus,
+      entryClearanceAt: sql<string | null>`${siteVisitsTable.reconciliationFacts}->'entryClearanceAt'->>'value'`,
       expectedDurationMinutes: siteVisitsTable.expectedDurationMinutes,
       hostType: siteVisitsTable.hostType,
       hostPartnerId: siteVisitsTable.hostPartnerId,

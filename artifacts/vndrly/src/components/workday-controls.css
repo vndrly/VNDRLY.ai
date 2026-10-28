@@ -11,6 +11,7 @@ button.workday-status-text { font-weight: 700 !important; }
 .workday-status-switch { min-height: 44px; display: inline-flex; align-items: center; gap: 10px; max-width: 100%; }
 .shift-card .workday-status-switch { flex-direction: column; justify-content: center; gap: 4px; }
 .shift-card .workday-switch-label { text-align: center; font-size: .8em; }
+.shift-card .gate-site-gate-label { font-weight: 700; }
 .workday-switch-label { white-space: normal; text-align: left; }
 .workday-switch-track { width: 44px; height: 24px; border-radius: 12px; padding: 3px; flex-shrink: 0; background: #6b7280; transition: background-color .15s; }
 .workday-switch-dot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }

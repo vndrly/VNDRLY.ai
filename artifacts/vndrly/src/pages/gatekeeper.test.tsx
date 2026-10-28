@@ -996,6 +996,25 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(entry.compareDocumentPosition(traffic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it("keeps an admitted driver green in Arrivals until actual entry, including after a refetch", async () => {
+    const waiting = recentVisit({ id: 88, firstName: "Cleared", admissionStatus: "pending", checkOutTime: null });
+    api.list.mockResolvedValue([waiting]);
+    api.gateAdmit.mockImplementation(async () => {
+      const cleared = { ...waiting, reconciliationFacts: { entryClearanceAt: { value: new Date().toISOString(), source: "supplied_later" } } };
+      api.list.mockResolvedValue([cleared]); return cleared;
+    });
+    renderPage();
+    await screen.findByTestId("gate-on-site-entries");
+    fireEvent.click(screen.getByRole("button", { name: "gatekeeper.arrivalsTab" }));
+    fireEvent.click(await screen.findByTestId("button-gate-admit-88"));
+    const cleared = await screen.findByText("Cleared to enter · awaiting arrival");
+    expect(cleared.closest(".gate-traffic-record")?.classList.contains("gate-traffic-approved")).toBe(true);
+    expect(screen.queryByTestId("button-gate-admit-88")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "gatekeeper.onSiteTab" }));
+    expect(within(screen.getByTestId("gate-on-site-entries")).queryByText("Cleared Visitor")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "gatekeeper.arrivalsTab" }));
+    expect(screen.getByText("Cleared to enter · awaiting arrival")).toBeTruthy();
+  });
   it("caps on-site traffic at 100 and moves pending admissions to Arrivals", async () => {
     api.list.mockResolvedValue([
       ...Array.from({ length: 5 }, (_, i) => recentVisit({ id: i + 1, checkOutTime: null, admissionStatus: "pending" })),

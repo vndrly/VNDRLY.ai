@@ -72,15 +72,23 @@ const state = () => ({
   items: [],
 });
 it("shows two-line counter records and links visitor and employee identities to exact Gate Log records", () => {
-  const visitor = { id: "visit:88", kind: "visitor", name: "Taylor Reed", company: "Acme", plate: "TX:ABC123", checkIn: "2026-10-22T08:00:00Z", checkOut: null, notes: null };
+  const visitor = { id: "visit:88", kind: "visitor", name: "Taylor Reed", company: "Acme (fictional)", plate: "TX:ABC123", checkIn: "2026-10-22T08:00:00Z", checkOut: null, notes: null };
   const worker = { ...visitor, id: "checkin:42", kind: "employee", name: "Sam Ortiz", plate: null };
-  const detailed = { ...snapshot, records: [visitor, worker], outstanding: [visitor, worker], metricRecordIds: { checkIns: [visitor.id, worker.id], onSiteEmployeeRecords: [worker.id], onSiteVehicles: [visitor.id] } };
+  const departed = { ...visitor, id: "visit:89", name: "Robin Lee", checkOut: "2026-10-22T10:00:00Z" };
+  const pending = { ...visitor, id: "visit:90", name: "Alex Chen" };
+  const detailed = { ...snapshot, records: [visitor, worker, departed, pending], outstanding: [visitor, worker], metricRecordIds: { checkIns: [visitor.id, worker.id, departed.id], checkOuts: [departed.id], pendingAdmission: [pending.id], onSiteEmployeeRecords: [worker.id], onSiteVehicles: [visitor.id] } };
   render(<ShiftSnapshotView snapshot={detailed} historyBaseHref="/gate/history?siteId=1&range=current_shift" />);
   const arrivals = screen.getByTestId("dashboard-metric-checkIns");
   fireEvent.click(arrivals.querySelector("summary")!);
   const record = within(arrivals).getByRole("link", { name: /Taylor Reed/ });
   expect(record.querySelectorAll("strong,small")).toHaveLength(2);
+  expect(record.querySelector("small")?.textContent).toBe("Acme TX.ABC123 · On Site");
+  expect(within(arrivals).getByRole("link", { name: /Robin Lee/ }).querySelector("small")?.textContent).toBe("Acme TX.ABC123 · Departed");
+  const admissions = screen.getByTestId("dashboard-metric-pendingAdmission");
+  fireEvent.click(admissions.querySelector("summary")!);
+  expect(within(admissions).getByRole("link", { name: /Alex Chen/ }).querySelector("small")?.textContent).toBe("Acme TX.ABC123 · Awaiting Admission");
   expect(record.getAttribute("href")).toContain("recordType=check_ins&recordId=visit%3A88");
+  expect(record.getAttribute("href")).toContain("&view=record");
   const employees = screen.getByTestId("dashboard-metric-onSiteEmployeeRecords");
   fireEvent.click(employees.querySelector("summary")!);
   expect(within(employees).getByRole("link", { name: /Sam Ortiz/ }).getAttribute("href")).toContain("recordType=employees_on_site&recordId=employee%3A42");

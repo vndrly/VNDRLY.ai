@@ -60,7 +60,24 @@ describe("GateHistoryPage plate display", () => {
     expect((screen.getByRole("button", { name: "Previous records" }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.queryByText("Incoming driver")).toBeNull();
   });
-  it("opens an exact historical record from a dashboard link independently of list filters", async () => {
+  it("shows a dashboard-selected crossing in Gate Log itself, even outside the current range or status filter", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=on_site&recordId=visit%3A88&view=record");
+    queryGateReportRows.mockImplementation(async (_kind, filters) => filters.recordId
+      ? [{ id: "visit:88", name: "Old departed driver", checkInTime: "2026-08-01T12:00:00Z", checkOutTime: "2026-08-01T13:00:00Z" }]
+      : [{ id: "visit:99", name: "Other crossing", checkInTime: "2026-10-28T12:00:00Z" }]);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    await screen.findByText("Old departed driver");
+    expect(screen.getAllByTestId("gate-history-row")).toHaveLength(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByText("Incoming driver")).toBeNull();
+    expect(queryGateReportRows).toHaveBeenCalledWith("history", expect.objectContaining({ siteId: 42, recordId: "visit:88", recordType: "all" }));
+    expect(window.location.search).toContain("view=record");
+    fireEvent.click(screen.getByRole("button", { name: /^All$/ }));
+    await screen.findByText("Other crossing");
+    await waitFor(() => expect(window.location.search).not.toContain("recordId="));
+    expect(window.location.search).not.toContain("view=record");
+  });
+  it("opens an exact historical record popup for existing quick-view links independently of list filters", async () => {
     window.history.replaceState({}, "", "/gate/history?siteId=42&recordType=check_outs&recordId=visit%3A88");
     queryGateReportRows.mockImplementation(async (_kind, filters) => filters.recordId ? [{ id: "visit:88", name: "Old departed driver", checkInTime: "2026-08-01T12:00:00Z", checkOutTime: "2026-08-01T13:00:00Z", notes: "Original crossing note" }] : []);
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);

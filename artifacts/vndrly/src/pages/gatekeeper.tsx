@@ -8,6 +8,7 @@ import { GateArrivalDetails } from "@/components/gate-arrival-details";
 import { GateVisitDetails } from "@/components/gate-visit-details";
 import { gateRecordFlags, gateDurationHHMM } from "@/lib/gate-record-flags";
 import { GateTrafficRecord } from "@/components/gate-traffic-record";
+import { isGateEntryCleared } from "@/lib/gate-entry-clearance";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
@@ -1638,9 +1639,9 @@ export default function GatekeeperPage() {
               {pendingVisits.map(visit => <GateTrafficRecord key={visit.id} name={`${visit.firstName} ${visit.lastName}`}
                 description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate), visit.siteName].filter(Boolean).join(" · ")}
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
-                status={t("gatekeeper.pendingAdmit")} className="gate-traffic-pending" onOpen={() => setDetailVisitId(visit.id)}
-                footer={<span data-testid={`gate-reconciliation-status-${visit.id}`}>{visit.reconciliationState === "needs_supervisor_review" ? t("gatekeeper.reconciliationReview") : visit.reconciliationState === "observed" ? t("gatekeeper.reconciliationObserved") : t("gatekeeper.pendingAdmit")}</span>}
-                action={<button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>} />)}
+                status={isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Autorizado" : "Admitted") : t("gatekeeper.pendingAdmit")} className={isGateEntryCleared(visit) ? "gate-traffic-approved" : "gate-traffic-pending"} onOpen={() => setDetailVisitId(visit.id)}
+                footer={<span data-testid={`gate-reconciliation-status-${visit.id}`}>{isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Puede entrar · esperando llegada" : "Cleared to enter · awaiting arrival") : visit.reconciliationState === "needs_supervisor_review" ? t("gatekeeper.reconciliationReview") : visit.reconciliationState === "observed" ? t("gatekeeper.reconciliationObserved") : t("gatekeeper.pendingAdmit")}</span>}
+                action={!isGateEntryCleared(visit) && <button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>} />)}
             </div>}
             <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} limit={100 - pendingVisits.length} hideEmpty={pendingVisits.length > 0} /></> : presenceView === "departures" ? (
               departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />

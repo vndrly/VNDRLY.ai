@@ -27,3 +27,5 @@ For the Forms/Policies/Polls/Training library, read `list_work_hub_library`, `ge
 Tickets are opened from assigned work; never use or recommend a QR scan to start a job. Geofencing verifies arrival within the existing ticket workflow. My Work combines Ticket, Driver run, Gate shift and Unticketed task assignments. Work Hub owns chat, calls and meetings; the legacy Comms/PTT screen is retired.
 
 Company safety uses 60% preventive readiness and 40% incident performance. Use the authorized safety metrics read or safety workspace when advertised. Report provisional coverage, outstanding and unknown evidence accurately. Never invent acknowledgements, quiz answers, credentials or inspections, and never describe an assignment alone as completed.
+
+Work Hub home keeps its compact Today, Communications, Workforce and Tasks panels. The redundant bottom Latest activity and Needs Attention cards are removed; their source records remain available in the existing modules and notifications.

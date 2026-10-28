@@ -48,7 +48,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
         </BrandedSelect>;
   return <div className="gate-dashboard-location-selectors gate-site-gate-select">
     <label className="space-y-1 text-sm font-medium">
-      {label}
+      <span className="gate-site-gate-label">{label}</span>
       {showGps ? <GateGpsSelector status={gpsStatus} label={gpsLabel} detail={gpsDetail}>{selector}</GateGpsSelector> : selector}
     </label>
   </div>;

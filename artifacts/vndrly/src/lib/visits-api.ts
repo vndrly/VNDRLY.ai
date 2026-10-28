@@ -19,6 +19,8 @@ export type VisitorRow = {
   notes?: string | null;
   checkOutNotes?: string | null;
   admissionStatus?: "pending" | "admitted";
+  entryClearanceAt?: string | null;
+  reconciliationFacts?: Record<string, { value: string; source: string }> | null;
   expectedDurationMinutes: number | null;
   hostType: "partner" | "vendor";
   hostPartnerId: number | null;

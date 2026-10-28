@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.10
+
+Matches persistent Gate entry clearance, final-ten-minute incoming run lists, exact Gate Log record navigation, shared cross-tab notification transport and compact Work Hub home. Clearance is not physical entry; only a recorded arrival moves a visitor On Site. Existing MCP tools and embedded views use the same server projections. All five service skills, branding, existing plugin identity and permission grants remain intact. Submitted, approved and public availability remain distinct states.
+
 # VNDRLY plugin 1.22.9
 
 Matches the Gate record cards, exact Gate Log record links, source-based GPS/duration flags, combined Site | Gate selection and Gate Map staff roster. Map reads group authorized app-enabled employees by On Watch, On Call and Everyone else. Current shared locations can be focused on the map; stale, missing or revoked positions remain unavailable. Tracked incoming vehicle details remain limited to authorized runs and current consented driver-phone observations; missing speed, origin or ETA is never invented. Existing MCP tools, embedded view identities, five service skills, branding and permission grants are retained. Submission is separate from approval or public availability.

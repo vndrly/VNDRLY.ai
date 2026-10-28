@@ -418,13 +418,14 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
       v.vehicle_plate AS "vehiclePlate",v.plate_state AS "plateState",v.check_in_time AS "checkInTime",
       v.check_out_time AS "checkOutTime",v.admission_status AS "admissionStatus",
       v.reconciliation_state AS "reconciliationState",'visitor' AS kind,
+      v.reconciliation_facts->'entryClearanceAt'->>'value' AS "entryClearanceAt",
       v.check_in_gps_evidence AS "checkInGpsEvidence",v.check_out_gps_evidence AS "checkOutGpsEvidence",
       concat_ws(E'\n',v.notes,v.check_out_notes,v.conflict_reason) AS notes,v.purpose,v.expected_duration_minutes AS "expectedMinutes"
      FROM site_visits v WHERE v.site_location_id=$1
        AND ($4::text IS NULL OR 'visit:'||v.id=$4)
        AND ($4::text IS NOT NULL OR (v.check_in_time <= $3 AND (v.check_out_time IS NULL OR v.check_out_time >= $2)))
      UNION ALL
-     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::jsonb,NULL::jsonb,NULL::text,NULL::text,NULL::int
+     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::text,NULL::jsonb,NULL::jsonb,NULL::text,NULL::text,NULL::int
      FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id JOIN vendor_people p ON p.id=c.employee_id
        JOIN vendors ven ON ven.id=t.vendor_id WHERE t.site_location_id=$1
        AND ($4::text IS NULL OR 'employee:'||c.id=$4)
