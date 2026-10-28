@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { TEAMS_SCOPES, graphRequest, normalizeTeamsText, createTeamsCalendarEvent, listTeamsMessages } from "./teams-graph";
+import { classifyTeamsIdentityError, loadTeamsConfig, teamsTenantAllowed, isMultiTenantAuthority, TEAMS_SCOPES, graphRequest, normalizeTeamsText, createTeamsCalendarEvent, listTeamsMessages } from "./teams-graph";
 afterEach(() => vi.unstubAllGlobals());
 describe("Teams Graph boundary", () => {
   it("uses delegated scopes without organization-wide access", () => {
@@ -37,5 +37,36 @@ describe("Teams Graph boundary", () => {
     const result = await listTeamsMessages("token", "19:a@thread.v2");
     expect(result).toMatchObject({ hasMore: true, messages: [{ id: "m", text: "Hello", sender: { id: "external", displayName: "Joe" } }] });
     expect(JSON.stringify(result)).not.toContain("secret.example");
+  });
+});
+describe("Teams identity errors and tenants", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("separates user-grant failures from app-registration failures", () => {
+    expect(classifyTeamsIdentityError("invalid_grant", [70008])).toBe("teams_reconnect_required");
+    expect(classifyTeamsIdentityError("interaction_required", [50076])).toBe("teams_reconnect_required");
+    expect(classifyTeamsIdentityError("invalid_client", [7000215])).toBe("teams_app_misconfigured");
+    expect(classifyTeamsIdentityError("invalid_client", [7000222])).toBe("teams_app_misconfigured");
+    expect(classifyTeamsIdentityError("invalid_request", [50194])).toBe("teams_app_misconfigured");
+    expect(classifyTeamsIdentityError("unauthorized_client", [])).toBe("teams_app_misconfigured");
+    expect(classifyTeamsIdentityError("temporarily_unavailable", [])).toBeNull();
+  });
+  it("defaults to the organizations authority, rejects consumer authorities and parses the allow-list", () => {
+    vi.stubEnv("MICROSOFT_365_CLIENT_ID", "client"); vi.stubEnv("MICROSOFT_365_CLIENT_SECRET", "s"); vi.stubEnv("MICROSOFT_365_TENANT_ID", "");
+    expect(loadTeamsConfig()).toMatchObject({ tenantId: "organizations" });
+    expect(isMultiTenantAuthority("organizations")).toBe(true); expect(isMultiTenantAuthority("common")).toBe(true);
+    for (const bad of ["consumers", "9188040d-6c67-4c5b-b112-36a304b66dad", "evil/tenant"]) { vi.stubEnv("MICROSOFT_365_TENANT_ID", bad); expect(() => loadTeamsConfig()).toThrow("invalid_tenant_config"); }
+    vi.stubEnv("MICROSOFT_365_TENANT_ID", "organizations");
+    vi.stubEnv("MICROSOFT_365_ALLOWED_TENANT_IDS", " D59A479F-2195-4137-9CC7-F1B9F81D21F6 ,0b9e5d1a-3c4f-4e2a-9d8b-7a6c5b4e3f21");
+    expect(loadTeamsConfig()?.allowedTenantIds).toEqual(["d59a479f-2195-4137-9cc7-f1b9f81d21f6", "0b9e5d1a-3c4f-4e2a-9d8b-7a6c5b4e3f21"]);
+    vi.stubEnv("MICROSOFT_365_ALLOWED_TENANT_IDS", "contoso.com"); expect(() => loadTeamsConfig()).toThrow("invalid_tenant_config");
+  });
+  it("pins a GUID authority, applies the allow-list and never allows the consumer tenant", () => {
+    const base = { clientId: "c", clientSecret: "s", redirectUri: "https://vndrly.ai/cb" };
+    const a = "d59a479f-2195-4137-9cc7-f1b9f81d21f6", b = "0b9e5d1a-3c4f-4e2a-9d8b-7a6c5b4e3f21";
+    expect(teamsTenantAllowed({ ...base, tenantId: "organizations" }, b)).toBe(true);
+    expect(teamsTenantAllowed({ ...base, tenantId: a }, b)).toBe(false);
+    expect(teamsTenantAllowed({ ...base, tenantId: a.toUpperCase() }, a)).toBe(true);
+    expect(teamsTenantAllowed({ ...base, tenantId: "organizations", allowedTenantIds: [a] }, b)).toBe(false);
+    expect(teamsTenantAllowed({ ...base, tenantId: "common" }, "9188040d-6c67-4c5b-b112-36a304b66dad")).toBe(false);
   });
 });

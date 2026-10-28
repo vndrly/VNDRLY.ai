@@ -48,4 +48,29 @@ describe("Teams authenticated HTTP boundary", () => {
     expect(result.status).toBe(303); expect(result.headers.location).toContain("microsoft_consent_not_completed");
     expect(result.headers.location).not.toContain("private-detail"); expect(mocks.callback).not.toHaveBeenCalled();
   });
+  it("maps an app-registration AADSTS at authorization to teams_app_misconfigured, never the description", async () => {
+    for (const q of ["error=invalid_request&error_description=AADSTS50194%3A+Application+is+not+configured+as+a+multi-tenant+application.+private-detail", "error=invalid_request&error_description=AADSTS700016%3A+app+not+found", "error=unauthorized_client"]) {
+      const result = await request(app).get(`/work-hub/teams/callback?${q}`);
+      expect(result.headers.location).toBe("/work-hub/settings?teams_error=teams_app_misconfigured");
+    }
+    expect(mocks.callback).not.toHaveBeenCalled();
+  });
+  it("surfaces reconnect-required status and distinct reconnect / misconfiguration error codes", async () => {
+    mocks.status.mockResolvedValue({ configured: true, connected: false, reconnectRequired: true, errorCode: "teams_reconnect_required", account: { username: "v@x" } });
+    expect((await request(app).get("/work-hub/teams/status")).body).toMatchObject({ reconnectRequired: true, errorCode: "teams_reconnect_required" });
+    mocks.withToken.mockRejectedValueOnce(new TeamsProviderError("teams_reconnect_required", 401));
+    const revoked = await request(app).get("/work-hub/teams/chats");
+    expect(revoked.status).toBe(401); expect(revoked.body.code).toBe("teams_reconnect_required");
+    mocks.withToken.mockRejectedValueOnce(new TeamsProviderError("teams_app_misconfigured", 503));
+    const misconfigured = await request(app).get("/work-hub/teams/chats");
+    expect(misconfigured.status).toBe(503); expect(misconfigured.body.code).toBe("teams_app_misconfigured");
+  });
+  it("opts only idempotent reads into a token-refresh retry after Graph 401", async () => {
+    mocks.withToken.mockResolvedValue({ chats: [], hasMore: false });
+    await request(app).get("/work-hub/teams/chats");
+    expect(mocks.withToken.mock.calls[0][2]).toEqual({ retryReadOnUnauthorized: true });
+    mocks.deliver.mockResolvedValue({ messageId: "m", status: "sent", replayed: false }); mocks.withToken.mockImplementation((_s, cb) => cb("token", { id: "connection" }));
+    await request(app).post("/work-hub/teams/chats/chat/messages").send(payload);
+    expect(mocks.withToken.mock.calls[1][2]).toBeUndefined();
+  });
 });

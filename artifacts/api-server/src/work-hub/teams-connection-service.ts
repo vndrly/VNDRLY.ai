@@ -3,6 +3,7 @@ import { and, eq, isNull, like, notLike } from "drizzle-orm";
 import { db, workHubCalendarConnectionsTable as connections, workHubSyncCursorsTable as cursors } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { encryptToken, decryptToken } from "../lib/accounting/crypto";
+import { logger } from "../lib/logger";
 import { authorizationUrl, exchangeTeamsCode, refreshTeamsToken, getTeamsProfile, loadTeamsConfig, TEAMS_SCOPES, TeamsProviderError, type TeamsTokens } from "./teams-graph";
 
 export type TeamsSession = SessionPayload & { userId: number };
@@ -45,21 +46,31 @@ async function findConnection(session: TeamsSession) {
 }
 export async function getTeamsConnection(session: TeamsSession): Promise<Connection | null> {
   const { identity, row } = await findConnection(session);
+  return verifiedConnection(identity, row);
+}
+function verifiedConnection(identity: ReturnType<typeof teamsConnectionIdentity>, row: Connection | undefined): Connection | null {
   if (!row || row.status !== "connected" || row.revokedAt) return null;
   const credentials = readCredentials(row, identity.binding);
   if (!credentials.tokens?.accessToken || !credentials.account?.id || !credentials.tenantId) return null;
   assertGrantedScopes(credentials.tokens);
   return row;
 }
+/** Connection whose Microsoft grant was revoked/expired; tokens are removed and the user must reconnect. */
+export const TEAMS_RECONNECT_STATUS = "reconnect_required";
 export async function status(session: TeamsSession) {
   const configured = Boolean(loadTeamsConfig());
   try {
-    const row = await getTeamsConnection(session);
+    const { identity, row: stored } = await findConnection(session);
+    if (stored?.status === TEAMS_RECONNECT_STATUS && !stored.revokedAt) {
+      const prior = readCredentials(stored, identity.binding);
+      return { configured, connected: false, reconnectRequired: true, errorCode: "teams_reconnect_required", ...(prior.account ? { account: { displayName: prior.account.displayName, username: prior.account.username } } : {}) };
+    }
+    const row = verifiedConnection(identity, stored);
     if (!row) return { configured, connected: false };
-    const credentials = readCredentials(row, teamsConnectionIdentity(session).binding);
+    const credentials = readCredentials(row, identity.binding);
     return { configured, connected: true, account: credentials.account, accountGeneration: credentials.generation };
   } catch (error) {
-    if (error instanceof TeamsProviderError && error.code === "teams_reconnect_required") return { configured, connected: false, reconnectRequired: true };
+    if (error instanceof TeamsProviderError && error.code === "teams_reconnect_required") return { configured, connected: false, reconnectRequired: true, errorCode: "teams_reconnect_required" };
     throw error;
   }
 }
@@ -93,7 +104,10 @@ export async function finishConnect(session: TeamsSession, state: string, code: 
   // Consume before contacting Microsoft. A failed exchange requires a fresh authorization; replay cannot exchange twice.
   const claimed = await db.update(cursors).set({ cursor: null, updatedAt: new Date() }).where(and(eq(cursors.id, cursor.id), eq(cursors.cursor, cursor.cursor!))).returning({ id: cursors.id });
   if (!claimed.length) throw new TeamsProviderError("teams_invalid_oauth_state", 400);
-  const tokens = await exchangeTeamsCode(config, code, pending.verifier);
+  let tokens: TeamsTokens;
+  // A rejected authorization code (expired/replayed) needs a fresh sign-in, not a stored-connection reconnect.
+  try { tokens = await exchangeTeamsCode(config, code, pending.verifier); }
+  catch (error) { if (error instanceof TeamsProviderError && error.code === "teams_reconnect_required") throw new TeamsProviderError("teams_invalid_oauth_state", 400); throw error; }
   assertGrantedScopes(tokens);
   const principal = await getTeamsProfile(tokens.accessToken);
   const account = { ...principal, username: principal.userPrincipalName || principal.mail || "" };
@@ -102,7 +116,8 @@ export async function finishConnect(session: TeamsSession, state: string, code: 
   // A session-version change requires reconnect but must still retain the previous Microsoft principal boundary.
   try { prior = JSON.parse(decryptToken(pending.priorCredentials)) as Credentials; } catch { /* Initial registration has no principal. */ }
   const accountChanged = Boolean(prior?.account?.id && (prior.account.id !== account.id || prior.tenantId !== tokens.tenantId));
-  if (accountChanged && row.status !== "revoked") throw new TeamsProviderError("teams_disconnect_before_account_switch", 409);
+  // A reconnect-required row has no usable tokens, so switching principal is treated like a prior disconnect.
+  if (accountChanged && row.status !== "revoked" && row.status !== TEAMS_RECONNECT_STATUS) throw new TeamsProviderError("teams_disconnect_before_account_switch", 409);
   const credentials: Credentials = { kind: "teams_connection_v1", binding: identity.binding, tokens, expiresAt: Date.now() + tokens.expiresIn * 1000, account, tenantId: tokens.tenantId, generation: createHash("sha256").update(`${tokens.tenantId}:${account.id}`).digest("hex") };
   await db.transaction(async tx => {
     const updated = await tx.update(connections).set({ status: "connected", revokedAt: null, capabilities: [...TEAMS_SCOPES], encryptedCredentials: encryptToken(JSON.stringify(credentials)) }).where(and(ownerPredicate(identity), eq(connections.id, row.id), eq(connections.encryptedCredentials, pending.priorCredentials))).returning({ id: connections.id });
@@ -128,21 +143,50 @@ export async function disconnect(session: TeamsSession) {
   }
   throw new TeamsProviderError("teams_connection_changed", 409);
 }
-export async function withTeamsToken<T>(session: TeamsSession, callback: (token: string, connection: Connection) => Promise<T>): Promise<T> {
+/**
+ * Persist that Microsoft rejected the stored grant (invalid_grant and similar). Tokens are dropped, the
+ * account identity and meeting mappings are retained, and status reports reconnectRequired. Compare-and-swap
+ * ensures a concurrent reconnect or disconnect is never overwritten.
+ */
+async function markReconnectRequired(identity: ReturnType<typeof teamsConnectionIdentity>, row: Connection, credentials: Credentials) {
+  const { tokens: _dropped, expiresAt: _expiry, ...rest } = credentials;
+  const changed = await db.update(connections).set({ status: TEAMS_RECONNECT_STATUS, encryptedCredentials: encryptToken(JSON.stringify(rest satisfies Credentials)) }).where(and(ownerPredicate(identity), eq(connections.id, row.id), eq(connections.status, "connected"), isNull(connections.revokedAt), eq(connections.encryptedCredentials, row.encryptedCredentials))).returning({ id: connections.id });
+  logger.warn({ event: "teams.connection.reconnect_required", connectionId: row.id, persisted: changed.length > 0 }, "Microsoft Teams grant rejected; reconnect required");
+}
+async function refreshConnection(session: TeamsSession, identity: ReturnType<typeof teamsConnectionIdentity>, row: Connection, credentials: Credentials) {
+  const config = loadTeamsConfig(); if (!config) throw new TeamsProviderError("teams_registration_required", 503);
+  if (!credentials.tokens?.refreshToken) { await markReconnectRequired(identity, row, credentials); throw new TeamsProviderError("teams_reconnect_required", 401); }
+  let refreshed: TeamsTokens;
+  try { refreshed = await refreshTeamsToken(config, credentials.tokens.refreshToken, credentials.tenantId); }
+  catch (error) {
+    // Only a user-grant rejection flips state. App misconfiguration, throttling and outages leave it connected.
+    if (error instanceof TeamsProviderError && error.code === "teams_reconnect_required") await markReconnectRequired(identity, row, credentials);
+    throw error;
+  }
+  assertGrantedScopes(refreshed);
+  if (refreshed.tenantId && refreshed.tenantId !== credentials.tenantId) throw new TeamsProviderError("provider_identity_changed", 401);
+  const next: Credentials = { ...credentials, tokens: refreshed, expiresAt: Date.now() + refreshed.expiresIn * 1000 };
+  await db.update(connections).set({ encryptedCredentials: encryptToken(JSON.stringify(next)) }).where(and(ownerPredicate(identity), eq(connections.id, row.id), eq(connections.status, "connected"), isNull(connections.revokedAt), eq(connections.encryptedCredentials, row.encryptedCredentials))).returning({ id: connections.id });
+  // A racing refresh uses the winner; a racing disconnect cannot be overwritten or used.
+  const current = await getTeamsConnection(session); if (!current) throw new TeamsProviderError("teams_not_connected", 409);
+  const currentCredentials = readCredentials(current, identity.binding);
+  if (!currentCredentials.expiresAt || currentCredentials.expiresAt <= Date.now() + 1000) throw new TeamsProviderError("teams_refresh_in_progress", 409);
+  return { row: current, credentials: currentCredentials };
+}
+/**
+ * Graph 401 means the access token was rejected before its expiry (e.g. revoked sessions). Refresh once to
+ * learn whether the grant itself is gone. Only idempotent reads opt in to re-running the callback.
+ */
+export async function withTeamsToken<T>(session: TeamsSession, callback: (token: string, connection: Connection) => Promise<T>, options: { retryReadOnUnauthorized?: boolean } = {}): Promise<T> {
   const identity = teamsConnectionIdentity(session);
   let row = await getTeamsConnection(session); if (!row) throw new TeamsProviderError("teams_not_connected", 409);
   let credentials = readCredentials(row, identity.binding);
-  if (!credentials.expiresAt || credentials.expiresAt <= Date.now() + 60000) {
-    const config = loadTeamsConfig(); if (!config || !credentials.tokens?.refreshToken) throw new TeamsProviderError("teams_reconnect_required", 401);
-    const refreshed = await refreshTeamsToken(config, credentials.tokens.refreshToken);
-    assertGrantedScopes(refreshed);
-    if (refreshed.tenantId && refreshed.tenantId !== credentials.tenantId) throw new TeamsProviderError("provider_identity_changed", 401);
-    const next: Credentials = { ...credentials, tokens: refreshed, expiresAt: Date.now() + refreshed.expiresIn * 1000 };
-    await db.update(connections).set({ encryptedCredentials: encryptToken(JSON.stringify(next)) }).where(and(ownerPredicate(identity), eq(connections.id, row.id), eq(connections.status, "connected"), isNull(connections.revokedAt), eq(connections.encryptedCredentials, row.encryptedCredentials))).returning({ id: connections.id });
-    // A racing refresh uses the winner; a racing disconnect cannot be overwritten or used.
-    row = await getTeamsConnection(session); if (!row) throw new TeamsProviderError("teams_not_connected", 409);
-    credentials = readCredentials(row, identity.binding);
-    if (!credentials.expiresAt || credentials.expiresAt <= Date.now() + 1000) throw new TeamsProviderError("teams_refresh_in_progress", 409);
+  if (!credentials.expiresAt || credentials.expiresAt <= Date.now() + 60000) ({ row, credentials } = await refreshConnection(session, identity, row, credentials));
+  try { return await callback(credentials.tokens!.accessToken, row); }
+  catch (error) {
+    if (!(error instanceof TeamsProviderError) || error.code !== "provider_reauthentication_required") throw error;
+    const renewed = await refreshConnection(session, identity, row, credentials);
+    if (!options.retryReadOnUnauthorized) throw error;
+    return callback(renewed.credentials.tokens!.accessToken, renewed.row);
   }
-  return callback(credentials.tokens!.accessToken, row);
 }

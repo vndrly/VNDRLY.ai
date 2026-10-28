@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import BrandPillButton from "@/components/brand-pill-button";
 
-type Status = { configured: boolean; connected: boolean; accountGeneration?: string; account?: { displayName: string; username: string }; errorCode?: string; capabilities: string[] };
+type Status = { configured: boolean; connected: boolean; accountGeneration?: string; account?: { displayName: string; username: string }; errorCode?: string; reconnectRequired?: boolean; capabilities: string[] };
 type Event = { id: string; subject: string; start: { dateTime: string; timeZone: string }; end: { dateTime: string; timeZone: string }; isCancelled?: boolean; webLink?: string; onlineMeeting?: { joinUrl?: string } };
 type Chat = { id: string; topic?: string; chatType: string; webUrl?: string };
 type Message = { id: string; text: string; sender: string; createdAt: string; webUrl?: string };
@@ -12,7 +12,7 @@ type Meeting = { occurrenceId: string; title: string; startsAt: string; endsAt?:
 async function request<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`/api/work-hub/teams${path}`, { method: body === undefined ? "GET" : "POST", credentials: "same-origin", signal, headers: body === undefined ? undefined : { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
   const value = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(value?.message ?? `Microsoft Teams (${response.status})`);
+  if (!response.ok) throw Object.assign(new Error(value?.message ?? `Microsoft Teams (${response.status})`), { code: typeof value?.code === "string" ? value.code : undefined });
   return value as T;
 }
 function safeLink(value?: string) {
@@ -64,15 +64,25 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
   const date = (value: string) => { const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString(i18n.language); };
   const selectedChat = chats.data?.chats.find(chat => chat.id === chatId);
   const error = status.error ?? calendar.error ?? chats.error ?? meetings.error ?? messages.error;
+  const errorCode = (error as (Error & { code?: string }) | null)?.code;
+  const reconnectRequired = status.data?.reconnectRequired === true;
+  // A read that finds the Microsoft grant revoked flips the server to reconnect-required; reload status to prompt.
+  useEffect(() => { if (errorCode === "teams_reconnect_required" && !reconnectRequired) void status.refetch(); }, [errorCode, reconnectRequired, status]);
+  const errorText = errorCode === "teams_app_misconfigured" ? copy("Microsoft Teams is unavailable because of a VNDRLY configuration problem. You do not need to sign in again; an administrator must fix the Microsoft app registration.", "Microsoft Teams no está disponible por un problema de configuración de VNDRLY. No necesita volver a iniciar sesión; un administrador debe corregir el registro de la aplicación de Microsoft.")
+    : errorCode === "teams_reconnect_required" ? copy("Microsoft access for this account was revoked or expired. Reconnect Microsoft Teams to continue.", "El acceso de Microsoft para esta cuenta fue revocado o venció. Vuelva a conectar Microsoft Teams para continuar.")
+    : error?.message;
   return <section className="rounded-xl border-2 border-amber-500 p-4 space-y-4" aria-label="Microsoft Teams">
     <h2 className="font-semibold text-lg">Microsoft Teams</h2>
     <p className="text-sm">{copy("Calendar and chats are private to your connected account. Only meetings you explicitly publish are shared with Teams.", "El calendario y los chats son privados de su cuenta conectada. Solo las reuniones que publique explícitamente se comparten con Teams.")}</p>
     {status.isPending ? <p>{copy("Loading…", "Cargando…")}</p> : null}
-    {callbackError ? <p role="alert">{copy("Microsoft sign-in was not completed. Your organization may require an administrator to approve access. Try connecting again or ask your Microsoft administrator.", "No se completó el inicio de sesión de Microsoft. Su organización puede requerir que un administrador apruebe el acceso. Vuelva a conectar o consulte a su administrador de Microsoft.")}{/^[a-z_]{1,80}$/.test(callbackError) ? ` (${callbackError})` : ""}</p> : null}
-    {error ? <p role="alert">{error.message}</p> : null}
+    {callbackError === "teams_app_misconfigured" ? <p role="alert">{copy("Microsoft rejected VNDRLY's Teams app registration. This is a configuration problem on our side, not your account; please contact VNDRLY support.", "Microsoft rechazó el registro de la aplicación de Teams de VNDRLY. Es un problema de configuración nuestro, no de su cuenta; comuníquese con soporte de VNDRLY.")}</p>
+      : callbackError === "teams_tenant_not_allowed" ? <p role="alert">{copy("This Microsoft organization is not enabled for VNDRLY Teams. Ask VNDRLY support to enable your organization.", "Esta organización de Microsoft no está habilitada para Teams en VNDRLY. Pida a soporte de VNDRLY que habilite su organización.")}</p>
+      : callbackError ? <p role="alert">{copy("Microsoft sign-in was not completed. Your organization may require an administrator to approve access. Try connecting again or ask your Microsoft administrator.", "No se completó el inicio de sesión de Microsoft. Su organización puede requerir que un administrador apruebe el acceso. Vuelva a conectar o consulte a su administrador de Microsoft.")}{/^[a-z_]{1,80}$/.test(callbackError) ? ` (${callbackError})` : ""}</p> : null}
+    {error && !(reconnectRequired && errorCode === "teams_reconnect_required") ? <p role="alert">{errorText}</p> : null}
+    {reconnectRequired ? <p role="alert">{copy(`Microsoft access${status.data?.account?.username ? ` for ${status.data.account.username}` : ""} was revoked or expired. Reconnect Microsoft Teams to resume calendar, chats and linked meetings.`, `El acceso de Microsoft${status.data?.account?.username ? ` para ${status.data.account.username}` : ""} fue revocado o venció. Vuelva a conectar Microsoft Teams para reanudar el calendario, los chats y las reuniones vinculadas.`)}</p> : null}
     {notice ? <p role="status">{notice}</p> : null}
     {!status.data?.configured && !status.isPending ? <p>{copy("Microsoft app registration must be configured before connecting.", "Debe configurarse el registro de la aplicación de Microsoft antes de conectar.")}</p> : null}
-    {status.data?.errorCode ? <p>{status.data.errorCode}</p> : null}
+    {status.data?.errorCode && !reconnectRequired ? <p>{status.data.errorCode}</p> : null}
     {connected ? <>
       <p className="text-sm font-medium">{status.data?.account?.displayName} · {account}</p>
       <div className="flex flex-wrap gap-2">
@@ -106,6 +116,6 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
         })}>{copy("Send to Teams", "Enviar a Teams")}</BrandPillButton>
         {uncertain ? <p role="status">{copy("This send is locked to prevent duplicates. Check the destination chat in Teams.", "Este envío está bloqueado para evitar duplicados. Revise el chat de destino en Teams.")}</p> : null}
       </> : null}
-    </> : <BrandPillButton tone="amber" disabled={busy || !status.data?.configured} onClick={() => void run(async () => { const result = await request<{ authorizationUrl: string }>("/connect", {}); const url = new URL(result.authorizationUrl); if (url.protocol !== "https:" || url.hostname !== "login.microsoftonline.com") throw new Error(copy("Unexpected Microsoft sign-in address.", "Dirección de inicio de sesión inesperada.")); window.location.assign(url.href); })}>{copy("Connect Microsoft Teams", "Conectar Microsoft Teams")}</BrandPillButton>}
+    </> : <BrandPillButton tone="amber" disabled={busy || !status.data?.configured} onClick={() => void run(async () => { const result = await request<{ authorizationUrl: string }>("/connect", {}); const url = new URL(result.authorizationUrl); if (url.protocol !== "https:" || url.hostname !== "login.microsoftonline.com") throw new Error(copy("Unexpected Microsoft sign-in address.", "Dirección de inicio de sesión inesperada.")); window.location.assign(url.href); })}>{reconnectRequired ? copy("Reconnect Microsoft Teams", "Volver a conectar Microsoft Teams") : copy("Connect Microsoft Teams", "Conectar Microsoft Teams")}</BrandPillButton>}
   </section>;
 }

@@ -15,6 +15,7 @@ vi.mock("@workspace/db", () => {
 };});
 vi.mock("../lib/accounting/crypto",()=>({encryptToken:(s:string)=>s,decryptToken:(s:string)=>s}));
 vi.mock("./teams-graph",async(importOriginal)=>({ ...await importOriginal<typeof import("./teams-graph")>(),loadTeamsConfig:()=>({clientId:"client",clientSecret:"secret",tenantId:"organizations",redirectUri:"https://vndrly.ai/api/work-hub/teams/callback"}),exchangeTeamsCode:mocks.exchanged,refreshTeamsToken:mocks.refreshed,getTeamsProfile:mocks.profile }));
+import { TeamsProviderError } from "./teams-graph";
 import { assertTeamsGeneration, connectStart, disconnect, finishConnect, getTeamsConnection, status, teamsConnectionIdentity, withTeamsToken } from "./teams-connection-service";
 const session={userId:7,vendorId:9,activeMembershipId:12,sv:3};
 const binding={userId:7,membershipId:12,sessionVersion:3,ownerType:"vendor",ownerId:9};
@@ -88,5 +89,74 @@ describe("Teams account boundaries",()=>{
     expect(saved).toMatchObject({account:{id:"object"},tenantId:tokens.tenantId});
     expect(saved.tokens).toBeUndefined();
     expect(mocks.updateWhere.mock.calls[1][0]).toContainEqual({like:"resourceType",pattern:"oauth:%"});
+  });
+});
+describe("Teams revoked grant / app misconfiguration",()=>{
+  const expired=()=>row({encryptedCredentials:JSON.stringify({...JSON.parse(row().encryptedCredentials),expiresAt:1})});
+  it("invalid_grant on refresh persists reconnect_required, drops tokens and keeps identity",async()=>{
+    const current=expired();mocks.selections.push([current]);mocks.updates.push([{id:"connection"}]);
+    mocks.refreshed.mockRejectedValue(new TeamsProviderError("teams_reconnect_required",401));
+    const caller=vi.fn();
+    await expect(withTeamsToken(session,caller)).rejects.toMatchObject({code:"teams_reconnect_required",status:401});
+    expect(caller).not.toHaveBeenCalled();
+    expect(mocks.refreshed).toHaveBeenCalledWith(expect.anything(),"private-refresh",tokens.tenantId);
+    const set=mocks.updateValues.mock.calls[0][0];
+    expect(set.status).toBe("reconnect_required");
+    const saved=JSON.parse(set.encryptedCredentials);
+    expect(saved.tokens).toBeUndefined();expect(saved.expiresAt).toBeUndefined();
+    expect(saved).toMatchObject({account:{id:"object"},tenantId:tokens.tenantId,binding,generation:"g"});
+    // Compare-and-swap: only the still-connected row with the same ciphertext is flipped.
+    expect(mocks.updateWhere.mock.calls[0][0]).toEqual(expect.arrayContaining([{a:"id",b:"connection"},{a:"status",b:"connected"},{null:"revokedAt"},{a:"credentials",b:current.encryptedCredentials}]));
+  });
+  it("status reports reconnectRequired with safe account metadata and no credentials",async()=>{
+    const saved={...JSON.parse(row().encryptedCredentials)};delete saved.tokens;delete saved.expiresAt;
+    mocks.selections.push([row({status:"reconnect_required",encryptedCredentials:JSON.stringify(saved)})]);
+    const result=await status(session);
+    expect(result).toEqual({configured:true,connected:false,reconnectRequired:true,errorCode:"teams_reconnect_required",account:{displayName:"V",username:"v@vndrly.ai"}});
+    expect(JSON.stringify(result)).not.toContain("private-");
+    // A connected row that the reconnect flips is not reported as connected by getTeamsConnection either.
+    mocks.selections.push([row({status:"reconnect_required"})]);
+    await expect(getTeamsConnection(session)).resolves.toBeNull();
+  });
+  it("teams_app_misconfigured on refresh is surfaced without marking the user's connection",async()=>{
+    mocks.selections.push([expired()]);
+    mocks.refreshed.mockRejectedValue(new TeamsProviderError("teams_app_misconfigured",503));
+    await expect(withTeamsToken(session,vi.fn())).rejects.toMatchObject({code:"teams_app_misconfigured",status:503});
+    expect(mocks.updateValues).not.toHaveBeenCalled();
+  });
+  it("Graph 401 forces one refresh; reads retry with the new token, mutations do not",async()=>{
+    const rotated={...tokens,accessToken:"private-access-2"};mocks.refreshed.mockResolvedValue(rotated);
+    const refreshedRow=row({encryptedCredentials:JSON.stringify({...JSON.parse(row().encryptedCredentials),tokens:rotated})});
+    mocks.selections.push([row()],[refreshedRow]);mocks.updates.push([{id:"connection"}]);
+    const read=vi.fn().mockRejectedValueOnce(new TeamsProviderError("provider_reauthentication_required",401)).mockResolvedValue("ok");
+    await expect(withTeamsToken(session,read,{retryReadOnUnauthorized:true})).resolves.toBe("ok");
+    expect(read.mock.calls.map(c=>c[0])).toEqual(["private-access","private-access-2"]);
+    mocks.selections.push([row()],[refreshedRow]);mocks.updates.push([{id:"connection"}]);
+    const write=vi.fn().mockRejectedValue(new TeamsProviderError("provider_reauthentication_required",401));
+    await expect(withTeamsToken(session,write)).rejects.toMatchObject({code:"provider_reauthentication_required"});
+    expect(write).toHaveBeenCalledTimes(1);
+  });
+  it("Graph 401 followed by invalid_grant marks reconnect_required",async()=>{
+    mocks.selections.push([row()]);mocks.updates.push([{id:"connection"}]);
+    mocks.refreshed.mockRejectedValue(new TeamsProviderError("teams_reconnect_required",401));
+    const read=vi.fn().mockRejectedValue(new TeamsProviderError("provider_reauthentication_required",401));
+    await expect(withTeamsToken(session,read,{retryReadOnUnauthorized:true})).rejects.toMatchObject({code:"teams_reconnect_required"});
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(mocks.updateValues.mock.calls[0][0].status).toBe("reconnect_required");
+  });
+  it("a rejected authorization code is a sign-in failure, and reconnect after revocation may switch account",async()=>{
+    const connection=row({status:"reconnect_required"});mocks.selections.push([connection]);
+    const started=await connectStart(session);const state=new URL(started.authorizationUrl).searchParams.get("state")!;
+    const pending=mocks.insertValues.mock.calls[1][0];
+    mocks.selections.push([connection],[{id:"cursor",cursor:pending.cursor}]);mocks.updates.push([{id:"cursor"}],[{id:"connection"}]);
+    mocks.profile.mockResolvedValue({id:"different-object",displayName:"Other",userPrincipalName:"other@example.com",mail:null});
+    await expect(finishConnect(session,state,"code")).resolves.toMatchObject({connected:true});
+    expect(mocks.updateValues.mock.calls.at(-1)![0]).toMatchObject({cursor:null,lastErrorCode:"teams_account_changed"});
+    mocks.selections.push([row()]);
+    const again=await connectStart(session);const state2=new URL(again.authorizationUrl).searchParams.get("state")!;
+    const pending2=mocks.insertValues.mock.calls.at(-1)![0];
+    mocks.selections.push([row()],[{id:"cursor",cursor:pending2.cursor}]);mocks.updates.push([{id:"cursor"}]);
+    mocks.exchanged.mockRejectedValue(new TeamsProviderError("teams_reconnect_required",401));
+    await expect(finishConnect(session,state2,"code")).rejects.toMatchObject({code:"teams_invalid_oauth_state"});
   });
 });
