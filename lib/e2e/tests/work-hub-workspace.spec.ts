@@ -69,8 +69,10 @@ test.describe("Work Hub workspace persisted flow", () => {
     await page.getByRole("button", { name: `Edit Review Group ${stamp}`, exact: true }).click();
     const groupEditor=page.getByRole("dialog");
     await groupEditor.getByLabel("New channel name", { exact: true }).fill(`Review Group ${stamp}`);
+    const channelSaved=page.waitForResponse(response=>response.url().includes("/crews/")&&response.url().endsWith("/channels")&&response.request().method()==="POST"&&response.ok());
     await groupEditor.getByRole("button", { name: "Add channel", exact: true }).click();
-    await groupEditor.getByRole("button", { name: `Review Group ${stamp}`, exact: true }).click();
+    await channelSaved;
+    await groupEditor.getByRole("button", { name: "Close", exact: true }).click();
     await page.goto("/work-hub/chat");
     const conversations=page.getByRole("navigation", { name: "Conversations" });
     if (!(await conversations.isVisible())) await page.getByRole("button", { name: "Choose a conversation", exact: true }).click();
