@@ -392,10 +392,10 @@ export default function GateChangeOverPage({
   );
   return (
     <div className={history ? `${FIELD_OPS_PAGE_CLASS} space-y-5` : "gate-dashboard w-full space-y-3"}>
-      <div className="flex items-center gap-3">
+      <div className={history ? "flex items-center gap-3" : "flex flex-wrap items-center gap-x-3 gap-y-1"}>
         {history
           ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />
-          : <ContentPaneBackLink href="/work-hub" ariaLabel={t("changeOver.title")} testId="button-back" />}
+          : <ContentPaneBackLink href="/work-hub" ariaLabel={t("changeOver.title")} testId="button-back" className="h-11 self-start" />}
         {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         <div>
@@ -404,7 +404,7 @@ export default function GateChangeOverPage({
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
-        {!history && <LanguageToggle className="ml-auto shrink-0" />}
+        {!history && <LanguageToggle presentation="line" className="ml-auto shrink-0 self-start" />}
       </div>
       {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}

@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/hooks/use-brand";
 import SplitToggleHalf from "@/components/split-toggle-half";
+import WorkdayStatusSwitch from "@/components/workday-status-switch";
+import "@/components/workday-controls.css";
 import {
   pickTogglePillSrc,
   splitToggleDividerClass,
@@ -13,7 +15,7 @@ import {
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-export default function LanguageToggle({ className, variant = "dark" }: { className?: string; variant?: SplitToggleVariant }) {
+export default function LanguageToggle({ className, variant = "dark", presentation = "pill" }: { className?: string; variant?: SplitToggleVariant; presentation?: "pill" | "line" }) {
   const { t, i18n } = useTranslation();
   const { user, setPreferredLanguage } = useAuth();
   const { toast } = useToast();
@@ -49,6 +51,14 @@ export default function LanguageToggle({ className, variant = "dark" }: { classN
   const brand = useBrand();
   const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
   const dividerClass = splitToggleDividerClass(variant);
+
+  if (presentation === "line") return (
+    <div className={cn("language-status-slider inline-flex items-center gap-2 text-sm font-bold", className)} data-testid="language-toggle">
+      <button type="button" onClick={() => set("en")} data-testid="lang-en" aria-pressed={current === "en"} className={cn("min-h-11 rounded px-1 font-bold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]", current === "en" ? "text-[var(--brand-primary)]" : "text-muted-foreground")}>English</button>
+      <WorkdayStatusSwitch active={current === "es"} label="" accessibilityLabel="English / Español" onClick={() => set(current === "en" ? "es" : "en")} />
+      <button type="button" onClick={() => set("es")} data-testid="lang-es" aria-pressed={current === "es"} className={cn("min-h-11 rounded px-1 font-bold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]", current === "es" ? "text-[var(--brand-primary)]" : "text-muted-foreground")}>Español</button>
+    </div>
+  );
 
   return (
     <div

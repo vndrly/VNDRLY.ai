@@ -308,7 +308,7 @@ export function FieldOpsPortalShell({
           className="flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
           data-testid="askv-pane"
         >
-          <div className="flex shrink-0 items-center gap-0 overflow-visible">
+          <div className="relative flex shrink-0 items-center gap-0 overflow-visible">
             <div className="relative top-[3px] flex items-center">
               <Suspense fallback={null}>
                 <AssistantLauncher placement="askv-pane" />

@@ -10,11 +10,14 @@
 button.workday-status-text { font-weight: 700 !important; }
 .workday-status-switch { min-height: 44px; display: inline-flex; align-items: center; gap: 10px; max-width: 100%; }
 .shift-card .workday-status-switch { flex-direction: column; justify-content: center; gap: 4px; }
-.shift-card .workday-switch-label { text-align: center; }
+.shift-card .workday-switch-label { text-align: center; font-size: .8em; }
 .workday-switch-label { white-space: normal; text-align: left; }
 .workday-switch-track { width: 44px; height: 24px; border-radius: 12px; padding: 3px; flex-shrink: 0; background: #6b7280; transition: background-color .15s; }
 .workday-switch-dot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
 .workday-status-switch.is-active .workday-switch-track { background: #22c55e; }
+.language-status-slider .workday-status-switch.is-active .workday-switch-track { background: var(--brand-primary); }
+/* The dashboard language labels explicitly override the normal button weight. */
+.language-status-slider > button { font-weight: 700 !important; }
 .workday-status-switch.is-active .workday-switch-dot { transform: translateX(20px); }
 .watch-pass-control { max-width: 100%; display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 4px 8px; background: none; border: 0; color: #9ca3af; font: inherit; font-size: 17px; font-weight: 700 !important; cursor: pointer; }
 .watch-pass-control.is-holding-watch { color: #22c55e; }

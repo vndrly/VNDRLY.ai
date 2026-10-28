@@ -20,10 +20,10 @@ export default function AskVStatusIndicator({ placement = "default" }: AskVStatu
   const toggle = () => {
     setMuted(active || connecting);
   };
-  return <div className="relative flex w-20 shrink-0 items-center justify-center text-green-500" data-testid="askv-status-toggle" title={actionTitle} data-placement={placement}>
+  return <div className={`${placement === "top-strip" ? "static text-[var(--brand-primary)]" : "relative text-green-500"} flex w-20 shrink-0 items-center justify-center`} data-testid="askv-status-toggle" title={actionTitle} data-placement={placement}>
     <WorkdayStatusSwitch active={active} label="" accessibilityLabel={label} onClick={toggle} />
-    <div className={`pointer-events-none absolute top-[calc(50%+10px)] ${placement === "top-strip" ? "-left-[50.575px] right-[18px]" : "left-[18px] right-[18px]"}`} aria-hidden="true">
-      <AskVAudioTrace active={active} />
+    <div className={`pointer-events-none absolute ${placement === "top-strip" ? "top-[calc(50%-22px)] -left-1 right-[10px] h-11" : "top-[calc(50%+10px)] left-[18px] right-[18px]"}`} aria-hidden="true">
+      <AskVAudioTrace active={active} shape={placement === "top-strip" ? "oval" : "line"} />
     </div>
   </div>;
 }
