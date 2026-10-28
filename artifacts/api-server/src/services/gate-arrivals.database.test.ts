@@ -28,11 +28,18 @@ it.skipIf(!isolated)("reads canonical PostgreSQL incoming/completed runs, live c
   }
   await audit("fleet-run",run.id,run);
   await audit("fleet-location",run.id,{deviceId:device,assignment:JSON.stringify([run.id,vendor,driver,vehicle,null]),observation});
-  const authorize=vi.fn(async()=>{}),service=createGateArrivalsService(pool,authorize,async()=>({ok:false,errorCode:"mapbox.missing_token",message:"No external routing in test"}),()=>now);
+  let routeAvailable=true;
+  const authorize=vi.fn(async()=>{}),service=createGateArrivalsService(pool,authorize,async()=>routeAvailable
+    ? {ok:true,provider:"mapbox",trafficAware:true,distanceMiles:3,durationMinutes:8,routeConfidence:"medium"}
+    : {ok:false,errorCode:"mapbox.missing_token",message:"No external routing in test"},()=>now);
   const session={userId:driver,role:"field_employee",vendorId:vendor,sv:1};
   const list=await service.list(session,site);
-  expect(list.arrivals).toHaveLength(1);expect(list.arrivals[0]).toMatchObject({runId:run.id,ticketId:ticket,driverName:"Arrival driver",etaMinutes:null});
+  expect(list.arrivals).toHaveLength(1);expect(list.arrivals[0]).toMatchObject({runId:run.id,ticketId:ticket,driverName:"Arrival driver",etaMinutes:8});
   expect(JSON.stringify(list)).not.toMatch(/latitude|longitude|deviceId|billing|manifest/);
+  routeAvailable=false;
+  expect((await service.list(session,site)).arrivals).toEqual([]);
+  expect(await service.detail(session,site,run.id)).toMatchObject({runId:run.id,etaMinutes:null});
+  routeAvailable=true;
   const visit=(await pool.query("INSERT INTO site_visits(site_location_id,first_name,last_name,host_type,host_partner_id) VALUES($1,'Synthetic','Driver','partner',$2) RETURNING id",[site,partner])).rows[0].id;
   expect((await service.visitLinks(session,site,visit)).runs).toEqual([]);
   await audit("fleet-gate-link",String(visit),{runId:run.id,visitId:visit,observation:{siteId:site}});
