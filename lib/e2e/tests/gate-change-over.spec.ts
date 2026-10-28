@@ -75,12 +75,12 @@ test("gate watch survives sign-out and transfers only after the incoming account
     await expect.poll(async () => (await pool.query(
       "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
     )).rows).toEqual([{ operator_id: outgoing.userId }]);
-    await expect(page.getByRole("button", { name: "Save Shift Handoff", exact: true })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Sign Handoff", exact: true })).toBeEnabled();
     await page
       .getByRole("textbox", { name: "Anything the next shift should know?", exact: true })
       .fill("Inspect the north barrier before admitting heavy loads.");
     await page
-      .getByRole("button", { name: "Save Shift Handoff", exact: true })
+      .getByRole("button", { name: "Sign Handoff", exact: true })
       .click();
     await expect(page.getByText("Ready for next watch", { exact: true })).toHaveCount(0);
     await expect.poll(async()=> (await pool.query("SELECT p.notes FROM gate_shifts s JOIN gate_preparations p ON p.id=s.preparation_id WHERE s.station_id=$1 AND s.ended_at IS NULL",[gate])).rows[0]?.notes).toBe("Inspect the north barrier before admitting heavy loads.");
@@ -109,7 +109,7 @@ test("gate watch survives sign-out and transfers only after the incoming account
       "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
     )).rows).toEqual([{ operator_id: incoming.userId }]);
     await expect(page.getByRole("textbox", { name: "Anything the next shift should know?", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Save Shift Handoff", exact: true })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Sign Handoff", exact: true })).toBeEnabled();
     expect((await pool.query("SELECT session_version FROM users WHERE id=ANY($1::int[]) ORDER BY id",[[outgoing.userId,incoming.userId]])).rows.map(row=>row.session_version)).toEqual([1,1]);
     expect((await pool.query("SELECT count(*)::int AS count FROM assistant_action_audit WHERE target_type='workday' AND user_id=ANY($1::int[])",[[outgoing.userId,incoming.userId]])).rows[0].count).toBe(0);
     await page.locator('summary').filter({ hasText: 'Read shift notes' }).click();
