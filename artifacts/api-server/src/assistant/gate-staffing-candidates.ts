@@ -18,7 +18,7 @@ const expirationDate = (value: unknown): string | null => {
   const parsed = new Date(`${value}T00:00:00Z`);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
 };
-const personSchema = z.object({ id: z.number().int().positive(), user_id: z.number().int().positive(), first_name: z.string().max(200), last_name: z.string().max(200) });
+const personSchema = z.object({ id: z.number().int().positive().nullable(), sponsorship_id: z.uuid().nullish(), user_id: z.number().int().positive(), first_name: z.string().max(200), last_name: z.string().max(200) });
 
 export function gateStaffingCandidatesAvailable(session: SessionPayload, scopes: string[]) {
   try {
@@ -64,8 +64,8 @@ export async function readGateStaffingCandidatesForClient(
     const start = date(shift.starts_at), end = date(shift.ends_at);
     if (end <= start || end.getTime() - start.getTime() > 7 * 86400000 || !Number.isFinite(now.getTime())) throw Error("gate_candidates.invalid_interval");
     const codes = z.array(z.string().trim().min(1).max(100)).max(50).nullable().parse(shift.qualification_codes) ?? [];
-    const people = await client.query(`SELECT p.id,p.user_id,p.first_name,p.last_name,
-      COALESCE((SELECT d.native_operations->'pickupShifts' = 'true'::jsonb FROM work_hub_device_preferences d WHERE d.user_id=p.user_id AND d.owner_org_type='vendor' AND d.owner_org_id=$1),false) AS pickup_shifts
+    const people = await client.query(`SELECT * FROM (SELECT DISTINCT ON (user_id) * FROM (SELECT p.id,p.user_id,p.first_name,p.last_name,
+      COALESCE((SELECT d.native_operations->'pickupShifts' = 'true'::jsonb FROM work_hub_device_preferences d WHERE d.user_id=p.user_id AND d.owner_org_type='vendor' AND d.owner_org_id=$1),false) AS pickup_shifts, NULL::uuid AS sponsorship_id
       FROM vendor_people p JOIN users u ON u.id=p.user_id
       WHERE p.vendor_id=$1 AND p.is_active=true AND p.deleted_at IS NULL AND u.suspended_at IS NULL
       AND EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=u.id AND m.org_type='vendor' AND m.vendor_id=$1)
@@ -73,11 +73,20 @@ export async function readGateStaffingCandidatesForClient(
       AND (EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id AND r.is_active=true AND r.role IN ('gatekeeper','gate_supervisor'))
         OR (NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id) AND p.vendor_role IN ('gatekeeper','gate_supervisor')))
       AND ($3::integer[] IS NULL OR p.user_id=ANY($3::integer[]))
-      ORDER BY p.id LIMIT 26`, [session.vendorId, shift.site_id, selectedUserIds ?? null]);
+      UNION ALL
+      SELECT NULL::int AS id,u.id AS user_id,u.display_name AS first_name,concat(' · ',o.name) AS last_name,false AS pickup_shifts,w.id AS sponsorship_id
+      FROM managed_subcontractor_worker_sponsorships w JOIN users u ON u.id=w.worker_user_id
+      JOIN managed_subcontractor_organizations o ON o.id=w.managed_organization_id
+      JOIN managed_subcontractor_sponsors sponsor ON sponsor.managed_organization_id=o.id AND sponsor.sponsor_vendor_id=w.sponsor_vendor_id AND sponsor.status='active'
+      WHERE w.sponsor_vendor_id=$1 AND w.status='active' AND u.suspended_at IS NULL
+      AND EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=u.id AND m.org_type='vendor' AND m.vendor_id=$1)
+      AND EXISTS(SELECT 1 FROM managed_subcontractor_role_grants g WHERE g.sponsorship_id=w.id AND g.site_id=$2 AND g.status='active' AND g.role IN ('gatekeeper','gate_supervisor'))
+      AND ($3::integer[] IS NULL OR u.id=ANY($3::integer[]))
+      ) roster ORDER BY user_id,id NULLS LAST) unique_roster ORDER BY first_name,user_id LIMIT 26`, [session.vendorId, shift.site_id, selectedUserIds ?? null]);
     const candidates = [];
     for (const rawPerson of people.rows.slice(0, 25)) {
       const person = personSchema.parse(rawPerson);
-      const certs = await client.query("SELECT id,name,expiration_date,vendor_verified_at FROM employee_certifications WHERE employee_id=$1 AND deleted_at IS NULL", [person.id]);
+      const certs = person.id === null ? { rows: [] } : await client.query("SELECT id,name,expiration_date,vendor_verified_at FROM employee_certifications WHERE employee_id=$1 AND deleted_at IS NULL", [person.id]);
       const deadline = end.toISOString().slice(0, 10);
       const requirements = codes.map(code => {
         const matches = certs.rows.filter(cert => {
@@ -114,12 +123,12 @@ export async function readGateStaffingCandidatesForClient(
         pickupShifts,
         qualificationState: codes.length ? requirements.every(item => item.currentRecorded && item.vendorVerified) ? "recorded_requirements_verified" : "missing_or_unverified" : "unknown_no_configured_requirements",
         availability: explicitlyUnavailable || overlaps || meeting.rows.length > 0 ? "recorded_conflict" : unsupportedRecurrence ? "unknown_recurrence" : recordedAvailable ? "recorded_available" : "unknown_no_window",
-        eligibility, contact: { workHubUserId: person.user_id, reachability: "unknown" }, sourceReference: `vendor_people:${person.id}` });
+        eligibility, contact: { workHubUserId: person.user_id, reachability: "unknown" }, sourceReference: person.id === null ? `managed_subcontractor_worker_sponsorships:${person.sponsorship_id}` : `vendor_people:${person.id}` });
     }
     const fresh = await authorize(client, session, Number(shift.site_id));
     await contract();
     if ((supervisor && !fresh.supervisor) || JSON.stringify(await load()) !== JSON.stringify(shift)) throw Error("gate_candidates.context_changed");
     return GATE_STAFFING_CANDIDATE_OUTPUT.parse({ shiftId: input.shiftId, shiftVersion: z.number().int().positive().parse(shift.version), siteId: Number(shift.site_id), startsAt: start.toISOString(), endsAt: end.toISOString(), observedAt: now.toISOString(), candidates, truncated: people.rows.length > 25,
       coverage: shift.coverage_state == null ? null : { state: String(shift.coverage_state), required: Number(shift.required_count), assigned: Number(shift.assigned_count), recordedActual: Number(shift.actual_count) },
-      assignmentMade: false, messageSent: false, limitations: ["Availability and qualifications are saved records, not physical readiness or guaranteed reachability. Other-company commitments, unrecorded duties and recurring availability are not verified. Certificates without expiration dates do not establish current qualification; no explicit nonexpiring designation exists here.", "Only direct current-company Gate-role members with selected site access are included; sponsored external workers require a separate canonical candidate adapter.", "Eligibility applies the existing assignment policy only to recorded same-company shifts in the seven-day window on each side of this interval. Rest and overtime are bounded observations, not regulatory or complete personal-schedule clearance. Assignment authorization, qualifications and availability must be checked again when assigning. Coverage counts do not prove an uncovered physical interval."] });
+      assignmentMade: false, messageSent: false, limitations: ["Availability and qualifications are saved records, not physical readiness or guaranteed reachability. Other-company commitments, unrecorded duties and recurring availability are not verified. Certificates without expiration dates do not establish current qualification; no explicit nonexpiring designation exists here.", "Includes current-company Gate staff and active sponsored contractors with explicit access to this site. Contractor enrollment and qualifications are not implied by inclusion.", "Eligibility applies the existing assignment policy only to recorded same-company shifts in the seven-day window on each side of this interval. Rest and overtime are bounded observations, not regulatory or complete personal-schedule clearance. Assignment authorization, qualifications and availability must be checked again when assigning. Coverage counts do not prove an uncovered physical interval."] });
 }

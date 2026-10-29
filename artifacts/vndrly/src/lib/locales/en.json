@@ -394,7 +394,13 @@
     "field": "Field",
     "both": "Both",
     "foreman": "Foreman",
-    "gatekeeper": "Gatekeeper"
+    "gatekeeper": "Gatekeeper",
+    "gateSupervisor": "Gate Supervisor",
+    "gate": "Gate",
+    "dispatch": "Dispatch",
+    "driver": "Driver",
+    "fieldEmployee": "Field Employee",
+    "officeStaff": "Office Staff"
   },
   "common": {
     "saveChanges": "Save Changes",
@@ -436,7 +442,7 @@
     "partners": "Partners",
     "partner": "Partner",
     "vendors": "Vendors",
-    "vendor": "Vendor",
+    "vendor": "Vendor Profile",
     "employees": "Employees",
     "siteLocations": "Site Locations",
     "gateLocations": "Gate Locations",

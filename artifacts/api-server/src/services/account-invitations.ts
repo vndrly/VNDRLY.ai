@@ -170,6 +170,7 @@ export async function issueAccountInvitation(
     role: "gatekeeper" | "gate_supervisor";
     siteIds: number[];
   },
+  deliveryMode: "email" | "manual" = "email",
 ) {
   await assertManagedOrganizationSponsor(actor, input.managedOrganizationId);
   const rawToken = newToken();
@@ -272,7 +273,7 @@ export async function issueAccountInvitation(
     };
   });
 
-  await deliverInvitation({
+  if (deliveryMode === "email") await deliverInvitation({
     invitationId: issued.invitation.id,
     rawToken,
     email,

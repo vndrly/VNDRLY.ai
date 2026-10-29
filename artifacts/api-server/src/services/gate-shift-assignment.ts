@@ -105,8 +105,9 @@ export async function guardGateShiftAssignments(
   await client.query("SELECT id FROM site_work_assignments WHERE vendor_id=$1 AND site_location_id=$2 FOR SHARE", [session.vendorId, shift.site_location_id]);
   await client.query("SELECT id FROM partner_vendor_relationships WHERE vendor_id=$1 AND partner_id=(SELECT partner_id FROM site_locations WHERE id=$2) FOR SHARE", [session.vendorId, shift.site_location_id]);
   await client.query("SELECT id FROM user_org_memberships WHERE user_id=ANY($1::integer[]) ORDER BY id FOR SHARE", [users]);
-  await client.query("SELECT id FROM managed_subcontractor_worker_sponsorships WHERE worker_user_id=$1 ORDER BY id FOR UPDATE", [session.userId]);
-  await client.query("SELECT id FROM managed_subcontractor_role_grants WHERE sponsorship_id IN (SELECT id FROM managed_subcontractor_worker_sponsorships WHERE worker_user_id=$1) ORDER BY id FOR SHARE", [session.userId]);
+  await client.query("SELECT id FROM managed_subcontractor_worker_sponsorships WHERE worker_user_id=ANY($1::integer[]) ORDER BY id FOR UPDATE", [users]);
+  await client.query("SELECT id FROM managed_subcontractor_role_grants WHERE sponsorship_id IN (SELECT id FROM managed_subcontractor_worker_sponsorships WHERE worker_user_id=ANY($1::integer[])) ORDER BY id FOR SHARE", [users]);
+  await client.query("SELECT id FROM managed_subcontractor_sponsors WHERE sponsor_vendor_id=$1 AND managed_organization_id IN (SELECT managed_organization_id FROM managed_subcontractor_worker_sponsorships WHERE worker_user_id=ANY($2::integer[])) ORDER BY id FOR SHARE", [session.vendorId, users]);
   await client.query("SELECT id FROM vendor_people WHERE user_id=ANY($1::integer[]) ORDER BY id FOR UPDATE", [users]);
   for (const table of ["vendor_person_operational_roles", "vendor_person_site_access"]) {
     await client.query(`SELECT id FROM ${table} WHERE vendor_people_id IN (SELECT id FROM vendor_people WHERE user_id=ANY($1::integer[])) ORDER BY id FOR SHARE`, [users]);

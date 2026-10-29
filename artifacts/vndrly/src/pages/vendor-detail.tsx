@@ -1,3 +1,9 @@
+import StaffProfileDialog, { type StaffProfilePerson } from "@/components/staff-profile-dialog";
+import type { StaffType } from "@/lib/staff-profile";
+import { WORKFORCE_GROUPS, workforceCategories, workforceDisplayRoles } from "@/lib/vendor-workforce-groups";
+import VendorOperatingArea from "@/components/vendor-operating-area";
+import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
+import "./vendor-profile.css";
 import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -14,10 +20,7 @@ import {
   useGetVendor,
   useUpdateVendor,
   useListVendorContacts,
-  useCreateVendorContact,
   useDeleteVendorContact,
-  useUpdateVendorContact,
-  useUpdateFieldEmployee,
   useDeleteFieldEmployee,
   useListVendorNotes,
   useCreateVendorNote,
@@ -51,11 +54,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, ArrowDown, ArrowUp, Check, FileText, ImageIcon, Pencil, Plus, ShoppingCart, Star, Trash2, Upload, UserCheck, Users, X } from "lucide-react";
 import StarRating from "@/components/star-rating";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { BrandedCheckbox as Checkbox } from "@/components/branded-checkbox";
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
-import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
-import { pillBaker } from "@/lib/pill-palette-assets";
+import { PngPillButton } from "@/components/png-pill-rollover";
+
 import { useBrand } from "@/hooks/use-brand";
 import GreyButton from "@/components/grey-button";
 import BrandPillButton from "@/components/brand-pill-button";
@@ -68,27 +71,18 @@ import EmployeePortalLoginFields from "@/components/employee-portal-login-fields
 import { useAuth } from "@/hooks/use-auth";
 import OrgMembersCard from "@/components/org-members-card";
 import VendorPartnerRelationshipsCard from "@/components/vendor-partner-relationships-card";
-import VendorManagedSubcontractorsCard from "@/components/vendor-managed-subcontractors-card";
+import ManagedSubcontractorEmployeesCard from "@/components/managed-subcontractor-employees-card";
 import { useQuery } from "@tanstack/react-query";
-import { hotlistApi } from "@/lib/hotlist-api";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { PlatformEulaModal } from "@/components/platform-eula-modal";
 import { canManageVendorSubcontractors, canViewVendorOfficeEmployees } from "@/lib/vendor-detail-visibility";
 
-const WORKFORCE_ROLES = ["Field Worker", "Driver", "Visitor Notifications"] as const;
-
-function WorkforceRoleChecks({ roles, onChange, prefix }: { roles: string[]; onChange: (roles: string[]) => void; prefix: string }) {
-  const { t } = useTranslation();
-  return <div className="flex flex-wrap gap-4">
-    {WORKFORCE_ROLES.map((role) => <div key={role} className="flex items-center gap-2">
-      <Checkbox id={`${prefix}-${role}`} checked={roles.includes(role)} onCheckedChange={(checked) => onChange(checked ? Array.from(new Set([...roles, role])) : roles.filter((item) => item !== role))} />
-      <Label htmlFor={`${prefix}-${role}`} className="cursor-pointer">{role === "Visitor Notifications" ? t("vendors.visitorNotifications") : role}</Label>
-    </div>)}
-  </div>;
-}
-
 export default function VendorDetail({ id }: { id: number }) {
+  const [staffOpen, setStaffOpen] = useState(false);
+  const [staffTarget, setStaffTarget] = useState<StaffProfilePerson | null>(null);
+  const [staffDefaultType, setStaffDefaultType] = useState<StaffType>("Office Staff");
+  const addStaff = (type: StaffType) => { setStaffTarget(null); setStaffDefaultType(type); setStaffOpen(true); };
   const brand = useBrand();
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
@@ -107,13 +101,26 @@ export default function VendorDetail({ id }: { id: number }) {
   const { eligibleForemen: employees } =
     useEligibleVendorFieldEmployeesByVendorId(id, canEditVendor);
   const { data: contacts } = useListVendorContacts(id, undefined, { query: { enabled: !!id && canViewOfficeEmployees, queryKey: getListVendorContactsQueryKey(id) } });
+  const { data: companyOperations, isError: operationsError } = useQuery({
+    queryKey: ["company-operations", id], enabled: !!id && canEditVendor,
+    queryFn: async (): Promise<{ categories: string[] }> => {
+      const response = await fetch(`/api/company-operations?vendorId=${id}`, { credentials: "include" });
+      if (!response.ok) throw new Error("Unable to load company operations");
+      return response.json();
+    },
+  });
+  const { data: workforceAccess } = useQuery({
+    queryKey: ["vendor-people-access", id], enabled: !!id && canEditVendor, retry: false,
+    queryFn: async (): Promise<{ people: { vendorPeopleId: number; operationalRoles: string[] }[] }> => {
+      const response = await fetch(`/api/vendors/${id}/people-access`, { credentials: "include" });
+      if (!response.ok) throw new Error("Unable to load employee duties");
+      return response.json();
+    },
+  });
   const { data: notes } = useListVendorNotes(id, { query: { enabled: !!id && (authUser?.role === "admin" || authUser?.role === "partner" || isOwnVendor), queryKey: [...getListVendorNotesQueryKey(id), authUser?.role, authUser?.partnerId, authUser?.vendorId] } });
   const updateVendor = useUpdateVendor();
   const removeVendor = useDeleteVendor();
-  const createContact = useCreateVendorContact();
   const deleteContact = useDeleteVendorContact();
-  const updateContact = useUpdateVendorContact();
-  const updateEmployee = useUpdateFieldEmployee();
   const deleteEmployee = useDeleteFieldEmployee();
   const createNote = useCreateVendorNote();
   const deleteNote = useDeleteVendorNote();
@@ -122,38 +129,18 @@ export default function VendorDetail({ id }: { id: number }) {
   const [, navigate] = useLocation();
   const [editOpen, setEditOpen] = useState(false);
   const [platformEulaOpen, setPlatformEulaOpen] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [editContactOpen, setEditContactOpen] = useState(false);
-  const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
-  const [editingContactId, setEditingContactId] = useState<number | null>(null);
-  const [editingEmployeeId, setEditingEmployeeId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ name: "", contactName: "", contactEmail: "", contactPhone: "", physicalAddress: "", billingAddress: "", stateTaxId: "", federalTaxId: "", businessPhone: "", hoursOfOperation: "", blurb: "", brandPrimaryColor: "", brandAccentColor: "" });
-  const [contactForm, setContactForm] = useState({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "office" as string, pecCertification: false, pecExpirationDate: "", roles: [] as string[] });
-  const [editContactForm, setEditContactForm] = useState({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "office" as string, pecCertification: false, pecExpirationDate: "", photoUrl: null as string | null, roles: [] as string[] });
-  const [editEmployeeForm, setEditEmployeeForm] = useState({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", pecCertification: false, pecExpirationDate: "", vendorRole: "field" as string, photoUrl: null as string | null, roles: [] as string[] });
   const initialEditFormRef = useRef<typeof editForm | null>(null);
-  const initialEditContactFormRef = useRef<typeof editContactForm | null>(null);
-  const initialEditEmployeeFormRef = useRef<typeof editEmployeeForm | null>(null);
   const editFormDirty = useMemo(() => !!initialEditFormRef.current && JSON.stringify(editForm) !== JSON.stringify(initialEditFormRef.current), [editForm]);
-  const editContactDirty = useMemo(() => !!initialEditContactFormRef.current && JSON.stringify(editContactForm) !== JSON.stringify(initialEditContactFormRef.current), [editContactForm]);
-  const editEmployeeDirty = useMemo(() => !!initialEditEmployeeFormRef.current && JSON.stringify(editEmployeeForm) !== JSON.stringify(initialEditEmployeeFormRef.current), [editEmployeeForm]);
-  const anyDirty = (editOpen && editFormDirty) || (editContactOpen && editContactDirty) || (editEmployeeOpen && editEmployeeDirty);
+  const anyDirty = editOpen && editFormDirty;
   useUnsavedChanges(anyDirty);
   const tryCloseEdit = (open: boolean) => {
     if (!open && editFormDirty && !window.confirm("You have unsaved changes. Discard them?")) return;
     if (!open) initialEditFormRef.current = null;
     setEditOpen(open);
   };
-  const tryCloseEditContact = (open: boolean) => {
-    if (!open && editContactDirty && !window.confirm("You have unsaved changes. Discard them?")) return;
-    if (!open) { initialEditContactFormRef.current = null; setEditingContactId(null); }
-    setEditContactOpen(open);
-  };
-  const tryCloseEditEmployee = (open: boolean) => {
-    if (!open && editEmployeeDirty && !window.confirm("You have unsaved changes. Discard them?")) return;
-    if (!open) { initialEditEmployeeFormRef.current = null; setEditingEmployeeId(null); }
-    setEditEmployeeOpen(open);
-  };
+
+
 
   // Duplicate-name guard for the rename flow. Mirrors the create-path
   // logic in vendors.tsx and the partner rename flow in
@@ -410,25 +397,32 @@ export default function VendorDetail({ id }: { id: number }) {
     return 0;
   };
 
-  const sortedContacts = contacts ? [...contacts].sort((a, b) => {
+  const officeContacts = (contacts ?? []).filter(person => {
+    const access = workforceAccess?.people.find(row => row.vendorPeopleId === person.id)?.operationalRoles;
+    return access?.length ? access.includes("office") || person.vendorRole === "admin" : ["admin", "office", "both"].includes(person.vendorRole ?? "office");
+  });
+  const sortedContacts = [...officeContacts].sort((a, b) => {
     const dir = contactSort.dir === "asc" ? 1 : -1;
     const k = contactSort.key;
     if (k === "vendorRole") return dir * (a.vendorRole || "office").localeCompare(b.vendorRole || "office");
     const av = (a as any)[k] || "";
     const bv = (b as any)[k] || "";
     return dir * String(av).localeCompare(String(bv));
-  }) : [];
+  });
 
-  const sortedEmployees = employees ? [...employees].sort((a, b) => {
-    const dir = empSort.dir === "asc" ? 1 : -1;
-    const k = empSort.key;
-    if (k === "name") return dir * `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
-    if (k === "vendorRole") return dir * (a.vendorRole || "field").localeCompare(b.vendorRole || "field");
-    if (k === "pecStatus") return dir * (getPecSortValue(a.pecExpirationDate) - getPecSortValue(b.pecExpirationDate));
-    const av = (a as any)[k] || "";
-    const bv = (b as any)[k] || "";
-    return dir * String(av).localeCompare(String(bv));
-  }) : [];
+  const workforcePeople = [...new Map([
+    ...(contacts ?? []).map(person => ({ ...person, vendorRole: person.vendorRole ?? "office", pecCertification: person.pecCertification ?? false, source: "contact" as const })),
+    ...(employees ?? []).map(person => ({ ...person, vendorRole: person.vendorRole ?? "field", source: "employee" as const })),
+  ].map(person => [person.id, person])).values()];
+  const workforceCards = WORKFORCE_GROUPS.filter(group => companyOperations?.categories.includes(group.category)).map(group => ({
+    ...group,
+    people: workforcePeople.filter(person => workforceCategories(person, workforceAccess?.people.find(row => row.vendorPeopleId === person.id)?.operationalRoles).includes(group.category)).sort((a, b) => {
+      const dir = empSort.dir === "asc" ? 1 : -1;
+      if (empSort.key === "name") return dir * `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      if (empSort.key === "pecStatus") return dir * (getPecSortValue(a.pecExpirationDate ?? null) - getPecSortValue(b.pecExpirationDate ?? null));
+      return dir * String(a[empSort.key] ?? "").localeCompare(String(b[empSort.key] ?? ""));
+    }),
+  }));
 
   const openEditDialog = () => {
     if (vendor) {
@@ -494,65 +488,13 @@ export default function VendorDetail({ id }: { id: number }) {
     );
   };
 
-  const handleAddContact = (e: React.FormEvent) => {
-    e.preventDefault();
-    createContact.mutate(
-      { vendorId: id, data: { ...contactForm, phone: stripPhone(contactForm.phone) || null, jobTitle: contactForm.jobTitle || "", pecExpirationDate: contactForm.pecExpirationDate || null } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListVendorContactsQueryKey(id) });
-          queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey({ vendorId: id }) });
-          setContactOpen(false);
-          setContactForm({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "office", pecCertification: false, pecExpirationDate: "", roles: [] });
-          const role = contactForm.vendorRole;
-          const label = role === "field" || role === "foreman" ? t("vendors.fieldEmployeeAddedToast") : t("vendors.employeeAddedToast");
-          toast({ title: label });
-        },
-        onError: (err) => {
-          toast({ title: translateApiError(err, t, t("vendors.addEmployeeFailed")), variant: "destructive" });
-        },
-      },
-    );
-  };
+
 
   const openEditContactDialog = (contact: { id: number; jobTitle: string | null; firstName: string; lastName: string; email: string; phone: string | null; vendorRole?: string; pecCertification?: boolean; pecExpirationDate?: string | null; photoUrl?: string | null; roles?: string[] | null }) => {
-    setEditingContactId(contact.id);
-    const hydrated = {
-      jobTitle: contact.jobTitle ?? "",
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      email: contact.email,
-      phone: contact.phone ? formatPhone(contact.phone) : "",
-      vendorRole: contact.vendorRole || "office",
-      pecCertification: contact.pecCertification ?? false,
-      pecExpirationDate: contact.pecExpirationDate ?? "",
-      photoUrl: contact.photoUrl ?? null,
-      roles: contact.roles ?? [],
-    };
-    setEditContactForm(hydrated);
-    initialEditContactFormRef.current = hydrated;
-    setEditContactOpen(true);
+    setStaffTarget(contact); setStaffOpen(true);
   };
 
-  const handleEditContact = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingContactId) return;
-    updateContact.mutate(
-      { vendorId: id, contactId: editingContactId, data: { ...editContactForm, phone: stripPhone(editContactForm.phone) || null, pecExpirationDate: editContactForm.pecExpirationDate || null } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListVendorContactsQueryKey(id) });
-          initialEditContactFormRef.current = editContactForm;
-          setEditContactOpen(false);
-          setEditingContactId(null);
-          toast({ title: t("vendors.contactUpdatedToast") });
-        },
-        onError: (err) => {
-          toast({ title: translateApiError(err, t, t("vendors.updateContactFailed")), variant: "destructive" });
-        },
-      },
-    );
-  };
+
 
   const handleDeleteContact = (contactId: number) => {
     deleteContact.mutate(
@@ -568,43 +510,10 @@ export default function VendorDetail({ id }: { id: number }) {
   };
 
   const openEditEmployeeDialog = (emp: { id: number; jobTitle?: string | null; firstName: string; lastName: string; email: string; phone: string | null; pecCertification: boolean; pecExpirationDate: string | null; vendorRole?: string | null; photoUrl?: string | null; roles?: string[] | null }) => {
-    setEditingEmployeeId(emp.id);
-    const hydrated = {
-      jobTitle: emp.jobTitle || "",
-      firstName: emp.firstName,
-      lastName: emp.lastName,
-      email: emp.email,
-      phone: emp.phone ? formatPhone(emp.phone) : "",
-      pecCertification: emp.pecCertification,
-      pecExpirationDate: emp.pecExpirationDate || "",
-      vendorRole: emp.vendorRole || "field",
-      photoUrl: emp.photoUrl ?? null,
-      roles: emp.roles ?? [],
-    };
-    setEditEmployeeForm(hydrated);
-    initialEditEmployeeFormRef.current = hydrated;
-    setEditEmployeeOpen(true);
+    setStaffTarget(emp); setStaffOpen(true);
   };
 
-  const handleEditEmployee = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingEmployeeId) return;
-    updateEmployee.mutate(
-      { id: editingEmployeeId, data: { ...editEmployeeForm, jobTitle: editEmployeeForm.jobTitle || null, phone: stripPhone(editEmployeeForm.phone) || null, pecExpirationDate: editEmployeeForm.pecExpirationDate || null } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey({ vendorId: id }) });
-          initialEditEmployeeFormRef.current = editEmployeeForm;
-          setEditEmployeeOpen(false);
-          setEditingEmployeeId(null);
-          toast({ title: t("vendors.employeeUpdatedToast") });
-        },
-        onError: (err) => {
-          toast({ title: translateApiError(err, t, t("vendors.updateEmployeeFailed")), variant: "destructive" });
-        },
-      },
-    );
-  };
+
 
   const handleDeleteEmployee = (employeeId: number) => {
     deleteEmployee.mutate(
@@ -670,7 +579,7 @@ export default function VendorDetail({ id }: { id: number }) {
   if (!vendor) return <p className="text-muted-foreground">Vendor not found</p>;
 
   return (
-    <div className="space-y-6" data-testid="vendor-detail-page">
+    <div className="vendor-profile-page space-y-6" data-testid="vendor-detail-page">
       <SquareLogoCropDialog
         file={pendingSquareLogoFile}
         onConfirm={async (cropped) => {
@@ -697,16 +606,8 @@ export default function VendorDetail({ id }: { id: number }) {
         <div className="ml-auto">
           {canEditVendor && (
           <Dialog open={editOpen} onOpenChange={tryCloseEdit}>
-            <DialogTrigger asChild>
-              <PngPillButton color="brand" onClick={openEditDialog} className="px-2" data-testid="button-edit-vendor"><Pencil className="w-4 h-4" />{t("common.edit")}</PngPillButton>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
-              <DialogLogoHeader
-                src={vendor?.logoUrl}
-                alt={vendor ? `${vendor.name} logo` : undefined}
-                data-testid="img-edit-vendor-logo"
-              />
-              <DialogHeader><DialogTitle>{t("vendors.editVendor")}</DialogTitle></DialogHeader>
+
+            <VendorEditFlyout title={t("vendors.editVendor")} logoSrc={vendor.logoSquareUrl || vendor.logoUrl || undefined} logoAlt={`${vendor.name} logo`} onClose={() => tryCloseEdit(false)}>
               <form onSubmit={handleEdit} className="space-y-4">
                 <CompanyOperationsChoice vendorId={id} />
 <div>
@@ -814,18 +715,13 @@ export default function VendorDetail({ id }: { id: number }) {
                         <p className="text-xs text-muted-foreground mb-2">PNG, JPG, SVG, or animated GIF. Used in your portal sidebar and on tickets.</p>
                         <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} data-testid="input-logo-file" />
                         <div className="flex gap-2 flex-wrap">
-                          {/* Logo actions converted to TogglePill family per
-                              user UI doctrine: blue = non-destructive
-                              primary in dialog (Upload/Replace), red =
-                              destructive (Remove). Pulses to colored state
-                              on hover to match the rest of the pill chrome. */}
-                          <PngPillButton type="button" color="brand" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
+                          <button className="vendor-mini-card-button" type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
                             <Upload className="w-4 h-4" />{uploadingLogo ? "Uploading..." : vendor.logoUrl ? "Replace Logo" : "Upload Logo"}
-                          </PngPillButton>
+                          </button>
                           {vendor.logoUrl && (
-                            <PngPillButton type="button" color="red" onClick={handleRemoveLogo} data-testid="button-remove-logo">
+                            <button className="vendor-mini-card-button" type="button" onClick={handleRemoveLogo} data-testid="button-remove-logo">
                               <Trash2 className="w-4 h-4" />Remove
-                            </PngPillButton>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -846,7 +742,7 @@ export default function VendorDetail({ id }: { id: number }) {
                       <div className="flex-1">
                         <div className="text-sm font-medium mb-1">Square Logo (1:1)</div>
                         <p className="text-xs text-muted-foreground mb-2">
-                          PNG, JPG, SVG, or animated GIF, ideally a 1:1 square mark/icon. Animated GIFs display proportionally without cropping. Shown at 64×64 in the navigation sidebar. Optional — if you don't upload one, the main logo will be used.
+                          PNG, JPG, SVG, or GIF, max 512x512, ideally a 1:1 square image. . Shown at 64×64 in the navigation sidebar.
                         </p>
                         <input
                           ref={squareLogoInputRef}
@@ -857,9 +753,8 @@ export default function VendorDetail({ id }: { id: number }) {
                           data-testid="input-square-logo-file"
                         />
                         <div className="flex gap-2 flex-wrap">
-                          <PngPillButton
+                          <button className="vendor-mini-card-button"
                             type="button"
-                            color="brand"
                             onClick={() => squareLogoInputRef.current?.click()}
                             disabled={uploadingSquareLogo}
                             data-testid="button-upload-square-logo"
@@ -870,11 +765,11 @@ export default function VendorDetail({ id }: { id: number }) {
                               : vendor.logoSquareUrl
                                 ? "Replace Square Logo"
                                 : "Upload Square Logo"}
-                          </PngPillButton>
+                          </button>
                           {vendor.logoSquareUrl && (
-                            <PngPillButton type="button" color="red" onClick={handleRemoveSquareLogo} data-testid="button-remove-square-logo">
+                            <button className="vendor-mini-card-button" type="button" onClick={handleRemoveSquareLogo} data-testid="button-remove-square-logo">
                               <Trash2 className="w-4 h-4" />Remove
-                            </PngPillButton>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -925,41 +820,24 @@ export default function VendorDetail({ id }: { id: number }) {
                     </div>
                   </div>
                 </div>
-                <PngPillButton
+                <button className="vendor-mini-card-button"
                   type="submit"
-                  color="image"
-                  activeSrc={
-                    vendor?.name?.toLowerCase().includes("baker")
-                      ? pillBaker
-                      : brandImagePillSrc(brand.primary, brand.name)
-                  }
-                  attention={editFormDirty}
                   disabled={updateVendor.isPending || (isAdmin && editForm.name.trim().length >= 3 && (renameMatchesLoading || renameCheckedName !== editForm.name.trim())) || (isAdmin && renameMatches.length > 0 && !confirmDifferentRename)}
                   data-testid="button-submit-edit"
-                  size="sm"
                 >
                   {updateVendor.isPending ? t("common.saving") : t("common.saveChanges")}
-                </PngPillButton>
+                </button>
               </form>
-            </DialogContent>
+            </VendorEditFlyout>
           </Dialog>
           )}
         </div>
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardHeader className="vendor-profile-info-header flex flex-row items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Vendor Information</CardTitle>
-          {(isOwnVendor || authUser?.role === "admin") && (
-            <GreyButton
-              type="button"
-              data-testid="button-view-platform-eula"
-              onClick={() => setPlatformEulaOpen(true)}
-            >
-              <FileText className="w-4 h-4" />
-              {t("platformEula.viewButton")}
-            </GreyButton>
-          )}
+
         </CardHeader>
         <CardContent className="space-y-2">
           <div><span className="text-sm text-muted-foreground">Physical Address:</span> <span className="font-medium">{vendor.physicalAddress || "-"}</span></div>
@@ -974,79 +852,55 @@ export default function VendorDetail({ id }: { id: number }) {
             <div className="text-sm text-muted-foreground mb-1">About Us</div>
             <p className="text-sm whitespace-pre-wrap">{vendor.blurb || "-"}</p>
           </div>
-          <OperatingAreaEditor vendorId={id} canEdit={authUser?.role === "admin" || isOwnVendor} />
+          <div className="vendor-profile-footer-actions pt-2 border-t">
+          <VendorOperatingArea vendorId={id} canEdit={authUser?.role === "admin" || isOwnVendor} />
+          <div className="vendor-profile-info-actions">
+            {(isOwnVendor || authUser?.role === "admin") && <button type="button" className="vendor-mini-card-button" data-testid="button-view-platform-eula" onClick={() => setPlatformEulaOpen(true)}><FileText className="w-4 h-4" />{t("platformEula.viewButton")}</button>}
+            {canEditVendor && <button type="button" className="vendor-mini-card-button" data-testid="button-edit-vendor" onClick={openEditDialog}><Pencil className="w-4 h-4" />{t("common.edit")}</button>}
+          </div>
+          </div>
         </CardContent>
       </Card>
 
       <VendorRatingsCard vendorId={id} />
 
+      {/* Hide the Members card unless the viewer is a system admin or
+          has an admin-role membership in THIS vendor — mirrors the
+          backend authz so non-admin org members don't see a card that
+          would 403 on every action. */}
+      {canEditVendor && <OrgMembersCard
+        onAddStaff={() => addStaff("Office Staff")}
+        onEditStaff={(member) => {
+          const match = workforcePeople.find(person => person.email.toLowerCase() === member.username.toLowerCase());
+          if (match) { setStaffTarget(match); setStaffOpen(true); return true; }
+          const [firstName, ...rest] = member.displayName.split(" ");
+          setStaffTarget({ id: 0, vendorId: id, accountUserId: member.userId, isCompanyAdmin: member.role === "admin", firstName, lastName: rest.join(" "), email: member.username, vendorRole: member.role === "admin" ? "admin" : "office" });
+          setStaffOpen(true); return true;
+        }}
+        administrativeOnly
+        orgType="vendor"
+        orgId={id}
+        canManage={
+          authUser?.role === "admin" ||
+          (authUser?.availableMemberships ?? []).some(
+            (m) => m.orgType === "vendor" && m.orgId === id && m.role === "admin",
+          )
+        }
+        currentUserId={authUser?.userId ?? null}
+        onEditFieldMember={canEditVendor ? (m) => {
+          const emp = employees?.find((e) => e.userId === m.userId);
+          if (emp) openEditEmployeeDialog(emp);
+        } : undefined}
+      />}
+
+
       {canViewOfficeEmployees && <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Office Employees ({contacts?.length ?? 0})</CardTitle>
-          <Dialog open={contactOpen} onOpenChange={setContactOpen}>
-            {canEditVendor && (
-            <DialogTrigger asChild>
-              <PngPillButton color="brand" data-testid="button-add-contact" className="px-2" onClick={() => setContactForm((f) => ({ ...f, vendorRole: "office" }))}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
-            </DialogTrigger>
-            )}
-            <DialogContent>
-              <DialogHeader><DialogTitle>{t("vendors.addEmployeeTitle")}</DialogTitle></DialogHeader>
-              <form onSubmit={handleAddContact} className="space-y-4">
-                <div>
-                  <Label>{t("vendors.jobTitle")}</Label>
-                  <Input value={contactForm.jobTitle} onChange={(e) => setContactForm({ ...contactForm, jobTitle: e.target.value })} placeholder={t("vendors.jobTitlePlaceholderOffice")} data-testid="input-contact-job-title" />
-                </div>
-                <div>
-                  <Label>{t("vendors.role")}</Label>
-                  <Select value={contactForm.vendorRole} onValueChange={(v) => setContactForm({ ...contactForm, vendorRole: v })}>
-                    <SelectTrigger data-testid="select-contact-role"><SelectValue placeholder={t("vendors.selectRole")} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="admin" /></SelectItem>
-                      <SelectItem value="office" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="office" /></SelectItem>
-                      <SelectItem value="field" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="field" /></SelectItem>
-                      <SelectItem value="both" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="both" /></SelectItem>
-                      <SelectItem value="foreman" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="foreman" /></SelectItem>
-                      <SelectItem value="gatekeeper" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="gatekeeper" /></SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">{t("vendors.roleHelp")}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>{t("vendors.firstName")}</Label>
-                    <Input value={contactForm.firstName} onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })} required data-testid="input-new-contact-first-name" />
-                  </div>
-                  <div>
-                    <Label>{t("vendors.lastName")}</Label>
-                    <Input value={contactForm.lastName} onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })} required data-testid="input-new-contact-last-name" />
-                  </div>
-                </div>
-                <div>
-                  <Label>{t("common.email")}</Label>
-                  <Input type="email" value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} data-testid="input-new-contact-email" />
-                </div>
-                <div>
-                  <Label>{t("common.phone")}</Label>
-                  <Input value={contactForm.phone} onChange={(e) => setContactForm({ ...contactForm, phone: handlePhoneInput(e.target.value) })} data-testid="input-new-contact-phone" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox id="pec-cert-contact-add" checked={contactForm.pecCertification} onCheckedChange={(v) => setContactForm({ ...contactForm, pecCertification: !!v })} data-testid="checkbox-contact-pec-cert" />
-                  <Label htmlFor="pec-cert-contact-add" className="cursor-pointer">{t("vendors.pecCertified")}</Label>
-                </div>
-                <WorkforceRoleChecks roles={contactForm.roles} onChange={(roles) => setContactForm({ ...contactForm, roles })} prefix="contact-add-role" />
-                <div>
-                  <Label>{t("vendors.pecExpiration")}</Label>
-                  <Input type="date" value={contactForm.pecExpirationDate} onChange={(e) => setContactForm({ ...contactForm, pecExpirationDate: e.target.value })} data-testid="input-contact-pec-expiration" />
-                </div>
-                <PngPillButton color="brand" type="submit" disabled={createContact.isPending} className="w-full" data-testid="button-submit-contact">
-                  {createContact.isPending ? t("vendors.addingEmployee") : t("vendors.addEmployee")}
-                </PngPillButton>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Office Staff ({officeContacts.length})</CardTitle>
+          <button type="button" className="vendor-mini-card-button" data-testid="button-add-contact" onClick={() => addStaff("Office Staff")}><Plus className="w-4 h-4" />Add Office Staff</button>
         </CardHeader>
         <CardContent className="p-0">
-          {contacts && contacts.length > 0 ? (
+          {officeContacts.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1102,15 +956,15 @@ export default function VendorDetail({ id }: { id: number }) {
         </CardContent>
       </Card>}
 
-      {canEditVendor && <Card>
+      {canEditVendor && workforceCards.map(group => <Card key={group.category} data-testid={`workforce-card-${group.category}`}>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Field Employees ({employees?.length ?? 0})</CardTitle>
+          <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{group.title} ({group.people.length})</CardTitle>
           {canEditVendor && (
-            <PngPillButton color="brand" data-testid="button-add-employee" className="px-2" onClick={() => { setContactForm({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "field", pecCertification: false, pecExpirationDate: "", roles: [] }); setContactOpen(true); }}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
+            <button type="button" className="vendor-mini-card-button" data-testid={`button-add-${group.category}-employee`} onClick={() => addStaff(group.category === "gate" ? "Gatekeeper" : group.category === "fleet" ? "Driver" : "Field Employee")}><Plus className="w-4 h-4" />Add {group.category === "gate" ? "Gatekeeper" : group.category === "fleet" ? "Driver" : "Field Employee"}</button>
           )}
         </CardHeader>
         <CardContent className="p-0">
-          {employees && employees.length > 0 ? (
+          {group.people.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1123,14 +977,14 @@ export default function VendorDetail({ id }: { id: number }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedEmployees.map((emp) => (
-                  <TableRow key={emp.id} className={canEditVendor ? "group cursor-pointer hover:bg-muted/50" : ""} onClick={canEditVendor ? () => openEditEmployeeDialog(emp) : undefined} data-testid={`row-employee-${emp.id}`}>
+                {group.people.map((emp) => (
+                  <TableRow key={emp.id} className={canEditVendor ? "group cursor-pointer hover:bg-muted/50" : ""} onClick={canEditVendor ? () => emp.source === "contact" ? openEditContactDialog(emp) : openEditEmployeeDialog(emp) : undefined} data-testid={`row-${group.category}-employee-${emp.id}`}>
                     <TableCell className="font-medium">{emp.jobTitle || "-"}</TableCell>
                     <TableCell className="font-medium"><div className="flex items-center gap-2 text-gray-700 group-hover:text-[var(--brand-primary)] transition-colors">{emp.photoUrl ? <img src={emp.photoUrl} alt="" className="w-6 h-6 rounded-full object-cover border border-gray-200" /> : <UserCheck className="w-4 h-4" style={{ color: "var(--brand-primary)" }} />}{emp.firstName} {emp.lastName}</div></TableCell>
                     <TableCell>{emp.email}</TableCell>
                     <TableCell>{formatPhone(emp.phone)}</TableCell>
                     <TableCell>
-                      <RoleBadge role={emp.vendorRole} />
+                      <div className="flex flex-wrap gap-1">{workforceDisplayRoles(group.category, emp, workforceAccess?.people.find(row => row.vendorPeopleId === emp.id)?.operationalRoles).map(role => <RoleBadge key={role} role={role} />)}</div>
                     </TableCell>
                     <TableCell>
                       <PecStatusBadge expirationDate={emp.pecExpirationDate || null} />
@@ -1150,7 +1004,7 @@ export default function VendorDetail({ id }: { id: number }) {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteEmployee(emp.id)} data-testid={`button-delete-employee-confirm-${emp.id}`}>Remove</AlertDialogAction>
+                              <AlertDialogAction onClick={() => emp.source === "contact" ? handleDeleteContact(emp.id) : handleDeleteEmployee(emp.id)} data-testid={`button-delete-employee-confirm-${emp.id}`}>Remove</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -1161,32 +1015,15 @@ export default function VendorDetail({ id }: { id: number }) {
               </TableBody>
             </Table>
           ) : (
-            <div className="p-8 text-center text-muted-foreground"><p>No field employees yet</p></div>
+            <div className="p-8 text-center text-muted-foreground"><p>No {group.title.toLowerCase()} yet</p></div>
           )}
         </CardContent>
-      </Card>}
-      {/* Hide the Members card unless the viewer is a system admin or
-          has an admin-role membership in THIS vendor — mirrors the
-          backend authz so non-admin org members don't see a card that
-          would 403 on every action. */}
-      {canEditVendor && <OrgMembersCard
-        orgType="vendor"
-        orgId={id}
-        canManage={
-          authUser?.role === "admin" ||
-          (authUser?.availableMemberships ?? []).some(
-            (m) => m.orgType === "vendor" && m.orgId === id && m.role === "admin",
-          )
-        }
-        currentUserId={authUser?.userId ?? null}
-        onEditFieldMember={canEditVendor ? (m) => {
-          const emp = employees?.find((e) => e.userId === m.userId);
-          if (emp) openEditEmployeeDialog(emp);
-        } : undefined}
-      />}
+      </Card>)}
+      {canManageVendorSubcontractors(authUser, id) && <ManagedSubcontractorEmployeesCard vendorId={id} />}
+      {canEditVendor && operationsError && <p role="alert">Unable to load workforce cards. Please refresh the page.</p>}
 
       {canEditVendor && <VendorPartnerRelationshipsCard vendorId={id} />}
-      {canManageVendorSubcontractors(authUser, id) && <VendorManagedSubcontractorsCard vendorId={id} vendorName={vendor.name} />}
+
 
       <VendorServicesAndPricingCard vendorId={id} />
 
@@ -1238,271 +1075,15 @@ export default function VendorDetail({ id }: { id: number }) {
         </div>
       )}
 
-      <Dialog open={editContactOpen} onOpenChange={tryCloseEditContact}>
-        <DialogContent>
-          <DialogLogoHeader
-            src={vendor?.logoUrl}
-            alt={vendor ? t("vendors.logoAlt", { name: vendor.name }) : undefined}
-            data-testid="img-edit-contact-vendor-logo"
-          />
-          <DialogHeader><DialogTitle>{t("vendors.editOfficeEmployeeTitle")}</DialogTitle></DialogHeader>
-          <form onSubmit={handleEditContact} className="space-y-4">
-            <div>
-              <Label>{t("vendors.employeePhoto")}</Label>
-              <div className="mt-2"><PhotoUploadField value={editContactForm.photoUrl} onChange={(url) => setEditContactForm({ ...editContactForm, photoUrl: url })} testIdPrefix="edit-contact-photo" /></div>
-            </div>
-            <div>
-              <Label>{t("vendors.jobTitle")}</Label>
-              <Input value={editContactForm.jobTitle} onChange={(e) => setEditContactForm({ ...editContactForm, jobTitle: e.target.value })} data-testid="input-edit-contact-job-title" />
-            </div>
-            <div>
-              <Label>{t("vendors.role")}</Label>
-              <Select value={editContactForm.vendorRole} onValueChange={(v) => setEditContactForm({ ...editContactForm, vendorRole: v })}>
-                <SelectTrigger data-testid="select-edit-contact-role"><SelectValue placeholder={t("vendors.selectRole")} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="admin" /></SelectItem>
-                  <SelectItem value="office" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="office" /></SelectItem>
-                  <SelectItem value="field" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="field" /></SelectItem>
-                      <SelectItem value="both" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="both" /></SelectItem>
-                      <SelectItem value="foreman" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="foreman" /></SelectItem>
-                      <SelectItem value="gatekeeper" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="gatekeeper" /></SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>{t("vendors.firstName")}</Label>
-                <Input value={editContactForm.firstName} onChange={(e) => setEditContactForm({ ...editContactForm, firstName: e.target.value })} required data-testid="input-edit-contact-first-name" />
-              </div>
-              <div>
-                <Label>{t("vendors.lastName")}</Label>
-                <Input value={editContactForm.lastName} onChange={(e) => setEditContactForm({ ...editContactForm, lastName: e.target.value })} required data-testid="input-edit-contact-last-name" />
-              </div>
-            </div>
-            <div>
-              <Label>{t("common.email")}</Label>
-              <Input type="email" value={editContactForm.email} onChange={(e) => setEditContactForm({ ...editContactForm, email: e.target.value })} data-testid="input-edit-contact-email" />
-            </div>
-            <div>
-              <Label>{t("common.phone")}</Label>
-              <Input value={editContactForm.phone} onChange={(e) => setEditContactForm({ ...editContactForm, phone: handlePhoneInput(e.target.value) })} data-testid="input-edit-contact-phone" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox id="pec-cert-contact-edit" checked={editContactForm.pecCertification} onCheckedChange={(v) => setEditContactForm({ ...editContactForm, pecCertification: !!v })} data-testid="checkbox-edit-contact-pec-cert" />
-              <Label htmlFor="pec-cert-contact-edit" className="cursor-pointer">{t("vendors.pecCertified")}</Label>
-            </div>
-              <WorkforceRoleChecks roles={editContactForm.roles} onChange={(roles) => setEditContactForm({ ...editContactForm, roles })} prefix="contact-edit-role" />
-            <div>
-              <Label>{t("vendors.pecExpiration")}</Label>
-              <Input type="date" value={editContactForm.pecExpirationDate} onChange={(e) => setEditContactForm({ ...editContactForm, pecExpirationDate: e.target.value })} data-testid="input-edit-contact-pec-expiration" />
-            </div>
-            {editingContactId ? (
-              <EmployeePortalLoginFields
-                employeeId={editingContactId}
-                defaultEmail={editContactForm.email}
-                vendorRole={editContactForm.vendorRole}
-                variant="inline"
-                testIdPrefix="edit-contact-login"
-                onSaved={() => {
-                  queryClient.invalidateQueries({ queryKey: getListVendorContactsQueryKey(id) });
-                }}
-              />
-            ) : null}
-            <PngPillButton color="brand" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
-              {updateContact.isPending ? t("common.saving") : t("common.saveChanges")}
-            </PngPillButton>
-          </form>
-        </DialogContent>
-      </Dialog>
 
-      <Dialog open={editEmployeeOpen} onOpenChange={tryCloseEditEmployee}>
-        <DialogContent>
-          <DialogLogoHeader
-            src={vendor?.logoUrl}
-            alt={vendor ? t("vendors.logoAlt", { name: vendor.name }) : undefined}
-            data-testid="img-edit-employee-vendor-logo"
-          />
-          <DialogHeader><DialogTitle>{t("vendors.editFieldEmployeeTitle")}</DialogTitle></DialogHeader>
-          <form onSubmit={handleEditEmployee} className="space-y-4">
-            <div>
-              <Label>{t("vendors.employeePhoto")}</Label>
-              <div className="mt-2"><PhotoUploadField value={editEmployeeForm.photoUrl} onChange={(url) => setEditEmployeeForm({ ...editEmployeeForm, photoUrl: url })} testIdPrefix="edit-employee-photo" /></div>
-            </div>
-            <div>
-              <Label>{t("vendors.jobTitle")}</Label>
-              <Input value={editEmployeeForm.jobTitle} onChange={(e) => setEditEmployeeForm({ ...editEmployeeForm, jobTitle: e.target.value })} data-testid="input-edit-job-title" placeholder={t("vendors.jobTitlePlaceholderField")} />
-            </div>
-            <div>
-              <Label>{t("vendors.role")}</Label>
-              <Select value={editEmployeeForm.vendorRole} onValueChange={(v) => setEditEmployeeForm({ ...editEmployeeForm, vendorRole: v })}>
-                <SelectTrigger data-testid="select-edit-employee-role"><SelectValue placeholder={t("vendors.selectRole")} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="admin" /></SelectItem>
-                      <SelectItem value="office" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="office" /></SelectItem>
-                      <SelectItem value="field" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="field" /></SelectItem>
-                      <SelectItem value="both" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="both" /></SelectItem>
-                      <SelectItem value="foreman" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="foreman" /></SelectItem>
-                      <SelectItem value="gatekeeper" className="focus:bg-transparent data-[highlighted]:bg-transparent"><RoleBadge role="gatekeeper" /></SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>{t("vendors.firstName")}</Label>
-                <Input value={editEmployeeForm.firstName} onChange={(e) => setEditEmployeeForm({ ...editEmployeeForm, firstName: e.target.value })} data-testid="input-edit-first-name" required />
-              </div>
-              <div>
-                <Label>{t("vendors.lastName")}</Label>
-                <Input value={editEmployeeForm.lastName} onChange={(e) => setEditEmployeeForm({ ...editEmployeeForm, lastName: e.target.value })} data-testid="input-edit-last-name" required />
-              </div>
-            </div>
-            <div>
-              <Label>{t("common.email")}</Label>
-              <Input type="email" value={editEmployeeForm.email} onChange={(e) => setEditEmployeeForm({ ...editEmployeeForm, email: e.target.value })} data-testid="input-edit-email" required />
-            </div>
-            <div>
-              <Label>{t("common.phone")}</Label>
-              <Input value={editEmployeeForm.phone} onChange={(e) => setEditEmployeeForm({ ...editEmployeeForm, phone: handlePhoneInput(e.target.value) })} data-testid="input-edit-phone" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label>{t("vendors.pecCertification")}</Label>
-              <PecStatusBadge expirationDate={editEmployeeForm.pecExpirationDate || null} />
-            </div>
-            <div>
-              <Label>{t("vendors.expirationDate")}</Label>
-              <Input type="date" value={editEmployeeForm.pecExpirationDate} onChange={(e) => setEditEmployeeForm({ ...editEmployeeForm, pecExpirationDate: e.target.value })} data-testid="input-edit-pec-expiration" />
-            </div>
-              <WorkforceRoleChecks roles={editEmployeeForm.roles} onChange={(roles) => setEditEmployeeForm({ ...editEmployeeForm, roles })} prefix="employee-edit-role" />
-            {editingEmployeeId ? (
-              <EmployeePortalLoginFields
-                employeeId={editingEmployeeId}
-                defaultEmail={editEmployeeForm.email}
-                vendorRole={editEmployeeForm.vendorRole}
-                variant="inline"
-                testIdPrefix="edit-employee-login"
-                onSaved={() => {
-                  queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey({ vendorId: id }) });
-                }}
-              />
-            ) : null}
-            <PngPillButton type="submit" color="brand" className="w-full px-2" disabled={updateEmployee.isPending} attention={editEmployeeDirty} data-testid="button-submit-edit-employee">
-              {updateEmployee.isPending ? t("common.saving") : t("common.saveChanges")}
-            </PngPillButton>
-          </form>
-        </DialogContent>
-      </Dialog>
 
+
+
+      <StaffProfileDialog open={staffOpen} onOpenChange={setStaffOpen} vendorId={id} person={staffTarget} defaultType={staffDefaultType} canVerify={authUser?.role === "admin" || (authUser?.availableMemberships ?? []).some(m => m.orgType === "vendor" && m.orgId === id && m.role === "admin")} />
       <PlatformEulaModal open={platformEulaOpen} onOpenChange={setPlatformEulaOpen} />
     </div>
   );
 }
-
-function OperatingAreaEditor({ vendorId, canEdit }: { vendorId: number; canEdit: boolean }) {
-  const { t } = useTranslation();
-  const qc = useQueryClient();
-  const { toast } = useToast();
-  const areaQueryKey = ["hotlist", "operating-area", vendorId];
-  const { data: v } = useQuery({ queryKey: areaQueryKey, queryFn: () => hotlistApi.getOperatingArea(vendorId), enabled: !!vendorId });
-  const [editing, setEditing] = useState(false);
-  const [radius, setRadius] = useState<string>("");
-  const [refresh, setRefresh] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const start = () => {
-    setRadius(v?.operatingRadiusMiles != null ? String(v.operatingRadiusMiles) : "");
-    setRefresh(false);
-    setEditing(true);
-  };
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      const result = await hotlistApi.setOperatingArea(vendorId, {
-        operatingRadiusMiles: radius === "" ? null : parseInt(radius),
-        refreshGeocode: refresh,
-      });
-      qc.invalidateQueries({ queryKey: areaQueryKey });
-      qc.invalidateQueries({ queryKey: ["hotlist", "list"] });
-      if (result.geocodeWarning) {
-        toast({
-          title: "Saved, but address could not be geocoded",
-          description: result.geocodeWarning,
-          variant: "destructive",
-        });
-      } else if (result.geocodeUsedQuery) {
-        toast({
-          title: "Operating area saved",
-          description: `Exact street address not found; geocoded using "${result.geocodeUsedQuery}" instead.`,
-        });
-      } else {
-        toast({ title: "Operating area saved" });
-      }
-      setEditing(false);
-    } catch (e: unknown) {
-      toast({
-        title: translateApiError(e, t, t("errors.vendor.operating_area_save_failed")),
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const hasGeo = v?.latitude != null && v?.longitude != null;
-  return (
-    <div className="pt-2 border-t" data-testid="operating-area-section">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-sm text-muted-foreground">Operating Radius:</div>
-          <div className="font-medium" data-testid="text-operating-radius">
-            {v?.operatingRadiusMiles != null ? `${v.operatingRadiusMiles} miles` : "Not set"}
-            {!hasGeo && v?.operatingRadiusMiles != null && (
-              <span className="ml-2 text-xs text-amber-600">(address could not be geocoded — try editing the physical address to "City, ST ZIP" format)</span>
-            )}
-            {hasGeo && (
-              <span className="ml-2 text-xs text-muted-foreground">· geocoded {v.geocodedAt ? new Date(v.geocodedAt).toLocaleDateString() : ""}</span>
-            )}
-          </div>
-        </div>
-        {canEdit && !editing && (
-          <PngPillButton color="brand" onClick={start} className="px-2" data-testid="button-edit-operating-area"><Pencil className="w-3 h-3" />Change Radius</PngPillButton>
-        )}
-      </div>
-      {editing && (
-        <div className="mt-3 space-y-3">
-          <div>
-            <Label>Radius (miles)</Label>
-            <Input type="number" min="0" max="5000" value={radius} onChange={(e) => setRadius(e.target.value)} placeholder="e.g. 100" data-testid="input-operating-radius" />
-            <p className="text-xs text-muted-foreground mt-1">Hotlist jobs whose location is within this distance of your physical address will appear on your dashboard.</p>
-          </div>
-          {hasGeo && (
-            <div className="flex items-center gap-2">
-              <Checkbox id="refresh-geo" checked={refresh} onCheckedChange={(c) => setRefresh(!!c)} />
-              <Label htmlFor="refresh-geo" className="cursor-pointer text-sm">Re-geocode from current physical address</Label>
-            </div>
-          )}
-          {/* Save / Cancel converted to TogglePill family per user
-              spec — both 24px tall. Save uses canonical blue (the
-              "Edit / non-destructive primary in dialogs" doctrine);
-              Cancel is explicitly red per user request (overrides
-              the usual grey-cancel convention for this surface). */}
-          <div className="flex gap-2">
-            <PngPillButton color="brand" onClick={save} disabled={saving} data-testid="button-save-operating-area">
-              <Check className="h-4 w-4" />
-              {saving ? "Saving..." : "Save"}
-            </PngPillButton>
-            <div className="w-3" />
-            <PngPillButton color="red" onClick={() => setEditing(false)} data-testid="button-cancel-operating-area">
-              <X className="h-4 w-4" />
-              Cancel
-            </PngPillButton>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 
 function VendorRatingsCard({ vendorId }: { vendorId: number }) {
   const { user: authUser } = useAuth();
@@ -1629,7 +1210,9 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
           </div>
         )}
 
-        <div className="space-y-3">
+        <details className="vendor-reviews-list" data-testid="vendor-reviews-list">
+          <summary><span>Reviews</span><span>{count}</span></summary>
+          <div className="space-y-3 pt-3">
           {data?.items && data.items.length > 0 ? (
             data.items.map((r) => (
               <div key={r.id} className="border-t pt-3" data-testid={`rating-item-${r.id}`}>
@@ -1645,7 +1228,8 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
           ) : (
             <p className="text-sm text-muted-foreground">No reviews yet.</p>
           )}
-        </div>
+          </div>
+        </details>
       </CardContent>
     </Card>
   );

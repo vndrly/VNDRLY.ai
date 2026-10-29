@@ -10,11 +10,11 @@ export type EmployeeOperationalRole =
   | "gate_supervisor";
 
 const ROLE_OPTIONS: Array<{ value: EmployeeOperationalRole; label: string }> = [
-  { value: "office", label: "Office" },
-  { value: "field_employee", label: "Field Employee" },
-  { value: "foreman", label: "Foreman" },
-  { value: "gatekeeper", label: "Gatekeeper" },
-  { value: "gate_supervisor", label: "Gate Supervisor" },
+  { value: "office", label: "Office tools" },
+  { value: "field_employee", label: "Field work" },
+  { value: "foreman", label: "Foreman actions" },
+  { value: "gatekeeper", label: "Gate actions" },
+  { value: "gate_supervisor", label: "Gate supervision" },
 ];
 
 export default function EmployeeAccessEditor({
@@ -49,9 +49,9 @@ export default function EmployeeAccessEditor({
   return (
     <div className="space-y-4" data-testid="employee-access-editor">
       <div>
-        <Label>Access roles</Label>
+        <Label>Operational permissions</Label>
         <p className="mb-2 text-xs text-muted-foreground">
-          Select every role this employee may perform.
+          Permissions control which operations this person can perform. Site access still applies.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {ROLE_OPTIONS.map((role) => (

@@ -98,7 +98,15 @@ router.get("/work-hub/site-shift-plans/:siteId/schedule", async (req,res) => {
       AND EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=p.user_id AND m.org_type='vendor' AND m.vendor_id=$1)
       AND EXISTS(SELECT 1 FROM vendor_person_site_access a WHERE a.vendor_people_id=p.id AND a.site_location_id=$2 AND a.is_active=true)
       AND (EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id AND r.is_active=true AND r.role IN ('gatekeeper','gate_supervisor'))
-        OR (NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id) AND p.vendor_role IN ('gatekeeper','gate_supervisor'))) ORDER BY name`,[owner.id,siteId]);
+        OR (NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id) AND p.vendor_role IN ('gatekeeper','gate_supervisor')))
+      UNION
+      SELECT DISTINCT u.id AS id,concat(u.display_name,' · ',o.name) AS name
+      FROM managed_subcontractor_worker_sponsorships w JOIN users u ON u.id=w.worker_user_id
+      JOIN managed_subcontractor_organizations o ON o.id=w.managed_organization_id
+      JOIN managed_subcontractor_sponsors sponsor ON sponsor.managed_organization_id=o.id AND sponsor.sponsor_vendor_id=w.sponsor_vendor_id AND sponsor.status='active'
+      WHERE w.sponsor_vendor_id=$1 AND w.status='active' AND u.suspended_at IS NULL
+      AND EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=u.id AND m.org_type='vendor' AND m.vendor_id=$1)
+      AND EXISTS(SELECT 1 FROM managed_subcontractor_role_grants g WHERE g.sponsorship_id=w.id AND g.site_id=$2 AND g.status='active' AND g.role IN ('gatekeeper','gate_supervisor')) ORDER BY name`,[owner.id,siteId]);
     const scheduled = await pool.query(`SELECT s.id,s.version,s.title,s.starts_at AS "startsAt",s.ends_at AS "endsAt",s.timezone,
       to_char(s.starts_at AT TIME ZONE s.timezone,'YYYY-MM-DD') AS date, extract(dow FROM s.starts_at AT TIME ZONE s.timezone)::int AS weekday,
       to_char(s.starts_at AT TIME ZONE s.timezone,'HH24:MI') AS starts,to_char(s.ends_at AT TIME ZONE s.timezone,'HH24:MI') AS ends,

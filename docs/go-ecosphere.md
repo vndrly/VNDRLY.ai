@@ -203,3 +203,22 @@ Behaviours worth reviewing as product questions, not data bugs:
 - **Fleet billing access:** FleetGo's billing clerk (office membership, no fleet grant) gets `fleet.finance_required` on the fleet ticket plan. Only fleet managers with `financeRead`, or vendor admins, can read it.
 - **Gate supervisor screens:** a gate supervisor who is a field employee gets `visit.no_access` on `/visits/gate/enabled` and `/visits/gate/ops` (office-only). Booth, roster and change-over screens work.
 - **Work Hub switch:** the platform-wide `work_hub_enabled` setting has to be on for any Work Hub screen to load.
+
+## Refresh an existing CompanyGo demo (30 + 7)
+
+Use `scripts/go-ecosphere/refresh-30plus7.ts` for the existing GasGo/FieldGo/FleetGo/GateGo ecosystem. Do not rerun the one-shot provisioner over an occupied database.
+
+```powershell
+$env:VNDRLY_LOAD_ENV_LOCAL='1'
+pnpm --filter @workspace/scripts exec tsx go-ecosphere/refresh-30plus7.ts
+# After inspecting the rollback-only report:
+pnpm --filter @workspace/scripts exec tsx go-ecosphere/refresh-30plus7.ts --apply
+```
+
+The window is the current Central calendar day plus its preceding 29 days, followed by seven planned days. `GO_DEMO_NOW` can freeze the window for reproducibility. Civil time handles the November DST boundary. The runner verifies the approved database and exact demo identities, serializes its transaction, snapshots affected records under `.local`, checks credentials and relationship invariants, and rolls back unless `--apply` is supplied. Reports are `.local/companygo-refresh-dry-run.json` and `.local/companygo-refresh-applied.json`.
+
+The refresh preserves accounts, grants, existing scheduled assignments and saved records. It fills missing calendar/service dates, enriches the stable Fleet fixture labels, updates StaffGO's five fictional contacts, adds company coordination messages/meetings/tasks and a relief roster, and flags unverified manual gate entries for review. Identifiable stale fictional work sessions receive a review closeout rather than remaining on the clock indefinitely. The known four-minute synthetic late-relief overlap is corrected and marked for extended-duty review; its scheduled assignment stays intact.
+
+Future work remains planned. The runner does not send invitations, email, SMS or calls; issue credentials; enroll or certify contractors; grant location consent; fabricate GPS/inspection/delivery proof; or represent actual payment. Older Fleet billing fixtures without physical events stay without physical-event claims. Real-world delivery and background location behavior still require device/provider testing.
+
+Run calendar boundary tests with `node --test scripts/go-ecosphere/calendar-time.test.mjs`.

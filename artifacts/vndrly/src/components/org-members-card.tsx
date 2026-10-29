@@ -62,6 +62,7 @@ import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { formatPhone } from "@/lib/utils";
 import { KeyRound, Plus, Trash2, UserCheck } from "lucide-react";
+import { isAdministrativeMembership } from "@/lib/vendor-workforce-groups";
 
 // API_BASE matches the convention used elsewhere in the app
 // (partner-detail, etc) — strip the trailing slash off Vite's
@@ -88,6 +89,10 @@ interface MemberRow {
 }
 
 interface OrgMembersCardProps {
+  /** Vendor profiles show operational personnel in their workforce cards. */
+  administrativeOnly?: boolean;
+  onAddStaff?: () => void;
+  onEditStaff?: (member: MemberRow) => boolean;
   /**
    * Optional callback fired when a field-employee row's display name
    * is clicked. When provided, the field-employee displayName cell
@@ -123,6 +128,9 @@ export default function OrgMembersCard({
   canManage,
   currentUserId,
   onEditFieldMember,
+  administrativeOnly = false,
+  onAddStaff,
+  onEditStaff,
 }: OrgMembersCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -243,7 +251,7 @@ export default function OrgMembersCard({
   const removeMutation = useRemoveOrgMember({
     mutation: {
       onSuccess: () => {
-        toast({ title: "Member removed" });
+        toast({ title: "Staff removed" });
         void queryClient.invalidateQueries({
           queryKey: getListOrgMembersQueryKey(orgType, orgId),
         });
@@ -268,7 +276,7 @@ export default function OrgMembersCard({
 
   if (!canManage) return null;
 
-  const members = data?.members ?? [];
+  const members = (data?.members ?? []).filter(member => !administrativeOnly || isAdministrativeMembership(member));
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -296,7 +304,7 @@ export default function OrgMembersCard({
           <UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
           Administrative Team Members ({members.length})
         </CardTitle>
-        <PngPillButton
+        {onAddStaff ? <button type="button" className="vendor-mini-card-button" data-testid={`button-add-${orgType}-member`} onClick={onAddStaff}><Plus className="w-4 h-4" />Add Staff</button> : (        <PngPillButton
           color="brand"
 
           onClick={() => setAddOpen(true)}
@@ -304,12 +312,12 @@ export default function OrgMembersCard({
           data-testid={`button-add-${orgType}-member`}
         >
           <Plus className="w-4 h-4" />
-          Add Team Member
-        </PngPillButton>
+          Add Staff
+        </PngPillButton>)}
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Team Member</DialogTitle>
+              <DialogTitle>Add Staff</DialogTitle>
               <DialogDescription>
                 Attach an existing login to this {orgType} or create a new
                 one. The new login can sign in immediately with the password
@@ -383,7 +391,7 @@ export default function OrgMembersCard({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="member">Office Staff</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     {orgType === "partner" && (
                       <SelectItem value="ap" data-testid="select-partner-member-role-ap">
@@ -463,7 +471,7 @@ export default function OrgMembersCard({
                   disabled={addMutation.isPending}
                   data-testid={`button-submit-${orgType}-member`}
                 >
-                  {addMutation.isPending ? "Saving…" : "Add Team Member"}
+                  {addMutation.isPending ? "Saving…" : "Add Staff"}
                 </PngPillButton>
               </div>
             </form>
@@ -473,11 +481,11 @@ export default function OrgMembersCard({
       <CardContent className="p-0">
         {isLoading ? (
           <div className="p-6 text-center text-muted-foreground text-sm">
-            Loading members…
+            Loading staff…
           </div>
         ) : members.length === 0 ? (
           <div className="p-6 text-center text-muted-foreground text-sm">
-            No members attached yet.
+            No staff accounts yet.
           </div>
         ) : (
           <Table>
@@ -563,12 +571,13 @@ export default function OrgMembersCard({
                           >
                             {m.displayName}
                           </button>
-                        ) : isSelf || m.role === "field_employee" ? (
+                        ) : (isSelf && !onEditStaff) || m.role === "field_employee" ? (
                           <span>{m.displayName}</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => {
+                              if (onEditStaff?.(m)) return;
                               setEditTarget(m);
                               setEditTempPassword("");
                               setResetPasswordError(null);
@@ -627,7 +636,7 @@ export default function OrgMembersCard({
                       ) : (
                         // Editable role: render the same RoleBadge as
                         // the read-only branch but wrap it in a button
-                        // that opens the Edit Team Member modal — the
+                        // that opens the Edit Staff modal — the
                         // role Select lives there now (matches the
                         // Edit Field Employee modal in vendor-detail
                         // where the role dropdown is also modal-only,
@@ -635,6 +644,7 @@ export default function OrgMembersCard({
                         <button
                           type="button"
                           onClick={() => {
+                            if (onEditStaff?.(m)) return;
                             setEditTarget(m);
                             setEditTempPassword("");
                             setResetPasswordError(null);
@@ -713,7 +723,7 @@ export default function OrgMembersCard({
           </Table>
         )}
       </CardContent>
-      {/* Edit Team Member modal — opens when an admin clicks a
+      {/* Edit Staff modal — opens when an admin clicks a
           teammate's display name in the table. Lets the admin swap
           the member's role (same patchMutation as the inline Select)
           and reset their password (admin-types a temporary password
@@ -738,7 +748,7 @@ export default function OrgMembersCard({
           data-testid={`dialog-edit-${orgType}-member`}
         >
           <DialogHeader>
-            <DialogTitle>Edit Team Member</DialogTitle>
+            <DialogTitle>Edit Staff</DialogTitle>
             <DialogDescription>
               Change this teammate&apos;s role or send them a temporary
               password.

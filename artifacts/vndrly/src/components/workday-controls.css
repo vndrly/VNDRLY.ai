@@ -43,3 +43,5 @@ button.workday-status-text { font-weight: 700 !important; }
   .shift-card .workday-status-switch { min-width: 0; font-size: 14px; line-height: 1.2; }
   .shift-card-on-call small { font-size: 10px; }
 }
+
+.askv-pane-brand-toggle .workday-status-switch.is-active .workday-switch-track { background: var(--brand-primary); }

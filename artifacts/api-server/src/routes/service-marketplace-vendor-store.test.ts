@@ -490,3 +490,23 @@ describe("marketplace persisted vendor boundaries", () => {
     },
   );
 });
+
+
+describe("device-selected operating radius center", () => {
+  it("stores opted-in device coordinates without claiming address verification", async () => {
+    const response = await request(app).patch("/api/hotlist/vendors/3/operating-area").set("Cookie", admin).send({operatingRadiusMiles:125.5,currentLocation:{latitude:32.2,longitude:-101.8}});
+    expect(response.status).toBe(200);
+    expect(state.vendor).toMatchObject({operatingRadiusMiles:125.5,latitude:32.2,longitude:-101.8,geocodedAt:null,physicalAddress:"Oklahoma City, OK 73102"});
+  });
+  it.each([{latitude:91,longitude:0},{latitude:0,longitude:-181},{latitude:"32",longitude:-102},null])("rejects invalid device coordinates without writing", async currentLocation => {
+    const before={...state.vendor};
+    const response=await request(app).patch("/api/hotlist/vendors/3/operating-area").set("Cookie",admin).send({operatingRadiusMiles:100,currentLocation});
+    expect(response.status).toBe(400);expect(state.vendor).toEqual(before);
+  });
+  it("keeps operating-area edits limited to the owner or administrator",async()=>{
+    const before={...state.vendor};
+    const cookie=buildTestCookie({userId:9,role:"vendor",vendorId:4,exp:Math.floor(Date.now()/1000)+3600});
+    const response=await request(app).patch("/api/hotlist/vendors/3/operating-area").set("Cookie",cookie).send({operatingRadiusMiles:100,currentLocation:{latitude:32,longitude:-102}});
+    expect(response.status).toBe(403);expect(state.vendor).toEqual(before);
+  });
+});

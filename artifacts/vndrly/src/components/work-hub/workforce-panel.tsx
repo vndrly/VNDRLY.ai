@@ -13,7 +13,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { WorkspacePanel, WorkspaceRow } from "./workspace-panel";
 import "./workforce-panel.css";
 
-type Employee = WorkforceRoster["employees"][number];
+type Employee = Omit<WorkforceRoster["employees"][number], "vendorPeopleId"> & { vendorPeopleId: number | null };
 type Gap = { id: string; shiftId: string; shiftTitle?: string; startsAt: string; endsAt?: string; assignedCount: number; requiredCount: number; state: string };
 type Copy = (en: string, es: string) => string;
 type OfferCommand = { shiftId: string; expectedVersion: number; workerUserId: number } | { shiftId: string; offerId: string; expectedVersion: number; decision: "accepted" | "declined" };

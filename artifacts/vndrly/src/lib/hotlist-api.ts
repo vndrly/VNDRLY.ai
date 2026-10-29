@@ -190,7 +190,7 @@ export const hotlistApi = {
       `/api/hotlist/jobs/${hotlistJobId}/convert`,
       { method: "POST", body: JSON.stringify(body) },
     ),
-  setOperatingArea: (vendorId: number, body: { operatingRadiusMiles: number | null; refreshGeocode?: boolean }) =>
+  setOperatingArea: (vendorId: number, body: { operatingRadiusMiles: number | null; refreshGeocode?: boolean; currentLocation?: { latitude: number; longitude: number } }) =>
     jsonFetch<{ id: number; operatingRadiusMiles: number | null; latitude: number | null; longitude: number | null; geocodedAt: string | null; geocodeWarning?: string | null; geocodeUsedQuery?: string | null }>(
       `/api/hotlist/vendors/${vendorId}/operating-area`,
       { method: "PATCH", body: JSON.stringify(body) },

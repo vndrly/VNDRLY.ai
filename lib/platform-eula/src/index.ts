@@ -1,9 +1,9 @@
 /** VNDRLY Platform End User License Agreement (web + iOS). Counsel review recommended. */
-export const PLATFORM_EULA_VERSION = "2026-06-05";
+export const PLATFORM_EULA_VERSION = "2026-10-29";
 
 export const PLATFORM_EULA_TITLE = "VNDRLY Platform End User License Agreement";
 
-export const PLATFORM_EULA_LAST_UPDATED = "June 5, 2026";
+export const PLATFORM_EULA_LAST_UPDATED = "October 29, 2026";
 
 export const PLATFORM_EULA_PRIVACY_URL = "https://vndrly.ai/legal/privacy";
 
@@ -121,7 +121,13 @@ Odometer readings, hourly/day rates, parts, and labor lines may be captured for 
 7.5 Safety
 Field Employees and Foremen must follow site-specific safety rules, Partner requirements, and applicable law. Visitor and guest flows may require explicit safety acknowledgements; those acknowledgements do not replace your Organization's safety program.
 
-8. Location Data & Background Tracking (Mobile)
+7.6 Gate, Fleet, and Work Hub records
+
+Enabled services may include gate admission and departure records, watch assignments, shift notes and handoffs, task hoppers, fleet dispatch and vehicle records, and Work Hub schedules, files, messages, and collaboration. Availability and permitted actions depend on your Organization's configuration and your access rights. Administrators are responsible for reviewing permissions and removing access when it is no longer appropriate.
+
+Recorded counts, acknowledgements, presence, vehicle positions, and workflow statuses reflect available reports and may be delayed, incomplete, or corrected. They are not independent proof of physical presence, fitness for duty, payment, employment status, or site clearance. Your Organization remains responsible for approving access and resolving outstanding operational issues. Do not use communications or tracking as a substitute for emergency procedures.
+
+8. Location Data & Background Tracking
 
 The mobile app may request foreground and background location permission to:
 
@@ -131,7 +137,9 @@ The mobile app may request foreground and background location permission to:
 
 By enabling location sharing and using field features, you consent to collection and use of location data as described in our Privacy Policy (${PLATFORM_EULA_PRIVACY_URL}). Location sharing may be controlled through in-app consent settings and can be revoked, though some features may not work without location.
 
-Location pings during active jobs may include latitude, longitude, speed, battery level, and timestamps. Retention periods are described in the Privacy Policy; UI copy references approximately 30 days for certain ping data.
+Location reports may include latitude, longitude, speed, battery level, and timestamps. Enabled tracking may support active jobs, gate watches, on-call availability, and other authorized duties, subject to device permissions and available sharing controls. Your Organization is responsible for lawful workforce monitoring and required notices and consents. Turning off one duty state does not necessarily end a separate active tracking session. Device restrictions, connectivity, and permissions may interrupt reporting; continuous tracking is not guaranteed. A displayed location may be last reported rather than current. Check its timestamp before relying on it.
+
+Retention and deletion are governed by the Privacy Policy, applicable law, and any applicable written customer agreement. A reporting or map-history window is not a promise that all underlying records are deleted when that window ends.
 
 VNDRLY may use location data to provide the Service, improve reliability, investigate disputes, and support audit/compliance features—not for unrelated advertising.
 
@@ -142,15 +150,15 @@ The app may request access to:
 
 - Camera — QR scanning, site photos
 - Photo library — attach images to tickets
-- Microphone — push-to-talk (PTT) voice messages on active jobs
+- Microphone — enabled voice messages, calls, transcription, and assistant voice interactions
 - Location — as described in Section 8
 - Face ID / Touch ID — optional convenience login that unlocks credentials stored locally on your device; VNDRLY does not receive biometric templates
 - Push notifications — job assignments, mentions, schedule reminders, alerts
 
 You may deny permissions; features depending on them may be unavailable.
 
-9.2 Push-to-talk audio
-Voice clips recorded through PTT are uploaded and attached to ticket communication threads. They may be stored in VNDRLY object storage and visible to authorized job participants. Do not transmit confidential, legally privileged, or unlawful content. You are responsible for obtaining any consents required to record crew communications under applicable law.
+9.2 Audio and communications
+Enabled communications may process audio, messages, and transcripts to deliver the selected feature. Voice clips recorded through PTT may be uploaded and attached to ticket communication threads. Stored communications may be visible to authorized participants and administrators under the applicable access rules. You are responsible for having authority to share the content and for obtaining notices and consents required to record or transcribe communications. Calls and messages may fail or be delayed and are not an emergency service.
 
 9.3 App updates
 We may deliver updates via the App Store and/or over-the-air (Expo Updates) for bug fixes and features. Continued use after updates constitutes acceptance of the updated app as part of the Service.
@@ -162,7 +170,11 @@ You acknowledge:
 - Apple has no warranty or support obligation for the app
 - Apple is not responsible for product claims, IP infringement claims, or regulatory compliance related to the app
 - Apple and its subsidiaries are third-party beneficiaries of this Agreement and may enforce it against you
-- You must comply with applicable App Store terms
+- VNDRLY, not Apple, is responsible for required maintenance and support and for applicable warranties not lawfully disclaimed
+- If the app fails to conform to an applicable warranty, you may notify Apple for a refund of its purchase price, if any. To the extent permitted by law, Apple has no further warranty obligation, and remaining warranty-related claims are VNDRLY's responsibility
+- VNDRLY, not Apple, is responsible for addressing product liability, consumer protection, and regulatory claims concerning the app, and for investigation, defense, settlement, and discharge of third-party intellectual property claims concerning the app
+- You must comply with applicable Apple usage rules and third-party agreements, including your wireless service agreement. Permitted Family Sharing and volume-purchase use remain subject to Apple's applicable rules
+- Nothing in this Agreement excludes rights or remedies that cannot lawfully be excluded
 
 10. Hotlist, Bidding & Payments
 
@@ -197,7 +209,9 @@ Hosts are responsible for authorizing visitors, enforcing site access rules, and
 
 13. AI Assistant ("askV")
 
-The Service may include an AI assistant that answers questions using data visible to your Organization within the Service.
+The Service may include AskV, an AI assistant that answers questions, generates summaries, and, where enabled and authorized, performs actions using connected tools. Access depends on the signed-in user's permissions and authorized Organization context. Review proposed actions and confirmations carefully. Instructions to the assistant do not grant rights you do not otherwise hold.
+
+Prompts, attachments, voice inputs, retrieved records, and responses may be processed by service providers to deliver these features as described in the Privacy Policy. Do not submit information you are not authorized to share. AI-generated material may omit context or misstate records; verify the underlying source. Assistant features and integrations are not guaranteed to complete an action, deliver a communication, or contact emergency personnel.
 
 AI output may be inaccurate or incomplete. It is not legal, safety, engineering, medical, or financial advice. Verify critical decisions through official records, qualified personnel, and your Organization's policies. Do not rely on AI output for emergency actions.
 
@@ -227,13 +241,21 @@ We strive for reliable operation but do not guarantee uninterrupted or error-fre
 
 Beta or TestFlight builds may contain bugs; you accept heightened risk when using pre-release builds.
 
+18.1 Commercial terms
+
+Pricing, subscription duration, renewal, cancellation, and any refund rights are governed by the applicable order form, subscription offer, written customer agreement, or app-store purchase terms. This Agreement does not create a new subscription, automatic-renewal arrangement, or payment obligation by itself. Mandatory rights under applicable law remain unaffected.
+
+18.2 Changes to this Agreement
+
+Material changes will be communicated through the Service or the account contact information before they take effect, except where an earlier change is required by law or an urgent security issue. The revised version and effective date will be identified. Where affirmative acceptance is required, we will request it. Changes do not retroactively alter accrued rights. If you disagree, stop using the affected Service and follow the applicable cancellation terms.
+
 19. Suspension & Termination
 
 We may suspend or terminate access if you breach this Agreement, pose a security risk, or if required by law. You may stop using the Service at any time.
 
 Upon termination, your license ends. Provisions that by nature should survive (confidentiality, disclaimers, liability limits, dispute resolution) survive.
 
-Export or retrieval of data after termination may be available for a limited period per our data retention policy or separate agreement.
+Before closing an account, use available export tools or contact support regarding retrieval of Organization records. Post-termination access, retention, and deletion are subject to the Privacy Policy, applicable legal obligations, and any written customer agreement; this Agreement does not promise an unspecified recovery period. Records shared with another authorized Organization may remain in its records, subject to applicable law.
 
 20. Disclaimers
 
@@ -264,7 +286,7 @@ This Agreement is governed by the laws of the State of Texas, excluding conflict
 
 24. Export & Sanctions
 
-You may not use the Service in violation of U.S. export laws or sanctions programs. You represent you are not barred from receiving U.S. services.
+You may not use the Service in violation of U.S. export laws or sanctions programs. You represent that you are not located in a country subject to a U.S. government embargo or designated as supporting terrorism, are not on a U.S. government prohibited or restricted-party list, and are not otherwise barred from receiving the Service.
 
 25. General
 

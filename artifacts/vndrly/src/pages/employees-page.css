@@ -1,0 +1,13 @@
+/* Same content-pane colors as Gate Mode and Vendor Profile. */
+main:has(.employees-page), .dark main:has(.employees-page) { background: #3a3d42 !important; color: #ececec; }
+.employees-page { max-width: 1280px; margin-inline: auto; color: #ececec; }
+.employees-page [data-slot="card"], .employees-page div.bg-white { background-color: #242426; color: #ececec; }
+.employees-page [data-slot="card"] { border-radius: 14px; }
+.employees-page h1, .employees-page h2, .employees-page h3, .employees-page [data-slot="card-title"] { color: #ececec; }
+.employees-page .text-muted-foreground, .employees-page th { color: #b3b3b3; }
+.employees-page thead, .employees-page tbody tr:hover { background-color: #303034; }
+.employees-page tr, .employees-page div.border-t, .employees-page hr { border-color: #3a3a3a; }
+.employees-page [data-testid^="button-edit-field-"], .employees-page [data-testid^="button-edit-office-"] { color: #ececec; }
+.employees-page [data-testid^="button-edit-field-"]:hover, .employees-page [data-testid^="button-edit-office-"]:hover { color: var(--brand-primary); }
+.employees-page input:not([type="checkbox"]):not([type="radio"]), .employees-page textarea, .employees-page [data-testid="select-status-filter"] { background-color: #303034; color: #ececec; }
+.employees-page input::placeholder, .employees-page textarea::placeholder { color: #b3b3b3; }

@@ -168,7 +168,8 @@ const RoleSitesSchema = z
   .strict();
 const WorkerSchema = RoleSitesSchema.extend({
   name: z.string().trim().min(1).max(160),
-  email: z.email().max(320),
+  email: z.email().max(320).optional(),
+  sendInvitation: z.boolean().optional(),
 });
 const base = "/vendors/:vendorId/managed-subcontractors";
 router.get(base, async (req, res) => {

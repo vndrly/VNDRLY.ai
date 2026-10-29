@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, notInArray, isNull, sql, inArray } from "drizzle-orm";
+import { eq, and, or, notInArray, isNull, sql, inArray } from "drizzle-orm";
 import crypto from "crypto";
 import { z } from "zod/v4";
 import {
@@ -93,6 +93,36 @@ const VendorPersonAccessParams = z.object({
 const VendorPersonAccessBody = z.object({
   operationalRoles: z.array(z.string()).max(5),
   siteLocationIds: z.array(z.number().int().positive()).max(500),
+});
+
+// A company login may predate its staff profile. Link it on explicit Save,
+// retaining the existing membership and credentials. The membership lock
+// makes repeated submissions reuse one person instead of creating duplicates.
+router.post("/vendors/:vendorId/staff-profile-from-account/:userId", async (req, res): Promise<void> => {
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: "Not authenticated" }); return; }
+  const params = z.object({ vendorId: z.coerce.number().int().positive(), userId: z.coerce.number().int().positive() }).safeParse(req.params);
+  const body = CreateVendorContactBody.safeParse(req.body);
+  if (!params.success || !body.success) { res.status(400).json({ error: "Invalid staff profile" }); return; }
+  if (!(session.role === "admin" || session.role === "vendor" && session.vendorId === params.data.vendorId && session.membershipRole === "admin")) {
+    res.status(403).json({ error: "Company administrator access required" }); return;
+  }
+  const { vendorId, userId } = params.data;
+  const result = await db.transaction(async tx => {
+    const [membership] = await tx.select().from(userOrgMembershipsTable).where(and(eq(userOrgMembershipsTable.userId, userId), eq(userOrgMembershipsTable.vendorId, vendorId), eq(userOrgMembershipsTable.orgType, "vendor"))).limit(1).for("update");
+    if (!membership) return { status: 404, error: "Account does not belong to this company" };
+    const [account] = await tx.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!account || ![account.email, account.username].some(value => value?.toLowerCase() === body.data.email.toLowerCase())) return { status: 400, error: "Use the existing account email to link this profile" };
+    const [existing] = await tx.select().from(vendorContactsTable).where(and(eq(vendorContactsTable.vendorId, vendorId), or(eq(vendorContactsTable.userId, userId), sql`LOWER(${vendorContactsTable.email}) = LOWER(${body.data.email})`))).limit(1);
+    if (existing?.deletedAt) return { status: 409, error: "Restore the existing staff profile before linking this account" };
+    if (existing?.userId && existing.userId !== userId) return { status: 409, error: "This staff email belongs to another account" };
+    const person = existing ?? (await tx.insert(vendorContactsTable).values({ ...body.data, vendorId, userId, vendorRole: membership.role === "admin" ? "admin" : "office" }).returning())[0];
+    if (existing && existing.userId == null) await tx.update(vendorContactsTable).set({ userId }).where(and(eq(vendorContactsTable.id, person.id), eq(vendorContactsTable.vendorId, vendorId), isNull(vendorContactsTable.userId)));
+    await tx.update(userOrgMembershipsTable).set({ vendorPeopleId: person.id }).where(eq(userOrgMembershipsTable.id, membership.id));
+    return { status: 200, person };
+  });
+  if (result.error) { res.status(result.status).json({ error: result.error }); return; }
+  res.status(result.status).json(result.person);
 });
 
 function noteOwner(session: Session) {

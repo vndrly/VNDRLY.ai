@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import {
   db,
   managedSubcontractorClaimsTable,
@@ -504,7 +505,8 @@ export async function createManagedWorker(
   organizationId: string,
   input: {
     name: string;
-    email: string;
+    email?: string;
+    sendInvitation?: boolean;
     role: "gatekeeper" | "gate_supervisor";
     siteIds: number[];
   },
@@ -514,12 +516,13 @@ export async function createManagedWorker(
   const issued = await issueAccountInvitation(
     actor,
     {
-      email: input.email,
+      email: input.email || `contractor-${randomUUID()}@unenrolled.invalid`,
       displayName: input.name,
       managedOrganizationId: organizationId,
       authorizationVersion: "work-participation-2026-09",
     },
     { role: input.role, siteIds: [...new Set(input.siteIds)] },
+    input.sendInvitation === false ? "manual" : "email",
   );
   const result = await listManagedOrganizations(actor);
   const worker = result.items

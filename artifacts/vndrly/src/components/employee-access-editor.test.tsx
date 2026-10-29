@@ -21,7 +21,7 @@ describe("EmployeeAccessEditor", () => {
         onChange={onChange}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Gate Supervisor" }));
+    fireEvent.click(screen.getByRole("button", { name: "Gate supervision" }));
     expect(onChange).toHaveBeenCalledWith({
       operationalRoles: ["office", "gatekeeper", "gate_supervisor"],
       siteLocationIds: [22],

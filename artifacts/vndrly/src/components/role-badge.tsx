@@ -10,17 +10,21 @@ const roleConfig: Record<
   { labelKey: string; fallback: string; color: ImagePillColor; isRest?: boolean }
 > = {
   admin: { labelKey: "roles.admin", fallback: "Admin", color: "amber" },
-  office: { labelKey: "roles.office", fallback: "Office", color: "blue" },
+  office: { labelKey: "roles.officeStaff", fallback: "Office Staff", color: "blue" },
   field: { labelKey: "roles.field", fallback: "Field", color: "grey", isRest: true },
   both: { labelKey: "roles.both", fallback: "Both", color: "green" },
   foreman: { labelKey: "roles.foreman", fallback: "Foreman", color: "amber" },
+  gate_supervisor: { labelKey: "roles.gateSupervisor", fallback: "Gate Supervisor", color: "blue" },
+  gate: { labelKey: "roles.gate", fallback: "Gate", color: "blue" },
+  dispatch: { labelKey: "roles.dispatch", fallback: "Dispatch", color: "blue" },
+  driver: { labelKey: "roles.driver", fallback: "Driver", color: "blue" },
   gatekeeper: { labelKey: "roles.gatekeeper", fallback: "Gatekeeper", color: "blue" },
   // Org-membership roles (Administrative Team Members card) mapped onto
   // the same PNG palette so the role column reads consistently across
   // every surface — see Employees page for the canonical treatment.
-  member: { labelKey: "roles.member", fallback: "Member", color: "blue" },
+  member: { labelKey: "roles.officeStaff", fallback: "Office Staff", color: "blue" },
   ap: { labelKey: "roles.ap", fallback: "Accounts Payable", color: "green" },
-  field_employee: { labelKey: "roles.field", fallback: "Field", color: "grey", isRest: true },
+  field_employee: { labelKey: "roles.fieldEmployee", fallback: "Field Employee", color: "grey", isRest: true },
 };
 
 interface RoleBadgeProps {

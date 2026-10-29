@@ -136,7 +136,10 @@ router.patch("/hotlist/vendors/:id/operating-area", async (req, res) => {
   if (session.role !== "admin" && !(session.role === "vendor" && session.vendorId === id)) {
     return sendApiError(res, 403, "auth.forbidden", "Forbidden");
   }
-  const { operatingRadiusMiles, refreshGeocode } = req.body ?? {};
+  const { operatingRadiusMiles, refreshGeocode, currentLocation } = req.body ?? {};
+  if (currentLocation !== undefined && (!currentLocation || typeof currentLocation.latitude !== "number" || !Number.isFinite(currentLocation.latitude) || Math.abs(currentLocation.latitude) > 90 || typeof currentLocation.longitude !== "number" || !Number.isFinite(currentLocation.longitude) || Math.abs(currentLocation.longitude) > 180)) {
+    return sendApiError(res, 400, "hotlist.invalid_location", "Invalid current location");
+  }
   const radius = operatingRadiusMiles == null ? null : Number(operatingRadiusMiles);
   if (radius != null && (!Number.isFinite(radius) || radius < 0 || radius > 5000)) {
     return sendApiError(res, 400, "hotlist.invalid_radius", "Invalid radius");
@@ -148,7 +151,12 @@ router.patch("/hotlist/vendors/:id/operating-area", async (req, res) => {
   const updates: any = { operatingRadiusMiles: radius };
   let geocodeWarning: string | null = null;
   let geocodeUsedQuery: string | null = null;
-  if (refreshGeocode || vendor.latitude == null || vendor.longitude == null) {
+  if (currentLocation) {
+    updates.latitude = currentLocation.latitude;
+    updates.longitude = currentLocation.longitude;
+    // A device-selected operating center is not a verified geocode of the physical address.
+    updates.geocodedAt = null;
+  } else if (refreshGeocode || vendor.latitude == null || vendor.longitude == null) {
     if (vendor.physicalAddress) {
       const geo = await geocode(vendor.physicalAddress);
       if (geo) {

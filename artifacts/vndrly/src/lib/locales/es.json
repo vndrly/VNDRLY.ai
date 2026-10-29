@@ -394,7 +394,13 @@
     "field": "Campo",
     "both": "Ambos",
     "foreman": "Capataz",
-    "gatekeeper": "Portero"
+    "gatekeeper": "Portero",
+    "gateSupervisor": "Supervisor de acceso",
+    "gate": "Acceso",
+    "dispatch": "Despacho",
+    "driver": "Conductor",
+    "fieldEmployee": "Empleado de campo",
+    "officeStaff": "Personal de oficina"
   },
   "common": {
     "saveChanges": "Guardar Cambios",
@@ -436,7 +442,7 @@
     "partners": "Socios",
     "partner": "Socio",
     "vendors": "Proveedores",
-    "vendor": "Proveedor",
+    "vendor": "Perfil del proveedor",
     "employees": "Empleados",
     "siteLocations": "Ubicaciones",
     "gateLocations": "Ubicaciones de acceso",

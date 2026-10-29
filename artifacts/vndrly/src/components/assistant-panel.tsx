@@ -1516,7 +1516,7 @@ export function AssistantLauncher({
             ? "fixed bottom-5 left-5 z-[1100] hover:scale-[1.03]"
             : "relative z-[1100]",
         )}
-        style={{ width: ASKV_LAUNCHER_WIDTH * (open ? 1.5 : 1), height: ASKV_LAUNCHER_HEIGHT * (open ? 1.5 : 1) }}
+        style={{ width: ASKV_LAUNCHER_WIDTH, height: ASKV_LAUNCHER_HEIGHT }}
         data-testid="assistant-launcher"
         aria-label={open ? "Close Ask V" : "Open Ask V"}
         aria-expanded={open}
