@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.11
+
+Matches Gate Map activity flyouts, compact staff locations, role-authorized gate administration, explicit historical gate associations, and 30-day Shift Notes with site-scoped and all-site exports. Saved shift cards retain their recorded activity totals and notes, with separate expandable activity rows and task hopper items. Existing MCP tools, embedded views, five service skills, branding, plugin identity and permission grants remain intact. Submission, approval and public availability remain separate states.
+
 # VNDRLY plugin 1.22.10
 
 Matches persistent Gate entry clearance, final-ten-minute incoming run lists, exact Gate Log record navigation, shared cross-tab notification transport and compact Work Hub home. Clearance is not physical entry; only a recorded arrival moves a visitor On Site. Existing MCP tools and embedded views use the same server projections. All five service skills, branding, existing plugin identity and permission grants remain intact. Submitted, approved and public availability remain distinct states.
