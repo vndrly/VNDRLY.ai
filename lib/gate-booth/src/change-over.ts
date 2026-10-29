@@ -28,7 +28,8 @@ export interface ChangeOverSnapshot {
   records?: (ChangeOverSnapshot["outstanding"][number] & { checkOut: string | null })[];
   metricRecordIds?: Partial<Record<keyof ChangeOverSnapshot["metrics"], string[]>>;
   exceptions: { sourceId: string; code: string; text: string }[];
-  openItems: { id: string; text: string; status: string }[];
+  openItems: { id: string; text: string; status: string; resolution?: string }[];
+  taskItems?: { id: string; text: string; status: string; resolution?: string }[];
   facts: ChangeOverFact[];
 }
 export interface ChangeOverPreparation {
@@ -69,6 +70,7 @@ export interface ShiftNote extends ChangeOverPreparation {
 export interface ShiftNotesResponse {
   rows: ShiftNote[];
   nextBefore: string | null;
+  nextBeforeId?: string | null;
   actions: {
     id: string;
     actor_name: string;

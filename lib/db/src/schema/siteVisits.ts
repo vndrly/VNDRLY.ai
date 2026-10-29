@@ -5,6 +5,15 @@ import { vendorsTable } from "./vendors";
 import { usersTable } from "./users";
 import { assetsTable } from "./assets";
 
+import { gateStationsTable } from "./gateChangeOver";
+
+export type GateAssociationProvenance = {
+  source: "user_supplied_historical_correction";
+  correctionId: string;
+  correctedAt: string;
+  instruction: string;
+};
+
 export const guestSessionsTable = pgTable(
   "guest_sessions",
   {
@@ -34,6 +43,8 @@ export const siteVisitsTable = pgTable(
   {
     id: serial("id").primaryKey(),
     siteLocationId: integer("site_location_id").notNull().references(() => siteLocationsTable.id),
+    gateStationId: uuid("gate_station_id").references(() => gateStationsTable.id),
+    gateAssociationProvenance: jsonb("gate_association_provenance").$type<GateAssociationProvenance>(),
     guestSessionId: integer("guest_session_id").references(() => guestSessionsTable.id, { onDelete: "set null" }),
 
     firstName: text("first_name").notNull(),

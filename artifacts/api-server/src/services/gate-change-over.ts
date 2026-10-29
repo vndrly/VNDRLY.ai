@@ -380,10 +380,10 @@ async function releasedWatch(client: Queryable, stationId:string) {
  * Persisted handoff JSON is never rewritten by a viewer's projection. */
 async function projectGateTaskItems(client: Queryable, value: any, vendorId?: number | null) {
   if (!value || !vendorId) return value;
-  const ids = [...new Set<string>([...(value.openItems ?? []).map((item: ShiftItem) => item.id), ...(value.facts ?? []).filter((fact: ShiftFact) => fact.id.startsWith("item:")).map((fact: ShiftFact) => fact.id.slice(5))])].filter(id => /^[0-9a-f-]{36}$/i.test(id));
+  const ids = [...new Set<string>([...(value.openItems ?? []).map((item: ShiftItem) => item.id), ...(value.taskItems ?? []).map((item: ShiftItem) => item.id), ...(value.facts ?? []).filter((fact: ShiftFact) => fact.id.startsWith("item:")).map((fact: ShiftFact) => fact.id.slice(5))])].filter(id => /^[0-9a-f-]{36}$/i.test(id));
   if (!ids.length) return value;
   const foreign = new Set((await client.query("SELECT id FROM work_hub_tasks WHERE id=ANY($1::uuid[]) AND gate_hopper IS NOT NULL AND owner_org_id<>$2", [ids, vendorId])).rows.map(row => row.id));
-  return { ...value, ...(value.openItems ? { openItems: value.openItems.filter((item: ShiftItem) => !foreign.has(item.id)) } : {}),
+  return { ...value, ...(value.taskItems ? { taskItems: value.taskItems.filter((item: ShiftItem) => !foreign.has(item.id)) } : {}), ...(value.openItems ? { openItems: value.openItems.filter((item: ShiftItem) => !foreign.has(item.id)) } : {}),
     ...(value.facts ? { facts: value.facts.filter((fact: ShiftFact) => !fact.id.startsWith("item:") || !foreign.has(fact.id.slice(5))) } : {}) };
 }
 async function projectGatePreparation(client: Queryable, preparation: any, vendorId?: number | null) {
@@ -411,6 +411,7 @@ async function snapshot(
   siteId: number,
   stationId: string,
   startedAt: Date | string,
+  gateOnly = false,
 ): Promise<ShiftSnapshot> {
   // Consistent source rows, without leaking phone/email or unrelated account data.
   const result = await client.query(
@@ -420,16 +421,19 @@ async function snapshot(
     check_in_time AS "checkIn", check_out_time AS "checkOut", admission_status AS admission,
     expected_duration_minutes AS "expectedMinutes", reconciliation_state AS reconciliation,
     concat_ws(E'\\n', notes, check_out_notes, conflict_reason) AS notes
-    FROM site_visits WHERE site_location_id=$1 AND (check_out_time IS NULL OR check_out_time >= $2 OR check_in_time >= $2)
+    FROM site_visits WHERE site_location_id=$1
+    AND ($3::text IS NULL OR coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=$3)
+    AND (check_out_time IS NULL OR check_out_time >= $2 OR check_in_time >= $2)
     UNION ALL
     SELECT 'checkin:' || c.id, 'employee', trim(p.first_name || ' ' || p.last_name), v.name, NULL,
     c.check_in_at, c.check_out_at, NULL, NULL, NULL, NULL
     FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id
     JOIN vendor_people p ON p.id=c.employee_id AND p.vendor_id=t.vendor_id
     JOIN vendors v ON v.id=t.vendor_id WHERE t.site_location_id=$1
+    AND ($3::text IS NULL OR c.gate_station_id::text=$3)
     AND (c.check_out_at IS NULL OR c.check_out_at >= $2 OR c.check_in_at >= $2)
     ORDER BY id LIMIT 25001`,
-    [siteId, startedAt],
+    [siteId, startedAt, gateOnly ? stationId : null],
   );
   if (result.rows.length > 25000)
     return fail(
@@ -508,7 +512,16 @@ export async function listChangeOverStations(
 /** Gate creation is an office capability; it does not grant watch recovery. */
 async function requireGateStationManagementAccess(client: Queryable, session: SessionPayload, siteId: number) {
   try {
-    if ((await requireChangeOverAccess(client, session, siteId)).supervisor) return;
+    const access = await requireChangeOverAccess(client, session, siteId);
+    if (access.supervisor) {
+      // Partner site visibility alone is not gate-administration authority.
+      if (session.role !== "partner") return;
+      const administrator = await client.query(
+        "SELECT id FROM user_org_memberships WHERE user_id=$1 AND partner_id=$2 AND org_type='partner' AND role='admin' AND ($3::int IS NULL OR id=$3)",
+        [session.userId, session.partnerId, session.activeMembershipId ?? null],
+      );
+      if (administrator.rowCount) return;
+    }
   } catch (error) {
     if (!(error instanceof ChangeOverError) || error.status !== 403) throw error;
   }
@@ -652,6 +665,27 @@ async function changeGateStation(session: SessionPayload, input: GateStationChan
     return result;
   });
 }
+/** Fresh, gate-attributed activity using the dashboard's snapshot definitions and window. */
+export async function readGateMapActivity(session: SessionPayload, stationId: string) {
+  return changeOverTransaction(async c => {
+    await c.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY");
+    const access = await stationAccess(c, session, stationId);
+    const shift = await activeShift(c, stationId);
+    const released = !shift ? await releasedWatch(c, stationId) : null;
+    const startedAt = shift?.started_at ?? released?.started_at ?? new Date(Date.now() - 86400000);
+    const current = await snapshot(c, access.station.site_id, stationId, startedAt, true);
+    return {
+      stationId: access.station.id, gateName: access.station.name,
+      siteId: access.site.id, siteName: access.site.name,
+      scope: "gate_attributed" as const, generatedAt: current.generatedAt,
+      startedAt: new Date(startedAt).toISOString(),
+      window: shift ? "current_shift" as const : released ? "released_watch" as const : "24h" as const,
+      metrics: { checkIns: current.metrics.checkIns, checkOuts: current.metrics.checkOuts,
+        pendingAdmission: current.metrics.pendingAdmission, itemsToReview: current.exceptions.length },
+    };
+  });
+}
+
 export async function getChangeOverState(
   session: SessionPayload,
   stationId: string,
@@ -1221,7 +1255,7 @@ export async function assumeGateWatch(session: SessionPayload, input: {
 
 export async function getShiftNotes(
   session: SessionPayload,
-  input: { stationId: string; days?: number; before?: string; search?: string; limit?: number; handoffId?: string },
+  input: { stationId: string; days?: number; before?: string; beforeId?: string; search?: string; limit?: number; handoffId?: string },
 ) {
   const access = await stationAccess(pool, session, input.stationId);
   const days = input.days ?? 7;
@@ -1243,11 +1277,11 @@ export async function getShiftNotes(
       (SELECT min(a.created_at) FROM gate_shift_actions a WHERE a.station_id=s.station_id
        AND a.item_id=h.id AND a.actor_id=$5 AND a.kind='note_viewed') AS viewed_at
     FROM gate_handovers h JOIN gate_preparations p ON p.id=h.preparation_id JOIN gate_shifts s ON s.id=p.shift_id
-    WHERE s.station_id=$1 AND h.acknowledged_at >= $2 AND h.acknowledged_at < $3
+    WHERE s.station_id=$1 AND h.acknowledged_at >= $2 AND (h.acknowledged_at < $3 OR ($8::uuid IS NOT NULL AND h.acknowledged_at=$3 AND h.id<$8))
     AND ($6::uuid IS NULL OR h.id=$6)
     AND position(lower($4) in lower(p.notes || ' ' || p.snapshot::text || ' ' || h.outgoing_name || ' ' || h.incoming_name)) > 0
     ORDER BY ${input.limit !== undefined ? "p.created_at" : "h.acknowledged_at"} DESC, h.id DESC LIMIT $7`,
-    [input.stationId, from, before, (input.search ?? "").slice(0, 200), session.userId, input.handoffId ?? null, limit + 1],
+    [input.stationId, from, before, (input.search ?? "").slice(0, 200), session.userId, input.handoffId ?? null, limit + 1, input.beforeId ?? null],
   );
   if (input.handoffId && !result.rows.length) return fail(404, "not_found", "Shift note not found at this gate");
   const rows = await Promise.all(result.rows.slice(0, limit).map(async row => ({ ...await projectGatePreparation(pool, row, session.vendorId), site_id: access.station.site_id })));
@@ -1263,6 +1297,7 @@ export async function getShiftNotes(
       input.limit === undefined && result.rows.length > limit
         ? new Date(rows[limit - 1].acknowledged_at).toISOString()
         : null,
+    nextBeforeId: input.limit === undefined && result.rows.length > limit ? rows[limit - 1].id : null,
     actions,
     from: from.toISOString(),
     retention: "History is retained; this date range is a display filter.",

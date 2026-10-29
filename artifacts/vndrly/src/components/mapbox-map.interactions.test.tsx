@@ -8,12 +8,15 @@ vi.mock("mapbox-gl", () => {
   class Map {
     container: HTMLElement;
     scrollZoom = { disable() {} };
-    constructor(options: any) { this.container = options.container; }
+    constructor(options: any) { this.container = options.container; Object.defineProperties(this.container, { clientWidth: { value: 280 }, clientHeight: { value: 420 } }); }
     addControl() {} on() {} once() {} remove() {} isStyleLoaded() { return false; }
+    getContainer() { return this.container; } project() { return { x: 100, y: 100 }; }
     easeTo = mock.ease;
   }
   class Popup {
     node = document.createElement("div");
+    on() { return this; } off() { return this; }
+    setDOMContent(node: HTMLElement) { this.node.append(node); return this; }
     setHTML(html: string) { this.node.innerHTML = html; return this; }
     setLngLat() { return this; }
     addTo(map: Map) { map.container.append(this.node); return this; }
@@ -45,4 +48,23 @@ it("pans to staff and shows vehicle details on hover or keyboard focus, clearing
   view.rerender(tree([]));
   await waitFor(() => expect(screen.queryByText("Driver · 45 mph")).toBeNull());
   expect(screen.queryByRole("button", { name: "Truck 24" })).toBeNull();
+});
+
+it("anchors React activity content inside the map, switches pins, and closes on outside pointer or Escape", async () => {
+  const close = vi.fn(), hover = vi.fn(), leave = vi.fn();
+  const points = [{ id: "a", title: "Gate A", latitude: 31, longitude: -102, onHover: hover, onLeave: leave }, { id: "b", title: "Gate B", latitude: 32, longitude: -103 }];
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const tree = (pointId: string, text: string) => <QueryClientProvider client={client}><MapboxMap points={points} fitToData={false} selectedPointId={pointId} panToSelectedPoint anchoredPopup={{ pointId, content: <div>{text}</div>, onClose: close }} /></QueryClientProvider>;
+  const view = render(tree("a", "Gate A activity"));
+  expect(await screen.findByText("Gate A activity")).toBeTruthy();
+  expect(mock.ease).toHaveBeenCalledWith({ center: [-102, 31], zoom: 14, offset: [0, 105] });
+  fireEvent.mouseEnter(screen.getByRole("button", { name: "Gate A" })); expect(hover).not.toHaveBeenCalled();
+  fireEvent.focus(screen.getByRole("button", { name: "Gate A" })); expect(hover).toHaveBeenCalled();
+  fireEvent.mouseLeave(screen.getByRole("button", { name: "Gate A" })); expect(leave).toHaveBeenCalled();
+  view.rerender(tree("b", "Gate B activity"));
+  expect(await screen.findByText("Gate B activity")).toBeTruthy();
+  expect(screen.queryByText("Gate A activity")).toBeNull();
+  fireEvent.pointerDown(screen.getByText("Gate B activity")); expect(close).not.toHaveBeenCalled();
+  fireEvent.pointerDown(document.body); expect(close).toHaveBeenCalledTimes(1);
+  fireEvent.keyDown(document, { key: "Escape" }); expect(close).toHaveBeenCalledTimes(2);
 });

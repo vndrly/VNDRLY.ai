@@ -146,6 +146,7 @@ export function assembleShiftSnapshot(
     outstanding,
     exceptions,
     openItems,
+    taskItems: [...items].sort((a, b) => a.id.localeCompare(b.id)),
     facts,
     coverage:
       "site-wide records across all gates; visitor and employee records can refer to the same person; vehicle count uses recorded plates only",

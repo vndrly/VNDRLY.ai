@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import type { FeatureCollection, Position } from "geojson";
 import mapboxgl, { type GeoJSONSource, type LngLatBoundsLike, type Map as MapboxMapInstance } from "mapbox-gl";
@@ -18,6 +19,8 @@ export type MapboxPoint = {
   popupOnHover?: boolean;
   popupClassName?: string;
   onClick?: () => void;
+  onHover?: () => void;
+  onLeave?: () => void;
   flashing?: boolean;
 };
 
@@ -53,6 +56,7 @@ type Props = {
   panToSelectedPoint?: boolean;
   scrollZoom?: boolean;
   onPointDrag?: (id: string, latitude: number, longitude: number) => void;
+  anchoredPopup?: { pointId: string; content: ReactNode; onClose: () => void; className?: string };
 };
 
 const EMPTY_COLLECTION: FeatureCollection = {
@@ -139,6 +143,7 @@ export function MapboxMap({
   panToSelectedPoint = false,
   scrollZoom = true,
   onPointDrag,
+  anchoredPopup,
 }: Props) {
   const configuration = useQuery({
     queryKey: ["public-map-configuration"],
@@ -153,6 +158,11 @@ export function MapboxMap({
   const clickHandlers = useRef<Map<string, () => void>>(new Map());
   const hoverPoints = useRef<Map<string, MapboxPoint>>(new Map());
   const hoverPopup = useRef<mapboxgl.Popup | null>(null);
+  const [popupNode] = useState(() => document.createElement("div"));
+  const popupClose = useRef(anchoredPopup?.onClose);
+  popupClose.current = anchoredPopup?.onClose;
+  const popupPoint = points.find(point => point.id === anchoredPopup?.pointId);
+  const popupLongitude = popupPoint?.longitude, popupLatitude = popupPoint?.latitude;
 
   const initialCenter = useMemo<[number, number]>(() => {
     if (center) return center;
@@ -272,7 +282,7 @@ export function MapboxMap({
     clickHandlers.current.clear();
     hoverPopup.current?.remove();
     hoverPopup.current = null;
-    hoverPoints.current = new Map(points.filter(point => point.popupOnHover && point.popupHtml).map(point => [point.id, point]));
+    hoverPoints.current = new Map(points.filter(point => point.onHover || point.onLeave || (point.popupOnHover && point.popupHtml)).map(point => [point.id, point]));
     for (const point of points) {
       if (!isValidLatLng(point.latitude, point.longitude)) continue;
       clickHandlers.current.set(point.id, point.onClick ?? (() => {}));
@@ -283,14 +293,15 @@ export function MapboxMap({
         el.className = "vndrly-mapbox-marker";
         el.dataset.markerId = point.id;
         el.addEventListener("click", () => clickHandlers.current.get(point.id)?.());
-        const showDetails = () => {
+        const showDetails = (event: Event) => {
           const current = hoverPoints.current.get(point.id);
+          if (event.type === "focus" || map.getContainer().clientWidth >= 560) current?.onHover?.();
           if (!current?.popupHtml) return;
           hoverPopup.current?.remove();
           hoverPopup.current = new mapboxgl.Popup({ offset: 18, closeButton: false, className: current.popupClassName })
             .setLngLat([current.longitude, current.latitude]).setHTML(current.popupHtml).addTo(map);
         };
-        const hideDetails = () => { hoverPopup.current?.remove(); hoverPopup.current = null; };
+        const hideDetails = () => { hoverPoints.current.get(point.id)?.onLeave?.(); hoverPopup.current?.remove(); hoverPopup.current = null; };
         el.addEventListener("mouseenter", showDetails);
         el.addEventListener("mouseleave", hideDetails);
         el.addEventListener("focus", showDetails);
@@ -328,8 +339,13 @@ export function MapboxMap({
   useEffect(() => {
     if (!panToSelectedPoint || !selectedPointId) return;
     const point = points.find(item => item.id === selectedPointId);
-    if (point && isValidLatLng(point.latitude, point.longitude)) mapRef.current?.easeTo({ center: [point.longitude, point.latitude], zoom });
-  }, [panToSelectedPoint, selectedPointId, points, zoom, token]);
+    if (point && isValidLatLng(point.latitude, point.longitude)) {
+      const map = mapRef.current, frame = map?.getContainer();
+      const offset = anchoredPopup?.pointId === selectedPointId && frame && frame.clientWidth < 560
+        ? { offset: [0, frame.clientHeight / 4] as [number, number] } : {};
+      map?.easeTo({ center: [point.longitude, point.latitude], zoom, ...offset });
+    }
+  }, [panToSelectedPoint, selectedPointId, points, zoom, token, anchoredPopup?.pointId]);
 
   useEffect(() => {
     if (!panToSelectedPoint || !selectedPointId) mapRef.current?.easeTo({ zoom });
@@ -357,6 +373,31 @@ export function MapboxMap({
     else map.fitBounds(bounds as LngLatBoundsLike, { padding: 36, maxZoom: 17 });
   }, [fitToData, lines, points, zoom, token, initialCenter, scrollZoom, styleKind]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !anchoredPopup?.pointId || !isValidLatLng(popupLatitude, popupLongitude)) return;
+    const close = () => popupClose.current?.();
+    const outside = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !popupNode.contains(target) && !target.closest(".vndrly-mapbox-marker")) close();
+    };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
+    const frame = map.getContainer(), position = map.project([popupLongitude!, popupLatitude]);
+    const narrow = frame.clientWidth < 560;
+    const side = position.x < frame.clientWidth / 2 ? "left" : "right";
+    const vertical = position.y < 150 ? "top" : position.y > frame.clientHeight - 150 ? "bottom" : "";
+    const anchor = narrow ? "bottom" : (vertical ? `${vertical}-${side}` : side) as "top-left" | "top-right" | "bottom-left" | "bottom-right" | "left" | "right";
+    if (narrow) map.easeTo({ center: [popupLongitude!, popupLatitude], offset: [0, frame.clientHeight / 4] });
+    const popup = new mapboxgl.Popup({ anchor, offset: 22, maxWidth: "280px", className: anchoredPopup.className, closeOnClick: false, focusAfterOpen: false })
+      .setLngLat([popupLongitude!, popupLatitude]).setDOMContent(popupNode).addTo(map);
+    popup.on("close", close);
+    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => popup.setLngLat([popupLongitude!, popupLatitude]));
+    resize?.observe(popupNode);
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { resize?.disconnect(); document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); popup.off("close", close); popup.remove(); };
+  }, [anchoredPopup?.pointId, anchoredPopup?.className, popupLatitude, popupLongitude, popupNode, token, styleKind, scrollZoom]);
+
   const containerStyle: React.CSSProperties = {
     height: typeof height === "number" ? `${height}px` : height,
   };
@@ -372,6 +413,7 @@ export function MapboxMap({
   return (
     <div className={`vndrly-mapbox relative overflow-hidden ${className ?? ""}`.trim()} style={containerStyle}>
       <div ref={containerRef} className="h-full w-full" />
+      {anchoredPopup && createPortal(anchoredPopup.content, popupNode)}
     </div>
   );
 }

@@ -37,7 +37,7 @@ router.post("/gate-report/deliver", async (req, res) => {
       reportKind: z.enum(["history", "shift_notes"]),
       format: z.enum(["pdf", "excel", "word"]),
       filters: z.object({
-        siteId: z.number().int().positive(),
+        siteId: z.number().int().positive(), siteIds: z.array(z.number().int().positive()).min(1).max(100).optional(),
         stationId: z.string().uuid().optional(),
         range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
         recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
@@ -66,7 +66,7 @@ router.post("/gate-report/email", async (req, res) => {
       reportKind: z.enum(["history", "shift_notes"]),
       format: z.enum(["pdf", "excel", "word"]),
       filters: z.object({
-        siteId: z.number().int().positive(),
+        siteId: z.number().int().positive(), siteIds: z.array(z.number().int().positive()).min(1).max(100).optional(),
         stationId: z.string().uuid().optional(),
         range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
         recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
@@ -95,7 +95,7 @@ router.post("/gate-report/export", async (req, res) => {
       reportKind: z.enum(["history", "shift_notes"]),
       format: z.enum(["pdf", "excel", "word"]),
       filters: z.object({
-        siteId: z.number().int().positive(), stationId: z.string().uuid().optional(),
+        siteId: z.number().int().positive(), siteIds: z.array(z.number().int().positive()).min(1).max(100).optional(), stationId: z.string().uuid().optional(),
         range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
         recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),

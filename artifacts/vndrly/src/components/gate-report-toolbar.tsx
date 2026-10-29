@@ -12,6 +12,7 @@ export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" 
 export type GateReportRecordType = "all" | "arrivals" | "check_ins" | "check_outs" | "on_site" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
 export type GateReportFilters = {
   siteId: number;
+  siteIds?: number[];
   stationId?: string;
   range: GateReportRange;
   recordType: GateReportRecordType;
@@ -63,6 +64,7 @@ export function GateReportToolbar({
     const params = new URLSearchParams({
       reportKind,
       siteId: String(filters.siteId),
+      ...(filters.siteIds ? { siteIds: filters.siteIds.join(",") } : {}),
       range: filters.range,
       recordType: filters.recordType,
       ...(filters.stationId ? { stationId: filters.stationId } : {}),

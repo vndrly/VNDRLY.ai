@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { pool } from "@workspace/db";
+import { pool, insertTicketCheckInSchema } from "@workspace/db";
 import { readFileSync } from "node:fs";
 import {
   createMemoryGateReportDependencies,
@@ -25,7 +25,7 @@ describe("Gate reports", () => {
     try {
       const filters = { siteId: 10, range: "current_shift" as const, recordType: "on_site" as const, recordId: "employee:42" };
       expect(await databaseGateReportDependencies.queryRows(filters, { kind: "company", company: "Acme" }, "history")).toEqual([row]);
-      expect(query).toHaveBeenCalledWith(expect.stringContaining("t.site_location_id=$1"), [10, expect.any(Date), expect.any(Date), "employee:42"]);
+      expect(query).toHaveBeenCalledWith(expect.stringContaining("t.site_location_id=$1"), [10, expect.any(Date), expect.any(Date), "employee:42", null]);
       expect(await databaseGateReportDependencies.queryRows(filters, { kind: "company", company: "Other" }, "history")).toEqual([]);
       expect(query.mock.calls.every(([sql]) => String(sql).includes("$4::text IS NOT NULL"))).toBe(true);
     } finally { query.mockRestore(); }
@@ -272,4 +272,48 @@ describe("Gate reports", () => {
       filters,
     }, deps)).rejects.toMatchObject({ status: 403, code: "gate_report.recipient_forbidden" });
   });
+});
+
+
+describe("historical gate associations", () => {
+  it("uses explicit association first, limits both joins to the row site and preserves GPS evidence", async () => {
+    const evidence = { gateStationId: "main", status: "inaccurate", accuracy: 900 };
+    const row = { id: "visit:1", gateStationId: "main", gateName: "Main Gate", gateAssociationSource: "check_in_gps_evidence", gateAssociationProvenance: null, checkInGpsEvidence: evidence };
+    const query = vi.spyOn(pool, "query").mockResolvedValue({ rows: [row] } as never);
+    try {
+      expect(await databaseGateReportDependencies.queryRows({ siteId: 399, range: "7d", recordType: "all" }, { kind: "full_site" }, "history")).toEqual([row]);
+      const sql = String(query.mock.calls[0][0]);
+      expect(sql).toContain("g.site_id=v.site_location_id");
+      expect(sql).toContain("coalesce(v.gate_station_id::text,v.check_in_gps_evidence->>'gateStationId')");
+      expect(sql).toContain("g.site_id=t.site_location_id AND g.id=c.gate_station_id");
+      expect(row.checkInGpsEvidence).toEqual(evidence);
+    } finally { query.mockRestore(); }
+  });
+  it("rejects an unrelated selected gate before querying history", async () => {
+    const query = vi.spyOn(pool, "query").mockResolvedValue({ rows: [] } as never);
+    try {
+      await expect(databaseGateReportDependencies.queryRows({ siteId: 399, stationId: "other-site", range: "7d", recordType: "all" }, { kind: "full_site" }, "history")).rejects.toMatchObject({ status: 400, code: "gate_report.invalid_station" });
+      expect(query).toHaveBeenCalledExactlyOnceWith("SELECT id FROM gate_stations WHERE site_id=$1 AND id::text=$2", [399, "other-site"]);
+    } finally { query.mockRestore(); }
+  });
+  it("filters station before exact-record selection for visitor and employee rows", async () => {
+    const query = vi.spyOn(pool, "query").mockResolvedValueOnce({ rows: [{ id: "main" }] } as never).mockResolvedValueOnce({ rows: [{ id: "employee:2", gateStationId: "other" }, { id: "employee:2", gateStationId: "main" }, { id: "visit:3", gateStationId: null }] } as never);
+    try {
+      expect(await databaseGateReportDependencies.queryRows({ siteId: 399, stationId: "main", recordId: "employee:2", range: "7d", recordType: "all" }, { kind: "full_site" }, "history")).toEqual([{ id: "employee:2", gateStationId: "main" }]);
+      expect(String(query.mock.calls[1][0]).split("AND ($5::text IS NULL OR g.id::text=$5)")).toHaveLength(3);
+      expect(query.mock.calls[1][1]).toEqual([399, expect.any(Date), expect.any(Date), "employee:2", "main"]);
+    } finally { query.mockRestore(); }
+  });
+});
+
+
+it("keeps historical gate association and correction provenance server-owned in generic employee inserts", () => {
+  const result = insertTicketCheckInSchema.parse({
+    ticketId: 1, employeeId: 2, checkInAt: new Date("2026-10-28T12:00:00Z"),
+    gateStationId: "11111111-1111-4111-8111-111111111111",
+    gateAssociationProvenance: { source: "user_supplied_historical_correction", correctionId: "forged", correctedAt: "2026-10-28T12:00:00Z", instruction: "client supplied" },
+  });
+  expect(result).toMatchObject({ ticketId: 1, employeeId: 2 });
+  expect(result).not.toHaveProperty("gateStationId");
+  expect(result).not.toHaveProperty("gateAssociationProvenance");
 });

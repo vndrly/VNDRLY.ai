@@ -1,3 +1,6 @@
+import { GateShiftNoteContent } from "@/components/gate-shift-note-content";
+import GateShiftNotesList from "@/components/gate-shift-notes-list";
+import { GateActivityCard } from "@/components/gate-activity-card";
 import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import GateHandoffDesk from "@/components/gate-handoff-desk";
@@ -95,10 +98,7 @@ export function ShiftSnapshotView({
       </details>;
     };
     return <>
-      <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={snapshot ? `${activityWindow === "24h" ? c("Last 24 hours", "Últimas 24 horas") + " · " : ""}${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}` : unavailable} icon={LogIn}>
-        {metric("checkIns", LogIn)}{metric("checkOuts", LogOut)}{metric("pendingAdmission", Clock3)}
-        <details className="gate-panel-disclosure" data-testid="dashboard-metric-exceptions"><summary><AlertTriangle aria-hidden="true" /><span className="flex-1">{t("changeOver.exceptions")}</span><small>{snapshot?.exceptions.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.exceptions.map(e => recordLink(records.get(e.sourceId) ?? { id: e.sourceId, name: e.sourceId, kind: "visitor", company: null, plate: null, checkIn: "", notes: null }, "needs_review", `${e.sourceId}:${e.code}`, e.text))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.exceptions.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=needs_review`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
-      </WorkspacePanel>
+      <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} />
       <WorkspacePanel title={c("On site", "En el sitio")} subtitle={c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
         {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
         <details className="gate-panel-disclosure" data-testid="dashboard-metric-outstanding"><summary><ClipboardList aria-hidden="true" /><span className="flex-1">{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.outstanding.map(row => recordLink(row, "on_site"))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.outstanding.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=on_site`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
@@ -415,11 +415,11 @@ export default function GateChangeOverPage({
       {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
       {(history || !online || loading || error || loadError || sites.data?.sites.length === 0) && <div
         className={history
-          ? `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`
+          ? linkedNote ? "space-y-5" : `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`
           : "space-y-5"}
-        data-testid={history ? "shift-notes-main-card" : undefined}
+        data-testid={history && !linkedNote ? "shift-notes-main-card" : undefined}
       >
-      {history && locationSelectors}
+      {history && !linkedNote && locationSelectors}
       {!online && <p role="status">{t("changeOver.offline")}</p>}
       {loading && <p role="status">{t("changeOver.loading")}</p>}
       {(error || loadError) && (
@@ -432,7 +432,7 @@ export default function GateChangeOverPage({
       )}
       {history ? (
         <>
-          {!linkedNote && <GateReportToolbar
+          {!linkedNote && <GateReportToolbar dropdown
             reportKind="shift_notes"
             filters={siteId ? {
               siteId: Number(siteId),
@@ -477,22 +477,7 @@ export default function GateChangeOverPage({
             <ViewedShiftNote key={row.id} stationId={stationId} note={row}>
             <WorkspacePanel title={new Date(row.filed_at ?? row.created_at ?? row.acknowledged_at).toLocaleString()} subtitle={`${row.outgoing_name} → ${row.incoming_name}`} icon={ClipboardList}>
               <div className="gate-panel-body">
-                <p>{t("changeOver.acknowledged")}</p>
-                <ul>
-                  {row.summary.facts.map((f) => (
-                    <li key={f.id}>{f.text}</li>
-                  ))}
-                </ul>
-                <p className="whitespace-pre-wrap">{row.notes}</p>
-                {row.snapshot.openItems.map((i) => (
-                  <p key={i.id}>
-                    {t("changeOver.carryForward")}: {i.text}
-                  </p>
-                ))}
-                <details>
-                  <summary>{t("changeOver.snapshot")}</summary>
-                  <ShiftSnapshotView snapshot={row.snapshot} />
-                </details>
+                <GateShiftNoteContent note={row} />
               </div>
             </WorkspacePanel>
             </ViewedShiftNote>
@@ -585,5 +570,6 @@ export default function GateChangeOverPage({
   );
 }
 export function GateShiftNotesPage() {
-  return <GateChangeOverPage history />;
+  const search = useSearch();
+  return new URLSearchParams(search).has("handoffId") ? <GateChangeOverPage history /> : <GateShiftNotesList />;
 }

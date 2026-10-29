@@ -12,7 +12,7 @@ import GateCreateCard from "./gate-create-card";
 beforeEach(() => {
   vi.clearAllMocks();
   user.vendorRole = "office"; user.availableMemberships[0].role = "member";
-  mocks.request.mockImplementation(async path => path === "/station-management/sites" ? { sites: [{ id: 10, name: "Site A" }, { id: 20, name: "Site B" }] } : { id: "new-gate" });
+  mocks.request.mockImplementation(async path => path === "/station-management/sites" ? { sites: user.vendorRole === "gatekeeper" && user.availableMemberships[0].role !== "admin" ? [] : [{ id: 10, name: "Site A" }, { id: 20, name: "Site B" }] } : { id: "new-gate" });
   Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: mocks.gps } });
 });
 async function mount() {
@@ -25,11 +25,12 @@ it("requires an actual location and does not request GPS on page load", async ()
   expect((screen.getByRole("button", { name: "Add gate" }) as HTMLButtonElement).disabled).toBe(true);
   expect(mocks.gps).not.toHaveBeenCalled();
 });
-it("matches the Calendar administration selector and hides it from gatekeepers", async () => {
+it("uses server-authorized management sites and hides administration from gatekeepers", async () => {
   user.vendorRole = "gatekeeper";
   render(<QueryClientProvider client={new QueryClient()}><GateCreateCard /></QueryClientProvider>);
   expect(screen.queryByText("Administrative functions")).toBeNull();
-  expect(mocks.request).not.toHaveBeenCalled();
+  await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/station-management/sites"));
+  expect(screen.queryByRole("form", { name: "Add gate" })).toBeNull();
 });
 it("keeps administrators visible even when their employee role is gatekeeper", async () => {
   user.vendorRole = "gatekeeper"; user.availableMemberships[0].role = "admin";
@@ -133,4 +134,11 @@ it("discards a delayed address lookup after the site changes", async () => {
   await act(async () => resolve({ latitude: 35, longitude: -97, displayName: "Old site address" }));
   expect(screen.queryByText("Gate coordinates")).toBeNull();
   expect((screen.getByRole("button", { name: "Add gate" }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it("shows administration to a supervisor authorized by the server even when the legacy role is gatekeeper", async () => {
+  user.vendorRole = "gatekeeper";
+  mocks.request.mockResolvedValue({ sites: [{ id: 10, name: "Site A" }] });
+  await mount();
+  expect(screen.getByRole("combobox", { name: "Administrative function" })).toBeTruthy();
 });

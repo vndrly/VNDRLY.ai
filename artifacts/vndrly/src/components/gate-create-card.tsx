@@ -14,8 +14,6 @@ type Method = "gps" | "coordinates" | "address";
 type EditableGate = { id: string; siteId: number; name: string; latitude: number | null; longitude: number | null; version: number };
 export default function GateCreateCard() {
   const { user } = useAuth(), cache = useQueryClient();
-  const activeMembership = user?.availableMemberships?.find(row => row.id === user.activeMembershipId);
-  const canManage = user?.role === "admin" || activeMembership?.role === "admin" || ["office", "both", "gate_supervisor"].includes(user?.vendorRole ?? "");
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n.language?.startsWith("es") ? es : en;
   const [selectedSite, setSelectedSite] = useState("");
@@ -33,9 +31,10 @@ export default function GateCreateCard() {
   const sites = useQuery({
     queryKey: ["gate-station-management-sites", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId],
     queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/station-management/sites"),
-    enabled: Boolean(user?.userId) && canManage, retry: false,
+    enabled: Boolean(user?.userId), retry: false,
   });
   const available = sites.data?.sites ?? [];
+  const canManage = sites.isSuccess && available.length > 0;
   const siteId = available.find(site => String(site.id) === selectedSite)?.id ?? available[0]?.id;
   const editableGates = useQuery({
     queryKey: ["gate-station-management-gates", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, siteId],

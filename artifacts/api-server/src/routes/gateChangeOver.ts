@@ -26,6 +26,7 @@ import {
   moveGateStation,
   retireGateStation,
   getChangeOverState,
+  readGateMapActivity,
   startGateShift,
   prepareGateHandoff,
   cancelGateHandoff,
@@ -171,6 +172,9 @@ router.post("/gate-change-over/stations/:stationId/retire", async (req, res) => 
   const input = z.object({ siteId, expectedVersion: z.number().int().positive(), operationId: uuid }).strict().parse(req.body);
   res.json(await retireGateStation(sessionFor(req), { ...input, stationId: uuid.parse(req.params.stationId) }));
 });
+router.get("/gate-change-over/:stationId/map-activity", async (req, res) => {
+  res.json(await readGateMapActivity(sessionFor(req), uuid.parse(req.params.stationId)));
+});
 router.get("/gate-change-over/:stationId/state", async (req, res) => {
   res.json(
     await getChangeOverState(sessionFor(req), uuid.parse(req.params.stationId)),
@@ -261,6 +265,7 @@ router.get("/gate-change-over/:stationId/notes", async (req, res) => {
     .object({
       days: z.coerce.number().int().min(1).max(3650).optional(),
       before: z.string().datetime().optional(),
+      beforeId: uuid.optional(),
       search: z.string().max(200).optional(),
       limit: z.coerce.number().int().min(1).max(50).optional(),
       handoffId: uuid.optional(),

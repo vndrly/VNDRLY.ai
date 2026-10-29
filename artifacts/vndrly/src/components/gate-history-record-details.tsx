@@ -9,6 +9,12 @@ export type GateHistoryRecord = {
   reconciliationState?: string | null; admissionStatus?: string | null; kind?: string;
   entryClearanceAt?: string | null;
   notes?: string | null; purpose?: string | null; expectedMinutes?: number | null;
+  gateStationId?: string | null;
+  gateName?: string | null;
+  gateAssociationSource?: "user_supplied_historical_correction" | "check_in_gps_evidence" | null;
+  gateAssociationProvenance?: {
+    source: string; correctionId: string; correctedAt: string; instruction: string;
+  } | null;
   checkInGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;
   checkOutGpsEvidence?: { status: string; gateName?: string; distanceMeters?: number | null } | null;
 };
@@ -25,6 +31,14 @@ export default function GateHistoryRecordDetails({ open, record, loading, failed
     {loading ? <Loader2 className="animate-spin" /> : failed ? <p role="alert">{c("The record could not be loaded.", "No se pudo cargar el registro.")}</p> : !record ? <p role="status">{c("This record is unavailable in the selected site.", "Este registro no está disponible en el sitio seleccionado.")}</p> : <dl className="gate-record-facts text-sm">
       {[
         [c("Record", "Registro"), record.id],
+        [c("Gate", "Acceso"), record.gateName || c("Unknown", "Desconocido")],
+        [c("Gate association source", "Origen de la asociación del acceso"), record.gateName ? (
+          record.gateAssociationSource === "user_supplied_historical_correction"
+            ? c("User-supplied historical correction", "Corrección histórica proporcionada por el usuario")
+            : record.gateAssociationSource === "check_in_gps_evidence"
+              ? c("Recorded gate selection", "Selección de acceso registrada")
+              : c("Unknown", "Desconocido")
+        ) : null],
         [c("Company", "Empresa"), record.company],
         [c("Vehicle plate", "Placa del vehículo"), record.vehiclePlate ? formatPlateForDisplay(record.plateState, record.vehiclePlate, t("gatekeeper.plateStateUnconfirmed")) : null],
         [c("Check-in", "Entrada"), time(record.checkInTime)],

@@ -32,3 +32,22 @@ it("rejects invalid coordinates and refuses an unauthorized gatekeeper", async (
   await expect(addChangeOverStation({ ...session, role: "field_employee", vendorId: 2 }, 10, "West gate", { latitude: 35, longitude: -97 })).rejects.toMatchObject({ status: 403 });
   expect(query.mock.calls.some(([sql]) => sql.startsWith("INSERT"))).toBe(false);
 });
+
+it("allows database-authorized gate supervisors to create gates", async () => {
+  const original = query.getMockImplementation()!;
+  query.mockImplementation(async (sql: string, values?: unknown[]) => {
+    if (sql.startsWith("SELECT id, role, session_version")) return { rows: [{ id: 7, role: "vendor", session_version: 1 }], rowCount: 1 };
+    if (sql.startsWith("SELECT id FROM site_work_assignments")) return { rows: [{ id: 2 }], rowCount: 1 };
+    if (sql.startsWith("SELECT id, vendor_people_id, role")) return { rows: [{ id: 8, role: "member" }], rowCount: 1 };
+    if (sql.startsWith("SELECT vendor_role FROM vendor_people")) return { rows: [{ vendor_role: "gate_supervisor" }], rowCount: 1 };
+    return original(sql, values);
+  });
+  await expect(addChangeOverStation({ userId: 7, role: "vendor", vendorId: 2, activeMembershipId: 8, membershipRole: "member", sv: 1 }, 10, "West gate", { latitude: 35, longitude: -97 })).resolves.toMatchObject({ id: "created" });
+});
+it("does not turn ordinary partner site visibility into gate administration", async () => {
+  const original = query.getMockImplementation()!;
+  query.mockImplementation(async (sql: string, values?: unknown[]) => sql.includes("role IN ('admin','member')")
+    ? { rows: [{ id: 8 }], rowCount: 1 } : original(sql, values));
+  await expect(addChangeOverStation({ userId: 7, role: "partner", partnerId: 2, activeMembershipId: 8, sv: 1 }, 10, "West gate", { latitude: 35, longitude: -97 })).rejects.toMatchObject({ status: 403 });
+  expect(query.mock.calls.some(([sql]) => sql.startsWith("INSERT INTO gate_stations"))).toBe(false);
+});

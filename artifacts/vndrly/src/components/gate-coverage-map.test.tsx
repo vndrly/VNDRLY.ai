@@ -1,13 +1,14 @@
 import { act, cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-const mocks = vi.hoisted(() => ({ read: vi.fn(), points: [] as any[], mapProps: {} as any }));
+const mocks = vi.hoisted(() => ({ read: vi.fn(), points: [] as any[], mapProps: {} as any, mapRenders: 0 }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 1, vendorId: 2, activeMembershipId: 3 } }) }));
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: mocks.read }));
-vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.points = props.points; mocks.mapProps = props; return <div>Map</div>; } }));
+vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.mapRenders++; mocks.points = props.points; mocks.mapProps = props; return <div>Map</div>; } }));
 vi.mock("@/components/work-hub/chrome", () => ({ BrandedInput: (props: any) => <input {...props} />, BrandedSelect: (props: any) => <select {...props} /> }));
+vi.mock("./gate-map-activity-panel", () => ({ GateMapActivityPanel: () => <section aria-label="Gate activity">Gate activity</section> }));
 import { GateCoverageMap } from "./gate-coverage-map";
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); vi.clearAllMocks(); vi.useRealTimers(); });
 it("uses the viewing selector to focus one gate without creating or editing a gate", async () => {
   mocks.read.mockResolvedValue({ at: new Date().toISOString(), staff: [], gates: [
     { id: "a", siteId: 1, name: "North gate", siteName: "Site A", latitude: 31, longitude: -102 },
@@ -16,6 +17,9 @@ it("uses the viewing selector to focus one gate without creating or editing a ga
   ], duties: [] });
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCoverageMap showGateSelector /></QueryClientProvider>);
   const selector = await screen.findByTestId("select-gate-map-location");
+  expect(screen.getByTestId("gate-gps-indicator").contains(selector)).toBe(true);
+  expect(screen.getByTestId("gate-gps-indicator").getAttribute("data-gps-status")).toBe("unavailable");
+  expect(screen.getByText("GPS not evaluated on this map")).toBeTruthy();
   expect(screen.getByRole("option", { name: "Site A | South gate" })).toBeTruthy();
   fireEvent.change(selector, { target: { value: "b" } });
   expect(mocks.mapProps).toMatchObject({ selectedPointId: "gate:b", center: [-103, 32], zoom: 16, fitToData: false });
@@ -38,9 +42,36 @@ it("keeps stale staff off the map and exposes missing observations without an ac
   expect(mocks.points.map(point => point.id)).toEqual(["staff:4"]);
   expect(screen.getByText(/stale or inaccurate/)).toBeTruthy();
   expect(screen.getByText(/no report/)).toBeTruthy();
-  fireEvent.change(screen.getByLabelText(/Coverage time/), { target: { value: "2026-10-12T10:00" } });
-  await waitFor(() => expect(mocks.read).toHaveBeenCalledWith(expect.stringMatching(/^\/coverage-map\?at=/)));
+  fireEvent.click(screen.getByRole("button", { name: "Day of" }));
+  fireEvent.input(screen.getByLabelText("Date and time (Central Time)"), { target: { value: "2026-10-12T10:00" } });
+  await waitFor(() => expect(mocks.read).toHaveBeenCalledWith("/coverage-map?at=2026-10-12T15%3A00%3A00.000Z"));
   expect(mocks.read.mock.calls.every(call => call.length === 1)).toBe(true);
+});
+
+it("ticks beneath the Live controls without rerendering the map or fetching each second", async () => {
+  vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-28T23:57:01Z"));
+  mocks.read.mockResolvedValue({ at: new Date().toISOString(), gates: [], staff: [], duties: [] });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } } });
+  await client.prefetchQuery({ queryKey: ["gate-coverage-map", 1, 3, null], queryFn: () => mocks.read("/coverage-map") });
+  await act(async () => {
+    render(<QueryClientProvider client={client}><GateCoverageMap /></QueryClientProvider>);
+    await vi.advanceTimersByTimeAsync(5);
+  });
+  expect(mocks.read).toHaveBeenCalledTimes(1);
+  const renders = mocks.mapRenders;
+  const clock = screen.getByLabelText("Coverage clock");
+  expect(clock.closest('[aria-label="Coverage time controls"]')?.querySelector('button[aria-pressed="true"]')?.textContent).toBe("Live");
+  expect(screen.queryByText(/^As of/)).toBeNull();
+  expect(screen.queryByLabelText(/Coverage time \(leave blank/)).toBeNull();
+  await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+  expect(clock.textContent).toBe("10/28/26, 6:57:03 PM CT");
+  expect(mocks.mapRenders).toBe(renders);
+  expect(mocks.read).toHaveBeenCalledTimes(1);
+  await act(async () => { await vi.advanceTimersByTimeAsync(27000); });
+  expect(mocks.read).toHaveBeenCalledTimes(1);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+  expect(mocks.read).toHaveBeenCalledTimes(2);
+  client.clear();
 });
 it("groups all app employees, sorts names, and pans to a selected current staff location", async () => {
   const location = { latitude: 31, longitude: -102, capturedAt: new Date().toISOString() };
@@ -77,8 +108,7 @@ it("uses mini-card map toggles without coverage filters and preserves refresh an
     { id: "b", name: "South gate", siteName: "Site A", latitude: 32, longitude: -103 },
   ], duties: [{ id: "d", stationId: "a", name: "Operator", startedAt: new Date().toISOString(), coverage: {} }] });
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCoverageMap /></QueryClientProvider>);
-  await screen.findByText("Live");
-  expect(mocks.points.map(point => point.id)).toEqual(["gate:a", "gate:b"]);
+  await waitFor(() => expect(mocks.points.map(point => point.id)).toEqual(["gate:a", "gate:b"]));
   expect(screen.queryByRole("button", { name: "Staffed" })).toBeNull();
   expect(screen.queryByRole("button", { name: /^All$/ })).toBeNull();
   expect(screen.queryByRole("button", { name: "No recorded duty" })).toBeNull();
@@ -89,7 +119,7 @@ it("uses mini-card map toggles without coverage filters and preserves refresh an
   expect(mocks.mapProps.styleKind).toBe("street");
   expect(street.getAttribute("aria-pressed")).toBe("true");
   expect(screen.getByRole("button", { name: "Satellite" }).getAttribute("aria-pressed")).toBe("false");
-  expect(screen.getByRole("button", { name: /^Fit$/ }).closest(".gate-map-view-controls")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Fit to coverage" }).closest(".gate-map-view-controls")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Expand map" }));
   expect(screen.getByRole("button", { name: "Collapse map" })).toBeTruthy();
   fireEvent.keyDown(window, { key: "Escape" });

@@ -12,6 +12,7 @@ export type GateReportKind = "history" | "shift_notes";
 export type GateReportFormat = "pdf" | "excel" | "word";
 export type GateReportFilters = {
   siteId: number;
+  siteIds?: number[];
   stationId?: string;
   range: GateReportRange;
   recordType: GateReportRecordType;
@@ -86,6 +87,10 @@ function recipientCandidateIsSelectable(candidate: GateReportRecipientCandidate)
 export function parseGateReportFilters(input: Partial<Record<keyof GateReportFilters, unknown>>): GateReportFilters {
   const siteId = Number(input.siteId);
   if (!Number.isSafeInteger(siteId) || siteId <= 0) fail(400, "gate_report.invalid_site");
+  const requestedSites = typeof input.siteIds === "string" ? input.siteIds.split(",").map(Number) : input.siteIds;
+  if (requestedSites !== undefined && (!Array.isArray(requestedSites) || !requestedSites.length || requestedSites.length > 100 || requestedSites.some(id => !Number.isSafeInteger(id) || id <= 0))) fail(400, "gate_report.invalid_sites");
+  const siteIds = requestedSites === undefined ? undefined : [...new Set(requestedSites as number[])];
+  if (siteIds && !siteIds.includes(siteId)) fail(400, "gate_report.invalid_sites");
   const range = String(input.range ?? "current_shift") as GateReportRange;
   if (!ranges.includes(range)) fail(400, "gate_report.invalid_range");
   const recordType = String(input.recordType ?? "all") as GateReportRecordType;
@@ -94,7 +99,42 @@ export function parseGateReportFilters(input: Partial<Record<keyof GateReportFil
   const search = typeof input.search === "string" && input.search.trim() ? input.search.trim().slice(0, 200) : undefined;
   const recordId = typeof input.recordId === "string" ? input.recordId.trim() : undefined;
   if (input.recordId !== undefined && (!recordId || !/^(visit|employee):[1-9]\d*$/.test(recordId))) fail(400, "gate_report.invalid_record_id");
-  return { siteId, ...(stationId ? { stationId } : {}), range, recordType, ...(search ? { search } : {}), ...(recordId ? { recordId } : {}) };
+  return { siteId, ...(siteIds ? { siteIds } : {}), ...(stationId ? { stationId } : {}), range, recordType, ...(search ? { search } : {}), ...(recordId ? { recordId } : {}) };
+}
+
+const MULTI_SITE_REPORT = Symbol("multi-site-shift-notes");
+/** All-site Shift Notes reuse the single-site permissions, renderer and delivery flow. */
+function multiSiteDependencies(filters: GateReportFilters, kind: GateReportKind, base: GateReportDependencies): GateReportDependencies {
+  const siteIds = filters.siteIds;
+  if (!siteIds || (base as GateReportDependencies & { [MULTI_SITE_REPORT]?: boolean })[MULTI_SITE_REPORT]) return base;
+  if (kind !== "shift_notes" || filters.range !== "30d" || filters.recordType !== "all" || filters.stationId || filters.search || filters.recordId)
+    return fail(400, "gate_report.invalid_all_sites_scope");
+  const single = (siteId: number): GateReportFilters => { const { siteIds: _allSites, ...rest } = filters; return { ...rest, siteId }; };
+  const scoped: GateReportDependencies & { [MULTI_SITE_REPORT]: boolean } = {
+    ...base, [MULTI_SITE_REPORT]: true,
+    async resolveAccess(userId, _filters, reportKind) {
+      const scopes = await Promise.all(siteIds.map(id => base.resolveAccess(userId, single(id), reportKind)));
+      return scopes.every(scope => scope?.kind === "full_site") ? { kind: "full_site" } : null;
+    },
+    async queryRows(_filters, scope, reportKind, session) {
+      const groups = await Promise.all(siteIds.map(async id => {
+        const filter = single(id), context = await base.resolveContext(filter);
+        return (await base.queryRows(filter, scope, reportKind, session)).map(row => ({ ...row, siteName: context.siteName }));
+      }));
+      const rows = groups.flat();
+      if (rows.length > 25000) return fail(413, "gate_report.too_large");
+      return rows;
+    },
+    async resolveContext() {
+      const contexts = await Promise.all(siteIds.map(id => base.resolveContext(single(id))));
+      return { siteName: contexts.map(context => context.siteName).join("; "), stationName: "All gates" };
+    },
+    async listRecipientCandidates(_filters, senderId, reportKind) {
+      const lists = await Promise.all(siteIds.map(id => base.listRecipientCandidates(single(id), senderId, reportKind)));
+      return (lists[0] ?? []).filter(candidate => lists.every(list => list.some(other => other.userId === candidate.userId && recipientCandidateIsSelectable(other))));
+    },
+  };
+  return scoped;
 }
 
 function scopeCanView(viewer: GateReportScope, report: GateReportScope) {
@@ -110,6 +150,7 @@ export async function deliverGateReports(input: {
   filters: GateReportFilters;
 }, deps: GateReportDependencies = databaseGateReportDependencies) {
   const filters = parseGateReportFilters(input.filters);
+  deps = multiSiteDependencies(filters, input.reportKind, deps);
   if (!input.recipientUserIds.length || input.recipientUserIds.some((id) => !Number.isSafeInteger(id) || id <= 0))
     fail(400, "gate_report.invalid_recipients");
   const recipients = [...new Set(input.recipientUserIds)];
@@ -189,6 +230,7 @@ export async function emailGateReportAttachments(input: {
   filters: GateReportFilters;
 }, deps: GateReportDependencies = databaseGateReportDependencies) {
   const filters = parseGateReportFilters(input.filters);
+  deps = multiSiteDependencies(filters, input.reportKind, deps);
   const recipients = [...new Set(input.recipientUserIds)];
   if (!recipients.length || recipients.some((id) => !Number.isSafeInteger(id) || id <= 0))
     fail(400, "gate_report.invalid_recipients");
@@ -227,6 +269,7 @@ export async function openGateReport(
   if (!delivery || delivery.revokedAt || delivery.expiresAt <= now)
     throw new GateReportsError(410, "gate_report.link_expired");
   if (delivery.recipientUserId !== input.userId) fail(403, "gate_report.wrong_recipient");
+  deps = multiSiteDependencies(parseGateReportFilters(delivery.filters), delivery.reportKind, deps);
   const currentScope = await deps.resolveAccess(input.userId, delivery.filters, delivery.reportKind);
   if (!currentScope || !scopeCanView(currentScope, delivery.recipientScope))
     throw new GateReportsError(403, "gate_report.access_changed");
@@ -245,6 +288,7 @@ export async function generateGateReport(input: {
   filters: GateReportFilters;
 }, deps: GateReportDependencies = databaseGateReportDependencies) {
   const filters = parseGateReportFilters(input.filters);
+  deps = multiSiteDependencies(filters, input.reportKind, deps);
   const scope = await deps.resolveAccess(input.userId, filters, input.reportKind);
   if (!scope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && scope.kind !== "full_site")
@@ -259,6 +303,7 @@ export async function queryGateReport(input: {
   filters: GateReportFilters;
 }, deps: GateReportDependencies = databaseGateReportDependencies) {
   const filters = parseGateReportFilters(input.filters);
+  deps = multiSiteDependencies(filters, input.reportKind, deps);
   const scope = await deps.resolveAccess(input.userId, filters, input.reportKind);
   if (!scope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && scope.kind !== "full_site")
@@ -271,6 +316,7 @@ export async function listGateReportRecipients(
   deps: GateReportDependencies = databaseGateReportDependencies,
 ) {
   const filters = parseGateReportFilters(input.filters);
+  deps = multiSiteDependencies(filters, input.reportKind, deps);
   const senderScope = await deps.resolveAccess(input.senderUserId, filters, input.reportKind);
   if (!senderScope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && senderScope.kind !== "full_site")
@@ -387,6 +433,10 @@ async function resolveDatabaseAccess(userId: number, filters: GateReportFilters,
 }
 
 async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportScope, reportKind: GateReportKind, session?: SessionPayload) {
+  if (filters.stationId) {
+    const station = await pool.query("SELECT id FROM gate_stations WHERE site_id=$1 AND id::text=$2", [filters.siteId, filters.stationId]);
+    if (!station.rows.length) fail(400, "gate_report.invalid_station");
+  }
   if (reportKind === "history" && filters.recordType === "arrivals") {
     if (!session?.userId) fail(403, "gate_report.current_session_required");
     // Use the existing live-arrivals authorization; report access never replaces it.
@@ -419,22 +469,36 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
       v.check_out_time AS "checkOutTime",v.admission_status AS "admissionStatus",
       v.reconciliation_state AS "reconciliationState",'visitor' AS kind,
       v.reconciliation_facts->'entryClearanceAt'->>'value' AS "entryClearanceAt",
+      g.id AS "gateStationId",g.name AS "gateName",
+      CASE WHEN g.id IS NULL THEN NULL WHEN v.gate_station_id IS NOT NULL THEN v.gate_association_provenance->>'source' ELSE 'check_in_gps_evidence' END AS "gateAssociationSource",
+      CASE WHEN g.id IS NOT NULL AND v.gate_station_id IS NOT NULL THEN v.gate_association_provenance ELSE NULL END AS "gateAssociationProvenance",
       v.check_in_gps_evidence AS "checkInGpsEvidence",v.check_out_gps_evidence AS "checkOutGpsEvidence",
       concat_ws(E'\n',v.notes,v.check_out_notes,v.conflict_reason) AS notes,v.purpose,v.expected_duration_minutes AS "expectedMinutes"
-     FROM site_visits v WHERE v.site_location_id=$1
+     FROM site_visits v
+     LEFT JOIN gate_stations g ON g.site_id=v.site_location_id
+       AND g.id::text=coalesce(v.gate_station_id::text,v.check_in_gps_evidence->>'gateStationId')
+     WHERE v.site_location_id=$1
+       AND ($5::text IS NULL OR g.id::text=$5)
        AND ($4::text IS NULL OR 'visit:'||v.id=$4)
        AND ($4::text IS NOT NULL OR (v.check_in_time <= $3 AND (v.check_out_time IS NULL OR v.check_out_time >= $2)))
      UNION ALL
-     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::text,NULL::jsonb,NULL::jsonb,NULL::text,NULL::text,NULL::int
+     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::text,
+       g.id,g.name,CASE WHEN g.id IS NOT NULL THEN c.gate_association_provenance->>'source' ELSE NULL END,
+       CASE WHEN g.id IS NOT NULL THEN c.gate_association_provenance ELSE NULL END,
+       NULL::jsonb,NULL::jsonb,NULL::text,NULL::text,NULL::int
      FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id JOIN vendor_people p ON p.id=c.employee_id
-       JOIN vendors ven ON ven.id=t.vendor_id WHERE t.site_location_id=$1
+       JOIN vendors ven ON ven.id=t.vendor_id
+       LEFT JOIN gate_stations g ON g.site_id=t.site_location_id AND g.id=c.gate_station_id
+       WHERE t.site_location_id=$1
+       AND ($5::text IS NULL OR g.id::text=$5)
        AND ($4::text IS NULL OR 'employee:'||c.id=$4)
        AND ($4::text IS NOT NULL OR (c.check_in_at <= $3 AND (c.check_out_at IS NULL OR c.check_out_at >= $2)))
      ORDER BY "checkInTime" DESC LIMIT 25000`,
-    [filters.siteId, from, to, filters.recordId ?? null],
+    [filters.siteId, from, to, filters.recordId ?? null, filters.stationId ?? null],
   );
   const search = filters.search?.toLowerCase();
   return (result.rows as GateReportRow[]).filter((row) => {
+    if (filters.stationId && row.gateStationId !== filters.stationId) return false;
     if (scope.kind === "company" && String(row.company ?? "").toLowerCase() !== scope.company.toLowerCase()) return false;
     if (filters.recordId) return row.id === filters.recordId;
     if (search && !Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search))) return false;
