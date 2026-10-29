@@ -358,7 +358,7 @@ test("partner members flow: add → AP → member → remove (AP option visible)
       `[data-testid="button-confirm-remove-partner-member-${membershipId}"]`,
     )
     .click();
-  await expect(page.getByText(/Member removed/i).first()).toBeVisible();
+  await expect(page.getByText(/Staff removed/i).first()).toBeVisible();
   await expect(memberRow).toHaveCount(0);
   const removed = await pool.query<{ count: string }>(
     `SELECT count(*)::text AS count FROM user_org_memberships WHERE id = $1`,
