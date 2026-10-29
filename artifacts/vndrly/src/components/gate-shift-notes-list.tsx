@@ -95,7 +95,7 @@ export default function GateShiftNotesList({ renderSnapshot }: { renderSnapshot?
   const gpsStatus = fence.milesToSite == null ? "unavailable" : fence.insideFence ? "verified" : "mismatch";
   const gpsLabel = !selectedGate ? es ? "Seleccione un acceso para comparar GPS" : "Choose a gate to compare GPS" : gpsStatus === "verified" ? es ? "GPS coincide con el acceso seleccionado" : "GPS matches the selected gate" : gpsStatus === "mismatch" ? es ? "GPS fuera del acceso seleccionado" : "GPS outside the selected gate" : es ? "GPS no disponible" : "GPS unavailable";
   return <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5`}>
-    <div className="flex items-center gap-3"><ContentPaneBackLink href="/gate/change-over" ariaLabel={es ? "Panel" : "Dashboard"} /><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" /><h1 className="text-2xl font-bold">{es ? "Notas de turno" : "Shift Notes"}</h1></div>
+    <div className="flex items-center gap-3"><ContentPaneBackLink href={selectedGate ? `/gate/change-over?${new URLSearchParams({ siteId: String(selectedGate.siteId), stationId: selectedGate.id })}` : "/gate/change-over"} ariaLabel={es ? "Panel" : "Dashboard"} /><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" /><h1 className="text-2xl font-bold">{es ? "Notas de turno" : "Shift Notes"}</h1></div>
     <section className="hub-home-card gate-shift-notes-card" aria-label={es ? "Notas de turno" : "Shift Notes"}>
       <header className="gate-shift-notes-header">
         <h2 className="flex items-center gap-2"><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Notas de turno" : "Shift Notes"}</h2>

@@ -115,8 +115,9 @@ test("gate watch survives sign-out and transfers only after the incoming account
     await page.locator('summary').filter({ hasText: 'Read shift notes' }).click();
     await page.getByRole('link', { name: /All shift notes/ }).click();
     await expect(
-      page.getByRole("heading", { name: "Shift Notes", exact: true }),
+      page.getByRole("heading", { name: "Shift Notes", exact: true, level: 1 }),
     ).toBeVisible();
+    await page.locator(".gate-note-list-record > summary").first().click();
     await expect(
       page.getByText(
         "Inspect the north barrier before admitting heavy loads.",
