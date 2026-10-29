@@ -1,0 +1,4 @@
+import {test}from'node:test';import assert from'node:assert/strict';import{isCompanyGoFixture}from'./existing-company-identity.mjs';
+test('edited demo description retains one-shot identity without rewriting the profile',()=>assert.equal(isCompanyGoFixture({kind:'vendor',name:'GateGo',blurb:null,state_tax_id:'SYN-TX-gatego',canonical_admin:true},'marker'),true));
+test('a same-name real company is never treated as the existing demo',()=>{assert.equal(isCompanyGoFixture({kind:'vendor',name:'GateGo',state_tax_id:'SYN-TX-gatego',canonical_admin:false},'marker'),false);assert.equal(isCompanyGoFixture({kind:'vendor',name:'GateGo',state_tax_id:'TX-REAL',canonical_admin:true},'marker'),false)});
+test('original marker remains authoritative and other names cannot match fallback',()=>{assert.equal(isCompanyGoFixture({blurb:'marker'},'marker'),true);assert.equal(isCompanyGoFixture({kind:'vendor',name:'Other',state_tax_id:'SYN-TX-other',canonical_admin:true},'marker'),false)});

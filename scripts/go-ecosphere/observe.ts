@@ -1,3 +1,4 @@
+import { existingCompanyGoQuery, isCompanyGoFixture } from './existing-company-identity.mjs';
 /** Read-only observation report for the Go companies: per-company footprint,
  * daily trends, and work-life consistency checks. Exits 1 on any violation.
  *
@@ -22,7 +23,8 @@ async function check(name: string, sql: string, params: unknown[] = []) {
 async function main() {
   await c.connect();
   await c.query("begin read only");
-  const { rows: orgs } = await c.query("select 'partner' kind,id,name from partners where blurb=$1 union all select 'vendor',id,name from vendors where blurb=$1 order by 1,2", [GO_MARKER]);
+  const { rows: existing } = await c.query(existingCompanyGoQuery, [["gasgo","fieldgo","fleetgo","gatego"]]);
+  const orgs = existing.filter((row: any) => isCompanyGoFixture(row, GO_MARKER));
   if (orgs.length !== 4) throw new Error(`Expected 4 Go companies, found ${orgs.length}`);
   const partnerId = orgs.find((o: any) => o.kind === "partner").id;
   const vendorIds: number[] = orgs.filter((o: any) => o.kind === "vendor").map((o: any) => o.id);

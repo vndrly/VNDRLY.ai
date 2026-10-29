@@ -53,7 +53,7 @@ export default function RoleBadge({ role, className, height = PILL_HEIGHT_PX, "d
       activeSrc={isAdmin ? undefined : brandSrc}
       height={height}
       className={className}
-      data-testid={dataTestId ?? `employee-role-pill-${(cfg.fallback || "").toLowerCase()}`}
+      data-testid={dataTestId ?? `employee-role-pill-${role === "member" || role === "office" ? role : (cfg.fallback || "").toLowerCase()}`}
     >
       {label}
     </ImagePill>

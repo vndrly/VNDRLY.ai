@@ -1,3 +1,4 @@
+import { existingCompanyGoQuery, isCompanyGoFixture } from './existing-company-identity.mjs';
 /** GasGo / FieldGo / FleetGo / GateGo: 30 days of synthetic company work life.
  *
  * Additive and one-shot: refuses to run when any Go company already exists,
@@ -194,9 +195,9 @@ async function main() {
   await client.query("begin");
   await client.query("select pg_advisory_xact_lock(hashtext($1))", [GO_VERSION]);
   const names = Object.values(ORGS).map((o) => o.name.toLowerCase());
-  const existing = await client.query("select name, blurb from partners where lower(btrim(name))=any($1) union all select name, blurb from vendors where lower(btrim(name))=any($1)", [names]);
+  const existing = await client.query(existingCompanyGoQuery, [names]);
   if (existing.rows.length) {
-    const ours = existing.rows.every((r: any) => r.blurb === GO_MARKER);
+    const ours = existing.rows.every((r: any) => isCompanyGoFixture(r, GO_MARKER));
     if (ours) throw new AlreadyProvisioned();
     throw new Error("A real organization already uses a Go company name; nothing was changed");
   }

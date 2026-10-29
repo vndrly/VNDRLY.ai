@@ -48,7 +48,7 @@ describe("branded employee and team role pills", () => {
     brand.name = "Example Company"; brand.primary = "#777777";
     render(<RoleBadge role="office" />);
     expect(artwork(screen.getByTestId("employee-role-pill-office"))).toBe(PILL_IDLE);
-    expect(screen.getByText("Office").className).toContain("text-gray-700");
+    expect(screen.getByText("Office Staff").className).toContain("text-gray-700");
   });
 
   it("shares branding with the field employee wrapper and retains its custom height", () => {
