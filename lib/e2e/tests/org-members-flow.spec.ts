@@ -338,7 +338,7 @@ test("partner members flow: add → AP → member → remove (AP option visible)
   await partnerEditDialog
     .locator('[data-testid="select-edit-partner-member-role"]')
     .click();
-  await page.getByRole("option", { name: "Member", exact: true }).click();
+  await page.getByRole("option", { name: "Office Staff", exact: true }).click();
   expect((await memberRoleResponse).ok()).toBeTruthy();
   await expect(page.getByText(/Role updated/i).first()).toBeVisible();
   const memberCheck = await pool.query<{ role: string }>(
@@ -367,128 +367,50 @@ test("partner members flow: add → AP → member → remove (AP option visible)
   expect(removed.rows[0].count).toBe("0");
 });
 
-test("vendor members flow: add → admin → member → remove (no AP option)", async ({
-  page,
-}) => {
+test("vendor staff profile: create office staff, retain scoped membership management and remove access", async ({ page }) => {
+  test.setTimeout(120000);
   await loginAsAdmin(page);
   await page.goto(`/vendors/${seed.vendorId}`);
-
-  const card = page.locator('[data-testid="card-vendor-members"]');
+  const card = page.getByTestId("card-vendor-members");
   await expect(card).toBeVisible();
-
-  // Open Add Member dialog and confirm the AP option is NOT offered.
-  await page.locator('[data-testid="button-add-vendor-member"]').click();
-  const dialogEmail = page.locator('[data-testid="input-vendor-member-email"]');
-  await expect(dialogEmail).toBeVisible();
-  await page.locator('[data-testid="select-vendor-member-role"]').click();
-  // The dialog's AP testid is partner-only; vendors must not surface it.
-  await expect(
-    page.locator('[data-testid="select-partner-member-role-ap"]'),
-  ).toHaveCount(0);
-  // Inspect the visible options for the vendor select. Member + Admin
-  // only — anything else is a regression.
-  await expect(
-    page.getByRole("option", { name: "Member", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("option", { name: "Admin", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("option", { name: /Accounts Payable/i }),
-  ).toHaveCount(0);
-  await page.keyboard.press("Escape");
-
+  await page.getByTestId("button-add-vendor-member").click();
+  const form = page.getByTestId("shared-staff-profile");
+  await expect(form.getByLabel("Staff type", { exact: true })).toHaveValue("Office Staff");
+  await expect(form.getByRole("option", { name: /Accounts Payable/i })).toHaveCount(0);
   const memberEmail = `e2e-member-vendor-${seed.stamp}@example.com`;
-  await dialogEmail.fill(memberEmail);
-  await page
-    .locator('[data-testid="input-vendor-member-display-name"]')
-    .fill(`E2E Member Vendor ${seed.stamp}`);
-  await page
-    .locator('[data-testid="input-vendor-member-password"]')
-    .fill(NEW_MEMBER_PASSWORD);
-  await page.locator('[data-testid="button-submit-vendor-member"]').click();
-
-  await expect(
-    page.getByText(/New login created and attached/i).first(),
-  ).toBeVisible();
-  await expect(dialogEmail).toHaveCount(0);
-
-  const membershipId = await findMembershipIdByEmail(
-    "vendor",
-    seed.vendorId,
-    memberEmail,
-  );
-  const memberRow = page.locator(
-    `[data-testid="row-vendor-member-${membershipId}"]`,
-  );
-  await expect(memberRow).toBeVisible();
-  const { rows: userIdRow } = await pool.query<{ id: number }>(
-    `SELECT id FROM users WHERE lower(username) = lower($1)`,
-    [memberEmail],
-  );
-  seed.createdMemberUserIds.push(userIdRow[0].id);
-
-  // The edit-member role select must also omit the AP option.
-  await page
-    .locator(`[data-testid="button-edit-vendor-member-role-${membershipId}"]`)
-    .click();
-  const vendorEditDialog = page.locator('[data-testid="dialog-edit-vendor-member"]');
-  await expect(vendorEditDialog).toBeVisible();
-  await vendorEditDialog
-    .locator('[data-testid="select-edit-vendor-member-role"]')
-    .click();
-  await expect(
-    page.locator(
-      '[data-testid="select-edit-vendor-member-role-ap"]',
-    ),
-  ).toHaveCount(0);
-  await expect(
-    page.getByRole("option", { name: /Accounts Payable/i }),
-  ).toHaveCount(0);
-
-  // member -> admin
-  await page.getByRole("option", { name: "Admin", exact: true }).click();
-  await expect(page.getByText(/Role updated/i).first()).toBeVisible();
-  const adminCheck = await pool.query<{ role: string }>(
-    `SELECT role FROM user_org_memberships WHERE id = $1`,
-    [membershipId],
-  );
-  expect(adminCheck.rows[0].role).toBe("admin");
-
-  // Wait for the previous toast to dismiss so the next assertion below
-  // does not race-match it before the admin→member request finishes.
-  await expect(page.getByText(/Role updated/i)).toHaveCount(0);
-
-  // admin -> member
-  await vendorEditDialog
-    .locator('[data-testid="select-edit-vendor-member-role"]')
-    .click();
-  await page.getByRole("option", { name: "Member", exact: true }).click();
-  await expect(page.getByText(/Role updated/i).first()).toBeVisible();
-  const backCheck = await pool.query<{ role: string }>(
-    `SELECT role FROM user_org_memberships WHERE id = $1`,
-    [membershipId],
-  );
-  expect(backCheck.rows[0].role).toBe("member");
-  await vendorEditDialog.locator('[data-testid="button-edit-vendor-member-close"]').click();
-  await expect(vendorEditDialog).toHaveCount(0);
-
-  // Remove
-  await page
-    .locator(`[data-testid="button-remove-vendor-member-${membershipId}"]`)
-    .click();
-  await page
-    .locator(
-      `[data-testid="button-confirm-remove-vendor-member-${membershipId}"]`,
-    )
-    .click();
-  await expect(page.getByText(/Member removed/i).first()).toBeVisible();
+  await form.getByLabel("First name", { exact: true }).fill("E2E Office");
+  await form.getByLabel("Last name", { exact: true }).fill(seed.stamp);
+  await form.getByLabel("Email", { exact: true }).fill(memberEmail);
+  await form.getByRole("button", { name: "Create Staff Profile", exact: true }).click();
+  await expect(page.getByText("Staff profile created", { exact: true })).toBeVisible();
+  await page.getByTestId("staff-login-portal-enabled").check();
+  await page.getByTestId("staff-login-email").fill(memberEmail);
+  await page.getByTestId("staff-login-password").fill(NEW_MEMBER_PASSWORD);
+  await page.getByTestId("staff-login-save").click();
+  await expect.poll(async () => (await pool.query("select user_id from vendor_people where vendor_id=$1 and lower(email)=lower($2)", [seed.vendorId,memberEmail])).rows[0]?.user_id).toBeTruthy();
+  const person = (await pool.query("select id,user_id,roles,vendor_role from vendor_people where vendor_id=$1 and lower(email)=lower($2)", [seed.vendorId,memberEmail])).rows[0];
+  seed.createdMemberUserIds.push(person.user_id);
+  expect(person.roles).toContain("Office Staff");
+  expect(person.vendor_role).toBe("office");
+  await page.getByRole("button", { name: "Close employee profile", exact: true }).click();
+  const membershipId = await findMembershipIdByEmail("vendor",seed.vendorId,memberEmail);
+  await page.reload();
+  const memberRow = page.getByTestId(`row-vendor-member-${membershipId}`);
+  await expect(memberRow).toContainText("Office Staff");
+  await page.getByTestId(`button-edit-vendor-member-role-${membershipId}`).click();
+  await expect(page.getByTestId("shared-staff-profile").getByLabel("Staff type", { exact: true })).toHaveValue("Office Staff");
+  await page.getByRole("button", { name: "Close employee profile", exact: true }).click();
+  const endpoint=`/api/orgs/vendor/${seed.vendorId}/members/${membershipId}`;
+  expect([400,422]).toContain((await page.request.patch(endpoint,{data:{role:"ap"}})).status());
+  expect((await page.request.patch(endpoint,{data:{role:"admin"}})).ok()).toBeTruthy();
+  expect((await pool.query("select role from user_org_memberships where id=$1",[membershipId])).rows[0].role).toBe("admin");
+  expect((await page.request.patch(endpoint,{data:{role:"member"}})).ok()).toBeTruthy();
+  expect((await pool.query("select role from user_org_memberships where id=$1",[membershipId])).rows[0].role).toBe("member");
+  await page.reload();
+  await page.getByTestId(`button-remove-vendor-member-${membershipId}`).click();
+  await page.getByTestId(`button-confirm-remove-vendor-member-${membershipId}`).click();
   await expect(memberRow).toHaveCount(0);
-  const removed = await pool.query<{ count: string }>(
-    `SELECT count(*)::text AS count FROM user_org_memberships WHERE id = $1`,
-    [membershipId],
-  );
-  expect(removed.rows[0].count).toBe("0");
+  expect((await pool.query("select id from user_org_memberships where id=$1",[membershipId])).rowCount).toBe(0);
 });
 
 test("field-employee row renders as a static badge with no role select", async ({

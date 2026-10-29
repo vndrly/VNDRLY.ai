@@ -82,35 +82,26 @@ test.describe("vendor managed subcontractors", () => {
     test.setTimeout(180000);
     await loginAsVendor(page, { username, password });
     await page.goto(`/vendors/${vendorId}`);
-    const card = page.getByTestId("vendor-managed-subcontractors-card");
+    const card = page.getByTestId("managed-subcontractor-employees-section");
     await expect(card).toBeVisible();
-    await card
-      .getByLabel("Subcontractor business name")
-      .fill(`Example Staffing ${stamp}`);
-    await card
-      .getByRole("button", { name: "Create subcontractor", exact: true })
-      .click();
-    await expect(
-      card.getByRole("heading", {
-        name: `Example Staffing ${stamp}`,
-        exact: true,
-      }),
-    ).toBeVisible();
-    await card.getByRole("button", { name: "Add worker", exact: true }).click();
-    await card.getByLabel("Worker name").fill("Example Gate Worker");
-    await card
-      .getByLabel("Worker email")
-      .fill(`managed-worker-${stamp}@example.invalid`);
-    await card.getByLabel(siteName, { exact: true }).check();
-    await card
-      .getByRole("button", { name: "Save worker access", exact: true })
-      .click();
-    await expect(
-      card.getByText("Example Gate Worker", { exact: true }),
-    ).toBeVisible();
-    const activationUrl = new URL(
-      await card.getByLabel("Worker activation link").inputValue(),
-    );
+    await card.getByRole("button", { name: "Add Contractor", exact: true }).click();
+    let dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Company name", { exact: true }).fill(`Example Staffing ${stamp}`);
+    const companyCreated = page.waitForResponse(response => response.url().endsWith(`/api/vendors/${vendorId}/managed-subcontractors`) && response.request().method() === "POST");
+    await dialog.getByRole("button", { name: "Add Contractor", exact: true }).click();
+    const company = await (await companyCreated).json();
+    await expect(card).toContainText(`Example Staffing ${stamp}`);
+    await card.getByRole("button", { name: "Add Contracted Employee", exact: true }).click();
+    dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Employee name", { exact: true }).fill("Example Gate Worker");
+    await dialog.getByLabel("Email (optional)", { exact: true }).fill(`managed-worker-${stamp}@example.invalid`);
+    await dialog.getByLabel("Send an enrollment invitation", { exact: true }).check();
+    await dialog.getByLabel(siteName, { exact: true }).check();
+    const workerCreated = page.waitForResponse(response => response.url().endsWith(`/api/vendors/${vendorId}/managed-subcontractors/${company.id}/workers`) && response.request().method() === "POST");
+    await dialog.getByRole("button", { name: "Add Contracted Employee", exact: true }).click();
+    const worker = await (await workerCreated).json();
+    await expect(card.getByText("Example Gate Worker", { exact: true })).toBeVisible();
+    const activationUrl = new URL(worker.activationUrl);
     const workerContext = await browser.newContext({
       baseURL: testInfo.project.use.baseURL,
     });
@@ -159,14 +150,11 @@ test.describe("vendor managed subcontractors", () => {
     await expect(
       card.getByText("Example Gate Worker", { exact: true }),
     ).toBeVisible();
-    await card
-      .getByRole("button", { name: "Edit access", exact: true })
-      .click();
-    await card.getByLabel("Operational role").selectOption("gate_supervisor");
-    await card
-      .getByRole("button", { name: "Save worker access", exact: true })
-      .click();
-    await expect(card.getByText(/Gate Supervisor/).first()).toBeVisible();
+    await card.getByText("Example Gate Worker", { exact: true }).click();
+    dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Assigned role", { exact: true }).selectOption("gate_supervisor");
+    await dialog.getByRole("button", { name: "Save Changes", exact: true }).click();
+    await expect(card.getByText("Gate Supervisor", { exact: true })).toBeVisible();
     // Role changes invalidate the prior session; log in for the updated assignment.
     expect(
       (
@@ -180,18 +168,11 @@ test.describe("vendor managed subcontractors", () => {
     await card.screenshot({
       path: testInfo.outputPath("managed-subcontractors.png"),
     });
-    await card
-      .getByRole("button", { name: "Revoke access", exact: true })
-      .click();
-    await card
-      .getByRole("button", { name: "Confirm revoke", exact: true })
-      .click();
-    await expect(
-      card.getByRole("button", { name: "Edit access", exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      card.getByText("Example Gate Worker", { exact: true }),
-    ).toBeVisible();
+    const revoked = await page.request.patch(`/api/vendors/${vendorId}/managed-subcontractors/${company.id}/workers/${worker.id}`, { data: { status: "terminated" } });
+    expect(revoked.ok()).toBeTruthy();
+    await page.reload();
+    await expect(card.getByText("terminated", { exact: true })).toBeVisible();
+    await expect(card.getByText("Example Gate Worker", { exact: true })).toBeVisible();
     expect(
       (
         await workerPage.request.get("/api/visits/gate/assigned-sites")

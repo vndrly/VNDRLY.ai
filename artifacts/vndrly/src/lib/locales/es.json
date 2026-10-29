@@ -4676,6 +4676,7 @@
       "upstream_error": "Un servicio externo no respondió. Inténtalo de nuevo."
     },
     "vendor": {
+      "staff_profile_link_failed": "No se pudo vincular el perfil. Revisa la afiliación a la empresa y el correo de la cuenta existente.",
       "cannot_merge_self": "Un proveedor no se puede fusionar consigo mismo.",
       "consent_email_required": "Se requiere una dirección de correo para enviar el consentimiento.",
       "duplicate_name": "Ya existe un proveedor llamado «{{name}}».",

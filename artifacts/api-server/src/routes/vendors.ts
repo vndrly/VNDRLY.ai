@@ -100,12 +100,12 @@ const VendorPersonAccessBody = z.object({
 // makes repeated submissions reuse one person instead of creating duplicates.
 router.post("/vendors/:vendorId/staff-profile-from-account/:userId", async (req, res): Promise<void> => {
   const session = getSession(req);
-  if (!session) { res.status(401).json({ error: "Not authenticated" }); return; }
+  if (!session) { res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" }); return; }
   const params = z.object({ vendorId: z.coerce.number().int().positive(), userId: z.coerce.number().int().positive() }).safeParse(req.params);
   const body = CreateVendorContactBody.safeParse(req.body);
-  if (!params.success || !body.success) { res.status(400).json({ error: "Invalid staff profile" }); return; }
+  if (!params.success || !body.success) { res.status(400).json({ error: "Invalid staff profile", code: "validation.invalid_input" }); return; }
   if (!(session.role === "admin" || session.role === "vendor" && session.vendorId === params.data.vendorId && session.membershipRole === "admin")) {
-    res.status(403).json({ error: "Company administrator access required" }); return;
+    res.status(403).json({ error: "Company administrator access required", code: "auth.forbidden" }); return;
   }
   const { vendorId, userId } = params.data;
   const result = await db.transaction(async tx => {
@@ -121,7 +121,7 @@ router.post("/vendors/:vendorId/staff-profile-from-account/:userId", async (req,
     await tx.update(userOrgMembershipsTable).set({ vendorPeopleId: person.id }).where(eq(userOrgMembershipsTable.id, membership.id));
     return { status: 200, person };
   });
-  if (result.error) { res.status(result.status).json({ error: result.error }); return; }
+  if (result.error) { res.status(result.status).json({ error: result.error, code: "vendor.staff_profile_link_failed" }); return; }
   res.status(result.status).json(result.person);
 });
 

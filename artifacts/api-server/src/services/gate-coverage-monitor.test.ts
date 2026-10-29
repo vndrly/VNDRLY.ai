@@ -205,3 +205,9 @@ describe("Gate coverage monitoring", () => {
     expect(createException).toHaveBeenCalledTimes(1);
   });
 });
+
+// Exercise the real PostgreSQL parameter binding; injected unit stores cannot catch this.
+it.skipIf(!process.env.DATABASE_URL)("loads an empty distant coverage window with timestamp parameters", async () => {
+  const { databaseGateCoverageDependencies } = await import("./gate-coverage-monitor");
+  expect(await databaseGateCoverageDependencies.loadCandidates(new Date("9998-01-01T00:00:00Z"))).toEqual([]);
+});

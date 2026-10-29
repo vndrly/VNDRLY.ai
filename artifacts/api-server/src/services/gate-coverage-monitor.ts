@@ -136,7 +136,7 @@ async function loadCandidates(at: Date): Promise<GateCoverageCandidate[]> {
        FROM work_hub_shifts s
        JOIN gate_stations g ON g.id=s.gate_station_id
        LEFT JOIN gate_coverage_status c ON c.station_id=s.gate_station_id
-       WHERE s.gate_station_id IS NOT NULL AND s.starts_at <= $1 + interval '24 hours' AND s.ends_at > $1
+       WHERE s.gate_station_id IS NOT NULL AND s.starts_at <= $1::timestamptz + interval '24 hours' AND s.ends_at > $1::timestamptz
          AND s.milestone_status <> 'cancelled'`,
       [at],
     )

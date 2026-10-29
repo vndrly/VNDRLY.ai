@@ -4676,6 +4676,7 @@
       "upstream_error": "An upstream service didn't respond. Please try again."
     },
     "vendor": {
+      "staff_profile_link_failed": "Unable to link the staff profile. Check the company membership and existing account email.",
       "cannot_merge_self": "A vendor can't be merged into itself.",
       "consent_email_required": "An email address is required to send consent.",
       "duplicate_name": "A vendor named \"{{name}}\" already exists.",
