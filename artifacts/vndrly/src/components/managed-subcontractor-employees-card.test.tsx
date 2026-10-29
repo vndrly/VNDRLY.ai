@@ -16,8 +16,8 @@ function mount(items: unknown[]) {
 beforeEach(() => { cleanup(); vi.clearAllMocks(); });
 it("Add Contractor creates only the managed company", async () => {
  const fetch = mount([]);
- await waitFor(() => expect((screen.getByRole("button", { name: "Add Contractor", exact: true }) as HTMLButtonElement).disabled).toBe(false));
- fireEvent.click(screen.getByRole("button", { name: "Add Contractor", exact: true }));
+ await waitFor(() => expect((screen.getByRole("button", { name: "Add Contractor" }) as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByRole("button", { name: "Add Contractor" }));
  const name = screen.getByLabelText("Company name");
  fireEvent.change(name, { target: { value: "StaffGO" } }); fireEvent.submit(name.closest("form")!);
  await waitFor(() => expect(fetch.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(1));
@@ -28,8 +28,8 @@ it("Add Contractor creates only the managed company", async () => {
 });
 it("Add Contracted Employee uses an existing company and does not send enrollment by default", async () => {
  const fetch = mount([company]);
- await waitFor(() => expect((screen.getByRole("button", { name: "Add Contracted Employee", exact: true }) as HTMLButtonElement).disabled).toBe(false));
- fireEvent.click(screen.getByRole("button", { name: "Add Contracted Employee", exact: true }));
+ await waitFor(() => expect((screen.getByRole("button", { name: "Add Contracted Employee" }) as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByRole("button", { name: "Add Contracted Employee" }));
  const name = screen.getByLabelText("Employee name");
  fireEvent.change(name, { target: { value: "Demo Gatekeeper" } });
  fireEvent.click(screen.getByRole("checkbox", { name: "Main Gate" }));
