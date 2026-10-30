@@ -6091,6 +6091,11 @@ components:
     SiteLocation:
       type: object
       properties:
+        gateLinkId:
+          type: ["string", "null"]
+          format: uuid
+        gateLinkName:
+          type: ["string", "null"]
         id:
           type: integer
         partnerId:
@@ -6147,7 +6152,7 @@ components:
           format: date-time
         taxProvider:
           type: ["string", "null"]
-          enum: [rubric_fallback, county_seat, fallback]
+          enum: [rubric_fallback, county_seat, fallback, manual]
         createdAt:
           type: string
           format: date-time
@@ -6156,6 +6161,11 @@ components:
     SiteLocationDetail:
       type: object
       properties:
+        gateLinkId:
+          type: ["string", "null"]
+          format: uuid
+        gateLinkName:
+          type: ["string", "null"]
         id:
           type: integer
         partnerId:
@@ -6207,7 +6217,7 @@ components:
           format: date-time
         taxProvider:
           type: ["string", "null"]
-          enum: [rubric_fallback, county_seat, fallback]
+          enum: [rubric_fallback, county_seat, fallback, manual]
         hidden:
           type: boolean
         supersededAt:
@@ -6227,6 +6237,17 @@ components:
     CreateSiteLocationBody:
       type: object
       properties:
+        gateLink:
+          type: object
+          additionalProperties: false
+          properties:
+            targetSiteId:
+              type: integer
+              minimum: 1
+            name:
+              type: string
+              minLength: 1
+              maxLength: 100
         partnerId:
           type: integer
         name:

@@ -70,6 +70,7 @@ export * from "./createPartnerBodyType";
 export * from "./createPartnerOnboardingBodyType";
 export * from "./createSiteAssignmentBodyType";
 export * from "./createSiteLocationBodyType";
+export * from "./createSiteLocationBodyTypeGateLink";
 export * from "./createTicketBodyType";
 export * from "./createTicketBodyTypeInitialState";
 export * from "./createTicketBodyTypeIntakeChannel";

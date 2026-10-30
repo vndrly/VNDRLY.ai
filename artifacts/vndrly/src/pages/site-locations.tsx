@@ -1,3 +1,4 @@
+import GateLinkFields, { emptyGateLink, gateLinkPayload } from "@/components/gate-link-fields";
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useListSiteLocations, useCreateSiteLocation, useUpdateSiteLocation, useListPartners, getListSiteLocationsQueryKey } from "@workspace/api-client-react";
@@ -83,6 +84,7 @@ export default function SiteLocations() {
     user?.role === "admin" || (user?.role === "partner" && safetyCaps?.isPartnerHse === true);
   const [reactivatingId, setReactivatingId] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
+  const [gateLink, setGateLink] = useState(emptyGateLink);
   const initialPartnerId = isPartner ? String(user!.partnerId!) : "";
   const [form, setForm] = useState<AddSiteForm>(() => emptyForm(initialPartnerId));
   const [locating, setLocating] = useState(false);
@@ -356,6 +358,7 @@ export default function SiteLocations() {
           photoUrl: form.photoUrl,
           afe: form.afe.trim() ? form.afe.trim() : null,
           autoAssignAllVendors: form.autoAssignAllVendors,
+          gateLink:gateLinkPayload(gateLink),
         },
       },
       {
@@ -363,7 +366,7 @@ export default function SiteLocations() {
           queryClient.invalidateQueries({ queryKey: getListSiteLocationsQueryKey() });
           setOpen(false);
           const wasAutoAssigned = form.autoAssignAllVendors;
-          setForm(emptyForm(initialPartnerId));
+          setForm(emptyForm(initialPartnerId)); setGateLink(emptyGateLink);
           lastResolvedAddressRef.current = "";
           lastResolvedReverseKeyRef.current = "";
           forwardReqIdRef.current++;
@@ -454,6 +457,8 @@ export default function SiteLocations() {
                 <Input data-testid="input-site-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </div>
 
+              <GateLinkFields value={gateLink} onChange={setGateLink} partnerId={Number(form.partnerId) || undefined}
+                sites={(sites ?? []).map(site => ({id:site.id,name:site.name,partnerId:site.partnerId}))} disabled={createSite.isPending}/>
               <div className="flex justify-end">
                 <BrandPillButton
                   type="button"

@@ -19,6 +19,7 @@ beforeEach(()=>{
     if(sql.startsWith("SELECT * FROM gate_stations"))rows=[{id:"gate",site_id:3,name:"Main Gate",active:true}];
     else if(sql.startsWith("SELECT id, role, session_version"))rows=[{id:args[0],role:"vendor",session_version:1,display_name:"Admin"}];
     else if(sql.startsWith("SELECT id, name, partner_id"))rows=[{id:3,name:"Antelope Draw",partner_id:5}];
+    else if(sql.startsWith("SELECT id,partner_id,gate_link_id,gate_link_name"))rows=[{id:3,partner_id:5,gate_link_id:null,gate_link_name:null}];
     else if(sql.startsWith("SELECT id FROM site_work_assignments"))rows=[{id:1}];
     else if(sql.startsWith("SELECT id, vendor_people_id, role FROM user_org_memberships"))rows=[{id:args[0]===7?2:18,vendor_people_id:args[0]===7?70:80,role:args[0]===7?"admin":"field_employee"}];
     else if(sql.startsWith("SELECT id FROM user_org_memberships"))rows=administrator?[{id:2}]:[];

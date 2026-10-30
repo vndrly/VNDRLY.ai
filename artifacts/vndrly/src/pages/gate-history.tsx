@@ -1,3 +1,4 @@
+import { useLinkedGates } from "@/hooks/use-linked-gates";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { History, Loader2, Search } from "lucide-react";
@@ -65,10 +66,11 @@ export default function GateHistoryPage() {
   } : null;
   const listFilters = filters && focusedRecordId ? { ...filters, recordType: "all" as const, recordId: focusedRecordId } : filters && trafficView === "arrivals" ? { ...filters, recordType: "pending" as const } : filters;
   const rows = useQuery({ queryKey: ["gate-history-report", listFilters], queryFn: () => queryGateReportRows<GateHistoryRow>("history", listFilters!), enabled: Boolean(listFilters), retry: false });
-  const arrivals = useGateArrivals(!focusedRecordId && (trafficView === "arrivals" || trafficView === "all" && recordType === "all") ? Number(resolvedSiteId) || undefined : undefined);
+  const linkedGates = useLinkedGates(Number(resolvedSiteId) || undefined);
+  const arrivals = useGateArrivals(!focusedRecordId && (trafficView === "arrivals" || trafficView === "all" && recordType === "all") ? Number(resolvedSiteId) || undefined : undefined, linkedGates.data?.siteIds);
   const selectedRecord = useQuery({
-    queryKey: ["gate-history-record", user?.userId, user?.activeMembershipId, resolvedSiteId, recordId],
-    queryFn: () => queryGateReportRows<GateHistoryRow>("history", { siteId: Number(resolvedSiteId), range, recordType: "all", recordId: recordId! }),
+    queryKey: ["gate-history-record", user?.userId, user?.activeMembershipId, resolvedSiteId, resolvedStationId, recordId],
+    queryFn: () => queryGateReportRows<GateHistoryRow>("history", { siteId: Number(resolvedSiteId), ...(resolvedStationId ? {stationId:resolvedStationId} : {}), range, recordType: "all", recordId: recordId! }),
     enabled: Boolean(resolvedSiteId && recordId), retry: false,
   });
   async function correctPresence(visit: GateHistoryRow) {
@@ -171,7 +173,7 @@ export default function GateHistoryPage() {
             <span role="status" className="text-center text-sm text-muted-foreground">{visibleRecords.length ? pageStart + 1 : 0}–{Math.min(pageStart + pageSize, visibleRecords.length)} {c("of", "de")} {visibleRecords.length} {c("Records", "registros")}</span>
             <button type="button" className="group inline-flex disabled:cursor-default disabled:opacity-35" aria-label={c("Next records", "Registros siguientes")} disabled={currentPage === lastPage} onClick={() => setPage(currentPage + 1)}><SphereBackButton direction="right" size={32} /></button>
           </nav>
-          <GateArrivalDetails siteId={Number(resolvedSiteId)} runId={runId} onClose={() => setRunId(null)} />
+          <GateArrivalDetails siteId={arrivals.data?.arrivals.find(row => row.runId === runId)?.siteLocationId ?? Number(resolvedSiteId)} runId={runId} onClose={() => setRunId(null)} />
         </CardContent>
       </Card>
       <GateHistoryRecordDetails open={recordId !== null} record={selectedRecord.data?.[0]} loading={selectedRecord.isLoading} failed={selectedRecord.isError} onClose={() => setRecordId(null)} />

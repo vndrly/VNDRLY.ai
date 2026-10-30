@@ -9,6 +9,10 @@ import type { SiteLocationStatusType } from "./siteLocationStatusType";
 import type { SiteLocationTypeTaxProvider } from "./siteLocationTypeTaxProvider";
 
 export interface SiteLocationType {
+  /** @nullable */
+  gateLinkId?: string | null;
+  /** @nullable */
+  gateLinkName?: string | null;
   id: number;
   partnerId: number;
   name: string;

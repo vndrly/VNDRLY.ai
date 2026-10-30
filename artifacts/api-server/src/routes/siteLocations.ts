@@ -1,6 +1,8 @@
+import { z } from "zod/v4";
+import { requireGateStationManagementAccess } from "../services/gate-change-over";
 import { Router, type IRouter } from "express";
 import { eq, sql, and, or, isNull, inArray } from "drizzle-orm";
-import { db, siteLocationsTable, partnersTable, siteWorkAssignmentsTable, workTypesTable, vendorsTable, vendorWorkTypesTable, vendorPeopleTable, ticketsTable, ticketCrewTable, siteLocationAdminAuditLogTable } from "@workspace/db";
+import { db, pool, siteLocationsTable, partnersTable, siteWorkAssignmentsTable, workTypesTable, vendorsTable, vendorWorkTypesTable, vendorPeopleTable, ticketsTable, ticketCrewTable, siteLocationAdminAuditLogTable } from "@workspace/db";
 import { approvedPartnersForVendor, vendorCanReadSite, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
 import { acceptedMarketplaceSites } from "../lib/accepted-marketplace-access";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
@@ -36,7 +38,7 @@ import {
   DeleteSiteLocationParams,
 } from "@workspace/api-zod";
 import { sendResponse, sendResponseStatus } from "../lib/typed-response";
-import { randomBytes } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import QRCode from "qrcode";
 import { getStateFromCoordinates } from "../utils/latlong-to-state";
 import { sendApiError } from "../lib/apiError";
@@ -71,6 +73,8 @@ const siteLocationPublicSelect = {
   laborTaxRate: siteLocationsTable.laborTaxRate,
   taxJurisdictionResolvedAt: siteLocationsTable.taxJurisdictionResolvedAt,
   taxProvider: siteLocationsTable.taxProvider,
+  gateLinkId: siteLocationsTable.gateLinkId,
+  gateLinkName: siteLocationsTable.gateLinkName,
   createdAt: siteLocationsTable.createdAt,
 } as const;
 
@@ -226,27 +230,41 @@ router.post("/site-locations", async (req, res): Promise<void> => {
     sendApiError(res, 403, "site_location.partner_mismatch", "Cannot create sites for another partner");
     return;
   }
+  const linkParsed = z.object({ gateLink: z.object({targetSiteId:z.number().int().positive().optional(),name:z.string().trim().min(1).max(100).optional()}).strict().optional() }).safeParse(req.body);
+  if (!linkParsed.success) {sendValidationFailed(res,linkParsed.error);return;}
+  const gateLink = linkParsed.data.gateLink;
+  if (gateLink && !gateLink.targetSiteId && !gateLink.name) {sendApiError(res,400,"gate_links.name_required","Enter a Site / Spur link name");return;}
+  if (gateLink?.targetSiteId) {
+    try {await requireGateStationManagementAccess(pool,session,gateLink.targetSiteId);}
+    catch {sendApiError(res,403,"gate_links.forbidden","Site / Spur is not available for linking");return;}
+    const [target] = await db.select({partnerId:siteLocationsTable.partnerId}).from(siteLocationsTable).where(eq(siteLocationsTable.id,gateLink.targetSiteId));
+    if (!target || target.partnerId !== parsed.data.partnerId) {sendApiError(res,400,"gate_links.partner_mismatch","Linked sites must belong to the same partner");return;}
+  }
   const siteCode = generateSiteCode();
   const autoState = parsed.data.state || getStateFromCoordinates(parsed.data.latitude, parsed.data.longitude);
   // Strip the auto-assign flag before insert — it's a request-only hint
   // that drives the secondary site_work_assignments fan-out below; not a
   // column on site_locations.
-  const { autoAssignAllVendors, ...siteValues } = parsed.data;
+  const { autoAssignAllVendors, gateLink: _gateLink, ...siteValues } = parsed.data;
   // 1-mile default if the caller didn't pass a radius. Mirrors the
   // partner-portal create form's DEFAULT_RADIUS_METERS so API-direct
   // creators (assistant flows, scripts) get the same field-ops
   // default a human partner would.
   const radiusToWrite =
     siteValues.siteRadiusMeters == null ? 1609 : siteValues.siteRadiusMeters;
-  const [site] = await db
-    .insert(siteLocationsTable)
-    .values({
-      ...siteValues,
-      siteRadiusMeters: radiusToWrite,
-      siteCode,
-      state: autoState,
-    })
-    .returning();
+  const site = await db.transaction(async tx => {
+    let gateLinkId: string | null = gateLink ? randomUUID() : null;
+    let gateLinkName: string | null = gateLink?.name ?? null;
+    if (gateLink?.targetSiteId) {
+      const [target] = await tx.select().from(siteLocationsTable).where(eq(siteLocationsTable.id,gateLink.targetSiteId)).for("update");
+      if (!target || target.partnerId !== parsed.data.partnerId || target.hidden || !target.isActive) throw Error("Linked site changed; retry creation");
+      gateLinkId = target.gateLinkId ?? gateLinkId;
+      gateLinkName = target.gateLinkName ?? target.name;
+      await tx.update(siteLocationsTable).set({gateLinkId,gateLinkName}).where(eq(siteLocationsTable.id,target.id));
+    }
+    const [created] = await tx.insert(siteLocationsTable).values({...siteValues,siteRadiusMeters:radiusToWrite,siteCode,state:autoState,gateLinkId,gateLinkName}).returning();
+    return created;
+  });
 
   // Hybrid auto-assign (caller opt-in): clone every (vendor, work_type)
   // pair already approved on this partner into site_work_assignments so

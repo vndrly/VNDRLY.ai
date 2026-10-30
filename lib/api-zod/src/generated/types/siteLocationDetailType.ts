@@ -10,6 +10,10 @@ import type { SiteLocationStatusType } from "./siteLocationStatusType";
 import type { SiteWorkAssignmentType } from "./siteWorkAssignmentType";
 
 export interface SiteLocationDetailType {
+  /** @nullable */
+  gateLinkId?: string | null;
+  /** @nullable */
+  gateLinkName?: string | null;
   id: number;
   partnerId: number;
   name: string;

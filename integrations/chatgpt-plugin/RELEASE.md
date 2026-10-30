@@ -1,4 +1,6 @@
-# VNDRLY plugin 1.22.13
+# VNDRLY plugin 1.22.14
+
+Parallel linked gates share authorized Site / Spur traffic, totals, task hoppers and handoff notes. Entry and exit gates remain separate evidence on one visit. The compact Site | Gate selector separates booth connectivity from GPS; unlinked gates hide the connection indicator. Existing MCP identity and grants remain unchanged.
 
 Matches compact employee staffing summaries, company-defined reusable staff positions, shared enrollment flows, recurring Gate shift definitions, unassigned task creation, coverage assignment and branded flyouts. VNDRLY operational roles remain separate from editable company staffing positions. Existing MCP tools, embedded views, five service skills, branding, plugin identity and grants are preserved. This full ship includes production web/API, guarded database migrations, OTA and native TestFlight submission. Submission, approval and public availability remain separate states.
 

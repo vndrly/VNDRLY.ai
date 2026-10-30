@@ -4,6 +4,9 @@ export interface ShiftRecord {
   id: string;
   kind: "visitor" | "employee";
   name: string;
+  siteId?: number;
+  entryGateId?: string | null;
+  exitGateId?: string | null;
   company: string | null;
   plate: string | null;
   checkIn: string;
@@ -152,7 +155,10 @@ export function assembleShiftSnapshot(
       "site-wide records across all gates; visitor and employee records can refer to the same person; vehicle count uses recorded plates only",
   };
 }
-export type ShiftSnapshot = ReturnType<typeof assembleShiftSnapshot>;
+export type ShiftSnapshot = ReturnType<typeof assembleShiftSnapshot> & {
+  linkedScope?: {siteIds:number[];name:string|null;groupId:string|null};
+  linkedHandoffs?: {stationId:string;siteId:number;gateName:string;siteName:string;id:string;notes:string;createdAt:string;operatorName:string}[];
+};
 
 /** AI may select/order facts; it cannot author operational assertions. */
 export function groundedSummary(

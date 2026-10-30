@@ -11,6 +11,8 @@ export type GateHistoryRecord = {
   notes?: string | null; purpose?: string | null; expectedMinutes?: number | null;
   gateStationId?: string | null;
   gateName?: string | null;
+  exitGateName?: string | null;
+  siteLocationId?: number;
   gateAssociationSource?: "user_supplied_historical_correction" | "check_in_gps_evidence" | null;
   gateAssociationProvenance?: {
     source: string; correctionId: string; correctedAt: string; instruction: string;
@@ -31,7 +33,8 @@ export default function GateHistoryRecordDetails({ open, record, loading, failed
     {loading ? <Loader2 className="animate-spin" /> : failed ? <p role="alert">{c("The record could not be loaded.", "No se pudo cargar el registro.")}</p> : !record ? <p role="status">{c("This record is unavailable in the selected site.", "Este registro no está disponible en el sitio seleccionado.")}</p> : <dl className="gate-record-facts text-sm">
       {[
         [c("Record", "Registro"), record.id],
-        [c("Gate", "Acceso"), record.gateName || c("Unknown", "Desconocido")],
+        [c("Entry gate", "Acceso de entrada"), record.gateName || c("Unknown", "Desconocido")],
+        [c("Exit gate", "Acceso de salida"), record.exitGateName || record.checkOutGpsEvidence?.gateName],
         [c("Gate association source", "Origen de la asociación del acceso"), record.gateName ? (
           record.gateAssociationSource === "user_supplied_historical_correction"
             ? c("User-supplied historical correction", "Corrección histórica proporcionada por el usuario")

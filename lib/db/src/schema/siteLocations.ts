@@ -1,4 +1,4 @@
-import { pgTable, jsonb, text, serial, timestamp, integer, doublePrecision, boolean, uniqueIndex, numeric } from "drizzle-orm/pg-core";
+import { pgTable, jsonb, text, serial, timestamp, integer, doublePrecision, boolean, uniqueIndex, numeric, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -6,6 +6,8 @@ import { partnersTable } from "./partners";
 
 export const siteLocationsTable = pgTable("site_locations", {
   fleetTicketPolicy: jsonb("fleet_ticket_policy"),
+  gateLinkId: uuid("gate_link_id"),
+  gateLinkName: text("gate_link_name"),
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id").notNull().references(() => partnersTable.id),
   name: text("name").notNull(),
@@ -52,6 +54,6 @@ export const siteLocationsTable = pgTable("site_locations", {
     .where(sql`${t.sourceRef} IS NOT NULL`),
 }));
 
-export const insertSiteLocationSchema = createInsertSchema(siteLocationsTable).omit({ id: true, siteCode: true, isActive: true, status: true, createdAt: true });
+export const insertSiteLocationSchema = createInsertSchema(siteLocationsTable).omit({ id: true, siteCode: true, isActive: true, status: true, createdAt: true, gateLinkId: true, gateLinkName: true });
 export type InsertSiteLocation = z.infer<typeof insertSiteLocationSchema>;
 export type SiteLocation = typeof siteLocationsTable.$inferSelect;

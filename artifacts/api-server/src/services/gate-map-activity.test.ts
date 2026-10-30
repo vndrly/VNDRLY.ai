@@ -27,7 +27,7 @@ it("uses dashboard definitions with explicit visitor/GPS and employee gate attri
   const result = await readGateMapActivity(session, "gate-a");
   expect(result).toMatchObject({ stationId: "gate-a", siteId: 10, scope: "gate_attributed", window: "current_shift", metrics: { checkIns: 2, checkOuts: 1, pendingAdmission: 1, itemsToReview: 1 } });
   const [sql, values] = mock.query.mock.calls.find(([sql]) => sql.includes("FROM site_visits WHERE"))!;
-  expect(values).toEqual([10, start, "gate-a"]);
+  expect(values).toEqual([[10], start, "gate-a"]);
   expect(sql).toContain("coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=$3");
   expect(sql).toContain("c.gate_station_id::text=$3");
   expect(result).not.toHaveProperty("records");

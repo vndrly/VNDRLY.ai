@@ -3590,6 +3590,8 @@ export const ListSiteLocationsQueryParams = zod.object({
 });
 
 export const ListSiteLocationsResponseItem = zod.object({
+  gateLinkId: zod.string().uuid().nullish(),
+  gateLinkName: zod.string().nullish(),
   id: zod.number(),
   partnerId: zod.number(),
   name: zod.string(),
@@ -3632,7 +3634,7 @@ export const ListSiteLocationsResponseItem = zod.object({
     .describe("Legacy alias of stateTaxRate (informational)"),
   taxJurisdictionResolvedAt: zod.coerce.date().nullable(),
   taxProvider: zod
-    .enum(["rubric_fallback", "county_seat", "fallback"])
+    .enum(["rubric_fallback", "county_seat", "fallback", "manual"])
     .nullable(),
   createdAt: zod.coerce.date(),
 });
@@ -3643,7 +3645,20 @@ export const ListSiteLocationsResponse = zod.array(
 /**
  * @summary Create a new site location
  */
+
+export const createSiteLocationBodyGateLinkNameMax = 100;
+
 export const CreateSiteLocationBody = zod.object({
+  gateLink: zod
+    .object({
+      targetSiteId: zod.number().min(1).optional(),
+      name: zod
+        .string()
+        .min(1)
+        .max(createSiteLocationBodyGateLinkNameMax)
+        .optional(),
+    })
+    .optional(),
   partnerId: zod.number(),
   name: zod.string(),
   address: zod.string(),
@@ -3669,6 +3684,8 @@ export const GetSiteLocationParams = zod.object({
 });
 
 export const GetSiteLocationResponse = zod.object({
+  gateLinkId: zod.string().uuid().nullish(),
+  gateLinkName: zod.string().nullish(),
   id: zod.number(),
   partnerId: zod.number(),
   name: zod.string(),
@@ -3694,7 +3711,7 @@ export const GetSiteLocationResponse = zod.object({
   laborTaxRate: zod.string().nullable(),
   taxJurisdictionResolvedAt: zod.coerce.date().nullable(),
   taxProvider: zod
-    .enum(["rubric_fallback", "county_seat", "fallback"])
+    .enum(["rubric_fallback", "county_seat", "fallback", "manual"])
     .nullable(),
   hidden: zod.boolean(),
   supersededAt: zod.coerce.date().nullable(),
@@ -3761,6 +3778,8 @@ export const UpdateSiteLocationBody = zod.object({
 });
 
 export const UpdateSiteLocationResponse = zod.object({
+  gateLinkId: zod.string().uuid().nullish(),
+  gateLinkName: zod.string().nullish(),
   id: zod.number(),
   partnerId: zod.number(),
   name: zod.string(),
@@ -3803,7 +3822,7 @@ export const UpdateSiteLocationResponse = zod.object({
     .describe("Legacy alias of stateTaxRate (informational)"),
   taxJurisdictionResolvedAt: zod.coerce.date().nullable(),
   taxProvider: zod
-    .enum(["rubric_fallback", "county_seat", "fallback"])
+    .enum(["rubric_fallback", "county_seat", "fallback", "manual"])
     .nullable(),
   createdAt: zod.coerce.date(),
 });
@@ -4533,6 +4552,8 @@ export const GetPortalInfoParams = zod.object({
 
 export const GetPortalInfoResponse = zod.object({
   siteLocation: zod.object({
+    gateLinkId: zod.string().uuid().nullish(),
+    gateLinkName: zod.string().nullish(),
     id: zod.number(),
     partnerId: zod.number(),
     name: zod.string(),
@@ -4575,7 +4596,7 @@ export const GetPortalInfoResponse = zod.object({
       .describe("Legacy alias of stateTaxRate (informational)"),
     taxJurisdictionResolvedAt: zod.coerce.date().nullable(),
     taxProvider: zod
-      .enum(["rubric_fallback", "county_seat", "fallback"])
+      .enum(["rubric_fallback", "county_seat", "fallback", "manual"])
       .nullable(),
     createdAt: zod.coerce.date(),
   }),

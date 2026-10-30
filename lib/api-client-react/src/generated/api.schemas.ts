@@ -2034,9 +2034,14 @@ export const SiteLocationTaxProvider = {
   rubric_fallback: "rubric_fallback",
   county_seat: "county_seat",
   fallback: "fallback",
+  manual: "manual",
 } as const;
 
 export interface SiteLocation {
+  /** @nullable */
+  gateLinkId?: string | null;
+  /** @nullable */
+  gateLinkName?: string | null;
   id: number;
   partnerId: number;
   name: string;
@@ -2107,6 +2112,7 @@ export const SiteLocationDetailTaxProvider = {
   rubric_fallback: "rubric_fallback",
   county_seat: "county_seat",
   fallback: "fallback",
+  manual: "manual",
 } as const;
 
 export interface SiteWorkAssignment {
@@ -2124,6 +2130,10 @@ export interface SiteWorkAssignment {
 }
 
 export interface SiteLocationDetail {
+  /** @nullable */
+  gateLinkId?: string | null;
+  /** @nullable */
+  gateLinkName?: string | null;
   id: number;
   partnerId: number;
   name: string;
@@ -2173,7 +2183,18 @@ export interface SiteLocationDetail {
   assignments: SiteWorkAssignment[];
 }
 
+export type CreateSiteLocationBodyGateLink = {
+  /** @minimum 1 */
+  targetSiteId?: number;
+  /**
+   * @minLength 1
+   * @maxLength 100
+   */
+  name?: string;
+};
+
 export interface CreateSiteLocationBody {
+  gateLink?: CreateSiteLocationBodyGateLink;
   partnerId: number;
   name: string;
   address: string;

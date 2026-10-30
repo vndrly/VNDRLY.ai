@@ -5,8 +5,10 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+import type { CreateSiteLocationBodyTypeGateLink } from "./createSiteLocationBodyTypeGateLink";
 
 export interface CreateSiteLocationBodyType {
+  gateLink?: CreateSiteLocationBodyTypeGateLink;
   partnerId: number;
   name: string;
   address: string;

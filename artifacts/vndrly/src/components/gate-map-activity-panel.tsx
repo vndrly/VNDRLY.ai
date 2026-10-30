@@ -9,7 +9,7 @@ export function GateMapActivityPanel({ gates, selectedGateId, userId, membership
   gates: Gate[]; selectedGateId: string | null; userId: number; membershipId?: number | null;
 }) {
   const { i18n } = useTranslation(), es = i18n.language?.startsWith("es");
-  // Dashboard activity is site-wide. In All mode count each authorized site once.
+  // Fetch each authorized site, then count each explicit parallel group once.
   const selected = gates.find(gate => gate.id === selectedGateId);
   const scoped = selected ? [selected] : [...new Map(gates.map(gate => [gate.siteId, gate])).values()];
   const activity = useQuery({
@@ -18,9 +18,15 @@ export function GateMapActivityPanel({ gates, selectedGateId, userId, membership
     enabled: scoped.length > 0, retry: false, refetchInterval: 15000,
   });
   const states = activity.data ?? [];
-  const snapshots = states.flatMap(state => state.snapshot ? [state.snapshot] : []);
+  const received = states.flatMap(state => state.snapshot ? [{siteId:state.site.id,snapshot:state.snapshot}] : []);
+  const shared = new Map<string, ChangeOverSnapshot>();
+  for (const {siteId,snapshot:value} of received) {
+    const key=value.linkedScope?.groupId ?? `site:${siteId}`, previous=shared.get(key);
+    if (!previous || value.generatedAt > previous.generatedAt) shared.set(key,value);
+  }
+  const snapshots = [...shared.values()];
   let snapshot: ChangeOverSnapshot | null = null;
-  if (!activity.isError && snapshots.length > 0 && snapshots.length === scoped.length) {
+  if (!activity.isError && snapshots.length > 0 && received.length === scoped.length) {
     const first = snapshots[0]!;
     const keys = Object.keys(first.metrics) as (keyof ChangeOverSnapshot["metrics"])[];
     snapshot = { ...first,

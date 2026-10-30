@@ -1,6 +1,7 @@
+import { useLinkedGates } from "@/hooks/use-linked-gates";
 import WorkdayControls from "@/components/workday-controls";
 import "@/components/gate-dashboard.css";
-import { gateDeparturesForSite, gateHistoryFromIso } from "@/lib/gate-history";
+import { gateHistoryFromIso } from "@/lib/gate-history";
 import "@/components/gate-presence-tabs.css";
 import GateSiteGateSelect from "@/components/gate-site-gate-select";
 import { GateArrivalsPanel, useGateArrivals } from "@/components/gate-arrivals-panel";
@@ -335,15 +336,17 @@ export default function GatekeeperPage() {
     enabled: !!confirmedCode,
     retry: false,
   });
+  const linkedGates = useLinkedGates(site.data?.site.id);
+  const sharedSiteIds = linkedGates.data?.siteIds ?? (site.data?.site.id ? [site.data.site.id] : []);
   const departures = useQuery({
-    queryKey: ["gatekeeper-departures", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, site.data?.site.id],
-    queryFn: () => listAllVisits({ siteLocationId: site.data!.site.id, from: gateHistoryFromIso(), overlap: true }),
+    queryKey: ["gatekeeper-departures", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, sharedSiteIds],
+    queryFn: async () => (await Promise.all(sharedSiteIds.map(siteLocationId => listAllVisits({ siteLocationId, from: gateHistoryFromIso(), overlap: true })))).flat(),
     enabled: presenceView === "departures" && Boolean(site.data?.site.id),
     refetchInterval: presenceView === "departures" ? 30000 : false,
     retry: false,
   });
-  const recentDepartures = useMemo(() => gateDeparturesForSite(departures.data ?? [], site.data?.site.id).slice(0, 100), [departures.data, site.data?.site.id]);
-  const arrivals = useGateArrivals(site.data?.site.id);
+  const recentDepartures = useMemo(() => (departures.data ?? []).filter(row => sharedSiteIds.includes(row.siteLocationId) && Boolean(row.checkOutTime)).sort((a,b) => Date.parse(b.checkOutTime!) - Date.parse(a.checkOutTime!)).slice(0, 100), [departures.data, sharedSiteIds.join(",")]);
+  const arrivals = useGateArrivals(site.data?.site.id, sharedSiteIds);
   useEffect(() => {
     setDetailVisitId(null);
     setDetailRunId(null);
@@ -895,10 +898,10 @@ export default function GatekeeperPage() {
     : fence.milesToSite != null ? t("gatekeeper.gpsDistanceEvidence", { miles: fence.milesToSite.toFixed(1), radius: fence.radiusMiles?.toFixed(1) })
     : t("gatekeeper.gpsRequiredToSubmit");
   const pendingVisits = activeVisits.filter(
-    (visit) => visit.siteLocationId === site.data?.site.id && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus === "pending",
+    (visit) => sharedSiteIds.includes(visit.siteLocationId) && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus === "pending",
   ).slice(0, 100);
   const onSiteVisits = activeVisits.filter(
-    (visit) => visit.siteLocationId === site.data?.site.id && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus !== "pending",
+    (visit) => sharedSiteIds.includes(visit.siteLocationId) && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus !== "pending",
   ).slice(0, 100);
 
   const currentPlateMatchKey = plateMatchKey(plateState, vehiclePlate);
@@ -1156,7 +1159,7 @@ export default function GatekeeperPage() {
         coords?.latitude,
         coords?.longitude,
         undefined,
-        activeVisits.find(visit => visit.id === id)?.siteLocationId === site.data?.site.id ? selectedGateLocation?.id : undefined,
+        selectedGateLocation?.id,
       );
         resetEntry();
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
@@ -1715,7 +1718,7 @@ export default function GatekeeperPage() {
           </CardContent>
         </Card>
         <GateVisitDetails visitId={detailVisitId} onClose={() => setDetailVisitId(null)} onOpenRun={runId => { setDetailVisitId(null); setDetailRunId(runId); }} />
-        <GateArrivalDetails siteId={site.data?.site.id} runId={detailRunId} onClose={() => setDetailRunId(null)} />
+        <GateArrivalDetails siteId={arrivals.data?.arrivals.find(row => row.runId === detailRunId)?.siteLocationId ?? site.data?.site.id} runId={detailRunId} onClose={() => setDetailRunId(null)} />
         </div>
       </div>
     </div>

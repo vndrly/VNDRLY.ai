@@ -83,6 +83,7 @@ function tableTag(name: string, cols: string[]) {
 }
 
 const tables = {
+  gateStations: tableTag("gateStations", ["id","siteId","name","latitude","longitude","geofenceRadiusM","active"]),
   guestSessions: tableTag("guestSessions", [
     "id",
     "tokenJti",
@@ -101,6 +102,8 @@ const tables = {
   siteVisits: tableTag("siteVisits", [
     "id",
     "siteLocationId",
+    "gateStationId",
+    "gateAssociationProvenance",
     "guestSessionId",
     "firstName",
     "lastName",
@@ -192,6 +195,7 @@ const tables = {
 };
 
 const fixtures: Record<string, Row[]> = {
+  gateStations: [],
   guestSessions: [],
   siteVisits: [],
   siteLocations: [],
@@ -413,6 +417,7 @@ vi.mock("@workspace/db", () => {
     pool: { query: vi.fn(async () => ({ rows: [] })) },
     guestSessionsTable: tables.guestSessions,
     siteVisitsTable: tables.siteVisits,
+    gateStationsTable: tables.gateStations,
     siteLocationsTable: tables.siteLocations,
     partnersTable: tables.partners,
     vendorsTable: tables.vendors,
@@ -426,6 +431,12 @@ vi.mock("@workspace/db", () => {
     ticketNoteLogsTable: tableTag("ticketNoteLogs", []),
   };
 });
+
+vi.mock("../services/gate-links",()=>({linkedGateScope:async(_c:any,_s:any,siteId:number)=>{
+  const source=fixtures.siteLocations.find(row=>row.id===siteId);
+  return {siteIds:source?.gateLinkId ? fixtures.siteLocations.filter(row=>row.gateLinkId===source.gateLinkId && row.partnerId===source.partnerId).map(row=>row.id) : [siteId],groupId:source?.gateLinkId??null};
+}}));
+vi.mock("../services/gate-change-over",async original=>({...await original<typeof import("../services/gate-change-over")>(),listChangeOverStations:async(_s:any,siteId:number)=>fixtures.gateStations.filter(row=>row.siteId===siteId&&row.active!==false)}));
 
 vi.mock("drizzle-orm", () => {
   const passthrough = (..._args: any[]) => ({ kind: "true" });
@@ -2129,6 +2140,41 @@ describe("GET /api/visits/sites/:siteId/preferred-plate-states", () => {
 });
 
 describe("gatekeeper visit workflow", () => {
+  function linkedVisitFixture(pending=false) {
+    const {site:seededSite,vendor}=seedScenario(); const site=Object.assign(seededSite,{gateLinkId:"parallel"});
+    const other={...site,id:999,name:"Other gate site",gateLinkId:"parallel"};fixtures.siteLocations.push(other);
+    fixtures.siteWorkAssignments.push({id:999,siteLocationId:other.id,vendorId:vendor.id,isGateContractor:true});
+    const entry={id:"11111111-1111-4111-8111-111111111111",siteId:site.id,name:"Gate 1",latitude:site.latitude,longitude:site.longitude,geofenceRadiusM:500,active:true};
+    const exit={...entry,id:"22222222-2222-4222-8222-222222222222",siteId:other.id,name:"Gate 2"};fixtures.gateStations.push(entry,exit);
+    fixtures.siteVisits.push({id:88,siteLocationId:site.id,firstName:"Pat",lastName:"Driver",company:"Hauling",vehiclePlate:"TRK88",plateState:"TX",admissionStatus:pending?"pending":"admitted",checkInTime:new Date("2026-10-28T12:00:00Z"),checkOutTime:null,gateStationId:entry.id,checkInGpsEvidence:{gateStationId:entry.id,gateName:entry.name},hostType:"partner",hostPartnerId:site.partnerId});
+    return {site,other,entry,exit,cookie:staffCookie({role:"vendor",vendorId:vendor.id,vendorRole:"gatekeeper"})};
+  }
+  it("retains one visit when the same truck is checked in through another linked gate",async()=>{
+    const f=linkedVisitFixture();
+    const result=await request(app).post("/api/visits/gate/check-in").set("Cookie",f.cookie).send({siteLocationId:f.other.id,gateStationId:f.exit.id,firstName:"Pat",lastName:"Driver",company:"Hauling",vehiclePlate:"TRK88",plateState:"TX"});
+    expectStatus(result,200);expect(result.body.id).toBe(88);expect(fixtures.siteVisits).toHaveLength(1);
+    expect(fixtures.siteVisits[0].checkInGpsEvidence.gateStationId).toBe(f.entry.id);
+  });
+  it("records exit through another linked gate without replacing the entry gate",async()=>{
+    const f=linkedVisitFixture();
+    const result=await request(app).post("/api/visits/gate/88/check-out").set("Cookie",f.cookie).send({gateStationId:f.exit.id});
+    expectStatus(result,200);expect(result.body.checkOutGpsEvidence.gateStationId).toBe(f.exit.id);
+    expect(result.body.checkInGpsEvidence.gateStationId).toBe(f.entry.id);
+    const repeat=await request(app).post("/api/visits/gate/88/check-out").set("Cookie",f.cookie).send({gateStationId:f.exit.id});
+    expectStatus(repeat,200);expect(repeat.body.checkOutTime).toBe(result.body.checkOutTime);
+  });
+  it("rejects checkout at an unlinked gate",async()=>{
+    const f=linkedVisitFixture();fixtures.siteLocations.find(row=>row.id===f.other.id)!.gateLinkId=null;
+    const result=await request(app).post("/api/visits/gate/88/check-out").set("Cookie",f.cookie).send({gateStationId:f.exit.id});
+    expectStatus(result,403);expect(fixtures.siteVisits[0].checkOutTime).toBeNull();
+  });
+  it("records the actual linked entry gate when a cleared waiting visit arrives",async()=>{
+    const f=linkedVisitFixture(true);
+    const result=await request(app).post("/api/visits/gate/check-in").set("Cookie",f.cookie).send({siteLocationId:f.other.id,gateStationId:f.exit.id,firstName:"Pat",lastName:"Driver",company:"Hauling",vehiclePlate:"TRK88",plateState:"TX"});
+    expectStatus(result,201);expect(result.body.id).toBe(88);expect(fixtures.siteVisits).toHaveLength(1);
+    expect(result.body).toMatchObject({admissionStatus:"admitted",gateStationId:f.exit.id,checkInGpsEvidence:{gateStationId:f.exit.id}});
+  });
+
   it("Admit records repeat-safe entry clearance without recording an arrival or changing other facts", async () => {
     const { site, vendor } = seedScenario();
     const originalAt = "2026-10-28T12:00:00.000Z";

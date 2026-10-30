@@ -17,4 +17,5 @@ export const SiteLocationDetailTypeTaxProvider = {
   rubric_fallback: "rubric_fallback",
   county_seat: "county_seat",
   fallback: "fallback",
+  manual: "manual",
 } as const;

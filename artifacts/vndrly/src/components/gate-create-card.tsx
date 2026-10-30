@@ -1,3 +1,4 @@
+import GateLinkFields, { emptyGateLink, gateLinkPayload, type LinkSite } from "./gate-link-fields";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, MapPin, Settings2 } from "lucide-react";
@@ -17,6 +18,7 @@ export default function GateCreateCard() {
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n.language?.startsWith("es") ? es : en;
   const [selectedSite, setSelectedSite] = useState("");
+  const [link, setLink] = useState(emptyGateLink);
   const [mode, setMode] = useState<"create" | "move" | "edit">("create");
   const [editingGate, setEditingGate] = useState<EditableGate | null>(null);
   const editOperation = useRef<{ fingerprint: string; operationId: string } | null>(null);
@@ -30,7 +32,7 @@ export default function GateCreateCard() {
   useEffect(() => () => { requestRevision.current += 1; }, []);
   const sites = useQuery({
     queryKey: ["gate-station-management-sites", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId],
-    queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/station-management/sites"),
+    queryFn: () => changeOverRequest<{ sites: LinkSite[] }>("/station-management/sites"),
     enabled: Boolean(user?.userId), retry: false,
   });
   const available = sites.data?.sites ?? [];
@@ -39,7 +41,7 @@ export default function GateCreateCard() {
   const editableGates = useQuery({
     queryKey: ["gate-station-management-gates", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, siteId],
     queryFn: () => changeOverRequest<{ stations: EditableGate[] }>(`/station-management/stations?siteId=${siteId}`),
-    enabled: canManage && mode !== "create" && Boolean(siteId), retry: false, refetchOnWindowFocus: false,
+    enabled: canManage && Boolean(siteId), retry: false, refetchOnWindowFocus: false,
   });
   const lat = Number(latitude), lng = Number(longitude);
   const validLocation = latitude.trim() !== "" && longitude.trim() !== "" && Number.isFinite(lat) && Math.abs(lat) <= 90 && Number.isFinite(lng) && Math.abs(lng) <= 180;
@@ -82,7 +84,7 @@ export default function GateCreateCard() {
     if (!canManage || !siteId || !name.trim() || !validLocation || !editable || (mode !== "create" && !hasEdits) || saveLock.current || locating || !navigator.onLine || sites.isError) return;
     saveLock.current = true; setBusy(true); setError(""); setSaved("");
     try {
-      const values = { siteId, name: name.trim(), location: { latitude: lat, longitude: lng } };
+      const values = { siteId, name: name.trim(), location: { latitude: lat, longitude: lng }, ...(mode === "create" && link.mode !== "none" ? {link: gateLinkPayload(link)} : {}) };
       if (mode !== "create" && editingGate) {
         const fingerprint = JSON.stringify({ ...values, id: editingGate.id, expectedVersion: editingGate.version });
         if (editOperation.current?.fingerprint !== fingerprint) editOperation.current = { fingerprint, operationId: crypto.randomUUID() };
@@ -90,9 +92,9 @@ export default function GateCreateCard() {
         setEditingGate(updated);
       } else {
         await changeOverRequest("/stations", values);
-        setName(""); clearLocation(); setAddress("");
+        setName(""); clearLocation(); setAddress(""); setLink(emptyGateLink);
       }
-      await Promise.all(["gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
+      await Promise.all(["linked-gates", "gate-station-management-sites", "gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
       setSaved(mode !== "create" ? c("Gate location saved.", "Ubicación del acceso guardada.") : c(`Gate created: ${values.name}`, `Acceso creado: ${values.name}`));
     } catch (failure) { setError(failure instanceof Error ? failure.message : t("changeOver.failed")); }
     finally { saveLock.current = false; setBusy(false); }
@@ -106,7 +108,7 @@ export default function GateCreateCard() {
       if (editOperation.current?.fingerprint !== fingerprint) editOperation.current = { fingerprint, operationId: crypto.randomUUID() };
       await changeOverRequest(`/stations/${editingGate.id}/retire`, { ...values, operationId: editOperation.current.operationId });
       setEditingGate(null); setName(""); setAddress(""); clearLocation();
-      await Promise.all(["gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
+      await Promise.all(["linked-gates", "gate-station-management-sites", "gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
       setSaved(c("Gate removed from active use. Its history is retained.", "Acceso retirado del uso activo. Su historial se conserva."));
     } catch (failure) { setError(failure instanceof Error ? failure.message : t("changeOver.failed")); }
     finally { saveLock.current = false; setBusy(false); }
@@ -118,12 +120,18 @@ export default function GateCreateCard() {
       <details className="gate-panel-disclosure" open>
         <summary><ClipboardList aria-hidden="true" /><span className="flex-1">{c("Gate Details", "Detalles del acceso")}</span></summary>
         <div className="grid gap-3 pb-3 sm:grid-cols-2">
-          <label className="grid min-w-0 gap-1 text-sm font-medium">{t("changeOver.site")}<BrandedSelect value={siteId} disabled={busy} onChange={event => { setSelectedSite(event.target.value); setEditingGate(null); if (mode !== "create") setName(""); clearLocation(); setAddress(""); }}>{available.map(site => <option key={site.id} value={site.id}>{site.name}</option>)}</BrandedSelect></label>
+          <label className="grid min-w-0 gap-1 text-sm font-medium">{t("changeOver.site")}<BrandedSelect value={siteId} disabled={busy} onChange={event => { setSelectedSite(event.target.value); setLink(emptyGateLink); setEditingGate(null); if (mode !== "create") setName(""); clearLocation(); setAddress(""); }}>{available.map(site => <option key={site.id} value={site.id}>{site.name}</option>)}</BrandedSelect></label>
           {mode !== "create" && <label className="grid min-w-0 gap-1 text-sm font-medium">{c("Choose a gate", "Elegir acceso")}<BrandedSelect value={editingGate?.id ?? ""} disabled={busy || editableGates.isFetching} onChange={event => loadGate(event.target.value)}><option value="">{c("Choose a gate", "Elegir acceso")}</option>{editableGates.data?.stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}</BrandedSelect></label>}
           <label className="grid min-w-0 gap-1 text-sm font-medium">{mode !== "create" ? c("Gate name", "Nombre del acceso") : t("changeOver.newGate")}<BrandedInput required value={name} maxLength={80} readOnly={mode === "move"} disabled={busy || !editable} onChange={event => { setName(event.target.value); setSaved(""); }} /></label>
           {mode !== "create" && editableGates.isError && <p role="alert">{c("Gates could not load. Refresh to try again.", "No se pudieron cargar los accesos. Actualice para reintentar.")}</p>}
         </div>
       </details>
+      <div className="pb-3">
+        <GateLinkFields value={link} onChange={value => setLink(value.mode === "new" && !value.name ? {...value,name:available.find(site => site.id === siteId)?.gateLinkName ?? available.find(site => site.id === siteId)?.name ?? ""} : value)} sites={available} siteId={siteId} partnerId={available.find(site => site.id === siteId)?.partnerId} disabled={busy}/>
+        {mode !== "create" && link.mode !== "none" && <button type="button" className="gate-history-filter mt-2" disabled={busy || (link.mode === "new" ? !link.name.trim() : !link.targetSiteId)} onClick={async () => {
+          setBusy(true); setError(""); try { await changeOverRequest("/site-link", {siteId,...gateLinkPayload(link)}); setLink(emptyGateLink); await Promise.all(["linked-gates","gate-station-management-sites","change-over-state"].map(key => cache.invalidateQueries({queryKey:[key]}))); setSaved(c("Parallel gates linked.","Accesos paralelos vinculados.")); } catch(e) {setError(e instanceof Error ? e.message : t("changeOver.failed"));} finally {setBusy(false);}
+        }}>{c("Save link", "Guardar vínculo")}</button>}
+      </div>
       <details className="gate-panel-disclosure" open>
         <summary><MapPin aria-hidden="true" /><span className="flex-1">{c("Gate Location", "Ubicación del acceso")}</span><small>{validLocation ? c("Location set", "Ubicación lista") : c("Not set", "Sin establecer")}</small></summary>
         <div className="grid gap-3 pb-3">

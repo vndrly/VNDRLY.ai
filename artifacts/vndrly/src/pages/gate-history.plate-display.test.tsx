@@ -40,6 +40,17 @@ beforeEach(() => {
 });
 
 describe("GateHistoryPage plate display", () => {
+  it("opens a crossing from another linked site using the selected gate's shared report scope", async () => {
+    const stationId="00000000-0000-4000-8000-000000000042";
+    window.history.replaceState({}, "", `/gate/history?siteId=42&stationId=${stationId}&recordId=visit%3A88`);
+    queryGateReportRows.mockImplementation(async (_kind, filters) => filters.recordId && filters.stationId===stationId
+      ? [{id:"visit:88",siteLocationId:43,name:"Parallel gate driver",gateName:"Entry gate A",exitGateName:"Exit gate B",checkInTime:"2026-10-28T12:00:00Z",checkOutTime:"2026-10-28T13:00:00Z"}] : []);
+    render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}})}><GateHistoryPage/></QueryClientProvider>);
+    const dialog=await screen.findByRole("dialog");
+    await waitFor(()=>expect(dialog.textContent).toContain("Exit gate B"));
+    expect(dialog.textContent).toContain("Entry gate A");
+    expect(queryGateReportRows).toHaveBeenCalledWith("history",expect.objectContaining({siteId:42,stationId,recordId:"visit:88"}));
+  });
   it("pages mixed traffic 25 at a time with branded arrows and resets after filtering", async () => {
     const records = Array.from({ length: 51 }, (_, index) => ({ id: `visit:${index + 1}`, name: `Driver ${index + 1}`, checkInTime: new Date(Date.UTC(2026, 9, 28, 12, index)).toISOString() }));
     queryGateReportRows.mockResolvedValue(records);

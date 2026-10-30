@@ -77,13 +77,17 @@ export function ShiftSnapshotView({
     const records = new Map<string, RecordRow>([...(snapshot?.records ?? []), ...(snapshot?.outstanding ?? [])].map(row => [row.id, row]));
     const recordLink = (row: RecordRow, recordType: string, key = row.id, detail?: string) => {
       const recordId = row.id.replace(/^checkin:/, "employee:");
+      const recordParams = new URLSearchParams(historyBaseHref.split("?")[1]);
+      if (row.siteId) recordParams.set("siteId",String(row.siteId));
+      recordParams.delete("stationId");
+      const linkedRecordHref = `/gate/history?${recordParams}`;
       const pending = recordType === "pending" || snapshot?.metricRecordIds?.pendingAdmission?.includes(row.id);
       const departed = row.checkOut && Date.parse(row.checkOut) <= Date.parse(snapshot?.generatedAt ?? "");
       const status = pending ? c("Awaiting Admission", "Esperando admisión") : departed ? c("Departed", "Salió") : c("On Site", "En el sitio");
       const company = row.company?.replace(/\s*\(fictional\)/gi, "").trim();
       const plate = row.plate?.trim().replace(/\s*[:•·]\s*/, ".");
       const description = [[company, plate].filter(Boolean).join(" "), status].filter(Boolean).join(" · ");
-      return <Link key={key} className="gate-metric-record" href={`${historyBaseHref}&recordType=${recordType}&recordId=${encodeURIComponent(recordId)}&view=record`}><strong>{row.name || row.id}</strong><small title={detail ?? description}>{description}</small></Link>;
+      return <Link key={key} className="gate-metric-record" href={`${linkedRecordHref}&recordType=${recordType}&recordId=${encodeURIComponent(recordId)}&view=record`}><strong>{row.name || row.id}</strong><small title={detail ?? description}>{description}</small></Link>;
     };
     const metric = (key: keyof ChangeOverSnapshot["metrics"], Icon: typeof LogIn) => {
       const ids = snapshot?.metricRecordIds?.[key];
@@ -99,7 +103,7 @@ export function ShiftSnapshotView({
     };
     return <>
       <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} />
-      <WorkspacePanel title={c("On site", "En el sitio")} subtitle={c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
+      <WorkspacePanel title={c("On site", "En el sitio")} subtitle={snapshot?.linkedScope?.name ? `${snapshot.linkedScope.name} · ${c("Shared linked-gate presence", "Presencia compartida de accesos vinculados")}` : c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
         {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
         <details className="gate-panel-disclosure" data-testid="dashboard-metric-outstanding"><summary><ClipboardList aria-hidden="true" /><span className="flex-1">{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.outstanding.map(row => recordLink(row, "on_site"))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.outstanding.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=on_site`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
       </WorkspacePanel>

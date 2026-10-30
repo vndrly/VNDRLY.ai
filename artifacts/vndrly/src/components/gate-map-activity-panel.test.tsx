@@ -33,3 +33,13 @@ it("shows unavailable instead of zero when the activity request fails", async ()
   expect(await screen.findByRole("alert")).toBeTruthy();
   expect(screen.getByTestId("dashboard-metric-checkIns").querySelector("summary small")?.textContent).toBe("Unavailable");
 });
+it("counts a parallel group's shared totals and records once in All mode", async () => {
+  const shared=state("a",1,5);
+  const snapshot={...shared.snapshot,linkedScope:{groupId:"spur",siteIds:[1,2],name:"North Spur"}};
+  request.mockImplementation(async path=>({...shared,site:{id:path==="/b/state"?2:1},snapshot}));
+  mount(null);
+  const row=await screen.findByTestId("dashboard-metric-checkIns");
+  await waitFor(()=>expect(row.querySelector("summary small")?.textContent).toBe("5"));
+  fireEvent.click(row.querySelector("summary")!);
+  expect(within(row).getAllByRole("link",{name:/Visitor 1/})).toHaveLength(1);
+});

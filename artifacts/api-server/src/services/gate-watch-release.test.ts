@@ -13,6 +13,7 @@ beforeEach(()=>{
     if(sql.startsWith("SELECT * FROM gate_stations"))rows=[{id:"gate",site_id:3,active:true}];
     else if(sql.startsWith("SELECT id, role, session_version"))rows=[{id:7,role:"admin",session_version:1}];
     else if(sql.startsWith("SELECT id, name, partner_id"))rows=[{id:3,name:"Site",partner_id:5}];
+    else if(sql.startsWith("SELECT id,partner_id,gate_link_id,gate_link_name"))rows=[{id:3,partner_id:5,gate_link_id:null,gate_link_name:null}];
     else if(sql.startsWith("SELECT * FROM gate_shifts WHERE id="))rows=[shift];
     else if(sql.startsWith("INSERT INTO gate_preparations"))rows=[{id:"prep"}];
     else if(sql.startsWith("UPDATE gate_shifts")){shift={...shift,ended_at:args[1],preparation_id:args[2]};}

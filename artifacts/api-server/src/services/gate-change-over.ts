@@ -1,3 +1,4 @@
+import { linkedGateScope, linkGateSite } from "./gate-links";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import {recordGateWorkday, endGateWorkdayForRecovery} from "./gate-workday";
 import {WorkdayError} from "./workday";
@@ -305,7 +306,7 @@ export async function administerGateWatch(session:SessionPayload,input:AdminWatc
     if((await c.query("SELECT id FROM gate_shifts WHERE operator_id=$1 AND ended_at IS NULL UNION ALL SELECT id FROM gate_duty_sessions WHERE user_id=$1 AND ended_at IS NULL LIMIT 1",[incoming.userId])).rowCount)return fail(409,"operator_on_watch","Choose someone who is not currently on watch");
     await requireChangeOverAccess(c,incoming,access.station.site_id);
     if(input.action==="assume"&&session.userId&&(session.vendorId||session.partnerId))await assertRequiredWorkClear(c,session.userId,session.partnerId?{type:"partner",id:session.partnerId}:{type:"vendor",id:session.vendorId!});
-    const facts=await snapshot(c,access.station.site_id,input.stationId,shift.started_at),now=new Date();
+    const facts=await gateTrafficSnapshot(c, session,access.station.site_id,input.stationId,shift.started_at),now=new Date();
     if(input.action==="assume"&&input.acknowledged!==undefined) {
       if(!input.acknowledged||(shift.preparation_id??null)!==(input.preparationId??null)||(!shift.preparation_id&&!input.allowUnprepared))return fail(409,"stale","The handover changed. Review it again before assuming the watch.");
       if(facts.revision!==input.reviewedRevision)return fail(409,"stale","Gate activity changed. Review it again before assuming the watch.");
@@ -358,7 +359,7 @@ export async function releaseGateWatch(session: SessionPayload, input: {stationI
     if(!shift || shift.operator_id!==session.userId)return fail(403,"owner_required","Only the current watch owner may hand off this watch");
     // The expected watch is the idempotent boundary: a retry cannot end a later watch.
     if(shift.ended_at)return {watchId:shift.id,endedAt:shift.ended_at,preparationId:shift.preparation_id};
-    const facts=await snapshot(c,access.station.site_id,input.stationId,shift.started_at);
+    const facts=await gateTrafficSnapshot(c, session,access.station.site_id,input.stationId,shift.started_at);
     const signed=shift.preparation_id?(await c.query("SELECT notes,summary FROM gate_preparations WHERE id=$1",[shift.preparation_id])).rows[0]:null;
     const prep=(await c.query("INSERT INTO gate_preparations(shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5) RETURNING id",
       [shift.id,session.userId,JSON.stringify(facts),input.notes,JSON.stringify({source:"structured_facts",facts:facts.facts,watchReleased:true,signature:signed?.notes===input.notes?signed.summary?.signature:undefined})])).rows[0];
@@ -394,46 +395,52 @@ async function currentItems(
   client: Queryable,
   stationId: string,
   vendorId?: number | null,
+  linkedSiteIds?: number[],
 ): Promise<ShiftItem[]> {
   const rows = (
     await client.query(
       `SELECT DISTINCT ON (item_id) item_id AS id, text, kind,
     CASE WHEN kind='resolve' THEN 'resolved' ELSE 'open' END AS status FROM gate_shift_actions
-    WHERE station_id=$1 AND kind IN ('open','resolve','reopen') ORDER BY item_id, created_at DESC, id DESC`,
-      [stationId],
+    WHERE (station_id::text=$1 OR station_id IN (SELECT id FROM gate_stations WHERE site_id=ANY($2::int[]))) AND kind IN ('open','resolve','reopen') ORDER BY item_id, created_at DESC, id DESC`,
+      [stationId, linkedSiteIds ?? []],
     )
   ).rows;
   const items = rows.map((r) => ({ id: r.id, text: r.text, status: r.status }));
   return (await projectGateTaskItems(client, { openItems: items }, vendorId)).openItems as ShiftItem[];
 }
-async function snapshot(
+export async function gateTrafficSnapshot(
   client: Queryable,
+  session: SessionPayload,
   siteId: number,
   stationId: string,
   startedAt: Date | string,
   gateOnly = false,
 ): Promise<ShiftSnapshot> {
-  // Consistent source rows, without leaking phone/email or unrelated account data.
+  const link = await linkedGateScope(client, session, siteId);
+  const sharedStart = link.groupId ? (await client.query(`SELECT min(w.started_at) AS started_at FROM gate_shifts w JOIN gate_stations g ON g.id=w.station_id WHERE g.site_id=ANY($1::int[]) AND w.ended_at IS NULL`,[link.siteIds])).rows[0]?.started_at : null;
+  const windowStart = link.groupId ? sharedStart ?? new Date(Date.now()-86400000) : startedAt;
+  // A shared parallel roster counts each retained visit once. Entry/exit evidence remains immutable.
   const result = await client.query(
     `SELECT 'visit:' || id AS id, 'visitor' AS kind,
     trim(first_name || ' ' || last_name) AS name, company,
     CASE WHEN vehicle_plate IS NULL THEN NULL ELSE coalesce(plate_state,'?') || ':' || vehicle_plate END AS plate,
     check_in_time AS "checkIn", check_out_time AS "checkOut", admission_status AS admission,
     expected_duration_minutes AS "expectedMinutes", reconciliation_state AS reconciliation,
-    concat_ws(E'\\n', notes, check_out_notes, conflict_reason) AS notes
-    FROM site_visits WHERE site_location_id=$1
-    AND ($3::text IS NULL OR coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=$3)
+    concat_ws(E'\\n', notes, check_out_notes, conflict_reason) AS notes,
+    site_location_id AS "siteId", coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId') AS "entryGateId", check_out_gps_evidence->>'gateStationId' AS "exitGateId"
+    FROM site_visits WHERE site_location_id=ANY($1::int[])
+    AND ($3::text IS NULL OR coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=$3 OR check_out_gps_evidence->>'gateStationId'=$3)
     AND (check_out_time IS NULL OR check_out_time >= $2 OR check_in_time >= $2)
     UNION ALL
     SELECT 'checkin:' || c.id, 'employee', trim(p.first_name || ' ' || p.last_name), v.name, NULL,
-    c.check_in_at, c.check_out_at, NULL, NULL, NULL, NULL
+    c.check_in_at, c.check_out_at, NULL, NULL, NULL, NULL,t.site_location_id,c.gate_station_id::text,NULL::text
     FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id
     JOIN vendor_people p ON p.id=c.employee_id AND p.vendor_id=t.vendor_id
-    JOIN vendors v ON v.id=t.vendor_id WHERE t.site_location_id=$1
+    JOIN vendors v ON v.id=t.vendor_id WHERE t.site_location_id=ANY($1::int[])
     AND ($3::text IS NULL OR c.gate_station_id::text=$3)
     AND (c.check_out_at IS NULL OR c.check_out_at >= $2 OR c.check_in_at >= $2)
     ORDER BY id LIMIT 25001`,
-    [siteId, startedAt, gateOnly ? stationId : null],
+    [link.siteIds, windowStart, gateOnly && !link.groupId ? stationId : null],
   );
   if (result.rows.length > 25000)
     return fail(
@@ -446,11 +453,17 @@ async function snapshot(
     checkIn: new Date(r.checkIn).toISOString(),
     checkOut: r.checkOut ? new Date(r.checkOut).toISOString() : null,
   }));
-  return assembleShiftSnapshot(
+  const assembled = assembleShiftSnapshot(
     records,
-    await currentItems(client, stationId),
-    new Date(startedAt).toISOString(),
+    await currentItems(client, stationId, session.vendorId, link.groupId ? link.siteIds : undefined),
+    new Date(windowStart).toISOString(),
   );
+  const linkedHandoffs = link.groupId ? (await client.query(`SELECT g.id AS "stationId",g.site_id AS "siteId",g.name AS "gateName",s.name AS "siteName",p.id,p.notes,p.created_at AS "createdAt",u.display_name AS "operatorName"
+    FROM gate_stations g JOIN site_locations s ON s.id=g.site_id
+    CROSS JOIN LATERAL(SELECT p.* FROM gate_preparations p JOIN gate_shifts w ON w.id=p.shift_id WHERE w.station_id=g.id ORDER BY p.created_at DESC,p.id DESC LIMIT 1) p
+    JOIN users u ON u.id=p.prepared_by WHERE g.site_id=ANY($1::int[]) AND g.id<>$2 AND g.active=true ORDER BY s.name,g.name`, [link.siteIds,stationId])).rows : [];
+  return {...assembled, revision:link.groupId ? createHash("sha256").update(assembled.revision+JSON.stringify(linkedHandoffs)).digest("hex") : assembled.revision,
+    linkedScope: {siteIds:link.siteIds, name:link.name, groupId:link.groupId}, linkedHandoffs};
 }
 export type GateDiscoveryMode = "operational" | "history";
 export async function listChangeOverSites(session: SessionPayload, mode: GateDiscoveryMode = "operational") {
@@ -510,7 +523,7 @@ export async function listChangeOverStations(
   ).rows;
 }
 /** Gate creation is an office capability; it does not grant watch recovery. */
-async function requireGateStationManagementAccess(client: Queryable, session: SessionPayload, siteId: number) {
+export async function requireGateStationManagementAccess(client: Queryable, session: SessionPayload, siteId: number) {
   try {
     const access = await requireChangeOverAccess(client, session, siteId);
     if (access.supervisor) {
@@ -545,18 +558,18 @@ async function requireGateStationManagementAccess(client: Queryable, session: Se
 
 export async function listGateStationManagementSites(session: SessionPayload) {
   const candidates = (await pool.query(
-    `SELECT s.id,s.name FROM site_locations s
+    `SELECT s.id,s.name,s.partner_id AS "partnerId",s.gate_link_id AS "gateLinkId",s.gate_link_name AS "gateLinkName" FROM site_locations s
      WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
        AND ($1='admin' OR ($1='partner' AND s.partner_id=$2)
          OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true))
      ORDER BY s.name LIMIT 2000`,
     [session.role, session.partnerId ?? null, session.vendorId ?? null],
   )).rows;
-  const sites: { id: number; name: string }[] = [];
+  const sites: { id: number; name: string; partnerId?: number; gateLinkId?: string | null; gateLinkName?: string | null }[] = [];
   for (const site of candidates) {
     try {
       await requireGateStationManagementAccess(pool, session, site.id);
-      sites.push({ id: site.id, name: site.name });
+      sites.push(site);
     } catch (error) {
       if (!(error instanceof ChangeOverError) || error.status !== 403) throw error;
     }
@@ -569,11 +582,13 @@ export async function addChangeOverStation(
   siteId: number,
   name: string,
   location?: { latitude: number; longitude: number },
+  link?: { targetSiteId?: number; name?: string },
 ) {
   if (location && (!Number.isFinite(location.latitude) || Math.abs(location.latitude) > 90 || !Number.isFinite(location.longitude) || Math.abs(location.longitude) > 180))
     return fail(400, "invalid_gate_location", "Enter valid gate coordinates");
   return changeOverTransaction(async (c) => {
     await requireGateStationManagementAccess(c, session, siteId);
+    if (link) await linkGateSite(c, session, siteId, link.targetSiteId, link.name);
     if (location) {
       const result = await c.query(
         "INSERT INTO gate_stations(site_id,name,latitude,longitude) VALUES($1,$2,$3,$4) ON CONFLICT(site_id,name) DO NOTHING RETURNING *",
@@ -673,12 +688,12 @@ export async function readGateMapActivity(session: SessionPayload, stationId: st
     const shift = await activeShift(c, stationId);
     const released = !shift ? await releasedWatch(c, stationId) : null;
     const startedAt = shift?.started_at ?? released?.started_at ?? new Date(Date.now() - 86400000);
-    const current = await snapshot(c, access.station.site_id, stationId, startedAt, true);
+    const current = await gateTrafficSnapshot(c, session, access.station.site_id, stationId, startedAt, true);
     return {
       stationId: access.station.id, gateName: access.station.name,
       siteId: access.site.id, siteName: access.site.name,
-      scope: "gate_attributed" as const, generatedAt: current.generatedAt,
-      startedAt: new Date(startedAt).toISOString(),
+      scope: current.linkedScope?.groupId ? "linked_gates" as const : "gate_attributed" as const, generatedAt: current.generatedAt,
+      startedAt: current.startedAt,
       window: shift ? "current_shift" as const : released ? "released_watch" as const : "24h" as const,
       metrics: { checkIns: current.metrics.checkIns, checkOuts: current.metrics.checkOuts,
         pendingAdmission: current.metrics.pendingAdmission, itemsToReview: current.exceptions.length },
@@ -704,7 +719,7 @@ export async function getChangeOverState(
         ).rows[0]
       : null;
     // Site activity and occupancy remain visible before anybody assumes a watch.
-    const current = await snapshot(c, access.station.site_id, stationId,
+    const current = await gateTrafficSnapshot(c, session, access.station.site_id, stationId,
       shift?.started_at ?? released?.started_at ?? new Date(Date.now() - 24 * 60 * 60_000));
     return {
       station: access.station,
@@ -717,7 +732,7 @@ export async function getChangeOverState(
       // Elapsed time alone does not invalidate saved notes. The incoming
       // operation still checks the exact current facts revision transactionally.
       stale: Boolean(preparation && !released && preparation.snapshot.revision !== current?.revision),
-      items: await currentItems(c, stationId, session.vendorId),
+      items: await currentItems(c, stationId, session.vendorId, current.linkedScope?.groupId ? current.linkedScope.siteIds : undefined),
       roster: await activeRoster(c, stationId),
     };
   });
@@ -816,7 +831,7 @@ export async function appendGateShiftNote(session:SessionPayload,input:{stationI
     const previous=shift.preparation_id?(await c.query("SELECT notes FROM gate_preparations WHERE id=$1 AND shift_id=$2",[shift.preparation_id,shift.id])).rows[0]?.notes??"":"";
     const now=new Date(),entry=`${now.toISOString()} · ${access.user.display_name??"Gatekeeper"}\n${text}`,notes=[previous,entry].filter(Boolean).join("\n\n");
     if(notes.length>8000)return fail(400,"notes_full","These shift notes have reached the 8,000-character limit.");
-    const live=await snapshot(c,access.station.site_id,input.stationId,shift.started_at);
+    const live=await gateTrafficSnapshot(c, session,access.station.site_id,input.stationId,shift.started_at);
     await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6)",[input.operationId,shift.id,session.userId,JSON.stringify(live),notes,JSON.stringify({source:"structured_facts",facts:live.facts,addedNote:{id:input.operationId,text,authorId:session.userId,createdAt:now.toISOString()}})]);
     await c.query("UPDATE gate_shifts SET preparation_id=$2 WHERE id=$1",[shift.id,input.operationId]);
     await c.query("INSERT INTO gate_shift_actions(id,station_id,actor_id,item_id,kind,text,created_at) VALUES($1,$2,$3,$4,'shift_note',$5,$6)",[input.operationId,input.stationId,session.userId,shift.id,text,now]);
@@ -831,7 +846,7 @@ export async function signGateHandoff(session:SessionPayload,input:{stationId:st
     const shift=await activeShift(c,input.stationId);
     if(!shift||shift.id!==input.expectedWatchId||(shift.preparation_id??null)!==input.expectedPreparationId)return fail(409,"shift_changed","The watch or notes changed. Review them before signing.");
     if(shift.operator_id!==session.userId)return fail(403,"owner_required","Only the gatekeeper responsible for this watch can sign its notes.");
-    const live=await snapshot(c,access.station.site_id,input.stationId,shift.started_at),now=new Date();
+    const live=await gateTrafficSnapshot(c, session,access.station.site_id,input.stationId,shift.started_at),now=new Date();
     const signature={userId:session.userId,name:access.user.display_name??"Gatekeeper",signedAt:now.toISOString(),contentHash:createHash("sha256").update(JSON.stringify({stationId:input.stationId,watchId:shift.id,notes:input.notes})).digest("hex")};
     const saved=(await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6) RETURNING *",[input.operationId,shift.id,session.userId,JSON.stringify(live),input.notes,JSON.stringify({source:"structured_facts",facts:live.facts,signature})])).rows[0];
     await c.query("UPDATE gate_shifts SET preparation_id=$2 WHERE id=$1",[shift.id,input.operationId]);
@@ -943,7 +958,7 @@ export async function recoverGateShift(
     const incomingDuty = (await c.query("SELECT post_coverage FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL FOR UPDATE", [stationId, incoming.userId])).rows[0];
     if (incomingDuty?.post_coverage?.vendorId && incomingDuty.post_coverage.vendorId !== incoming.vendorId)
       return fail(409, "duty_employer_changed", "Return to the original employer before changing this watch");
-    const facts = await snapshot(c, access.station.site_id, stationId, shift.started_at);
+    const facts = await gateTrafficSnapshot(c, session, access.station.site_id, stationId, shift.started_at);
     const previous = shift.preparation_id ? (await c.query("SELECT notes FROM gate_preparations WHERE id=$1", [shift.preparation_id])).rows[0]?.notes : "";
     const now = new Date();
     const clockReceipt = await endGateWorkdayForRecovery(c, session, {
@@ -1085,8 +1100,8 @@ export async function transferGateShift(
         [input.preparationId, shift.id],
       )
     ).rows[0];
-    const current = await snapshot(
-      c,
+    const current = await gateTrafficSnapshot(
+      c, outgoing,
       access.station.site_id,
       input.stationId,
       shift.started_at,
@@ -1223,7 +1238,7 @@ export async function assumeGateWatch(session: SessionPayload, input: {
       const unprepared=explicitReview&&!shift.preparation_id&&input.allowUnprepared;
       if (!unprepared&&(!input.acknowledged || !input.preparationId || input.preparationId !== shift.preparation_id)) return fail(409, "acknowledgment_required", "Review the handover before assuming this watch.");
       const prep = unprepared?null:(await c.query("SELECT * FROM gate_preparations WHERE id=$1 AND shift_id=$2", [input.preparationId, shift.id])).rows[0];
-      const live = await snapshot(c, access.station.site_id, input.stationId, shift.started_at);
+      const live = await gateTrafficSnapshot(c, session, access.station.site_id, input.stationId, shift.started_at);
       // Notes survive sign-out and elapsed time. Incoming review must still match
       // the live site revision, rather than silently acknowledge new activity.
       if ((!unprepared&&!prep) || live.revision !== input.reviewedRevision) return fail(409, "stale", "Activity changed. Review the current watch and handover notes again.");

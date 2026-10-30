@@ -5,7 +5,7 @@ import { formatGateMapTime } from "./gate-map-time-control";
 
 export type GateMapActivity = {
   stationId: string; siteId: number; gateName: string; siteName: string;
-  scope: "gate_attributed"; generatedAt: string; startedAt: string;
+  scope: "gate_attributed" | "linked_gates"; generatedAt: string; startedAt: string;
   window: "current_shift" | "released_watch" | "24h";
   metrics: { checkIns: number; checkOuts: number; pendingAdmission: number; itemsToReview: number };
 };
@@ -19,7 +19,7 @@ export function GateMapActivityPopup({ stationId, siteId, siteName, gateName, us
     queryKey: ["gate-map-activity", userId, membershipId, siteId, stationId, visit],
     queryFn: async () => {
       const value = await changeOverRequest<GateMapActivity>(`/${stationId}/map-activity`);
-      if (value.stationId !== stationId || value.siteId !== siteId || value.scope !== "gate_attributed") throw new Error("Gate scope mismatch");
+      if (value.stationId !== stationId || value.siteId !== siteId || !["gate_attributed","linked_gates"].includes(value.scope)) throw new Error("Gate scope mismatch");
       return value;
     },
     staleTime: 0, gcTime: 0, retry: false, refetchOnMount: "always", refetchInterval: 30000,
@@ -35,7 +35,7 @@ export function GateMapActivityPopup({ stationId, siteId, siteName, gateName, us
     onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) onLeave(); }}>
     <h3>{c("Gate activity", "Actividad del acceso")}</h3>
     <strong className="gate-map-activity-name">{siteName} · {gateName}</strong>
-    <p>{c("Current gate-attributed records", "Registros actuales atribuidos al acceso")}</p>
+    <p>{activity.data?.scope === "linked_gates" ? c("Shared linked-gate records", "Registros compartidos de accesos vinculados") : c("Current gate-attributed records", "Registros actuales atribuidos al acceso")}</p>
     {historical && <p>{c("Current counts; map shows a historical time.", "Cifras actuales; el mapa muestra una hora histórica.")}</p>}
     {activity.isPending ? <p role="status">{c("Loading current activity…", "Cargando actividad actual…")}</p> : activity.isError ?
       <div role="alert"><p>{c("Activity unavailable. Counts could not be loaded.", "Actividad no disponible. No se pudieron cargar las cifras.")}</p><button type="button" onClick={() => void activity.refetch()}>{c("Retry", "Reintentar")}</button></div> : <>

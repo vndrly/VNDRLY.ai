@@ -1,3 +1,4 @@
+import { linkedGateScope } from "./gate-links";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import PDFDocument from "pdfkit";
 import { pool } from "@workspace/db";
@@ -19,7 +20,7 @@ export type GateReportFilters = {
   search?: string;
   recordId?: string;
 };
-export type GateReportScope = { kind: "full_site" } | { kind: "company"; company: string };
+export type GateReportScope = ({ kind: "full_site" } | { kind: "company"; company: string }) & { linkedSiteIds?: number[] };
 export type GateReportRow = Record<string, unknown> & {
   id: string;
   name?: string;
@@ -247,7 +248,17 @@ export async function emailGateReportAttachments(input: {
   for (const recipientUserId of recipients) {
     const recipientScope = await deps.resolveAccess(recipientUserId, filters, input.reportKind);
     if (!recipientScope) throw new GateReportsError(403, "gate_report.recipient_forbidden");
-    const reportScope = senderScope.kind === "company" ? senderScope : recipientScope;
+    const reportScope: GateReportScope = senderScope.kind === "company" ? {...senderScope} : {...recipientScope};
+    if(input.session && filters.stationId && deps === databaseGateReportDependencies) {
+      const linked=await linkedGateScope(pool,input.session,filters.siteId);
+      reportScope.linkedSiteIds=[];
+      for(const siteId of linked.siteIds) {
+        const siteFilter={...filters,siteId,stationId:undefined};
+        const sender=await deps.resolveAccess(input.senderUserId,siteFilter,input.reportKind);
+        const recipient=await deps.resolveAccess(recipientUserId,siteFilter,input.reportKind);
+        if(sender&&recipient&&scopeCanView(sender,reportScope)&&scopeCanView(recipient,reportScope)) reportScope.linkedSiteIds.push(siteId);
+      }
+    }
     const rendered = await renderGateReport(
       input.reportKind,
       input.format,
@@ -437,29 +448,38 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
     const station = await pool.query("SELECT id FROM gate_stations WHERE site_id=$1 AND id::text=$2", [filters.siteId, filters.stationId]);
     if (!station.rows.length) fail(400, "gate_report.invalid_station");
   }
+  const link = session && filters.stationId ? await linkedGateScope(pool, session, filters.siteId) : {siteIds:[filters.siteId],groupId:null};
+  if(scope.linkedSiteIds) link.siteIds=link.siteIds.filter(id=>scope.linkedSiteIds!.includes(id));
+  const trafficStationId = link.groupId ? null : filters.stationId ?? null;
   if (reportKind === "history" && filters.recordType === "arrivals") {
     if (!session?.userId) fail(403, "gate_report.current_session_required");
     // Use the existing live-arrivals authorization; report access never replaces it.
-    const result = await createGateArrivalsService().list(session!, filters.siteId).catch(error => {
+    const service = createGateArrivalsService();
+    const results = await Promise.all(link.siteIds.map(id => service.list(session!, id).catch(error => {
       if (error instanceof GateArrivalsError || error instanceof OfflineGateError) throw new GateReportsError(error.status, error.code);
       throw error;
-    });
-    return result.arrivals.filter(row => scope.kind === "full_site" || row.companyName?.toLowerCase() === scope.company.toLowerCase())
+    })));
+    const arrivals = [...new Map(results.flatMap(result=>result.arrivals).map(row=>[row.id,row])).values()];
+    return arrivals.filter(row => scope.kind === "full_site" || row.companyName?.toLowerCase() === scope.company.toLowerCase())
       .map(row => ({ id: row.id, name: row.driverName ?? row.title, company: row.companyName, vehiclePlate: row.vehicleLabel,
         ticketNumber: row.ticketNumber, destination: row.destinationName, etaMinutes: row.etaMinutes, observedAt: row.observedAt, status: "Incoming" }))
       .filter(row => !filters.search || Object.values(row).some(value => String(value ?? "").toLowerCase().includes(filters.search!.toLowerCase())));
   }
   const now = new Date();
-  const { from, to } = filters.recordId ? { from: new Date(0), to: now } : await resolveRange(filters, now);
+  let { from, to } = filters.recordId ? { from: new Date(0), to: now } : await resolveRange(filters, now);
+  if(link.groupId && filters.range === "current_shift" && !filters.recordId) {
+    const start=(await pool.query("SELECT min(w.started_at) AS started_at FROM gate_shifts w JOIN gate_stations g ON g.id=w.station_id WHERE g.site_id=ANY($1::int[]) AND w.ended_at IS NULL",[link.siteIds])).rows[0]?.started_at;
+    from=start ? new Date(start) : new Date(now.getTime()-86400000);
+  }
   if (reportKind === "shift_notes") {
     const result = await pool.query(
       `SELECT 'handoff:'||h.id AS id,h.outgoing_name AS "outgoingName",h.incoming_name AS "incomingName",
         h.acknowledged_at AS "acknowledgedAt",p.notes,g.name AS "gateName"
        FROM gate_handovers h JOIN gate_preparations p ON p.id=h.preparation_id
        JOIN gate_shifts s ON s.id=p.shift_id JOIN gate_stations g ON g.id=s.station_id
-       WHERE g.site_id=$1 AND ($2::uuid IS NULL OR g.id=$2) AND h.acknowledged_at >= $3 AND h.acknowledged_at <= $4
+       WHERE g.site_id=ANY($1::int[]) AND ($2::uuid IS NULL OR g.id=$2) AND h.acknowledged_at >= $3 AND h.acknowledged_at <= $4
        ORDER BY h.acknowledged_at DESC LIMIT 25000`,
-      [filters.siteId, filters.stationId ?? null, from, to],
+      [link.siteIds, trafficStationId, from, to],
     );
     return result.rows as GateReportRow[];
   }
@@ -469,36 +489,37 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
       v.check_out_time AS "checkOutTime",v.admission_status AS "admissionStatus",
       v.reconciliation_state AS "reconciliationState",'visitor' AS kind,
       v.reconciliation_facts->'entryClearanceAt'->>'value' AS "entryClearanceAt",
-      g.id AS "gateStationId",g.name AS "gateName",
-      CASE WHEN g.id IS NULL THEN NULL WHEN v.gate_station_id IS NOT NULL THEN v.gate_association_provenance->>'source' ELSE 'check_in_gps_evidence' END AS "gateAssociationSource",
+      g.id AS "gateStationId",g.name AS "gateName",v.site_location_id AS "siteLocationId",
+      v.check_out_gps_evidence->>'gateName' AS "exitGateName",
+      CASE WHEN g.id IS NULL THEN NULL WHEN v.gate_association_provenance IS NOT NULL THEN v.gate_association_provenance->>'source' ELSE 'check_in_gps_evidence' END AS "gateAssociationSource",
       CASE WHEN g.id IS NOT NULL AND v.gate_station_id IS NOT NULL THEN v.gate_association_provenance ELSE NULL END AS "gateAssociationProvenance",
       v.check_in_gps_evidence AS "checkInGpsEvidence",v.check_out_gps_evidence AS "checkOutGpsEvidence",
       concat_ws(E'\n',v.notes,v.check_out_notes,v.conflict_reason) AS notes,v.purpose,v.expected_duration_minutes AS "expectedMinutes"
      FROM site_visits v
-     LEFT JOIN gate_stations g ON g.site_id=v.site_location_id
+     LEFT JOIN gate_stations g ON (g.site_id=v.site_location_id OR g.site_id=ANY($1::int[]))
        AND g.id::text=coalesce(v.gate_station_id::text,v.check_in_gps_evidence->>'gateStationId')
-     WHERE v.site_location_id=$1
-       AND ($5::text IS NULL OR g.id::text=$5)
+     WHERE v.site_location_id=ANY($1::int[])
+       AND ($5::text IS NULL OR g.id::text=$5 OR v.check_out_gps_evidence->>'gateStationId'=$5)
        AND ($4::text IS NULL OR 'visit:'||v.id=$4)
        AND ($4::text IS NOT NULL OR (v.check_in_time <= $3 AND (v.check_out_time IS NULL OR v.check_out_time >= $2)))
      UNION ALL
      SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee',NULL::text,
-       g.id,g.name,CASE WHEN g.id IS NOT NULL THEN c.gate_association_provenance->>'source' ELSE NULL END,
+       g.id,g.name,t.site_location_id,NULL::text,CASE WHEN g.id IS NOT NULL THEN c.gate_association_provenance->>'source' ELSE NULL END,
        CASE WHEN g.id IS NOT NULL THEN c.gate_association_provenance ELSE NULL END,
        NULL::jsonb,NULL::jsonb,NULL::text,NULL::text,NULL::int
      FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id JOIN vendor_people p ON p.id=c.employee_id
        JOIN vendors ven ON ven.id=t.vendor_id
        LEFT JOIN gate_stations g ON g.site_id=t.site_location_id AND g.id=c.gate_station_id
-       WHERE t.site_location_id=$1
+       WHERE t.site_location_id=ANY($1::int[])
        AND ($5::text IS NULL OR g.id::text=$5)
        AND ($4::text IS NULL OR 'employee:'||c.id=$4)
        AND ($4::text IS NOT NULL OR (c.check_in_at <= $3 AND (c.check_out_at IS NULL OR c.check_out_at >= $2)))
      ORDER BY "checkInTime" DESC LIMIT 25000`,
-    [filters.siteId, from, to, filters.recordId ?? null, filters.stationId ?? null],
+    [link.siteIds, from, to, filters.recordId ?? null, trafficStationId],
   );
   const search = filters.search?.toLowerCase();
   return (result.rows as GateReportRow[]).filter((row) => {
-    if (filters.stationId && row.gateStationId !== filters.stationId) return false;
+    if (trafficStationId && row.gateStationId !== trafficStationId && (row.checkOutGpsEvidence as {gateStationId?:string}|null)?.gateStationId !== trafficStationId) return false;
     if (scope.kind === "company" && String(row.company ?? "").toLowerCase() !== scope.company.toLowerCase()) return false;
     if (filters.recordId) return row.id === filters.recordId;
     if (search && !Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search))) return false;

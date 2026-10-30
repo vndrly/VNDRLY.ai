@@ -1,3 +1,4 @@
+import { readLinkedGates, saveGateSiteLink, gateConnectionHeartbeat } from "../services/gate-links";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { readGateCoverageMap } from "../services/gate-coverage-map";
 import { ownCoverageStatus, recordWorkCoverageLocation, resolvePostIncident, actOnGateSharingIncident } from "../services/gate-post-coverage";
@@ -142,6 +143,16 @@ router.get("/gate-change-over/map", async (req, res) => {
   }
   res.json({ gates });
 });
+router.get("/gate-change-over/linked-gates", async (req, res) => {
+  res.json(await readLinkedGates(sessionFor(req), siteId.parse(req.query.siteId)));
+});
+router.post("/gate-change-over/site-link", async (req, res) => {
+  const input = z.object({siteId, targetSiteId: siteId.optional(), name: text.max(100).optional()}).strict().parse(req.body);
+  res.json(await saveGateSiteLink(sessionFor(req), input));
+});
+router.post("/gate-change-over/:stationId/connection", async (req, res) => {
+  res.json(await gateConnectionHeartbeat(sessionFor(req), uuid.parse(req.params.stationId)));
+});
 router.get("/gate-change-over/station-management/sites", async (req, res) => {
   res.json({ sites: await listGateStationManagementSites(sessionFor(req)) });
 });
@@ -158,8 +169,8 @@ router.post("/gate-change-over/stations", async (req, res) => {
   const b = z.object({ siteId, name: text.max(80), location: z.object({
     latitude: z.number().finite().min(-90).max(90),
     longitude: z.number().finite().min(-180).max(180),
-  }).strict().optional() }).parse(req.body);
-  res.json(await addChangeOverStation(sessionFor(req), b.siteId, b.name, b.location));
+  }).strict().optional(), link: z.object({targetSiteId: siteId.optional(), name: text.max(100).optional()}).strict().optional() }).parse(req.body);
+  res.json(await addChangeOverStation(sessionFor(req), b.siteId, b.name, b.location, b.link));
 });
 router.get("/gate-change-over/station-management/stations", async (req, res) => {
   res.json({ stations: await listGateStationManagementStations(sessionFor(req), siteId.parse(req.query.siteId)) });

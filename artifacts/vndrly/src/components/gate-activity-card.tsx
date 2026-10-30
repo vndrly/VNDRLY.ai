@@ -24,13 +24,17 @@ export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, sc
     const records = new Map<string, RecordRow>([...(snapshot?.records ?? []), ...(snapshot?.outstanding ?? [])].map(row => [row.id, row]));
     const recordLink = (row: RecordRow, recordType: string, key = row.id, detail?: string) => {
       const recordId = row.id.replace(/^checkin:/, "employee:");
+      const recordParams = new URLSearchParams(historyBaseHref.split("?")[1]);
+      if (row.siteId) recordParams.set("siteId",String(row.siteId));
+      recordParams.delete("stationId");
+      const linkedRecordHref = `/gate/history?${recordParams}`;
       const pending = recordType === "pending" || snapshot?.metricRecordIds?.pendingAdmission?.includes(row.id);
       const departed = row.checkOut && Date.parse(row.checkOut) <= Date.parse(snapshot?.generatedAt ?? "");
       const status = pending ? c("Awaiting Admission", "Esperando admisión") : departed ? c("Departed", "Salió") : c("On Site", "En el sitio");
       const company = row.company?.replace(/\s*\(fictional\)/gi, "").trim();
       const plate = row.plate?.trim().replace(/\s*[:•·]\s*/, ".");
       const description = [[company, plate].filter(Boolean).join(" "), status].filter(Boolean).join(" · ");
-      return <Link key={key} className="gate-metric-record" href={`${recordHistoryHref?.(row.id) ?? historyBaseHref}&recordType=${recordType}&recordId=${encodeURIComponent(recordId)}&view=record`}><strong>{row.name || row.id}</strong><small title={detail ?? description}>{description}</small></Link>;
+      return <Link key={key} className="gate-metric-record" href={`${recordHistoryHref?.(row.id) ?? linkedRecordHref}&recordType=${recordType}&recordId=${encodeURIComponent(recordId)}&view=record`}><strong>{row.name || row.id}</strong><small title={detail ?? description}>{description}</small></Link>;
     };
     const metric = (key: keyof ChangeOverSnapshot["metrics"], Icon: typeof LogIn) => {
       const ids = snapshot?.metricRecordIds?.[key];
@@ -48,7 +52,7 @@ export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, sc
         {metric("checkIns", LogIn)}{metric("checkOuts", LogOut)}{metric("pendingAdmission", Clock3)}
         <details className="gate-panel-disclosure" data-testid="dashboard-metric-exceptions"><summary><AlertTriangle aria-hidden="true" /><span className="flex-1">{t("changeOver.exceptions")}</span><small>{snapshot?.exceptions.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.exceptions.map(e => recordLink(records.get(e.sourceId) ?? { id: e.sourceId, name: e.sourceId, kind: "visitor", company: null, plate: null, checkIn: "", notes: null }, "needs_review", `${e.sourceId}:${e.code}`, e.text))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.exceptions.length && <p>{t("changeOver.none")}</p>}{showAllLogLink && <Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=needs_review`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link>}</div></details>
       </>;
-    return contentOnly ? contents : <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={snapshot ? `${scopeLabel ? scopeLabel + " · " : ""}${activityWindow === "24h" ? c("Last 24 hours", "Últimas 24 horas") + " · " : ""}${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}` : unavailable} icon={LogIn}>{contents}</WorkspacePanel>;
+    return contentOnly ? contents : <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={snapshot ? `${scopeLabel || snapshot.linkedScope?.name ? (scopeLabel ?? snapshot.linkedScope?.name) + " · " : ""}${activityWindow === "24h" ? c("Last 24 hours", "Últimas 24 horas") + " · " : ""}${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}` : unavailable} icon={LogIn}>{contents}</WorkspacePanel>;
 }
 
 /** Activity totals captured when this shift was handed over. */

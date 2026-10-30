@@ -45,7 +45,8 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     itemText, onItemTextChange, itemNotes, onItemNoteChange, onItemAction,
     onAddItem, onSave, onAssumeReviewed, pendingWatch, onRecoverWatch,
   } = props;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const es = i18n?.language?.startsWith("es");
   const brand = useBrand();
   const [itemView, setItemView] = useState<"open" | "resolved">("open");
   const [editing,setEditing]=useState(false),[editNotes,setEditNotes]=useState(""),[editBusy,setEditBusy]=useState(false),[editError,setEditError]=useState("");
@@ -204,6 +205,13 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       {savedReview}
     </> : <p className="handoff-waiting" role="status">{t(current.shift ? "handoffDesk.waiting" : "handoffDesk.noWatch", { name: current.shift?.operator_name })}</p>}
 
+    {current.snapshot?.linkedScope?.groupId && <details className="handoff-disclosure">
+      <summary>{es ? "Informes de accesos vinculados" : "Linked gate handoffs"} · {(preparation?.snapshot ?? current.snapshot).linkedHandoffs?.length ?? 0}</summary>
+      <div className="handoff-review-tree">{((preparation?.snapshot ?? current.snapshot).linkedHandoffs ?? []).map(note => <details key={note.id} className="handoff-review-branch">
+        <summary><NotebookPen aria-hidden="true"/><span>{note.siteName} | {note.gateName}</span></summary>
+        <div className="handoff-review-content"><small>{note.operatorName} · {new Date(note.createdAt).toLocaleString()}</small><p className="handoff-preserve">{note.notes || t("changeOver.none")}</p><a className="gate-all-shift-notes" href={`/gate/shift-notes?stationId=${note.stationId}&siteId=${note.siteId}`}>{es ? "Abrir notas" : "Open shift notes"}</a></div>
+      </details>)}{!(preparation?.snapshot ?? current.snapshot).linkedHandoffs?.length && <p className="handoff-muted">{es ? "No hay otros informes guardados." : "No other saved gate handoffs."}</p>}</div>
+    </details>}
     {pendingWatch && <div className="handoff-recovery" role="status">
       <p>{t("handoffDesk.pendingWatch")}</p>
       <PngPillButton type="button" color="brand" disabled={busy || !online} onClick={onRecoverWatch}>{t("handoffDesk.checkRequest")}</PngPillButton>

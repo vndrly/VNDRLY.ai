@@ -3,6 +3,8 @@ export interface ChangeOverFact {
   text: string;
 }
 export interface ChangeOverSnapshot {
+  linkedHandoffs?: {stationId:string;siteId:number;gateName:string;siteName:string;id:string;notes:string;createdAt:string;operatorName:string}[];
+  linkedScope?: {siteIds:number[];name:string|null;groupId:string|null};
   generatedAt: string;
   startedAt: string;
   revision: string;
@@ -16,6 +18,9 @@ export interface ChangeOverSnapshot {
     pendingAdmission: number;
   };
   outstanding: {
+    siteId?: number;
+    entryGateId?: string | null;
+    exitGateId?: string | null;
     id: string;
     kind: string;
     name: string;

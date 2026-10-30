@@ -10,14 +10,19 @@ import { GateTrafficRecord } from "./gate-traffic-record";
 import { gateRecordFlags } from "@/lib/gate-record-flags";
 
 /** Run identities, rather than location ping identities, trigger a short alert. */
-export function useGateArrivals(siteId?: number) {
+export function useGateArrivals(siteId?: number, linkedSiteIds?: number[]) {
   const { user } = useAuth();
+  const siteIds = [...new Set(linkedSiteIds?.length ? linkedSiteIds : siteId ? [siteId] : [])].sort((a,b)=>a-b);
   const [preview] = useState(isGateArrivalPreview);
   const [previewApprovedIds, setPreviewApprovedIds] = useState<Set<string>>(new Set());
-  const scope = `${user?.userId}:${user?.activeMembershipId}:${siteId}`;
+  const scope = `${user?.userId}:${user?.activeMembershipId}:${siteIds.join(",")}`;
   const query = useQuery({
-    queryKey: ["gate-arrivals", user?.userId, user?.activeMembershipId, siteId, ...(preview ? ["sample"] : [])],
-    queryFn: () => preview ? Promise.resolve(sampleGateArrivals(siteId!)) : gateArrivalsApi.list(siteId!), enabled: Boolean(siteId),
+    queryKey: ["gate-arrivals", user?.userId, user?.activeMembershipId, siteIds, ...(preview ? ["sample"] : [])],
+    queryFn: async () => {
+      if (preview) return sampleGateArrivals(siteId!);
+      const results = await Promise.all(siteIds.map(id => gateArrivalsApi.list(id)));
+      return {...results[0]!, arrivals:[...new Map(results.flatMap(result => result.arrivals).map(row=>[row.id,row])).values()], truncated:results.some(result => result.truncated)};
+    }, enabled: Boolean(siteId),
     retry: false, refetchInterval: 30_000,
   });
   const seen = useRef({ scope, ids: new Set<string>() });

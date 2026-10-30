@@ -1,3 +1,4 @@
+import { linkedGateScope } from "./gate-links";
 import { createHash } from "node:crypto";
 import { pool } from "@workspace/db";
 import type { PoolClient } from "pg";
@@ -46,22 +47,28 @@ const taskSelect = `SELECT t.*,s.name AS site_name,g.name AS gate_name,u.display
 export async function readGateTaskHopper(session: SessionPayload, filter: { stationId?: string; taskId?: string; before?: string }) {
   return transaction(async c => {
     const actor = await gateTaskActor(c, session, filter.taskId);
+    let linkedSites: number[] = [];
+    if (filter.stationId) {
+      const gate = (await c.query("SELECT site_id FROM gate_stations WHERE id=$1",[filter.stationId])).rows[0];
+      if (gate) {const scope = await linkedGateScope(c,session,gate.site_id); if(scope.groupId) linkedSites=scope.siteIds;}
+    }
+
     const rows = (await c.query(`${taskSelect} WHERE t.owner_org_type='vendor' AND t.gate_hopper IS NOT NULL AND ($1::int IS NULL OR t.owner_org_id=$1)
-      AND ($2::text IS NULL OR t.gate_hopper->>'stationId'=$2) AND ($3::uuid IS NULL OR t.id=$3)
+      AND ($2::text IS NULL OR t.gate_hopper->>'stationId'=$2 OR (t.gate_hopper->>'siteId')::int=ANY($5::int[])) AND ($3::uuid IS NULL OR t.id=$3)
       AND ($3::uuid IS NOT NULL OR (t.assignee_user_id IS NULL AND t.status IN ('open','in_progress') AND t.gate_hopper->>'clearedAt' IS NULL))
       AND ($4::uuid IS NULL OR (t.created_at,t.id)<(SELECT created_at,id FROM work_hub_tasks WHERE id=$4))
-      ORDER BY t.created_at DESC,t.id DESC LIMIT 101`, [actor.platform ? actor.vendorId : actor.vendorId, filter.stationId ?? null, filter.taskId ?? null, filter.before ?? null])).rows;
+      ORDER BY t.created_at DESC,t.id DESC LIMIT 101`, [actor.platform ? actor.vendorId : actor.vendorId, filter.stationId ?? null, filter.taskId ?? null, filter.before ?? null, linkedSites])).rows;
     // An exact-task request is subject to the same vendor boundary as the hopper.
     const tasks = rows.slice(0, 100).map(gateTaskProjection);
     const total = (await c.query(`SELECT count(*)::int AS count FROM work_hub_tasks t WHERE t.owner_org_type='vendor' AND t.gate_hopper IS NOT NULL AND ($1::int IS NULL OR t.owner_org_id=$1)
-      AND ($2::text IS NULL OR t.gate_hopper->>'stationId'=$2) AND t.assignee_user_id IS NULL AND t.status IN ('open','in_progress') AND t.gate_hopper->>'clearedAt' IS NULL`, [actor.vendorId, filter.stationId ?? null])).rows[0].count;
+      AND ($2::text IS NULL OR t.gate_hopper->>'stationId'=$2 OR (t.gate_hopper->>'siteId')::int=ANY($3::int[])) AND t.assignee_user_id IS NULL AND t.status IN ('open','in_progress') AND t.gate_hopper->>'clearedAt' IS NULL`, [actor.vendorId, filter.stationId ?? null, linkedSites])).rows[0].count;
     const unimported = actor.hopper && !filter.taskId ? (await c.query(`WITH latest AS (
       SELECT DISTINCT ON(a.item_id) a.* FROM gate_shift_actions a WHERE a.kind IN ('open','resolve','reopen') ORDER BY a.item_id,a.created_at DESC,a.id DESC
     ) SELECT a.item_id AS id,a.station_id AS "stationId",a.text,a.created_at AS "createdAt",s.name AS "siteName",g.name AS "gateName" FROM latest a
       JOIN gate_stations g ON g.id=a.station_id JOIN site_locations s ON s.id=g.site_id
-      WHERE a.kind<>'resolve' AND ($1::text IS NULL OR a.station_id::text=$1) AND NOT EXISTS(SELECT 1 FROM work_hub_tasks t WHERE t.id=a.item_id)
+      WHERE a.kind<>'resolve' AND ($1::text IS NULL OR a.station_id::text=$1 OR g.site_id=ANY($3::int[])) AND NOT EXISTS(SELECT 1 FROM work_hub_tasks t WHERE t.id=a.item_id)
       AND ($2::int IS NULL OR EXISTS(SELECT 1 FROM site_work_assignments w WHERE w.site_location_id=g.site_id AND w.vendor_id=$2 AND w.is_gate_contractor=true))
-      ORDER BY a.created_at DESC,a.item_id DESC LIMIT 100`, [filter.stationId ?? null, actor.vendorId])).rows : [];
+      ORDER BY a.created_at DESC,a.item_id DESC LIMIT 100`, [filter.stationId ?? null, actor.vendorId, linkedSites])).rows : [];
     return { tasks, total: actor.hopper ? total : 0, unimported, canManage: actor.manager, nextBefore: rows.length > 100 ? tasks.at(-1)!.id : null };
   });
 }

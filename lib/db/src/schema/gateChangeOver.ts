@@ -29,6 +29,7 @@ export const gateStationsTable = pgTable(
     geofenceRadiusM: integer("geofence_radius_m").notNull().default(500),
     active: boolean("active").notNull().default(true),
     version: integer("version").notNull().default(1),
+    connection: jsonb("connection"),
     createdAt: time("created_at").notNull().defaultNow(),
   },
   (t) => ({
