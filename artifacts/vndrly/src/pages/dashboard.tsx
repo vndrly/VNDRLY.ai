@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import {
   useGetDashboardSummary,
   useGetRecentActivity,
@@ -1234,9 +1235,9 @@ function AwaitingPaymentTile({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">
+                    <CardHeading as="h3" className="text-sm font-semibold text-gray-900">
                       {t("dashboard.awaitingPayment.title")}
-                    </h3>
+                    </CardHeading>
                     <p className="text-xs text-muted-foreground">
                       {t("dashboard.awaitingPayment.subtitle")}
                     </p>
@@ -1346,10 +1347,10 @@ function ReassignmentsTile({ loading, data, accentColor }: ReassignmentsTileProp
             <div className="rounded-md p-2" style={{ backgroundColor: `${accentColor}1a` }}>
               <Repeat2 className="w-5 h-5" style={{ color: accentColor }} />
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-gray-900">
+            <div data-card-header-row className="flex-1 min-w-0">
+              <CardHeading as="h3" className="text-sm font-semibold text-gray-900">
                 {t("dashboard.reassignments.title", { defaultValue: "Reassignments" })}
-              </h3>
+              </CardHeading>
               <p className="text-xs text-muted-foreground">
                 {t("dashboard.reassignments.subtitle", {
                   defaultValue: "Tickets that bounced through 2+ vendors. Audited via ticket history.",

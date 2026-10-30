@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { GateShiftNoteContent } from "@/components/gate-shift-note-content";
 import GateShiftNotesList from "@/components/gate-shift-notes-list";
 import { GateActivityCard } from "@/components/gate-activity-card";
@@ -495,7 +496,7 @@ export default function GateChangeOverPage({
           {!!log.data?.actions.length && (
             <Card>
               <CardContent className="space-y-2 p-5">
-                <h2 className="font-bold">{t("changeOver.audit")}</h2>
+                <CardHeading as="h2" className="font-bold">{t("changeOver.audit")}</CardHeading>
                 {log.data.actions.map((a) => (
                   <p key={a.id} className="gate-audit-row">
                     {new Date(a.created_at).toLocaleString()} · {a.actor_name} ·{" "}

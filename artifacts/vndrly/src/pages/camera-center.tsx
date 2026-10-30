@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Radio, Server, VideoOff } from "lucide-react";
@@ -105,6 +106,7 @@ export default function CameraCenterPage({ siteId }: { siteId: number }) {
         <p className="text-destructive">{t("cameraCenter.loadError")}</p>
       ) : registry.data?.gateways.length === 0 ? (
         <Card>
+        <ContentCardHeader title="Cameras" spanish="Cámaras" />
           <CardContent className="p-8 text-center text-muted-foreground">
             <VideoOff className="mx-auto mb-3 h-8 w-8" />
             {t("cameraCenter.empty")}

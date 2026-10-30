@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocation, useRoute } from "wouter";
@@ -385,7 +386,7 @@ export default function OnboardingField() {
 
           {currentStep.key === "personal-info" && (
             <div className="space-y-4" data-testid="step-personal-info-body">
-              <h2 className="text-lg font-semibold text-gray-900">{t("fieldOnboarding.personal.heading")}</h2>
+              <CardHeading as="h2" className="text-lg font-semibold text-gray-900">{t("fieldOnboarding.personal.heading")}</CardHeading>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>{t("fieldOnboarding.personal.firstName")}</Label>
@@ -433,7 +434,7 @@ export default function OnboardingField() {
 
           {currentStep.key === "photo-certs" && (
             <div className="space-y-4" data-testid="step-photo-certs-body">
-              <h2 className="text-lg font-semibold text-gray-900">{t("fieldOnboarding.photo.heading")}</h2>
+              <CardHeading as="h2" className="text-lg font-semibold text-gray-900">{t("fieldOnboarding.photo.heading")}</CardHeading>
               <div>
                 <Label>{t("fieldOnboarding.photo.profilePhoto")}</Label>
                 <div className="flex items-center gap-3">

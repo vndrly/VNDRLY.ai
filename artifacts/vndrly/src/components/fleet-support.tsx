@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -74,16 +75,16 @@ export function FleetSupportPanel({ identity }: { identity: string }) {
       {query.isError && <p role="alert">{c.unavailable}</p>}
       {pages?.map((page, index) => (
         <section key={index} className="space-y-3">
-          <h2>{page.companyName}</h2>
+          <CardHeading as="h2">{page.companyName}</CardHeading>
           <p>
             {c.supportReason}: {page.reason} · {c.supportExpires}:{" "}
             {new Date(page.expiresAt).toLocaleString(i18n.language)}
           </p>
           {page.runs.map((run) => (
-            <article className="rounded border p-3" key={run.id}>
-              <h3>
+            <article data-card-layout className="rounded border p-3" key={run.id}>
+              <CardHeading as="h3">
                 {run.title} · {run.status}
-              </h3>
+              </CardHeading>
               <p>{run.id}</p>
               {run.stops.map((stop) => (
                 <p key={stop.id}>

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { CsvImport } from "./csv-import";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -40,10 +41,10 @@ function SavedImport({
     onSuccess: onApplied,
   });
   return (
-    <article className="my-3 rounded border p-3">
-      <h3 className="font-semibold">
+    <article data-card-layout className="my-3 rounded border p-3">
+      <CardHeading as="h3" className="font-semibold">
         {batch.errorSummary?.source ?? "CSV import"}
-      </h3>
+      </CardHeading>
       <p className="text-sm">
         {batch.categories.join(", ")} · {batch.status} ·{" "}
         {new Date(batch.createdAt).toLocaleString()}
@@ -169,10 +170,10 @@ export function ImportExportTools() {
   const shownJob = exportStatus.error ? null : exportStatus.data ?? job;
   return (
     <div className="mt-5 grid gap-5">
-      {admin && owner && <section className="rounded-xl border bg-card p-5">
-        <h2 className="text-xl font-semibold">
+      {admin && owner && <section data-card-layout className="rounded-xl border bg-card p-5">
+        <CardHeading as="h2" className="text-xl font-semibold">
           {t("workHubExports.title")}
-        </h2>
+        </CardHeading>
         <p className="my-3 text-sm text-muted-foreground">
           {t("workHubExports.description")}
         </p>
@@ -221,8 +222,8 @@ export function ImportExportTools() {
           {shownJob.status === "expired" && <p>{t("workHubExports.expiredHelp")}</p>}
         </div>}
       </section>}
-      {allowedDatasets.length > 0 && owner && <section className="rounded-xl border bg-card p-5">
-        <h2 className="text-xl font-semibold">Workforce, inventory, and safety exports</h2>
+      {allowedDatasets.length > 0 && owner && <section data-card-layout className="rounded-xl border bg-card p-5">
+        <CardHeading as="h2" className="text-xl font-semibold">Workforce, inventory, and safety exports</CardHeading>
         <p className="my-3 text-sm text-muted-foreground">Preview exactly what is included before creating an owner-scoped, audited CSV.</p>
         <select aria-label="Implementation A export dataset" className="rounded border bg-background px-3 py-2" value={selectedImplementationDataset} onChange={(event) => setImplementationDataset(event.target.value as ImplementationExportDataset)}>
           {allowedDatasets.map(value => <option key={value} value={value}>{implementationExportDescriptions[value].label}</option>)}
@@ -237,8 +238,8 @@ export function ImportExportTools() {
         <HubError error={implementationExport.error} />
       </section>}      {admin && <CsvImport />}
       {admin && (
-        <section className="rounded-xl border bg-card p-5">
-          <h2 className="text-xl font-semibold">Import history</h2>
+        <section data-card-layout className="rounded-xl border bg-card p-5">
+          <CardHeading as="h2" className="text-xl font-semibold">Import history</CardHeading>
           <HubError error={history.error} />
           {history.isLoading && <p role="status">Loading import history…</p>}
           {history.data?.batches.map((batch) => (

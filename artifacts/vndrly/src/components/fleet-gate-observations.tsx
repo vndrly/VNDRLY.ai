@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -101,8 +102,8 @@ export function FleetGateObservationsPanel({
     }
   }
   return (
-    <section className="space-y-3 rounded border p-3">
-      <h3 className="font-semibold">{c.gateObservations}</h3>
+    <section data-card-layout className="space-y-3 rounded border p-3">
+      <CardHeading as="h3" className="font-semibold">{c.gateObservations}</CardHeading>
       <p className="text-xs text-muted-foreground">{c.gateBasis}</p>
       <PngPillButton disabled={busy} onClick={() => void query.refetch()}>
         {c.refresh}

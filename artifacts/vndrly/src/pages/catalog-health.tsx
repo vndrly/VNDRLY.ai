@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
@@ -96,9 +97,7 @@ export default function CatalogHealthPage() {
             ).map(([key, value]) => (
               <Card key={key}>
                 <CardContent className="p-4">
-                  <div className="text-xs text-muted-foreground">
-                    {t(`catalogHealth.totals.${key}`)}
-                  </div>
+                  <CardHeading as="h3" className="text-xs">{t(`catalogHealth.totals.${key}`)}</CardHeading>
                   <div className="text-2xl font-bold tabular-nums">{value}</div>
                 </CardContent>
               </Card>

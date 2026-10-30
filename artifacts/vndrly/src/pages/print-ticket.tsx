@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useMemo, useState } from "react";
 import {
   useGetTicket,
@@ -382,7 +383,7 @@ export default function PrintTicketPage({ id }: { id: number }) {
         <button onClick={() => window.close()} className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100" data-testid="button-close">Close</button>
       </div>
 
-      <div
+      <div data-card-layout
         className="w-full max-w-2xl border-4 rounded-lg p-8 bg-white"
         style={{ borderColor: primaryColor }}
         data-testid="ticket-printable"
@@ -422,7 +423,7 @@ export default function PrintTicketPage({ id }: { id: number }) {
         <section className="mt-6" data-testid="proof-packet-summary">
           <div className="flex items-start justify-between gap-4 border-b pb-2" style={{ borderColor: accentColor }}>
             <div>
-              <h2 className="text-lg font-bold" style={{ color: primaryColor }}>Proof-to-Pay Packet</h2>
+              <CardHeading as="h2" className="text-lg font-bold" style={{ color: primaryColor }}>Proof-to-Pay Packet</CardHeading>
               <p className="text-xs text-gray-600 mt-1">
                 Field ticket evidence from dispatch through payment.
               </p>
@@ -458,7 +459,7 @@ export default function PrintTicketPage({ id }: { id: number }) {
 
         {ticket.description && (
           <>
-            <h2 className="text-base font-bold mt-4" style={{ color: accentColor }}>Description</h2>
+            <CardHeading as="h2" className="text-base font-bold mt-4" style={{ color: accentColor }}>Description</CardHeading>
             <p className="text-sm whitespace-pre-wrap mt-1">{ticket.description}</p>
           </>
         )}

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { workHubItemDestination } from "@workspace/api-client-react/work-hub-destinations";
 
@@ -19,8 +20,8 @@ export function WorkHubExactItem({ subjectType, itemId }: { subjectType: string;
   if (state?.key !== key) return <p role="status">Loading record…</p>;
   if (state.error) return <p role="alert">{state.error}</p>;
   const item = state.item ?? {};
-  return <article className="rounded-lg border p-4 space-y-3">
-    <h2 className="font-semibold">{String(item.title ?? item.name ?? "Record")}</h2>
+  return <article data-card-layout className="rounded-lg border p-4 space-y-3">
+    <CardHeading as="h2" className="font-semibold">{String(item.title ?? item.name ?? "Record")}</CardHeading>
     {typeof item.body === "string" && <p className="whitespace-pre-wrap">{item.body}</p>}
     {typeof item.status === "string" && <p>{item.status}</p>}
     {subjectType === "asset" && <dl>{["category", "legalOwner", "condition", "holderUserId", "version"].map(field => item[field] != null ? <div key={field}><dt>{field}</dt><dd>{String(item[field])}</dd></div> : null)}</dl>}

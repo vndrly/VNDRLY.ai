@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { Fragment, useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useListTickets, useCreateTicket, useListSiteLocations, useListWorkTypes, useListVendors, useGetTicketGpsLogs, useGetSiteLocation, useReverseFundsDispersal, reverseFundsDispersal, getListTicketsQueryKey, getListSiteLocationsQueryKey, getGetTicketGpsLogsQueryKey, getGetSiteLocationQueryKey, getListWorkTypesQueryKey, getListVendorsQueryKey, getGetTicketQueryKey, getGetTicketNoteLogsQueryKey, getTicket, type Ticket } from "@workspace/api-client-react";
 import { useEligibleVendorFieldEmployees, useClearStaleFieldEmployeeSelection } from "@/hooks/use-eligible-vendor-field-employees";
@@ -2647,6 +2648,7 @@ export default function Tickets() {
       )}
 
       <Card>
+        <ContentCardHeader title="Tickets" spanish="Tickets" />
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>

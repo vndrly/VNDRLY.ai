@@ -1,3 +1,5 @@
+import { CardHeading } from "@/components/ui/card-heading";
+import { ContentCardHeader } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { MailCheck, MessageSquareText, RefreshCcw, Smartphone } from "lucide-react";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
@@ -119,7 +121,7 @@ function FeaturePill({
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-sm font-medium">{label}</div>
+            <CardHeading as="h3" className="text-sm font-medium">{label}</CardHeading>
             <div className="text-xs text-muted-foreground">{provider}</div>
           </div>
           <Badge variant={ready ? "default" : "destructive"}>
@@ -205,6 +207,7 @@ export default function AdminCommunicationsHealth() {
 
       {isError && (
         <Card>
+        <ContentCardHeader title="Communications health" spanish="Estado de comunicaciones" />
           <CardContent className="p-6 text-sm text-destructive">
             Failed to load communications health:{" "}
             {error instanceof Error ? error.message : "unknown error"}

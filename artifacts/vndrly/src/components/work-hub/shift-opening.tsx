@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -76,8 +77,8 @@ function Panel({ identity, actor, owner, shifts, onSaved }: { identity: string; 
     } catch { if (alive.current) setMessage(c.unknown); }
     finally { lock.current = false; if (alive.current) setBusy(false); }
   }
-  return <section className="mb-4 rounded-lg border p-4" aria-label={c.title}>
-    <h2>{c.title}</h2><p>{c.note}</p>
+  return <section data-card-layout className="mb-4 rounded-lg border p-4" aria-label={c.title}>
+    <CardHeading as="h2">{c.title}</CardHeading><p>{c.note}</p>
     <select aria-label={c.select} value={selected} disabled={busy || Boolean(attempt) || invalid} onChange={e => setSelected(e.target.value)}><option value="">{c.select}</option>{shifts.map(row => row.item ?? row).filter(row => row.id).map(row => <option key={row.id} value={row.id}>{row.title ?? row.id}</option>)}</select>
     {!attempt && <PngPillButton color="blue" disabled={busy || !selected || invalid} onClick={() => void review()}>{c.review}</PngPillButton>}
     {attempt && <><p>{attempt.input.open ? c.open : c.close} · {attempt.shiftId} · v{attempt.input.expectedVersion}</p><PngPillButton color="blue" disabled={busy} onClick={() => void save()}>{sent ? c.retry : c.save}</PngPillButton></>}

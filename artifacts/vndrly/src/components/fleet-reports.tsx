@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -310,8 +311,8 @@ export function FleetReportsPanel({
             ))}
           </div>
           {data.recordedTiming && (
-            <section className="space-y-2 rounded border p-3">
-              <h2>{c.timingTitle}</h2>
+            <section data-card-layout className="space-y-2 rounded border p-3">
+              <CardHeading as="h2">{c.timingTitle}</CardHeading>
               <p>{c.timingSource}</p>
               {[
                 [c.timingEligible, data.recordedTiming.eligibleRunCount],
@@ -338,7 +339,7 @@ export function FleetReportsPanel({
               ))}
             </section>
           )}
-          <h2 className="font-semibold">{c.loads}</h2>
+          <CardHeading as="h2" className="font-semibold">{c.loads}</CardHeading>
           {data.loadTotals.length ? (
             <table className="w-full text-left">
               <thead>
@@ -365,7 +366,7 @@ export function FleetReportsPanel({
           ) : (
             <p>{c.noTotals}</p>
           )}
-          <h2 className="font-semibold">{c.distance}</h2>
+          <CardHeading as="h2" className="font-semibold">{c.distance}</CardHeading>
           {data.distanceTotals.length ? (
             data.distanceTotals.map((total) => (
               <p key={total.unit}>
@@ -375,7 +376,7 @@ export function FleetReportsPanel({
           ) : (
             <p>{c.noTotals}</p>
           )}
-          <h2 className="font-semibold">{c.fuel}</h2>
+          <CardHeading as="h2" className="font-semibold">{c.fuel}</CardHeading>
           {data.fuelTotals === null ? (
             <p>{c.fuelRestricted}</p>
           ) : data.fuelTotals.length ? (
@@ -387,7 +388,7 @@ export function FleetReportsPanel({
           ) : (
             <p>{c.noTotals}</p>
           )}
-          <h2 className="font-semibold">{c.unavailableMetrics}</h2>
+          <CardHeading as="h2" className="font-semibold">{c.unavailableMetrics}</CardHeading>
           {data.unavailableMetrics.map((metric) => (
             <p key={metric.metric}>
               {metric.metric}: {metric.reason}

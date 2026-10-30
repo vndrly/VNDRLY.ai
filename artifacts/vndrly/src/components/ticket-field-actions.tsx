@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { BrandedInput } from "@/components/work-hub/chrome";
@@ -22,8 +23,8 @@ export function TicketFieldActions({ id, status, lifecycleState, onSaved }: {
     } catch (failure) { setError(failure instanceof Error ? failure.message : "Work action failed. Refresh the ticket before retrying."); }
     finally { setBusy(false); }
   };
-  return <section aria-label="Field work actions" className="space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] p-4">
-    <h2 className="font-semibold">Field work</h2>
+  return <section data-card-layout aria-label="Field work actions" className="space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] p-4">
+    <CardHeading as="h2" className="font-semibold">Field work</CardHeading>
     <p className="text-sm">Travel → Arrival → Check In → Check Out → Review. Arrival records your presence; Check In starts work.</p>
     {action === "en-route" && <label className="block text-sm">Starting mileage (optional)<BrandedInput inputMode="decimal" value={mileage} onChange={event => setMileage(event.target.value)} /></label>}
     <PngPillButton color="blue" disabled={busy} onClick={() => void run()}>{busy ? "Saving…" : action === "en-route" ? "Start Travel" : action === "on-location" ? "Record Arrival" : "Check In"}</PngPillButton>

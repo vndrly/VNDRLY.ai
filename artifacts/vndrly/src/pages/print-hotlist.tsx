@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -292,9 +293,9 @@ export default function PrintHotlistPage() {
       `}</style>
 
       <div className="no-print w-full max-w-2xl mb-4 space-y-3" data-testid="print-hotlist-filters">
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <div className="flex items-baseline justify-between gap-2 flex-wrap">
-            <h2 className="text-sm font-semibold text-gray-800">Filters</h2>
+        <div data-card-layout className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-3">
+          <div data-card-header-row className="flex items-baseline justify-between gap-2 flex-wrap">
+            <CardHeading as="h2" className="text-sm font-semibold text-gray-800">Filters</CardHeading>
             <p className="text-xs text-gray-500" data-testid="text-filtered-count">
               Showing {filteredJobs.length} of {jobs.length} job{jobs.length === 1 ? "" : "s"}
             </p>
@@ -344,7 +345,7 @@ export default function PrintHotlistPage() {
         </div>
       </div>
 
-      <div
+      <div data-card-layout
         className="w-full max-w-2xl border-4 rounded-lg p-8 bg-white"
         style={{ borderColor: primaryColor }}
         data-testid="hotlist-printable"
@@ -374,8 +375,8 @@ export default function PrintHotlistPage() {
           <ul className="space-y-4">
             {filteredJobs.map((job) => (
               <li key={job.id} className="pb-4 border-b border-gray-200" data-testid={`hotlist-row-${job.id}`}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="text-base font-bold" style={{ color: primaryColor }}>{job.title}</h2>
+                <div data-card-header-row className="flex items-baseline justify-between gap-3">
+                  <CardHeading as="h2" className="text-base font-bold" style={{ color: primaryColor }}>{job.title}</CardHeading>
                   <span className="text-xs font-semibold uppercase" style={{ color: accentColor }}>
                     {STATUS_LABELS[job.status] ?? job.status}
                   </span>

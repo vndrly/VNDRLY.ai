@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MapboxMap } from "./mapbox-map";
@@ -23,8 +24,8 @@ export function FleetRouteReplay({ identity, runs }: { identity: string; runs: {
   }, [playing, speed, route.durationMs]);
   useEffect(() => { if (offset >= route.durationMs) setPlaying(false); }, [offset, route.durationMs]);
   const at = (route.startMs ?? 0) + offset, position = routePositionAt(route.points, at);
-  return <section aria-label="Fleet recorded route replay" className="space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
-    <h2 className="font-semibold">History &amp; Replay</h2>
+  return <section data-card-layout aria-label="Fleet recorded route replay" className="space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+    <CardHeading as="h2" className="font-semibold">History &amp; Replay</CardHeading>
     <BrandedSelect aria-label="Replay run" value={runId} onChange={event => setRunId(event.target.value)}><option value="">Select a run</option>{runs.map(run => <option key={run.id} value={run.id}>Replay: {run.title}</option>)}</BrandedSelect>
     {runId && authorizedRun && (history.isPending ? <p role="status">Loading recorded history…</p> : history.isError ? <p role="alert">Recorded history unavailable.</p> : <>
       {history.data?.truncated && <p>History is truncated; this is a partial route.</p>}

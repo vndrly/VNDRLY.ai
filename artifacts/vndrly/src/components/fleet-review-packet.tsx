@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { FleetRun } from "@workspace/api-zod";
@@ -30,8 +31,8 @@ export function FleetReviewPacketPanel({
     signature: c.packetSignature,
   };
   return (
-    <section className="space-y-2 rounded border p-3">
-      <h3>{c.packetTitle}</h3>
+    <section data-card-layout className="space-y-2 rounded border p-3">
+      <CardHeading as="h3">{c.packetTitle}</CardHeading>
       <p className="text-sm">{c.packetSource}</p>
       {!packet ? (
         <p role="status">{c.packetUnavailable}</p>

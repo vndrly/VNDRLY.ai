@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import {DriverDayHistory} from "@/components/driver-day-history";
 import {FleetPriorWork} from "@/components/fleet-prior-work";
 import {FleetMonitoring} from "@/components/fleet-monitoring";
@@ -856,8 +857,8 @@ function FleetWorkspace({
         />
       )}
       {location.endsWith("/loads") && (
-        <section className="space-y-3 rounded-xl border p-4">
-          <h2 className="text-lg font-semibold">{c.loads}</h2>
+        <section data-card-layout className="space-y-3 rounded-xl border p-4">
+          <CardHeading as="h2" className="text-lg font-semibold">{c.loads}</CardHeading>
           <p className="text-sm text-muted-foreground">
             Saved reports and references from authorized runs. Media, scale
             readings and signatures are available only when recorded by a
@@ -884,15 +885,15 @@ function FleetWorkspace({
         </section>
       )}
       {isDesk && candidates && (
-        <section className="space-y-3 rounded-xl border p-4">
-          <h2 className="text-lg font-semibold">Dispatch resources</h2>
+        <section data-card-layout className="space-y-3 rounded-xl border p-4">
+          <CardHeading as="h2" className="text-lg font-semibold">Dispatch resources</CardHeading>
           <p className="text-sm">
             Eligibility and assignment conflicts are rechecked when the exact
             change is saved.
           </p>
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <h3>Authorized drivers</h3>
+              <CardHeading as="h3">Authorized drivers</CardHeading>
               {candidates.drivers.map((person) => (
                 <p key={person.userId}>
                   {person.name} ·{" "}
@@ -907,7 +908,7 @@ function FleetWorkspace({
               ))}
             </div>
             <div>
-              <h3>Vehicles and trailers</h3>
+              <CardHeading as="h3">Vehicles and trailers</CardHeading>
               {candidates.equipment.map((asset) => (
                 <p key={asset.id}>
                   {asset.name} · {asset.category} · {asset.status} ·{" "}
@@ -954,7 +955,7 @@ function FleetWorkspace({
                 key={card.href}
                 href={card.href}
               >
-                <h2>{card.title}</h2>
+                <CardHeading as="h2">{card.title}</CardHeading>
                 <strong>{card.count}</strong>
                 <span>{card.hint}</span>
               </Link>
@@ -962,7 +963,7 @@ function FleetWorkspace({
           </div>
           <section aria-label={c.fleetTools}>
             <div className="fleet-card-heading">
-              <h2>{c.fleetTools}</h2>
+              <CardHeading as="h2">{c.fleetTools}</CardHeading>
               <p>
                 {c.loadedRuns}: {data.runs.length}
               </p>
@@ -985,9 +986,9 @@ function FleetWorkspace({
         </>
       )}
       {create && (
-        <section className="space-y-3 rounded-xl border p-4">
+        <section data-card-layout className="space-y-3 rounded-xl border p-4">
           <fieldset disabled={busy || createUnverified} className="space-y-3">
-            <h2>{c.create}</h2>
+            <CardHeading as="h2">{c.create}</CardHeading>
             <p className="text-sm">{c.readiness}</p>
             <input
               aria-label={c.title}
@@ -1294,13 +1295,13 @@ function FleetWorkspace({
       )}
       {showDetails && (
         <div className="fleet-run-detail" id="fleet-run-detail" ref={detailRef}>
-          <section className="space-y-3 rounded-xl border p-4">
-            <h2 className="font-semibold">{mine ? c.myRun : c.selected}</h2>
+          <section data-card-layout className="space-y-3 rounded-xl border p-4">
+            <CardHeading as="h2" className="font-semibold">{mine ? c.myRun : c.selected}</CardHeading>
             {!run ? (
               <p>{c.noSelection}</p>
             ) : (
               <>
-                <h3 className="text-lg">{run.title}</h3>
+                <CardHeading as="h3" className="text-lg">{run.title}</CardHeading>
                 {run.recoveredWork&&<div className="fleet-detail-group"><p role="status">{fleetPerformedRecoveryCopy(i18n.language).history}</p><p>{run.recoveredWork.snapshot.detail.name} · v{run.recoveredWork.snapshot.detail.version}</p></div>}
                 {run.localWork&&<p role="status">{fleetWorkReferenceLabel(run.localWork.ticket,i18n.language)}</p>}
                 {run.linkedTicketId && !run.ticketReference&&!run.localWork &&
@@ -1370,7 +1371,7 @@ function FleetWorkspace({
                 <Link href={`/fleet/runs/${run.id}`}>{c.openRun}</Link>
                 <p className="text-xs">{c.routeUnavailable}</p>
                 <div className="fleet-detail-group">
-                  <h3>{c.stops}</h3>
+                  <CardHeading as="h3">{c.stops}</CardHeading>
                   <p>
                     {c.trailer}:{" "}
                     {run.labels?.trailerName ??
@@ -1402,7 +1403,7 @@ function FleetWorkspace({
                 </div>
                 <details className="fleet-detail-group">
                   <summary>{c.runRecords}</summary>
-                  <h3>Reported meter and fuel records</h3>
+                  <CardHeading as="h3">Reported meter and fuel records</CardHeading>
                   <ul>
                     {run.records.map((record) => (
                       <li key={record.id}>
@@ -1412,7 +1413,7 @@ function FleetWorkspace({
                       </li>
                     ))}
                   </ul>
-                  <h3>{c.loads}</h3>
+                  <CardHeading as="h3">{c.loads}</CardHeading>
                   {!run.loads.length && <p>{c.noLoads}</p>}
                   <ul>
                     {run.loads.map((load) => (
@@ -1444,7 +1445,7 @@ function FleetWorkspace({
                       </li>
                     ))}
                   </ul>
-                  <h3>Driver inspection reports</h3>
+                  <CardHeading as="h3">Driver inspection reports</CardHeading>
                   <ul>
                     {run.inspections.map((inspection, index) => (
                       <li key={index}>
@@ -1467,7 +1468,7 @@ function FleetWorkspace({
                     </Link>
                   )}
                 </details>
-                <h3>{c.availableActions}</h3>
+                <CardHeading as="h3">{c.availableActions}</CardHeading>
                 <div className="fleet-detail-tools">
                   <FleetEtaPanel
                     key={`${run.id}:${run.version}`}
@@ -1772,10 +1773,10 @@ function FleetWorkspace({
         </div>
       )}
       {showRunList && (
-        <section className="rounded-xl border p-4">
-          <h2 className="font-semibold">
+        <section data-card-layout className="rounded-xl border p-4">
+          <CardHeading as="h2" className="font-semibold">
             {mine ? c.assigned : c.runs} ({runs.length})
-          </h2>
+          </CardHeading>
           <p className="text-xs text-muted-foreground">
             {c.loadedRuns}: {data.runs.length}
           </p>

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { useTranslation } from "react-i18next";
 import type { FleetOperationalProfile } from "@workspace/api-zod";
@@ -15,8 +16,8 @@ export function FleetProfileFields({
   const { i18n } = useTranslation();
   const c = fleetCopy(i18n.language);
   return (
-    <section className="space-y-2 rounded border p-3">
-      <h4>{c.profile}</h4>
+    <section data-card-layout className="space-y-2 rounded border p-3">
+      <CardHeading as="h4">{c.profile}</CardHeading>
       <p className="text-xs">{c.profileHint}</p>
       {value && (
         <PngPillButton disabled={disabled} onClick={() => onChange(undefined)}>

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
@@ -79,11 +80,11 @@ export default function VendorJobOfferInbox({
       }
     });
   return (
-    <section
+    <section data-card-layout
       className="space-y-3 rounded border p-4"
       aria-label={t("jobOffers.inbox")}
     >
-      <h2 className="font-semibold">{t("jobOffers.inbox")}</h2>
+      <CardHeading as="h2" className="font-semibold">{t("jobOffers.inbox")}</CardHeading>
       {(error || inbox.isError) && <p role="alert">{t("jobOffers.changed")}</p>}
       <PngPillButton
         color="blue"
@@ -136,11 +137,11 @@ export default function VendorJobOfferInbox({
         </article>
       ))}
       {selected && (
-        <section
+        <section data-card-layout
           aria-label={t("jobOffers.confirmAccept")}
           className="space-y-3 rounded border p-3"
         >
-          <h3>{t("jobOffers.confirmAccept")}</h3>
+          <CardHeading as="h3">{t("jobOffers.confirmAccept")}</CardHeading>
           <JobOfferSummary offer={selected} />
           <PngPillButton
             color="green"

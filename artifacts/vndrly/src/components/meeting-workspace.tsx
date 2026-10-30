@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -169,7 +170,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   return <section className="meeting-workspace" style={{ "--meeting-brand": brand.primary } as React.CSSProperties} aria-label={t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })}>
     <header className="meeting-header">
       <div className="meeting-heading">
-        <h2>{data.meeting.title}</h2>
+        <CardHeading as="h2">{data.meeting.title}</CardHeading>
         {data.transcriptionIndicator === "persistent" && <span className="meeting-recording-indicator" role="status">● {t("meetingWorkspace.transcriptionActiveIndicator", { defaultValue: "Transcription active" })}</span>}
         <p>{t("meetingWorkspace.presentCount", { defaultValue: "{{count}} present", count: present.length })} · {ended ? t("meetingWorkspace.meetingEnded", { defaultValue: "Meeting ended" }) : audio.joined ? t("meetingWorkspace.live", { defaultValue: "Live" }) : t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} · {audio.transcriptionActive ? t("meetingWorkspace.transcribingMic", { defaultValue: "Transcribing your microphone" }) : invited ? captureLabel : t("meetingWorkspace.transcriptionPaused", { defaultValue: "Transcription paused" })}</p>
         <div className="meeting-actions">

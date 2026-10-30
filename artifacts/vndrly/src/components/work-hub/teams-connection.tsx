@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -71,8 +72,8 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
   const errorText = errorCode === "teams_app_misconfigured" ? copy("Microsoft Teams is unavailable because of a VNDRLY configuration problem. You do not need to sign in again; an administrator must fix the Microsoft app registration.", "Microsoft Teams no está disponible por un problema de configuración de VNDRLY. No necesita volver a iniciar sesión; un administrador debe corregir el registro de la aplicación de Microsoft.")
     : errorCode === "teams_reconnect_required" ? copy("Microsoft access for this account was revoked or expired. Reconnect Microsoft Teams to continue.", "El acceso de Microsoft para esta cuenta fue revocado o venció. Vuelva a conectar Microsoft Teams para continuar.")
     : error?.message;
-  return <section className="rounded-xl border-2 border-amber-500 p-4 space-y-4" aria-label="Microsoft Teams">
-    <h2 className="font-semibold text-lg">Microsoft Teams</h2>
+  return <section data-card-layout className="rounded-xl border-2 border-amber-500 p-4 space-y-4" aria-label="Microsoft Teams">
+    <CardHeading as="h2" className="font-semibold text-lg">Microsoft Teams</CardHeading>
     <p className="text-sm">{copy("Calendar and chats are private to your connected account. Only meetings you explicitly publish are shared with Teams.", "El calendario y los chats son privados de su cuenta conectada. Solo las reuniones que publique explícitamente se comparten con Teams.")}</p>
     {status.isPending ? <p>{copy("Loading…", "Cargando…")}</p> : null}
     {callbackError === "teams_app_misconfigured" ? <p role="alert">{copy("Microsoft rejected VNDRLY's Teams app registration. This is a configuration problem on our side, not your account; please contact VNDRLY support.", "Microsoft rechazó el registro de la aplicación de Teams de VNDRLY. Es un problema de configuración nuestro, no de su cuenta; comuníquese con soporte de VNDRLY.")}</p>
@@ -89,7 +90,7 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
         <BrandPillButton tone="amber" disabled={busy} onClick={() => void run(async () => { await request("/sync", { expectedGeneration }); await cache.invalidateQueries({ queryKey: base }); })}>{copy("Refresh linked meetings", "Actualizar reuniones vinculadas")}</BrandPillButton>
         <BrandPillButton disabled={busy} onClick={() => void run(async () => { await request("/disconnect", {}); cache.removeQueries({ queryKey: base }); setChatId(""); setText(""); setAttempt(null); setUncertain(false); await status.refetch(); })}>{copy("Disconnect", "Desconectar")}</BrandPillButton>
       </div>
-      <h3 className="font-semibold">{copy("Your Microsoft calendar", "Su calendario de Microsoft")}</h3>
+      <CardHeading as="h3" className="font-semibold">{copy("Your Microsoft calendar", "Su calendario de Microsoft")}</CardHeading>
       {calendar.isPending ? <p>{copy("Loading…", "Cargando…")}</p> : null}
       {calendar.data?.events.length === 0 ? <p>{copy("No events in this calendar window.", "No hay eventos en este intervalo del calendario.")}</p> : null}
       <ul className="space-y-2">{calendar.data?.events.map(event => <li key={event.id} className="border rounded p-2 text-sm"><strong>{event.subject}</strong><div>{event.start.dateTime} — {event.end.dateTime} ({event.start.timeZone})</div>{event.isCancelled ? <span>{copy("Cancelled", "Cancelado")}</span> : safeLink(event.onlineMeeting?.joinUrl) ? <a className="underline" href={safeLink(event.onlineMeeting?.joinUrl)} target="_blank" rel="noopener noreferrer">{copy("Join in Teams", "Unirse en Teams")}</a> : null}</li>)}</ul>

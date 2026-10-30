@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useTranslation } from "react-i18next";
 import { fleetCopy } from "@/lib/fleet-copy";
 import { useState } from "react";
@@ -62,8 +63,8 @@ function PreferenceForm({
     }
   }
   return (
-    <section className="space-y-4 rounded-xl border p-4">
-      <h2 className="text-xl font-semibold">{c.preferenceHeading}</h2>
+    <section data-card-layout className="space-y-4 rounded-xl border p-4">
+      <CardHeading as="h2" className="text-xl font-semibold">{c.preferenceHeading}</CardHeading>
       <p>{c.preferenceExplanation}</p>
       <label className="block">
         {c.defaultHome}

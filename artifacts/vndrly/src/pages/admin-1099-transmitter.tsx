@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 // IRS FIRE transmitter settings (Task #415).
 //
 // Admin-only edit surface for the singleton fire_transmitter_settings
@@ -178,6 +179,7 @@ export default function Admin1099Transmitter() {
 
       {isLoading ? (
         <Card>
+        <ContentCardHeader title="Transmitter information" spanish="Información del transmisor" />
           <CardContent className="p-6 space-y-3">
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="h-9 w-full" />

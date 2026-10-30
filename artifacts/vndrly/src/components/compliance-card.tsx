@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,11 +52,9 @@ export function ComplianceCard({ employeeId, firstName, lastName, jobTitle, vend
 
   return (
     <Card className="print:shadow-none print:border-2 print:border-black">
-      <CardContent className="p-6 space-y-4">
+      <CardContent className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-amber-600 font-semibold uppercase text-xs tracking-wider">
-            <ShieldCheck className="w-4 h-4" /> VNDRLY Compliance
-          </div>
+          <CardHeading as="h3" className="font-semibold uppercase text-xs tracking-wider"><ShieldCheck className="w-4 h-4" /> VNDRLY Compliance</CardHeading>
           <div className="text-xs text-muted-foreground">ID #{employeeId}</div>
         </div>
         <div className="flex gap-4 items-center">

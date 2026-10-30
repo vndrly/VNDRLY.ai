@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { BrandedCheckbox } from "./branded-checkbox";
 import FleetPolicyEditor from "./fleet-policy-editor";
 import React, { useState, useRef } from "react";
@@ -116,8 +117,8 @@ export function FleetAgreementEditor({
     </label>
   );
   return (
-    <section className="fleet-card p-4 space-y-3">
-      <h4>{es ? "Acuerdo de transporte" : "Transport agreement"}</h4>
+    <section data-card-layout className="fleet-card p-4 space-y-3">
+      <CardHeading as="h4">{es ? "Acuerdo de transporte" : "Transport agreement"}</CardHeading>
       <p>
         {es
           ? "USD. Cambiar términos no modifica trabajo anterior. Se requiere aprobación del socio."

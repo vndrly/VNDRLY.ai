@@ -94,7 +94,7 @@ import {
 
 const GATE_SELECT_CONTENT_CLASS = "border-2 border-[color:var(--brand-primary)] bg-white text-gray-700";
 const GATE_SELECT_ITEM_CLASS = "focus:bg-[var(--brand-primary)] focus:text-white data-[highlighted]:bg-[var(--brand-primary)] data-[highlighted]:text-white data-[state=checked]:bg-[var(--brand-primary)] data-[state=checked]:text-white";
-const GATE_TALL_FIELD_CLASS = "min-h-20 w-full rounded-xl border-2 border-[color:var(--brand-primary)] bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25";
+const GATE_TALL_FIELD_CLASS = "min-h-20 w-full rounded-xl border-2 border-[color:var(--brand-primary)] bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:ring-0 focus:shadow-none";
 import {
   applyGateAskVTurn,
   evaluateGateAskVTurn,

@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -1095,6 +1096,7 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
       </div>
 
       <Card data-testid="card-balance">
+        <ContentCardHeader title="Invoice totals" spanish="Totales de la factura" />
         <CardContent className="pt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <div className="text-muted-foreground">
@@ -1188,6 +1190,7 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
 
       {isDraft && (
         <Card data-testid="card-bulk-actions">
+        <ContentCardHeader title="Line items" spanish="Partidas" />
           <CardContent className="flex flex-wrap items-center gap-3 pt-4">
             <Checkbox
               id="bulk-select-all"
@@ -1566,6 +1569,7 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
       })}
 
       <Card>
+        <ContentCardHeader title="Invoice summary" spanish="Resumen de factura" />
         <CardContent className="flex justify-end pt-6">
           <div className="text-right space-y-1 tabular-nums">
             <div className="text-sm text-muted-foreground">

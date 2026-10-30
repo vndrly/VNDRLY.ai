@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -166,7 +167,7 @@ function ReviewerForm({ onChanged }: Props) {
     : [];
   return (
     <section className="fleet-detail-group space-y-3">
-      <h3>{es ? "Revisores de evidencia" : "Evidence reviewers"}</h3>
+      <CardHeading as="h3">{es ? "Revisores de evidencia" : "Evidence reviewers"}</CardHeading>
       <p>
         {es
           ? "Los revisores designados pueden leer y revisar licencias completas y registros médicos, de pruebas y de cobertura privados. Despacho y finanzas conservan sus permisos separados."

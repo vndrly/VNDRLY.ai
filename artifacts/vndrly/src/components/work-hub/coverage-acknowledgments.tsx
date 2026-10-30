@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -21,8 +22,8 @@ export function CoverageAcknowledgments({owner,userId}:{owner:WorkHubOwner;userI
   }
   if(query.isError) return <p role="alert">Coverage acknowledgments could not load. <button onClick={()=>void query.refetch()}>Retry</button></p>;
   if(!query.data?.notices.length) return null;
-  return <section className="hub-shift-panel" aria-label="Coverage awaiting your acknowledgment">
-    <h3>Coverage awaiting your acknowledgment</h3>
+  return <section data-card-layout className="hub-shift-panel" aria-label="Coverage awaiting your acknowledgment">
+    <CardHeading as="h3">Coverage awaiting your acknowledgment</CardHeading>
     {query.data.notices.map(n=><div key={n.id} className="hub-gap-assignment-row">
       <span>{n.title} · {new Date(n.startsAt).toLocaleString(undefined,{timeZone:n.timezone})} ({n.timezone})</span>
       <PngPillButton color="brand" disabled={saving!==null||query.data.readOnly} onClick={()=>void acknowledge(n.id)}>{saving===n.id?'Acknowledging…':'Acknowledge Shift'}</PngPillButton>

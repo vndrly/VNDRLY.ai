@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import {
   Dialog,
   DialogContent,
@@ -168,7 +169,7 @@ export function LiveMeetingsPanel({
             <p className="text-[color:var(--brand-primary)] font-bold">
               LIVE · {m.connectedCount} connected
             </p>
-            <h3 className="font-bold text-lg">{m.title}</h3>
+            <CardHeading as="h3" className="font-bold text-lg">{m.title}</CardHeading>
             <p>
               {m.hostName} ·{" "}
               {m.admissionMode === "company_open"
@@ -226,11 +227,11 @@ export function LiveMeetingsPanel({
               >
                 {t("liveMeetings.close", { defaultValue: "Close" })}
               </BrandPillButton>
-              <h3 className="font-bold text-xl">
+              <CardHeading as="h3" className="font-bold text-xl">
                 {t("liveMeetings.startNow", {
                   defaultValue: "Start meeting now",
                 })}
-              </h3>
+              </CardHeading>
               <Input
                 aria-label={t("liveMeetings.title", {
                   defaultValue: "Meeting title",
@@ -446,7 +447,7 @@ export function LiveMeetingLobby({
             : "MEETING"}{" "}
           · {m.connectedCount} connected
         </p>
-        <h2 className="font-bold text-xl">{m.title}</h2>
+        <CardHeading as="h2" className="font-bold text-xl">{m.title}</CardHeading>
         <p>
           {t("liveMeetings.hostedBy", { defaultValue: "Hosted by " })}
           {m.hostName}

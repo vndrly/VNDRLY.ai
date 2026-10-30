@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import {
   ArrowRight,
   BadgeCheck,
@@ -149,7 +150,7 @@ export default function MarketingHome() {
                 [ShieldCheck, "Security aware", "All transactions are audited for security 24/7"],
               ].map(([Icon, title, copy]) => {
                 const CardIcon = Icon as typeof BadgeCheck;
-                return <div key={title as string} data-testid="marketing-card" className="rounded-2xl border-2 border-[var(--vndrly-amber)] bg-white/10 p-4"><div className="flex items-center gap-2"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><h2 className="font-black text-white">{title as string}</h2></div><p className="mt-2 text-sm leading-6 text-white">{copy as string}</p></div>;
+                return <div data-card-layout key={title as string} data-testid="marketing-card" className="rounded-2xl border-2 border-[var(--vndrly-amber)] bg-white/10 p-4"><div data-card-header-row className="flex items-center gap-2"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><CardHeading as="h2" className="font-black text-white">{title as string}</CardHeading></div><p className="mt-2 text-sm leading-6 text-white">{copy as string}</p></div>;
               })}
             </div>
           </aside>
@@ -167,7 +168,7 @@ export default function MarketingHome() {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {FEATURED_SOLUTIONS.map((solution, index) => {
             const Icon = solutionIcons[index];
-            return <article key={solution.title} data-testid="marketing-card" className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><div className="flex items-center gap-3"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><h3 className="text-2xl font-black text-white">{solution.title}</h3></div><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><p className="mt-3 leading-7 text-white">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
+            return <article data-card-layout key={solution.title} data-testid="marketing-card" className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><div data-card-header-row className="flex items-center gap-3"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><CardHeading as="h3" className="text-2xl font-black text-white">{solution.title}</CardHeading></div><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><p className="mt-3 leading-7 text-white">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
           })}
         </div>
       </section>
@@ -196,14 +197,14 @@ export default function MarketingHome() {
 
       <SectionDivider />
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-20 lg:grid-cols-2">
-        <article id="partners" data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
+        <article data-card-layout id="partners" data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
           <div className="flex items-center gap-3"><Building2 className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="text-base font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">For operating partners</p></div>
-          <h2 className="mt-5 text-2xl font-black leading-tight text-white">For partners: know who can do the work—and what is happening now.</h2>
+          <CardHeading as="h2" className="mt-5 text-2xl font-black leading-tight text-white">For partners: know who can do the work—and what is happening now.</CardHeading>
           <BenefitList items={PARTNER_BENEFITS} dark textClassName="text-white"/>
         </article>
-        <article id="vendors" data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
+        <article data-card-layout id="vendors" data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
           <div className="flex items-center gap-3"><BriefcaseBusiness className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="text-base font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">For vendors</p></div>
-          <h2 className="mt-5 text-2xl font-black leading-tight text-white">For vendors: make proven performance easier to find and easier to repeat.</h2>
+          <CardHeading as="h2" className="mt-5 text-2xl font-black leading-tight text-white">For vendors: make proven performance easier to find and easier to repeat.</CardHeading>
           <BenefitList items={VENDOR_BENEFITS} dark textClassName="text-white"/>
         </article>
       </section>
@@ -222,7 +223,7 @@ export default function MarketingHome() {
           <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {MARKETING_MODULES.map((module, index) => {
               const Icon = moduleIcons[index];
-              return <article key={module.title} data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)]"><div className="flex items-center gap-3"><Icon className="h-7 w-7 text-[var(--vndrly-amber)]"/><h3 className="text-xl font-black text-white">{module.title}</h3></div><p className="mt-4 text-sm leading-6 text-white">{module.description}</p></article>;
+              return <article data-card-layout key={module.title} data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)]"><div data-card-header-row className="flex items-center gap-3"><Icon className="h-7 w-7 text-[var(--vndrly-amber)]"/><CardHeading as="h3" className="text-xl font-black text-white">{module.title}</CardHeading></div><p className="mt-4 text-sm leading-6 text-white">{module.description}</p></article>;
             })}
           </div>
         </div>
@@ -261,9 +262,9 @@ export default function MarketingHome() {
           <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">VNDRLY can help rank vendor fit using service alignment, operating geography, verified activity, responsiveness, and ratings. The public experience does not reveal who hired whom, private job details, or organization records.</p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">{[[BadgeCheck,"Verified operational signals"],[ShieldCheck,"Role and organization permissions"],[Star,"Reputation built through work"],[Network,"No public account directory"]].map(([Icon,label]) => { const TrustIcon = Icon as typeof BadgeCheck; return <div key={label as string} data-testid="marketing-card" className="flex items-center gap-3 rounded-2xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-4 font-bold text-white shadow-[0_18px_50px_rgba(15,23,42,.16)]"><TrustIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/>{label as string}</div>; })}</div>
         </div>
-        <aside data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-8 text-white shadow-xl">
+        <aside data-card-layout data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-8 text-white shadow-xl">
           <SectionLabel>Ask V — Product Guide</SectionLabel>
-          <h2 className="mt-3 text-3xl font-black text-white">Questions before you sign in?</h2>
+          <CardHeading as="h2" className="mt-3 text-3xl font-black text-white">Questions before you sign in?</CardHeading>
           <p className="mt-4 leading-7 text-white">Ask about product fit, roles, signup, onboarding, demos, or sales. The public Product Guide uses approved public information only and cannot access accounts, operational records, or internal actions.</p>
           <p className="mt-6 text-sm font-bold text-[var(--vndrly-amber)]">Open Ask V in the lower-right corner.</p>
         </aside>
@@ -281,10 +282,10 @@ export default function MarketingHome() {
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {workHubFeatures.map(([Icon, title, description]) => (
-              <article key={title} data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,.2)]">
-                <div className="flex items-center gap-3">
+              <article data-card-layout key={title} data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,.2)]">
+                <div data-card-header-row className="flex items-center gap-3">
                   <Icon className="h-7 w-7 shrink-0 text-[var(--vndrly-amber)]"/>
-                  <h3 className="text-xl font-black text-white">{title}</h3>
+                  <CardHeading as="h3" className="text-xl font-black text-white">{title}</CardHeading>
                 </div>
                 <p className="mt-4 leading-7 text-white">{description}</p>
               </article>

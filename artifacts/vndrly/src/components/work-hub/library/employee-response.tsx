@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import React, { useEffect, useState } from "react";
 import { AssignedLibraryReadSchema } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
@@ -96,7 +97,7 @@ export default function EmployeeResponse({
   return (
     <div className="space-y-4">
       <section className={card}>
-        <h3 className="font-semibold text-lg">{data.title}</h3>
+        <CardHeading as="h3" className="font-semibold text-lg">{data.title}</CardHeading>
         <p>
           {t(`workHubLibrary.status_${data.assignment.status}`)} ·{" "}
           {t("workHubLibrary.version")} {data.metadata.contentVersion}

@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -560,6 +561,7 @@ export default function InvoicesPage() {
       )}
 
       <Card>
+        <ContentCardHeader title="Invoices" spanish="Facturas" />
         <CardContent className="p-0">
           <Table>
             <TableHeader>

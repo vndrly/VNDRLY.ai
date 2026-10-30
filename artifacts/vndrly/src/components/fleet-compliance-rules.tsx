@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import {FleetCoverageRequirementFields} from "./fleet-coverage-requirement-fields";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -184,7 +185,7 @@ function Rules({
       className="fleet-detail-group space-y-3"
       aria-label={say("Requirements and history", "Requisitos e historial")}
     >
-      <h3>{say("Requirements and history", "Requisitos e historial")}</h3>
+      <CardHeading as="h3">{say("Requirements and history", "Requisitos e historial")}</CardHeading>
       <p>
         {say(
           "References require your source and scope review. Adoption never activates enforcement or verifies a document. Previous revisions remain in history.",

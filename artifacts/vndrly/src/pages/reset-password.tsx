@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -102,8 +103,8 @@ export default function ResetPassword() {
               <p className="text-sm text-gray-500 mt-3">Validating reset link…</p>
             </div>
           ) : !valid ? (
-            <div className="border-2 border-red-400 rounded-xl p-6 shadow-xl bg-white">
-              <h2 className="text-lg font-bold text-gray-900 mb-2">Link Invalid or Expired</h2>
+            <div data-card-layout className="border-2 border-red-400 rounded-xl p-6 shadow-xl bg-white">
+              <CardHeading as="h2" className="text-lg font-bold text-gray-900 mb-2">Link Invalid or Expired</CardHeading>
               <p className="text-sm text-gray-600 leading-relaxed">
                 This reset link is no longer valid. Please request a new one.
               </p>
@@ -114,8 +115,8 @@ export default function ResetPassword() {
               </div>
             </div>
           ) : done ? (
-            <div className="border-2 border-amber-500 rounded-xl p-6 shadow-xl bg-white">
-              <h2 className="text-lg font-bold text-gray-900 mb-2">Password Updated</h2>
+            <div data-card-layout className="border-2 border-amber-500 rounded-xl p-6 shadow-xl bg-white">
+              <CardHeading as="h2" className="text-lg font-bold text-gray-900 mb-2">Password Updated</CardHeading>
               <p className="text-sm text-gray-600 leading-relaxed">
                 Your password was updated successfully. You can now sign in with your new password.
               </p>

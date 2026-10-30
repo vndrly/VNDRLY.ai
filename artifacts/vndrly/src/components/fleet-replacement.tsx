@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -185,8 +186,8 @@ export function FleetReplacementPanel({
     }
   }
   return (
-    <section className="space-y-3 rounded border p-3">
-      <h3>{c.replacementTitle}</h3>
+    <section data-card-layout className="space-y-3 rounded border p-3">
+      <CardHeading as="h3">{c.replacementTitle}</CardHeading>
       <p className="text-xs">{c.replacementSource}</p>
       {run.activeReplacement && (
         <p>

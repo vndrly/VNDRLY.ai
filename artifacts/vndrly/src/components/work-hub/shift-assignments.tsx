@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, Users } from "lucide-react";
@@ -73,7 +74,7 @@ export function ShiftAssignments({ siteId, owner, mode }: { siteId: number; owne
         <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><PngPillButton color="brand" disabled={!transferRows.length || transferRows.some(s => !s.assignees.includes(transferChoices[s.id]))} onClick={() => { if (!transferCell) return; setConfirmedTransfers(current => ({...current,...transferChoices})); setCells(current => [...current,transferCell]); setTransferCell(null); resetReview(); }}>Yes Reassign Shift</PngPillButton></AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-    <section className="hub-shift-panel"><h3><CalendarDays aria-hidden="true" />{mode === "assign" ? "Recurring assignments" : "Coverage gaps"}</h3>
+    <section data-card-layout className="hub-shift-panel"><CardHeading as="h3"><CalendarDays aria-hidden="true" />{mode === "assign" ? "Recurring assignments" : "Coverage gaps"}</CardHeading>
       <fieldset disabled={Boolean(pending) || saving}>
         <div className="hub-assignment-dates"><label>From<BrandedInput aria-label="Schedule from" type="date" value={from} onChange={e => { setFrom(e.target.value); clearDraft(); }} /></label><label>Through<BrandedInput aria-label="Schedule through" type="date" value={through} onChange={e => { setThrough(e.target.value); clearDraft(); }} /></label></div>
         <label>Gatekeeper<BrandedSelect aria-label="Assignment gatekeeper" value={employee} onChange={e => { setEmployee(e.target.value); clearDraft(); }}><option value="">Select a gatekeeper</option>{data?.people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</BrandedSelect></label>
@@ -87,7 +88,7 @@ export function ShiftAssignments({ siteId, owner, mode }: { siteId: number; owne
       {data && !data.people.length && <p>No active gatekeepers with access to this site were found.</p>}
       {data?.readOnly && <p role="status">Local preview: review assignments here; saving is disabled to protect the existing schedule.</p>}
     </section>
-    {data && <section className="hub-shift-panel hub-shift-rows"><h3><Users aria-hidden="true" />{mode === "assign" ? "Weekly responsibilities" : "Unfilled scheduled shifts"}</h3>
+    {data && <section data-card-layout className="hub-shift-panel hub-shift-rows"><CardHeading as="h3"><Users aria-hidden="true" />{mode === "assign" ? "Weekly responsibilities" : "Unfilled scheduled shifts"}</CardHeading>
       <fieldset disabled={Boolean(pending) || saving}>
       {mode === "assign" ? <><p>Checked days show saved assignments. Uncheck a day to remove it or transfer it to another gatekeeper. Changes are reviewed before saving.</p><div className="hub-assignment-table"><table><thead><tr><th>Shift</th>{days.map(day => <th key={day}>{day}</th>)}</tr></thead><tbody>{patterns.map(p => <tr key={patternKey(p)}><th>{p.pattern}<small>{p.starts}–{p.ends} · {p.timezone}</small></th>{days.map((day, weekday) => { const cell = `${patternKey(p)}|${weekday}`; const exists = available.some(s => shiftCell(s) === cell); const assigned = assignedCells.has(cell); return <td key={day}><input type="checkbox" aria-label={`${p.pattern} ${day}`} title={assigned ? "Already assigned" : undefined} disabled={!exists || !employee} checked={assigned ? !removedCells.includes(cell) : cells.includes(cell)} onChange={() => assigned ? toggle(cell,removedCells,setRemovedCells) : chooseCell(cell)} /></td>; })}</tr>)}</tbody></table></div></>
         : <div className="hub-gap-list">{gaps.map(s => <label key={s.id}><input type="checkbox" checked={ids.includes(s.id)} onChange={() => toggle(s.id,ids,setIds)} aria-label={`Fill ${s.pattern} ${s.date}`} /><span><strong>{s.pattern}</strong><br />{s.date} · {s.starts}–{s.ends} · {s.timezone}<br />{s.required - s.assignees.length} needed · {s.assignees.length}/{s.required} assigned</span></label>)}</div>}

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
@@ -65,11 +66,11 @@ export function LegalDocumentPage({
         </header>
 
         {kind === "messaging" && (
-          <section
+          <section data-card-layout
             className="mb-8 rounded-lg border border-2 border-amber-500 bg-white/5 p-5 text-sm text-gray-100"
             data-testid="messaging-disclosure-card"
           >
-            <h2 className="text-base font-semibold text-white">{MESSAGING_DISCLOSURE.programName}</h2>
+            <CardHeading as="h2" className="text-base font-semibold text-white">{MESSAGING_DISCLOSURE.programName}</CardHeading>
             <p className="mt-2 leading-6">{MESSAGING_DISCLOSURE.summary}</p>
             <p className="mt-3 leading-6">{MESSAGING_DISCLOSURE.consent}</p>
             <p className="mt-3 leading-6">
@@ -88,10 +89,10 @@ export function LegalDocumentPage({
         )}
 
         {children}
-        <div className="space-y-7 rounded-xl border-2 border-amber-500 bg-white/5 p-6">
+        <div data-card-layout className="space-y-7 rounded-xl border-2 border-amber-500 bg-white/5 p-6">
           {sections.map((section) => (
             <section key={section.title} className="border-b border-white/15 pb-6 last:border-b-0">
-              <h2 className="text-lg font-semibold text-white">{section.title}</h2>
+              <CardHeading as="h2" className="text-lg font-semibold text-white">{section.title}</CardHeading>
               <div className="mt-3 space-y-3 text-sm leading-6 text-gray-100">
                 {section.body.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>

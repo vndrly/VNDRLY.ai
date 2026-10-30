@@ -1,7 +1,7 @@
 .gate-handoff-desk {
   grid-column: 1 / -1;
   min-width: 0;
-  padding: 12px;
+  padding: 16px;
   border: 1px solid var(--brand-primary);
   border-radius: 14px;
   background: #242426;
@@ -10,7 +10,7 @@
   font-size: 14px;
   line-height: 1.5;
 }
-.handoff-heading { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
+.handoff-heading { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 8px; }
 .handoff-heading > div { flex: 1; min-width: 0; }
 .handoff-edit-mini-card{flex-shrink:0;align-self:flex-start;border:1px solid #515156;border-radius:8px;padding:8px 12px;background:#2b2b2f;color:#d1d1d1;font:inherit;font-weight:600;}
 .handoff-edit-mini-card:hover{border-color:var(--brand-primary);color:var(--brand-primary);}.handoff-edit-mini-card:disabled{opacity:.45;}
@@ -18,7 +18,7 @@
 .handoff-edit-card{display:grid;gap:14px;padding:16px;border:2px solid var(--brand-primary);border-radius:12px;background:#fff;color:#111;}
 .handoff-edit-card label{display:grid;gap:8px;font-weight:600;}
 .handoff-edit-card textarea{display:block;width:100%;min-width:0;padding:10px;border:1px solid var(--brand-primary);border-radius:8px;background:#f8fafc;color:#111;font:inherit;resize:vertical;}
-.handoff-edit-card textarea:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px;}
+.handoff-edit-card textarea:focus-visible{outline:none;box-shadow:none;}
 .handoff-edit-save{justify-self:end;border-color:var(--brand-primary);}
 .handoff-next-actions { flex: 0 1 370px; padding: 9px 12px; border: 1px solid #414145; border-left: 3px solid var(--brand-primary); border-radius: 9px; background: #2b2b2f; }
 .handoff-next-actions h3 { margin: 0; color: #ececec; font-size: 14px; font-weight: 700; }
@@ -48,7 +48,8 @@
 }
 .gate-handoff-desk textarea { resize: vertical; }
 .gate-handoff-desk textarea::placeholder, .gate-handoff-desk input::placeholder { color: #b3b3b3; }
-.gate-handoff-desk textarea:focus-visible, .gate-handoff-desk input:focus-visible, .handoff-disclosure > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
+.gate-handoff-desk textarea:focus-visible, .gate-handoff-desk input:focus-visible { outline:none; box-shadow:none; }
+.handoff-disclosure > summary:focus-visible { outline:2px solid var(--brand-primary); outline-offset:3px; }
 .gate-handoff-desk textarea:disabled, .gate-handoff-desk input:disabled { opacity: .6; }
 .handoff-tabs, .handoff-item-controls, .handoff-save-row, .handoff-withdraw-controls, .handoff-recovery { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .handoff-items, .handoff-item-editor, .handoff-add-item { display: grid; gap: 10px; }

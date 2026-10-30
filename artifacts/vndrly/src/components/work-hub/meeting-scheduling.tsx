@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useAuth } from "@/hooks/use-auth";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -95,14 +96,14 @@ export function MeetingScheduling() {
   }
   const windows = draftWindows ?? availability.data?.windows ?? [];
   return (
-    <section
+    <section data-card-layout
       data-work-hub-card
       className="mb-6 overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-card"
       aria-label="Meeting scheduling pages"
     >
       <header className="flex flex-wrap items-center justify-between gap-4 border-b p-5">
         <div>
-          <h2><WorkHubCardTitle icon={CalendarDays} className="text-xl">Meeting scheduling</WorkHubCardTitle></h2>
+          <CardHeading as="h2"><WorkHubCardTitle icon={CalendarDays} className="text-xl">Meeting scheduling</WorkHubCardTitle></CardHeading>
           <p className="mt-1 text-sm text-muted-foreground">
             Set your availability and let signed-in teammates reserve a time.
           </p>

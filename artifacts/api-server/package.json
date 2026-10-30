@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "migrate:linked-gates": "tsx scripts/migrate-linked-gates.ts",
+    "migrate:gate-map-pins": "tsx scripts/migrate-gate-map-pins.ts",
     "migrate:staff-role-catalog": "tsx scripts/migrate-staff-role-catalog.ts",
     "migrate:staff-enrollment": "tsx scripts/migrate-staff-enrollment.ts",
     "migrate:gate-shift-definitions": "tsx scripts/migrate-gate-shift-definitions.ts",

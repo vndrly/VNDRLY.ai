@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import {
   useInfiniteQuery,
@@ -218,11 +219,11 @@ export function FleetMaintenancePanel({
       {(overview.capabilities.canReportDefect ??
         (overview.capabilities.canManage ||
           overview.capabilities.canDrive)) && (
-        <section
+        <section data-card-layout
           className="space-y-3 rounded-xl border p-4"
           onChange={() => setReviewed(null)}
         >
-          <h2 className="font-semibold">{c.reportMaintenance}</h2>
+          <CardHeading as="h2" className="font-semibold">{c.reportMaintenance}</CardHeading>
           {overview.capabilities.canManage ? (
             <label className="block">
               {c.fleet}
@@ -356,8 +357,8 @@ export function FleetMaintenancePanel({
       )}
       {message && <p role="status">{message}</p>}
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="space-y-2 rounded-xl border p-4">
-          <h2 className="font-semibold">{c.maintenance}</h2>
+        <section data-card-layout className="space-y-2 rounded-xl border p-4">
+          <CardHeading as="h2" className="font-semibold">{c.maintenance}</CardHeading>
           {records.isPending && <p>{c.loading}</p>}
           {records.isError ? (
             <p role="alert">{c.maintenanceUnavailable}</p>
@@ -391,11 +392,11 @@ export function FleetMaintenancePanel({
             </PngPillButton>
           )}
         </section>
-        <section className="space-y-3 rounded-xl border p-4">
+        <section data-card-layout className="space-y-3 rounded-xl border p-4">
           {selected.isError && <p role="alert">{c.maintenanceUnavailable}</p>}
           {record ? (
             <>
-              <h2 className="font-semibold">{record.title}</h2>
+              <CardHeading as="h2" className="font-semibold">{record.title}</CardHeading>
               <p>
                 {statusLabel(record.status)} · {c.version} {record.version}
               </p>
@@ -452,7 +453,7 @@ export function FleetMaintenancePanel({
                   </PngPillButton>
                 </div>
               )}
-              <h3 className="font-semibold">{c.events}</h3>
+              <CardHeading as="h3" className="font-semibold">{c.events}</CardHeading>
               {record.events.map((event, index) => (
                 <article
                   className="border-t py-2"

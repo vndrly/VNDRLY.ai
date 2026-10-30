@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -174,8 +175,8 @@ export function FleetServiceTemplates({ identity }: { identity: string }) {
     pending.current = command;
   }
   return (
-    <section className="fleet-panel space-y-4">
-      <h2>{c.title}</h2>
+    <section data-card-layout className="fleet-panel space-y-4">
+      <CardHeading as="h2">{c.title}</CardHeading>
       <p>{c.hint}</p>
       <PngPillButton
         disabled={busy || !!pending.current}

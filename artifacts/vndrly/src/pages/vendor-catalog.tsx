@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
@@ -511,7 +512,7 @@ export default function VendorCatalog() {
           ) : (
             <>
             {recommendedItems.length > 0 ? (
-              <div
+              <div data-card-layout
                 className="space-y-2 rounded border p-3"
                 style={{
                   background:
@@ -523,14 +524,14 @@ export default function VendorCatalog() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="space-y-0.5">
-                    <h3
+                    <CardHeading as="h3"
                       className="text-sm font-semibold"
                       style={{ color: "var(--brand-primary)" }}
                     >
                       {t("vendorCatalog.recommendedTitle", {
                         count: recommendedItems.length,
                       })}
-                    </h3>
+                    </CardHeading>
                     <p className="text-xs text-muted-foreground">
                       {t("vendorCatalog.recommendedSubtitle")}
                     </p>
@@ -601,9 +602,9 @@ export default function VendorCatalog() {
             ) : null}
             {grouped.map(([category, items]) => (
               <div key={category} className="space-y-2">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                <CardHeading as="h3" className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   {category}
-                </h3>
+                </CardHeading>
                 <div className="space-y-2">
                   {items.map((wt) => {
                     const draft = drafts[wt.id] ?? rowToDraft(wt);

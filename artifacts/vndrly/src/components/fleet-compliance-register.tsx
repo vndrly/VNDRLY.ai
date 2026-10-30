@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useInfiniteQuery,useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -127,9 +128,9 @@ export function FleetComplianceRegister({ identity,companyId }: { identity: stri
       <div className="grid gap-3 md:grid-cols-2">
         {entries.map((entry) => (
           <article key={entry.id} className="fleet-detail-group space-y-2">
-            <h3>
+            <CardHeading as="h3">
               {registers[entry.subject.kind]} · {String(entry.subject.id)}
-            </h3>
+            </CardHeading>
             <p>
               <span
                 aria-hidden="true"

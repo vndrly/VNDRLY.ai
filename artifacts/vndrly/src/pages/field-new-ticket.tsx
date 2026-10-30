@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -118,6 +119,7 @@ export default function FieldNewTicket() {
       </div>
 
       <Card>
+        <ContentCardHeader title="New ticket" spanish="Nuevo ticket" />
         <CardContent className="p-4 space-y-5">
           <div className="rounded-lg border border-amber-300/50 bg-card p-3 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />

@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useState } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -53,6 +54,7 @@ export default function SafetyTrainingPage() {
         <p className="text-muted-foreground text-sm">{t("common.loading", { defaultValue: "Loading…" })}</p>
       ) : !data || data.incompleteModules.length === 0 ? (
         <Card>
+        <ContentCardHeader title="Training" spanish="Capacitación" />
           <CardContent className="py-8 text-center text-muted-foreground">
             {t("safety.trainingAllComplete")}
           </CardContent>

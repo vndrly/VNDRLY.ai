@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Loader2, Printer, Search } from "lucide-react";
@@ -73,7 +74,7 @@ function ScopedGateReport() {
     {error && <p role="alert" className="text-destructive">{error}</p>}
     {busy && <p role="status">{label("loading")}</p>}
     {report && <div id="gate-report-print" className="space-y-4">
-      <div><h2 className="text-xl font-semibold">{label("title")}</h2><p className="text-sm">{user?.role} · {fmt(report.filters.from)} - {fmt(report.filters.to)} · {label("snapshot")}: {fmt(report.generatedAt)}</p><p className="text-sm">{label("site")}: {report.filters.siteLocationId ? sites.find(row => row.id === report.filters.siteLocationId)?.name || report.filters.siteLocationId : label("allSites")} · {label("partner")}: {report.filters.partnerId ?? label("allAccessiblePartners")} · {label("company")}: {report.filters.company || label("all")} · {label("purpose")}: {report.filters.purpose || label("all")} · {label("category")}: {label(report.filters.category)}</p></div>
+      <div><CardHeading as="h2" className="text-xl font-semibold">{label("title")}</CardHeading><p className="text-sm">{user?.role} · {fmt(report.filters.from)} - {fmt(report.filters.to)} · {label("snapshot")}: {fmt(report.generatedAt)}</p><p className="text-sm">{label("site")}: {report.filters.siteLocationId ? sites.find(row => row.id === report.filters.siteLocationId)?.name || report.filters.siteLocationId : label("allSites")} · {label("partner")}: {report.filters.partnerId ?? label("allAccessiblePartners")} · {label("company")}: {report.filters.company || label("all")} · {label("purpose")}: {report.filters.purpose || label("all")} · {label("category")}: {label(report.filters.category)}</p></div>
       <p className="text-sm">{label("record")}: {label(report.filters.recordKind)}</p>
       <dl className="grid grid-cols-2 gap-3 border-y py-3 sm:grid-cols-4">{(["entries", "visitorEntries", "employeeCheckins", "currentOnsiteEntries", "uniqueRecordedIdentities", "unidentifiedEntries", "incompleteEntries", "pendingAdmissionEntries"] as const).map(key => <div key={key}><dt className="text-sm text-muted-foreground">{label(key)}</dt><dd className="text-xl font-semibold">{report.totals[key]}</dd></div>)}</dl>
       <p className="text-sm text-muted-foreground">{label("coverage")}</p>

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useLocation } from "wouter";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import LanguageToggle from "@/components/language-toggle";
@@ -68,20 +69,20 @@ export default function Signup() {
           </div>
 
           <div className="space-y-4">
-            <div
+            <div data-card-layout
               className={cn(
                 "border-2 rounded-xl p-6 transition-colors",
                 "border-amber-500/70 hover:bg-white/5",
               )}
             >
-              <h2
+              <CardHeading as="h2"
                 className={cn(
                   "text-lg font-bold mb-1",
                   "text-white",
                 )}
               >
                 Sign Up as a Vendor
-              </h2>
+              </CardHeading>
               <p
                 className={cn(
                   "text-sm",
@@ -103,20 +104,20 @@ export default function Signup() {
               </div>
             </div>
 
-            <div
+            <div data-card-layout
               className={cn(
                 "border-2 rounded-xl p-6 transition-colors",
                 "border-[color:var(--brand-primary)]/70 hover:bg-white/5",
               )}
             >
-              <h2
+              <CardHeading as="h2"
                 className={cn(
                   "text-lg font-bold mb-1",
                   "text-white",
                 )}
               >
                 Sign Up as a Partner
-              </h2>
+              </CardHeading>
               <p
                 className={cn(
                   "text-sm",
@@ -177,10 +178,10 @@ export default function Signup() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/30 to-transparent" />
         <div className="relative z-10 flex items-end justify-center p-12 w-full h-full">
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-md border-2 border-[color:var(--brand-primary)]">
-            <h2 className="text-xl font-bold text-white mb-2">
+          <div data-card-layout className="bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-md border-2 border-[color:var(--brand-primary)]">
+            <CardHeading as="h2" className="text-xl font-bold text-white mb-2">
               Field Management Elevated
-            </h2>
+            </CardHeading>
             <p className="text-sm text-white/85 leading-relaxed">
               VNDRLY bridges the gap between Partners, Vendors, and Field
               Employees with real-time GPS tracking and seamless work order

@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -146,6 +147,7 @@ export default function CrewReplayPage({ employeeId }: { employeeId: number }) {
 
       {points.length > 0 && (
         <Card data-testid="card-replay-scrubber">
+        <ContentCardHeader title="Playback" spanish="Reproducción" />
           <CardContent className="py-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span>
@@ -195,6 +197,7 @@ export default function CrewReplayPage({ employeeId }: { employeeId: number }) {
       )}
 
       <Card>
+        <ContentCardHeader title="Route history" spanish="Historial de rutas" />
         <CardContent className="p-0">
           <TicketRouteMap
             tracking={visiblePoints}
@@ -210,6 +213,7 @@ export default function CrewReplayPage({ employeeId }: { employeeId: number }) {
       </Card>
 
       <Card className="border-dashed" data-testid="card-replay-legend">
+        <ContentCardHeader title="Map key" spanish="Leyenda del mapa" />
         <CardContent className="py-3 text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="font-medium text-foreground">{t("crewReplay.legendTitle")}</span>
           <span className="inline-flex items-center gap-1.5" data-testid="legend-heading-arrow">

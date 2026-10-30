@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Bell, Check, Plus, Trash2, Users, Save } from "lucide-react";
@@ -193,11 +194,11 @@ export default function ForemanCrews() {
         </div>
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-4 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+      <section data-card-layout className="rounded-xl border border-border bg-card p-4 space-y-4">
+        <CardHeading as="h2" className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
           <Users className="w-4 h-4" />
           {t("foremanCrews.savedCrews")}
-        </h2>
+        </CardHeading>
 
         {presets.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("foremanCrews.noPresets")}</p>
@@ -350,11 +351,11 @@ export default function ForemanCrews() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+      <section data-card-layout className="rounded-xl border border-border bg-card p-4 space-y-4">
+        <CardHeading as="h2" className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
           <Bell className="w-4 h-4" />
           {t("foremanCrews.batchNotify")}
-        </h2>
+        </CardHeading>
         <p className="text-sm text-muted-foreground">{t("foremanCrews.batchNotifyHelp")}</p>
         <div className="flex gap-2">
           {([1, 2, 3] as const).map((d) => (

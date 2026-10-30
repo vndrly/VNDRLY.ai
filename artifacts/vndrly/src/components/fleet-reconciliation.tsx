@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import React,{useState} from "react";
 import FleetRecoverySources from "./fleet-recovery-sources";
 import {useTranslation} from "react-i18next";
@@ -34,5 +35,5 @@ export function FleetReconciliation({session,pendingCaseIds,onChanged}:{session:
  const {i18n}=useTranslation(),c=fleetRecoveryCopy(i18n.resolvedLanguage??i18n.language),[page,setPage]=useState<FleetReconciliationPage|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
  async function read(after?:string){const saved=await session.reconciliation(after);setPage(prior=>after&&prior?{...saved,cases:[...prior.cases,...saved.cases]}:saved);}
  async function refresh(after?:string){setBusy(true);try{await read(after);}catch(error){setMessage(error instanceof Error?error.message:c.unknown);}finally{setBusy(false);}}
- return <section className="fleet-panel space-y-3"><h3>{c.heading}</h3><PngPillButton disabled={busy} onClick={()=>void refresh()}>{c.read}</PngPillButton>{page?.cases.length===0&&<p>{c.empty}</p>}{page?.cases.map(item=><RecoveryCase key={item.case.id} session={session} item={item} pending={pendingCaseIds.includes(item.case.id)} onChanged={onChanged} onRead={()=>read()}/>)}{page?.nextCursor&&<PngPillButton disabled={busy} onClick={()=>void refresh(page.nextCursor!)}>{c.more}</PngPillButton>}{!!message&&<p role="alert">{message}</p>}</section>;
+ return <section data-card-layout className="fleet-panel space-y-3"><CardHeading as="h3">{c.heading}</CardHeading><PngPillButton disabled={busy} onClick={()=>void refresh()}>{c.read}</PngPillButton>{page?.cases.length===0&&<p>{c.empty}</p>}{page?.cases.map(item=><RecoveryCase key={item.case.id} session={session} item={item} pending={pendingCaseIds.includes(item.case.id)} onChanged={onChanged} onRead={()=>read()}/>)}{page?.nextCursor&&<PngPillButton disabled={busy} onClick={()=>void refresh(page.nextCursor!)}>{c.more}</PngPillButton>}{!!message&&<p role="alert">{message}</p>}</section>;
 }

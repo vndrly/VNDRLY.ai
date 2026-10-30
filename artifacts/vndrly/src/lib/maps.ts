@@ -1,6 +1,6 @@
 export const MAP_TILE_SIZE = 256;
 export const MAP_TILE_ZOOM = 15;
-export type MapboxMapStyle = "satellite" | "street";
+export type MapboxMapStyle = "satellite" | "street" | "dark";
 
 export type TileCoords = {
   url: string;
@@ -11,6 +11,7 @@ export type TileCoords = {
 const MAPBOX_STYLES: Record<MapboxMapStyle, string> = {
   satellite: "satellite-streets-v12",
   street: "streets-v12",
+  dark: "dark-v11",
 };
 
 export const MAPBOX_ATTRIBUTION =

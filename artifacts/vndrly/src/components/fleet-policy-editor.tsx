@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import React,{useState,useRef,useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {z} from "zod/v4";
@@ -25,7 +26,7 @@ function Editor({partnerId,vendorId,serviceId}:Props){
   }catch{if(live.current===identity)setMessage(c.failed);}finally{if(live.current===identity)setBusy(false);}
  }
  const inputClass="rounded border-2 border-[color:var(--brand-primary)] bg-[#3a3d42] p-2 text-white";
- return <section className="space-y-3 rounded border-2 border-[color:var(--brand-primary)] bg-[#3a3d42] p-3 text-white"><h3>{c.title}</h3><p>{c.initial}</p><PngPillButton disabled={busy} onClick={()=>void perform("load")}>{c.load}</PngPillButton>
+ return <section data-card-layout className="space-y-3 rounded border-2 border-[color:var(--brand-primary)] bg-[#3a3d42] p-3 text-white"><CardHeading as="h3">{c.title}</CardHeading><p>{c.initial}</p><PngPillButton disabled={busy} onClick={()=>void perform("load")}>{c.load}</PngPillButton>
  {config&&<><p>{c.revision}: {config.version}</p>{!config.policies.length&&<p>{c.empty}</p>}{config.policies.map(p=><p key={`${p.id}:${p.version}`}>{p.mode} · {p.effectiveFrom} · {p.notice}</p>)}
  <label>{c.mode}<select className={inputClass} aria-label={c.mode} disabled={busy} value={mode} onChange={e=>change(()=>setMode(e.target.value as typeof mode))}><option value="warn_only">{c.warn}</option><option value="enforced">{c.enforce}</option></select></label>
  <label>{c.effective}<input className={inputClass} aria-label={c.effective} disabled={busy} value={effective} placeholder="2026-11-01T06:00:00-06:00" onChange={e=>change(()=>setEffective(e.target.value))}/></label>

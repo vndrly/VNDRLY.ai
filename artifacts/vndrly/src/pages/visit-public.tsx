@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -482,9 +483,7 @@ export default function VisitPublicPage({ siteCode }: { siteCode: string }) {
         {step === "signin" && (
           <Card>
             <CardContent className="pt-6 space-y-3">
-              <div className="text-sm font-medium">
-                {t("visitor.public.step1Title")}
-              </div>
+              <CardHeading as="h3" className="text-sm font-medium">{t("visitor.public.step1Title")}</CardHeading>
               <div className="text-xs text-muted-foreground">
                 {t("visitor.public.step1Note")}
               </div>
@@ -636,9 +635,7 @@ export default function VisitPublicPage({ siteCode }: { siteCode: string }) {
         {step === "checkin" && (
           <Card>
             <CardContent className="pt-6 space-y-3">
-              <div className="text-sm font-medium">
-                {t("visitor.public.whoVisiting")}
-              </div>
+              <CardHeading as="h3" className="text-sm font-medium">{t("visitor.public.whoVisiting")}</CardHeading>
               {hostOptions.length === 0 ? (
                 <div className="text-sm text-muted-foreground">
                   {t("visitor.public.noHosts")}
@@ -711,10 +708,7 @@ export default function VisitPublicPage({ siteCode }: { siteCode: string }) {
           <Card>
             <CardContent className="pt-6 space-y-3">
               <div>
-                <div className="text-base font-semibold">
-                  {t("visitor.public.activeAt")}{" "}
-                  {active.siteName ?? ctx.site.name}
-                </div>
+                <CardHeading as="h3" className="text-base font-semibold">{t("visitor.public.activeAt")} {active.siteName ?? ctx.site.name}</CardHeading>
               </div>
               <div className="text-sm">
                 <div>

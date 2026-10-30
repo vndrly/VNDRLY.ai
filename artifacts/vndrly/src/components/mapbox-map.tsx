@@ -5,7 +5,9 @@ import type { FeatureCollection, Position } from "geojson";
 import mapboxgl, { type GeoJSONSource, type LngLatBoundsLike, type Map as MapboxMapInstance } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./mapbox-map.css";
+import { Plus, Minus } from "lucide-react";
 import { getMapboxStyleUrl, loadMapboxAccessToken, readMapboxAccessToken, type MapboxMapStyle } from "@/lib/maps";
+import { applyDarkStreetContrast } from "@/lib/dark-street-contrast";
 
 export type MapboxPoint = {
   id: string;
@@ -13,6 +15,8 @@ export type MapboxPoint = {
   longitude: number;
   color?: string;
   label?: string;
+  fullLabel?: string;
+  fullLabelMinZoom?: number;
   imageUrl?: string | null;
   title?: string;
   popupHtml?: string;
@@ -49,14 +53,21 @@ type Props = {
   center?: [number, number];
   zoom?: number;
   styleKind?: MapboxMapStyle;
+  enhancedStreetContrast?: boolean;
   height?: number | string;
   className?: string;
   fitToData?: boolean;
+  fitPoints?: MapboxPoint[];
   selectedPointId?: string | null;
   panToSelectedPoint?: boolean;
   scrollZoom?: boolean;
   onPointDrag?: (id: string, latitude: number, longitude: number) => void;
-  anchoredPopup?: { pointId: string; content: ReactNode; onClose: () => void; className?: string };
+  onMapClick?: (latitude: number, longitude: number) => void;
+  bottomControls?: ReactNode;
+  topControls?: ReactNode;
+  customZoomControls?: boolean;
+  navigationPosition?: "top-right" | "bottom-right";
+  anchoredPopup?: { pointId: string; content: ReactNode; onClose: () => void; className?: string; maxWidth?: string };
 };
 
 const EMPTY_COLLECTION: FeatureCollection = {
@@ -136,13 +147,20 @@ export function MapboxMap({
   center,
   zoom = 14,
   styleKind = "satellite",
+  enhancedStreetContrast = false,
   height = 320,
   className,
   fitToData = true,
+  fitPoints,
   selectedPointId,
   panToSelectedPoint = false,
   scrollZoom = true,
   onPointDrag,
+  onMapClick,
+  bottomControls,
+  topControls,
+  customZoomControls = true,
+  navigationPosition = "top-right",
   anchoredPopup,
 }: Props) {
   const configuration = useQuery({
@@ -158,9 +176,57 @@ export function MapboxMap({
   const clickHandlers = useRef<Map<string, () => void>>(new Map());
   const hoverPoints = useRef<Map<string, MapboxPoint>>(new Map());
   const hoverPopup = useRef<mapboxgl.Popup | null>(null);
+  const labelPoints = useRef<MapboxPoint[]>([]);
+  labelPoints.current = points;
+  const updateMarkerLabels = useRef(() => {});
+  updateMarkerLabels.current = () => {
+    const map = mapRef.current;
+    if (!map || !labelPoints.current.some(point=>point.fullLabel)) return;
+    const container = map.getContainer();
+    const occupied: Array<{x:number;y:number;width:number;height:number}> = [];
+    for(const point of labelPoints.current) {
+      const rect=markerRefs.current.get(point.id)?.getElement().getBoundingClientRect();
+      if(rect?.width&&rect.height){const pixel=map.project([point.longitude,point.latitude]);occupied.push({x:pixel.x-rect.width/2,y:pixel.y-rect.height/2,width:rect.width,height:rect.height});}
+    }
+    for (const point of labelPoints.current) {
+      const element = markerRefs.current.get(point.id)?.getElement();
+      if (!element) continue;
+      const visible = Boolean(point.fullLabel) && map.getZoom() >= (point.fullLabelMinZoom ?? 10);
+      const marker = element.getBoundingClientRect();
+      const pixel=map.project([point.longitude,point.latitude]);
+      const origin={x:pixel.x-marker.width/2,y:pixel.y-marker.height/2};
+      const inView=origin.x+marker.width>=0&&origin.x<=container.clientWidth&&origin.y+marker.height>=0&&origin.y<=container.clientHeight;
+      element.classList.toggle("has-visible-label", visible&&inView);
+      const caption = element.querySelector<HTMLElement>(".vndrly-mapbox-marker-caption");
+      if (!visible || !inView || !caption) continue;
+      caption.style.maxWidth = `${Math.max(100,Math.min(280,container.clientWidth-16))}px`;
+      const width=caption.offsetWidth, height=caption.offsetHeight;
+      if (!width || !height) continue;
+      const topLimit=bottomControls?50:8;
+      const clampX=(x:number)=>Math.max(8,Math.min(container.clientWidth-width-8,x));
+      const clampY=(y:number)=>Math.max(topLimit,Math.min(container.clientHeight-height-8,y));
+      let best={x:clampX(origin.x+marker.width+7),y:clampY(origin.y)},bestScore=Infinity;
+      for(let step=0;step<12;step++)for(const side of [1,-1]) {
+        const x=clampX(side===1?origin.x+marker.width+7:origin.x-width-7);
+        for(const direction of step===0?[0]:[-1,1]) {
+          const y=clampY(origin.y+direction*step*(height+5));
+          const overlap=occupied.reduce((total,other)=>total+Math.max(0,Math.min(x+width+4,other.x+other.width+4)-Math.max(x-4,other.x-4))*Math.max(0,Math.min(y+height+3,other.y+other.height+3)-Math.max(y-3,other.y-3)),0);
+          const score=overlap*1000+Math.abs(y-origin.y)+Math.abs(x-(origin.x+marker.width+7))*.1;
+          if(score<bestScore){best={x,y};bestScore=score;}
+        }
+      }
+      caption.style.left=`${best.x-origin.x}px`;caption.style.top=`${best.y-origin.y}px`;
+      const leader=element.querySelector<SVGLineElement>(".vndrly-mapbox-marker-label-leader line");
+      if(leader){leader.setAttribute("x1",String(marker.width/2));leader.setAttribute("y1",String(marker.height/2));leader.setAttribute("x2",String(Math.max(best.x,Math.min(best.x+width,pixel.x))-origin.x));leader.setAttribute("y2",String(Math.max(best.y,Math.min(best.y+height,pixel.y))-origin.y));}
+      occupied.push({...best,width,height});
+    }
+  };
   const [popupNode] = useState(() => document.createElement("div"));
   const popupClose = useRef(anchoredPopup?.onClose);
   popupClose.current = anchoredPopup?.onClose;
+  const mapClick = useRef(onMapClick);
+  mapClick.current = onMapClick;
+  const hasBottomControls = Boolean(bottomControls);
   const popupPoint = points.find(point => point.id === anchoredPopup?.pointId);
   const popupLongitude = popupPoint?.longitude, popupLatitude = popupPoint?.latitude;
 
@@ -185,8 +251,13 @@ export function MapboxMap({
       attributionControl: true,
     });
     if (!scrollZoom) map.scrollZoom.disable();
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    map.on("click", event => {
+      if ((event.originalEvent.target as Element | null)?.closest(".vndrly-mapbox-marker,.mapboxgl-popup")) return;
+      mapClick.current?.(event.lngLat.lat, event.lngLat.lng);
+    });
+    if (!customZoomControls) map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), navigationPosition);
     map.on("load", () => {
+      if (styleKind === "dark" || (styleKind === "street" && enhancedStreetContrast)) applyDarkStreetContrast(map, styleKind === "dark");
       map.addSource("vndrly-lines", { type: "geojson", data: EMPTY_COLLECTION });
       map.addLayer({
         id: "vndrly-lines",
@@ -220,6 +291,9 @@ export function MapboxMap({
       });
     });
     mapRef.current = map;
+    const updateLabels = () => updateMarkerLabels.current();
+    map.on("zoom", updateLabels);
+    map.on("moveend", updateLabels);
     return () => {
       markerRefs.current.forEach((marker) => marker.remove());
       markerRefs.current.clear();
@@ -228,7 +302,7 @@ export function MapboxMap({
       map.remove();
       mapRef.current = null;
     };
-  }, [scrollZoom, styleKind, token]);
+  }, [scrollZoom, styleKind, token, navigationPosition, customZoomControls, enhancedStreetContrast]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -324,6 +398,17 @@ export function MapboxMap({
       el.classList.toggle("is-selected", point.id === selectedPointId);
       el.dataset.flashing = point.flashing ? "1" : "0";
       el.innerHTML = mapboxMarkerContent(point);
+      if (point.fullLabel) {
+        const leader=document.createElementNS("http://www.w3.org/2000/svg","svg");
+        leader.classList.add("vndrly-mapbox-marker-label-leader");leader.setAttribute("aria-hidden","true");
+        leader.appendChild(document.createElementNS("http://www.w3.org/2000/svg","line"));
+        el.appendChild(leader);
+        const caption = document.createElement("div");
+        caption.className = "vndrly-mapbox-marker-caption";
+        caption.textContent = point.fullLabel;
+        caption.setAttribute("aria-hidden", "true");
+        el.appendChild(caption);
+      }
       if (point.flashing) {
         const ring = document.createElement("span");
         ring.className = "vndrly-mapbox-marker-flash";
@@ -334,6 +419,7 @@ export function MapboxMap({
         marker.setPopup(new mapboxgl.Popup({ offset: 18, className: point.popupClassName }).setHTML(point.popupHtml));
       }
     }
+    updateMarkerLabels.current();
   }, [onPointDrag, points, selectedPointId, token, initialCenter, scrollZoom, styleKind, zoom]);
 
   useEffect(() => {
@@ -342,7 +428,7 @@ export function MapboxMap({
     if (point && isValidLatLng(point.latitude, point.longitude)) {
       const map = mapRef.current, frame = map?.getContainer();
       const offset = anchoredPopup?.pointId === selectedPointId && frame && frame.clientWidth < 560
-        ? { offset: [0, frame.clientHeight / 4] as [number, number] } : {};
+          ? { offset: [0, frame.clientHeight / 2 - 22] as [number, number] } : {};
       map?.easeTo({ center: [point.longitude, point.latitude], zoom, ...offset });
     }
   }, [panToSelectedPoint, selectedPointId, points, zoom, token, anchoredPopup?.pointId]);
@@ -356,7 +442,7 @@ export function MapboxMap({
     if (!map || !fitToData) return;
     const bounds = new mapboxgl.LngLatBounds();
     let count = 0;
-    for (const point of points) {
+    for (const point of fitPoints ?? points) {
       if (!isValidLatLng(point.latitude, point.longitude)) continue;
       bounds.extend([point.longitude, point.latitude]);
       count += 1;
@@ -370,8 +456,8 @@ export function MapboxMap({
     }
     if (count === 0) return;
     if (count === 1) map.easeTo({ center: bounds.getCenter(), zoom });
-    else map.fitBounds(bounds as LngLatBoundsLike, { padding: 36, maxZoom: 17 });
-  }, [fitToData, lines, points, zoom, token, initialCenter, scrollZoom, styleKind]);
+    else map.fitBounds(bounds as LngLatBoundsLike, { padding: {top:36,left:36,right:36,bottom:hasBottomControls?86:36}, maxZoom: 17 });
+  }, [fitToData, fitPoints, lines, points, zoom, token, initialCenter, scrollZoom, styleKind, hasBottomControls]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -387,8 +473,8 @@ export function MapboxMap({
     const side = position.x < frame.clientWidth / 2 ? "left" : "right";
     const vertical = position.y < 150 ? "top" : position.y > frame.clientHeight - 150 ? "bottom" : "";
     const anchor = narrow ? "bottom" : (vertical ? `${vertical}-${side}` : side) as "top-left" | "top-right" | "bottom-left" | "bottom-right" | "left" | "right";
-    if (narrow) map.easeTo({ center: [popupLongitude!, popupLatitude], offset: [0, frame.clientHeight / 4] });
-    const popup = new mapboxgl.Popup({ anchor, offset: 22, maxWidth: "280px", className: anchoredPopup.className, closeOnClick: false, focusAfterOpen: false })
+    if (narrow) map.easeTo({ center: [popupLongitude!, popupLatitude], offset: [0, frame.clientHeight / 2 - 22] });
+    const popup = new mapboxgl.Popup({ anchor, offset: 22, maxWidth: anchoredPopup.maxWidth ?? "280px", className: anchoredPopup.className, closeOnClick: false, focusAfterOpen: false })
       .setLngLat([popupLongitude!, popupLatitude]).setDOMContent(popupNode).addTo(map);
     popup.on("close", close);
     const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => popup.setLngLat([popupLongitude!, popupLatitude]));
@@ -396,7 +482,7 @@ export function MapboxMap({
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
     return () => { resize?.disconnect(); document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); popup.off("close", close); popup.remove(); };
-  }, [anchoredPopup?.pointId, anchoredPopup?.className, popupLatitude, popupLongitude, popupNode, token, styleKind, scrollZoom]);
+  }, [anchoredPopup?.pointId, anchoredPopup?.className, anchoredPopup?.maxWidth, popupLatitude, popupLongitude, popupNode, token, styleKind, scrollZoom]);
 
   const containerStyle: React.CSSProperties = {
     height: typeof height === "number" ? `${height}px` : height,
@@ -413,6 +499,12 @@ export function MapboxMap({
   return (
     <div className={`vndrly-mapbox relative overflow-hidden ${className ?? ""}`.trim()} style={containerStyle}>
       <div ref={containerRef} className="h-full w-full" />
+      {topControls && <div className="vndrly-map-top-controls">{topControls}</div>}
+      {customZoomControls && <div className="vndrly-map-zoom" role="group" aria-label="Map zoom">
+        <button type="button" aria-label="Zoom in" title="Zoom in" onClick={()=>mapRef.current?.zoomIn()}><Plus aria-hidden="true" /></button>
+        <button type="button" aria-label="Zoom out" title="Zoom out" onClick={()=>mapRef.current?.zoomOut()}><Minus aria-hidden="true" /></button>
+      </div>}
+      {bottomControls && <div className="vndrly-map-bottom-controls">{bottomControls}</div>}
       {anchoredPopup && createPortal(anchoredPopup.content, popupNode)}
     </div>
   );

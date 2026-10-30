@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
@@ -239,8 +240,8 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                         <span className="hub-coverage-summary" title={gapSummary(g)}>{gapSummary(g)}</span>
                       </div>
                       {selectedId === g.id && chosen && <Dialog.Root open={flyoutOpen} onOpenChange={open=>{if(!open)closeFlyout();}}><VendorEditFlyout title="(Re)Assign Coverage" className="coverage-assignment-flyout" logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={closeFlyout}>
-                      <div id={`coverage-editor-${g.id}`} className="hub-gap-editor hub-shift-panel" role="region" aria-label={`Assign coverage for ${g.title}`}>
-                        <h3>{g.title}</h3>
+                      <div data-card-layout id={`coverage-editor-${g.id}`} className="hub-gap-editor hub-shift-panel" role="region" aria-label={`Assign coverage for ${g.title}`}>
+                        <CardHeading as="h3">{g.title}</CardHeading>
                         {g.shift&&<p>{gapSummary(g)} · {g.shift.timezone}</p>}
                         {!g.shift ? <p>Use Set/Edit a recurring shift to define this gate’s staffing first.</p> : <>
                           {g.requestStatus==='pending'&&<div className="hub-gap-assignment-row">

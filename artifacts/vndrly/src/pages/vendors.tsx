@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import {
   useListVendors,
@@ -547,6 +548,7 @@ export default function Vendors() {
       </div>
 
       <Card>
+        <ContentCardHeader title="Vendors" spanish="Proveedores" />
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>

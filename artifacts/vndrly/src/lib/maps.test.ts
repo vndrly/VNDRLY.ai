@@ -17,6 +17,7 @@ describe("Mapbox map provider helpers", () => {
 
   it("builds SDK style URLs for live map surfaces", () => {
     expect(getMapboxStyleUrl("street")).toBe("mapbox://styles/mapbox/streets-v12");
+    expect(getMapboxStyleUrl("dark")).toBe("mapbox://styles/mapbox/dark-v11");
   });
 
   it("builds static Mapbox tile URLs for thumbnails", () => {

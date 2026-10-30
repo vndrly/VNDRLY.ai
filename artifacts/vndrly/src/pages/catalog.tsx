@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -1166,6 +1167,7 @@ export default function Catalog() {
       </Dialog>
 
       <Card>
+        <ContentCardHeader title="Services catalog" spanish="Catálogo de servicios" />
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>

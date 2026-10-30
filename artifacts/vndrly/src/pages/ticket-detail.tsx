@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { TicketFieldActions } from "@/components/ticket-field-actions";
 import TicketLaborFinalization from "@/components/ticket-labor-finalization";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -1455,6 +1456,7 @@ export default function TicketDetail({ id }: { id: number }) {
       </div>
 
       <Card className="mb-6">
+        <ContentCardHeader title="Ticket status" spanish="Estado del ticket" />
         <CardContent className="py-5">
           <TicketStatusStepper status={ticket.status} />
           {ticket.lifecycleState ? (

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -161,8 +162,8 @@ export function FleetEvidencePanel({
     }
   }
   return (
-    <section className="space-y-3 rounded border p-3">
-      <h3>{c.evidenceTitle}</h3>
+    <section data-card-layout className="space-y-3 rounded border p-3">
+      <CardHeading as="h3">{c.evidenceTitle}</CardHeading>
       <p className="text-xs">{c.evidenceSource}</p>
       <PngPillButton disabled={busy} onClick={() => void query.refetch()}>
         {c.refresh}

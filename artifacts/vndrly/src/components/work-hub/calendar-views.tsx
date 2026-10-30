@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -32,9 +33,9 @@ export function CalendarTimeGrid({
     setView((current) => current === "week" ? "day" : "week");
   };
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
-        <h2 className="font-semibold">Schedule</h2>
+    <div data-card-layout className="mb-4 overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black">
+      <div data-card-header-row className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+        <CardHeading as="h2" className="font-semibold">Schedule</CardHeading>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"

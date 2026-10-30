@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -278,9 +279,9 @@ function EvidenceReviewForm({
         es ? "Revisión privada de evidencia" : "Private evidence review"
       }
     >
-      <h3>
+      <CardHeading as="h3">
         {es ? "Revisión privada de evidencia" : "Private evidence review"}
-      </h3>
+      </CardHeading>
       {!!error && <p role="alert">{error}</p>}
       {record && (
         <>

@@ -95,7 +95,7 @@ export function AccountWorkspace({ categories = [] }: { categories?: readonly st
     if (actions.length) cards.push({ title: c("Company workspace", "Espacio de la empresa"), subtitle: c("Tools for your company role", "Herramientas para su función en la empresa"), actions });
   }
   return <>{cards.map(card => <section key={card.title} className="hub-home-card" aria-label={card.title}>
-    <header className="hub-card-heading"><span className="hub-card-icon"><BriefcaseBusiness aria-hidden="true" /></span><div><h2>{card.title}</h2><p>{card.subtitle}</p></div></header>
+    <header data-card-header-row className="hub-card-heading"><span className="hub-card-icon"><BriefcaseBusiness aria-hidden="true" /></span><div><h2>{card.title}</h2><p>{card.subtitle}</p></div></header>
     <div className="hub-account-rows">{card.actions.map(action => <Link className="hub-home-row" href={action.href} key={action.href}><span className="hub-row-label">{action.label}</span><ChevronRight aria-hidden="true" className="hub-chevron" /></Link>)}</div>
   </section>)}</>;
 }

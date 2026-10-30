@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -198,10 +199,10 @@ export default function FieldEditProfile() {
         <p className="text-xs text-muted-foreground mt-2">{t("editProfile.tapToChange")}</p>
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-4 mb-4 space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <section data-card-layout className="rounded-xl border border-border bg-card p-4 mb-4 space-y-3">
+        <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("editProfile.yourDetails")}
-        </h2>
+        </CardHeading>
         <Field label={t("editProfile.firstName")} value={firstName} onChange={setFirstName} testId="input-first-name" disabled={loading} />
         <Field label={t("editProfile.lastName")} value={lastName} onChange={setLastName} testId="input-last-name" disabled={loading} />
         <Field label={t("editProfile.jobTitle")} value={jobTitle} onChange={setJobTitle} placeholder={t("editProfile.jobTitlePlaceholder")} testId="input-job-title" disabled={loading} />
@@ -218,10 +219,10 @@ export default function FieldEditProfile() {
         </PngPillButton>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <section data-card-layout className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("editProfile.changePassword")}
-        </h2>
+        </CardHeading>
         <Field label={t("editProfile.currentPw")} value={currentPw} onChange={setCurrentPw} type="password" testId="input-current-password" />
         <Field label={t("editProfile.newPw")} value={newPw} onChange={setNewPw} type="password" testId="input-new-password" />
         <Field label={t("editProfile.confirmPw")} value={confirmPw} onChange={setConfirmPw} type="password" testId="input-confirm-password" />

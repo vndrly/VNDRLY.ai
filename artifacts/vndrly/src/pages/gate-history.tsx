@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -117,6 +118,7 @@ export default function GateHistoryPage() {
         <div><h1 className="text-2xl font-bold tracking-tight text-foreground">{t("gatekeeper.historyTitle")}</h1><p className="mt-1 text-sm text-muted-foreground">Review and export Gate activity for the selected shift or date range.</p></div>
       </div>
       <Card className={`min-h-[24rem] ${CARD_SURFACE_CLASS}`}>
+        <ContentCardHeader title="Gate Log" spanish="Registro de accesos" />
         <CardContent className="space-y-4 p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-0 max-w-full"><GateSiteGateSelect history showGps={false} sites={sites.data?.sites ?? []} siteId={Number(resolvedSiteId)}

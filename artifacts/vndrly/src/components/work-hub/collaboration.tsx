@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { NoteEditor } from "./note-editor";
 import { NoteMessage } from "./note-message";
 import { ReceiptEditor } from "./receipt-editor";
@@ -383,8 +384,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   Save group name
                 </BrandPillButton>
               </section>
-              <section className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
-                <h3 className="font-semibold">Members and owners</h3>
+              <section data-card-layout className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+                <CardHeading as="h3" className="font-semibold">Members and owners</CardHeading>
                 {crewMembers.data?.map((member) => (
                   <div key={member.userId} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_150px] sm:items-center">
                     <span className="text-sm">{member.displayName}</span>
@@ -746,12 +747,12 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         )}
         {!chat && (
           <>
-            <section
+            <section data-card-layout
               role="region"
               aria-label="Manage crews and channels"
               className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3"
             >
-              <h2 className="text-sm font-semibold">Manage Crews & channels</h2>
+              <CardHeading as="h2" className="text-sm font-semibold">Manage Crews & channels</CardHeading>
               <BrandedSelect
                 aria-label="Manage selected crew"
                 value={crew}
@@ -832,8 +833,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     </BrandPillButton>
                   </section>
 
-                  <section className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
-                    <h3 className="font-semibold">Channels</h3>
+                  <section data-card-layout className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+                    <CardHeading as="h3" className="font-semibold">Channels</CardHeading>
                     {crewChannels.data?.map((item) => (
                       <button key={item.id} type="button" className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3 text-left" onClick={() => { setSelected(item.id); setCrewEditor(null); }}>{item.name}</button>
                     ))}
@@ -851,8 +852,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     )}
                   </section>
 
-                  <section className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
-                    <h3 className="font-semibold">Members and roles</h3>
+                  <section data-card-layout className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+                    <CardHeading as="h3" className="font-semibold">Members and roles</CardHeading>
                     {crewMembers.data?.map((member) => (
                       <div key={member.userId} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_150px] sm:items-center">
                         <span className="text-sm">{member.displayName}</span>

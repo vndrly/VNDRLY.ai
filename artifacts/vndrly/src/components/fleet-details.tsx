@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useFleetResourceCopy } from "@/lib/fleet-resource-copy";
 import { useRef, useState } from "react";
 import {
@@ -138,7 +139,7 @@ export function FleetDetailBuilder({
       className="fleet-detail-group space-y-4"
       aria-label={copy("Detail builder")}
     >
-      <h2>{initialDetail ? copy("Edit Detail") : copy("Build a Detail")}</h2>
+      <CardHeading as="h2">{initialDetail ? copy("Edit Detail") : copy("Build a Detail")}</CardHeading>
       <p>
         {copy(
           " Choose a truck, its optional towed package, and a driver. A Detail can be reused across runs. ",
@@ -346,11 +347,11 @@ export function FleetRigPackageBuilder({
   }
   return (
     <section className="fleet-detail-group space-y-3">
-      <h2>
+      <CardHeading as="h2">
         {initialPackage
           ? copy("Edit rig package")
           : copy("Build a rig package")}
-      </h2>
+      </CardHeading>
       <p>
         {copy(
           " Select components in coupling order. Cargo is recorded on the run separately. ",

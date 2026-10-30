@@ -1,3 +1,5 @@
+import { CardHeading } from "@/components/ui/card-heading";
+import { ContentCardHeader } from "@/components/ui/card";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bot, RefreshCcw, ShieldCheck } from "lucide-react";
@@ -100,7 +102,7 @@ function MetricCard({
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="text-xs uppercase text-muted-foreground">{label}</div>
+        <CardHeading as="h3" className="text-xs uppercase">{label}</CardHeading>
         <div className="text-2xl font-semibold tabular-nums" data-testid={testId}>
           {value}
         </div>
@@ -271,6 +273,7 @@ export default function AdminAskVAudit() {
 
       {isError && (
         <Card>
+        <ContentCardHeader title="Ask V audit" spanish="Auditoría de Ask V" />
           <CardContent className="p-6 text-sm text-destructive">
             Failed to load AskV action audit:{" "}
             {error instanceof Error ? error.message : "unknown error"}
@@ -280,6 +283,7 @@ export default function AdminAskVAudit() {
 
       {data && data.rows.length === 0 && (
         <Card>
+        <ContentCardHeader title="Ask V audit" spanish="Auditoría de Ask V" />
           <CardContent className="p-6 text-sm text-muted-foreground">
             No AskV action audit rows match this filter.
           </CardContent>
@@ -288,6 +292,7 @@ export default function AdminAskVAudit() {
 
       {data && data.rows.length > 0 && (
         <Card>
+        <ContentCardHeader title="Ask V audit" spanish="Auditoría de Ask V" />
           <CardContent className="p-0">
             <div className="flex items-center gap-2 border-b px-4 py-3 text-sm text-muted-foreground">
               <ShieldCheck className="w-4 h-4" />

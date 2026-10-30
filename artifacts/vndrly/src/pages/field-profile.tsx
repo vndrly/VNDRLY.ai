@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -89,13 +90,13 @@ export default function FieldProfile() {
       </div>
 
       {availableMemberships.length >= 2 ? (
-        <section
+        <section data-card-layout
           className="rounded-xl border border-border bg-card p-4 mb-4"
           data-testid="section-active-org"
         >
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+          <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
             {t("auth.activeOrg")}
-          </h2>
+          </CardHeading>
           <ul className="space-y-2">
             {availableMemberships.map((m) => {
               const isActive = m.id === activeMembershipId;
@@ -135,10 +136,10 @@ export default function FieldProfile() {
       ) : null}
 
 
-      <section className="rounded-xl border border-border bg-card p-4 mb-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+      <section data-card-layout className="rounded-xl border border-border bg-card p-4 mb-4">
+        <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
           {t("profile.language")}
-        </h2>
+        </CardHeading>
         <div className="flex justify-start">
           <LanguageToggle />
         </div>

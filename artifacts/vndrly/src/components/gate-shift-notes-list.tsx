@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearch } from "wouter";
@@ -96,9 +97,9 @@ export default function GateShiftNotesList({ renderSnapshot }: { renderSnapshot?
   const gpsLabel = !selectedGate ? es ? "Seleccione un acceso para comparar GPS" : "Choose a gate to compare GPS" : gpsStatus === "verified" ? es ? "GPS coincide con el acceso seleccionado" : "GPS matches the selected gate" : gpsStatus === "mismatch" ? es ? "GPS fuera del acceso seleccionado" : "GPS outside the selected gate" : es ? "GPS no disponible" : "GPS unavailable";
   return <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5`}>
     <div className="flex items-center gap-3"><ContentPaneBackLink href={selectedGate ? `/gate/change-over?${new URLSearchParams({ siteId: String(selectedGate.siteId), stationId: selectedGate.id })}` : "/gate/change-over"} ariaLabel={es ? "Panel" : "Dashboard"} /><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" /><h1 className="text-2xl font-bold">{es ? "Notas de turno" : "Shift Notes"}</h1></div>
-    <section className="hub-home-card gate-shift-notes-card" aria-label={es ? "Notas de turno" : "Shift Notes"}>
-      <header className="gate-shift-notes-header">
-        <h2 className="flex items-center gap-2"><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Notas de turno" : "Shift Notes"}</h2>
+    <section data-card-layout className="hub-home-card gate-shift-notes-card" aria-label={es ? "Notas de turno" : "Shift Notes"}>
+      <header data-card-header-row className="gate-shift-notes-header">
+        <CardHeading as="h2" className="flex items-center gap-2"><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Notas de turno" : "Shift Notes"}</CardHeading>
         <GateSiteGateSelect sites={sites} siteId={selectedGate?.siteId ?? 0} gate={selectedGate}
           gateOptions={gates} history allOptionLabel={es ? "Todos" : "All"} testId="select-shift-notes-location"
           gpsStatus={gpsStatus} gpsLabel={gpsLabel} onChange={(_siteId, gateId) => setSelectedGateId(gateId)} />

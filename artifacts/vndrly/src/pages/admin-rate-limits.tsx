@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 // Admin operations dashboard for the per-resource rate-limit budgets
 // (Task #709). Renders one card per limiter listed by
 // `GET /api/admin/rate-limit-budgets`, with the resolved
@@ -135,10 +136,10 @@ function BackingStoreCard({ store }: { store: ResolvedStoreInfo }) {
   return (
     <Card data-testid="card-rate-limit-store">
       <CardContent className="p-4 flex flex-wrap items-start gap-4">
-        <Icon className="w-5 h-5 text-muted-foreground mt-0.5" />
+        <Icon data-card-heading-icon className="w-5 h-5 shrink-0" style={{color:"var(--brand-primary)"}} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium">Backing store</span>
+            <span className="text-sm font-semibold">Backing store</span>
             <Badge
               variant={isRedis ? "default" : "secondary"}
               data-testid="badge-rate-limit-store-kind"
@@ -409,6 +410,7 @@ export default function AdminRateLimits() {
 
       {isError && (
         <Card>
+        <ContentCardHeader title="Rate limits" spanish="Límites de solicitudes" />
           <CardContent className="p-6 text-sm text-destructive">
             Failed to load rate-limit budgets:{" "}
             {error instanceof Error ? error.message : "unknown error"}
@@ -420,6 +422,7 @@ export default function AdminRateLimits() {
 
       {data && data.endpoints.length === 0 && (
         <Card>
+        <ContentCardHeader title="Rate limits" spanish="Límites de solicitudes" />
           <CardContent className="p-6 text-sm text-muted-foreground">
             No rate-limited endpoints are registered.
           </CardContent>

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ClipboardCheck, ClipboardList, NotebookPen } from "lucide-react";
@@ -176,12 +177,12 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
 
     {ownWatch&&(!signature||editingSigned) ? <>
       <div className="handoff-compose-panels">
-        <section className="handoff-panel" aria-label={t("changeOver.carryForward")}>
-          <h3><ClipboardList aria-hidden="true" />{t("changeOver.carryForward")}</h3>
+        <section data-card-layout className="handoff-panel" aria-label={t("changeOver.carryForward")}>
+          <CardHeading as="h3"><ClipboardList aria-hidden="true" />{t("changeOver.carryForward")}</CardHeading>
           {stationId ? <GateTaskHopper stationId={stationId} showTitle={false} /> : itemEditor}
         </section>
-        <section className="handoff-panel" aria-label={t("changeOver.outgoingNotes")}>
-          <h3><NotebookPen aria-hidden="true" />{t("changeOver.outgoingNotes")}</h3>
+        <section data-card-layout className="handoff-panel" aria-label={t("changeOver.outgoingNotes")}>
+          <CardHeading as="h3"><NotebookPen aria-hidden="true" />{t("changeOver.outgoingNotes")}</CardHeading>
           <textarea aria-label={t("changeOver.outgoingNotes")} placeholder={t("handoffDesk.notesHint")}
             rows={4} maxLength={8000} value={notes} disabled={blocked}
             onChange={(event) => onNotesChange(event.target.value)} />

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -81,9 +82,9 @@ function ReviewItem({
   return (
     <Card>
       <CardContent className="p-5 space-y-3">
-        <h2 className="font-semibold">
+        <CardHeading as="h2" className="font-semibold">
           {row.subject?.name ?? `${row.subjectType} #${row.subjectId}`}
-        </h2>
+        </CardHeading>
         <p>{row.subject?.description}</p>
         <dl className="grid gap-2 sm:grid-cols-2">
           <div>
@@ -308,9 +309,9 @@ export default function AdminServiceMappings() {
         {services.data?.items.map((service) => (
           <Card key={service.id}>
             <CardContent className="p-4 space-y-2">
-              <h3>
+              <CardHeading as="h3">
                 {service.name} · {service.code}
-              </h3>
+              </CardHeading>
               <p>{service.definition}</p>
               <p>{service.active ? label("active") : label("archived")}</p>
               <p>

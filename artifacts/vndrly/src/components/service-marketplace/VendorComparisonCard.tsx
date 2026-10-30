@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { MarketplaceRankedVendor } from "@workspace/api-client-react";
@@ -41,12 +42,12 @@ export default function VendorComparisonCard({
   const unknown = t("partnerMarketplace.notYetRated");
   // Explicit fields only: never stringify records or render internal evidence.
   return (
-    <section
+    <section data-card-layout
       className="rounded border bg-background p-4 space-y-3"
       aria-label={vendor.vendorName}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="font-semibold">{vendor.vendorName}</h4>
+      <div data-card-header-row className="flex flex-wrap items-center justify-between gap-2">
+        <CardHeading as="h4" className="font-semibold">{vendor.vendorName}</CardHeading>
         <ImagePill color={vendor.eligibility.eligible ? "green" : "amber"}>
           {vendor.eligibility.eligible
             ? t("partnerMarketplace.eligible")

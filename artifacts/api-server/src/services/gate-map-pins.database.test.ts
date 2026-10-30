@@ -1,0 +1,24 @@
+import {randomUUID} from "node:crypto";
+import {expect,it,vi} from "vitest";
+import {assertFreshLocalTestDatabaseEnvironment} from "../../../../scripts/fresh-test-database.mjs";
+vi.mock("./gate-change-over",async original=>({...await original<typeof import("./gate-change-over")>(),requireChangeOverAccess:vi.fn(async()=>({}))}));
+import {saveGateMapPin,setGateMapPinRemoved} from "./gate-map-pins";
+const isolated=process.env.VNDRLY_TEST_DB_MODE==="fresh-local"&&process.env.VNDRLY_ISOLATED_TEST_DB==="1";
+it.skipIf(!isolated)("persists company pins atomically, retries without duplicates and reversibly removes the chosen pin",async()=>{
+ assertFreshLocalTestDatabaseEnvironment(process.env);
+ const {pool}=await import("@workspace/db"),tag=randomUUID();
+ const vendor=(await pool.query("INSERT INTO vendors(name,contact_name,contact_email) VALUES($1,'Synthetic',$2) RETURNING id",[`Map pins ${tag}`,`${tag}@example.invalid`])).rows[0].id;
+ const session={userId:1,vendorId:vendor,sv:1} as any;
+ const input={id:randomUUID(),siteId:10,label:"Meeting point",notes:"Static test pin",latitude:32.23,longitude:-101.97};
+ const second={...input,id:randomUUID(),label:"Other point"};
+ await saveGateMapPin(session,input);await saveGateMapPin(session,input);await saveGateMapPin(session,second);
+ const read=async()=>(await pool.query("SELECT gate_map_pins FROM vendors WHERE id=$1",[vendor])).rows[0].gate_map_pins;
+ expect(await read()).toHaveLength(2);
+ await setGateMapPinRemoved(session,input.id,true);
+ expect((await read()).find((p:any)=>p.id===input.id).removedAt).toBeTruthy();
+ expect((await read()).find((p:any)=>p.id===second.id).removedAt).toBeUndefined();
+ await setGateMapPinRemoved(session,input.id,false);
+ expect((await read()).find((p:any)=>p.id===input.id).removedAt).toBeNull();
+ await expect(saveGateMapPin(session,{...input,label:"Conflicting retry"})).rejects.toMatchObject({status:409});
+ expect(await read()).toHaveLength(2);
+});

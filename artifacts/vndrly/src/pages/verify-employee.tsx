@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import {
   useVerifyEmployeeCompliance,
@@ -154,6 +155,7 @@ export default function VerifyEmployeePage({ token }: { token: string }) {
 
         {isLoading ? (
           <Card>
+        <ContentCardHeader title="Employee verification" spanish="Verificación de empleado" />
             <CardContent className="p-6 space-y-3">
               <Skeleton className="h-16 w-full" />
               <Skeleton className="h-20 w-full" />
@@ -162,6 +164,7 @@ export default function VerifyEmployeePage({ token }: { token: string }) {
           </Card>
         ) : error || !data ? (
           <Card>
+        <ContentCardHeader title="Employee verification" spanish="Verificación de empleado" />
             <CardContent className="p-6 space-y-3 text-center">
               <ShieldX className="w-10 h-10 text-red-600 mx-auto" />
               <div className="font-semibold text-red-700" data-testid="verify-error">
@@ -178,6 +181,7 @@ export default function VerifyEmployeePage({ token }: { token: string }) {
             <BannerView banner={bannerFor(data)} />
 
             <Card>
+        <ContentCardHeader title="Employee verification" spanish="Verificación de empleado" />
               <CardContent className="p-6 space-y-4">
                 <div className="flex gap-4 items-center">
                   {data.photoUrl && !photoFailed ? (

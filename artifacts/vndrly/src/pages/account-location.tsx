@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
@@ -88,7 +89,7 @@ export default function AccountLocationPage() {
           <>
             <section>
               <div className="flex items-center justify-between mb-2">
-                <h2 className="font-medium">{t("accountLocation.activeDevices")}</h2>
+                <CardHeading as="h2" className="font-medium">{t("accountLocation.activeDevices")}</CardHeading>
                 {active.length > 0 && (
                   <button
                     type="button"
@@ -126,7 +127,7 @@ export default function AccountLocationPage() {
 
             {revoked.length > 0 && (
               <section>
-                <h2 className="font-medium mb-2">{t("accountLocation.history")}</h2>
+                <CardHeading as="h2" className="font-medium mb-2">{t("accountLocation.history")}</CardHeading>
                 <ul className="divide-y divide-zinc-200 dark:divide-zinc-800 rounded border border-zinc-200 dark:border-zinc-800 text-sm">
                   {revoked.map((c) => (
                     <li key={c.id} className="p-3 flex justify-between">

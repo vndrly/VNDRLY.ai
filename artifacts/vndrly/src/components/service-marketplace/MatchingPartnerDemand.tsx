@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -174,9 +175,9 @@ function PartnerRate({
     <section aria-label={`${item.partnerName} — ${item.name}`}>
       <Card>
         <CardContent className="p-4 space-y-3">
-          <h4 className="font-semibold">
+          <CardHeading as="h4" className="font-semibold">
             {item.partnerName} — {item.name}
-          </h4>
+          </CardHeading>
           {item.description && <p className="text-sm">{item.description}</p>}
           <p className="text-sm">
             {t("marketplace.requirements")}:{" "}

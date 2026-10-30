@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -289,7 +290,7 @@ export default function PrintVisitorQrPage({ id }: { id: number }) {
         </button>
       </div>
 
-      <div
+      <div data-card-layout
         className="w-full max-w-2xl border-4 rounded-lg p-8 flex flex-col items-center text-center bg-white"
         style={{ borderColor: primaryColor }}
         data-testid="poster-container"
@@ -334,7 +335,7 @@ export default function PrintVisitorQrPage({ id }: { id: number }) {
         </div>
 
         <div className="text-left max-w-md w-full">
-          <h2 className="text-lg font-bold mb-2" style={{ color: accentColor }}>How to sign in</h2>
+          <CardHeading as="h2" className="text-lg font-bold mb-2" style={{ color: accentColor }}>How to sign in</CardHeading>
           <ol className="list-decimal list-inside text-base space-y-1 mb-4">
             <li>Open your phone's camera</li>
             <li>Point it at the QR code above</li>

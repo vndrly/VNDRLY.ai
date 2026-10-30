@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -63,7 +64,7 @@ export function DailyWorkspace() {
     </div>
     <a className="underline" href="/work-hub/native-work">Shift and On Call</a>
     <div id="daily-my-work" className={`${WORK_HUB_SUBCARD_CLASS} p-4`}>
-      <h2 className="font-semibold">My Work</h2>
+      <CardHeading as="h2" className="font-semibold">My Work</CardHeading>
       {work.isPending ? <p role="status">Loading your work…</p> : work.isError ? <p role="status">My Work unavailable; refresh before relying on this list.</p> : <>
         {!!work.data?.unavailable.length && <p role="status">Some work sources are unavailable. Displayed work is partial.</p>}
         <ul>{work.data?.items.map(item => <li key={item.id}><a className="underline" href={item.href}>{t(`myWork.kind_${item.kind}`)} · {item.title}</a> · {item.status.replaceAll("_", " ")}</li>)}</ul>
@@ -71,7 +72,7 @@ export function DailyWorkspace() {
       </>}
     </div>
     <div className={`${WORK_HUB_SUBCARD_CLASS} p-4`}>
-      <h2 className="font-semibold">Safety needs attention</h2>
+      <CardHeading as="h2" className="font-semibold">Safety needs attention</CardHeading>
       {safety.isPending ? <p role="status">Loading safety events…</p> : safety.isError ? <p role="status">Safety events unavailable; coverage is partial.</p> : <>
         {pending.length ? <ul>{pending.map(row => <li key={row.id}><a className="underline" href={`/safety/${row.id}`}>{row.title}</a> · {row.status.replaceAll("_", " ")}</li>)}</ul> : <p>No active safety events in returned records.</p>}
         {safety.data?.data.length === 50 && <p className="text-xs">Showing the first 50 safety events. Open Safety for the complete list.</p>}

@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -452,6 +453,7 @@ export default function StatementPage() {
 
       {!partyId && (
         <Card>
+        <ContentCardHeader title="Statement" spanish="Estado de cuenta" />
           <CardContent className="p-6 text-muted-foreground">
             {t("statement.noParty")}
           </CardContent>
@@ -464,6 +466,7 @@ export default function StatementPage() {
 
       {isError && (
         <Card>
+        <ContentCardHeader title="Statement" spanish="Estado de cuenta" />
           <CardContent className="p-6 text-destructive">
             {(error as Error)?.message ?? t("statement.loadError")}
           </CardContent>

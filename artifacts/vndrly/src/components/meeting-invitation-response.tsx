@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod/v4";
 import { useTranslation } from "react-i18next";
@@ -290,18 +291,18 @@ function ResponsePanel({
     }
   }
   return (
-    <section
+    <section data-card-layout
       className="mt-4 grid gap-3 rounded-lg border p-4"
       aria-label={c.title}
     >
-      <h2>{c.title}</h2>
+      <CardHeading as="h2">{c.title}</CardHeading>
       <p>{c.scope}</p>
       <PngPillButton disabled={busy} onClick={() => void load()}>
         {c.refresh}
       </PngPillButton>
       {data && (
         <>
-          <h3>{data.canManage ? c.host : c.own}</h3>
+          <CardHeading as="h3">{data.canManage ? c.host : c.own}</CardHeading>
           {data.responses.map((r) => (
             <p key={r.userId}>
               {r.userId === userId ? c.own : `#${r.userId}`} ·{" "}

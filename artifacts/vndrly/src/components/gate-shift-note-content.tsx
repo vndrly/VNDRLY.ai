@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import type { ShiftNote } from "@workspace/gate-booth";
 import { GateActivityCard } from "./gate-activity-card";
 import { useTranslation } from "react-i18next";
@@ -20,7 +21,7 @@ export function GateShiftNoteContent({ note }: { note: ShiftNote }) {
     <div className="gate-shift-activity-records"><GateActivityCard contentOnly snapshot={note.snapshot} historyBaseHref={`/gate/history?siteId=${note.site_id ?? ""}`} showAllLogLink={false} /></div>
     {notes && <p className="whitespace-pre-wrap">{notes}</p>}
     <section aria-label="Unassigned Task Hopper" className="mt-3">
-      <h3 className="font-semibold">{es ? "Tareas sin asignar" : "Unassigned Task Hopper"}</h3>
+      <CardHeading as="h3" className="font-semibold">{es ? "Tareas sin asignar" : "Unassigned Task Hopper"}</CardHeading>
       {parsed.length ? <ul className="mt-2 space-y-3">{parsed.map(item => <li key={item.id}>
         <p className="whitespace-pre-wrap">{item.text}</p>
         <small>{item.status === "resolved" ? es ? "Resuelto" : "Resolved" : es ? "Abierto" : "Open"}</small>

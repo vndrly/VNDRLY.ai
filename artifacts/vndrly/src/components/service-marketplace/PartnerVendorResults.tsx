@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -338,7 +339,7 @@ export default function PartnerVendorResults({
             </section>
           )}
           {detailId > 0 && (
-            <section
+            <section data-card-layout
               aria-label={t("partnerMarketplace.details")}
               className="rounded border p-3"
             >
@@ -350,7 +351,7 @@ export default function PartnerVendorResults({
               )}
               {details.data && !details.isError && !details.isFetching && (
                 <>
-                  <h4>{details.data.vendorName}</h4>
+                  <CardHeading as="h4">{details.data.vendorName}</CardHeading>
                   <p>{details.data.matchExplanation}</p>
                   <p>{details.data.offer.commercialConditions}</p>
                 </>

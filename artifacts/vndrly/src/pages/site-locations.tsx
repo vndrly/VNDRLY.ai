@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import GateLinkFields, { emptyGateLink, gateLinkPayload } from "@/components/gate-link-fields";
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -612,13 +613,13 @@ export default function SiteLocations() {
               placeholder={t("siteLocations.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[260px] rounded-full border-2 bg-white pl-9 shadow-sm focus-visible:ring-[var(--brand-primary)]"
+              className="w-[260px] rounded-full border-2 bg-white pl-9 shadow-sm focus-visible:ring-0 focus-visible:shadow-none"
               style={{ borderColor: "var(--brand-primary)" }}
             />
           </div>
           {!isPartner && availablePartners.length > 1 && (
             <Select value={partnerFilter} onValueChange={setPartnerFilter}>
-              <SelectTrigger className="w-[200px] rounded-full border-2 bg-white shadow-sm focus:ring-[var(--brand-primary)]" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-partner">
+              <SelectTrigger className="w-[200px] rounded-full border-2 bg-white shadow-sm focus:ring-0 focus:shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-partner">
                 <SelectValue placeholder={t("siteLocations.filterPartnerPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
@@ -630,7 +631,7 @@ export default function SiteLocations() {
             </Select>
           )}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] rounded-full border-2 bg-white shadow-sm focus:ring-[var(--brand-primary)]" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-status">
+            <SelectTrigger className="w-[180px] rounded-full border-2 bg-white shadow-sm focus:ring-0 focus:shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-status">
               <SelectValue placeholder={t("siteLocations.filterStatusPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
@@ -663,6 +664,7 @@ export default function SiteLocations() {
       )}
 
       <Card>
+        <ContentCardHeader title="Site locations" spanish="Ubicaciones de sitios" />
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>

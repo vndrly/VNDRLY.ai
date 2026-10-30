@@ -1,3 +1,5 @@
+import { ContentCardHeader } from "@/components/ui/card";
+import { CardHeading } from "@/components/ui/card-heading";
 import AssignedCards from "@/components/work-hub/library/assigned-cards";
 import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
@@ -726,6 +728,7 @@ function CalendarModule() {
           unavailable={(employeeView && (employeeContext.isError || !employeeLink.userId)) || calendar.isError || (!employeeView && (operations.isError || Boolean(operations.data?.unavailable.length))) || recordedHours.isError}
           filters={<>
       <Card className="border-0 bg-white shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
+        <ContentCardHeader title="Schedule filters" spanish="Filtros de horarios" />
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
           <BrandedInput aria-label="Filter employees, crews, or subcontractors" placeholder="Employee, crew, or subcontractor" value={calendarFilters.search} onChange={(event) => setCalendarFilters({ ...calendarFilters, search: event.target.value })} />
           <BrandedSelect aria-label="Filter by site" value={calendarFilters.site} onChange={(event) => setCalendarFilters({ ...calendarFilters, site: event.target.value })}>
@@ -1329,13 +1332,13 @@ function TasksModule() {
           </CardHeader>
           <CardContent className="grid gap-2">
             {tasks.data?.filter(row=>(!row.gateHopper || row.assigneeUserId || row.status === "completed") && (showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status))).map((row) => (
-              <article key={row.id} ref={row.id === linkedTask ? focusedTask : undefined} tabIndex={row.id === linkedTask ? -1 : undefined} className="rounded-lg border-2 border-primary bg-card p-4">
+              <article data-card-layout key={row.id} ref={row.id === linkedTask ? focusedTask : undefined} tabIndex={row.id === linkedTask ? -1 : undefined} className="rounded-lg border-2 border-primary bg-card p-4">
                 <div className="flex justify-between gap-3">
                   <div>
                     <span className="text-xs uppercase text-muted-foreground">
                       {row.priority} · {row.status}
                     </span>
-                    <h2 className="font-semibold">{row.title}</h2>
+                    <CardHeading as="h2" className="font-semibold">{row.title}</CardHeading>
                     {isWorkPlanDescription(row.description) ? <WorkPlanDetail key={`${user?.userId}:${user?.role}:${user?.activeMembershipId}:${owner?.type}:${owner?.id}:${row.id}`} taskId={row.id} taskVersion={row.version} identity={`${user?.userId}:${user?.role}:${user?.activeMembershipId}:${owner?.type}:${owner?.id}`} /> : <p className="text-sm text-muted-foreground">{row.description}</p>}
                     <p className="text-xs">
                       Assignee {row.assigneeUserId ?? "unassigned"} · Due{" "}
@@ -1433,11 +1436,11 @@ function TasksModule() {
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {required.data?.checklists?.map(({ instance, template }: Row) => (
-            <article key={instance.id} className="rounded-lg border p-4">
+            <article data-card-layout key={instance.id} className="rounded-lg border p-4">
               <span className="text-xs uppercase text-muted-foreground">
                 Checklist · {instance.status}
               </span>
-              <h3 className="font-semibold">{template.name}</h3>
+              <CardHeading as="h3" className="font-semibold">{template.name}</CardHeading>
               <p className="text-xs">
                 {instance.snapshot?.length ?? 0} items · Due{" "}
                 {displayDate(instance.dueAt)}
@@ -1465,11 +1468,11 @@ function TasksModule() {
             </article>
           ))}
           {required.data?.forms?.filter(({template}:Row)=>!template.campaignConfig).map(({ instance, template }: Row) => (
-            <article key={instance.id} className="rounded-lg border p-4">
+            <article data-card-layout key={instance.id} className="rounded-lg border p-4">
               <span className="text-xs uppercase text-muted-foreground">
                 Form
               </span>
-              <h3 className="font-semibold">{template.name}</h3>
+              <CardHeading as="h3" className="font-semibold">{template.name}</CardHeading>
               <div className="mt-2 grid gap-2">
                 {(instance.definitionSnapshot ?? []).map((field: Row) => (
                   <Field key={field.id} label={field.label}>
@@ -1505,13 +1508,13 @@ function TasksModule() {
             </article>
           ))}
           {required.data?.approvals?.map(({ request: row, step }: Row) => (
-            <article key={step.id} className="rounded-lg border p-4">
+            <article data-card-layout key={step.id} className="rounded-lg border p-4">
               <span className="text-xs uppercase text-muted-foreground">
                 Approval · {step.decision ?? "pending"}
               </span>
-              <h3 className="font-semibold">
+              <CardHeading as="h3" className="font-semibold">
                 {row.subjectType} · {row.subjectId}
-              </h3>
+              </CardHeading>
               {!step.decision && (
                 <div className="mt-3 flex gap-2">
                   <BrandPillButton
@@ -1609,11 +1612,11 @@ function TasksModule() {
                   kind: "Form",
                 })),
               ].map((row) => (
-                <article key={row.id} className="rounded-lg border p-4">
+                <article data-card-layout key={row.id} className="rounded-lg border p-4">
                   <span className="text-xs uppercase text-muted-foreground">
                     {row.kind} · v{row.currentVersion}
                   </span>
-                  <h3 className="font-semibold">{row.name}</h3>
+                  <CardHeading as="h3" className="font-semibold">{row.name}</CardHeading>
                   <p className="text-xs text-muted-foreground">
                     {row.definition?.length ?? 0} fields · published snapshot
                   </p>
@@ -1722,8 +1725,8 @@ function MeetingsContent() {
           </CardHeader>
           <CardContent className="grid gap-2">
             {calendar.data?.meetings?.map(({ item: { meeting, occurrence } }: Row) => (
-              <article key={occurrence.id} className="rounded-lg border p-4">
-                <h2 className="font-semibold">{meeting.title}</h2>
+              <article data-card-layout key={occurrence.id} className="rounded-lg border p-4">
+                <CardHeading as="h2" className="font-semibold">{meeting.title}</CardHeading>
                 <p className="text-sm text-muted-foreground">
                   {meeting.agenda}
                 </p>
@@ -2004,12 +2007,12 @@ function FilesModule() {
         <CardContent className="grid gap-2">
           <Notice error={files.error} />
           {visibleFiles.map((f) => (
-            <article
+            <article data-card-layout
               key={f.id}
               className="flex justify-between rounded-lg border p-4"
             >
               <div>
-                <h2 className="font-semibold">{f.fileName}</h2>
+                <CardHeading as="h2" className="font-semibold">{f.fileName}</CardHeading>
                 <p className="text-xs text-muted-foreground">
                   {f.contentType} · {Math.ceil(f.byteSize / 1024)} KB ·{" "}
                   {displayDate(f.finalizedAt)}
@@ -2234,8 +2237,8 @@ function Home() {
         ].map(([label, rows]) => (
           <Card key={String(label)}>
             <CardContent className="p-4">
+              <CardHeading as="h3" className="text-xs">{String(label)}</CardHeading>
               <strong>{Array.isArray(rows) ? rows.length : 0}</strong>
-              <p className="text-xs text-muted-foreground">{String(label)}</p>
             </CardContent>
           </Card>
         ))}

@@ -1,6 +1,8 @@
 import { readLinkedGates, saveGateSiteLink, gateConnectionHeartbeat } from "../services/gate-links";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { readGateCoverageMap } from "../services/gate-coverage-map";
+import { saveGateMapPin, setGateMapPinRemoved } from "../services/gate-map-pins";
+import { gateMapPinShareOptions, shareGateMapPin } from "../services/gate-map-pin-sharing";
 import { ownCoverageStatus, recordWorkCoverageLocation, resolvePostIncident, actOnGateSharingIncident } from "../services/gate-post-coverage";
 import { Router } from "express";
 import { z } from "zod";
@@ -130,6 +132,15 @@ router.get("/gate-change-over/sites", async (req, res) => {
 router.get("/gate-change-over/coverage-map", async(req,res)=>{
  const at=req.query.at===undefined?new Date():new Date(z.string().datetime().parse(req.query.at));if(at.getTime()>Date.now()+30000||at.getTime()<Date.now()-365*86400000){res.status(400).json({error:"Choose a time within the past year."});return;}res.json(await readGateCoverageMap(sessionFor(req),at));
 });
+router.post("/gate-change-over/map-pins", async(req,res)=>{
+  res.json(await saveGateMapPin(sessionFor(req),req.body));
+});
+router.post("/gate-change-over/map-pins/:pinId/removal", async(req,res)=>{
+  const {removed}=z.object({removed:z.boolean()}).strict().parse(req.body);
+  res.json(await setGateMapPinRemoved(sessionFor(req),uuid.parse(req.params.pinId),removed));
+});
+router.get("/gate-change-over/map-pins/:pinId/share-options",async(req,res)=>res.json(await gateMapPinShareOptions(sessionFor(req),uuid.parse(req.params.pinId))));
+router.post("/gate-change-over/map-pins/:pinId/share",async(req,res)=>res.json(await shareGateMapPin(sessionFor(req),uuid.parse(req.params.pinId),req.body)));
 router.get("/gate-change-over/work-location/status",async(req,res)=>res.json(await ownCoverageStatus(sessionFor(req),uuid.parse(req.query.deviceId))));
 router.post("/gate-change-over/work-location",async(req,res)=>{const value=z.object({deviceId:uuid,location:z.object({latitude:z.number().min(-90).max(90),longitude:z.number().min(-180).max(180),accuracy:z.number().min(0).max(10000),capturedAt:z.string().datetime()}).strict()}).strict().parse(req.body);const age=Date.now()-Date.parse(value.location.capturedAt);if(age>120000||age< -30000){res.status(400).json({error:"A fresh device location is required."});return;}res.json(await recordWorkCoverageLocation(sessionFor(req),value.deviceId,value.location));});
 router.post("/gate-change-over/duty/:id/coverage-action",async(req,res)=>{const input=z.object({kind:z.enum(["departure","sharing"]),action:z.enum(["approve","acknowledge","resolve"]),reason:z.string().trim().min(1).max(500),until:z.string().datetime().optional()}).strict().parse(req.body);if(input.action==="approve"&&(!input.until||Date.parse(input.until)<Date.now()||Date.parse(input.until)>Date.now()+8*3600000)){res.status(400).json({error:"Approval needs a future end within eight hours."});return;}if(input.kind==="sharing"&&input.action==="approve"||input.kind==="departure"&&input.action==="acknowledge"){res.status(400).json({error:"Unsupported incident action."});return;}res.json(input.kind==="sharing"?await actOnGateSharingIncident(sessionFor(req),uuid.parse(req.params.id),input.action as "acknowledge"|"resolve",input.reason):await resolvePostIncident(sessionFor(req),uuid.parse(req.params.id),input.action as "approve"|"resolve",input.reason,input.until));});

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import {currentFleetPositions,fleetCurrentPhoneSpeed} from "@workspace/api-zod";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,7 +31,7 @@ export function FleetOperationsMap({ runs, positions, selected, onSelect }: {
   const oldCount = positions.filter(point => point.freshness !== "recent").length;
   return <section className={`fleet-map-card ${expanded ? "fleet-map-expanded" : ""}`} aria-label={c.map}>
     <div className="fleet-card-heading">
-      <div><h2>{c.map}</h2><p>{c.mapSummary}</p></div>
+      <div><CardHeading as="h2">{c.map}</CardHeading><p>{c.mapSummary}</p></div>
       <ImagePill color="grey">{c.recordedSnapshot}</ImagePill>
     </div>
     <div className="fleet-map-tools" role="group" aria-label={c.mapTools}>
@@ -49,10 +50,10 @@ export function FleetOperationsMap({ runs, positions, selected, onSelect }: {
               label: String(index + 1), color: point.freshness === "recent" ? "#1E5BD0" : "#6b7280",
               title: `${run?.labels?.vehicleName ?? c.vehicle} · ${run?.title ?? ""} · ${point.freshness} · ${new Date(point.recordedAt).toLocaleString(i18n.language)}`,
               onClick: () => { onSelect(point.runId); setExpanded(false); } };
-          })} /> : <div className="fleet-map-empty"><h3>{c.noCurrentLocations}</h3><p>{oldCount ? c.oldLocationsHint : c.noLocations}</p></div>}
+          })} /> : <div className="fleet-map-empty"><CardHeading as="h3">{c.noCurrentLocations}</CardHeading><p>{oldCount ? c.oldLocationsHint : c.noLocations}</p></div>}
       </div>
       <div className="fleet-map-roster" aria-label={c.positionRoster}>
-        <h3>{c.positionRoster} ({shown.length})</h3>
+        <CardHeading as="h3">{c.positionRoster} ({shown.length})</CardHeading>
         <p className="text-xs text-muted-foreground">{c.positionLegend}</p>
         {shown.map((point, index) => {
           const run = runs.find(item => item.id === point.runId);

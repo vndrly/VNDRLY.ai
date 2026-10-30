@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { PinFields } from "@/components/admin-pin-setup";
 import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useEffect, useMemo, useState } from "react";
@@ -777,7 +778,7 @@ export default function OnboardingVendor() {
           {orgId ? <CompanyOperationsChoice key={orgId} /> : null}
           {currentStep.key === "company-basics" && (
             <div className="space-y-4" data-testid="step-company-basics-body">
-              <h2 className="text-lg font-semibold text-gray-900">Tell us about your company</h2>
+              <CardHeading as="h2" className="text-lg font-semibold text-gray-900">Tell us about your company</CardHeading>
               <div>
                 <Label>Company Name *</Label>
                 <Input value={basics.name} onChange={(e) => setBasics({ ...basics, name: e.target.value })} placeholder="e.g. Smith Welding LLC" data-testid="input-company-name" />
@@ -850,7 +851,7 @@ export default function OnboardingVendor() {
 
           {currentStep.key === "tax-ids" && (
             <div className="space-y-4" data-testid="step-tax-ids-body">
-              <h2 className="text-lg font-semibold text-gray-900">Tax IDs &amp; addresses</h2>
+              <CardHeading as="h2" className="text-lg font-semibold text-gray-900">Tax IDs &amp; addresses</CardHeading>
               <p className="text-sm text-gray-500">Required so partners can route invoices correctly.</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -168,11 +169,11 @@ export function FleetRunOrders({
     ).values(),
   ];
   return (
-    <section
+    <section data-card-layout
       className="space-y-3 rounded-xl border-2 p-4"
       aria-label={es ? "Recorridos guardados" : "Saved Runs"}
     >
-      <h2>{es ? "Recorridos guardados" : "Saved Runs"}</h2>
+      <CardHeading as="h2">{es ? "Recorridos guardados" : "Saved Runs"}</CardHeading>
       {groups.length > 1 && (
         <label>
           {es ? "Recursos de la empresa" : "Company resources"}
@@ -392,7 +393,7 @@ export function FleetRunOrders({
           )}
           {history && (
             <div className="space-y-2">
-              <h3>{es ? "Historial de versiones" : "Run revision history"}</h3>
+              <CardHeading as="h3">{es ? "Historial de versiones" : "Run revision history"}</CardHeading>
               {history.records.map((row) => (
                 <article key={row.id} className="rounded border-2 p-3">
                   <p>

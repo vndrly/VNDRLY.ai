@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -1087,6 +1088,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <Card className="border-2" style={{ borderColor: "var(--brand-primary)" }}>
+        <ContentCardHeader title="Crew map" spanish="Mapa del personal" />
             <CardContent className="p-0">
               <div style={{ height: 520, isolation: "isolate" }}>
                 <Suspense

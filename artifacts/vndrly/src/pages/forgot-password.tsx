@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -76,8 +77,8 @@ export default function ForgotPassword() {
           </div>
 
           {sent ? (
-            <div className="border-2 border-amber-500 rounded-xl p-6 shadow-xl bg-white">
-              <h2 className="text-lg font-bold text-gray-900 mb-2">Check your email</h2>
+            <div data-card-layout className="border-2 border-amber-500 rounded-xl p-6 shadow-xl bg-white">
+              <CardHeading as="h2" className="text-lg font-bold text-gray-900 mb-2">Check your email</CardHeading>
               <p className="text-sm text-gray-600 leading-relaxed">
                 If an account exists for <span className="font-medium text-gray-900">{email}</span>, we've sent a password reset link. The link expires in 1 hour.
               </p>

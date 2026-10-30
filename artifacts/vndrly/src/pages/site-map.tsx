@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -510,6 +511,7 @@ export default function SiteMapPage() {
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold">{t("siteMap.title", "Site Map")}</h1>
         <Card>
+        <ContentCardHeader title="Site map" spanish="Mapa de sitios" />
           <CardContent className="p-6 text-sm text-muted-foreground">
             {t(
               "siteMap.notAllowed",
@@ -559,6 +561,7 @@ export default function SiteMapPage() {
       </div>
 
       <Card>
+        <ContentCardHeader title="Map filters" spanish="Filtros del mapa" />
         <CardContent className="p-3 flex items-center gap-3 flex-wrap">
           <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
             <Checkbox
@@ -634,6 +637,7 @@ export default function SiteMapPage() {
               TicketRouteMap so the wellhead reads as a real-world
               place rather than a road map. */}
           <Card className="border-2" style={{ borderColor: "var(--brand-primary)" }}>
+        <ContentCardHeader title="Map filters" spanish="Filtros del mapa" />
             <CardContent className="p-0">
               <div className="relative" style={{ height: 520 }}>
                 {mapCenter ? (

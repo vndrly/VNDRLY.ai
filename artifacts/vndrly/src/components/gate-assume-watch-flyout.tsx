@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -59,7 +60,7 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
       {state.isPending||state.isFetching?<p role="status">{c("Loading watch summary…","Cargando resumen de guardia…")}</p>:state.isError?<><p role="alert">{c("The watch summary could not be loaded.","No se pudo cargar el resumen de guardia.")}</p><button type="button" onClick={()=>void state.refetch()}>{c("Retry","Reintentar")}</button></>:current?<>
         <strong>{current.site.name} · {current.station.name}</strong>
         {watch&&<p>{watch.operator_name} · {new Date(watch.started_at).toLocaleString()}</p>}
-        {prep?<><h3>{c("Saved handover","Relevo guardado")}</h3><ul>{prep.summary.facts.map(f=><li key={f.id}>{f.text}</li>)}</ul>{prep.notes&&<p className="whitespace-pre-wrap">{prep.notes}</p>}{prep.snapshot.openItems.filter(item=>item.status==="open").map(item=><p key={item.id}>{item.text}</p>)}</>:<p className="gate-assume-no-handover">{c("No handover prepared","No hay relevo preparado")}</p>}
+        {prep?<><CardHeading as="h3">{c("Saved handover","Relevo guardado")}</CardHeading><ul>{prep.summary.facts.map(f=><li key={f.id}>{f.text}</li>)}</ul>{prep.notes&&<p className="whitespace-pre-wrap">{prep.notes}</p>}{prep.snapshot.openItems.filter(item=>item.status==="open").map(item=><p key={item.id}>{item.text}</p>)}</>:<p className="gate-assume-no-handover">{c("No handover prepared","No hay relevo preparado")}</p>}
         {prep&&current.stale&&<><p>{c("Gate activity has changed since this handover was saved.","La actividad cambió desde que se guardó este relevo.")}</p><ul>{current.snapshot?.facts.map(f=><li key={f.id}>{f.text}</li>)}</ul></>}
         {own&&<p>{c("You already hold this watch.","Ya tienes esta guardia.")}</p>}{changed&&<p role="alert">{c("This watch has changed. Close this summary and select the current watch.","Esta guardia cambió. Cierra el resumen y selecciona la guardia actual.")}</p>}
       </>:null}

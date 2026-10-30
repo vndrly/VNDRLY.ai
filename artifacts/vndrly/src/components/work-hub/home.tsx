@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import WorkforcePanel from "./workforce-panel";
@@ -91,14 +92,14 @@ export function WorkHubHome() {
       <DashboardTasks />
     </div>
     <section aria-label={c("More tools", "Más herramientas")}><h2 className="hub-tools-title">{c("More tools", "Más herramientas")}</h2><div className="hub-home-tools">{utilities.map(({ label, icon: Icon, href }) => <Link className="hub-tool" href={href} key={href}><Icon aria-hidden="true" />{label}</Link>)}</div></section>
-    {panel === "work" && <section className="hub-home-card hub-detail" aria-label={c("My Work", "Mi trabajo")}><h2>{c("My Work", "Mi trabajo")}</h2>
+    {panel === "work" && <section data-card-layout className="hub-home-card hub-detail" aria-label={c("My Work", "Mi trabajo")}><CardHeading as="h2">{c("My Work", "Mi trabajo")}</CardHeading>
       {work.isPending && <p role="status">{c("Loading your work…", "Cargando su trabajo…")}</p>}
       {(work.isError || work.data?.unavailable.length || gate && sites.isError) ? <p role="status">{c("Some work sources are unavailable. This list may be incomplete.", "Algunas fuentes no están disponibles. La lista puede estar incompleta.")}</p> : null}
       {gate && sites.data?.sites.map(site => <Link className="hub-record" href={`/gate/change-over?siteId=${site.id}`} key={`site:${site.id}`}><MapPin aria-hidden="true" />{site.name}<ChevronRight aria-hidden="true" /></Link>)}
       {work.data?.items.map(item => <Link className="hub-record" key={item.id} href={item.href}><Clock3 aria-hidden="true" /><span>{item.title}<small>{item.status.replaceAll("_", " ")}</small></span><ChevronRight aria-hidden="true" /></Link>)}
       {workCount === 0 && <p>{c("No active work in returned records.", "No hay trabajo activo en los registros recibidos.")}</p>}
     </section>}
-    {panel === "safety" && <section className="hub-home-card hub-detail" aria-label="Safety needs attention"><h2>{c("Safety", "Seguridad")}</h2>{safety.isSuccess ? pending.length ? pending.map(row => <Link className="hub-record" href={`/safety/${row.id}`} key={row.id}><Shield aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>) : <p>{c("No active safety events in returned records.", "No hay eventos de seguridad activos en los registros recibidos.")}</p> : <p role="status">{unavailable}</p>}<Link href="/safety" className="hub-text-link">{c("Open all safety records", "Abrir todos los registros de seguridad")}</Link></section>}
+    {panel === "safety" && <section data-card-layout className="hub-home-card hub-detail" aria-label="Safety needs attention"><CardHeading as="h2">{c("Safety", "Seguridad")}</CardHeading>{safety.isSuccess ? pending.length ? pending.map(row => <Link className="hub-record" href={`/safety/${row.id}`} key={row.id}><Shield aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>) : <p>{c("No active safety events in returned records.", "No hay eventos de seguridad activos en los registros recibidos.")}</p> : <p role="status">{unavailable}</p>}<Link href="/safety" className="hub-text-link">{c("Open all safety records", "Abrir todos los registros de seguridad")}</Link></section>}
     <section className="hub-web-extras" aria-label="More from Work Hub"><h2>{c("More from Work Hub", "Más de Work Hub")}</h2>
     <AccountWorkspace categories={operations.data?.categories} />
     {gate && <HomeCard title={c("Gate desk", "Puesto de acceso")} subtitle={c("Your gates, visitors, and shift handoffs", "Sus accesos, visitantes y relevos de turno")} icon={Shield}>

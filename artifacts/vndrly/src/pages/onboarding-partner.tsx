@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { PinFields } from "@/components/admin-pin-setup";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
@@ -652,7 +653,7 @@ export default function OnboardingPartner() {
 
           {currentStep.key === "company-basics" && (
             <div className="space-y-4" data-testid="step-company-basics-body">
-              <h2 className="text-lg font-semibold text-gray-900">Tell us about your company</h2>
+              <CardHeading as="h2" className="text-lg font-semibold text-gray-900">Tell us about your company</CardHeading>
               <div>
                 <Label>Company Name *</Label>
                 <Input value={basics.name} onChange={(e) => setBasics({ ...basics, name: e.target.value })} placeholder="e.g. Exxon Energy" data-testid="input-company-name" />
@@ -729,7 +730,7 @@ export default function OnboardingPartner() {
 
           {currentStep.key === "branding" && (
             <div className="space-y-4" data-testid="step-branding-body">
-              <h2 className="text-lg font-semibold text-gray-900">Make it yours</h2>
+              <CardHeading as="h2" className="text-lg font-semibold text-gray-900">Make it yours</CardHeading>
               <p className="text-sm text-gray-500">Upload your logo and pick brand colors — the header above updates live on visitor posters, tickets, and your portal. We&apos;ll suggest colors from your logo. This step is optional; you can skip and finish anytime from the dashboard.</p>
               <OnboardingBrandFields
                 variant="partner"

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useTranslation } from "react-i18next";
 import { isWorkHubAdmin } from "@/lib/work-hub-client";
 import React, { useEffect, useState } from "react";
@@ -526,7 +527,7 @@ export function EmployeeForm({ id }: { id: string }) {
     canSubmit = d.canSubmit && !(c.kind === "poll" && remaining === 0);
   return (
     <section className={card}>
-      <h3 className="font-bold text-lg">{c.title}</h3>
+      <CardHeading as="h3" className="font-bold text-lg">{c.title}</CardHeading>
       <p>{c.description}</p>
       {c.kind === "poll" && c.question && (
         <p className="text-base font-semibold">{c.question}</p>
@@ -748,7 +749,7 @@ export function OwnerProgress({
   const d = api.data;
   return (
     <section className={card}>
-      <h3 className="font-bold text-lg">{d.config.title}</h3>
+      <CardHeading as="h3" className="font-bold text-lg">{d.config.title}</CardHeading>
       {d.config.description && <p>{d.config.description}</p>}
       {d.config.kind === "poll" && d.config.question && (
         <p className="font-semibold">{d.config.question}</p>
@@ -920,7 +921,7 @@ export default function FormCampaignsArea({completed}:{completed?:boolean}) {
       <ErrorNotice api={api} />
       {api.data?.campaigns.filter(c=>completed === undefined || (!!c.instanceId && c.completed === completed)).map((c) => (
         <article className={card} key={c.campaignId}>
-          <h3>{c.title}</h3>
+          <CardHeading as="h3">{c.title}</CardHeading>
           <p>
             {c.kind} · {c.state.status} ·{" "}
             {c.state.deadline

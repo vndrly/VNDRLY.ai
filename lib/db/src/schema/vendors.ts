@@ -6,6 +6,7 @@ import { usersTable } from "./users";
 
 export const vendorsTable = pgTable("vendors", {
   id: serial("id").primaryKey(),
+  gateMapPins: jsonb("gate_map_pins").$type<Array<{ id: string; siteId: number; label: string; notes: string; latitude: number; longitude: number; createdById: number; createdAt: string; removedAt?: string | null; removedById?: number | null }>>().notNull().default([]),
   callTranscriptionPolicy: jsonb("call_transcription_policy").$type<{ enabled: boolean; version: number; verifiedByUserId: number; effectiveAt: string }>(),
   operationsCategories: text("operations_categories").array(),
   staffRoleCatalog: jsonb("staff_role_catalog").$type<{ version: number; entries: Array<{ id: string; label: string; group: string; aliases?: string[] }> }>(),

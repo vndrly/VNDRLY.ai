@@ -1,0 +1,61 @@
+/* One header language: plain brand icon, normal title, aligned to the top edge. */
+.app-card-heading,
+[data-slot="card-title"] {
+  display:flex;
+  align-items:flex-start !important;
+  justify-content:flex-start;
+  gap:8px;
+  min-width:0;
+  margin-top:0 !important;
+  text-align:left !important;
+  color:var(--app-card-heading-color,inherit) !important;
+  line-height:1.25 !important;
+  align-self:flex-start;
+}
+.app-card-heading > svg,
+[data-slot="card-title"] > svg,
+.app-card-heading > :is(span,div,button):first-child > svg,
+[data-slot="card-title"] > :is(span,div,button):first-child > svg {
+  width:20px !important;
+  height:20px !important;
+  flex-shrink:0;
+  align-self:flex-start;
+  color:var(--brand-primary) !important;
+  background:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  padding:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+}
+/* Existing icons win, including icons inside a collapsible title control. */
+:is(.app-card-heading,[data-slot="card-title"]):has(> svg:not(.app-card-fallback-icon), > :is(span,div,button):not(.app-card-fallback-icon):first-of-type > svg) > .app-card-fallback-icon {
+  display:none;
+}
+[data-slot="card-header"] {
+  padding:16px !important;
+  align-items:flex-start !important;
+  text-align:left;
+  justify-content:flex-start;
+}
+[data-slot="card-header"] > [data-slot="card-title"] { flex:1; }
+[data-slot="card-header"] > [data-slot="card-description"] { width:100%; }
+[data-slot="card-header"] > :is(button,[data-card-actions]) { align-self:flex-start; }
+[data-card-header-row] { align-items:flex-start !important; text-align:left; }
+[data-card-header-row] > :is(button,select,[data-card-actions]) { align-self:flex-start; }
+[data-card-layout] { padding:16px !important; }
+[data-card-layout]:has(> [data-card-header-row]:is(.p-4,.p-5,.p-6)) { padding:0 !important; }
+[data-slot="card-header"] > div:last-child:not(:first-child):not([data-slot="card-title"]):not([data-slot="card-description"]) { margin-left:auto; align-self:flex-start; }
+.hub-card-heading, .handoff-heading { align-items:flex-start !important; gap:8px; }
+.hub-card-icon { width:20px !important; height:20px !important; padding:0 !important; border:0 !important; background:none !important; border-radius:0 !important; box-shadow:none !important; }
+.hub-card-icon svg { width:20px; height:20px; color:var(--brand-primary); filter:none; }
+.card-icon-drop-shadow { filter:none; }
+.app-card-stat-heading { align-items:flex-start !important; color:inherit; text-align:left; }
+.app-card-stat-heading > svg { width:20px; height:20px; color:var(--brand-primary) !important; filter:none !important; }
+.hub-calendar-page { --app-card-heading-color:#ececec; }
+@media(max-width:480px) {
+  [data-card-header-row] { flex-wrap:wrap; }
+  [data-card-header-row].hub-card-heading > div:not(.hub-panel-actions) { flex:1 1 160px; min-width:min(160px,100%); }
+  [data-card-header-row].hub-card-heading > .hub-panel-actions { flex:0 1 auto; min-width:0; max-width:100%; margin-left:auto; }
+  .hub-panel-actions > :is(select,button) { max-width:100%; }
+}

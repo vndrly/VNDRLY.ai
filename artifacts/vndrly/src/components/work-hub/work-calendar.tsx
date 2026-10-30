@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import type { ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -40,7 +41,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     { kind: "Fleet Run", title: "Fleet runs", icon: Truck },
   ].map(group => ({ ...group, rows: selected.filter(item => item.kind === group.kind) })).filter(group => group.rows.length && !(personalShifts && group.kind==='Shift'));
   return <><section className="hub-work-calendar" aria-label="Work calendar">
-    <div className="hub-calendar-heading"><h2>Work calendar</h2><div className="flex flex-wrap items-center gap-2">{taskControl}{scheduleControl ?? (onSchedule && <BrandPillButton tone="brand" aria-expanded={scheduling} onClick={onSchedule}>{scheduling ? "Close scheduling" : "Schedule"}</BrandPillButton>)}</div></div>
+    <div className="hub-calendar-heading"><CardHeading as="h2">Work calendar</CardHeading><div className="flex flex-wrap items-center gap-2">{taskControl}{scheduleControl ?? (onSchedule && <BrandPillButton tone="brand" aria-expanded={scheduling} onClick={onSchedule}>{scheduling ? "Close scheduling" : "Schedule"}</BrandPillButton>)}</div></div>
     <p className="hub-calendar-muted">Daily company work across shifts, meetings, tasks, and scheduled operations. Scheduling reserves planned time; it does not start work.</p>
     <div className="hub-month-navigation">
       <button type="button" className="group inline-flex min-h-11 min-w-11 items-center justify-center justify-self-start rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]" aria-label="Previous month" onClick={() => move(-1)}><SphereBackButton size={40} /></button>
@@ -68,7 +69,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     <div className="hub-calendar-day-panels" key={selectedDay}>{personalShifts}{groups.map(({kind,title,icon:Icon,rows}) => <details className="hub-calendar-day-panel" key={kind}>
       <summary><Icon aria-hidden="true" /><span>{title}</span><small>{rows.length}</small></summary>
       <div className="hub-calendar-day-list">{rows.map(item => <article className="hub-calendar-day-row" key={`${item.kind}-${item.id}`}>
-      <h3>{item.route ? <a href={item.route}>{item.title}</a> : <button type="button" onClick={onOpenDay}>{item.title}</button>}</h3>
+      <CardHeading as="h3">{item.route ? <a href={item.route}>{item.title}</a> : <button type="button" onClick={onOpenDay}>{item.title}</button>}</CardHeading>
       <p className="hub-calendar-muted">{item.recordedShift ? "Recorded shift" : item.kind} · {recordTime(item)}</p>
       {item.recordedShift && <p className="hub-calendar-muted">Recorded hours: {formatRecordedHours(item.recordedMilliseconds)}{item.status === "on_shift" ? " · running" : item.status === "on_break" ? " · on unpaid break" : ""}</p>}
       {item.kind === "Fleet Run" && <p className="hub-calendar-muted">{item.employeeName ? `${item.employeeName} · ` : ""}{item.linkedTicketId ? `Ticket #${item.linkedTicketId} · ` : ""}{item.timeBasis === "dispatch_recorded" ? "Dispatch recorded · no planned time" : "Planned run time"}</p>}

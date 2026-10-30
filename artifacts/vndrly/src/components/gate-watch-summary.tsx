@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock3, UserCheck } from "lucide-react";
@@ -58,7 +59,7 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
             <button type="button" className="gate-watch-text-action" disabled={blocked||w.userId===user?.userId} onClick={()=>{setAssumeTarget(w);setAssumeOpen(true);}}>{c("Assume","Asumir")}</button><span className="gate-watch-divider" aria-hidden="true">|</span>
             <Popover open={assignGate===w.stationId&&assignWatchId===w.watchId} onOpenChange={open=>{setAssignGate(open?w.stationId:null);setAssignWatchId(open?w.watchId!:null);}}><PopoverTrigger asChild><button type="button" className="gate-watch-text-action" disabled={blocked}>{c("Assign","Asignar")}</button></PopoverTrigger>
               <PopoverContent className="gate-watch-assign-flyout" align="end" aria-label={c(`Assign watch at ${w.siteName}`,`Asignar vigilancia en ${w.siteName}`)}>
-                <h3>{c("Available watch standers","Personal disponible")}</h3><p>{w.siteName} · {w.gateName}</p>
+                <CardHeading as="h3">{c("Available watch standers","Personal disponible")}</CardHeading><p>{w.siteName} · {w.gateName}</p>
                 <div className="gate-watch-stander-list">{standers.isPending?<p role="status">{c("Loading…","Cargando…")}</p>:standers.isError?<p role="alert">{c("Available watch standers could not be loaded.","No se pudo cargar el personal disponible.")}</p>:standers.data?.operators.length?standers.data.operators.map(person=><button key={person.membershipId} type="button" aria-label={c(`Assign to ${person.name}`,`Asignar a ${person.name}`)} disabled={blocked} onClick={()=>void administer(commandFor(w,"assign",person.membershipId))}><strong>{person.name}</strong><small>{person.companyName}</small></button>):<p>{c("No available watch standers.","No hay personal disponible.")}</p>}</div>
               </PopoverContent>
             </Popover>

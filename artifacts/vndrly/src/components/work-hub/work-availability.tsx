@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -226,8 +227,8 @@ function Panel({
   }
   const locked = Boolean(attempt || review || busy || journalBlocked);
   return (
-    <section aria-label={c.title} className="rounded-xl border p-4 space-y-3">
-      <h3>{c.title}</h3>
+    <section data-card-layout aria-label={c.title} className="rounded-xl border p-4 space-y-3">
+      <CardHeading as="h3">{c.title}</CardHeading>
       <p>{c.planning}</p>
       <PngPillButton
         disabled={busy}

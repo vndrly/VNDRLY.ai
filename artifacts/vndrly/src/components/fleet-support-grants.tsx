@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,8 +36,8 @@ export function FleetSupportGrants({
     Date.parse(expires) > Date.now() &&
     Date.parse(expires) <= Date.now() + 7 * 86400000;
   return (
-    <section className="space-y-3 rounded border p-3">
-      <h3>{c.support}</h3>
+    <section data-card-layout className="space-y-3 rounded border p-3">
+      <CardHeading as="h3">{c.support}</CardHeading>
       <p>{c.supportGrantScope}</p>
       {(draft.supportGrants ?? []).map((grant, index) => (
         <article key={`${grant.userId}:${index}`}>

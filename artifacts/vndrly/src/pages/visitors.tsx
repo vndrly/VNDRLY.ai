@@ -1,3 +1,4 @@
+import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -138,6 +139,7 @@ export default function VisitorsPage({ embedded = false }: { embedded?: boolean 
       </div>}
 
       <Card className="mb-6">
+        <ContentCardHeader title="Visitor filters" spanish="Filtros de visitantes" />
         <CardContent className="pt-6">
           <div className="grid sm:grid-cols-4 gap-3 items-end">
             <div className="space-y-1">

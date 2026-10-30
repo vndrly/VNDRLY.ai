@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useFleetResourceCopy } from "@/lib/fleet-resource-copy";
 import { useState } from "react";
 import {
@@ -137,7 +138,7 @@ export function FleetRouteFields({
   }
   return (
     <div className="space-y-4" aria-label={copy("Physical route")}>
-      <h3>{copy("Physical route")}</h3>
+      <CardHeading as="h3">{copy("Physical route")}</CardHeading>
       <p>
         {copy(
           " Choose the actual places visited. Billing site, customer and AFE stay separate. ",

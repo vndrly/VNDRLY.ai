@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -345,8 +346,8 @@ export default function SignupVendor() {
         <img src="/vndrly-background.jpg" alt="Oil field operations" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/30 to-transparent" />
         <div className="relative z-10 flex items-end justify-center p-12 w-full h-full">
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-md border-2 border-amber-500">
-            <h2 className="text-xl font-bold text-white mb-2">Vendor Benefits</h2>
+          <div data-card-layout className="bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-md border-2 border-amber-500">
+            <CardHeading as="h2" className="text-xl font-bold text-white mb-2">Vendor Benefits</CardHeading>
             <p className="text-sm text-white/85 leading-relaxed">
               Manage your field employees, track work orders in real-time, and streamline communication with your Partners — all from one platform.
             </p>

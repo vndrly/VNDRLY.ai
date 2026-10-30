@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -388,12 +389,12 @@ function Intake({
         "Recibir evidencia de cumplimiento",
       )}
     >
-      <h3>
+      <CardHeading as="h3">
         {say(
           "Receive compliance evidence",
           "Recibir evidencia de cumplimiento",
         )}
-      </h3>
+      </CardHeading>
       <p>
         {say(
           "This records a private, unverified source. It does not certify eligibility, coverage or a filing. Unknown details can be reviewed later.",

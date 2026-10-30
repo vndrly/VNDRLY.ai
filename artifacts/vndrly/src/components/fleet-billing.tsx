@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -206,7 +207,7 @@ export function FleetRunBillingFields({
     onChange({ ...value, ...update });
   return (
     <div className="fleet-detail-group space-y-3" aria-label={c.heading}>
-      <h3>{c.heading}</h3>
+      <CardHeading as="h3">{c.heading}</CardHeading>
       {data?.referenceFreshness==="cached_unverified"&&<p role="status">{i18n.language.startsWith("es")?"Opciones descargadas sin verificar; la oficina y el servidor revisarán la autoridad al sincronizar.":"Downloaded choices are unverified; authority is checked again when work synchronizes."}</p>}
       <div className="flex flex-wrap gap-3" role="group" aria-label={c.heading}>
         <PngPillButton
@@ -412,7 +413,7 @@ export function FleetBillingTicketPanel({
   }
   return (
     <section className="space-y-3" aria-label={`${c.heading} #${ticketId}`}>
-      <h3>Ticket #{ticketId}</h3>
+      <CardHeading as="h3">Ticket #{ticketId}</CardHeading>
       {!data ? (
         <p role="status">{c.unavailable}</p>
       ) : (

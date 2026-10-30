@@ -6,10 +6,12 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .work-hub-home h3 { font-size: 15px; margin-top: 20px; }
 .hub-home-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .hub-home-card { min-width: 0; background: #242426; border: 2px solid var(--brand-primary); border-radius: 16px; padding: 16px 16px 0; }
-.hub-card-heading { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; }
+.hub-card-heading { display: flex; align-items: flex-start; gap: 8px; padding-bottom: 12px; }
 .hub-card-heading p { color: #a3a3a3; font-size: 12px; margin-top: 2px; }
-.hub-card-icon { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: color-mix(in srgb, var(--brand-primary) 14%, transparent); color: var(--brand-primary); }
-.hub-card-icon svg { width: 21px; height: 21px; }
+.hub-card-icon { display: flex; align-items: flex-start; width: 20px; height: 20px; flex-shrink: 0; padding: 0; border: 0; border-radius: 0; background: none; color: var(--brand-primary); }
+.hub-card-icon svg { width: 20px; height: 20px; filter: none; }
+.hub-card-heading > div:not(.hub-panel-actions) { flex: 1; min-width: 0; }
+.hub-panel-actions { margin-left: auto; align-self: flex-start; }
 .hub-home-row { width: 100%; min-height: 52px; border-top: 1px solid #3a3a3a; display: flex; align-items: center; gap: 11px; padding: 13px 0; text-align: left; color: #ececec; transition: background-color .15s; }
 .hub-home-row:hover, .hub-home-row[aria-expanded=true] { background: color-mix(in srgb, var(--brand-primary) 8%, transparent); }
 .hub-inline-panel { border-top: 1px solid #3a3a3a; padding: 4px 0 10px 30px; }

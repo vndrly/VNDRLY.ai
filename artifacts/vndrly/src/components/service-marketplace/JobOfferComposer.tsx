@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { MarketplaceRankedVendor } from "@workspace/api-client-react";
@@ -261,11 +262,11 @@ export default function JobOfferComposer({
       )}
       {apiError && <p role="alert">{t("jobOffers.changed")}</p>}
       {saved?.status === "draft" && (
-        <section
+        <section data-card-layout
           aria-label={t("jobOffers.confirmSend")}
           className="space-y-3 rounded border p-3"
         >
-          <h4>{t("jobOffers.confirmSend")}</h4>
+          <CardHeading as="h4">{t("jobOffers.confirmSend")}</CardHeading>
           <JobOfferSummary offer={saved} />
           <TogglePillButton
             type="button"

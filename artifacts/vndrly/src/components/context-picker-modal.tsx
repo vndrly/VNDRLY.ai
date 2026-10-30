@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -45,10 +46,10 @@ export default function ContextPickerModal() {
       className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       data-testid="context-picker-modal"
     >
-      <div className="bg-card text-card-foreground rounded-xl shadow-2xl w-full max-w-md p-6 border border-border">
-        <h2 className="text-xl font-bold mb-1" data-testid="text-context-picker-title">
+      <div data-card-layout className="bg-card text-card-foreground rounded-xl shadow-2xl w-full max-w-md p-6 border border-border">
+        <CardHeading as="h2" className="text-xl font-bold mb-1" data-testid="text-context-picker-title">
           Choose your view
-        </h2>
+        </CardHeading>
         <p className="text-sm text-muted-foreground mb-5">
           You belong to multiple organizations. Pick one to start with — you can
           switch any time from the sidebar.

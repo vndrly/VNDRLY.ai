@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -95,8 +96,8 @@ export function NativeNotes() {
         <HubError error={channels.error ?? notes.error ?? save.error} />
         {notes.isLoading && <p role="status">Loading notes…</p>}
         {notes.data?.map((note) => (
-          <article key={note.id} className="rounded-lg border bg-card p-4">
-            <h2 className="font-semibold">{note.title}</h2>
+          <article data-card-layout key={note.id} className="rounded-lg border bg-card p-4">
+            <CardHeading as="h2" className="font-semibold">{note.title}</CardHeading>
             <p className="my-3 whitespace-pre-wrap text-sm">{note.body}</p>
             <div className="flex items-center justify-between gap-3">
               <time className="text-xs text-muted-foreground">
@@ -194,12 +195,12 @@ function ExistingUploads() {
       <HubError error={files.error} />
       {files.isLoading && <p role="status">Loading existing uploads…</p>}
       {files.data?.map((file) => (
-        <article
+        <article data-card-layout
           key={file.id}
           className="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-card p-4"
         >
           <div>
-            <h2 className="font-semibold">{file.fileName}</h2>
+            <CardHeading as="h2" className="font-semibold">{file.fileName}</CardHeading>
             <p className="text-xs text-muted-foreground">
               {file.contentType} · {Math.ceil(file.byteSize / 1024)} KB ·{" "}
               {new Date(file.finalizedAt).toLocaleString()}

@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -225,7 +226,7 @@ function FactsForm({ subject, onSaved, onClose }: Props) {
       className="fleet-detail-group space-y-3"
       aria-label={es ? "Hechos de aplicabilidad" : "Applicability facts"}
     >
-      <h3>{es ? "Hechos de aplicabilidad" : "Applicability facts"}</h3>
+      <CardHeading as="h3">{es ? "Hechos de aplicabilidad" : "Applicability facts"}</CardHeading>
       <p>
         {es
           ? "Desconocido no significa que un requisito no aplique. Estos hechos operativos no incluyen diagnósticos ni resultados médicos privados."

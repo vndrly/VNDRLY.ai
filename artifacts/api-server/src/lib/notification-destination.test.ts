@@ -1,5 +1,6 @@
 import {it,expect,vi,beforeEach} from "vitest";
-const mock=vi.hoisted(()=>({read:vi.fn(),row:vi.fn(),membership:vi.fn()}));
+const mock=vi.hoisted(()=>({read:vi.fn(),row:vi.fn(),membership:vi.fn(),pin:vi.fn()}));
+vi.mock("../services/gate-map-pin-sharing",()=>({readSharedGateMapPin:mock.pin}));
 vi.mock("./field-ticket-access",()=>({canReadTicket:mock.read,loadFieldTicketAccessRow:mock.row}));
 vi.mock("@workspace/db",async(importOriginal)=>{const actual=await importOriginal<Record<string,unknown>>();return{...actual,db:{select:()=>({from:()=>({where:()=>({limit:mock.membership})})})}};});
 import {resolveNotificationDestination} from "./notification-destination";
@@ -11,3 +12,10 @@ it("rejects a field ticket from another current vendor before canonical permissi
 it("defers vendor and partner tenancy decisions to existing ticket authorization",async()=>{for(const session of [{...actor,role:"vendor"},{...actor,role:"partner",vendorId:null,partnerId:8}]){expect(await resolveNotificationDestination(session,"/tickets/41")).toBe("/tickets/41");expect(mock.read).toHaveBeenCalledWith(session,41);}expect(mock.row).not.toHaveBeenCalled();});
 it.each(["/tickets/0","/tickets/-1","/tickets/41?task=x","/tickets/9007199254740992","/tickets/41#data","/tickets/41/delete"])("rejects ambiguous or malformed pointer %s",async link=>{expect(await resolveNotificationDestination(actor,link)).toBeNull();expect(mock.read).not.toHaveBeenCalled();});
 it("propagates operational failure without falsely reporting permission denial",async()=>{mock.read.mockRejectedValue(new Error("Reader unavailable"));await expect(resolveNotificationDestination(actor,"/tickets/41")).rejects.toThrow("Reader unavailable");});
+it("rechecks a shared pin's current authority and rejects mismatched or ambiguous links",async()=>{
+ const id="00000000-0000-4000-8000-000000000001",link=`/gate/map?pinId=${id}&siteId=10`;
+ mock.pin.mockResolvedValue({id,siteId:10});expect(await resolveNotificationDestination(actor,link)).toBe(link);expect(mock.pin).toHaveBeenCalledWith(actor,id);
+ expect(await resolveNotificationDestination(actor,`/gate/map?pinId=${id}&siteId=11`)).toBeNull();
+ expect(await resolveNotificationDestination(actor,`${link}&siteId=10`)).toBeNull();
+ mock.pin.mockRejectedValue(Error("No longer shared"));expect(await resolveNotificationDestination(actor,link)).toBeNull();
+});

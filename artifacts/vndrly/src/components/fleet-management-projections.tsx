@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import type {
@@ -40,10 +41,10 @@ export function FleetManagementProjections({
         (run.vehicleAssetId === assetId || run.trailerAssetId === assetId),
     );
   return (
-    <section className="space-y-3 rounded-xl border p-4">
+    <section data-card-layout className="space-y-3 rounded-xl border p-4">
       {section === "equipment" && (
         <>
-          <h2>{c.equipment}</h2>
+          <CardHeading as="h2">{c.equipment}</CardHeading>
           <Link href="/work-hub/inventory">{c.openInventory}</Link>
           {(data.capabilities.canDispatch || data.capabilities.canManageResources) ? (
             resources ? (
@@ -52,10 +53,10 @@ export function FleetManagementProjections({
                   (asset) => equipmentIds.has(asset.id) && match(asset.name),
                 )
                 .map((asset) => (
-                  <article key={asset.id} className="rounded border p-3">
-                    <h3>
+                  <article data-card-layout key={asset.id} className="rounded border p-3">
+                    <CardHeading as="h3">
                       {asset.name} · {asset.category}
-                    </h3>
+                    </CardHeading>
                     <p>
                       {asset.status} ·{" "}
                       {asset.dispatchable
@@ -90,7 +91,7 @@ export function FleetManagementProjections({
       )}
       {section === "drivers" && (
         <>
-          <h2>{c.drivers}</h2>
+          <CardHeading as="h2">{c.drivers}</CardHeading>
           <p>{c.driverDirectoryScope}</p>
           {(data.capabilities.canDispatch || data.capabilities.canManageResources) ? (
             resources ? (
@@ -101,8 +102,8 @@ export function FleetManagementProjections({
                     match(driver.name),
                 )
                 .map((driver) => (
-                  <article className="rounded border p-3" key={driver.userId}>
-                    <h3>{driver.name}</h3>
+                  <article data-card-layout className="rounded border p-3" key={driver.userId}>
+                    <CardHeading as="h3">{driver.name}</CardHeading>
                     <FleetDriverAvailability driverUserId={driver.userId} />
                     <p>
                       {fleets
@@ -140,7 +141,7 @@ export function FleetManagementProjections({
       )}
       {section === "readiness" && (
         <>
-          <h2>{c.readinessTitle}</h2>
+          <CardHeading as="h2">{c.readinessTitle}</CardHeading>
           <p>{c.readiness}</p>
           <p>{c.readinessReported}</p>
           {runs.map((run) => (
@@ -168,7 +169,7 @@ export function FleetManagementProjections({
       )}
       {section === "costs" && (
         <>
-          <h2>{c.costs}</h2>
+          <CardHeading as="h2">{c.costs}</CardHeading>
           <p>{c.costsUnavailable}</p>
           <Link href="/fleet/reports">{c.reports}</Link>
           <div className="grid gap-3 md:grid-cols-2">

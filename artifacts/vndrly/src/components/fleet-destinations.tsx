@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useFleetResourceCopy } from "@/lib/fleet-resource-copy";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -148,7 +149,7 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
       )}
       {draft && (
         <section className="space-y-4">
-          <h2>{draft.id ? copy("Edit location") : copy("Add location")}</h2>
+          <CardHeading as="h2">{draft.id ? copy("Edit location") : copy("Add location")}</CardHeading>
           <fieldset
             disabled={busy || Boolean(attempt)}
             className="fleet-asset-fields"
@@ -241,7 +242,7 @@ export function FleetDestinationsPage({ identity }: { identity: string }) {
       <div className="fleet-asset-grid">
         {rows.map((item) => (
           <article key={item.id} className="fleet-detail-group">
-            <h2>{item.name}</h2>
+            <CardHeading as="h2">{item.name}</CardHeading>
             <p>{item.address}</p>
             <p>
               {item.kind} · {item.active ? copy("Active") : copy("Inactive")}

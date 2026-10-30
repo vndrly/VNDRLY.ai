@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -121,19 +122,19 @@ export function FleetSiteActivityPanel({ identity }: { identity: string }) {
       )}
       {data && (
         <>
-          <h2>{data.siteName}</h2>
+          <CardHeading as="h2">{data.siteName}</CardHeading>
           <p>
             {date(data.window.startsAt)} – {date(data.window.endsAt)}
           </p>
           {!data.records.length && <p>{c.activityEmpty}</p>}
           {data.records.map((record) => (
-            <article
+            <article data-card-layout
               key={record.runId}
               className="space-y-2 rounded border p-3"
             >
-              <h3>
+              <CardHeading as="h3">
                 {record.vendorName} · {record.status}
-              </h3>
+              </CardHeading>
               <p className="text-xs">{record.runId}</p>
               {record.stops.map((stop) => (
                 <div key={stop.stopId}>

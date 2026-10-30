@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import {
   Fragment,
   useCallback,
@@ -1505,16 +1506,16 @@ function AuditDetailDialog({
             )}
             {(reconciliationOther.length > 0 ||
               reconciliationStateAggregates.length > 0) && (
-              <div
+              <div data-card-layout
                 className="space-y-2 rounded-md border border-amber-500/40 bg-amber-50/40 p-3 dark:bg-amber-950/20"
                 data-testid="section-audit-reconciliation"
               >
-                <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                <CardHeading as="h4" className="text-sm font-semibold text-amber-800 dark:text-amber-300">
                   {t("reports.audit.details.reconciliationHeading")} (
                   {reconciliationOther.length +
                     reconciliationStateAggregates.length}
                   )
-                </h4>
+                </CardHeading>
                 <p className="text-xs text-muted-foreground">
                   {t(reconciliationDescriptionKey)}
                 </p>

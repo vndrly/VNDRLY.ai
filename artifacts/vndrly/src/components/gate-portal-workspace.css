@@ -14,7 +14,7 @@
 .gate-portal-workspace :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea,button[role=combobox],[data-testid=plate-state-picker-trigger]) { background: #303034 !important; color: #ececec !important; border-color: var(--brand-primary) !important; border-width: 1px; box-shadow: none; }
 .gate-portal-workspace :is(input,textarea)::placeholder { color: #969ba4; opacity: 1; }
 .gate-portal-workspace :is(select option,select optgroup) { background: #303034; color: #ececec; }
-.gate-portal-workspace :is(input,textarea,select):focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.gate-portal-workspace :is(input,textarea,select,button[role=combobox]):focus-visible { outline:none; box-shadow:none; border-color:var(--brand-primary); background-color:color-mix(in srgb,var(--brand-primary) 12%,#303034) !important; }
 .gate-portal-workspace :is(.border-gray-200,.border-gray-300,.border-gray-400) { border-color: #414145; }
 .gate-portal-workspace label { font-size: 13px; }
 .gate-portal-workspace table { background: #242426; color: #ececec; }

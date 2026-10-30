@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import {
   useInfiniteQuery,
@@ -92,7 +93,7 @@ export function FleetDetailsLibrary({ identity }: { identity: string }) {
   return (
     <div className="space-y-4">
       <section className="space-y-3">
-        <h2>Reusable Details</h2>
+        <CardHeading as="h2">Reusable Details</CardHeading>
         <p>
           A Detail combines a truck, optional rig package and driver. Each run
           reserves its own immutable assignment.
@@ -194,7 +195,7 @@ export function FleetDetailsLibrary({ identity }: { identity: string }) {
         {rigView
           ? packages.map((item) => (
               <article key={item.id} className="fleet-detail-group">
-                <h3>{item.name}</h3>
+                <CardHeading as="h3">{item.name}</CardHeading>
                 <p>
                   Revision {item.version} · {item.components.length} components
                 </p>
@@ -216,7 +217,7 @@ export function FleetDetailsLibrary({ identity }: { identity: string }) {
             ))
           : rows.map((item) => (
               <article key={item.id} className="fleet-detail-group">
-                <h3>{item.name}</h3>
+                <CardHeading as="h3">{item.name}</CardHeading>
                 <p>
                   {resources.equipment.find(
                     (asset) => asset.id === item.vehicleAssetId,

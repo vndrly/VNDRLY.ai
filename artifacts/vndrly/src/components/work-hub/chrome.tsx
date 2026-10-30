@@ -81,7 +81,7 @@ export function WorkHubCardTitle({
   className?: string;
 }) {
   return (
-    <span className={cn("flex items-start gap-2 text-base font-bold text-black", className)}>
+    <span data-card-heading-title className={cn("app-card-heading flex items-start gap-2 text-base font-bold", className)}>
       <Icon aria-hidden="true" className="h-5 w-5 shrink-0 self-start text-[var(--brand-primary)]" />
       <span>{children}</span>
     </span>
@@ -89,7 +89,7 @@ export function WorkHubCardTitle({
 }
 
 export const WORK_HUB_BRANDED_FIELD_CLASS =
-  "h-9 w-full rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25";
+  "h-9 w-full rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 text-sm text-gray-700 outline-none focus:ring-0 focus:shadow-none focus:bg-[color:color-mix(in_srgb,var(--brand-primary)_8%,white)]";
 
 export function BrandedInput({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(WORK_HUB_BRANDED_FIELD_CLASS, className)} {...props} />;

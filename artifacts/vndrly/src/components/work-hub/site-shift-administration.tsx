@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useListVendors, useListPartners } from "@workspace/api-client-react";
@@ -57,14 +58,14 @@ function SitePlanner({ owner, mode }: { owner: WorkHubOwner; mode: Administratio
   const [siteId, setSiteId] = useState("");
   if (mode === "gaps") return <CoverageGaps owner={owner} />;
   return <div className="hub-shift-admin">
-    <section className="hub-shift-panel"><h3><MapPin aria-hidden="true" />Site</h3>
+    <section data-card-layout className="hub-shift-panel"><CardHeading as="h3"><MapPin aria-hidden="true" />Site</CardHeading>
       <label>Site location<BrandedSelect aria-label="Site location" value={siteId} onChange={event => setSiteId(event.target.value)}><option value="">Select a site</option>{availableSites.map(site => <option key={site.id} value={site.id}>{site.name}</option>)}</BrandedSelect></label>
       {scopedSites.isPending && <p role="status">Loading sites…</p>}
       {scopedSites.isError && <p role="alert">{scopedSites.data ? "Sites could not refresh. Showing the last loaded list." : "Sites could not load."} <button type="button" disabled={scopedSites.isFetching} onClick={() => void scopedSites.refetch()}>Retry</button></p>}
       {scopedSites.isSuccess && !availableSites.length && <p role="status">No sites are currently available for this company.</p>}
       <p>Times use the site’s local clock. Selected days are the days each shift starts. An end time earlier than the start ends the following day.</p>
     </section>
-    {siteId ? mode === "define" ? <PlanEditor key={siteId} siteId={Number(siteId)} owner={owner} /> : <ShiftAssignments key={`${siteId}:${mode}`} siteId={Number(siteId)} owner={owner} mode={mode} /> : <section className="hub-shift-panel"><h3><Clock3 aria-hidden="true" />Coverage &amp; shifts</h3><p>Choose a site to {mode === "define" ? "define or edit its weekly staffing" : mode === "assign" ? "assign its recurring shifts" : "review its coverage gaps"}.</p></section>}
+    {siteId ? mode === "define" ? <PlanEditor key={siteId} siteId={Number(siteId)} owner={owner} /> : <ShiftAssignments key={`${siteId}:${mode}`} siteId={Number(siteId)} owner={owner} mode={mode} /> : <section data-card-layout className="hub-shift-panel"><CardHeading as="h3"><Clock3 aria-hidden="true" />Coverage &amp; shifts</CardHeading><p>Choose a site to {mode === "define" ? "define or edit its weekly staffing" : mode === "assign" ? "assign its recurring shifts" : "review its coverage gaps"}.</p></section>}
   </div>;
 }
 function PlanEditor({ owner, siteId }: { owner: WorkHubOwner; siteId: number }) {
@@ -108,7 +109,7 @@ function PlanEditor({ owner, siteId }: { owner: WorkHubOwner; siteId: number }) 
     } finally { setBusy(false); }
   }
   return <>
-    <section className="hub-shift-panel"><h3><Clock3 aria-hidden="true" />Coverage pattern</h3>
+    <section data-card-layout className="hub-shift-panel"><CardHeading as="h3"><Clock3 aria-hidden="true" />Coverage pattern</CardHeading>
       {plan.shifts.some(row => row.patternName) && <label>Saved shift patterns<BrandedSelect aria-label="Saved shift patterns" defaultValue="" onChange={event => document.getElementById(`site-shift-${siteId}-${event.target.value}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}><option value="">Choose a saved pattern</option>{plan.shifts.map((row, index) => row.patternName && <option key={index} value={index}>{row.patternName}</option>)}</BrandedSelect></label>}
       {query.isPending && <p role="status">Loading saved shifts…</p>}
       {query.isError && <p role="alert">Saved shift definitions are unavailable. You can preview the form below, but saving stays disabled until the scheduling API is available.</p>}
@@ -119,7 +120,7 @@ function PlanEditor({ owner, siteId }: { owner: WorkHubOwner; siteId: number }) 
         <p>{plan.mode === "24_hour" ? "Changing the shift count splits 24 hours evenly from the first start time. Adjust each shift below." : "Add the time windows and number of people needed at this site."}</p>
       </fieldset>
     </section>
-    <section className="hub-shift-panel hub-shift-rows"><h3><Users aria-hidden="true" />Shift definitions</h3>
+    <section data-card-layout className="hub-shift-panel hub-shift-rows"><CardHeading as="h3"><Users aria-hidden="true" />Shift definitions</CardHeading>
       <fieldset disabled={busy || Boolean(attempt)}>{plan.shifts.map((row, index) => <div className="hub-shift-row" id={`site-shift-${siteId}-${index}`} key={index}>
         <h4>{row.patternName || `Shift ${index + 1}`} <small>{shiftMinutes(row) / 60} hrs{row.endsAtLocal <= row.startsAtLocal ? " · ends next day" : ""}</small></h4>
         <label>Pattern name<BrandedInput aria-label={`Shift ${index + 1} pattern name`} value={row.patternName ?? ""} maxLength={200} onChange={event => update(index, { patternName: event.target.value || undefined })} /></label>{row.timezone && <p>Timezone: {row.timezone}</p>}<div className="hub-shift-times"><label>Start time<BrandedInput aria-label={`Shift ${index + 1} start time`} type="time" value={row.startsAtLocal} onChange={event => update(index, { startsAtLocal: event.target.value })} /></label>

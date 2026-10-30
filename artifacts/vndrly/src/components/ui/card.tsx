@@ -1,6 +1,8 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { CardHeadingIcon } from "./card-heading"
+import { useTranslation } from "react-i18next"
 
 /** Shared corner radius — outer cards, mini stat tiles, and inner sub-cards. */
 export const CARD_CORNER_CLASS = "rounded-xl"
@@ -39,7 +41,7 @@ export const CARD_ICON_DROP_SHADOW_CLASS = "card-icon-drop-shadow"
 export const CARD_ICON_CLASS = "w-5 h-5 shrink-0 self-start card-icon-drop-shadow"
 
 /** Flex row for icon + label/title — icon stays on the first line when text wraps. */
-export const CARD_ICON_ROW_CLASS = "flex items-start gap-2"
+export const CARD_ICON_ROW_CLASS = "app-card-stat-heading flex items-start gap-2"
 
 /** CardTitle header icon. */
 export const CARD_TITLE_ICON_CLASS = CARD_ICON_CLASS
@@ -76,6 +78,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    data-slot="card-header"
     className={cn("flex flex-col space-y-1.5 p-6", className)}
     {...props}
   />
@@ -85,17 +88,17 @@ CardHeader.displayName = "CardHeader"
 const CardTitle = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <div
     ref={ref}
     data-slot="card-title"
     className={cn(
-      "font-semibold leading-none tracking-tight",
+      "app-card-heading text-[17px] font-semibold leading-none tracking-tight",
       CARD_TITLE_SVG_CLASS,
       className,
     )}
     {...props}
-  />
+  ><CardHeadingIcon title={children} />{children}</div>
 ))
 CardTitle.displayName = "CardTitle"
 
@@ -105,6 +108,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    data-slot="card-description"
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
@@ -131,4 +135,10 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+/** A named header for older content-only cards; preserves the existing body. */
+function ContentCardHeader({ title, spanish }: { title:string; spanish:string }) {
+  const { i18n } = useTranslation();
+  return <CardHeader><CardTitle>{i18n.language?.startsWith("es") ? spanish : title}</CardTitle></CardHeader>;
+}
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, ContentCardHeader }

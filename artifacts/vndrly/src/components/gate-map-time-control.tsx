@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { CalendarDays, Radio } from "lucide-react";
+import { CalendarDays, RotateCcw } from "lucide-react";
 import { fleetInstantToWallTime, fleetWallTimeToInstant } from "@workspace/api-zod";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
@@ -34,18 +34,14 @@ export function GateMapTimeControl({ instant, onChange, liveConnected, children,
       : es ? "Seleccione una fecha y hora válidas." : "Choose a valid date and time.");
   }
   function reset() { setNow(Date.now()); onChange(null); setDraft(""); setError(""); setCandidates([]); setOpen(false); }
-  return <div className="gate-map-time-toolbar max-w-full space-y-1" aria-label="Coverage time controls">
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <time aria-label="Coverage clock" dateTime={instant ?? new Date(now).toISOString()} className="text-sm font-medium tabular-nums">{formatGateMapTime(instant ?? now)}</time>
-      {instant && <button type="button" className="text-xs text-gray-400 no-underline" onClick={reset}>{es ? "RESTABLECER" : "RESET"}</button>}
-    </div>
+  return <div className="gate-map-time-toolbar max-w-full" aria-label="Coverage time controls">
     <div className="gate-map-controls" role="group" aria-label="Map controls">
-      <button type="button" className="gate-history-filter gate-map-live" data-live={!instant && liveConnected} aria-pressed={!instant} onClick={reset} title={!instant && !liveConnected ? es ? "Cobertura en vivo no disponible" : "Live coverage unavailable" : undefined}><Radio aria-hidden="true" />{es ? "En vivo" : "Live"}</button>
+      <button type="button" className="gate-map-time-link gate-map-live" data-live={!instant && liveConnected} aria-pressed={!instant} onClick={reset} title={!instant && !liveConnected ? es ? "Cobertura en vivo no disponible" : "Live coverage unavailable" : undefined}><span aria-hidden="true" className="gate-map-live-dot" />{es ? "En vivo" : "Live"}</button>
       <Popover open={open} onOpenChange={value => {
         setOpen(value);
         if (value) { setDraft(fleetInstantToWallTime(instant ?? new Date(Math.floor(Date.now() / 1000) * 1000).toISOString(), CENTRAL) ?? ""); setError(""); setCandidates([]); }
       }}>
-        <PopoverTrigger asChild><button type="button" className="gate-history-filter gate-map-control" aria-pressed={Boolean(instant)} aria-label={es ? "Día de" : "Day of"}><CalendarDays aria-hidden="true" />{es ? "Día de" : "Day of"}</button></PopoverTrigger>
+        <PopoverTrigger asChild><button type="button" className="gate-map-time-link" aria-pressed={Boolean(instant)} aria-label={es ? "Día de" : "Day of"}><CalendarDays aria-hidden="true" />{es ? "Día de" : "Day of"}</button></PopoverTrigger>
         <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] space-y-2">
           <label className="grid gap-1 text-sm">{es ? "Fecha y hora (hora central)" : "Date and time (Central Time)"}<BrandedInput aria-label="Date and time (Central Time)" type="datetime-local" step="1" value={draft} onInput={event => choose(event.currentTarget.value)} onChange={event => choose(event.target.value)} /></label>
           <p className="text-xs text-muted-foreground">America/Chicago · {es ? "Hora central, con horario de verano." : "Central Time, including daylight saving."}</p>
@@ -54,7 +50,9 @@ export function GateMapTimeControl({ instant, onChange, liveConnected, children,
           <button type="button" className="text-xs underline underline-offset-2" onClick={reset}>{es ? "Restablecer" : "Reset"}</button>
         </PopoverContent>
       </Popover>
+      {instant && <button type="button" className="gate-map-time-reset" aria-label={es ? "RESTABLECER" : "RESET"} title={es ? "Restablecer" : "Reset"} onClick={reset}><RotateCcw aria-hidden="true" /></button>}
       {children}
     </div>
+    <time aria-label="Coverage clock" dateTime={instant ?? new Date(now).toISOString()} className="gate-map-clock font-medium tabular-nums">{formatGateMapTime(instant ?? now)}</time>
   </div>;
 }

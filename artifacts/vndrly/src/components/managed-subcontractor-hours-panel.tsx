@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Mail, CheckCircle2, Clock3 } from "lucide-react";
@@ -41,9 +42,9 @@ export default function ManagedSubcontractorHoursPanel({ vendorId, companies, in
   } });
   const command = useMutation({ mutationFn: ({ suffix, method = "POST", body = {} }: { suffix: string; method?: string; body?: unknown }) => json(`${path}${suffix}?${range}`, { method, body: JSON.stringify(body) }), onSuccess: async () => { setNotice("Saved"); await qc.invalidateQueries({ queryKey: key }); } });
   if (!companies.length) return null;
-  return <section className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 space-y-4" data-testid="managed-subcontractor-hours-panel">
+  return <section data-card-layout className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 space-y-4" data-testid="managed-subcontractor-hours-panel">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><h3 className="font-semibold">Subcontractor hours</h3><p className="text-sm text-muted-foreground">Scheduled, accrued, and approved hours for outside payroll reporting.</p></div>
+      <div><CardHeading as="h3" className="font-semibold">Subcontractor hours</CardHeading><p className="text-sm text-muted-foreground">Scheduled, accrued, and approved hours for outside payroll reporting.</p></div>
       {companies.length > 1 && <select aria-label="Subcontractor" className="rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 py-2" value={companyId} onChange={(event) => setCompanyId(event.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</select>}
     </div>
     {report.isLoading && <p role="status">Loading hours…</p>}

@@ -1216,7 +1216,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything about VNDRLY..."
-              className="resize-none min-h-[76px] max-h-40 rounded-2xl border-[color:var(--brand-primary)] bg-white text-gray-900 focus-visible:ring-[color:var(--brand-primary)]"
+              className="resize-none min-h-[76px] max-h-40 rounded-2xl border-[color:var(--brand-primary)] bg-white text-gray-900 focus-visible:ring-0 focus-visible:shadow-none"
               rows={3}
               disabled={streaming || transcribing || voiceRecording}
               data-testid="assistant-input"

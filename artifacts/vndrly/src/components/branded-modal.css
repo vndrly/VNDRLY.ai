@@ -22,6 +22,11 @@
   background-color: #303034 !important; color: #ececec !important; border-color: var(--brand-primary) !important; border-radius: 8px; color-scheme: dark !important;
 }
 :is([role="dialog"]:not([data-sidebar]), [role="alertdialog"]) :is(input, textarea)::placeholder { color: #b3b3b3 !important; opacity: 1; }
+/* A focused field keeps its single border; focus is a fill change, never a second ring. */
+:is([role="dialog"]:not([data-sidebar]), [role="alertdialog"], .app-branded-flyout) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select, button[role="combobox"]):is(:focus,:focus-visible) {
+  outline:none !important; box-shadow:none !important; --tw-ring-shadow:0 0 #0000; --tw-ring-offset-shadow:0 0 #0000;
+  background-color:color-mix(in srgb,var(--brand-primary) 12%,#303034) !important;
+}
 :is([role="dialog"]:not([data-sidebar]), [role="alertdialog"]) [data-modal-pill-action="true"] {
   min-height: 44px !important; height: auto !important; max-height: none !important;
   padding: 7px 10px; border: 1px solid var(--brand-primary) !important; border-radius: 8px;

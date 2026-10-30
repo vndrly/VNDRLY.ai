@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { useAuth } from "@/hooks/use-auth";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -77,8 +78,8 @@ export function CsvImport() {
       .catch(() => undefined);
   }
   return (
-    <section className="rounded-xl border bg-card p-5">
-      <h2 className="text-xl font-semibold">One-time CSV import</h2>
+    <section data-card-layout className="rounded-xl border bg-card p-5">
+      <CardHeading as="h2" className="text-xl font-semibold">One-time CSV import</CardHeading>
       <p className="my-3 text-sm text-muted-foreground">
         Import company channels, unassigned tasks, or native notes. Map only
         work content; employee, bank, payroll and credential fields are
@@ -236,7 +237,7 @@ export function CsvImport() {
       )}
       {staged && (
         <div className="mt-5 border-t pt-4">
-          <h3 className="font-semibold">Review import into VNDRLY</h3>
+          <CardHeading as="h3" className="font-semibold">Review import into VNDRLY</CardHeading>
           <p className="my-2 text-sm">
             {staged.items.filter((r) => r.status === "staged").length} ready ·{" "}
             {staged.items.filter((r) => r.status === "duplicate").length}{" "}

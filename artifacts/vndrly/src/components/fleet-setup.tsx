@@ -1,3 +1,4 @@
+import { CardHeading } from "@/components/ui/card-heading";
 import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { FleetProfileFields } from "@/components/fleet-profile-fields";
 import { FleetSupportGrants } from "@/components/fleet-support-grants";
@@ -113,8 +114,8 @@ function FleetSetupForm({
     }
   }
   return (
-    <section className="space-y-4 rounded-xl border p-4">
-      <h2 className="text-xl font-semibold">{c.setup}</h2>
+    <section data-card-layout className="space-y-4 rounded-xl border p-4">
+      <CardHeading as="h2" className="text-xl font-semibold">{c.setup}</CardHeading>
       <p className="text-sm">{c.setupExplanation}</p>
       <label>
         <BrandedCheckbox
@@ -125,7 +126,7 @@ function FleetSetupForm({
         {c.enableFleet}
       </label>
       <div className="space-y-3">
-        <h3 className="font-semibold">{c.fleetsSites}</h3>
+        <CardHeading as="h3" className="font-semibold">{c.fleetsSites}</CardHeading>
         {draft.fleets.map((fleet) => (
           <fieldset className="rounded border p-3" key={fleet.id}>
             <legend>{fleet.name}</legend>
@@ -248,7 +249,7 @@ function FleetSetupForm({
         </PngPillButton>
       </div>
       <div className="space-y-3">
-        <h3 className="font-semibold">{c.memberGrants}</h3>
+        <CardHeading as="h3" className="font-semibold">{c.memberGrants}</CardHeading>
         {draft.grants.map((grant) => (
           <fieldset key={grant.userId} className="space-y-2 rounded border p-3">
             <legend>
