@@ -50,6 +50,7 @@ export const workHubShiftsTable = pgTable("work_hub_shifts", {
   sharedWithUserIds: jsonb("shared_with_user_ids").$type<number[]>().notNull().default([]),
   siteLocationId: integer("site_location_id").references(() => siteLocationsTable.id),
   gateStationId: uuid("gate_station_id").references(() => gateStationsTable.id),
+  gateDefinitionId: uuid("gate_definition_id"),
   requiredStaffCount: integer("required_staff_count"),
   workStartPolicy: text("work_start_policy"),
   version: integer("version").notNull().default(1),

@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, uniqueIndex, unique, index, check } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, jsonb, uniqueIndex, unique, index, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -17,6 +17,7 @@ export const userOrgMembershipsTable = pgTable(
     vendorId: integer("vendor_id").references(() => vendorsTable.id, { onDelete: "cascade" }),
     role: text("role").notNull(),
     vendorPeopleId: integer("vendor_people_id").references(() => vendorPeopleTable.id, { onDelete: "set null" }),
+    staffEnrollment: jsonb("staff_enrollment").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

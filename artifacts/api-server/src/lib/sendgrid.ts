@@ -730,6 +730,7 @@ export async function sendEmailVerificationEmail(
 }
 
 export interface SendFieldEmployeeOnboardingInviteEmailInput {
+  renderedEnrollment?: { html: string; text: string };
   to: string;
   displayName: string;
   vendorName: string;
@@ -770,7 +771,7 @@ export async function sendFieldEmployeeOnboardingInviteEmail(
     subject: `${input.vendorName} invited you to VNDRLY`,
     categories: ["field-employee-onboarding"],
     fromName: "VNDRLY.ai",
-    html: `
+    html: input.renderedEnrollment?.html ?? `
       <div style="margin:0;padding:28px 12px;background:#eef0f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#34373c;">
         <div style="max-width:600px;margin:0 auto;border-radius:16px;overflow:hidden;border:2px solid ${brandColor};box-shadow:0 10px 30px rgba(17,24,39,.16);background:#ffffff;">
           <div style="padding:18px 22px;background-color:#3a3d42;background-image:radial-gradient(circle at 2px 2px,rgba(255,255,255,.16) 1.1px,transparent 1.2px),linear-gradient(180deg,rgba(58,61,66,.15),rgba(58,61,66,.92));background-size:12px 12px,100% 100%;">
@@ -791,7 +792,7 @@ export async function sendFieldEmployeeOnboardingInviteEmail(
           </div>
         </div>
       </div>`,
-    text: `Hi ${input.displayName || "there"},\n\n${textIntro}\n\n${actionLabel}: ${input.inviteUrl}\n\nVNDRLY`,
+    text: input.renderedEnrollment?.text ?? `Hi ${input.displayName || "there"},\n\n${textIntro}\n\n${actionLabel}: ${input.inviteUrl}\n\nVNDRLY`,
   });
 }
 // ─── Admin-issued temporary password ─────────────────────────────

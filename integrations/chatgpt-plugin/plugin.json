@@ -23,7 +23,7 @@
   "description": "VNDRLY.ai provides connected field operations, fleet operations, gatekeeping, inventory management, and work coordination for operators, vendors, and field teams. Ask V helps users carry out work within the VNDRLY services their company uses, with access governed by their role and permissions.",
   "name": "dev-6ac4f61e0aac8191b7f7b4fbbc5822b0",
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "version": "1.22.12",
+  "version": "1.22.13",
   "homepage": "https://vndrly.ai",
   "author": {
     "name": "VNDRLY.ai",

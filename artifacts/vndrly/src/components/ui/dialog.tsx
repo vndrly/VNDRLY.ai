@@ -169,7 +169,7 @@ const DialogContent = React.forwardRef<
                     "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6",
                     modalTheme.bodyWrapperClassName,
                   )}
-                  style={{ colorScheme: "light" }}
+                  style={{ colorScheme: "dark" }}
                 >
                   {children}
                 </div>
@@ -227,7 +227,7 @@ const DialogContent = React.forwardRef<
                     "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6",
                     modalTheme.bodyWrapperClassName,
                   )}
-                  style={{ colorScheme: "light" }}
+                  style={{ colorScheme: "dark" }}
                 >
                   {children}
                 </div>

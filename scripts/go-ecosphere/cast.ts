@@ -141,7 +141,7 @@ export const PEOPLE: PersonSpec[] = [
     ["nadia-farouk", "Nadia", "Farouk"],
     ["glen-whitaker", "Glen", "Whitaker"],
   ] as const).map(([key, first, last]) =>
-    p("gatego", key, first, last, "Gate Attendant", { userRole: "field_employee", membership: "field_employee", vendorRole: "gatekeeper", operationalRoles: ["gatekeeper"], hourlyRate: 19, surface: "ios" }),
+    p("gatego", key, first, last, "Gatekeeper", { userRole: "field_employee", membership: "field_employee", vendorRole: "gatekeeper", operationalRoles: ["gatekeeper"], hourlyRate: 19, surface: "ios" }),
   ),
 ];
 

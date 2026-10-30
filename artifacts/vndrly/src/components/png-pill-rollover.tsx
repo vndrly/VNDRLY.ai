@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
+import { hasVisiblePillLabel } from "@/lib/pill-action-label";
 import {
   PILL_ACTION,
   PILL_BRAND,
@@ -255,6 +256,7 @@ export function PngPillLink({
       style={exactPillHeight(height)}
       data-testid={props["data-testid"]}
       data-color={color}
+      data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
       aria-label={props["aria-label"]}
     >
       <PillColorLayer
@@ -362,6 +364,7 @@ export function PngPillButton({
       style={exactPillHeight(height)}
       data-testid={props["data-testid"]}
       role={props.role}
+      data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
       aria-label={props["aria-label"]}
       aria-pressed={props["aria-pressed"]}
       aria-selected={props["aria-selected"]}

@@ -6,7 +6,9 @@
 // field-employee tools, which own their own membership sync).
 // Add / remove / patch all reject field-employee targets server-side.
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import StaffingSummaryList from "./staffing-summary-list";
+import RemovePill from "./remove-pill";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListOrgMembersQueryKey,
@@ -63,6 +65,8 @@ import { translateApiError } from "@/lib/api-error";
 import { formatPhone } from "@/lib/utils";
 import { KeyRound, Plus, Trash2, UserCheck } from "lucide-react";
 import { isAdministrativeMembership } from "@/lib/vendor-workforce-groups";
+import StaffEnrollmentControl from "./staff-enrollment-control";
+import WorkforceGroupToggle from "./workforce-group-toggle";
 
 // API_BASE matches the convention used elsewhere in the app
 // (partner-detail, etc) — strip the trailing slash off Vite's
@@ -89,10 +93,14 @@ interface MemberRow {
 }
 
 interface OrgMembersCardProps {
+  embedded?: boolean;
   /** Vendor profiles show operational personnel in their workforce cards. */
   administrativeOnly?: boolean;
   onAddStaff?: () => void;
   onEditStaff?: (member: MemberRow) => boolean;
+  pendingProfiles?: Array<{ id: number; firstName: string; lastName: string; email: string; phone?: string | null; jobTitle?: string | null; pecExpirationDate?: string | null }>;
+  onEditPendingProfile?: (id: number) => void;
+  renderPendingProfileRemove?: (id: number) => ReactNode;
   /**
    * Optional callback fired when a field-employee row's display name
    * is clicked. When provided, the field-employee displayName cell
@@ -131,11 +139,18 @@ export default function OrgMembersCard({
   administrativeOnly = false,
   onAddStaff,
   onEditStaff,
+  pendingProfiles = [],
+  onEditPendingProfile,
+  renderPendingProfileRemove,
+  embedded = false,
 }: OrgMembersCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [addOpen, setAddOpen] = useState(false);
+  const [workforceExpanded, setWorkforceExpanded] = useState(false);
+  const collapsibleWorkforce = orgType === "vendor" && administrativeOnly;
+  const addMemberLabel = collapsibleWorkforce ? "Add Team Member" : "Add Staff";
   const [form, setForm] = useState<{
     email: string;
     role: "admin" | "member" | "ap";
@@ -277,6 +292,8 @@ export default function OrgMembersCard({
   if (!canManage) return null;
 
   const members = (data?.members ?? []).filter(member => !administrativeOnly || isAdministrativeMembership(member));
+  const unenrolledProfiles = collapsibleWorkforce ? pendingProfiles.filter(person => !members.some(member => member.username.toLowerCase() === person.email.toLowerCase())) : [];
+  const teamCount = members.length + unenrolledProfiles.length;
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -297,14 +314,19 @@ export default function OrgMembersCard({
     addMutation.mutate({ orgType, orgId, data: payload });
   };
 
+  const Container = embedded ? "section" : Card;
   return (
-    <Card data-testid={`card-${orgType}-members`}>
+    <Container className={embedded ? "vendor-staffing-category" : undefined} data-testid={`card-${orgType}-members`}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
+          {collapsibleWorkforce ? <WorkforceGroupToggle open={workforceExpanded} onToggle={() => setWorkforceExpanded(value => !value)}>
+            <UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Administrative Team ({teamCount})
+          </WorkforceGroupToggle> : <>
           <UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
           Administrative Team Members ({members.length})
+          </>}
         </CardTitle>
-        {onAddStaff ? <button type="button" className="vendor-mini-card-button" data-testid={`button-add-${orgType}-member`} onClick={onAddStaff}><Plus className="w-4 h-4" />Add Staff</button> : (        <PngPillButton
+        {onAddStaff ? <button type="button" className={embedded ? "vendor-staffing-add-link" : "vendor-mini-card-button"} data-testid={`button-add-${orgType}-member`} onClick={onAddStaff}><Plus className="w-4 h-4" />{addMemberLabel}</button> : (        <PngPillButton
           color="brand"
 
           onClick={() => setAddOpen(true)}
@@ -312,12 +334,12 @@ export default function OrgMembersCard({
           data-testid={`button-add-${orgType}-member`}
         >
           <Plus className="w-4 h-4" />
-          Add Staff
+          {addMemberLabel}
         </PngPillButton>)}
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Staff</DialogTitle>
+              <DialogTitle>{addMemberLabel}</DialogTitle>
               <DialogDescription>
                 Attach an existing login to this {orgType} or create a new
                 one. The new login can sign in immediately with the password
@@ -471,19 +493,35 @@ export default function OrgMembersCard({
                   disabled={addMutation.isPending}
                   data-testid={`button-submit-${orgType}-member`}
                 >
-                  {addMutation.isPending ? "Saving…" : "Add Staff"}
+                  {addMutation.isPending ? "Saving…" : addMemberLabel}
                 </PngPillButton>
               </div>
             </form>
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent className="p-0">
+      {(!collapsibleWorkforce || workforceExpanded) && <CardContent className="p-0">
         {isLoading ? (
           <div className="p-6 text-center text-muted-foreground text-sm">
             Loading staff…
           </div>
-        ) : members.length === 0 ? (
+        ) : embedded ? <StaffingSummaryList people={[
+          ...unenrolledProfiles.map(person => ({
+            id: `profile:${person.id}`, name: `${person.firstName} ${person.lastName}`, email: person.email, phone: person.phone,
+            role: person.jobTitle || "Team Member", onOpen: () => onEditPendingProfile?.(person.id),
+            enrollment: <StaffEnrollmentControl vendorId={orgId} personKey={`person:${person.id}`} name={`${person.firstName} ${person.lastName}`} email={person.email} canManage={canManage} />,
+            remove: renderPendingProfileRemove?.(person.id),
+          })),
+          ...members.map(member => ({
+            id: `account:${member.userId}`, name: member.displayName, email: member.username, phone: member.phone,
+            role: member.jobTitle || (member.role === "admin" ? "Admin" : member.role === "ap" ? "Accounts Payable" : "Office Staff"),
+            onOpen: () => { if (!onEditStaff?.(member)) { setEditTarget(member); setEditTempPassword(""); setResetPasswordError(null); } },
+            enrollment: <StaffEnrollmentControl vendorId={orgId} personKey={`account:${member.userId}`} name={member.displayName} email={member.username} canManage={canManage} />,
+            remove: <AlertDialog><AlertDialogTrigger asChild><RemovePill aria-label={`Remove ${member.displayName}`} disabled={currentUserId === member.userId || removeMutation.isPending} /></AlertDialogTrigger>
+              <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Remove {member.displayName}?</AlertDialogTitle><AlertDialogDescription>{member.username} will lose access to this {orgType}. The login itself stays active for any other organizations they belong to.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => removeMutation.mutate({ orgType, orgId, membershipId: member.membershipId })}>Remove</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+            </AlertDialog>,
+          })),
+        ]} /> : teamCount === 0 ? (
           <div className="p-6 text-center text-muted-foreground text-sm">
             No staff accounts yet.
           </div>
@@ -517,10 +555,23 @@ export default function OrgMembersCard({
                 ) : (
                   <TableHead>Role</TableHead>
                 )}
+                {orgType === "vendor" && <TableHead>Enrollment</TableHead>}
+                {collapsibleWorkforce && <TableHead>Category</TableHead>}
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
             <TableBody>
+              {unenrolledProfiles.map(person => <TableRow key={`profile:${person.id}`}>
+                <TableCell>{person.jobTitle || "Team Member"}</TableCell>
+                <TableCell><button type="button" className="text-left" onClick={() => onEditPendingProfile?.(person.id)}>{person.firstName} {person.lastName}</button></TableCell>
+                <TableCell>{person.email}</TableCell>
+                <TableCell>{person.phone ? formatPhone(person.phone) : ""}</TableCell>
+                <TableCell>{person.jobTitle || "Team Member"}</TableCell>
+                <TableCell><PecStatusBadge expirationDate={person.pecExpirationDate ?? null} /></TableCell>
+                <TableCell><StaffEnrollmentControl vendorId={orgId} personKey={`person:${person.id}`} name={`${person.firstName} ${person.lastName}`} email={person.email} canManage={canManage} /></TableCell>
+                <TableCell>Administrative Team</TableCell>
+                <TableCell />
+              </TableRow>)}
               {members.map((m) => {
                 const isSelf = currentUserId === m.userId;
                 return (
@@ -669,6 +720,8 @@ export default function OrgMembersCard({
                         />
                       </TableCell>
                     ) : null}
+                    {orgType === "vendor" && <TableCell><StaffEnrollmentControl vendorId={orgId} personKey={`account:${m.userId}`} name={m.displayName} email={m.username} canManage={canManage} /></TableCell>}
+                    {collapsibleWorkforce && <TableCell>Administrative Team</TableCell>}
                     <TableCell className="text-right">
                       {(
                         <AlertDialog>
@@ -722,7 +775,7 @@ export default function OrgMembersCard({
             </TableBody>
           </Table>
         )}
-      </CardContent>
+      </CardContent>}
       {/* Edit Staff modal — opens when an admin clicks a
           teammate's display name in the table. Lets the admin swap
           the member's role (same patchMutation as the inline Select)
@@ -963,6 +1016,6 @@ export default function OrgMembersCard({
           ) : null}
         </DialogContent>
       </Dialog>
-    </Card>
+    </Container>
   );
 }

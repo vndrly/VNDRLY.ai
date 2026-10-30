@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "migrate:staff-role-catalog": "tsx scripts/migrate-staff-role-catalog.ts",
+    "migrate:staff-enrollment": "tsx scripts/migrate-staff-enrollment.ts",
+    "migrate:gate-shift-definitions": "tsx scripts/migrate-gate-shift-definitions.ts",
     "migrate:coverage-resolutions": "tsx scripts/migrate-coverage-resolutions.ts",
     "migrate:device-consent": "node scripts/apply-device-consent-migration.mjs",
     "migrate:native-operations": "tsx scripts/migrate-native-operations.ts",

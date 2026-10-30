@@ -505,7 +505,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {showAskVPane && (
         <div
           style={{ backgroundColor: ASKV_PANE_BG }}
-          className="flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
+          className="relative isolate z-40 flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
           data-testid="askv-pane"
         >
           <div className="relative flex shrink-0 items-center gap-0 overflow-visible">

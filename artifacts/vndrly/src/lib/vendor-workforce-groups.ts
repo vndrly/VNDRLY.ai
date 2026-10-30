@@ -23,7 +23,7 @@ export function workforceCategories(person: { vendorRole?: string | null; roles?
 
 export function workforceDisplayRoles(category: string, person: { vendorRole?: string | null; roles?: string[] | null }, operationalRoles: string[] = []): string[] {
   const roles = new Set([person.vendorRole, ...(person.roles ?? []), ...operationalRoles]);
-  if (category === "gate") return [roles.has("gate_supervisor") ? "gate_supervisor" : "gate"];
+  if (category === "gate") return [roles.has("gate_supervisor") ? "gate_supervisor" : "gatekeeper"];
   if (category === "field") return [roles.has("foreman") ? "foreman" : "field_employee"];
   const result: string[] = [];
   if (["Dispatch", "Dispatcher", "dispatch", "dispatcher"].some(role => roles.has(role))) result.push("dispatch");

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 import dialogAccent from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
-import dialogAccentDark from "@assets/VNDRLY_Header_Blur_Dark_1778850026167.png";
+import "./branded-modal.css";
 
 /** Shared modal chrome — approved light + dark snapshots (2026-06). */
 export const APP_MODAL_HEADER_HEIGHT_PX = 70;
@@ -49,22 +49,15 @@ export const APP_MODAL_LIGHT: AppModalTheme = {
 
 /** Standard modal chrome — dark mode. */
 export const APP_MODAL_DARK: AppModalTheme = {
-  shellChromeClassName: "bg-[#3a3d42] text-gray-100",
+  shellChromeClassName: "app-branded-modal bg-[#242426] text-[#ececec]",
   shellStyle: { borderColor: "var(--brand-primary)" },
-  accentHeaderClassName:
-    "relative z-20 shrink-0 pointer-events-none bg-cover bg-top bg-no-repeat",
-  accentHeaderStyle: {
-    height: APP_MODAL_HEADER_HEIGHT_PX,
-    backgroundImage: `url(${dialogAccentDark})`,
-    backgroundSize: "auto 100%",
-    WebkitMaskImage: ACCENT_MASK,
-    maskImage: ACCENT_MASK,
-  },
-  bodyWrapperClassName: "bg-[#d1d5db] text-gray-900",
-  bodySurfaceClassName: "bg-[#d1d5db] text-gray-900",
+  accentHeaderClassName: "hidden",
+  accentHeaderStyle: { display: "none" },
+  bodyWrapperClassName: "bg-transparent text-[#ececec]",
+  bodySurfaceClassName: "bg-[#242426] text-[#ececec]",
   sectionBorderClassName: "border-b border-white/10",
-  titleClassName: "text-gray-900",
-  descriptionClassName: "text-gray-600",
+  titleClassName: "text-[#ececec]",
+  descriptionClassName: "text-[#b3b3b3]",
   toolbarClassName:
     "relative z-10 shrink-0 border-b border-white/20 bg-transparent px-3 py-2.5 pr-11 sm:px-4 sm:py-3 sm:pr-12",
   logoClassName:

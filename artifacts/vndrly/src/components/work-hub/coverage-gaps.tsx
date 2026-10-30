@@ -1,7 +1,8 @@
 import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown } from "lucide-react";
-import { BrandedInput, BrandedSelect } from "./chrome";
+import { CalendarDays } from "lucide-react";
+import { BrandedSelect } from "./chrome";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { WorkspaceRow } from "./workspace-panel";
 import {
@@ -19,16 +20,24 @@ import {
   assignmentConflicts,
   type ScheduleData,
 } from "./shift-assignment-model";
-import SplitToggleHalf from "@/components/split-toggle-half";
-import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
+import WorkdayStatusSwitch from "@/components/workday-status-switch";
+import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
+import "@/components/workday-controls.css";
 import { useBrand } from "@/hooks/use-brand";
 const localDay = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const clock = (value: string) => { const [h,m]=value.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
+function gapSummary(gap: CoverageGap) {
+  if (!gap.shift) return "Needs shift setup";
+  const [year,month,day]=gap.shift.date.split('-');
+  const status=gap.id.includes('vacancy:')?`${gap.required} open`:gap.detail;
+  return `${month}/${day}/${year.slice(-2)} · ${clock(gap.shift.starts)}–${clock(gap.shift.ends)} · ${status}`;
+}
 export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
   const brand = useBrand();
-  const activePill = pickTogglePillSrc(brand.primary,brand.name);
-  const [from, setFrom] = useState(() => localDay(new Date())),
-    [through, setThrough] = useState(() => {
+  const [flyoutOpen, setFlyoutOpen] = useState(false);
+  const [from] = useState(() => localDay(new Date())),
+    [through] = useState(() => {
       const d = new Date();
       d.setDate(d.getDate() + 6);
       return localDay(d);
@@ -133,12 +142,22 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
     !query.isFetching,
   );
   function reset() {
+    setFlyoutOpen(false);
     setSelectedId("");
     setWorker("");
     setReview(false);
     setAttempt(null);
     setMessage("");
   }
+  function openGap(gap: CoverageGap) {
+    if (saving || ((attempt || decisionAttempt) && selectedId !== gap.id)) return;
+    if (!attempt && !decisionAttempt) {
+      setSelectedId(gap.id); setWorker(""); setKind("temporary");
+      setReview(false); setReassigning(false); setMessage("");
+    }
+    setFlyoutOpen(true);
+  }
+  function closeFlyout() { if (!saving) setFlyoutOpen(false); }
   async function save() {
     if (!canReview || query.data?.readOnly || saving) return;
     setSaving(true);
@@ -184,38 +203,9 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
   }
   return (
     <div className="hub-shift-admin hub-coverage-inline">
-      <section className="hub-shift-panel">
-        <h3>
-          <CalendarDays aria-hidden="true" />
-          Unfilled scheduled shifts
-        </h3>
+      <div className="hub-shift-panel hub-coverage-content">
         <fieldset disabled={saving}>
-          <div className="hub-assignment-dates">
-            <label>
-              From
-              <BrandedInput
-                type="date" disabled={Boolean(attempt||decisionAttempt)}
-                aria-label="Coverage from"
-                value={from}
-                onChange={(e) => {
-                  setFrom(e.target.value);
-                  reset();
-                }}
-              />
-            </label>
-            <label>
-              Through
-              <BrandedInput
-                type="date" disabled={Boolean(attempt||decisionAttempt)}
-                aria-label="Coverage through"
-                value={through}
-                onChange={(e) => {
-                  setThrough(e.target.value);
-                  reset();
-                }}
-              />
-            </label>
-          </div>
+          <p className="hub-coverage-period">Next 7 Days</p>
           {!valid && <p role="alert">Choose a date range of up to 93 days.</p>}
           {query.isFetching && (
             <p role="status">Loading coverage across all sites…</p>
@@ -241,38 +231,17 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                     )}
                     {rows.map((g) => (
                       <div key={g.id} className="hub-coverage-entry">
-                      <button
-                        type="button"
-                        disabled={Boolean(attempt||decisionAttempt)}
-                        aria-expanded={selectedId === g.id}
-                        aria-controls={`coverage-editor-${g.id}`}
-                        aria-pressed={selectedId === g.id}
-                        className="hub-coverage-choice"
-                        onClick={() => {
-                          setSelectedId(selectedId === g.id ? "" : g.id);
-                          setWorker("");
-                          setKind(
-                            g.category === "New / Unassigned Recurring Shifts"
-                              ? "permanent"
-                              : "temporary",
-                          );
-                          setReview(false);
-                          setReassigning(false);
-                          setMessage("");
-                        }}
-                      >
-                        <strong>
-                          {g.title}<ChevronDown aria-hidden="true" className="hub-gap-chevron" />
-                        </strong>
-                        <span>
-                          {g.shift
-                            ? `${g.shift.date} · ${g.shift.starts}–${g.shift.ends}`
-                            : "Needs shift setup"}
-                        </span>
-                        {g.shift && g.category === "New / Unassigned Recurring Shifts" && <span>Needs gatekeeper</span>}
-                        <span>{g.detail}</span>
-                      </button>
-                      {selectedId === g.id && chosen && <div id={`coverage-editor-${g.id}`} className="hub-gap-editor" role="region" aria-label={`Assign coverage for ${g.title}`}>
+                      <div className="hub-coverage-choice">
+                        <div className="hub-coverage-entry-heading">
+                          <button type="button" className="hub-coverage-title" aria-haspopup="dialog" disabled={saving||Boolean((attempt||decisionAttempt)&&selectedId!==g.id)} onClick={()=>openGap(g)}><strong>{g.title}</strong></button>
+                          <button type="button" className="hub-coverage-assign-link" aria-haspopup="dialog" disabled={saving||Boolean((attempt||decisionAttempt)&&selectedId!==g.id)} onClick={()=>openGap(g)}>(Re)Assign</button>
+                        </div>
+                        <span className="hub-coverage-summary" title={gapSummary(g)}>{gapSummary(g)}</span>
+                      </div>
+                      {selectedId === g.id && chosen && <Dialog.Root open={flyoutOpen} onOpenChange={open=>{if(!open)closeFlyout();}}><VendorEditFlyout title="(Re)Assign Coverage" className="coverage-assignment-flyout" logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={closeFlyout}>
+                      <div id={`coverage-editor-${g.id}`} className="hub-gap-editor hub-shift-panel" role="region" aria-label={`Assign coverage for ${g.title}`}>
+                        <h3>{g.title}</h3>
+                        {g.shift&&<p>{gapSummary(g)} · {g.shift.timezone}</p>}
                         {!g.shift ? <p>Use Set/Edit a recurring shift to define this gate’s staffing first.</p> : <>
                           {g.requestStatus==='pending'&&<div className="hub-gap-assignment-row">
                             <PngPillButton color="brand" disabled={query.data?.readOnly||Boolean(decisionAttempt&&decisionAttempt.decision!=='approved')} onClick={()=>void decide('approved')}>{decisionAttempt?.decision==='approved'?'Retry approval':'Approve'}</PngPillButton>
@@ -285,16 +254,19 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                           </div>}
                           {g.requestStatus!=='pending'&&(!g.awaitingAcknowledgment || reassigning) && <>
                           <div className="hub-gap-assignment-row">
-                            <div className="hub-gap-kind inline-flex overflow-hidden rounded-full" role="group" aria-label="Coverage replacement type">
-                              {(["temporary","permanent"] as const).map((value,index)=><SplitToggleHalf key={value} side={index===0?"left":"right"} active={kind===value} pillSrc={kind===value?activePill:TOGGLE_IDLE_PILL_SRC} aria-pressed={kind===value} title={value==='temporary'?'This shift only':'Recurring replacement'} disabled={Boolean(attempt||decisionAttempt)} onClick={()=>{setKind(value);setWorker("");setReview(false);}}>{value==='temporary'?'TEMP':'PERM'}</SplitToggleHalf>)}
+                            <div className="hub-gap-kind hub-gap-scope-toggle" role="group" aria-label="Coverage replacement type">
+                              <button type="button" aria-pressed={kind==='temporary'} disabled={Boolean(attempt||decisionAttempt)||saving} onClick={()=>{setKind('temporary');setWorker('');setReview(false);}}>TEMP</button>
+                              <WorkdayStatusSwitch active={kind==='permanent'} label="" accessibilityLabel="TEMP / PERM" disabled={Boolean(attempt||decisionAttempt)||saving} onClick={()=>{setKind(kind==='temporary'?'permanent':'temporary');setWorker('');setReview(false);}}/>
+                              <button type="button" aria-pressed={kind==='permanent'} disabled={Boolean(attempt||decisionAttempt)||saving} onClick={()=>{setKind('permanent');setWorker('');setReview(false);}}>PERM</button>
                             </div>
+                            <p className="hub-gap-scope">{kind==='temporary'?'This shift only':'Recurring assignment from this shift onward'}</p>
                             <div className="hub-gap-worker">
-                              <BrandedSelect aria-label="Coverage replacement gatekeeper" value={worker} disabled={Boolean(attempt)||candidates.isFetching||!candidates.isSuccess} className={people.find(p=>p.id===Number(worker))?.pickupExtraShifts ? "hub-pickup-priority" : undefined} onChange={e=>{setWorker(e.target.value);setReview(false);}}>
+                              <label htmlFor={`coverage-worker-${g.id}`}>Select Gatekeeper</label>
+                              <BrandedSelect id={`coverage-worker-${g.id}`} aria-label="Coverage replacement gatekeeper" value={worker} disabled={Boolean(attempt)||candidates.isFetching||!candidates.isSuccess} className={people.find(p=>p.id===Number(worker))?.pickupExtraShifts ? "hub-pickup-priority" : undefined} onChange={e=>{setWorker(e.target.value);setReview(false);}}>
                                 <option value="">Select a gatekeeper</option>
                                 {people.map(p=><option key={p.id} value={p.id} className={p.pickupExtraShifts?'hub-pickup-priority':undefined}>{p.name}</option>)}
                               </BrandedSelect>
                             </div>
-                            <PngPillButton color="brand" disabled={!canReview||query.data?.readOnly||saving} onClick={()=>chosen.originalUserId?setReview(true):void save()}>{saving?'Assigning…':attempt?'Retry':'Assign'}</PngPillButton>
                           </div>
                           {candidates.isFetching && <p role="status">Loading gatekeepers…</p>}
                           {candidates.isError && <p role="alert">Gatekeepers could not load. <button type="button" onClick={()=>void candidates.refetch()}>Retry</button></p>}
@@ -307,7 +279,12 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                           </div>}
                           </>}
                         </>}
-                      </div>}
+                        {message&&<p role="status">{message}</p>}
+                        <div className="hub-gap-actions">
+                          {g.shift&&g.requestStatus!=='pending'&&(!g.awaitingAcknowledgment||reassigning)&&<PngPillButton color="brand" disabled={!canReview||query.data?.readOnly||saving} onClick={()=>chosen.originalUserId?setReview(true):void save()}>{saving?'Assigning…':attempt?'Retry (Re)Assign':'(Re)Assign'}</PngPillButton>}
+                          <PngPillButton color="brand" disabled={saving} onClick={closeFlyout}>Cancel</PngPillButton>
+                        </div>
+                      </div></VendorEditFlyout></Dialog.Root>}
                       </div>
                     ))}
                     </div>}
@@ -316,7 +293,7 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
               })}
           </div>
         </fieldset>
-      </section>
+      </div>
       {query.data?.readOnly && <p role="status">Read-only preview: assignments are not saved.</p>}
       {message && <p role="status">{message}</p>}
     </div>

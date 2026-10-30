@@ -38,6 +38,7 @@ export const vendorPeopleTable = pgTable("vendor_people", {
   // token is O(1) and collisions are rejected at the DB layer.
   inviteToken: text("invite_token").unique(),
   inviteSentAt: timestamp("invite_sent_at", { withTimezone: true }),
+  staffEnrollment: jsonb("staff_enrollment").$type<Record<string, unknown>>(),
   // Language the invitee selected on the public onboarding page (one of
   // "en" or "es"; null until the toggle is touched). Populated *before*
   // the invitee finishes set-password, so the token-mode assistant can

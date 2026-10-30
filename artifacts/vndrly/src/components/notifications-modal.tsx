@@ -37,6 +37,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AppModalHeader, APP_MODAL_HEADER_ICON_CLASSNAME } from "@/components/app-modal-header";
+import { hasVisiblePillLabel } from "@/lib/pill-action-label";
 import {
   Dialog,
   DialogClose,
@@ -169,6 +170,7 @@ function FlatBubbleButton({
   return (
     <button
       type="button"
+      data-modal-pill-action={hasVisiblePillLabel(props.children) || undefined}
       className={cn(
         theme.flatActionBaseClassName,
         flatBubbleToneClass(theme, tone),
@@ -190,6 +192,7 @@ function FlatBubbleLink({
 }) {
   return (
     <a
+      data-modal-pill-action={hasVisiblePillLabel(props.children) || undefined}
       className={cn(
         theme.flatActionBaseClassName,
         flatBubbleToneClass(theme, tone),
@@ -396,6 +399,7 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
                   <TabsTrigger
                     key={c.id}
                     value={c.id}
+                    data-modal-pill-action
                     className={cn(
                       PILL_HEIGHT_CLASS,
                       PILL_MIN_HEIGHT_CLASS,

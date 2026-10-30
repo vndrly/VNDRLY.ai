@@ -1,0 +1,52 @@
+import { test, expect } from "@playwright/test";
+import { createPool, hashPassword, makeStamp } from "../helpers/db";
+import { createVendor, createUser, createUserOrgMembership, setActiveMembership } from "../helpers/fixtures";
+import { loginAsVendor } from "../helpers/auth";
+
+test("company staffing roles persist, appear in employee profiles, and stay on Employees", async ({ page }) => {
+  test.setTimeout(120000);
+  const pool = createPool(), stamp = makeStamp(), password = "StaffRoleFixture-2026";
+  try {
+    const vendor = await createVendor(pool, { name: `Staffing ${stamp}`, contactName: "Office", contactEmail: `office-${stamp}@example.invalid` });
+    const username = `staff-roles-${stamp}@example.invalid`;
+    const user = await createUser(pool, { username, email: username, passwordHash: hashPassword(password), role: "vendor", displayName: "Staffing Admin" });
+    const membership = await createUserOrgMembership(pool, { userId: user.id, orgType: "vendor", vendorId: vendor.id, role: "admin" });
+    await setActiveMembership(pool, { userId: user.id, membershipId: membership.id });
+    await loginAsVendor(page, { username, password });
+    await page.goto("/field-employees");
+    await expect(page.getByTestId("vendor-staffing-card")).toContainText(`Staffing ${stamp} Staffing`);
+    await page.getByRole("button", { name: "Add/Edit Roles", exact: true }).click();
+    let modal = page.getByRole("dialog");
+    await modal.getByLabel("Role name", { exact: true }).fill("Travel Coordinator");
+    await modal.getByRole("button", { name: "Save Role", exact: true }).click();
+    await expect(modal).toHaveCount(0);
+    await page.reload();
+    await page.getByRole("button", { name: "Add Office Staff", exact: true }).click();
+    modal = page.getByRole("dialog");
+    await modal.getByLabel("Assigned role", { exact: true }).selectOption("Travel Coordinator");
+    await modal.getByLabel("First name", { exact: true }).fill("Taylor");
+    await modal.getByLabel("Last name", { exact: true }).fill("Fixture");
+    const email = `coordinator-${stamp}@example.invalid`;
+    await modal.getByLabel("Email", { exact: true }).fill(email);
+    await modal.getByRole("button", { name: "Create Staff Profile", exact: true }).click();
+    await expect(page.getByText("Staff profile created", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Close employee profile", exact: true }).click();
+    const before = (await pool.query("select id,job_title,roles,user_id from vendor_people where vendor_id=$1 and email=$2", [vendor.id, email])).rows[0];
+    expect(before.job_title).toBe("Travel Coordinator"); expect(before.user_id).toBeNull();
+    await page.getByRole("button", { name: "Add/Edit Roles", exact: true }).click();
+    modal = page.getByRole("dialog");
+    await modal.getByLabel("Staff position", { exact: true }).selectOption({ label: "Travel Coordinator" });
+    await modal.getByLabel("Role name", { exact: true }).fill("Travel Manager");
+    await modal.getByRole("button", { name: "Save Role", exact: true }).click();
+    await expect(modal).toHaveCount(0);
+    const unchanged = (await pool.query("select id,job_title,roles,user_id from vendor_people where id=$1", [before.id])).rows[0];
+    expect(unchanged).toEqual(before);
+    await page.getByRole("button", { name: /^Staff Positions \(/ }).click();
+    await page.getByRole("button", { name: "Taylor Fixture", exact: true }).click();
+    await expect(page.getByRole("dialog").getByLabel("Assigned role", { exact: true })).toHaveValue("Travel Manager");
+    await page.getByRole("button", { name: "Close employee profile", exact: true }).click();
+    await page.goto(`/vendors/${vendor.id}`);
+    await expect(page.getByTestId("vendor-staffing-card")).toHaveCount(0);
+    await expect(page.getByTestId("managed-subcontractor-hours-panel")).toHaveCount(0);
+  } finally { await pool.end(); }
+});

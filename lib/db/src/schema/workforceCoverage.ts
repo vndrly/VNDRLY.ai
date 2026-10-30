@@ -10,6 +10,7 @@ export const workforceStaffingRequirementsTable = pgTable("workforce_staffing_re
   siteId: integer("site_id").notNull(),
   roleCode: text("role_code").notNull(),
   patternName: text("pattern_name"),
+  gateDefinition: jsonb("gate_definition").$type<{ id: string; version: number; stationId: string; notes: string; userIds: number[]; crewIds: string[] }>(),
   timezone: text("timezone"),
   weekday: integer("weekday").notNull(),
   startsAtLocal: text("starts_at_local").notNull(),

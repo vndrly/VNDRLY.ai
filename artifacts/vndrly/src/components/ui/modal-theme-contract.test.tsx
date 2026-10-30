@@ -34,7 +34,7 @@ afterEach(() => {
 
 describe("always-dark modal theme contract", () => {
   for (const pageTheme of ["light", "dark"] as const) {
-    it(`keeps standard dialogs dark on ${pageTheme} pages with a light body`, () => {
+    it(`keeps standard dialogs dark on ${pageTheme} pages with a dark body`, () => {
       resolvedTheme = pageTheme;
       render(
         <Dialog open>
@@ -45,16 +45,14 @@ describe("always-dark modal theme contract", () => {
         </Dialog>,
       );
 
-      expect(screen.getByRole("dialog").className).toContain("bg-[#3a3d42]");
+      expect(screen.getByRole("dialog").className).toContain("bg-[#242426]");
       const body = screen.getByTestId("modal-body");
-      expect(body.className).toContain("bg-[#d1d5db]");
-      expect(body.style.colorScheme).toBe("light");
-      expect(screen.getByTestId("modal-accent-header").style.backgroundImage).toContain(
-        "VNDRLY_Header_Blur_Dark",
-      );
+      expect(body.className).toContain("bg-transparent");
+      expect(body.style.colorScheme).toBe("dark");
+      expect(screen.getByTestId("modal-accent-header").style.display).toBe("none");
     });
 
-    it(`keeps confirmation dialogs dark on ${pageTheme} pages with a light body`, () => {
+    it(`keeps confirmation dialogs dark on ${pageTheme} pages with a dark body`, () => {
       resolvedTheme = pageTheme;
       render(
         <AlertDialog open>
@@ -71,13 +69,11 @@ describe("always-dark modal theme contract", () => {
         </AlertDialog>,
       );
 
-      expect(screen.getByRole("alertdialog").className).toContain("bg-[#3a3d42]");
+      expect(screen.getByRole("alertdialog").className).toContain("bg-[#242426]");
       const body = screen.getByTestId("modal-body");
-      expect(body.className).toContain("bg-[#d1d5db]");
-      expect(body.style.colorScheme).toBe("light");
-      expect(screen.getByTestId("modal-accent-header").style.backgroundImage).toContain(
-        "VNDRLY_Header_Blur_Dark",
-      );
+      expect(body.className).toContain("bg-transparent");
+      expect(body.style.colorScheme).toBe("dark");
+      expect(screen.getByTestId("modal-accent-header").style.display).toBe("none");
       const header = screen.getByTestId("app-modal-header");
       expect(header.contains(screen.getByText("Confirmation modal"))).toBe(true);
       expect(header.contains(screen.getByText("Confirmation description"))).toBe(true);

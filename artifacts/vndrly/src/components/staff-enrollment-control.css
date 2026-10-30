@@ -1,0 +1,14 @@
+.staff-enrollment-control { display: inline-flex; align-items: center; }
+.staff-enrollment-link { min-height: 44px; padding: 4px 2px; color: var(--brand-primary); font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; background: transparent; border: 0; }
+.staff-enrollment-link:hover { text-decoration: underline; }
+.staff-enrollment-link:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.staff-enrollment-link.is-sent, .staff-enrollment-status { color: #b3b3b3; font-size: 11px; font-weight: 700; }
+.staff-enrollment-link small { display: block; color: #f0b827; font-weight: 400; }
+.staff-enrollment-status.is-accepted { color: #4ade80; }
+.staff-enrollment-status.is-revoked { color: #fca5a5; }
+.staff-enrollment-form { display: flex; flex-direction: column; gap: 16px; }
+.staff-enrollment-form p { line-height: 1.5; }
+.staff-enrollment-access { padding: 12px; border: 1px solid #56565a; border-radius: 10px; }
+.staff-enrollment-access p { margin: 8px 0; color: #b3b3b3; font-size: 12px; }
+.staff-enrollment-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.staff-enrollment-email-preview { width: 100%; height: 540px; border: 1px solid var(--brand-primary); border-radius: 10px; background: #3a3d42; }

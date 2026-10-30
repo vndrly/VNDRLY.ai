@@ -6,11 +6,17 @@ const state = vi.hoisted(() => ({ user: { userId: 1, role: "vendor", membershipR
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: state.user }) }));
 vi.mock("@workspace/api-client-react", () => ({ useListSiteLocations: () => ({ data: [{ id: 7, name: "North site" }] }), useListVendors: () => ({ data: [] }), useListPartners: () => ({ data: [] }) }));
 vi.mock("@/components/png-pill-rollover", () => ({ PngPillButton: ({ color, children, ...props }: any) => <button type="button" {...props}>{children}</button> }));
+vi.mock("./coverage-gaps", () => ({ CoverageGaps: () => <div>Coverage board</div> }));
 vi.mock("@/lib/work-hub-client", async importOriginal => ({ ...await importOriginal<any>(), workHubRequest: state.request }));
 const saved = { revision: "a".repeat(64), mode: "part_time", shifts: [] };
 function mount() { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><SiteShiftAdministration /></QueryClientProvider>); }
 beforeEach(() => { state.user.membershipRole = "admin"; state.request.mockReset().mockImplementation(async (path: string) => path.startsWith("/site-shift-plans?") ? { sites: [{ id: 7, name: "North site" }] } : saved); });
 describe("site shift administration", () => {
+  it("places Coverage Gaps in its own card rather than the administration selector", () => {
+    mount();
+    expect(screen.getByRole("region", { name: "Coverage Gaps" }).textContent).toContain("Coverage board");
+    expect(screen.queryByRole("option", { name: "Coverage gaps" })).toBeNull();
+  });
   it("hides administrative controls from employees", () => { state.user.membershipRole = "field_employee"; mount(); expect(screen.queryByText("Administrative functions")).toBeNull(); });
   it("creates three editable shifts and saves weekly headcounts for the selected site", async () => {
     mount(); await screen.findByRole("option", {name:"North site"}); fireEvent.change(screen.getByLabelText("Site location"), { target: { value: "7" } });

@@ -1,0 +1,23 @@
+.staffing-summary-list { width: 100%; color: #ececec; font-size: 12px; }
+.staffing-summary-heading, .staffing-summary-row { display: grid; grid-template-columns: minmax(110px,1.2fr) minmax(140px,1.6fr) minmax(100px,1fr) minmax(95px,1fr) 85px 32px; align-items: center; gap: 8px; }
+.staffing-summary-heading { padding: 7px 0; color: #b3b3b3; font-weight: 600; border-bottom: 1px solid #3a3a3a; }
+.staffing-summary-row { padding: 5px 0; min-height: 44px; border-bottom: 1px solid #3a3a3a; }
+.staffing-summary-row:last-child { border-bottom: 0; }
+.staffing-summary-row > span { min-width: 0; overflow-wrap: anywhere; }
+.staffing-summary-name button { color: inherit; text-align: left; font-weight: 600; cursor: pointer; min-height: 36px; }
+.staffing-summary-name button:hover { color: var(--brand-primary); }
+.staffing-summary-name button:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.staffing-summary-remove { display: flex; justify-content: flex-end; }
+.staffing-summary-remove button { min-width: 32px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.staffing-summary-empty { padding: 12px 0; color: #b3b3b3; font-size: 12px; }
+@media (max-width: 900px) {
+  .staffing-summary-heading { display: none; }
+  .staffing-summary-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr) 32px; gap: 4px 10px; padding-block: 10px; }
+  .staffing-summary-name { grid-column: 1 / 3; grid-row: 1; }
+  .staffing-summary-row > [data-label="Email"] { grid-column: 1 / 3; }
+  .staffing-summary-row > [data-label="Phone"] { grid-column: 1; }
+  .staffing-summary-row > [data-label="Role"] { grid-column: 2; }
+  .staffing-summary-row > [data-label="Sent Invite"] { grid-column: 1 / 3; }
+  .staffing-summary-row > [data-label]::before { content: attr(data-label) ": "; color: #b3b3b3; font-size: 11px; }
+  .staffing-summary-remove { grid-column: 3; grid-row: 1; }
+}

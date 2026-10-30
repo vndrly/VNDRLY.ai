@@ -4,7 +4,7 @@ describe("vendor workforce cards", () => {
   it("uses the operation's actual role names and includes dispatch", () => {
     expect(workforceDisplayRoles("field", { vendorRole: "foreman" })).toEqual(["foreman"]);
     expect(workforceDisplayRoles("field", { vendorRole: "field" })).toEqual(["field_employee"]);
-    expect(workforceDisplayRoles("gate", { vendorRole: "gatekeeper" })).toEqual(["gate"]);
+    expect(workforceDisplayRoles("gate", { vendorRole: "gatekeeper" })).toEqual(["gatekeeper"]);
     expect(workforceDisplayRoles("gate", { vendorRole: "office" }, ["gate_supervisor"])).toEqual(["gate_supervisor"]);
     expect(workforceCategories({ vendorRole: "office", roles: ["Dispatch"] })).toEqual(["fleet"]);
     expect(workforceDisplayRoles("fleet", { roles: ["Dispatch", "Driver"] })).toEqual(["dispatch", "driver"]);

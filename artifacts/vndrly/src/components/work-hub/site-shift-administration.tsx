@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useListVendors, useListPartners } from "@workspace/api-client-react";
 import { siteShiftPlanSchema, shiftMinutes, type SiteShiftPlan, type SiteShiftRow } from "@workspace/api-zod";
-import { Settings2, MapPin, Clock3, Users } from "lucide-react";
+import { Settings2, MapPin, Clock3, Users, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { commandEnvelope, isWorkHubAdmin, ownerForUser, workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -17,14 +17,18 @@ const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const initial: SiteShiftPlan = { mode: "part_time", shifts: [{ startsAtLocal: "08:00", endsAtLocal: "16:00", requiredCount: 1, weekdays: [1, 2, 3, 4, 5] }] };
 const time = (minutes: number) => `${String(Math.floor(minutes / 60) % 24).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
-export default function SiteShiftAdministration() {
+export default function SiteShiftAdministration({ gateDefinitions = false }: { gateDefinitions?: boolean } = {}) {
   const { user } = useAuth();
-  const [mode, setMode] = useState<AdministrationMode>("define");
+  const [mode, setMode] = useState<AdministrationMode>(gateDefinitions ? "assign" : "define");
+  useEffect(() => { if (gateDefinitions) setMode(current => current === "define" ? "assign" : current); }, [gateDefinitions]);
   if (!isWorkHubAdmin(user)) return null;
   const owner = ownerForUser(user);
-  return <WorkspacePanel title="Administrative functions" subtitle="Weekly site staffing and shift definitions" icon={Settings2} actions={<BrandedSelect aria-label="Administrative function" value={mode} onChange={event => setMode(event.target.value as AdministrationMode)}><option value="define">Set/Edit a recurring shift</option><option value="assign">Assign a recurring shift</option><option value="gaps">Coverage gaps</option></BrandedSelect>}>
+  return <><WorkspacePanel title="Administrative functions" subtitle="Weekly site staffing" icon={Settings2} actions={<BrandedSelect aria-label="Administrative function" value={mode} onChange={event => setMode(event.target.value as AdministrationMode)}>{!gateDefinitions && <option value="define">Set/Edit a recurring shift</option>}<option value="assign">Assign a recurring shift</option></BrandedSelect>}>
     {owner ? <SitePlanner key={`${user?.userId}:${user?.activeMembershipId}:${owner.type}:${owner.id}:${mode}`} owner={owner} mode={mode} /> : user?.role === "admin" ? <AdminCompanyPlanner mode={mode} /> : <p className="p-4">Select a company workspace to manage its site shifts.</p>}
-  </WorkspacePanel>;
+  </WorkspacePanel>
+  <WorkspacePanel title="Coverage Gaps" subtitle="Unfilled shifts and coverage requests across all sites" icon={AlertTriangle}>
+    {owner ? <CoverageGaps key={`${user?.userId}:${user?.activeMembershipId}:${owner.type}:${owner.id}`} owner={owner} /> : user?.role === "admin" ? <AdminCompanyPlanner mode="gaps" /> : <p>Select a company workspace to review coverage.</p>}
+  </WorkspacePanel></>;
 }
 function AdminCompanyPlanner({ mode }: { mode: AdministrationMode }) {
   const vendors = useListVendors(), partners = useListPartners();

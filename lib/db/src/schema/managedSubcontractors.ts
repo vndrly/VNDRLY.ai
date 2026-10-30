@@ -94,6 +94,7 @@ export const managedSubcontractorWorkerSponsorshipsTable = pgTable(
   "managed_subcontractor_worker_sponsorships",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    staffEnrollment: jsonb("staff_enrollment").$type<Record<string, unknown>>(),
     workerUserId: integer("worker_user_id")
       .notNull()
       .references(() => usersTable.id),

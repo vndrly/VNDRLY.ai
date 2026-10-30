@@ -41,6 +41,7 @@ export default function PillBg({ src, imageAspect = 4, stretch = false, classNam
   if (stretch) {
     return (
       <img
+        data-pill-background
         src={src}
         alt=""
         draggable={false}
@@ -51,7 +52,7 @@ export default function PillBg({ src, imageAspect = 4, stretch = false, classNam
   }
   const capAspect = 0.15 * imageAspect;
   return (
-    <div className={`absolute inset-0 flex pointer-events-none ${className}`} style={style}>
+    <div data-pill-background className={`absolute inset-0 flex pointer-events-none ${className}`} style={style}>
       {/* Left cap */}
       <div
         className="h-full shrink-0 overflow-hidden relative"

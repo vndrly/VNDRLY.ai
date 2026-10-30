@@ -888,9 +888,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         hideOverlay
         inline={embedded}
         accentHeaderStyle={{ display: "none" }}
-        onPointerDownOutside={(event) => event.preventDefault()}
-        onInteractOutside={(event) => event.preventDefault()}
-        onEscapeKeyDown={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => { if ((event.target as Element)?.closest?.('[data-testid="assistant-launcher"]')) event.preventDefault(); }}
+        onInteractOutside={(event) => { if ((event.target as Element)?.closest?.('[data-testid="assistant-launcher"]')) event.preventDefault(); }}
         className={cn(
           "border-2 border-[color:var(--brand-primary)] sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden",
           embedded
@@ -1502,7 +1501,7 @@ export function AssistantLauncher({
   const engaged = voiceActive || (hovered && !open);
   return (
     <>
-      <div className={cn(placement === "onboarding" ? "fixed bottom-5 left-5 z-[1100] flex items-center gap-2" : "contents")}>
+      <div className={cn(placement === "onboarding" ? "fixed bottom-5 left-5 z-40 flex items-center gap-2" : "contents")}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -1513,8 +1512,8 @@ export function AssistantLauncher({
         className={cn(
           "inline-flex items-center justify-center overflow-visible transition-transform",
           placement === "floating"
-            ? "fixed bottom-5 left-5 z-[1100] hover:scale-[1.03]"
-            : "relative z-[1100]",
+            ? "fixed bottom-5 left-5 z-40 hover:scale-[1.03]"
+            : "relative z-0",
         )}
         style={{ width: ASKV_LAUNCHER_WIDTH, height: ASKV_LAUNCHER_HEIGHT }}
         data-testid="assistant-launcher"

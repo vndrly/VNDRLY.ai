@@ -22,12 +22,14 @@ export default function EmployeeAccessEditor({
   operationalRoles,
   siteLocationIds,
   eligibleSites,
+  showOperationalRoles = true,
   onChange,
 }: {
   isAdmin: boolean;
   operationalRoles: EmployeeOperationalRole[];
   siteLocationIds: number[];
   eligibleSites: Array<{ id: number; name: string }>;
+  showOperationalRoles?: boolean;
   onChange: (next: {
     operationalRoles: EmployeeOperationalRole[];
     siteLocationIds: number[];
@@ -48,7 +50,7 @@ export default function EmployeeAccessEditor({
 
   return (
     <div className="space-y-4" data-testid="employee-access-editor">
-      <div>
+      {showOperationalRoles && <div>
         <Label>Operational permissions</Label>
         <p className="mb-2 text-xs text-muted-foreground">
           Permissions control which operations this person can perform. Site access still applies.
@@ -65,7 +67,7 @@ export default function EmployeeAccessEditor({
             </BrandPill>
           ))}
         </div>
-      </div>
+      </div>}
 
       <div>
         <Label>Site access</Label>

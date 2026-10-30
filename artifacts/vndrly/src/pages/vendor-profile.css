@@ -10,11 +10,24 @@ main:has(.vendor-profile-page),
   color: #ececec;
 }
 .vendor-profile-page [data-slot="card"],
+.vendor-profile-page [data-testid="managed-subcontractor-hours-panel"],
 .vendor-profile-page div.bg-white {
   background-color: #242426;
   color: #ececec;
 }
 .vendor-profile-page [data-slot="card"] { border-radius: 14px; }
+.vendor-profile-page [data-slot="card"] > div:has(> [data-slot="card-title"]) {
+  display:flex; flex-direction:row; flex-wrap:wrap; align-items:flex-start;
+  justify-content:space-between; gap:12px; padding:16px;
+}
+.vendor-profile-page [data-slot="card"] > div:has(> [data-slot="card-title"]) > [data-slot="card-title"] {
+  min-width:0; margin:0; line-height:20px; align-items:flex-start;
+}
+.vendor-profile-page [data-slot="card"] > div:has(> [data-slot="card-title"]) > :not([data-slot="card-title"]) {
+  margin-top:0; margin-left:auto;
+}
+.vendor-profile-page [data-slot="card-title"] .workforce-group-toggle { align-items:flex-start; line-height:20px; }
+.vendor-profile-page [data-slot="card-title"] svg { flex-shrink:0; }
 .vendor-profile-page h1,
 .vendor-profile-page h2,
 .vendor-profile-page h3,
@@ -82,3 +95,40 @@ main:has(.vendor-profile-page),
 .vendor-reviews-list > summary::after { content: '›'; color: #b3b3b3; font-size: 20px; }
 .vendor-reviews-list[open] > summary::after { transform: rotate(90deg); }
 .vendor-reviews-list > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.workforce-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.workforce-group-toggle:hover { color: var(--brand-primary); }
+.workforce-group-toggle:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 4px; border-radius: 4px; }
+.workforce-group-chevron { width: 16px; height: 16px; flex-shrink: 0; transition: transform 150ms; }
+.workforce-group-chevron.is-open { transform: rotate(90deg); }
+
+.vendor-staffing-categories { padding-inline: 16px; padding-bottom: 4px; }
+.vendor-staffing-category + .vendor-staffing-category { border-top: 1px solid #3a3a3a; }
+.vendor-staffing-category > div:has(> [data-slot="card-title"]) {
+  display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 4px 12px; padding: 4px 0;
+}
+.vendor-staffing-category [data-slot="card-title"] { font-size: 14px; margin: 0; min-width: 0; }
+.vendor-staffing-category [data-slot="card-title"] .workforce-group-toggle { align-items: center; }
+.vendor-staffing-add-link {
+  display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;
+  min-height: 44px; padding: 0; margin-left: auto; border: 0; border-radius: 0;
+  background: transparent; color: #b3b3b3; font: inherit; font-size: 12px;
+  font-weight: 600; text-align: right; cursor: pointer;
+}
+.vendor-staffing-add-link:hover { color: var(--brand-primary); }
+.vendor-staffing-add-link:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
+.vendor-staffing-add-link:disabled { opacity: .5; cursor: not-allowed; }
+.vendor-staffing-actions { margin-left: auto; justify-content: flex-end; }
+.vendor-contractor-group { border-top: 1px solid #3a3a3a; }
+.vendor-contractor-header { display: flex; align-items: center; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; }
+.vendor-contractor-header .workforce-group-toggle { font-size: 13px; }

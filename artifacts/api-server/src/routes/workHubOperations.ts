@@ -1,5 +1,6 @@
 import {submitAssignedLibrary} from "../work-hub/training-service";
 import {calendarWorkerScope} from "../work-hub/calendar-worker-scope";
+import { assertCalendarEventAccess } from "../work-hub/calendar-event-policy";
 import { CampaignError, respondCampaign } from "../work-hub/form-campaign-service";
 import { setWorkHubShiftOpening, readWorkHubShiftOpening } from "../services/work-hub-shift-opening";
 import { requireRoomAdmission } from "../work-hub/live-meetings";
@@ -116,6 +117,7 @@ import {coverageOwners} from "../work-hub/coverage-rules";
 import workHubMeetingReplayRouter from "./workHubMeetingReplay";
 import { assertOwnerMatchesChannel, assertOwnerUsers } from "../work-hub/owner-users";
 import { canManageTaskAssignments, currentTaskAssignmentSession, taskAssignmentPeople } from "../work-hub/task-assignment";
+import { taskCreationAccess, isUnassignedTaskCompletion } from "../work-hub/task-hopper-policy";
 import {
   recordTrackingException,
   resolveAttendanceException,
@@ -338,7 +340,7 @@ function ownerFilter(session: Actor) {
   if (session.role !== "admin" && !session.vendorId && !session.partnerId) return sql`false`;
   if (session.managedSubcontractor) return and(
     eq(workHubTasksTable.ownerOrgType, "vendor"), eq(workHubTasksTable.ownerOrgId, session.vendorId ?? -1),
-    or(eq(workHubTasksTable.assigneeUserId, session.userId), eq(workHubTasksTable.createdById, session.userId), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`),
+    or(eq(workHubTasksTable.assigneeUserId, session.userId), eq(workHubTasksTable.createdById, session.userId), and(isNull(workHubTasksTable.assigneeUserId), isNull(workHubTasksTable.gateHopper), isNull(workHubTasksTable.channelId)), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`),
   );
   return session.role === "admin"
     ? undefined
@@ -592,7 +594,7 @@ router.get("/work-hub/tasks", async (req, res) => {
       (session.membershipRole === "admin" || ["office", "both"].includes(session.vendorRole ?? "")));
     const rows = await db.select({ ...getTableColumns(workHubTasksTable), assigneeName: usersTable.displayName })
       .from(workHubTasksTable).leftJoin(usersTable, eq(usersTable.id, workHubTasksTable.assigneeUserId))
-      .where(and(ownerFilter(session), company ? undefined : or(eq(workHubTasksTable.assigneeUserId, session.userId), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`),
+      .where(and(ownerFilter(session), company ? undefined : or(eq(workHubTasksTable.assigneeUserId, session.userId), and(isNull(workHubTasksTable.assigneeUserId), isNull(workHubTasksTable.gateHopper), isNull(workHubTasksTable.channelId)), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`),
         cursor.data ? gt(workHubTasksTable.id, cursor.data) : undefined))
       .orderBy(asc(workHubTasksTable.id)).limit(101);
     const page = rows.slice(0, 100);
@@ -1373,8 +1375,8 @@ router.post("/work-hub/admin/approvals/:id/decide", async (req, res) => {
   }
 });
 router.post("/work-hub/tasks", async (req, res) => {
-  const session = actor(req);
-  if (!session)
+  const savedSession = actor(req);
+  if (!savedSession)
     return sendApiError(
       res,
       401,
@@ -1383,7 +1385,6 @@ router.post("/work-hub/tasks", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    await ownAccess(session, envelope.owner, "task.assign", envelope.context);
     const payload = z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -1395,6 +1396,10 @@ router.post("/work-hub/tasks", async (req, res) => {
         recurrence: z.unknown().nullable().optional(),
       })
       .parse(envelope.payload);
+    const session = await currentTaskAssignmentSession(savedSession) as Actor;
+    const access = taskCreationAccess(session, envelope.owner, payload.assigneeUserId);
+    await ownAccess(session, envelope.owner, access === "supervisor" ? "task.assign" : "note.create", envelope.context);
+    if (access === "hopper" && payload.channelId) throw new WorkHubAccessError("forbidden");
     await assertOwnerUsers(
       envelope.owner,
       payload.assigneeUserId ? [payload.assigneeUserId] : [],
@@ -1511,6 +1516,7 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           current.createdById !== session.userId &&
           session.role !== "admin" &&
           session.membershipRole !== "admin" &&
+          !isUnassignedTaskCompletion(current, payload) &&
           !(assignmentManager && (payload.assigneeUserId !== undefined && Object.keys(payload).every(key => key === "assigneeUserId") ||
             payload.action === "complete" && Object.keys(payload).every(key => ["action", "resolution"].includes(key))))
         )
@@ -1518,6 +1524,7 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
         if (current.version !== envelope.expectedVersion)
           throw new Error("work_hub.version_conflict");
         if (payload.assigneeUserId !== undefined) {
+          if (!assignmentManager) throw new WorkHubAccessError("forbidden");
           if (["completed", "cancelled"].includes(current.status)) throw new ChangeOverError(409, "work_hub.task_closed", "Only active tasks can be reassigned");
           await assertOwnerUsers(envelope.owner, payload.assigneeUserId ? [payload.assigneeUserId] : []);
           if (payload.assigneeUserId && !(await taskAssignmentPeople(envelope.owner)).some(person => person.userId === payload.assigneeUserId)) throw new WorkHubAccessError("forbidden");
@@ -2260,7 +2267,6 @@ router.post("/work-hub/meetings", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    await ownAccess(session, envelope.owner, "meeting.host", envelope.context);
     const payload = z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -2271,6 +2277,7 @@ router.post("/work-hub/meetings", async (req, res) => {
         attendanceConfirmationRequired: z.boolean().default(false),
         admissionMode: z.enum(["company_open","host_approval"]).nullable().optional(),
         recordingAllowed: z.boolean().default(false),
+        calendarEvent: z.boolean().default(false),
         participantUserIds: z
           .array(z.number().int().positive())
           .max(500)
@@ -2278,6 +2285,8 @@ router.post("/work-hub/meetings", async (req, res) => {
         recurrence: z.unknown().nullable().optional(),
       })
       .parse(envelope.payload);
+    if (payload.calendarEvent) assertCalendarEventAccess(session, envelope.owner, payload);
+    else await ownAccess(session, envelope.owner, "meeting.host", envelope.context);
     const recurrence = payload.recurrence
       ? normalizeRecurrenceRule(payload.recurrence as never)
       : null;

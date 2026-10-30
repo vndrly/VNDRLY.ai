@@ -8,6 +8,7 @@ export const vendorsTable = pgTable("vendors", {
   id: serial("id").primaryKey(),
   callTranscriptionPolicy: jsonb("call_transcription_policy").$type<{ enabled: boolean; version: number; verifiedByUserId: number; effectiveAt: string }>(),
   operationsCategories: text("operations_categories").array(),
+  staffRoleCatalog: jsonb("staff_role_catalog").$type<{ version: number; entries: Array<{ id: string; label: string; group: string; aliases?: string[] }> }>(),
   nativeOperationsPolicy: jsonb("native_operations_policy").$type<Record<string, unknown>>().notNull().default({}),
   fleetCommercialSettings: jsonb("fleet_commercial_settings"),
   fleetOpsState: jsonb("fleet_ops_state"),

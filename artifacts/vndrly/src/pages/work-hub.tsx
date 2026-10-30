@@ -27,13 +27,15 @@ import WorkCalendar, { monthCalendarDays } from "@/components/work-hub/work-cale
 import { localDateKey } from "@/components/work-hub/calendar-views";
 import { calendarDayFromSearch, calendarWorkerFromSearch } from "@/lib/calendar-day-link";
 import { readDashboardShiftHours, readEmployeeCalendarContext } from "@/lib/dashboard-shift-hours";
-import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
 import SiteShiftAdministration from "@/components/work-hub/site-shift-administration";
 import {RequestShiftCoverage} from "@/components/work-hub/request-shift-coverage";
 import {CoverageAcknowledgments} from "@/components/work-hub/coverage-acknowledgments";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
 import CalendarCreateCards from "@/components/work-hub/calendar-create-cards";
+import CalendarTaskFlyout from "@/components/work-hub/calendar-task-flyout";
+import GateCalendarScheduling from "@/components/work-hub/gate-calendar-scheduling";
+import { canAdministerCalendar } from "@/lib/calendar-action-permissions";
 import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
 import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
 import { AssistantPanel } from "@/components/assistant-panel";
@@ -586,7 +588,10 @@ function Channels() {
 function CalendarModule() {
   const { user } = useAuth();
   const search = useSearch(), employeeLink = calendarWorkerFromSearch(search), employeeView = employeeLink.requested;
-  const canManage = isWorkHubScheduler(user) && !employeeView;
+  const canManage = canAdministerCalendar(user) && !employeeView;
+  const companyOperations = useQuery<{ categories: string[] }>({ queryKey: ["company-operations", user?.vendorId], enabled: !!user?.vendorId && !["gatekeeper", "gate_supervisor"].includes(user?.vendorRole ?? ""),
+    queryFn: async () => { const response = await fetch(`/api/company-operations?vendorId=${user!.vendorId}`, { credentials: "include" }); if (!response.ok) throw new Error("Company operations unavailable"); return response.json(); } });
+  const gateCompany = ["gatekeeper", "gate_supervisor"].includes(user?.vendorRole ?? "") || companyOperations.data?.categories.includes("gate") === true;
   const personalGatekeeper = !isWorkHubAdmin(user) && (user?.vendorRole === "gatekeeper" || user?.role === "field_employee");
   const context = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
   const clockOwner = ownerForUser(user);
@@ -597,15 +602,6 @@ function CalendarModule() {
   });
   const calendarReady = !employeeView || Boolean(employeeContext.data && !employeeContext.isError && employeeLink.userId);
   const clockWorkerId = employeeView ? employeeLink.userId : user?.userId;
-  const hoursCompanies = useQuery<{ items: { id: string; name: string }[] }>({
-    queryKey: ["managed-subcontractor-hours-access", ...context],
-    enabled: Boolean(user?.vendorId && !employeeView),
-    queryFn: async () => {
-      const response = await fetch(`/api/vendors/${user!.vendorId}/managed-subcontractors/hours-access`, { credentials: "include" });
-      if (!response.ok) return { items: [] };
-      return response.json();
-    },
-  });
   const linkedDay = calendarDayFromSearch(search);
   const [month, setMonth] = useState(() => { const date = linkedDay ? new Date(`${linkedDay}T12:00:00`) : new Date(); return new Date(date.getFullYear(), date.getMonth(), 1); });
   const [selectedDay, setSelectedDay] = useState(() => linkedDay ?? localDateKey(new Date()));
@@ -720,6 +716,8 @@ function CalendarModule() {
         {employeeView && <p role={employeeContext.isError || !employeeLink.userId ? "alert" : "status"}>{employeeContext.isError || !employeeLink.userId ? "Employee calendar is unavailable or your access has changed." : employeeContext.data ? `${employeeContext.data.employee.name} — employee calendar` : "Loading employee calendar…"}</p>}
         {!employeeView && <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />}
         <WorkCalendar month={month} selectedDay={selectedDay} items={filteredItems}
+          scheduleControl={!employeeView && clockOwner ? <><GateCalendarScheduling key={`${user?.userId}:${clockOwner.type}:${clockOwner.id}`} owner={clockOwner} canDefine={gateCompany && canManage} />{!gateCompany && canManage && <button type="button" className="hub-task-mini-card" aria-expanded={scheduling} onClick={() => setScheduling(current => !current)}>Add/Edit Shifts</button>}</> : undefined}
+          taskControl={!employeeView && clockOwner && canManage ? <CalendarTaskFlyout key={`${user?.userId}:${clockOwner.type}:${clockOwner.id}`} owner={clockOwner} canAssign /> : undefined}
           personalShifts={personalGatekeeper && !employeeView && user?.vendorId ? <RequestShiftCoverage key={`${user.userId}:${selectedDay}`} userId={user.userId} owner={{type:"vendor",id:user.vendorId}} day={selectedDay} /> : undefined}
           onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}
           onOpenDay={() => setAgendaOpen(true)}
@@ -951,15 +949,14 @@ function CalendarModule() {
               </CardContent>
             </Card>
           )}
-          {scheduling && canManage && <CalendarCreateCards owner={owner} />}
+          {scheduling && canManage && !gateCompany && <CalendarCreateCards owner={owner} />}
         </div>
         <DayAgendaDialog open={agendaOpen} onOpenChange={setAgendaOpen} day={selectedDay} items={selectedItems} />
         {!employeeView && <ProjectTimeline unavailable={calendar.isError || calendar.isPending} items={filteredItems} canManage={canManage} onCreate={() => { setScheduling(true); setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />}
         {!employeeView && <div className="hub-calendar-extras">
           <WorkHubAvailability />
-          {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} />}
         </div>}
-        {!employeeView && <SiteShiftAdministration />}
+        {!employeeView && <SiteShiftAdministration gateDefinitions={gateCompany} />}
       </div>
     </Shell>
   );

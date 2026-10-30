@@ -15,7 +15,7 @@ const roleConfig: Record<
   both: { labelKey: "roles.both", fallback: "Both", color: "green" },
   foreman: { labelKey: "roles.foreman", fallback: "Foreman", color: "amber" },
   gate_supervisor: { labelKey: "roles.gateSupervisor", fallback: "Gate Supervisor", color: "blue" },
-  gate: { labelKey: "roles.gate", fallback: "Gate", color: "blue" },
+  gate: { labelKey: "roles.gatekeeper", fallback: "Gatekeeper", color: "blue" },
   dispatch: { labelKey: "roles.dispatch", fallback: "Dispatch", color: "blue" },
   driver: { labelKey: "roles.driver", fallback: "Driver", color: "blue" },
   gatekeeper: { labelKey: "roles.gatekeeper", fallback: "Gatekeeper", color: "blue" },

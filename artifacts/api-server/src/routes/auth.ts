@@ -20,6 +20,7 @@ import {
 } from "@workspace/db";
 import { eq, sql, and, isNull, asc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { acceptStaffEnrollment } from "../services/staff-enrollment";
 import crypto from "crypto";
 import { DEMO_USERS } from "../lib/demo-users";
 import { syncDemoUsersInDatabase } from "../lib/demo-user-seed-db";
@@ -484,6 +485,7 @@ router.post("/auth/login", async (req, res) => {
       }
     }
 
+    if (!user.mustChangePassword) await acceptStaffEnrollment(user.id, ctx.vendorId);
     return res.json({
       id: user.id,
       username: user.username,
@@ -565,6 +567,7 @@ router.post("/auth/change-password", async (req, res) => {
       sessionVersion: (user.sessionVersion ?? 1) + 1,
     };
     const ctx = await resolveContext(refreshed);
+    await acceptStaffEnrollment(user.id, ctx.vendorId);
     const signed = buildSessionCookie(refreshed, ctx);
     res.cookie(COOKIE_NAME, signed, COOKIE_OPTIONS);
     return res.json({ ok: true, token: signed });

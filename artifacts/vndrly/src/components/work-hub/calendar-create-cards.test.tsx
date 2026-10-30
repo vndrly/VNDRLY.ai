@@ -22,52 +22,15 @@ vi.mock("@/lib/work-hub-client", async () => {
 });
 
 describe("CalendarCreateCards", () => {
-  it("keeps both creation forms in one scheduling panel and switches attendees between crews and individuals", async () => {
+  it("keeps shift scheduling inline without the old task form", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={client}>
-        <CalendarCreateCards owner={{ type: "vendor", id: 1 }} />
-      </QueryClientProvider>,
-    );
-
-    const row = screen.getByTestId("calendar-create-card-row");
-    expect(row.querySelectorAll(".hub-home-card")).toHaveLength(1);
+    render(<QueryClientProvider client={client}><CalendarCreateCards owner={{ type: "vendor", id: 1 }} /></QueryClientProvider>);
     expect(screen.getByRole("form", { name: "Create Shift/Event" })).toBeTruthy();
-    expect(screen.getByRole("form", { name: "Create Task" })).toBeTruthy();
-    expect(screen.getAllByTestId("calendar-assignee-toggle")).toHaveLength(2);
-    await waitFor(() => expect(screen.getAllByText("Gatekeepers")).toHaveLength(2));
-    expect(screen.queryByText("Alex Field")).toBeNull();
-
-    const individuals = screen.getAllByRole("button", { name: "Individuals" })[0];
-    fireEvent.click(individuals);
-    expect(individuals.getAttribute("aria-pressed")).toBe("true");
-    await waitFor(() => expect(screen.getByText("Alex Field")).toBeTruthy());
-    expect(screen.getAllByText("Gatekeepers")).toHaveLength(1);
-    const notes = screen.getByLabelText("Notes");
-    const description = screen.getByLabelText("Description");
-    const mandatory = screen.getByRole("checkbox", { name: "Mandatory" });
-    for (const field of [notes, description]) {
-      expect(field.className).toContain("rounded-xl");
-      expect(field.className).toContain("border-[color:var(--brand-primary)]");
-      expect(field.className).toContain("bg-white");
-    }
-    expect(mandatory.className).toContain("accent-[var(--brand-primary)]");
-    expect(mandatory.className).toContain("bg-white");
-    for (const list of screen.getAllByTestId("calendar-assignee-list")) {
-      expect(list.style.colorScheme).toBe("light");
-    }
-    for (const checkbox of screen.getAllByRole("checkbox")) {
-      expect(checkbox.style.colorScheme).toBe("light");
-      expect(checkbox.style.accentColor).toBe("var(--brand-primary)");
-      expect(checkbox.className).toContain("bg-white");
-    }
-    for (const name of ["Work type", "Calendar", "Priority"]) {
-      const select = screen.getByRole("combobox", { name });
-      expect(select.className).toContain("rounded-full");
-      expect(select.className).toContain("bg-white");
-      expect(select.className).toContain("hub-branded-select");
-      expect(select.style.colorScheme).toBe("light");
-    }
+    expect(screen.queryByRole("form", { name: "Create Task" })).toBeNull();
+    await waitFor(() => expect(screen.getByText("Gatekeepers")).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: "Individual" }));
+    expect(await screen.findByText("Alex Field")).toBeTruthy();
+    expect(screen.getByLabelText("Starts").getAttribute("placeholder")).toBe("MM/DD/YY hh:mm AM/PM");
   });
   it("shows branded Gate staffing and paid-travel selectors for Gate shifts", async () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string) => ({
@@ -90,7 +53,7 @@ describe("CalendarCreateCards", () => {
     expect(screen.getByRole("spinbutton", { name: "Required gatekeepers" }).getAttribute("value")).toBe("1");
     expect(screen.getByRole("combobox", { name: "Work start policy" }).className).toContain("rounded-full");
   });
-  it.each(["shift", "event", "task"])("preserves the %s submission fields after regrouping", async (kind) => {
+  it.each(["shift", "event"])("preserves the %s submission fields after regrouping", async (kind) => {
     vi.mocked(workHubRequest).mockClear();
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(<QueryClientProvider client={client}><CalendarCreateCards owner={{ type: "vendor", id: 1 }} /></QueryClientProvider>);
@@ -106,8 +69,8 @@ describe("CalendarCreateCards", () => {
         fireEvent.change(fields.getByLabelText("Work type"), { target: { value: "event" } });
         expect(fields.getByLabelText("Meeting Type")).toBeTruthy();
       }
-      fireEvent.change(fields.getByLabelText("Starts"), { target: { value: "2026-11-01T08:00" } });
-      fireEvent.change(fields.getByLabelText("Ends"), { target: { value: "2026-11-01T16:00" } });
+      fireEvent.change(fields.getByLabelText("Starts"), { target: { value: "11/01/26 08:00 AM" } });
+      fireEvent.change(fields.getByLabelText("Ends"), { target: { value: "11/01/26 04:00 PM" } });
       fireEvent.change(fields.getByLabelText("Notes"), { target: { value: "Gate instructions" } });
     }
     fireEvent.submit(form);

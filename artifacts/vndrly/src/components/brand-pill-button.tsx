@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
+import { hasVisiblePillLabel } from "@/lib/pill-action-label";
 import { brandImagePillSrc } from "@/components/png-pill-rollover";
 
 import { PillColorLayer } from "@/components/png-pill-chrome";
@@ -212,6 +213,7 @@ export default function BrandPillButton({
         className={sharedClassName}
 
         style={sharedStyle}
+        data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
 
         aria-disabled={disabled || undefined}
 
@@ -244,6 +246,7 @@ export default function BrandPillButton({
       className={sharedClassName}
 
       style={sharedStyle}
+      data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
 
     >
 

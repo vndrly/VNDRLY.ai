@@ -78,6 +78,7 @@ router.put("/work-hub/site-shift-plans/:siteId", async (req, res) => {
       // Serialize replacements even when the site has no existing requirements.
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`site-shift-plan:${envelope.owner.type}:${envelope.owner.id}:${siteId}`}))`);
       const current = await tx.select().from(requirements).where(scope(envelope.owner, siteId));
+      if (current.some(row => row.gateDefinition)) throw Object.assign(new Error("Use Define Shifts to edit gate definitions."), { status: 409 });
       if (revision(current) !== input.revision) throw Object.assign(new Error("Plan changed"), { status: 409 });
       await tx.update(requirements).set({ retiredAt: new Date() }).where(scope(envelope.owner, siteId));
       const saved = await tx.insert(requirements).values(input.plan.shifts.flatMap(shift => [...new Set(shift.weekdays)].map(weekday => ({ ownerOrgType: envelope.owner.type, ownerOrgId: envelope.owner.id, siteId, roleCode: "general", patternName: shift.patternName ?? null, timezone: shift.timezone ?? null, weekday, startsAtLocal: shift.startsAtLocal, endsAtLocal: shift.endsAtLocal, requiredCount: shift.requiredCount, createdById: session.userId! })))).returning();

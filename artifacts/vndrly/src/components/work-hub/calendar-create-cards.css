@@ -1,4 +1,4 @@
-.hub-schedule-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); color: #ececec; color-scheme: dark; }
+.hub-schedule-body { display: grid; grid-template-columns: minmax(0, 1fr); color: #ececec; color-scheme: dark; }
 .hub-schedule-form { min-width: 0; align-content: start; padding: 14px 16px 16px 0; border-top: 1px solid #3a3a3a; }
 .hub-schedule-form + .hub-schedule-form { padding-inline: 16px 0; border-left: 1px solid #3a3a3a; }
 .hub-schedule-form h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
@@ -16,6 +16,24 @@
 .hub-schedule-form .hub-schedule-attendees-list { max-height: 144px; height: auto; min-height: 28px; color-scheme: dark; }
 .hub-schedule-form textarea { min-height: 72px; }
 .hub-schedule-form > button[type=submit] { justify-self: end; }
+.hub-task-mini-card { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 7px 10px; border: 1px solid var(--brand-primary); border-radius: 8px; background: #2b2b2f; color: #ececec; font-size: 12px; font-weight: 600; cursor: pointer; }
+.hub-task-mini-card:hover { background: #353539; color: var(--brand-primary); }
+.hub-task-mini-card:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
+.hub-task-mini-card svg { color: var(--brand-primary); }
+.hub-task-flyout-form { padding: 0; border-top: 0; }
+.hub-task-flyout-form :is(input:not([type=checkbox]), textarea, select) { width: 100%; background: #303034; color: #ececec; border: 1px solid var(--brand-primary); border-radius: 8px; color-scheme: dark; }
+.hub-task-flyout-hint { color: #b3b3b3; font-size: 12px; }
+.hub-task-assignees > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-size: 13px; font-weight: 600; }
+.calendar-assignee-slider > button { min-height: 44px; font-size: 13px; font-weight: 700; }
+.calendar-assignee-slider > button[aria-pressed=true] { color: var(--brand-primary); }
+.calendar-assignee-slider .workday-status-switch.is-active .workday-switch-track { background: var(--brand-primary); }
+.gate-definition-days { display: flex; flex-wrap: wrap; gap: 8px; }
+.gate-definition-days label, .gate-definition-gates label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.gate-definition-gates { max-height: 180px; overflow-y: auto; }
+.gate-definition-watches { max-height: 200px; overflow-y: auto; font-size: 12px; }
+.gate-definition-watches li { display: grid; gap: 3px; padding: 8px 0; border-top: 1px solid #3a3a3a; }
+.gate-definition-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.gate-definition-actions .vendor-mini-card-button { min-width: 0; white-space: nowrap; }
 @media (max-width: 1023px) {
   .hub-schedule-body { grid-template-columns: minmax(0, 1fr); }
   .hub-schedule-form, .hub-schedule-form + .hub-schedule-form { padding: 14px 0 16px; border-left: 0; }

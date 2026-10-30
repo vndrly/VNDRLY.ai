@@ -1,10 +1,20 @@
+import DefineStaffRoles from "@/components/define-staff-roles";
 import { WORKFORCE_GROUPS, workforceCategories, workforceDisplayRoles } from "@/lib/vendor-workforce-groups";
 import StaffProfileDialog, { type StaffProfilePerson } from "@/components/staff-profile-dialog";
 import type { StaffType } from "@/lib/staff-profile";
 import "./employees-page.css";
+import "./vendor-profile.css";
+import StaffingSummaryList from "@/components/staffing-summary-list";
+import StaffEnrollmentControl from "@/components/staff-enrollment-control";
+import WorkforceGroupToggle from "@/components/workforce-group-toggle";
+import OrgMembersCard from "@/components/org-members-card";
+import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
+import RemovePill from "@/components/remove-pill";
+import { canManageVendorSubcontractors } from "@/lib/vendor-detail-visibility";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useListFieldEmployees, getListFieldEmployeesQueryKey, useGetVendor, useGetPartner, useListPartnerContacts, useCreatePartnerContact, useUpdatePartnerContact, getGetPartnerQueryKey, getListPartnerContactsQueryKey } from "@workspace/api-client-react";
+import { useDeleteVendorContact, useDeleteFieldEmployee, useListFieldEmployees, getListFieldEmployeesQueryKey, useGetVendor, useGetPartner, useListPartnerContacts, useCreatePartnerContact, useUpdatePartnerContact, getGetPartnerQueryKey, getListPartnerContactsQueryKey } from "@workspace/api-client-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn, formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -177,6 +187,10 @@ export default function FieldEmployees() {
   const [staffTarget, setStaffTarget] = useState<StaffProfilePerson | null>(null);
   const [staffCompanyId, setStaffCompanyId] = useState<number | null>(null);
   const [staffDefaultType, setStaffDefaultType] = useState<StaffType>("Office Staff");
+  const [staffDefaultRole, setStaffDefaultRole] = useState<string | undefined>();
+  const [expandedWorkforceGroups, setExpandedWorkforceGroups] = useState<Record<string, boolean>>({});
+  const toggleWorkforceGroup = (group: string) => setExpandedWorkforceGroups(previous => ({ ...previous, [group]: !previous[group] }));
+  const deleteContact = useDeleteVendorContact(), deleteEmployee = useDeleteFieldEmployee();
   const brand = useBrand();
   const accentColor = brand.isOrgBranded ? brand.primary : "#f59e0b";
   const iconStyle = { color: accentColor };
@@ -184,6 +198,23 @@ export default function FieldEmployees() {
   const vendorId = isVendor ? user!.vendorId! : null;
   const isPartner = user?.role === "partner" && !!user.partnerId;
   const partnerId = isPartner ? user!.partnerId! : null;
+  const canManageSubcontractors = !!vendorId && canManageVendorSubcontractors(user, vendorId);
+  const hoursCompanies = useQuery<{ items: { id: string; name: string }[] }>({
+    queryKey: ["managed-subcontractor-hours-access", user?.userId, user?.activeMembershipId, vendorId],
+    enabled: canManageSubcontractors,
+    queryFn: async () => {
+      const response = await fetch(`/api/vendors/${vendorId}/managed-subcontractors/hours-access`, { credentials: "include" });
+      if (!response.ok) return { items: [] };
+      return response.json();
+    },
+  });
+  const [hoursRange] = useState(() => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const end = new Date(start); end.setDate(end.getDate() + 1);
+    return { start: start.toISOString(), end: end.toISOString() };
+  });
+  const addStaff = (type: StaffType, role?: string) => { setStaffTarget(null); setStaffCompanyId(vendorId); setStaffDefaultType(type); setStaffDefaultRole(role); setStaffOpen(true); };
+  const openStaffProfile = (person: StaffProfilePerson) => { setStaffTarget(person); setStaffCompanyId(person.vendorId ?? vendorId); setStaffOpen(true); };
   const isForemanOnly =
     user?.role === "field_employee" &&
     (user.vendorRole === "foreman" || user.vendorRole === "both");
@@ -237,7 +268,7 @@ export default function FieldEmployees() {
     },
   });
 
-  const { data: companyOperations } = useQuery<{ categories: string[] }>({
+  const { data: companyOperations, isError: operationsError } = useQuery<{ categories: string[] }>({
     queryKey: ["company-operations", vendorId], enabled: !!vendorId,
     queryFn: async () => { const response = await fetch(`/api/company-operations?vendorId=${vendorId}`, { credentials: "include" }); if (!response.ok) throw new Error("Unable to load company operations"); return response.json(); },
   });
@@ -378,6 +409,24 @@ export default function FieldEmployees() {
   const workforceCards = WORKFORCE_GROUPS.filter(group => !isVendor || companyOperations?.categories.includes(group.category)).map(group => ({
     ...group, people: sortRows(filterByStatus(allStaff.filter(person => workforceCategories(person, accessByPersonId.get(person.id)?.operationalRoles).includes(group.category))), group.category === "gate" ? gateSort : fieldSort),
   }));
+  const contactIds = new Set((officeEmployees ?? []).map(person => person.id));
+  const staffingOfficePeople = sortedOffice.filter(person => !person.roles?.includes("Administrative Team"));
+  const staffingCategories = workforceCards.flatMap<{ category: "field" | "fleet" | "gate"; key: string; title: string; entryRole: string; people: PersonRow[] }>(group => group.category === "gate" ? [
+    { ...group, key: "gate_supervisor", title: "Gate Supervisors", entryRole: "Gate Supervisor", people: group.people.filter(person => workforceDisplayRoles("gate", person, accessByPersonId.get(person.id)?.operationalRoles).includes("gate_supervisor")) },
+    { ...group, key: "gate", entryRole: "Gatekeeper", people: group.people.filter(person => !workforceDisplayRoles("gate", person, accessByPersonId.get(person.id)?.operationalRoles).includes("gate_supervisor")) },
+  ] : [{ ...group, key: group.category, entryRole: group.category === "fleet" ? "Driver" : "Field Worker" }]);
+  const staffingRemoveControl = (person: { id: number; firstName: string; lastName: string }, source: "contact" | "employee") => <AlertDialog>
+    <AlertDialogTrigger asChild><RemovePill aria-label={`Remove ${person.firstName} ${person.lastName}`} /></AlertDialogTrigger>
+    <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Remove this employee?</AlertDialogTitle><AlertDialogDescription>{person.firstName} {person.lastName} will be hidden from your portal. A VNDRLY Admin can restore them if this was a mistake.</AlertDialogDescription></AlertDialogHeader>
+      <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => {
+        const onSuccess = () => { void queryClient.invalidateQueries({ predicate: query => /field-employees|vendor-contacts|org-members|staff-enrollments/.test(JSON.stringify(query.queryKey)) }); toast({ title: "Employee removed" }); };
+        const onError = () => toast({ title: "Unable to remove employee", variant: "destructive" });
+        if (source === "contact" && vendorId) deleteContact.mutate({ vendorId, contactId: person.id }, { onSuccess, onError });
+        else deleteEmployee.mutate({ id: person.id }, { onSuccess, onError });
+      }}>Remove</AlertDialogAction></AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>;
+
 
 
   const renderHeader = (
@@ -520,16 +569,12 @@ export default function FieldEmployees() {
           )}
         <BulkLoginUploadDialog visible={(isAdmin || isVendor) && !isPartner} />
         {isVendor && (
-          <button type="button" className="vendor-mini-card-button" data-testid="button-add-employee" onClick={() => { if (vendorId) { setStaffTarget(null); setStaffCompanyId(vendorId); setStaffDefaultType("Office Staff"); setStaffOpen(true); } }}>Add Staff</button>
+          <button type="button" className="vendor-mini-card-button" data-testid="button-add-employee" onClick={() => addStaff("Office Staff")}>Add Staff</button>
         )}
         </div>
       </div>
 
-      <Card data-testid="define-roles-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={iconStyle} />Define Roles</CardTitle>
-        </CardHeader>
-      </Card>
+      {vendorId && <DefineStaffRoles vendorId={vendorId} operations={companyOperations?.categories ?? []} logoSrc={vendorData?.logoSquareUrl || vendorData?.logoUrl || undefined} companyName={vendorData?.name} />}
 
       {isPartner ? (
         <Card>
@@ -617,6 +662,85 @@ export default function FieldEmployees() {
             )}
           </CardContent>
         </Card>
+      ) : isVendor && vendorId ? (
+        <>
+      {(isVendor || canManageSubcontractors) && <Card className="vendor-staffing-card" data-testid="vendor-staffing-card">
+      <CardHeader><CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{vendorData?.name ?? "Company"} Staffing</CardTitle></CardHeader>
+      <div className="vendor-staffing-categories">
+      {/* Hide the Members card unless the viewer is a system admin or
+          has an admin-role membership in THIS vendor — mirrors the
+          backend authz so non-admin org members don't see a card that
+          would 403 on every action. */}
+      {isVendor && <OrgMembersCard
+        embedded
+        onAddStaff={() => addStaff("Office Staff", "Team Member")}
+        pendingProfiles={(officeEmployees ?? []).filter(person => person.roles?.includes("Administrative Team"))}
+        onEditPendingProfile={personId => { const person = (officeEmployees ?? []).find(person => person.id === personId); if (person) openStaffProfile(person); }}
+        renderPendingProfileRemove={personId => { const person = (officeEmployees ?? []).find(person => person.id === personId); return person ? staffingRemoveControl(person, "contact") : undefined; }}
+        onEditStaff={(member) => {
+          const match = allStaff.find(person => person.email.toLowerCase() === member.username.toLowerCase());
+          if (match) { openStaffProfile(match); return true; }
+          const [firstName, ...rest] = member.displayName.split(" ");
+          setStaffCompanyId(vendorId); setStaffDefaultType("Office Staff"); setStaffDefaultRole(undefined);
+          setStaffTarget({ id: 0, vendorId, accountUserId: member.userId, isCompanyAdmin: member.role === "admin", firstName, lastName: rest.join(" "), email: member.username, vendorRole: member.role === "admin" ? "admin" : "office" });
+          setStaffOpen(true); return true;
+        }}
+        administrativeOnly
+        orgType="vendor"
+        orgId={vendorId}
+        canManage={
+          user?.role === "admin" ||
+          (user?.availableMemberships ?? []).some(
+            (m) => m.orgType === "vendor" && m.orgId === vendorId && m.role === "admin",
+          )
+        }
+        currentUserId={user?.userId ?? null}
+        onEditFieldMember={isVendor ? (m) => {
+          const emp = fieldEmployees?.find((e) => e.userId === m.userId);
+          if (emp) openStaffProfile(emp);
+        } : undefined}
+      />}
+
+
+      {isVendor && <section className="vendor-staffing-category">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle><WorkforceGroupToggle open={!!expandedWorkforceGroups.staff} onToggle={() => toggleWorkforceGroup("staff")}><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Staff Positions ({staffingOfficePeople.length})</WorkforceGroupToggle></CardTitle>
+          <button type="button" className="vendor-staffing-add-link" data-testid="button-add-contact" onClick={() => addStaff("Office Staff")}><Plus className="w-4 h-4" />Add Office Staff</button>
+        </CardHeader>
+        {expandedWorkforceGroups.staff && <CardContent className="p-0">
+          <StaffingSummaryList emptyText="No office staff added yet" people={staffingOfficePeople.map(person => ({
+            id: person.id, name: `${person.firstName} ${person.lastName}`, email: person.email, phone: person.phone,
+            role: person.jobTitle || "Office Staff", onOpen: () => { if (isVendor) openStaffProfile(person); },
+            enrollment: <StaffEnrollmentControl vendorId={vendorId} personKey={`person:${person.id}`} name={`${person.firstName} ${person.lastName}`} email={person.email} canManage={isVendor} />,
+            remove: staffingRemoveControl(person, "contact"),
+          }))} />
+        </CardContent>}
+      </section>}
+
+      {isVendor && staffingCategories.map(group => <section className="vendor-staffing-category" key={group.key} data-testid={`workforce-card-${group.key}`}>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle><WorkforceGroupToggle open={!!expandedWorkforceGroups[group.key]} onToggle={() => toggleWorkforceGroup(group.key)}><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{group.title} ({group.people.length})</WorkforceGroupToggle></CardTitle>
+          {isVendor && (
+            <button type="button" className="vendor-staffing-add-link" data-testid={`button-add-${group.key}-employee`} onClick={() => addStaff(group.category === "gate" ? "Gatekeeper" : group.category === "fleet" ? "Driver" : "Field Employee", group.entryRole)}><Plus className="w-4 h-4" />Add {group.entryRole}</button>
+          )}
+        </CardHeader>
+        {expandedWorkforceGroups[group.key] && <CardContent className="p-0">
+          <StaffingSummaryList emptyText={`No ${group.title.toLowerCase()} yet`} people={group.people.map(person => ({
+            id: person.id, name: `${person.firstName} ${person.lastName}`, email: person.email, phone: person.phone,
+            role: person.jobTitle || group.entryRole,
+            onOpen: () => openStaffProfile(person),
+            enrollment: <StaffEnrollmentControl vendorId={vendorId} personKey={`person:${person.id}`} name={`${person.firstName} ${person.lastName}`} email={person.email} />,
+            remove: staffingRemoveControl(person, contactIds.has(person.id) ? "contact" : "employee"),
+          }))} />
+        </CardContent>}
+      </section>)}
+      {canManageSubcontractors && <ManagedSubcontractorEmployeesCard vendorId={vendorId} embedded />}
+      </div>
+      </Card>}
+      {canManageSubcontractors && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel key={vendorId} vendorId={vendorId} companies={hoursCompanies.data!.items} start={hoursRange.start} end={hoursRange.end} />}
+      {isVendor && operationsError && <p role="alert">Unable to load workforce cards. Please refresh the page.</p>}
+
+        </>
       ) : (
         <>
           <Card>
@@ -740,7 +864,7 @@ export default function FieldEmployees() {
         </Dialog>
       )}
 
-      {staffCompanyId && <StaffProfileDialog open={staffOpen} onOpenChange={setStaffOpen} vendorId={staffCompanyId} person={staffTarget} defaultType={staffDefaultType} canVerify={canVerifyCerts} />}
+      {staffCompanyId && <StaffProfileDialog open={staffOpen} onOpenChange={setStaffOpen} vendorId={staffCompanyId} person={staffTarget} defaultType={staffDefaultType} defaultRole={staffDefaultRole} operationCategories={companyOperations?.categories} canVerify={canVerifyCerts} />}
     </div>
   );
 }

@@ -72,7 +72,7 @@ const SheetContent = React.forwardRef<
         ref={ref}
         className={cn(
           sheetVariants({ side }),
-          modalChrome && "flex flex-col overflow-hidden !bg-[#3a3d42] !p-0 text-gray-100",
+          modalChrome && "app-branded-modal flex flex-col overflow-hidden !bg-[#242426] !p-0 text-[#ececec]",
           className,
         )}
         {...props}
@@ -91,9 +91,9 @@ const SheetContent = React.forwardRef<
               <div ref={setHeaderHost} />
             </AppModalHeader>
             <div
-              className="min-h-0 flex-1 overflow-y-auto bg-[#d1d5db] p-6 text-gray-900"
+              className="min-h-0 flex-1 overflow-y-auto bg-transparent p-6 text-[#ececec]"
               data-testid="sheet-modal-body"
-              style={{ colorScheme: "light" }}
+              style={{ colorScheme: "dark" }}
             >
               {children}
             </div>

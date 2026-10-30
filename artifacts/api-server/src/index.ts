@@ -1,6 +1,7 @@
 import {startGateDailyBillingWorker,stopGateDailyBillingWorker} from "./services/gate-daily-billing-worker";
 import {startFleetMonitoringWorker,stopFleetMonitoringWorker} from "./services/fleet-monitoring";
 import {startOnboardingWorker,stopOnboardingWorker} from "./work-hub/onboarding-worker";
+import { startGateShiftDefinitionWorker, stopGateShiftDefinitionWorker } from "./work-hub/gate-shift-definition-worker";
 import { startFormCampaignWorker, stopFormCampaignWorker } from "./work-hub/form-campaign-worker";
 import { startInternalVoicemailWorker, stopInternalVoicemailWorker } from "./work-hub/call-voicemail-worker";
 import {startGatePostMonitor,stopGatePostMonitor} from "./services/gate-post-coverage";
@@ -187,6 +188,7 @@ function onListening(): void {
   startInternalVoicemailWorker();
 startFormCampaignWorker();
 startOnboardingWorker();
+startGateShiftDefinitionWorker();
   startGateCoverageMonitor();
   startGatePostMonitor();
   startInvoicePeriodWorker();
@@ -270,6 +272,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopInternalVoicemailWorker();
 stopFormCampaignWorker();
 stopOnboardingWorker();
+stopGateShiftDefinitionWorker();
   stopGateCoverageMonitor();
   stopGatePostMonitor();
   stopInvoicePeriodWorker();

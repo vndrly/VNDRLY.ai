@@ -21,12 +21,14 @@ function recordTime(item: Row) {
 }
 
 /** The iOS month/day layout, using the web calendar's existing authorized records. */
-export default function WorkCalendar({ month, selectedDay, items, onSelectDay, onOpenDay, onSchedule, scheduling, loading, unavailable, filters, personalShifts }: {
+export default function WorkCalendar({ month, selectedDay, items, onSelectDay, onOpenDay, onSchedule, scheduling, loading, unavailable, filters, personalShifts, taskControl, scheduleControl }: {
   month: Date; selectedDay: string; items: Row[];
   onSelectDay: (day: string) => void; onOpenDay: () => void;
   onSchedule?: () => void; scheduling: boolean; loading: boolean; unavailable: boolean;
   filters: ReactNode;
   personalShifts?: ReactNode;
+  taskControl?: ReactNode;
+  scheduleControl?: ReactNode;
 }) {
   const selected = items.filter(item => dayKey(item.startsAt) === selectedDay);
   const move = (offset: number) => onSelectDay(localDateKey(new Date(month.getFullYear(), month.getMonth() + offset, 1)));
@@ -38,7 +40,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     { kind: "Fleet Run", title: "Fleet runs", icon: Truck },
   ].map(group => ({ ...group, rows: selected.filter(item => item.kind === group.kind) })).filter(group => group.rows.length && !(personalShifts && group.kind==='Shift'));
   return <><section className="hub-work-calendar" aria-label="Work calendar">
-    <div className="hub-calendar-heading"><h2>Work calendar</h2>{onSchedule && <BrandPillButton tone="brand" aria-expanded={scheduling} onClick={onSchedule}>{scheduling ? "Close scheduling" : "Schedule"}</BrandPillButton>}</div>
+    <div className="hub-calendar-heading"><h2>Work calendar</h2><div className="flex flex-wrap items-center gap-2">{taskControl}{scheduleControl ?? (onSchedule && <BrandPillButton tone="brand" aria-expanded={scheduling} onClick={onSchedule}>{scheduling ? "Close scheduling" : "Schedule"}</BrandPillButton>)}</div></div>
     <p className="hub-calendar-muted">Daily company work across shifts, meetings, tasks, and scheduled operations. Scheduling reserves planned time; it does not start work.</p>
     <div className="hub-month-navigation">
       <button type="button" className="group inline-flex min-h-11 min-w-11 items-center justify-center justify-self-start rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]" aria-label="Previous month" onClick={() => move(-1)}><SphereBackButton size={40} /></button>

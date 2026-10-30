@@ -1,0 +1,15 @@
+.define-staff-roles { background:#242426; color:#ececec; }
+.define-staff-roles > div:first-child { display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px; }
+.define-staff-roles [data-slot="card-title"] { display:flex;align-items:center;gap:8px;margin:0; }
+.define-staff-roles svg { color:var(--brand-primary); }
+.define-staff-roles [data-slot="card-content"] { padding:0 16px 12px; }
+.define-staff-roles details + details { margin-top:8px; }
+.define-staff-roles summary { cursor:pointer;font-size:13px;font-weight:600; }
+.staff-role-directory { display:flex;gap:6px 16px;flex-wrap:wrap;padding:10px 0 2px; }
+.staff-role-directory button { color:#b8b8bc;text-align:left;font-size:12px; }
+.staff-role-directory button:hover:not(:disabled) { color:var(--brand-primary); }
+.staff-role-platform { color:#b8b8bc;font-size:12px;margin-top:8px; }
+.staff-role-form { display:grid;gap:12px; }
+.staff-role-form select { width:100%;padding:8px;background:#303033;border:1px solid var(--brand-primary);border-radius:5px;color:#eee; }
+.staff-role-form [role="alert"] { color:#fca5a5;font-size:13px; }
+.staff-role-actions { display:flex;gap:8px;justify-content:flex-end; }

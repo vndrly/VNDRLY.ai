@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.13
+
+Matches compact employee staffing summaries, company-defined reusable staff positions, shared enrollment flows, recurring Gate shift definitions, unassigned task creation, coverage assignment and branded flyouts. VNDRLY operational roles remain separate from editable company staffing positions. Existing MCP tools, embedded views, five service skills, branding, plugin identity and grants are preserved. This full ship includes production web/API, guarded database migrations, OTA and native TestFlight submission. Submission, approval and public availability remain separate states.
+
 # VNDRLY plugin 1.22.12
 
 Matches the shared employee profile, company staff types and functional roles, vendor-managed contracted workforce, and refreshed CompanyGo operational scenarios. Gate staffing includes active site-authorized sponsored workers while qualification and enrollment checks remain enforced. Existing MCP tools, five service skills, app identity, connected accounts and permission grants are preserved. No TestFlight build is part of this release.

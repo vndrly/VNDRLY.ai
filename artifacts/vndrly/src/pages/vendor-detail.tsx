@@ -1,6 +1,3 @@
-import StaffProfileDialog, { type StaffProfilePerson } from "@/components/staff-profile-dialog";
-import type { StaffType } from "@/lib/staff-profile";
-import { WORKFORCE_GROUPS, workforceCategories, workforceDisplayRoles } from "@/lib/vendor-workforce-groups";
 import VendorOperatingArea from "@/components/vendor-operating-area";
 import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
 import "./vendor-profile.css";
@@ -38,7 +35,6 @@ import {
   matchVendor,
 } from "@workspace/api-client-react";
 import type { MatchVendorResponseItem } from "@workspace/api-client-react";
-import { useEligibleVendorFieldEmployeesByVendorId } from "@/hooks/use-eligible-vendor-field-employees";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_CLASS } from "@/components/ui/card";
@@ -69,54 +65,19 @@ import RoleBadge from "@/components/role-badge";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import EmployeePortalLoginFields from "@/components/employee-portal-login-fields";
 import { useAuth } from "@/hooks/use-auth";
-import OrgMembersCard from "@/components/org-members-card";
 import VendorPartnerRelationshipsCard from "@/components/vendor-partner-relationships-card";
-import ManagedSubcontractorEmployeesCard from "@/components/managed-subcontractor-employees-card";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { PlatformEulaModal } from "@/components/platform-eula-modal";
-import { canManageVendorSubcontractors, canViewVendorOfficeEmployees } from "@/lib/vendor-detail-visibility";
 
 export default function VendorDetail({ id }: { id: number }) {
-  const [staffOpen, setStaffOpen] = useState(false);
-  const [staffTarget, setStaffTarget] = useState<StaffProfilePerson | null>(null);
-  const [staffDefaultType, setStaffDefaultType] = useState<StaffType>("Office Staff");
-  const addStaff = (type: StaffType) => { setStaffTarget(null); setStaffDefaultType(type); setStaffOpen(true); };
   const brand = useBrand();
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const isOwnVendor = authUser?.role === "vendor" && authUser.vendorId === id;
   const canEditVendor = authUser?.role === "admin" || isOwnVendor;
-  const canViewOfficeEmployees = canViewVendorOfficeEmployees(authUser?.role, isOwnVendor);
   const { data: vendor, isLoading } = useGetVendor(id, { query: { enabled: !!id, queryKey: getGetVendorQueryKey(id) } });
-  // Task #523: source the field-employee list through the shared hook so
-  // every vendor-facing surface that lists vendor_people goes through the
-  // same active-vendor + isActive defense (the table is read-only, but
-  // routing it through the shared helper keeps invalidation and filtering
-  // identical to the pickers and avoids future drift). The shared hook
-  // already calls useListFieldEmployees({ vendorId: id }) under the hood,
-  // so the queryKey lines up with the existing
-  // getListFieldEmployeesQueryKey({ vendorId: id }) invalidations below.
-  const { eligibleForemen: employees } =
-    useEligibleVendorFieldEmployeesByVendorId(id, canEditVendor);
-  const { data: contacts } = useListVendorContacts(id, undefined, { query: { enabled: !!id && canViewOfficeEmployees, queryKey: getListVendorContactsQueryKey(id) } });
-  const { data: companyOperations, isError: operationsError } = useQuery({
-    queryKey: ["company-operations", id], enabled: !!id && canEditVendor,
-    queryFn: async (): Promise<{ categories: string[] }> => {
-      const response = await fetch(`/api/company-operations?vendorId=${id}`, { credentials: "include" });
-      if (!response.ok) throw new Error("Unable to load company operations");
-      return response.json();
-    },
-  });
-  const { data: workforceAccess } = useQuery({
-    queryKey: ["vendor-people-access", id], enabled: !!id && canEditVendor, retry: false,
-    queryFn: async (): Promise<{ people: { vendorPeopleId: number; operationalRoles: string[] }[] }> => {
-      const response = await fetch(`/api/vendors/${id}/people-access`, { credentials: "include" });
-      if (!response.ok) throw new Error("Unable to load employee duties");
-      return response.json();
-    },
-  });
   const { data: notes } = useListVendorNotes(id, { query: { enabled: !!id && (authUser?.role === "admin" || authUser?.role === "partner" || isOwnVendor), queryKey: [...getListVendorNotesQueryKey(id), authUser?.role, authUser?.partnerId, authUser?.vendorId] } });
   const updateVendor = useUpdateVendor();
   const removeVendor = useDeleteVendor();
@@ -376,53 +337,6 @@ export default function VendorDetail({ id }: { id: number }) {
     );
   };
 
-  type ContactSortKey = "jobTitle" | "firstName" | "email" | "phone" | "vendorRole";
-  type EmpSortKey = "jobTitle" | "name" | "email" | "phone" | "vendorRole" | "pecStatus";
-  type SortDir = "asc" | "desc";
-  const [contactSort, setContactSort] = useState<{ key: ContactSortKey; dir: SortDir }>({ key: "firstName", dir: "asc" });
-  const [empSort, setEmpSort] = useState<{ key: EmpSortKey; dir: SortDir }>({ key: "name", dir: "asc" });
-
-  const toggleContactSort = (key: ContactSortKey) => {
-    setContactSort((prev) => prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
-  };
-  const toggleEmpSort = (key: EmpSortKey) => {
-    setEmpSort((prev) => prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
-  };
-
-  const getPecSortValue = (exp: string | null) => {
-    if (!exp) return 2;
-    const diff = new Date(exp + "T00:00:00").getTime() - new Date().setHours(0, 0, 0, 0);
-    if (diff < 0) return 2;
-    if (diff <= 30 * 86400000) return 1;
-    return 0;
-  };
-
-  const officeContacts = (contacts ?? []).filter(person => {
-    const access = workforceAccess?.people.find(row => row.vendorPeopleId === person.id)?.operationalRoles;
-    return access?.length ? access.includes("office") || person.vendorRole === "admin" : ["admin", "office", "both"].includes(person.vendorRole ?? "office");
-  });
-  const sortedContacts = [...officeContacts].sort((a, b) => {
-    const dir = contactSort.dir === "asc" ? 1 : -1;
-    const k = contactSort.key;
-    if (k === "vendorRole") return dir * (a.vendorRole || "office").localeCompare(b.vendorRole || "office");
-    const av = (a as any)[k] || "";
-    const bv = (b as any)[k] || "";
-    return dir * String(av).localeCompare(String(bv));
-  });
-
-  const workforcePeople = [...new Map([
-    ...(contacts ?? []).map(person => ({ ...person, vendorRole: person.vendorRole ?? "office", pecCertification: person.pecCertification ?? false, source: "contact" as const })),
-    ...(employees ?? []).map(person => ({ ...person, vendorRole: person.vendorRole ?? "field", source: "employee" as const })),
-  ].map(person => [person.id, person])).values()];
-  const workforceCards = WORKFORCE_GROUPS.filter(group => companyOperations?.categories.includes(group.category)).map(group => ({
-    ...group,
-    people: workforcePeople.filter(person => workforceCategories(person, workforceAccess?.people.find(row => row.vendorPeopleId === person.id)?.operationalRoles).includes(group.category)).sort((a, b) => {
-      const dir = empSort.dir === "asc" ? 1 : -1;
-      if (empSort.key === "name") return dir * `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
-      if (empSort.key === "pecStatus") return dir * (getPecSortValue(a.pecExpirationDate ?? null) - getPecSortValue(b.pecExpirationDate ?? null));
-      return dir * String(a[empSort.key] ?? "").localeCompare(String(b[empSort.key] ?? ""));
-    }),
-  }));
 
   const openEditDialog = () => {
     if (vendor) {
@@ -489,44 +403,6 @@ export default function VendorDetail({ id }: { id: number }) {
   };
 
 
-
-  const openEditContactDialog = (contact: { id: number; jobTitle: string | null; firstName: string; lastName: string; email: string; phone: string | null; vendorRole?: string; pecCertification?: boolean; pecExpirationDate?: string | null; photoUrl?: string | null; roles?: string[] | null }) => {
-    setStaffTarget(contact); setStaffOpen(true);
-  };
-
-
-
-  const handleDeleteContact = (contactId: number) => {
-    deleteContact.mutate(
-      { vendorId: id, contactId },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListVendorContactsQueryKey(id) });
-          queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey({ vendorId: id }) });
-          toast({ title: "Contact removed" });
-        },
-      },
-    );
-  };
-
-  const openEditEmployeeDialog = (emp: { id: number; jobTitle?: string | null; firstName: string; lastName: string; email: string; phone: string | null; pecCertification: boolean; pecExpirationDate: string | null; vendorRole?: string | null; photoUrl?: string | null; roles?: string[] | null }) => {
-    setStaffTarget(emp); setStaffOpen(true);
-  };
-
-
-
-  const handleDeleteEmployee = (employeeId: number) => {
-    deleteEmployee.mutate(
-      { id: employeeId },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey({ vendorId: id }) });
-          queryClient.invalidateQueries({ queryKey: getListVendorContactsQueryKey(id) });
-          toast({ title: "Employee removed" });
-        },
-      },
-    );
-  };
 
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
@@ -864,164 +740,6 @@ export default function VendorDetail({ id }: { id: number }) {
 
       <VendorRatingsCard vendorId={id} />
 
-      {/* Hide the Members card unless the viewer is a system admin or
-          has an admin-role membership in THIS vendor — mirrors the
-          backend authz so non-admin org members don't see a card that
-          would 403 on every action. */}
-      {canEditVendor && <OrgMembersCard
-        onAddStaff={() => addStaff("Office Staff")}
-        onEditStaff={(member) => {
-          const match = workforcePeople.find(person => person.email.toLowerCase() === member.username.toLowerCase());
-          if (match) { setStaffTarget(match); setStaffOpen(true); return true; }
-          const [firstName, ...rest] = member.displayName.split(" ");
-          setStaffTarget({ id: 0, vendorId: id, accountUserId: member.userId, isCompanyAdmin: member.role === "admin", firstName, lastName: rest.join(" "), email: member.username, vendorRole: member.role === "admin" ? "admin" : "office" });
-          setStaffOpen(true); return true;
-        }}
-        administrativeOnly
-        orgType="vendor"
-        orgId={id}
-        canManage={
-          authUser?.role === "admin" ||
-          (authUser?.availableMemberships ?? []).some(
-            (m) => m.orgType === "vendor" && m.orgId === id && m.role === "admin",
-          )
-        }
-        currentUserId={authUser?.userId ?? null}
-        onEditFieldMember={canEditVendor ? (m) => {
-          const emp = employees?.find((e) => e.userId === m.userId);
-          if (emp) openEditEmployeeDialog(emp);
-        } : undefined}
-      />}
-
-
-      {canViewOfficeEmployees && <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Office Staff ({officeContacts.length})</CardTitle>
-          <button type="button" className="vendor-mini-card-button" data-testid="button-add-contact" onClick={() => addStaff("Office Staff")}><Plus className="w-4 h-4" />Add Office Staff</button>
-        </CardHeader>
-        <CardContent className="p-0">
-          {officeContacts.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {([["jobTitle", "Job Title", "w-[150px]"], ["firstName", "Name", "w-[20%]"], ["email", "Email", "w-[22%]"], ["phone", "Phone", "w-[12%]"], ["vendorRole", "Role", "w-[80px]"], ["pecStatus", "PEC Status", "w-[100px]"]] as const).map(([key, label, w]) => (
-                    <TableHead key={key} className={`${w} cursor-pointer select-none`} onClick={() => toggleContactSort(key as ContactSortKey)}>
-                      <div className="flex items-center gap-1">{label}{contactSort.key === key ? (contactSort.dir === "asc" ? <ArrowUp className="w-3 h-3" style={{ color: "var(--brand-primary)" }} /> : <ArrowDown className="w-3 h-3" style={{ color: "var(--brand-primary)" }} />) : null}</div>
-                    </TableHead>
-                  ))}
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedContacts.map((c) => (
-                  <TableRow key={c.id} className={canEditVendor ? "group cursor-pointer hover:bg-muted/50" : ""} onClick={canEditVendor ? () => openEditContactDialog(c) : undefined} data-testid={`row-contact-${c.id}`}>
-                    <TableCell className="font-medium">{c.jobTitle}</TableCell>
-                    <TableCell><div className="flex items-center gap-2 text-gray-700 group-hover:text-[var(--brand-primary)] transition-colors">{c.photoUrl ? <img src={c.photoUrl} alt="" className="w-6 h-6 rounded-full object-cover border border-gray-200" /> : <UserCheck className="w-4 h-4" style={{ color: "var(--brand-primary)" }} />}{c.firstName} {c.lastName}</div></TableCell>
-                    <TableCell>{c.email}</TableCell>
-                    <TableCell>{formatPhone(c.phone)}</TableCell>
-                    <TableCell>
-                      <RoleBadge role={c.vendorRole} />
-                    </TableCell>
-                    <TableCell>
-                      <PecStatusBadge expirationDate={c.pecExpirationDate || null} />
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      {canEditVendor && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <RemovePill data-testid={`button-delete-contact-${c.id}`} />
-                          </AlertDialogTrigger>
-                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove this contact?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {c.firstName} {c.lastName} will be hidden from your portal. A VNDRLY Admin can restore them if this was a mistake.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteContact(c.id)} data-testid={`button-delete-contact-confirm-${c.id}`}>Remove</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="p-6 text-center text-muted-foreground text-sm">No contacts added yet</div>
-          )}
-        </CardContent>
-      </Card>}
-
-      {canEditVendor && workforceCards.map(group => <Card key={group.category} data-testid={`workforce-card-${group.category}`}>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{group.title} ({group.people.length})</CardTitle>
-          {canEditVendor && (
-            <button type="button" className="vendor-mini-card-button" data-testid={`button-add-${group.category}-employee`} onClick={() => addStaff(group.category === "gate" ? "Gatekeeper" : group.category === "fleet" ? "Driver" : "Field Employee")}><Plus className="w-4 h-4" />Add {group.category === "gate" ? "Gatekeeper" : group.category === "fleet" ? "Driver" : "Field Employee"}</button>
-          )}
-        </CardHeader>
-        <CardContent className="p-0">
-          {group.people.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {([["jobTitle", "Job Title", "w-[150px]"], ["name", "Name", "w-[20%]"], ["email", "Email", "w-[22%]"], ["phone", "Phone", "w-[12%]"], ["vendorRole", "Role", "w-[80px]"], ["pecStatus", "PEC Status", "w-[100px]"]] as const).map(([key, label, w]) => (
-                    <TableHead key={key} className={`${w} cursor-pointer select-none`} onClick={() => toggleEmpSort(key as EmpSortKey)}>
-                      <div className="flex items-center gap-1">{label}{empSort.key === key ? (empSort.dir === "asc" ? <ArrowUp className="w-3 h-3" style={{ color: "var(--brand-primary)" }} /> : <ArrowDown className="w-3 h-3" style={{ color: "var(--brand-primary)" }} />) : null}</div>
-                    </TableHead>
-                  ))}
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {group.people.map((emp) => (
-                  <TableRow key={emp.id} className={canEditVendor ? "group cursor-pointer hover:bg-muted/50" : ""} onClick={canEditVendor ? () => emp.source === "contact" ? openEditContactDialog(emp) : openEditEmployeeDialog(emp) : undefined} data-testid={`row-${group.category}-employee-${emp.id}`}>
-                    <TableCell className="font-medium">{emp.jobTitle || "-"}</TableCell>
-                    <TableCell className="font-medium"><div className="flex items-center gap-2 text-gray-700 group-hover:text-[var(--brand-primary)] transition-colors">{emp.photoUrl ? <img src={emp.photoUrl} alt="" className="w-6 h-6 rounded-full object-cover border border-gray-200" /> : <UserCheck className="w-4 h-4" style={{ color: "var(--brand-primary)" }} />}{emp.firstName} {emp.lastName}</div></TableCell>
-                    <TableCell>{emp.email}</TableCell>
-                    <TableCell>{formatPhone(emp.phone)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">{workforceDisplayRoles(group.category, emp, workforceAccess?.people.find(row => row.vendorPeopleId === emp.id)?.operationalRoles).map(role => <RoleBadge key={role} role={role} />)}</div>
-                    </TableCell>
-                    <TableCell>
-                      <PecStatusBadge expirationDate={emp.pecExpirationDate || null} />
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      {canEditVendor && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <RemovePill data-testid={`button-delete-employee-${emp.id}`} />
-                          </AlertDialogTrigger>
-                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove this employee?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {emp.firstName} {emp.lastName} will be hidden from your portal. A VNDRLY Admin can restore them if this was a mistake.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => emp.source === "contact" ? handleDeleteContact(emp.id) : handleDeleteEmployee(emp.id)} data-testid={`button-delete-employee-confirm-${emp.id}`}>Remove</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="p-8 text-center text-muted-foreground"><p>No {group.title.toLowerCase()} yet</p></div>
-          )}
-        </CardContent>
-      </Card>)}
-      {canManageVendorSubcontractors(authUser, id) && <ManagedSubcontractorEmployeesCard vendorId={id} />}
-      {canEditVendor && operationsError && <p role="alert">Unable to load workforce cards. Please refresh the page.</p>}
-
       {canEditVendor && <VendorPartnerRelationshipsCard vendorId={id} />}
 
 
@@ -1079,7 +797,6 @@ export default function VendorDetail({ id }: { id: number }) {
 
 
 
-      <StaffProfileDialog open={staffOpen} onOpenChange={setStaffOpen} vendorId={id} person={staffTarget} defaultType={staffDefaultType} canVerify={authUser?.role === "admin" || (authUser?.availableMemberships ?? []).some(m => m.orgType === "vendor" && m.orgId === id && m.role === "admin")} />
       <PlatformEulaModal open={platformEulaOpen} onOpenChange={setPlatformEulaOpen} />
     </div>
   );

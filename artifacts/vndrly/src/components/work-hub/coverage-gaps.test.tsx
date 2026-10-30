@@ -45,7 +45,7 @@ const facts: CoverageFacts = {
   readOnly: true,
 };
 function mount(node: React.ReactNode) {
-  render(
+  return render(
     <QueryClientProvider
       client={
         new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -138,6 +138,23 @@ describe("coverage classification", () => {
   });
 });
 describe("coverage board", () => {
+  it('shows only the next seven days without a second heading or date controls',async()=>{
+    state.request.mockImplementation(async path=>{
+      if(path.includes('coverage-facts'))return facts;
+      if(path.includes('/schedule'))return {shifts:[],people:[],busy:[],readOnly:false};
+      return {sites:[{id:9,name:'Gate'}]};
+    });
+    const {container}=mount(<CoverageGaps owner={{type:'vendor',id:5}}/>);
+    expect(screen.getByText('Next 7 Days')).toBeTruthy();
+    expect(screen.queryByText('Unfilled scheduled shifts')).toBeNull();
+    expect(screen.queryByLabelText('Coverage from')).toBeNull();
+    expect(screen.queryByLabelText('Coverage through')).toBeNull();
+    expect(container.querySelector('.hub-coverage-content')?.tagName).toBe('DIV');
+    await waitFor(()=>expect(state.request.mock.calls.some(([path])=>path.includes('coverage-facts'))).toBe(true));
+    const path=state.request.mock.calls.find(([path])=>path.includes('coverage-facts'))![0];
+    const params=new URLSearchParams(path.split('?')[1]);
+    expect((Date.parse(params.get('through')!)-Date.parse(params.get('from')!))/86400000).toBe(6);
+  });
   it.each(['Approve','Decline'])('requires %s before offering a request replacement',async action=>{
     let status='pending';
     state.request.mockImplementation(async(path,options)=>{
@@ -182,7 +199,7 @@ describe("coverage board", () => {
     fireEvent.click(screen.getByRole('button',{name:'Reassign'}));
     await screen.findByRole('option',{name:'Replacement'});
     fireEvent.change(screen.getByLabelText('Coverage replacement gatekeeper'),{target:{value:'8'}});
-    fireEvent.click(screen.getByRole('button',{name:'Assign'}));
+    fireEvent.click(screen.getByRole('button',{name:'(Re)Assign'}));
     expect(screen.getByRole('button',{name:'Yes Reassign Shift'})).toBeTruthy();
     expect(screen.queryByText('TEMP covers this shift only.')).toBeNull();
     expect(state.request.mock.calls.every(c=>!c[1]?.method)).toBe(true);
@@ -210,13 +227,13 @@ describe("coverage board", () => {
     mount(<CoverageGaps owner={{type:"vendor",id:5}}/>);
     const category=await screen.findByRole("button",{name:/New \/ Unassigned Recurring Shifts/});
     await waitFor(()=>expect(category.textContent).toContain("2 total"));
-    expect(screen.queryByText("Needs gatekeeper")).toBeNull();
+    expect(screen.queryByText(/1 open/)).toBeNull();
     fireEvent.click(category);
-    expect(screen.getByText("Needs gatekeeper")).toBeTruthy();
+    expect(screen.getByText(/1 open/)).toBeTruthy();
     expect(screen.getByText("Needs shift setup")).toBeTruthy();
     expect(screen.queryByRole("button",{name:/New \/ unscheduled locations/})).toBeNull();
     fireEvent.click(category);
-    expect(screen.queryByText("Needs gatekeeper")).toBeNull();
+    expect(screen.queryByText(/1 open/)).toBeNull();
     expect(screen.queryByText("Needs shift setup")).toBeNull();
     expect(state.request.mock.calls.every(c=>!c[1]?.method)).toBe(true);
   });
@@ -244,13 +261,34 @@ describe("coverage board", () => {
     });
     mount(<CoverageGaps owner={{ type: "vendor", id: 5 }} />);
   }
+  it('opens the top-line assignment link and cancels with X or Cancel without saving',async()=>{
+    setup(false,true);
+    const category=await screen.findByRole('button',{name:/New \/ Unassigned Recurring Shifts/});
+    await waitFor(()=>expect(category.textContent).toContain('1 total'));
+    fireEvent.click(category);
+    const link=screen.getByRole('button',{name:'(Re)Assign'});
+    expect(link.parentElement?.className).toBe('hub-coverage-entry-heading');
+    expect(screen.queryByText(/Needs gatekeeper/)).toBeNull();
+    fireEvent.click(link);
+    expect(screen.getByRole('dialog',{name:'(Re)Assign Coverage'})).toBeTruthy();
+    expect(screen.getByRole('switch',{name:'TEMP / PERM'}).getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(screen.getByRole('switch',{name:'TEMP / PERM'}));
+    expect(screen.getByRole('switch',{name:'TEMP / PERM'}).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText('Recurring assignment from this shift onward')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button',{name:'Cancel'}));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button',{name:'(Re)Assign'}));
+    fireEvent.click(screen.getByRole('button',{name:'Close (re)assign coverage'}));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(state.request.mock.calls.every(c=>!c[1]?.method)).toBe(true);
+  });
   it("assigns an empty shift directly with one mocked save and no review step", async () => {
     setup(false, true);
     const category = await screen.findByRole("button", {name:/New \/ Unassigned Recurring Shifts/});
     await waitFor(()=>expect(category.textContent).toContain("1 total"));
     fireEvent.click(category);
     fireEvent.click(await screen.findByRole("button", {name:/Main Gate Day/}));
-    const assign = screen.getByRole("button", {name:"Assign"}) as HTMLButtonElement;
+    const assign = screen.getByRole("button", {name:"(Re)Assign"}) as HTMLButtonElement;
     expect(assign.disabled).toBe(true);
     expect(screen.queryByText("Coverage Resolution")).toBeNull();
     expect(screen.getByRole("region",{name:/Assign coverage for/})).toBeTruthy();
@@ -264,7 +302,7 @@ describe("coverage board", () => {
     const body = JSON.parse(state.request.mock.calls.find(c=>c[1]?.method==='POST')![1].body);
     expect(body.payload).toMatchObject({shiftId:"one",originalUserId:null,replacementUserId:8});
   });
-  it("shows inline controls with green names and prevents read-only saves", async () => {
+  it("shows flyout controls with green names and prevents read-only saves", async () => {
     setup();
     const category = await screen.findByRole("button", {name:/Shift requested off/});
     await waitFor(()=>expect(category.textContent).toContain("1 total"));
@@ -287,10 +325,10 @@ describe("coverage board", () => {
     fireEvent.change(screen.getByLabelText("Coverage replacement gatekeeper"), {
       target: { value: "8" },
     });
-    fireEvent.click(screen.getByText("Assign"));
+    fireEvent.click(screen.getByRole("button",{name:"(Re)Assign"}));
     expect(state.request.mock.calls.every(c=>!c[1]?.method)).toBe(true);
     expect(
-      (screen.getByText("Assign") as HTMLButtonElement)
+      (screen.getByRole("button",{name:"(Re)Assign"}) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
     expect(state.request.mock.calls.every((c) => !c[1]?.method)).toBe(true);
@@ -311,7 +349,7 @@ describe("coverage board", () => {
     await screen.findByRole("option", {name:"Replacement"});
     fireEvent.change(screen.getByLabelText("Coverage replacement gatekeeper"), {target:{value:"8"}});
     expect(state.request.mock.calls.every((c) => !c[1]?.method)).toBe(true);
-    fireEvent.click(screen.getByText("Assign"));
+    fireEvent.click(screen.getByRole("button",{name:"(Re)Assign"}));
     expect(state.request.mock.calls.every(c=>!c[1]?.method)).toBe(true);
     fireEvent.click(screen.getByText("Yes Reassign Shift"));
     await waitFor(() =>

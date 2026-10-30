@@ -1,15 +1,14 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, CheckSquare2 } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import BrandPillButton from "@/components/brand-pill-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { BrandedSelect } from "@/components/work-hub/chrome";
 import { WorkspacePanel } from "./workspace-panel";
 import "./calendar-create-cards.css";
-import SplitToggleHalf from "@/components/split-toggle-half";
-import { useBrand } from "@/hooks/use-brand";
-import { pickTogglePillSrc, splitToggleDividerClass, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
+import Picker from "./calendar-assignee-picker";
+import { FormattedDateTimeInput, parseTaskDateTime } from "./formatted-date-time-input";
 import {
   commandEnvelope,
   createWorkHubOperationId,
@@ -29,58 +28,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <label className="grid gap-1 text-sm font-medium"><span>{label}</span>{children}</label>;
 }
 
-function Picker({
-  people,
-  crews,
-  userIds,
-  crewIds,
-  onUsers,
-  onCrews,
-}: {
-  people: Row[];
-  crews: Row[];
-  userIds: number[];
-  crewIds: string[];
-  onUsers: (ids: number[]) => void;
-  onCrews: (ids: string[]) => void;
-}) {
-  const [mode, setMode] = useState<"crews" | "individuals">("crews");
-  const brand = useBrand();
-  const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-  const toggle = <T,>(values: T[], value: T) =>
-    values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
-  return (
-    <div className="hub-schedule-attendees grid gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold">Assign attendees</p>
-        <div className="inline-flex items-stretch overflow-hidden rounded-full" data-testid="calendar-assignee-toggle">
-          <SplitToggleHalf side="left" active={mode === "crews"} pillSrc={mode === "crews" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setMode("crews")} aria-pressed={mode === "crews"}>Crews</SplitToggleHalf>
-          <span aria-hidden className={`w-px shrink-0 self-stretch ${splitToggleDividerClass("light")}`} />
-          <SplitToggleHalf side="right" active={mode === "individuals"} pillSrc={mode === "individuals" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setMode("individuals")} aria-pressed={mode === "individuals"}>Individuals</SplitToggleHalf>
-        </div>
-      </div>
-      <div
-        className="hub-schedule-attendees-list grid content-start gap-2 overflow-y-auto pr-1"
-        data-testid="calendar-assignee-list"
-        style={{ colorScheme: "light" }}
-      >
-        {mode === "crews" ? crews.map((crew) => (
-          <label key={crew.id} className="flex items-center gap-2 text-sm">
-            <input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] bg-white accent-[var(--brand-primary)]" style={{ colorScheme: "light", accentColor: "var(--brand-primary)" }} type="checkbox" checked={crewIds.includes(crew.id)} onChange={() => onCrews(toggle(crewIds, crew.id))} />
-            {crew.name}
-          </label>
-        )) : people.map((person) => (
-          <label key={person.id} className="flex items-center gap-2 text-sm">
-            <input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] bg-white accent-[var(--brand-primary)]" style={{ colorScheme: "light", accentColor: "var(--brand-primary)" }} type="checkbox" checked={userIds.includes(person.id)} onChange={() => onUsers(toggle(userIds, person.id))} />
-            {person.displayName || person.email}
-          </label>
-        ))}
-        {mode === "crews" && !crews.length && <p className="text-xs text-muted-foreground">No eligible crews found.</p>}
-        {mode === "individuals" && !people.length && <p className="text-xs text-muted-foreground">No eligible employees found.</p>}
-      </div>
-    </div>
-  );
-}
 
 async function expandedUsers(userIds: number[], crewIds: string[]) {
   const members = await Promise.all(
@@ -120,17 +67,9 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
     queryFn: () => gateRequest(`/stations?siteId=${form.siteLocationId}`),
     enabled: form.kind === "shift" && form.shiftType === "gate" && Boolean(form.siteLocationId),
   });
-  const [task, setTask] = useState({
-    title: "",
-    description: "",
-    dueAt: "",
-    priority: "normal",
-    userIds: [] as number[],
-    crewIds: [] as string[],
-  });
   const durationMinutes = useMemo(() => {
-    const start = new Date(form.startsAt).getTime();
-    const end = new Date(form.endsAt).getTime();
+    const start = parseTaskDateTime(form.startsAt)?.getTime() ?? NaN;
+    const end = parseTaskDateTime(form.endsAt)?.getTime() ?? NaN;
     return Number.isFinite(start) && Number.isFinite(end) && end > start
       ? Math.max(5, Math.round((end - start) / 60_000))
       : 60;
@@ -166,8 +105,8 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
               form.mandatory ? "Mandatory attendance." : "",
               form.notes,
             ].filter(Boolean).join("\n\n"),
-            startsAt: new Date(form.startsAt).toISOString(),
-            endsAt: new Date(form.endsAt).toISOString(),
+            startsAt: parseTaskDateTime(form.startsAt)!.toISOString(),
+            endsAt: parseTaskDateTime(form.endsAt)!.toISOString(),
             timezone,
             recordingAllowed: false,
             participantUserIds: attendeeIds,
@@ -178,8 +117,8 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
         method: "POST",
         body: JSON.stringify(commandEnvelope(owner, {
           title: form.title,
-          startsAt: new Date(form.startsAt).toISOString(),
-          endsAt: new Date(form.endsAt).toISOString(),
+          startsAt: parseTaskDateTime(form.startsAt)!.toISOString(),
+          endsAt: parseTaskDateTime(form.endsAt)!.toISOString(),
           timezone,
           open: false,
           assigneeUserIds: attendeeIds,
@@ -201,34 +140,10 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
       qc.invalidateQueries({ queryKey: ["work-hub", "meeting-types"] });
     },
   });
-  const createTask = useMutation({
-    mutationFn: async () => {
-      if (!owner) throw new Error("Choose a company before creating a task.");
-      const assignees = await expandedUsers(task.userIds, task.crewIds);
-      const targets: Array<number | null> = assignees.length ? assignees : [null];
-      return Promise.all(targets.map((assigneeUserId) =>
-        workHubRequest("/tasks", {
-          method: "POST",
-          body: JSON.stringify(commandEnvelope(owner, {
-            title: task.title,
-            description: task.description,
-            assigneeUserId,
-            dueAt: task.dueAt ? new Date(task.dueAt).toISOString() : null,
-            priority: task.priority,
-          })),
-        }),
-      ));
-    },
-    onSuccess: () => {
-      setTask({ title: "", description: "", dueAt: "", priority: "normal", userIds: [], crewIds: [] });
-      qc.invalidateQueries({ queryKey: ["work-hub", "calendar"] });
-      qc.invalidateQueries({ queryKey: ["work-hub", "tasks"] });
-    },
-  });
   const commonClass = "grid gap-3 [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:border-2 [&_input:not([type=checkbox])]:border-[color:var(--brand-primary)] [&_input:not([type=checkbox])]:bg-white [&_select]:h-10 [&_select]:rounded-full [&_select]:border-2 [&_select]:border-[color:var(--brand-primary)] [&_select]:bg-white [&_select]:px-3";
   return (
     <div id="create-shift-card" data-testid="calendar-create-card-row">
-      <WorkspacePanel title="Schedule work" subtitle="Create shifts, meetings, and tasks for your company." icon={CalendarDays}>
+      <WorkspacePanel title="Schedule work" subtitle="Create shifts and meetings for your company." icon={CalendarDays}>
         <div className="hub-schedule-body">
           <form aria-label="Create Shift/Event" className={`hub-schedule-form ${commonClass}`} onSubmit={(event) => { event.preventDefault(); createItem.mutate(); }}>
             <h3><CalendarDays aria-hidden="true" />Create Shift/Event</h3>
@@ -273,8 +188,8 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
             </Field>}
             <Field label="Title"><Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required /></Field>
             <fieldset className="hub-schedule-section"><legend>When</legend><div className="hub-schedule-fields">
-            <Field label="Starts"><Input type="datetime-local" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} required /></Field>
-            <Field label="Ends"><Input type="datetime-local" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} required /></Field>
+            <Field label="Starts"><FormattedDateTimeInput value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} required /></Field>
+            <Field label="Ends"><FormattedDateTimeInput value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} required /></Field>
             </div></fieldset>
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={form.userIds} crewIds={form.crewIds} onUsers={(userIds) => setForm({ ...form, userIds })} onCrews={(crewIds) => setForm({ ...form, crewIds })} />
             <fieldset className="hub-schedule-section"><legend>Options</legend>
@@ -285,18 +200,7 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
             {createItem.error && <p role="alert" className="text-sm text-red-700">{createItem.error instanceof Error ? createItem.error.message : "Unable to create Calendar work."}</p>}
             <BrandPillButton type="submit" tone="brand" disabled={!owner || createItem.isPending}>{createItem.isPending ? "Creating…" : "Create Shift/Event"}</BrandPillButton>
           </form>
-          <form aria-label="Create Task" className={`hub-schedule-form ${commonClass}`} onSubmit={(event) => { event.preventDefault(); createTask.mutate(); }}>
-            <h3><CheckSquare2 aria-hidden="true" />Create Task</h3>
-            <Field label="Title"><Input value={task.title} onChange={(event) => setTask({ ...task, title: event.target.value })} required /></Field>
-            <Field label="Description"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={task.description} onChange={(event) => setTask({ ...task, description: event.target.value })} /></Field>
-            <fieldset className="hub-schedule-section"><legend>When & priority</legend><div className="hub-schedule-fields">
-            <Field label="Due"><Input type="datetime-local" value={task.dueAt} onChange={(event) => setTask({ ...task, dueAt: event.target.value })} /></Field>
-            <Field label="Priority"><BrandedSelect aria-label="Priority" value={task.priority} onChange={(event) => setTask({ ...task, priority: event.target.value })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></BrandedSelect></Field>
-            </div></fieldset>
-            <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={task.userIds} crewIds={task.crewIds} onUsers={(userIds) => setTask({ ...task, userIds })} onCrews={(crewIds) => setTask({ ...task, crewIds })} />
-            {createTask.error && <p role="alert" className="text-sm text-red-700">{createTask.error instanceof Error ? createTask.error.message : "Unable to create task."}</p>}
-            <BrandPillButton type="submit" tone="brand" disabled={!owner || createTask.isPending}>{createTask.isPending ? "Creating…" : "Create Task"}</BrandPillButton>
-          </form>
+
         </div>
       </WorkspacePanel>
     </div>

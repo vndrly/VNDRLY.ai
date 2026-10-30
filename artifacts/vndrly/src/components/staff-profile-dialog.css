@@ -1,0 +1,7 @@
+.staff-additional-roles-header { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+.staff-additional-roles-header select { width: min(210px,100%); min-height: 36px; padding: 5px 8px; }
+.staff-assigned-role-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.staff-assigned-role { display: inline-flex; align-items: center; gap: 4px; padding: 0 0 0 7px; border: 1px solid #5b5b60; border-radius: 6px; color: #ececec; font-size: 12px; line-height: 18px; }
+.staff-assigned-role button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; color: #b3b3b3; cursor: pointer; font-size: 18px; }
+.staff-assigned-role button:hover { color: var(--brand-primary); }
+.staff-assigned-role button:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 3px; }

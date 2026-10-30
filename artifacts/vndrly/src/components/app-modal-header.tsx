@@ -60,7 +60,7 @@ export function AppModalHeader({
       className={cn(
         "relative isolate z-10 shrink-0 overflow-hidden border-b border-white/20",
         "[&_[data-slot=dialog-description]]:!text-white/80 [&_[data-slot=dialog-title]]:!text-white [&_[data-slot=sheet-description]]:!text-white/80 [&_[data-slot=sheet-title]]:!text-white",
-        compact ? "h-16 min-h-16" : "min-h-[118px]",
+        compact ? "h-16 min-h-16" : "min-h-[86px]",
         className,
       )}
       data-testid={testId}
@@ -84,7 +84,7 @@ export function AppModalHeader({
       <div
         className={cn(
           "relative z-10 flex flex-wrap gap-3 px-3",
-          compact ? "min-h-16 items-center py-2" : "min-h-[118px] items-center pt-[62px] pb-2",
+          compact ? "min-h-16 items-center py-2" : "min-h-[86px] items-center py-3",
         )}
       >
         <div

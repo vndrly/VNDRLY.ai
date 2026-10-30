@@ -39,12 +39,12 @@ describe("SheetContent modal chrome", () => {
       </Sheet>,
     );
 
-    expect(screen.getByTestId("modal-sheet").className).toContain("bg-[#3a3d42]");
+    expect(screen.getByTestId("modal-sheet").className).toContain("bg-[#242426]");
     const header = screen.getByTestId("app-modal-header");
     expect(header.contains(screen.getByText("Find Vendor"))).toBe(true);
     expect(header.contains(screen.getByText("Choose another vendor"))).toBe(true);
     const body = screen.getByTestId("sheet-modal-body");
-    expect(body.className).toContain("bg-[#d1d5db]");
-    expect(body.style.colorScheme).toBe("light");
+    expect(body.className).toContain("bg-transparent");
+    expect(body.style.colorScheme).toBe("dark");
   });
 });

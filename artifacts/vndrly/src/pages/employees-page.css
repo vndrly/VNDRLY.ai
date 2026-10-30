@@ -11,3 +11,6 @@ main:has(.employees-page), .dark main:has(.employees-page) { background: #3a3d42
 .employees-page [data-testid^="button-edit-field-"]:hover, .employees-page [data-testid^="button-edit-office-"]:hover { color: var(--brand-primary); }
 .employees-page input:not([type="checkbox"]):not([type="radio"]), .employees-page textarea, .employees-page [data-testid="select-status-filter"] { background-color: #303034; color: #ececec; }
 .employees-page input::placeholder, .employees-page textarea::placeholder { color: #b3b3b3; }
+.employees-page [data-testid="managed-subcontractor-hours-panel"] { background: #242426; color: #ececec; }
+.employees-page .vendor-staffing-card > div:has(> [data-slot="card-title"]) { display: flex; align-items: flex-start; gap: 12px; padding: 16px; }
+.employees-page .vendor-staffing-card > div:has(> [data-slot="card-title"]) > [data-slot="card-title"] { margin: 0; line-height: 20px; }

@@ -36,15 +36,31 @@
 .hub-coverage-list h4 { margin-top: 16px; font-weight: 700; }
 .hub-coverage-choice { display: flex; flex-direction: column; gap: 6px; width: 100%; text-align: left; padding: 12px; margin-top: 8px; border: 1px solid #57595e; border-radius: 12px; }
 .hub-coverage-choice span { font-size: 12px; color: #b3b3b3; }
-.hub-coverage-choice:hover { background: #3a3a3a; }
-.hub-coverage-choice[aria-pressed=true] { border-color: var(--brand-primary); background: color-mix(in srgb,var(--brand-primary) 12%,transparent); }
-.hub-shift-admin.hub-coverage-inline { grid-template-columns: minmax(0,1fr); }
+.hub-coverage-entry-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; width:100%; }
+.hub-coverage-title { flex:1; min-width:0; text-align:left; }
+.hub-coverage-title strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hub-coverage-summary { display:block; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hub-coverage-assign-link { flex-shrink:0; font-size:12px; color:#b3b3b3; }
+.hub-coverage-assign-link:hover { color:var(--brand-primary); }
+.hub-gap-scope-toggle { display:inline-flex; align-items:center; gap:8px; }
+.hub-gap-scope-toggle > button { font-size:13px; font-weight:700; }
+.hub-gap-scope-toggle > button[aria-pressed=true] { color:var(--brand-primary); }
+.hub-gap-scope-toggle .workday-status-switch.is-active .workday-switch-track { background:var(--brand-primary); }
+.hub-gap-editor .hub-gap-assignment-row { align-items:stretch; flex-direction:column; }
+.hub-gap-editor .hub-gap-worker { min-width:0; }
+.hub-gap-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.coverage-assignment-flyout .platform-agreement-header { min-height:48px; }
+.coverage-assignment-flyout .hub-gap-editor h3 { margin:0 0 4px; }
+.coverage-assignment-flyout .hub-gap-editor p { margin:4px 0 8px; }
+.coverage-assignment-flyout .hub-gap-assignment-row { gap:6px; }
+.coverage-assignment-flyout .hub-gap-assignment-row .hub-gap-scope { margin:0 0 4px; }
+.coverage-assignment-flyout .hub-gap-worker label { margin-bottom:6px; }
+.coverage-assignment-flyout .hub-gap-actions { margin-top:12px; }
+.hub-shift-admin.hub-coverage-inline { grid-template-columns: minmax(0,1fr); padding: 0; }
+.hub-coverage-inline .hub-coverage-content { border: 0; border-radius: 0; padding: 0; background: transparent; }
+.hub-coverage-content .hub-coverage-period { margin: 0 0 8px; }
 .hub-coverage-inline .hub-task-list { max-height: none; }
-.hub-coverage-choice strong { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-.hub-gap-chevron { width:16px; height:16px; flex-shrink:0; }
-.hub-coverage-choice[aria-expanded=true] .hub-gap-chevron { transform:rotate(180deg); }
-.hub-gap-editor { padding:12px; border:1px solid var(--brand-primary); border-top:0; border-radius:0 0 12px 12px; }
-.hub-coverage-choice[aria-expanded=true] { border-bottom-left-radius:0; border-bottom-right-radius:0; }
+.hub-gap-editor { padding:0; border:0; border-radius:0; background:transparent; }
 .hub-gap-assignment-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .hub-gap-kind { flex-shrink:0; }
 .hub-gap-worker { flex:1; min-width:180px; }
