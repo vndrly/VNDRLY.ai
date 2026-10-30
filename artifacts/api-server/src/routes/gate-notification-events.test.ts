@@ -97,7 +97,7 @@ const stationId = "40000000-0000-4000-8000-000000000001";
 const preparationId = "50000000-0000-4000-8000-000000000001";
 const shiftId = "60000000-0000-4000-8000-000000000001";
 const handoffId = "70000000-0000-4000-8000-000000000001";
-const cookie = buildTestCookie({ userId: 1, role: "vendor", vendorId: 11, membershipRole: "admin", sv: 1 });
+const cookie = buildTestCookie({ userId: 1, role: "vendor", vendorId: 11, membershipRole: "admin", activeMembershipId: 1, sv: 1 });
 const envelope = (payload: any, kind = "organization") => ({ operationId: "30000000-0000-4000-8000-000000000001", owner: { type: "vendor", id: 11 }, context: { kind, id: kind === "organization" ? 11 : 3 }, expectedVersion: null, payloadVersion: 1, payload });
 let app: express.Express;
 beforeEach(async () => {
@@ -122,7 +122,7 @@ beforeEach(async () => {
     else if (sql === "COMMIT" || sql === "ROLLBACK") state.transactionOpen = false;
     else if (sql.includes("SELECT id, role, session_version")) rows = [{ id: values[0], role: "vendor", session_version: 1, display_name: "Gate worker" }];
     else if (sql.startsWith("SELECT id, name, partner_id")) rows = [{ id: 3, name: "Site", partner_id: 22 }];
-    else if (sql.includes("FROM gate_stations")) rows = [{ id: stationId, site_id: 3 }];
+    else if (sql.includes("FROM gate_stations") && !sql.includes("FROM gate_shift_actions")) rows = [{ id: stationId, site_id: 3 }];
     else if (sql.includes("FROM site_work_assignments") || sql.includes("FROM user_org_memberships")) rows = [{ id: 1 }];
     else if (sql.startsWith("SELECT vendor_role")) rows = state.revoked.has(values[0]) ? [] : [{ vendor_role: values[0] === 1 ? "gate_supervisor" : "gatekeeper" }];
     else if (sql.startsWith("SELECT s.*, u.display_name")) rows = [{ id: shiftId, operator_id: 1, station_id: stationId, preparation_id: preparationId, started_at: "2026-09-24T08:00:00.000Z" }];

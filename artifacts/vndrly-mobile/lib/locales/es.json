@@ -1404,7 +1404,8 @@
       "survivor_not_found": "El proveedor sobreviviente no se encontró.",
       "no_operating_area": "El proveedor aún no ha publicado un área de operación.",
       "out_of_radius": "El área de operación del proveedor no alcanza el sitio.",
-      "no_access": "No tienes acceso a este proveedor."
+      "no_access": "No tienes acceso a este proveedor.",
+      "staff_profile_link_failed": "No se pudo vincular el perfil. Revisa la afiliación a la empresa y el correo de la cuenta existente."
     },
     "accounting": {
       "invalid_id_or_vendor_id": "Ese ID de conexión contable o de proveedor no es válido.",

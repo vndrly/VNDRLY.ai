@@ -1404,7 +1404,8 @@
       "survivor_not_found": "The surviving vendor wasn't found.",
       "no_operating_area": "Vendor hasn't published an operating area yet.",
       "out_of_radius": "This vendor's operating area doesn't reach the site.",
-      "no_access": "You don't have access to this vendor."
+      "no_access": "You don't have access to this vendor.",
+      "staff_profile_link_failed": "Unable to link the staff profile. Check the company membership and existing account email."
     },
     "accounting": {
       "invalid_id_or_vendor_id": "That accounting connection or vendor ID isn't valid.",

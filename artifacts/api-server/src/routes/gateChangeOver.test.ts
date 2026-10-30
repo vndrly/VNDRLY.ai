@@ -72,7 +72,7 @@ describe("Gate duty routes", () => {
     const result = await request(app).post("/gate-change-over/stations").set("Cookie", session)
       .send({ siteId: 22, name: "West gate", location: { latitude: 35.1, longitude: -97.2 } });
     expect(result.status).toBe(200);
-    expect(discovery.addStation).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), 22, "West gate", { latitude: 35.1, longitude: -97.2 });
+    expect(discovery.addStation).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), 22, "West gate", { latitude: 35.1, longitude: -97.2 }, undefined);
     for (const location of [{ latitude: 91, longitude: 0 }, { latitude: 0 }, { latitude: "", longitude: "" }]) {
       expect((await request(app).post("/gate-change-over/stations").set("Cookie", session).send({ siteId: 22, name: "West gate", location })).status).toBe(400);
     }

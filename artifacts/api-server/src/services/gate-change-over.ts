@@ -455,14 +455,16 @@ export async function gateTrafficSnapshot(
   }));
   const assembled = assembleShiftSnapshot(
     records,
-    await currentItems(client, stationId, session.vendorId, link.groupId ? link.siteIds : undefined),
+    // Revision describes the shared watch, before any viewer-specific redaction.
+    await currentItems(client, stationId, undefined, link.groupId ? link.siteIds : undefined),
     new Date(windowStart).toISOString(),
   );
   const linkedHandoffs = link.groupId ? (await client.query(`SELECT g.id AS "stationId",g.site_id AS "siteId",g.name AS "gateName",s.name AS "siteName",p.id,p.notes,p.created_at AS "createdAt",u.display_name AS "operatorName"
     FROM gate_stations g JOIN site_locations s ON s.id=g.site_id
     CROSS JOIN LATERAL(SELECT p.* FROM gate_preparations p JOIN gate_shifts w ON w.id=p.shift_id WHERE w.station_id=g.id ORDER BY p.created_at DESC,p.id DESC LIMIT 1) p
     JOIN users u ON u.id=p.prepared_by WHERE g.site_id=ANY($1::int[]) AND g.id<>$2 AND g.active=true ORDER BY s.name,g.name`, [link.siteIds,stationId])).rows : [];
-  return {...assembled, revision:link.groupId ? createHash("sha256").update(assembled.revision+JSON.stringify(linkedHandoffs)).digest("hex") : assembled.revision,
+  const visible = await projectGateTaskItems(client, assembled, session.vendorId);
+  return {...visible, revision:link.groupId ? createHash("sha256").update(assembled.revision+JSON.stringify(linkedHandoffs)).digest("hex") : assembled.revision,
     linkedScope: {siteIds:link.siteIds, name:link.name, groupId:link.groupId}, linkedHandoffs};
 }
 export type GateDiscoveryMode = "operational" | "history";
