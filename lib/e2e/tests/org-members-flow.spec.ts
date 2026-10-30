@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import type pg from "pg";
-import { loginAsAdmin as sharedLoginAsAdmin } from "../helpers/auth";
+import { loginAsAdmin as sharedLoginAsAdmin, loginAsVendor } from "../helpers/auth";
 import { createPool, hashPassword, makeStamp } from "../helpers/db";
 import {
   createPartner,
@@ -369,14 +369,17 @@ test("partner members flow: add → AP → member → remove (AP option visible)
 
 test("vendor staff profile: create office staff, retain scoped membership management and remove access", async ({ page }) => {
   test.setTimeout(120000);
-  await loginAsAdmin(page);
-  await page.goto(`/vendors/${seed.vendorId}`);
-  const card = page.getByTestId("card-vendor-members");
-  await expect(card).toBeVisible();
-  await page.getByTestId("button-add-vendor-member").click();
+  const username = `e2e-staff-owner-${seed.stamp}@example.com`;
+  const owner = await createUser(pool, { username, email: username, passwordHash: hashPassword(ADMIN_PASSWORD), role: "vendor", displayName: "E2E Office Owner" });
+  seed.createdMemberUserIds.push(owner.id);
+  const ownerMembership = await createUserOrgMembership(pool, { userId: owner.id, orgType: "vendor", vendorId: seed.vendorId, role: "admin" });
+  await setActiveMembership(pool, { userId: owner.id, membershipId: ownerMembership.id });
+  await loginAsVendor(page, { username, password: ADMIN_PASSWORD });
+  await page.goto("/field-employees");
+  await expect(page.getByTestId("vendor-staffing-card")).toBeVisible();
+  await page.getByRole("button", { name: "Add Office Staff", exact: true }).click();
   const form = page.getByTestId("shared-staff-profile");
-  await expect(form.getByLabel("Staff type", { exact: true })).toHaveValue("Office Staff");
-  await expect(form.getByRole("option", { name: /Accounts Payable/i })).toHaveCount(0);
+  await expect(form.getByLabel("Assigned role", { exact: true })).toHaveValue("Office Staff");
   const memberEmail = `e2e-member-vendor-${seed.stamp}@example.com`;
   await form.getByLabel("First name", { exact: true }).fill("E2E Office");
   await form.getByLabel("Last name", { exact: true }).fill(seed.stamp);
@@ -387,29 +390,23 @@ test("vendor staff profile: create office staff, retain scoped membership manage
   await page.getByTestId("staff-login-email").fill(memberEmail);
   await page.getByTestId("staff-login-password").fill(NEW_MEMBER_PASSWORD);
   await page.getByTestId("staff-login-save").click();
-  await expect.poll(async () => (await pool.query("select user_id from vendor_people where vendor_id=$1 and lower(email)=lower($2)", [seed.vendorId,memberEmail])).rows[0]?.user_id).toBeTruthy();
-  const person = (await pool.query("select id,user_id,roles,vendor_role from vendor_people where vendor_id=$1 and lower(email)=lower($2)", [seed.vendorId,memberEmail])).rows[0];
+  await expect.poll(async () => (await pool.query("select user_id from vendor_people where vendor_id=$1 and lower(email)=lower($2)", [seed.vendorId, memberEmail])).rows[0]?.user_id).toBeTruthy();
+  const person = (await pool.query("select id,user_id,roles,vendor_role from vendor_people where vendor_id=$1 and lower(email)=lower($2)", [seed.vendorId, memberEmail])).rows[0];
   seed.createdMemberUserIds.push(person.user_id);
-  expect(person.roles).toContain("Office Staff");
-  expect(person.vendor_role).toBe("office");
+  expect(person.roles).toContain("Office Staff"); expect(person.vendor_role).toBe("office");
   await page.getByRole("button", { name: "Close employee profile", exact: true }).click();
-  const membershipId = await findMembershipIdByEmail("vendor",seed.vendorId,memberEmail);
-  await page.reload();
-  const memberRow = page.getByTestId(`row-vendor-member-${membershipId}`);
-  await expect(memberRow).toContainText("Office Staff");
-  await page.getByTestId(`button-edit-vendor-member-role-${membershipId}`).click();
-  await expect(page.getByTestId("shared-staff-profile").getByLabel("Staff type", { exact: true })).toHaveValue("Office Staff");
+  await page.getByRole("button", { name: /^Staff Positions \(/ }).click();
+  await page.getByRole("button", { name: `E2E Office ${seed.stamp}`, exact: true }).click();
+  await expect(page.getByTestId("shared-staff-profile").getByLabel("Assigned role", { exact: true })).toHaveValue("Office Staff");
   await page.getByRole("button", { name: "Close employee profile", exact: true }).click();
-  const endpoint=`/api/orgs/vendor/${seed.vendorId}/members/${membershipId}`;
+  const membershipId = await findMembershipIdByEmail("vendor", seed.vendorId, memberEmail);
+  const endpoint = `/api/orgs/vendor/${seed.vendorId}/members/${membershipId}`;
   expect([400,422]).toContain((await page.request.patch(endpoint,{data:{role:"ap"}})).status());
   expect((await page.request.patch(endpoint,{data:{role:"admin"}})).ok()).toBeTruthy();
   expect((await pool.query("select role from user_org_memberships where id=$1",[membershipId])).rows[0].role).toBe("admin");
   expect((await page.request.patch(endpoint,{data:{role:"member"}})).ok()).toBeTruthy();
   expect((await pool.query("select role from user_org_memberships where id=$1",[membershipId])).rows[0].role).toBe("member");
-  await page.reload();
-  await page.getByTestId(`button-remove-vendor-member-${membershipId}`).click();
-  await page.getByTestId(`button-confirm-remove-vendor-member-${membershipId}`).click();
-  await expect(memberRow).toHaveCount(0);
+  expect((await page.request.delete(endpoint)).ok()).toBeTruthy();
   expect((await pool.query("select id from user_org_memberships where id=$1",[membershipId])).rowCount).toBe(0);
 });
 

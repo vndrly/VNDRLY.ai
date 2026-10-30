@@ -138,7 +138,7 @@ jobs:
             api-gate) pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run src/services/gate-arrivals.database.test.ts src/services/gate-arrivals.test.ts src/routes/visits.test.ts --no-file-parallelism --maxWorkers=1 ;;
             browser) pnpm run test:e2e ;;
             browser-workspace) pnpm run test:e2e tests/work-hub-workspace.spec.ts ;;
-            browser-workforce) pnpm run test:e2e tests/managed-subcontractors.spec.ts tests/staff-role-catalog.spec.ts ;;
+            browser-workforce) pnpm run test:e2e tests/managed-subcontractors.spec.ts tests/staff-role-catalog.spec.ts tests/org-members-flow.spec.ts ;;
             browser-gate) pnpm run test:e2e tests/gate-change-over.spec.ts ;;
             browser-*) shard='${{ matrix.check }}'; pnpm run test:e2e --shard="${shard#browser-}/4" ;;
           esac
