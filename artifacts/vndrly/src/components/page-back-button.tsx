@@ -27,6 +27,7 @@ export default function PageBackButton({
       className={cn("group inline-flex items-center", className)}
       aria-label={ariaLabel}
       data-testid={testId}
+      data-page-back
     >
       <SphereBackButton size={size} />
     </button>

@@ -33,6 +33,7 @@ export default function ContentPaneBackLink({
         className={wrapperClass}
         aria-label={ariaLabel}
         data-testid={testId}
+        data-page-back
       >
         <SphereBackButton size={size} />
       </button>
@@ -50,6 +51,7 @@ export default function ContentPaneBackLink({
       className={wrapperClass}
       aria-label={ariaLabel}
       data-testid={testId}
+      data-page-back
     >
       <SphereBackButton size={size} />
     </Link>

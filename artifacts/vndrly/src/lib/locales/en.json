@@ -401,6 +401,8 @@
     "officeStaff": "Office Staff"
   },
   "common": {
+    "pageNavigation": "Page navigation",
+    "navigation": "Navigation",
     "saveChanges": "Save Changes",
     "saving": "Saving...",
     "cancel": "Cancel",
@@ -436,6 +438,7 @@
     "saveFailedToast": "Couldn't save your language preference. Please try again."
   },
   "nav": {
+    "toggleMenu": "Toggle navigation",
     "dashboard": "Dashboard",
     "partners": "Partners",
     "partner": "Partner",

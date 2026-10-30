@@ -401,6 +401,8 @@
     "officeStaff": "Personal de oficina"
   },
   "common": {
+    "pageNavigation": "Navegación de la página",
+    "navigation": "Navegación",
     "saveChanges": "Guardar Cambios",
     "saving": "Guardando...",
     "cancel": "Cancelar",
@@ -436,6 +438,7 @@
     "saveFailedToast": "No se pudo guardar tu preferencia de idioma. Inténtalo de nuevo."
   },
   "nav": {
+    "toggleMenu": "Abrir o cerrar navegación",
     "dashboard": "Panel",
     "partners": "Socios",
     "partner": "Socio",

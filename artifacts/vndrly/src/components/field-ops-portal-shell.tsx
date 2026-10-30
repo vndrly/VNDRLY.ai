@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode, useEffect, useState } from "react";
+import { lazy, Suspense, type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { LogOut, Menu, type LucideIcon } from "lucide-react";
@@ -29,6 +29,7 @@ import {
 import { ASKV_PANE_BG, NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
+import { MobilePageHeader } from "./mobile-page-header";
 
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
@@ -79,6 +80,7 @@ export function FieldOpsPortalShell({
   const { resolved: themeResolved } = useTheme();
   const isDarkTheme = themeResolved === "dark";
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const contentRef=useRef<HTMLElement>(null);
   const [vendorName, setVendorName] = useState<string | null>(null);
   const [employeeName, setEmployeeName] = useState<string | null>(null);
 
@@ -178,7 +180,7 @@ export function FieldOpsPortalShell({
       <aside
         style={navPaneStyle}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform overflow-hidden",
+          "portal-phone-sidebar fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform overflow-hidden",
           FIXED_APP_CHROME ? "md:translate-x-0" : "md:static md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
@@ -330,7 +332,8 @@ export function FieldOpsPortalShell({
           />
         </div>
 
-        <header className="flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
+        <MobilePageHeader contentRef={contentRef} fallbackTitle={t(tabs.find(tab=>tab.match(location))?.labelKey??portalLabelKey)} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
+        <header className="portal-legacy-phone-header flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
           <PillButton
             color="image"
             className="min-w-[28px] px-0"
@@ -343,8 +346,9 @@ export function FieldOpsPortalShell({
         </header>
 
         <main
+          ref={contentRef}
           className={cn(
-            "flex-1 p-6 pb-24 md:pb-6",
+            "portal-phone-main flex-1 p-6 pb-24 md:pb-6",
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
         >
@@ -352,7 +356,7 @@ export function FieldOpsPortalShell({
         </main>
 
         <nav
-          className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-card border-t border-border"
+          className="portal-mobile-footer fixed bottom-0 inset-x-0 z-40 md:hidden bg-card border-t border-border"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           aria-label={t(navAriaKey)}
         >
@@ -365,6 +369,7 @@ export function FieldOpsPortalShell({
                 <li key={tab.href} className="flex-1">
                   <Link
                     href={tab.href}
+                    onClick={event=>{if(tab.onSelect){event.preventDefault();tab.onSelect();}else setSidebarOpen(false);}}
                     data-testid={`${tab.testId}-mobile`}
                     className={cn(
                       "flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-medium transition-colors",

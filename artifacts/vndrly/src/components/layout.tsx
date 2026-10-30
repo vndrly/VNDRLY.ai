@@ -73,9 +73,10 @@ import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { orderPortalNavigation } from "@/lib/portal-nav-order";
-import { workHubIcons, getWorkHubNavItems, isWorkHubPath } from "@/lib/work-hub-nav";
+import { workHubIcons, getWorkHubNavItems, isWorkHubPath, orderWorkHubItems } from "@/lib/work-hub-nav";
 
-import { WorkHubNavigation } from "@/components/work-hub/navigation";
+import { WorkHubNavigation, useHubPreferences } from "@/components/work-hub/navigation";
+import { MobilePageHeader } from "./mobile-page-header";
 
 const AssistantLauncher = React.lazy(() =>
   import("@/components/assistant-panel").then((mod) => ({
@@ -231,6 +232,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
   const fleetText = fleetCopy(i18n.language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const contentRef=useRef<HTMLElement>(null);
   const fleetIdentity = `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`;
   const currentFleetIdentity = useRef<string | null>(fleetIdentity);
   currentFleetIdentity.current = fleetIdentity;
@@ -289,6 +291,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useWorkHubDevicePresence(location, Boolean(user?.vendorId || user?.partnerId), user?.userId, `${user?.vendorId ?? ""}:${user?.partnerId ?? ""}`);
 
   const navItems = inFleet && canEnterFleet ? fleetNavItems : inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
+  const {preferences:hubPreferences}=useHubPreferences(inWorkHub);
+  const phoneNavItems=inWorkHub?orderWorkHubItems(navItems,hubPreferences.order).flatMap(item=>{const source=navItems.find(nav=>nav.key===item.key);return source&&hubPreferences.pinned.includes(item.key)?[source]:[];}):navItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
   const { data: partner } = useGetPartner(user?.partnerId ?? 0, { query: { enabled: user?.role === "partner" && !!user.partnerId, queryKey: getGetPartnerQueryKey(user?.partnerId ?? 0) } });
   const { data: vendorRatings } = useGetVendorRatings(user?.vendorId ?? 0, {
@@ -337,7 +341,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside
         style={navPaneStyle}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform overflow-hidden",
+          "portal-phone-sidebar fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform overflow-hidden",
           FIXED_APP_CHROME ? "md:translate-x-0" : "md:static md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
@@ -530,21 +534,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           />
         </div>
         )}
-        <header className="flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
+        <MobilePageHeader contentRef={contentRef} fallbackTitle={navItems.find(item=>item.href===location)?.label??"VNDRLY"} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
+        <header className="portal-legacy-phone-header flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
           <PillButton color="image" className="min-w-[28px] px-0" onClick={() => setSidebarOpen(true)} data-testid="button-menu">
             <Menu className="w-5 h-5" />
           </PillButton>
           <span className="font-bold">VNDRLY</span>
         </header>
         <main
+          ref={contentRef}
           className={cn(
-            "flex-1 p-6",
+            "portal-phone-main flex-1 p-6 max-sm:pb-24",
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
         >
           <OnboardingProgressBanner />
           {children}
         </main>
+        <nav className="portal-mobile-footer fixed bottom-0 inset-x-0 z-40 hidden max-sm:block" style={{paddingBottom:"env(safe-area-inset-bottom)"}} aria-label={t("common.navigation",{defaultValue:"Navigation"})}>
+          <ul className="flex h-16 items-stretch">
+            {phoneNavItems.map(item=>{const Icon=item.icon;const active=location===item.href;return <li key={item.key}><Link href={item.href} onClick={()=>{if(item.key==="work-hub"&&!inWorkHub)sessionStorage.setItem("vndrly.workHub.returnPath",location);setSidebarOpen(false);}} aria-current={active?"page":undefined} className="flex h-full flex-col items-center justify-center gap-0.5 px-2 text-[10px] font-medium">{Icon&&<Icon className="h-5 w-5"/>}<span>{item.label}</span></Link></li>;})}
+          </ul>
+        </nav>
       </div>
     </div>
     </MeetingSessionProvider>
