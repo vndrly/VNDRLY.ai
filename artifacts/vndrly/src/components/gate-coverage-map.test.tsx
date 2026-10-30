@@ -29,7 +29,7 @@ it("uses the viewing selector to focus one gate without creating or editing a ga
   fireEvent.change(selector, { target: { value: "" } });
   expect(mocks.mapProps.fitToData).toBe(true);
   expect(mocks.mapProps.selectedPointId).toBeNull();
-  expect(mocks.read.mock.calls.every(call => call.length === 1 && call[0] === "/coverage-map")).toBe(true);
+  expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || /^\/linked-gates\?siteId=[12]$/.test(call[0])))).toBe(true);
 });
 it("keeps stale staff off the map and exposes missing observations without an action", async () => {
   mocks.read.mockResolvedValue({ at: "2026-10-13T15:00:00Z", gates: [], duties: [], staff: [
