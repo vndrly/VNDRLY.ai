@@ -30,6 +30,12 @@ try {
     "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS fleet_plan jsonb",
     "ALTER TABLE site_locations ADD COLUMN IF NOT EXISTS fleet_ticket_policy jsonb",
     "ALTER TABLE gate_duty_sessions ADD COLUMN IF NOT EXISTS post_coverage jsonb NOT NULL DEFAULT '{}'::jsonb",
+    "ALTER TABLE vendor_people ADD COLUMN IF NOT EXISTS staff_enrollment jsonb",
+    "ALTER TABLE user_org_memberships ADD COLUMN IF NOT EXISTS staff_enrollment jsonb",
+    "ALTER TABLE managed_subcontractor_worker_sponsorships ADD COLUMN IF NOT EXISTS staff_enrollment jsonb",
+    "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS staff_role_catalog jsonb",
+    "ALTER TABLE workforce_staffing_requirements ADD COLUMN IF NOT EXISTS gate_definition jsonb",
+    "ALTER TABLE work_hub_shifts ADD COLUMN IF NOT EXISTS gate_definition_id uuid",
   ]) await owner.query(statement.replace("ALTER TABLE ", "ALTER TABLE public."));
   await owner.query("COMMIT");
   console.log("Isolated demo parity columns available; rows and credentials preserved.");
