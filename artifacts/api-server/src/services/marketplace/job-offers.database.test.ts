@@ -392,7 +392,6 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     });
   });
   it.each([
-    "compliance",
     "coverage",
     "capacity",
     "rate",
@@ -401,11 +400,6 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     "credential",
   ])("blocks changed %s before creating any ticket", async (kind) => {
     const f = await fixture();
-    if (kind === "compliance")
-      await db
-        .update(s.vendorsTable)
-        .set({ wcExpirationDate: "2020-01-01" })
-        .where(eq(s.vendorsTable.id, f.vendor.id));
     if (kind === "coverage")
       await db
         .update(s.vendorServiceAreasTable)

@@ -12,6 +12,7 @@ describe("persisted offer restriction boundary", () => {
       status: offerStatus, version: 2, scope: "Control entry", afeReference: "PARTNER-AFE", scheduledStartAt: new Date("2026-11-01"), scheduledEndAt: new Date("2026-11-02"),
       expiresAt: new Date("2026-10-31"), crewCount: 1, attachments: [], commercialSnapshot: {}, createdTicketId: null };
     const data: Record<string, any[]> = { job_offers: [offer], users: [{ id: 1, role: "admin", sessionVersion: 1 }], vendors: [{ id: 3 }], partner_vendor_relationships: status ? [{ status }] : [], vendor_capabilities: [] };
+    data.site_locations = [{ id: 8, partnerId: 9, afe: "PARTNER-AFE" }];
     const connection = { transaction: async (run: any, options: any) => {
       expect(options.isolationLevel).toBe("serializable");
       return run({ select: () => {
