@@ -161,7 +161,8 @@ beforeEach(async () => {
               limit: 50,
               offset: 0,
             };
-      } else if (url.pathname === "/api/site-locations")
+      } else if (url.pathname === "/api/site-locations/101") data = { id: 101, partnerId: 20, afe: "AFE-1" };
+      else if (url.pathname === "/api/site-locations")
         data = [
           {
             id: 101,
@@ -491,7 +492,7 @@ describe("partner marketplace", () => {
       />,
     );
     change("Scope of work", "Control the north entry");
-    change("AFE reference", "AFE-1");
+    await screen.findByDisplayValue("AFE-1");
     change("PO reference", "PO-2");
     change("Attachment URLs (one per line)", "https://example.com/scope.pdf");
     change("Offer expires", "2026-10-31T12:00");
@@ -517,7 +518,7 @@ describe("partner marketplace", () => {
       ),
     ).toBeTruthy();
   });
-  it("rejects reversed dates and unsafe attachment URLs without losing the draft", () => {
+  it("rejects reversed dates and unsafe attachment URLs without losing the draft", async () => {
     mount(
       <JobOfferComposer
         partnerId={20}
@@ -530,14 +531,14 @@ describe("partner marketplace", () => {
       />,
     );
     change("Scope of work", "Retain this scope");
-    change("AFE reference", "AFE-1");
+    await screen.findByDisplayValue("AFE-1");
     change("Attachment URLs (one per line)", "javascript:alert(1)");
     change("Offer expires", "2026-10-31T12:00");
     fireEvent.click(screen.getByRole("button", { name: "Prepare draft" }));
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(screen.getByDisplayValue("Retain this scope")).toBeTruthy();
   });
-  it("rejects unsafe attachments when all other draft values are valid", () => {
+  it("rejects unsafe attachments when all other draft values are valid", async () => {
     mount(
       <JobOfferComposer
         partnerId={20}
@@ -550,7 +551,7 @@ describe("partner marketplace", () => {
       />,
     );
     change("Scope of work", "Control entry");
-    change("AFE reference", "AFE-1");
+    await screen.findByDisplayValue("AFE-1");
     change("Attachment URLs (one per line)", "javascript:alert(1)");
     change("Offer expires", "2026-10-31T12:00");
     fireEvent.click(screen.getByRole("button", { name: "Prepare draft" }));

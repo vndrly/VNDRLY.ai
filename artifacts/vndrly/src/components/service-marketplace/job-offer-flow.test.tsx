@@ -62,6 +62,7 @@ beforeEach(async () => {
     vi.fn(async (url: RequestInfo | URL, options?: RequestInit) => {
       const path = String(url);
       const method = options?.method ?? "GET";
+      if (path.endsWith("/site-locations/6")) return Response.json({ id: 6, partnerId: 1, afe: "AFE-TEST-1" });
       requests.push({
         path,
         body: options?.body ? JSON.parse(String(options.body)) : null,
@@ -153,7 +154,8 @@ describe("confirmed offer flow", () => {
     fireEvent.change(screen.getByLabelText("Offer expires"), {
       target: { value: "2026-10-31T10:00" },
     });
-    fireEvent.change(screen.getByLabelText("AFE reference"), { target: { value: "AFE-TEST-1" } });
+    await waitFor(() => expect((screen.getByLabelText("AFE reference") as HTMLInputElement).value).toBe("AFE-TEST-1"));
+    expect((screen.getByLabelText("AFE reference") as HTMLInputElement).readOnly).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Prepare draft" }));
     await screen.findByRole("region", { name: "Confirm job offer" });
     expect(screen.getByText("USD 125.00 / hour")).toBeTruthy();

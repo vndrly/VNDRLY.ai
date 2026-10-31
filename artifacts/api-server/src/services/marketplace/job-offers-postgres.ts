@@ -3,6 +3,9 @@ import { db } from "@workspace/db";
 import {
   vendorsTable,
   vendorPartnerBillingSettingsTable,
+  siteLocationsTable,
+  siteWorkAssignmentsTable,
+  canonicalServicesTable,
 } from "@workspace/db/schema";
 import { commercialBillingMode } from "../../lib/ticket-commercial-rate";
 import {
@@ -95,6 +98,16 @@ function adapter(tx: Transaction): JobOfferTransaction {
         .limit(100);
     },
     async validate(input, now) {
+      // The partner-owned site is the authoritative AFE source. Lock through
+      // create/send/accept so a concurrent site edit cannot silently change terms.
+      const [site] = await tx.select().from(siteLocationsTable).where(and(
+        eq(siteLocationsTable.id, input.siteLocationId),
+        eq(siteLocationsTable.partnerId, input.partnerId),
+      )).for("share");
+      if (!site) throw new MarketplaceError(404, "marketplace.work_type_or_site_not_found");
+      if (!site.afe?.trim()) throw new MarketplaceError(409, "marketplace.site_afe_required");
+      if (site.afe.trim() !== input.afeCode)
+        throw new MarketplaceError(409, "marketplace.afe_changed");
       // Share locks make address invalidation and explicit relationship
       // revocation linearize before or after the entire acceptance transaction.
       await tx.select({ id: vendorsTable.id }).from(vendorsTable)
@@ -155,6 +168,8 @@ function adapter(tx: Transaction): JobOfferTransaction {
       );
       if (!rate || !raw)
         throw new MarketplaceError(409, "marketplace.ineligible");
+      const [canonicalService] = await tx.select({ code: canonicalServicesTable.code })
+        .from(canonicalServicesTable).where(eq(canonicalServicesTable.id, candidate.canonicalServiceId)).for("share");
       const [vendor] = await tx
         .select()
         .from(vendorsTable)
@@ -203,6 +218,8 @@ function adapter(tx: Transaction): JobOfferTransaction {
       return {
         canonicalServiceId: candidate.canonicalServiceId,
         commercial: {
+          gateContractor: canonicalService?.code === "gatekeeping",
+          afeAssignment: { source: "site_locations", siteLocationId: site.id, partnerId: site.partnerId, afeCode: site.afe.trim() },
           rateId: rate.id,
           rateVersion: rate.version,
           unitPrice: rate.unitPrice,
@@ -223,7 +240,7 @@ function adapter(tx: Transaction): JobOfferTransaction {
         },
         eligibility: {
           eligible: true,
-          reasonCodes: [],
+          reasonCodes: candidate.eligibility.reasonCodes,
           facts: candidate.eligibility.facts,
           checkedAt: now.toISOString(),
         },
@@ -251,6 +268,17 @@ function adapter(tx: Transaction): JobOfferTransaction {
       );
     },
     async engage(offer, now) {
+      // A partner's gatekeeping job offer designates this vendor for this site
+      // when mutually accepted. Preserve other work assignments and their AFEs.
+      if (offer.commercialSnapshot.gateContractor === true) {
+        await tx.insert(siteWorkAssignmentsTable).values({
+          siteLocationId: offer.siteLocationId, workTypeId: offer.workTypeId,
+          vendorId: offer.vendorId, afe: offer.afeReference, isGateContractor: true,
+        }).onConflictDoUpdate({
+          target: [siteWorkAssignmentsTable.vendorId, siteWorkAssignmentsTable.workTypeId, siteWorkAssignmentsTable.siteLocationId],
+          set: { isGateContractor: true },
+        });
+      }
       // Marketplace engagement does not fabricate blanket catalog/EULA approval.
       await tx
         .insert(relationships)

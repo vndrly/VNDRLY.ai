@@ -27,7 +27,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     persistence = (await import("./job-offers-postgres"))
       .createPostgresJobOfferPersistence;
   });
-  async function fixture(afeCode = "TEST-AFE") {
+  async function fixture(afeCode = "TEST-AFE", gatekeeping = false) {
     const suffix = randomUUID();
     const [partner] = await db
       .insert(s.partnersTable)
@@ -87,12 +87,13 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
         latitude: 35,
         longitude: -97,
         siteCode: suffix,
+        afe: afeCode,
       })
       .returning();
     const [service] = await db
       .insert(s.canonicalServicesTable)
       .values({
-        code: suffix,
+        code: gatekeeping ? "gatekeeping" : suffix,
         name: "Pressure testing",
         category: "Testing",
         definition: "Pressure test",
@@ -214,18 +215,53 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       area,
       rate,
       mapping,
+      service,
     };
   }
+  it("rejects missing, forged, cross-partner and changed site AFEs without creating work", async () => {
+    const f = await fixture();
+    await expect(f.api.createJobOffer({ ...f.input, afeCode: "FORGED" }, f.actor, randomUUID()))
+      .rejects.toMatchObject({ code: "marketplace.afe_changed" });
+    await expect(f.api.createJobOffer({ ...f.input, partnerId: f.input.partnerId + 1000000 }, f.actor, randomUUID()))
+      .rejects.toMatchObject({ code: "marketplace.work_type_or_site_not_found" });
+    await db.update(s.siteLocationsTable).set({ afe: null }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
+    await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.site_afe_required" });
+    await db.update(s.siteLocationsTable).set({ afe: "CHANGED" }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
+    await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.afe_changed" });
+    expect(await db.select().from(s.ticketsTable).where(eq(s.ticketsTable.jobOfferId, f.sent.id))).toHaveLength(0);
+    expect(await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, f.sent.id))).toHaveLength(0);
+  });
+  it("designates only the accepted gatekeeping assignment and preserves prior connections on replay", async () => {
+    const f = await fixture("GATE-AFE", true);
+    const [otherWork] = await db.insert(s.workTypesTable).values({ partnerId: f.input.partnerId, name: "Other work", category: "Other" }).returning();
+    const [prior] = await db.insert(s.siteWorkAssignmentsTable).values({ siteLocationId: f.input.siteLocationId, vendorId: f.vendor.id, workTypeId: otherWork.id, afe: "PRESERVE", isGateContractor: false }).returning();
+    // Compliance warnings are retained, but no longer prohibit the partner's decision.
+    await db.update(s.vendorsTable).set({ coiDocumentUrl: null }).where(eq(s.vendorsTable.id, f.vendor.id));
+    const accepted = await f.api.acceptJobOffer(f.accept);
+    expect((await f.api.acceptJobOffer(f.accept)).ticketId).toBe(accepted.ticketId);
+    const rows = await db.select().from(s.siteWorkAssignmentsTable).where(eq(s.siteWorkAssignmentsTable.vendorId, f.vendor.id));
+    expect(rows).toHaveLength(2);
+    expect(rows.find(row => row.id === prior.id)).toEqual(prior);
+    expect(rows.find(row => row.workTypeId === f.work.id)).toMatchObject({ siteLocationId: f.input.siteLocationId, afe: f.input.afeCode, isGateContractor: true });
+    const [snapshot] = await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, f.sent.id));
+    expect(snapshot.eligibilitySnapshot.reasonCodes).toContain("COMPLIANCE_STALE");
+    expect(snapshot.commercialSnapshot.afeAssignment).toMatchObject({ afeCode: f.input.afeCode, siteLocationId: f.input.siteLocationId, partnerId: f.input.partnerId });
+  });
   it.each(["ACCEPTED-AFE", "SECOND-AFE"])("retains accepted AFE %s in canonical ticket reads and invoice regeneration", async afeCode => {
     const f = await fixture(afeCode);
-    await db.update(s.siteLocationsTable).set({ afe: "SITE-BEFORE" }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
     const [assignment] = await db.insert(s.siteWorkAssignmentsTable).values({ siteLocationId: f.input.siteLocationId, vendorId: f.vendor.id, workTypeId: f.work.id, afe: "ASSIGNMENT-BEFORE" }).returning();
     const accepted = await f.api.acceptJobOffer(f.accept);
     const { ticketAfeSql } = await import("../../lib/ticket-afe");
     const readAfe = async () => (await db.select({ afe: ticketAfeSql }).from(s.ticketsTable).leftJoin(s.siteWorkAssignmentsTable, eq(s.siteWorkAssignmentsTable.id, assignment.id)).where(eq(s.ticketsTable.id, accepted.ticketId)))[0]?.afe;
     expect(await readAfe()).toBe(afeCode ?? null);
-    await db.update(s.ticketsTable).set({ status: "approved", approvedAt: now }).where(eq(s.ticketsTable.id, accepted.ticketId));
+    await db.update(s.ticketsTable).set({ status: "submitted", notes: "Synthetic completed work evidence" }).where(eq(s.ticketsTable.id, accepted.ticketId));
     await db.insert(s.ticketLineItemsTable).values({ ticketId: accepted.ticketId, type: "equipment", description: "Synthetic equipment", quantity: "1", unitPrice: "25" });
+    const { freezeTicketSubmission, reviewedSubmission } = await import("../../lib/ticket-submissions");
+    const proof = await db.transaction(tx => freezeTicketSubmission(tx, accepted.ticketId, f.user.id));
+    expect(proof).toMatchObject({ jobId: f.sent.id, afe: afeCode, revision: 1 });
+    const rawTicket = (await db.execute(sql`SELECT * FROM tickets WHERE id=${accepted.ticketId}`)).rows[0];
+    expect(reviewedSubmission(rawTicket, 1)?.afe).toBe(afeCode);
+    await db.update(s.ticketsTable).set({ status: "approved", approvedAt: now, approvedSubmissionRevision: 1 }).where(eq(s.ticketsTable.id, accepted.ticketId));
     const { generateInvoiceForTicket } = await import("../../lib/invoice-generator");
     expect(await generateInvoiceForTicket(accepted.ticketId)).toMatchObject({ ok: true });
     await db.update(s.siteLocationsTable).set({ afe: "SITE-AFTER" }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));

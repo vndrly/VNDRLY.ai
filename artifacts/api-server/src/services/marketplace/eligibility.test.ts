@@ -179,13 +179,6 @@ describe("marketplace eligibility", () => {
       "OFFER_INACTIVE",
     ],
     [
-      "stale compliance",
-      (x: EligibilityInput) => {
-        x.complianceCurrent = false;
-      },
-      "COMPLIANCE_STALE",
-    ],
-    [
       "missing credential",
       (x: EligibilityInput) => {
         x.currentCredentials = [];
@@ -268,5 +261,12 @@ describe("marketplace eligibility", () => {
     const result = await evaluateMarketplaceEligibility(fixture);
     expect(result.internalEvidence).toEqual({ privateNotes: "secret" });
     expect(JSON.stringify(result.facts)).not.toContain("secret");
+  });
+  it("keeps compliance advisory without bypassing coverage or explicit credential requirements", async () => {
+    const fixture = input();
+    fixture.complianceCurrent = false;
+    expect(await evaluateMarketplaceEligibility(fixture)).toMatchObject({ eligible: true, reasonCodes: ["COMPLIANCE_STALE"] });
+    fixture.currentCredentials = [];
+    expect(await evaluateMarketplaceEligibility(fixture)).toMatchObject({ eligible: false, reasonCodes: ["COMPLIANCE_STALE", "CREDENTIAL_MISSING"] });
   });
 });

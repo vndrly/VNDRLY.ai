@@ -24,6 +24,7 @@ export default function JobOfferSummary({
         })}
       </p>
       <p>{offer.scope}</p>
+      {terms.gateContractor === true && <p>{t("partnerMarketplace.gateDesignation")}</p>}
       <p>
         {display(terms.currency)} {Number(terms.unitPrice).toFixed(2)} /{" "}
         {display(terms.unit)}
@@ -79,6 +80,7 @@ export default function JobOfferSummary({
           {t("partnerMarketplace.afe")}: {offer.afeReference}
         </p>
       )}
+      {offer.afeReference?.startsWith("PENDING-") && <p role="status">{t("partnerMarketplace.temporaryAfe")}</p>}
       {offer.poReference && (
         <p>
           {t("partnerMarketplace.po")}: {offer.poReference}

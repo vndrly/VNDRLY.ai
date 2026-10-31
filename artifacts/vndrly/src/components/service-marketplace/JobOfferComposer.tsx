@@ -7,6 +7,8 @@ import {
   sendMarketplaceJobOffer,
   getMarketplaceJobOffer,
   withdrawMarketplaceJobOffer,
+  useGetSiteLocation,
+  getGetSiteLocationQueryKey,
   type MarketplaceJobOffer,
 } from "@workspace/api-client-react";
 import JobOfferSummary from "./JobOfferSummary";
@@ -53,12 +55,15 @@ export default function JobOfferComposer({
 }) {
   const { t } = useTranslation();
   const id = useId();
+  const { data: site, isLoading: afeLoading, isError: afeError } = useGetSiteLocation(siteLocationId, {
+    query: { queryKey: getGetSiteLocationQueryKey(siteLocationId), staleTime: 0 },
+  });
+  const siteAfe = site?.partnerId === partnerId ? site.afe?.trim() ?? "" : "";
   const [form, setForm] = useState({
     scope: "",
     start: initialStartAt,
     end: initialEndAt,
     crews: String(crewCount),
-    afe: "",
     po: "",
     attachments: "",
     expires: "",
@@ -136,8 +141,6 @@ export default function JobOfferComposer({
         type={type}
         className="rounded border bg-background p-2"
         value={form[key]}
-        required={key === "afe"}
-        maxLength={key === "afe" ? 200 : undefined}
         disabled={busy || sent}
         onChange={(e) => {
           setForm({ ...form, [key]: e.target.value });
@@ -174,8 +177,8 @@ export default function JobOfferComposer({
           !vendor.offerable ||
           !vendor.eligibility.eligible ||
           !form.scope.trim() ||
-          !form.afe.trim() ||
-          form.afe.trim().length > 200 ||
+          afeLoading || afeError || !siteAfe ||
+          siteAfe.length > 200 ||
           form.scope.trim().length > 10000 ||
           !Number.isFinite(start) ||
           !Number.isFinite(end) ||
@@ -207,7 +210,7 @@ export default function JobOfferComposer({
           crewCount: crews,
           attachmentUrls: attachments,
           expiresAt: new Date(expires).toISOString(),
-          afeCode: form.afe.trim(),
+          afeCode: siteAfe,
           ...(form.po.trim() ? { poNumber: form.po.trim() } : {}),
         };
         setError(false);
@@ -231,7 +234,14 @@ export default function JobOfferComposer({
         {field("end", "end", "datetime-local")}
         {field("crews", "crews", "number")}
         {field("expires", "expires", "datetime-local")}
-        {field("afe", "afe")}
+        <div className="grid gap-1 text-sm">
+          <label htmlFor={`${id}-afe`}>{t("partnerMarketplace.afe")}</label>
+          <input id={`${id}-afe`} className="rounded border bg-background p-2" value={siteAfe} readOnly />
+          <span>{t("partnerMarketplace.siteAfeHelp")}</span>
+          {siteAfe.startsWith("PENDING-") && <span role="status">{t("partnerMarketplace.temporaryAfe")}</span>}
+          {!afeLoading && !siteAfe && <a href={`/site-locations/${siteLocationId}`}>{t("partnerMarketplace.siteAfeMissing")}</a>}
+          {afeError && <span role="alert">{t("partnerMarketplace.siteAfeError")}</span>}
+        </div>
         {field("po", "po")}
       </div>
       <label className="grid gap-1 text-sm" htmlFor={`${id}-attachments`}>
@@ -256,6 +266,7 @@ export default function JobOfferComposer({
           busy ||
           sent ||
           isChecking ||
+          afeLoading || afeError || !siteAfe ||
           !vendor.offer ||
           !vendor.offerable ||
           !vendor.eligibility.eligible

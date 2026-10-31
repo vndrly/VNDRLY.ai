@@ -211,7 +211,8 @@ export async function evaluateMarketplaceEligibility(
     "RELATIONSHIP_REQUIRED",
   );
   return {
-    eligible: reasons.length === 0,
+    // Compliance remains visible advice; it does not override the partner's hiring decision.
+    eligible: reasons.every((reason) => reason === "COMPLIANCE_STALE"),
     reasonCodes: reasons,
     facts: {
       distanceMiles: distance,
