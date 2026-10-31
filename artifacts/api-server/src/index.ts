@@ -178,8 +178,8 @@ function onListening(): void {
   startNotificationEventBus();
   startMajikEventBus();
   startScheduledNotificationWorker();
+  startJobOfferExpiryWorker();
   if (process.env.SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true") {
-    startJobOfferExpiryWorker();
     startCatalogClassificationWorker();
   }
   startReliableNotificationWorker();

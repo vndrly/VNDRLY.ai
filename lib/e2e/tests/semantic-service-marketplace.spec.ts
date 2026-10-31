@@ -273,6 +273,7 @@ function draft(f: Fixture, site = f.near.id) {
     vendorPartnerServiceOfferId: f.flywheelRate.id,
     siteLocationId: site,
     scope: `Synthetic gatekeeping ${f.stamp}`,
+    afeCode: `E2E-AFE-${f.stamp}`,
     requestedStartAt: new Date(Date.now() + 3 * 86400000).toISOString(),
     requestedEndAt: new Date(Date.now() + 4 * 86400000).toISOString(),
     crewCount: 1,
@@ -388,6 +389,7 @@ test("Gatekeeping and Perimeter Security match Gate Services; compare, send and 
     });
     const input = draft(f);
     await form.getByLabel("Scope of work", { exact: true }).fill(input.scope);
+    await form.getByLabel("AFE reference", { exact: true }).fill(input.afeCode);
     // datetime-local is intentionally entered as wall time; the UI serializes it.
     await form
       .getByLabel("Requested start", { exact: true })

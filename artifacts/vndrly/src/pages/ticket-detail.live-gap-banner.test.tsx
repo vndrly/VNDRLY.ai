@@ -1,4 +1,11 @@
 import * as React from "react";
+
+// These legacy ticket fixtures have no submitted proof. Keep this page harness
+// isolated from proof fetching; the proof component has its own focused suite.
+vi.mock("@/components/ticket-submitted-proof", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/components/ticket-submitted-proof")>(),
+  useSubmittedProof: () => ({ data: undefined, isError: false }),
+}));
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 // Task #659 — pin down the explicit "live updates briefly disconnected"

@@ -14,6 +14,9 @@ function productionTsxFiles(directory = srcRoot): string[] {
   });
 }
 
+// Match JSX opening tags, not CSS selector strings such as closest('[role="dialog"]').
+const hasDialogRole = (source: string) => /<[A-Za-z][^>]*\brole\s*=\s*["']dialog["']/.test(source);
+
 function sourceFor(relativePath: string): string {
   return readFileSync(resolve(srcRoot, relativePath), "utf8");
 }
@@ -23,6 +26,10 @@ function relativePath(path: string): string {
 }
 
 describe("production modal inventory", () => {
+  it("distinguishes actual dialog elements from selectors used to inspect existing dialogs", () => {
+    expect(hasDialogRole('<section\n role="dialog" aria-modal="true">')).toBe(true);
+    expect(hasDialogRole("heading.closest('[role=\"dialog\"]')")).toBe(false);
+  });
   it("keeps page theme state out of shared and custom modal chrome", () => {
     const themeIndependentFiles = [
       "components/ui/dialog.tsx",
@@ -39,7 +46,7 @@ describe("production modal inventory", () => {
 
   it("limits hand-authored dialog roles to the documented helpers and notification preview", () => {
     const actual = productionTsxFiles()
-      .filter((file) => /role=["']dialog["']/.test(readFileSync(file, "utf8")))
+      .filter((file) => hasDialogRole(readFileSync(file, "utf8")))
       .map(relativePath)
       .sort();
 

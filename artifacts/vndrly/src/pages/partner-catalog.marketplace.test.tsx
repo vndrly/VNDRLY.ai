@@ -30,7 +30,7 @@ vi.mock("@/hooks/use-brand", () => ({
     isOrgBranded: true,
   }),
 }));
-const midcon: MarketplaceRankedVendor = {
+const midcon: MarketplaceRankedVendor & { offer: NonNullable<MarketplaceRankedVendor["offer"]> } = {
   vendorId: 7,
   vendorName: "MidCon",
   capabilityId: 10,
@@ -68,6 +68,7 @@ const midcon: MarketplaceRankedVendor = {
     },
   },
   offerable: true,
+  quoteRequired: false,
   weightedScore: 0.87,
   factors: [
     {
@@ -133,7 +134,9 @@ beforeEach(async () => {
       const method = init?.method ?? "GET";
       requests.push({ url, method });
       let data: unknown;
-      if (url.pathname.includes("/service-marketplace/")) {
+      if (url.pathname.endsWith("/job-offers")) {
+        data = { items: [] };
+      } else if (url.pathname.includes("/service-marketplace/")) {
         if (failSearch)
           return Response.json(
             { code: "marketplace.unavailable" },
@@ -146,7 +149,7 @@ beforeEach(async () => {
                 v.vendorId === Number(url.pathname.split("/").pop()) &&
                 v.capabilityId ===
                   Number(url.searchParams.get("vendorCapabilityId")) &&
-                v.offer.id ===
+                v.offer?.id ===
                   Number(url.searchParams.get("vendorPartnerServiceOfferId")),
             ))
           : {
@@ -242,7 +245,7 @@ describe("partner marketplace", () => {
       ),
     ).toBeTruthy();
     expect(
-      requests.some((r) => r.url.pathname.includes("service-marketplace")),
+      requests.some((r) => r.url.pathname.includes("/work-types/") && r.url.pathname.includes("/vendors")),
     ).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Edit Gatekeeping" }));
     expect(await screen.findByDisplayValue("Gatekeeping")).toBeTruthy();
@@ -527,6 +530,7 @@ describe("partner marketplace", () => {
       />,
     );
     change("Scope of work", "Retain this scope");
+    change("AFE reference", "AFE-1");
     change("Attachment URLs (one per line)", "javascript:alert(1)");
     change("Offer expires", "2026-10-31T12:00");
     fireEvent.click(screen.getByRole("button", { name: "Prepare draft" }));
@@ -546,6 +550,7 @@ describe("partner marketplace", () => {
       />,
     );
     change("Scope of work", "Control entry");
+    change("AFE reference", "AFE-1");
     change("Attachment URLs (one per line)", "javascript:alert(1)");
     change("Offer expires", "2026-10-31T12:00");
     fireEvent.click(screen.getByRole("button", { name: "Prepare draft" }));

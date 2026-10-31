@@ -19,7 +19,7 @@ const { fetchMock, requests } = vi.hoisted(() => {
 });
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }),
 }));
 
 vi.mock("@/hooks/use-auth", () => ({

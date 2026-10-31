@@ -124,7 +124,12 @@ test("gate watch survives sign-out and transfers only after the incoming account
         { exact: true },
       ),
     ).toBeVisible();
-    await page.getByTestId('button-back').click();
+    // The phone header replaces the desktop content back link at this viewport.
+    // Exercise the visible navigation control and retain the scoped return checks.
+    const phoneBack = page.getByRole('banner', { name: 'Page navigation', exact: true })
+      .getByRole('button', { name: 'Back', exact: true });
+    await expect(phoneBack).toBeVisible();
+    await phoneBack.click();
     await expect(page).toHaveURL(new RegExp(`/gate/change-over\\?siteId=${site.id}&stationId=${gate}$`));
     await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible();
     const active = (

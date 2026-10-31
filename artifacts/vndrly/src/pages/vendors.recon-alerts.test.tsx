@@ -97,6 +97,7 @@ vi.mock("wouter", () => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
+    i18n: { language: "en" },
     t: (key: string, opts?: { defaultValue?: string } & Record<string, unknown>) => {
       if (opts && typeof opts.defaultValue === "string") {
         let out = opts.defaultValue;

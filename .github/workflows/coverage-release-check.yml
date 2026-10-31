@@ -131,6 +131,7 @@ jobs:
               ;;
             libraries) pnpm run test:libs ;;
             web) pnpm run test:web ;;
+            web-handshake) pnpm --filter @workspace/vndrly exec vitest run src/components/modal-inventory.test.ts src/pages/gate-history.plate-display.test.tsx src/pages/gatekeeper.export-pills.test.tsx src/pages/vendors.recon-alerts.test.tsx src/pages/partner-catalog.marketplace.test.tsx src/pages/ticket-detail.assignment-removed.test.tsx src/pages/ticket-detail.audit-payment-reversed.test.tsx src/pages/ticket-detail.live-connection-pill.test.tsx src/pages/ticket-detail.live-gap-banner.test.tsx src/pages/ticket-detail.status-pills.test.tsx src/components/ticket-submitted-proof.test.tsx src/components/service-marketplace/vendor-discovery.test.tsx src/components/service-marketplace/job-offer-flow.test.tsx src/components/service-marketplace/partner-catalog-import.test.tsx src/components/gate-daily-billing-panel.test.tsx src/pages/print-ticket.proof-packet.test.tsx --maxWorkers=2 ;;
             mobile) pnpm run test:mobile ;;
             api) pnpm run test:api ;;
             api-map) pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run src/services/gate-map-pins.database.test.ts src/services/gate-map-pins.test.ts src/services/gate-map-pin-sharing.test.ts src/services/gate-coverage-map.test.ts src/lib/notification-destination.test.ts --no-file-parallelism --maxWorkers=1 ;;

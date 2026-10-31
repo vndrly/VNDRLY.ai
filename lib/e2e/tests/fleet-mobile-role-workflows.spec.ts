@@ -165,5 +165,5 @@ test("Compliance module outage stays isolated from current ticket work", async (
   const orders = await page.request.get("/api/fleet/yard-orders?limit=20");
   expect(orders.ok()).toBe(true);
   await page.goto("/fleet");
-  await expect(page.locator("h1").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Assigned work \(/ })).toBeVisible();
 });

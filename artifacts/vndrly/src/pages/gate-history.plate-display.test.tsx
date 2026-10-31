@@ -12,7 +12,7 @@ vi.mock("@/lib/visits-api", () => ({ visitsApi: { correctGatePresence } }));
 vi.mock("@/lib/gate-arrivals-api", () => ({ gateArrivalsApi: { list: incoming } }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }),
 }));
 vi.mock("@/components/content-pane-back-link", () => ({
   default: () => React.createElement("a", { href: "/gate" }, "Back"),
