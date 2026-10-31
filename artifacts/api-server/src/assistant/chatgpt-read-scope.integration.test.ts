@@ -102,7 +102,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     const [unchanged] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(unchanged.status).toBe("submitted");
     // A work reviewer can approve proof but has no AP authority; org admins do.
-    await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "partner", partnerId: partners[0].id, role: "member" });
+    const [reviewMembership] = await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "partner", partnerId: partners[0].id, role: "member" }).returning();
     const cookie = buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[0].id });
     expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).set("X-Submission-Revision", String(submitted.submissionRevision)).send({}), 200);
     const [approved] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
@@ -115,7 +115,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     expectStatus(await request(app).post(`/tickets/${ticket.id}/disperse-funds`).set("Cookie", fieldCookie).send(payment), 403);
     expectStatus(await request(app).post(`/tickets/${ticket.id}/disperse-funds`).set("Cookie", cookie).send(payment), 403);
     await state("approved", "off_site");
-    const [apMembership] = await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "partner", partnerId: partners[0].id, role: "ap" }).returning();
+    const [apMembership] = await db.update(userOrgMembershipsTable).set({ role: "ap" }).where(eq(userOrgMembershipsTable.id, reviewMembership.id)).returning();
     const apCookie = buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[0].id, membershipRole: "ap", activeMembershipId: apMembership.id });
     expectStatus(await request(app).post(`/tickets/${ticket.id}/awaiting-payment`).set("Cookie", apCookie).send({ note: "Synthetic AP review complete" }), 200);
     await state("awaiting_payment", "off_site");
