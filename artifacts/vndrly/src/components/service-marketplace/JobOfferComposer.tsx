@@ -24,7 +24,7 @@ export interface CreateJobOfferInput {
   requestedStartAt: string;
   requestedEndAt: string;
   crewCount: number;
-  afeCode?: string;
+  afeCode: string;
   poNumber?: string;
   attachmentUrls: string[];
   expiresAt: string;
@@ -136,6 +136,8 @@ export default function JobOfferComposer({
         type={type}
         className="rounded border bg-background p-2"
         value={form[key]}
+        required={key === "afe"}
+        maxLength={key === "afe" ? 200 : undefined}
         disabled={busy || sent}
         onChange={(e) => {
           setForm({ ...form, [key]: e.target.value });
@@ -168,9 +170,12 @@ export default function JobOfferComposer({
         });
         if (
           isChecking ||
+          !vendor.offer ||
           !vendor.offerable ||
           !vendor.eligibility.eligible ||
           !form.scope.trim() ||
+          !form.afe.trim() ||
+          form.afe.trim().length > 200 ||
           form.scope.trim().length > 10000 ||
           !Number.isFinite(start) ||
           !Number.isFinite(end) ||
@@ -202,7 +207,7 @@ export default function JobOfferComposer({
           crewCount: crews,
           attachmentUrls: attachments,
           expiresAt: new Date(expires).toISOString(),
-          ...(form.afe.trim() ? { afeCode: form.afe.trim() } : {}),
+          afeCode: form.afe.trim(),
           ...(form.po.trim() ? { poNumber: form.po.trim() } : {}),
         };
         setError(false);
@@ -213,10 +218,10 @@ export default function JobOfferComposer({
       <h4 className="font-semibold">
         {t("partnerMarketplace.composer")} · {vendor.vendorName}
       </h4>
-      <p className="text-sm">
+      {vendor.offer && <p className="text-sm">
         {t("partnerMarketplace.rateBasis")}: {vendor.offer.currency}{" "}
         {vendor.offer.unitPrice.toFixed(2)} / {vendor.offer.unit}
-      </p>
+      </p>}
       <p className="text-sm text-muted-foreground">
         {t("partnerMarketplace.savedTerms")}
       </p>
@@ -251,6 +256,7 @@ export default function JobOfferComposer({
           busy ||
           sent ||
           isChecking ||
+          !vendor.offer ||
           !vendor.offerable ||
           !vendor.eligibility.eligible
         }

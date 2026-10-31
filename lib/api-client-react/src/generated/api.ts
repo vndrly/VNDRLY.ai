@@ -104,6 +104,8 @@ import type {
   GpsLocationBody,
   GpsLog,
   HealthStatus,
+  ImportPartnerServiceCatalog200,
+  ImportPartnerServiceCatalogBody,
   KickbackBody,
   LaborSummary,
   ListAdminCanonicalServices200,
@@ -115,6 +117,7 @@ import type {
   ListFireTransmitterSettingsHistoryParams,
   ListFireTransmitterSettingsHistoryResponse,
   ListOrgMembersResponse,
+  ListPartnerCatalogImports200,
   ListPartnerContactsParams,
   ListSiteLocationsParams,
   ListTicketsParams,
@@ -134,6 +137,9 @@ import type {
   MarketplaceJobOfferDraft,
   MarketplaceJobOfferList,
   MarketplaceJobOfferVersion,
+  MarketplaceJobTicketInput,
+  MarketplaceJobTicketList,
+  MarketplaceJobTicketResult,
   MarketplacePartnerRate,
   MarketplacePartnerRateInput,
   MarketplaceRankedVendor,
@@ -158,6 +164,8 @@ import type {
   PublicPlatformBrand,
   QrCodeData,
   ReinviteTicketBody,
+  RequestPartnerMarketplaceQuote202,
+  RequestPartnerMarketplaceQuoteBody,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
   RespondDirectAssignmentBody,
@@ -220,6 +228,283 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+export const getImportPartnerServiceCatalogUrl = (partnerId: number) => {
+  return `/api/partners/${partnerId}/catalog-import`;
+};
+
+export const importPartnerServiceCatalog = async (
+  partnerId: number,
+  importPartnerServiceCatalogBody: ImportPartnerServiceCatalogBody,
+  options?: RequestInit,
+): Promise<ImportPartnerServiceCatalog200> => {
+  return customFetch<ImportPartnerServiceCatalog200>(
+    getImportPartnerServiceCatalogUrl(partnerId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(importPartnerServiceCatalogBody),
+    },
+  );
+};
+
+export const getImportPartnerServiceCatalogMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importPartnerServiceCatalog>>,
+    TError,
+    { partnerId: number; data: BodyType<ImportPartnerServiceCatalogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importPartnerServiceCatalog>>,
+  TError,
+  { partnerId: number; data: BodyType<ImportPartnerServiceCatalogBody> },
+  TContext
+> => {
+  const mutationKey = ["importPartnerServiceCatalog"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importPartnerServiceCatalog>>,
+    { partnerId: number; data: BodyType<ImportPartnerServiceCatalogBody> }
+  > = (props) => {
+    const { partnerId, data } = props ?? {};
+
+    return importPartnerServiceCatalog(partnerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportPartnerServiceCatalogMutationResult = NonNullable<
+  Awaited<ReturnType<typeof importPartnerServiceCatalog>>
+>;
+export type ImportPartnerServiceCatalogMutationBody =
+  BodyType<ImportPartnerServiceCatalogBody>;
+export type ImportPartnerServiceCatalogMutationError = ErrorType<void>;
+
+export const useImportPartnerServiceCatalog = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importPartnerServiceCatalog>>,
+    TError,
+    { partnerId: number; data: BodyType<ImportPartnerServiceCatalogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof importPartnerServiceCatalog>>,
+  TError,
+  { partnerId: number; data: BodyType<ImportPartnerServiceCatalogBody> },
+  TContext
+> => {
+  return useMutation(getImportPartnerServiceCatalogMutationOptions(options));
+};
+
+export const getListPartnerCatalogImportsUrl = (partnerId: number) => {
+  return `/api/partners/${partnerId}/catalog-imports`;
+};
+
+export const listPartnerCatalogImports = async (
+  partnerId: number,
+  options?: RequestInit,
+): Promise<ListPartnerCatalogImports200> => {
+  return customFetch<ListPartnerCatalogImports200>(
+    getListPartnerCatalogImportsUrl(partnerId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListPartnerCatalogImportsQueryKey = (partnerId: number) => {
+  return [`/api/partners/${partnerId}/catalog-imports`] as const;
+};
+
+export const getListPartnerCatalogImportsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPartnerCatalogImports>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPartnerCatalogImports>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListPartnerCatalogImportsQueryKey(partnerId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPartnerCatalogImports>>
+  > = ({ signal }) =>
+    listPartnerCatalogImports(partnerId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!partnerId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPartnerCatalogImports>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPartnerCatalogImportsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPartnerCatalogImports>>
+>;
+export type ListPartnerCatalogImportsQueryError = ErrorType<void>;
+
+export function useListPartnerCatalogImports<
+  TData = Awaited<ReturnType<typeof listPartnerCatalogImports>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPartnerCatalogImports>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPartnerCatalogImportsQueryOptions(
+    partnerId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getDownloadPartnerCatalogImportSourceUrl = (
+  partnerId: number,
+  importId: number,
+) => {
+  return `/api/partners/${partnerId}/catalog-imports/${importId}/source`;
+};
+
+export const downloadPartnerCatalogImportSource = async (
+  partnerId: number,
+  importId: number,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(
+    getDownloadPartnerCatalogImportSourceUrl(partnerId, importId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getDownloadPartnerCatalogImportSourceQueryKey = (
+  partnerId: number,
+  importId: number,
+) => {
+  return [
+    `/api/partners/${partnerId}/catalog-imports/${importId}/source`,
+  ] as const;
+};
+
+export const getDownloadPartnerCatalogImportSourceQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadPartnerCatalogImportSource>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  importId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadPartnerCatalogImportSource>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getDownloadPartnerCatalogImportSourceQueryKey(partnerId, importId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof downloadPartnerCatalogImportSource>>
+  > = ({ signal }) =>
+    downloadPartnerCatalogImportSource(partnerId, importId, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(partnerId && importId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadPartnerCatalogImportSource>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type DownloadPartnerCatalogImportSourceQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadPartnerCatalogImportSource>>
+>;
+export type DownloadPartnerCatalogImportSourceQueryError = ErrorType<void>;
+
+export function useDownloadPartnerCatalogImportSource<
+  TData = Awaited<ReturnType<typeof downloadPartnerCatalogImportSource>>,
+  TError = ErrorType<void>,
+>(
+  partnerId: number,
+  importId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadPartnerCatalogImportSource>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getDownloadPartnerCatalogImportSourceQueryOptions(
+    partnerId,
+    importId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Prepare a draft with authoritative saved rates
@@ -1046,6 +1331,192 @@ export const useAcceptMarketplaceJobOffer = <
 };
 
 /**
+ * @summary List tickets belonging to an accepted job
+ */
+export const getListMarketplaceJobTicketsUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}/tickets`;
+};
+
+export const listMarketplaceJobTickets = async (
+  offerId: number,
+  options?: RequestInit,
+): Promise<MarketplaceJobTicketList> => {
+  return customFetch<MarketplaceJobTicketList>(
+    getListMarketplaceJobTicketsUrl(offerId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListMarketplaceJobTicketsQueryKey = (offerId: number) => {
+  return [`/api/service-marketplace/job-offers/${offerId}/tickets`] as const;
+};
+
+export const getListMarketplaceJobTicketsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMarketplaceJobTickets>>,
+  TError = ErrorType<unknown>,
+>(
+  offerId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMarketplaceJobTickets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMarketplaceJobTicketsQueryKey(offerId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMarketplaceJobTickets>>
+  > = ({ signal }) =>
+    listMarketplaceJobTickets(offerId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!offerId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMarketplaceJobTickets>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMarketplaceJobTicketsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMarketplaceJobTickets>>
+>;
+export type ListMarketplaceJobTicketsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List tickets belonging to an accepted job
+ */
+
+export function useListMarketplaceJobTickets<
+  TData = Awaited<ReturnType<typeof listMarketplaceJobTickets>>,
+  TError = ErrorType<unknown>,
+>(
+  offerId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMarketplaceJobTickets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMarketplaceJobTicketsQueryOptions(
+    offerId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a shift ticket retaining the accepted job and AFE
+ */
+export const getCreateMarketplaceJobTicketUrl = (offerId: number) => {
+  return `/api/service-marketplace/job-offers/${offerId}/tickets`;
+};
+
+export const createMarketplaceJobTicket = async (
+  offerId: number,
+  marketplaceJobTicketInput: MarketplaceJobTicketInput,
+  options?: RequestInit,
+): Promise<MarketplaceJobTicketResult> => {
+  return customFetch<MarketplaceJobTicketResult>(
+    getCreateMarketplaceJobTicketUrl(offerId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(marketplaceJobTicketInput),
+    },
+  );
+};
+
+export const getCreateMarketplaceJobTicketMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMarketplaceJobTicket>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobTicketInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMarketplaceJobTicket>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobTicketInput> },
+  TContext
+> => {
+  const mutationKey = ["createMarketplaceJobTicket"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMarketplaceJobTicket>>,
+    { offerId: number; data: BodyType<MarketplaceJobTicketInput> }
+  > = (props) => {
+    const { offerId, data } = props ?? {};
+
+    return createMarketplaceJobTicket(offerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMarketplaceJobTicketMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMarketplaceJobTicket>>
+>;
+export type CreateMarketplaceJobTicketMutationBody =
+  BodyType<MarketplaceJobTicketInput>;
+export type CreateMarketplaceJobTicketMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a shift ticket retaining the accepted job and AFE
+ */
+export const useCreateMarketplaceJobTicket = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMarketplaceJobTicket>>,
+    TError,
+    { offerId: number; data: BodyType<MarketplaceJobTicketInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createMarketplaceJobTicket>>,
+  TError,
+  { offerId: number; data: BodyType<MarketplaceJobTicketInput> },
+  TContext
+> => {
+  return useMutation(getCreateMarketplaceJobTicketMutationOptions(options));
+};
+
+/**
  * Active partner membership or identified system admin required. Eligibility is evaluated before ranking and pagination. Missing evidence stays null. Private terms, internal notes, and other partner assessments are excluded. Price factors are unavailable when currencies or units differ.
  * @summary Compare current matching vendor offers for an owned work type and saved site
  */
@@ -1316,6 +1787,128 @@ export function useGetPartnerMarketplaceVendor<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+export const getRequestPartnerMarketplaceQuoteUrl = (
+  partnerId: number,
+  workTypeId: number,
+  vendorId: number,
+) => {
+  return `/api/service-marketplace/partners/${partnerId}/work-types/${workTypeId}/vendors/${vendorId}/quote-requests`;
+};
+
+export const requestPartnerMarketplaceQuote = async (
+  partnerId: number,
+  workTypeId: number,
+  vendorId: number,
+  requestPartnerMarketplaceQuoteBody: RequestPartnerMarketplaceQuoteBody,
+  options?: RequestInit,
+): Promise<RequestPartnerMarketplaceQuote202> => {
+  return customFetch<RequestPartnerMarketplaceQuote202>(
+    getRequestPartnerMarketplaceQuoteUrl(partnerId, workTypeId, vendorId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(requestPartnerMarketplaceQuoteBody),
+    },
+  );
+};
+
+export const getRequestPartnerMarketplaceQuoteMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestPartnerMarketplaceQuote>>,
+    TError,
+    {
+      partnerId: number;
+      workTypeId: number;
+      vendorId: number;
+      data: BodyType<RequestPartnerMarketplaceQuoteBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestPartnerMarketplaceQuote>>,
+  TError,
+  {
+    partnerId: number;
+    workTypeId: number;
+    vendorId: number;
+    data: BodyType<RequestPartnerMarketplaceQuoteBody>;
+  },
+  TContext
+> => {
+  const mutationKey = ["requestPartnerMarketplaceQuote"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestPartnerMarketplaceQuote>>,
+    {
+      partnerId: number;
+      workTypeId: number;
+      vendorId: number;
+      data: BodyType<RequestPartnerMarketplaceQuoteBody>;
+    }
+  > = (props) => {
+    const { partnerId, workTypeId, vendorId, data } = props ?? {};
+
+    return requestPartnerMarketplaceQuote(
+      partnerId,
+      workTypeId,
+      vendorId,
+      data,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestPartnerMarketplaceQuoteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestPartnerMarketplaceQuote>>
+>;
+export type RequestPartnerMarketplaceQuoteMutationBody =
+  BodyType<RequestPartnerMarketplaceQuoteBody>;
+export type RequestPartnerMarketplaceQuoteMutationError = ErrorType<void>;
+
+export const useRequestPartnerMarketplaceQuote = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestPartnerMarketplaceQuote>>,
+    TError,
+    {
+      partnerId: number;
+      workTypeId: number;
+      vendorId: number;
+      data: BodyType<RequestPartnerMarketplaceQuoteBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestPartnerMarketplaceQuote>>,
+  TError,
+  {
+    partnerId: number;
+    workTypeId: number;
+    vendorId: number;
+    data: BodyType<RequestPartnerMarketplaceQuoteBody>;
+  },
+  TContext
+> => {
+  return useMutation(getRequestPartnerMarketplaceQuoteMutationOptions(options));
+};
 
 /**
  * @summary List own capabilities and stored mapping status (active vendor admin or system admin)

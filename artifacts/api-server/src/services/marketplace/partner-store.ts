@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, gt, or } from "drizzle-orm";
 import {
   workTypesTable as workTypes,
   siteLocationsTable as sites,
@@ -54,7 +54,7 @@ export interface PartnerMarketplaceCandidate {
   vendorName: string;
   capability: VendorCapability;
   capabilityMapping: ServiceMapping;
-  offer: VendorPartnerServiceOffer;
+  offer: VendorPartnerServiceOffer | null;
   companyActive: boolean;
   serviceAreas: EligibilityArea[];
   complianceCurrent: boolean;
@@ -116,16 +116,14 @@ export async function discoverPartnerMarketplaceVendors(
     return [];
   const candidates: RankingCandidate[] = [];
   for (const row of await store.listCandidates(context, now)) {
-    const offer = row.offer;
+    const savedOffer = row.offer;
+    const offer = savedOffer && savedOffer.partnerId === context.partnerId &&
+      savedOffer.workTypeId === context.workType.id && savedOffer.vendorCapabilityId === row.capability.id &&
+      savedOffer.active && savedOffer.effectiveFrom <= now &&
+      (savedOffer.effectiveUntil === null || savedOffer.effectiveUntil > now) ? savedOffer : null;
     if (
       row.capability.vendorId !== row.vendorId ||
-      offer.partnerId !== context.partnerId ||
-      offer.workTypeId !== context.workType.id ||
-      offer.vendorCapabilityId !== row.capability.id ||
       !row.capability.active ||
-      !offer.active ||
-      offer.effectiveFrom > now ||
-      (offer.effectiveUntil !== null && offer.effectiveUntil <= now) ||
       !activeServiceMatch(
         row.capabilityMapping,
         context.demandMapping,
@@ -153,13 +151,14 @@ export async function discoverPartnerMarketplaceVendors(
       demandMapping: context.demandMapping,
       canonicalServiceActive: context.canonicalServiceActive,
       offer,
+      requireOffer: false,
       serviceAreas: row.serviceAreas,
       site: context.site,
       complianceCurrent: row.complianceCurrent,
       requiredCredentials: context.requiredCredentials,
       currentCredentials: row.currentCredentials,
       requestedCapacity: options.requestedCapacity,
-      available: offer.availability?.available !== false,
+      available: offer?.availability?.available !== false,
       relationshipStatus: row.relationshipStatus,
       now,
     });
@@ -170,15 +169,15 @@ export async function discoverPartnerMarketplaceVendors(
       capabilityName: row.capability.name,
       canonicalServiceId: row.capabilityMapping.canonicalServiceId!,
       matchExplanation: row.capabilityMapping.explanation,
-      offer: {
+      offer: offer ? {
         id: offer.id,
         unitPrice: Number(offer.unitPrice),
         unit: offer.unit,
         currency: offer.currency,
         capacity: offer.capacity,
-        available: offer.availability?.available !== false,
+        available: offer?.availability?.available !== false,
         commercialConditions: offer.commercialConditions,
-      },
+      } : null,
       rating: row.rating,
       reviewCount: row.reviewCount,
       safety: row.safety,
@@ -294,12 +293,16 @@ export function createPostgresPartnerMarketplaceStore(
           offer: offers,
           vendor: vendors,
         })
-        .from(offers)
-        .innerJoin(
-          capabilities,
+        .from(capabilities)
+        .leftJoin(
+          offers,
           and(
             eq(capabilities.id, offers.vendorCapabilityId),
-            eq(capabilities.active, true),
+            eq(offers.partnerId, context.partnerId),
+            eq(offers.workTypeId, context.workType.id),
+            eq(offers.active, true),
+            lte(offers.effectiveFrom, now),
+            or(isNull(offers.effectiveUntil), gt(offers.effectiveUntil, now)),
           ),
         )
         .innerJoin(vendors, eq(vendors.id, capabilities.vendorId))
@@ -315,13 +318,7 @@ export function createPostgresPartnerMarketplaceStore(
             ),
           ),
         )
-        .where(
-          and(
-            eq(offers.partnerId, context.partnerId),
-            eq(offers.workTypeId, context.workType.id),
-            eq(offers.active, true),
-          ),
-        )
+        .where(eq(capabilities.active, true))
         .orderBy(asc(vendors.id), asc(capabilities.id));
       // Reject stale or tampered semantic mappings before any private
       // compliance projection is attempted.

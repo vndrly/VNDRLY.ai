@@ -63,7 +63,9 @@ export async function regenerateAutoLaborLines(ticketId: number, database?: Omit
   await database.execute(sql`SELECT id FROM tickets WHERE id=${ticketId} FOR UPDATE`);
   // Resolve OT thresholds from vendor config (same precedence as labor-summary).
   const [ticketRow] = await database
-    .select({ id: ticketsTable.id, jobOfferId: ticketsTable.jobOfferId, vendorId: ticketsTable.vendorId, closedAt: ticketsTable.closedAt })
+    .select({ id: ticketsTable.id, jobOfferId: ticketsTable.jobOfferId, engagementJobOfferId: ticketsTable.engagementJobOfferId,
+      siteLocationId: ticketsTable.siteLocationId, workTypeId: ticketsTable.workTypeId,
+      vendorId: ticketsTable.vendorId, closedAt: ticketsTable.closedAt })
     .from(ticketsTable)
     .where(eq(ticketsTable.id, ticketId));
 

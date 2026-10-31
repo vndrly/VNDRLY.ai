@@ -7,6 +7,9 @@ const es: Readonly<Record<string, string>> = {
   Partner: "Cliente",
   Site: "Sitio",
   AFE: "AFE",
+  Job: "Trabajo",
+  "Select an accepted job with a partner-assigned AFE and Gate authorization.":
+    "Seleccione un trabajo aceptado con un AFE asignado por el cliente y autorización de acceso.",
   "Period daily rate": "Tarifa diaria del período",
   "This post’s billing site or partner changed. Office review is required.":
     "El sitio o cliente de facturación de este puesto cambió. Se requiere revisión de oficina.",
@@ -92,6 +95,8 @@ export function gateDailyBillingError(code: string, language: string) {
         ? "Sign in again to continue billing."
         : code.endsWith("version_conflict") || code.endsWith("preview_changed")
           ? "The billing preview changed. Refresh it and review again."
+          : code.endsWith("accepted_job_required") || code.endsWith("job_afe_required")
+            ? "Select an accepted job with a partner-assigned AFE and Gate authorization."
           : code.endsWith("approved_daily_terms_required") ||
               code.endsWith("precise_agreement_review_required")
             ? "This agreement needs pricing review before daily billing."

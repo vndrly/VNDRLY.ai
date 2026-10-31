@@ -31,8 +31,11 @@ export interface MarketplaceJobOfferDraftType {
    * @maximum 100000
    */
   crewCount: number;
-  /** @maxLength 200 */
-  afeCode?: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  afeCode: string;
   /** @maxLength 200 */
   poNumber?: string;
   /** @maxItems 20 */

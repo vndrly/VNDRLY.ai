@@ -64,6 +64,8 @@ export interface EligibilityInput {
   requestedCapacity: number;
   available: boolean;
   now: Date;
+  /** Discovery evaluates capability without requiring negotiated commercial terms. Award callers retain the default. */
+  requireOffer?: boolean;
   relationshipRequired?: boolean;
   relationshipApproved?: boolean;
   relationshipStatus?: string | null;
@@ -151,7 +153,7 @@ export async function evaluateMarketplaceEligibility(
     offer.partnerId === input.partnerId &&
     offer.workTypeId === input.workTypeId &&
     effective(offer, input.now);
-  add(!offerActive, "OFFER_INACTIVE");
+  add(input.requireOffer !== false && !offerActive, "OFFER_INACTIVE");
   const scoped = input.serviceAreas.filter(
     (row) =>
       row.vendorId === input.vendorId &&
@@ -194,12 +196,12 @@ export async function evaluateMarketplaceEligibility(
   add(missing.length > 0, "CREDENTIAL_MISSING");
   const capacity = Math.max(
     0,
-    Math.min(capability?.capacity ?? 0, offerActive ? offer!.capacity : 0),
+    Math.min(capability?.capacity ?? 0, offerActive ? offer!.capacity : input.requireOffer === false ? capability?.capacity ?? 0 : 0),
   );
   add(
     !Number.isSafeInteger(input.requestedCapacity) ||
       input.requestedCapacity <= 0 ||
-      (offerActive && capacity < input.requestedCapacity),
+      ((offerActive || input.requireOffer === false) && capacity < input.requestedCapacity),
     "INSUFFICIENT_CAPACITY",
   );
   add(!input.available, "UNAVAILABLE");

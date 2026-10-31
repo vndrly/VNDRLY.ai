@@ -32,6 +32,7 @@ const input = {
   requestedStartAt: "2026-11-01T10:00:00Z",
   requestedEndAt: "2026-11-01T12:00:00Z",
   crewCount: 2,
+  afeCode: "AFE-TEST-1",
   attachmentUrls: [],
   expiresAt: "2026-10-31T10:00:00Z",
 };
@@ -125,6 +126,17 @@ describe("job offer lifecycle", () => {
             tickets.push(ticket);
             return ticket.id;
           },
+          createJobTicket: async (offer, _session, period, key) => {
+            const prior = tickets.find((row) => row.engagementJobOfferId === offer.id && row.key === key);
+            if (prior) {
+              if (JSON.stringify(prior.period) !== JSON.stringify(period)) throw new Error("marketplace.idempotency_conflict");
+              return { ticketId: prior.id, replayed: true };
+            }
+            const row = { id: tickets.length + 100, engagementJobOfferId: offer.id, key, period };
+            tickets.push(row);
+            return { ticketId: row.id, replayed: false };
+          },
+          listJobTickets: async (offer) => tickets.filter((row) => row.engagementJobOfferId === offer.id || row.jobOfferId === offer.id),
           expire: async (date) => {
             let count = 0;
             for (const row of offers)
@@ -164,6 +176,27 @@ describe("job offer lifecycle", () => {
     version: row.version,
     session: vendor,
     idempotencyKey: "accept-1",
+  });
+  it("requires a partner-assigned AFE before creating or sending work", async () => {
+    await expect(service.createJobOffer({ ...input, afeCode: "  " }, partner, "blank")).rejects.toThrow();
+    const row = await draft();
+    row.afeReference = null;
+    await expect(service.sendJobOffer({ offerId: row.id, version: row.version, session: partner })).rejects.toThrow("marketplace.afe_required");
+    expect(tickets).toHaveLength(0);
+  });
+  it("creates repeatable shifts under one accepted job without changing the first ticket", async () => {
+    const row = structuredClone(await sent());
+    const original = await service.acceptJobOffer(acceptance(row));
+    const period = { requestedStartAt: input.requestedStartAt, requestedEndAt: input.requestedEndAt };
+    const shift = await service.createJobTicket(row.id, period, vendor, "shift-1");
+    expect(shift.ticketId).not.toBe(original.ticketId);
+    expect(await service.createJobTicket(row.id, period, vendor, "shift-1")).toEqual({ ...shift, replayed: true });
+    expect((await service.getJobOffer(row.id, vendor)).createdTicketId).toBe(original.ticketId);
+    expect(await service.listJobTickets(row.id, partner)).toHaveLength(2);
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0].scopeSnapshot.afeCode).toBe(input.afeCode);
+    await expect(service.createJobTicket(row.id, { ...period, requestedEndAt: "2026-11-01T13:00:00Z" }, vendor, "shift-2")).rejects.toThrow("marketplace.ticket_outside_job_schedule");
+    await expect(service.createJobTicket(row.id, period, { ...vendor, vendorId: 99 }, "shift-2")).rejects.toThrow("marketplace.vendor_scope_required");
   });
   it("freezes server terms, retains the partner work type, and returns one ticket on retries", async () => {
     const row = structuredClone(await sent());

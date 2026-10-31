@@ -97,7 +97,7 @@ export async function verifyMarketplaceSchema(client: pg.Client): Promise<void> 
       const rls = await client.query("SELECT relrowsecurity FROM pg_class WHERE oid = $1::regclass", [`public.${config.name}`]);
       if (!rls.rows[0]?.relrowsecurity) throw new Error(`Marketplace RLS missing: ${config.name}`);
     }
-    for (const index of config.indexes) {
+    for (const index of config.indexes.filter(index => table !== ticketsTable || index.config.columns.every(column => "name" in column && ticketLineage.has(column.name!)))) {
       const definition = index.config;
       const result = await client.query(`SELECT i.indisunique, i.indisvalid, i.indnkeyatts,
         pg_get_expr(i.indpred, i.indrelid) AS predicate,
@@ -144,7 +144,7 @@ export async function migrateSemanticServiceMarketplace(client: pg.Client): Prom
         const ref = fk.reference();
         await client.query(`ALTER TABLE public.${quote(config.name)} ADD CONSTRAINT ${quote(name)} FOREIGN KEY (${ref.columns.map((col) => quote(col.name)).join(", ")}) REFERENCES public.${quote(getTableConfig(ref.foreignTable).name)} (${ref.foreignColumns.map((col) => quote(col.name)).join(", ")})`);
       }
-      for (const index of config.indexes) {
+      for (const index of config.indexes.filter(index => table !== ticketsTable || index.config.columns.every(column => "name" in column && ticketLineage.has(column.name!)))) {
         const definition = index.config;
         const columns = definition.columns.map((column) => {
           if (!("name" in column) || !column.name) throw new Error("Marketplace expression index requires explicit migration support");

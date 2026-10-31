@@ -29,12 +29,14 @@ export default function VendorComparisonCard({
   onCompare,
   onOffer,
   onDetails,
+  onQuote,
 }: {
   vendor: MarketplaceRankedVendor;
   compared: boolean;
   onCompare: () => void;
   onOffer: () => void;
   onDetails: () => void;
+  onQuote?: () => void;
 }) {
   const { t } = useTranslation();
   const id = useId();
@@ -62,8 +64,7 @@ export default function VendorComparisonCard({
         <div>
           <dt>{t("partnerMarketplace.price")}</dt>
           <dd>
-            {vendor.offer.currency} {vendor.offer.unitPrice.toFixed(2)} /{" "}
-            {vendor.offer.unit}
+            {vendor.offer ? `${vendor.offer.currency} ${vendor.offer.unitPrice.toFixed(2)} / ${vendor.offer.unit}` : t("partnerMarketplace.quoteRequired")}
           </dd>
         </div>
         <div>
@@ -137,7 +138,9 @@ export default function VendorComparisonCard({
         <div>
           <dt>{t("partnerMarketplace.availability")}</dt>
           <dd>
-            {vendor.offer.available
+            {!vendor.offer
+              ? t("partnerMarketplace.confirmAvailability")
+              : vendor.offer.available
               ? t("partnerMarketplace.capacityValue", {
                   count: facts.availableCapacity,
                 })
@@ -148,7 +151,7 @@ export default function VendorComparisonCard({
       <p className="text-sm text-muted-foreground">
         {t("partnerMarketplace.advisoryHiring")}
       </p>
-      {vendor.offer.commercialConditions && (
+      {vendor.offer?.commercialConditions && (
         <p className="text-sm">{vendor.offer.commercialConditions}</p>
       )}
       {vendor.eligibility.reasonCodes
@@ -188,10 +191,13 @@ export default function VendorComparisonCard({
         <TogglePillButton type="button" color="blue" onClick={onDetails}>
           {t("partnerMarketplace.details")}
         </TogglePillButton>
+        {!vendor.offer && onQuote && <TogglePillButton type="button" color="blue" disabled={!vendor.eligibility.eligible} onClick={onQuote}>
+          {t("partnerMarketplace.requestQuote")}
+        </TogglePillButton>}
         <TogglePillButton
           type="button"
           color="blue"
-          disabled={!vendor.offerable || !vendor.eligibility.eligible}
+          disabled={!vendor.offer || !vendor.offerable || !vendor.eligibility.eligible}
           onClick={onOffer}
         >
           {t("partnerMarketplace.prepareOffer")}

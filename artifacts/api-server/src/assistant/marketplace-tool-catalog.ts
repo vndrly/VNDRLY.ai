@@ -125,6 +125,7 @@ const job = object(
     "requestedStartAt",
     "requestedEndAt",
     "crewCount",
+    "afeCode",
     "attachmentUrls",
     "expiresAt",
   ],

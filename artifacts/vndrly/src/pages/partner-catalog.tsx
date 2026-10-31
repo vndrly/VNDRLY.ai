@@ -5,6 +5,8 @@ import { ShoppingCart } from "lucide-react";
 import { CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { useBrand } from "@/hooks/use-brand";
 import { PartnerProductServiceCatalogCard } from "@/pages/partner-detail";
+import PartnerCatalogImport from "@/components/service-marketplace/PartnerCatalogImport";
+import PartnerAcceptedJobs from "@/components/service-marketplace/PartnerAcceptedJobs";
 
 export default function PartnerCatalogPage() {
   const { user } = useAuth();
@@ -43,6 +45,7 @@ export default function PartnerCatalogPage() {
           {t("partners.productServiceCatalog.title")}
         </h1>
       </div>
+      {canManage && <PartnerCatalogImport key={partnerId} partnerId={partnerId} />}
       <PartnerProductServiceCatalogCard
         partnerId={partnerId}
         canManage={canManage}
@@ -51,6 +54,7 @@ export default function PartnerCatalogPage() {
           import.meta.env.VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true"
         }
       />
+      {import.meta.env.VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED === "true" && <PartnerAcceptedJobs partnerId={partnerId} />}
     </div>
   );
 }

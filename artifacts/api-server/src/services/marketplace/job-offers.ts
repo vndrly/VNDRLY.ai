@@ -19,7 +19,7 @@ export const createJobOfferInput = z
     requestedStartAt: z.string().datetime({ offset: true }),
     requestedEndAt: z.string().datetime({ offset: true }),
     crewCount: id.max(100000),
-    afeCode: z.string().trim().max(200).optional(),
+    afeCode: z.string().trim().min(1, "The partner must assign an AFE to this job").max(200),
     poNumber: z.string().trim().max(200).optional(),
     attachmentUrls: z
       .array(
@@ -40,6 +40,14 @@ export const createJobOfferInput = z
     { message: "Offer expiry and schedule are out of order" },
   );
 export type CreateJobOfferInput = z.infer<typeof createJobOfferInput>;
+export const createJobTicketInput = z.object({
+  requestedStartAt: z.string().datetime({ offset: true }),
+  requestedEndAt: z.string().datetime({ offset: true }),
+}).strict().refine((value) => Date.parse(value.requestedEndAt) > Date.parse(value.requestedStartAt) &&
+  (Date.parse(value.requestedEndAt) - Date.parse(value.requestedStartAt)) % 60000 === 0, {
+  message: "Ticket end must follow its start by a whole number of minutes",
+});
+export type CreateJobTicketInput = z.infer<typeof createJobTicketInput>;
 export interface JobOfferActionInput {
   offerId: number;
   version: number;
@@ -74,6 +82,8 @@ export interface JobOfferTransaction {
   acceptedVersion(id: number): Promise<number | null>;
   engage(offer: JobOffer, now: Date): Promise<void>;
   createTicket(offer: JobOffer, session: SessionPayload): Promise<number>;
+  createJobTicket(offer: JobOffer, session: SessionPayload, period: CreateJobTicketInput, key: string): Promise<{ ticketId: number; replayed: boolean }>;
+  listJobTickets(offer: JobOffer): Promise<{ id: number; status: string; scheduledStartAt: Date | null; scheduledDurationMinutes: number | null }[]>;
   expire(now: Date): Promise<number>;
 }
 export interface JobOfferPersistence {
@@ -113,7 +123,7 @@ const fromOffer = (row: JobOffer): CreateJobOfferInput => ({
   crewCount: row.crewCount,
   attachmentUrls: (row.attachments ?? []) as string[],
   expiresAt: row.expiresAt!.toISOString(),
-  ...(row.afeReference ? { afeCode: row.afeReference } : {}),
+  afeCode: row.afeReference ?? "",
   ...(row.poReference ? { poNumber: row.poReference } : {}),
 });
 
@@ -182,6 +192,7 @@ export function createJobOfferService(
     offer: JobOffer,
     now: Date,
   ) => {
+    if (!offer.afeReference?.trim()) fail("afe_required");
     const facts = await tx.validate(fromOffer(offer), now);
     const { requestFingerprint: _request, ...frozen } =
       offer.commercialSnapshot;
@@ -348,6 +359,28 @@ export function createJobOfferService(
       };
     },
     expireJobOffers: () => storage.transaction((tx) => tx.expire(clock())),
+    createJobTicket: (offerId: number, raw: CreateJobTicketInput, session: SessionPayload, key: string) =>
+      storage.transaction(async (tx) => {
+        const period = createJobTicketInput.parse(raw);
+        const offer = await tx.get(id.parse(offerId));
+        if (!offer) return fail("offer_not_found", 404);
+        const side = session.role === "vendor" ? "vendor" : "partner";
+        await requireJobOfferAuthority(tx, session, side, side === "vendor" ? offer.vendorId : offer.partnerId);
+        if (offer.status !== "accepted" || !(await tx.acceptedVersion(offer.id))) fail("accepted_job_required");
+        if (!offer.afeReference?.trim()) fail("afe_required");
+        if (!offer.scheduledStartAt || !offer.scheduledEndAt ||
+            Date.parse(period.requestedStartAt) < offer.scheduledStartAt.getTime() ||
+            Date.parse(period.requestedEndAt) > offer.scheduledEndAt.getTime()) fail("ticket_outside_job_schedule");
+        return tx.createJobTicket(offer, session, period, operationKey(key));
+      }),
+    listJobTickets: (offerId: number, session: SessionPayload) => storage.transaction(async (tx) => {
+      const offer = await tx.get(id.parse(offerId));
+      if (!offer) return fail("offer_not_found", 404);
+      const side = session.role === "vendor" ? "vendor" : "partner";
+      await requireJobOfferAuthority(tx, session, side, side === "vendor" ? offer.vendorId : offer.partnerId);
+      if (offer.status !== "accepted") fail("accepted_job_required");
+      return tx.listJobTickets(offer);
+    }),
     getJobOffer: (offerId: number, session: SessionPayload) =>
       storage.transaction(async (tx) => {
         const offer = await tx.get(id.parse(offerId));

@@ -29,11 +29,11 @@ export function commercialBillingMode(
 
 /** Null is exclusively the legacy path. Marketplace tickets must never fall back. */
 export function resolveTicketCommercialRate(
-  ticket: { jobOfferId?: number | null },
+  ticket: { jobOfferId?: number | null; engagementJobOfferId?: number | null },
   snapshot: Record<string, unknown> | null,
   scopeSnapshot?: Record<string, unknown> | null,
 ): TicketCommercialRate | null {
-  if (!ticket.jobOfferId) return null;
+  if (!ticket.jobOfferId && !ticket.engagementJobOfferId) return null;
   if (!snapshot) throw new Error("marketplace.acceptance_snapshot_required");
   const rules = snapshot.billingRules as Record<string, unknown> | undefined;
   const amount = (value: unknown) => {
@@ -71,10 +71,10 @@ export function requireAutomaticHourlyRate(rate: TicketCommercialRate | null) {
 }
 
 export async function loadTicketCommercialRate(
-  ticket: { id: number; jobOfferId?: number | null; vendorId: number },
+  ticket: { id: number; jobOfferId?: number | null; engagementJobOfferId?: number | null; vendorId: number; siteLocationId?: number; workTypeId?: number },
   connection?: Pick<typeof database, "select">,
 ) {
-  if (!ticket.jobOfferId) return null;
+  if (!ticket.jobOfferId && !ticket.engagementJobOfferId) return null;
   const {
     db,
     jobOfferAcceptanceSnapshotsTable: snapshots,
@@ -87,8 +87,10 @@ export async function loadTicketCommercialRate(
     .innerJoin(offers, eq(offers.id, snapshots.jobOfferId))
     .where(
       and(
-        eq(offers.id, ticket.jobOfferId),
-        eq(offers.createdTicketId, ticket.id),
+        eq(offers.id, ticket.engagementJobOfferId ?? ticket.jobOfferId!),
+        ticket.engagementJobOfferId ? undefined : eq(offers.createdTicketId, ticket.id),
+        ticket.siteLocationId == null ? undefined : eq(offers.siteLocationId, ticket.siteLocationId),
+        ticket.workTypeId == null ? undefined : eq(offers.workTypeId, ticket.workTypeId),
         eq(offers.vendorId, ticket.vendorId),
         eq(offers.status, "accepted"),
       ),

@@ -27,7 +27,7 @@ export type GetPartnerMarketplaceVendorParamsType = {
   /**
    * @minimum 1
    */
-  vendorPartnerServiceOfferId: MarketplaceDetailPartnerOfferIdType;
+  vendorPartnerServiceOfferId?: MarketplaceDetailPartnerOfferIdType;
   /**
    * @minimum 1
    */

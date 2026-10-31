@@ -37,6 +37,7 @@ import InPageHeader from "@/components/InPageHeader";
 import TogglePill2 from "@/components/TogglePill2";
 import LiveLocationStatusPill from "@/components/LiveLocationStatusPill";
 import TicketSiteVisitSummary from "@/components/TicketSiteVisitSummary";
+import TicketSubmittedProof from "@/components/TicketSubmittedProof";
 import CrewTimeSection, { type CrewTimeSectionHandle } from "@/components/CrewTimeSection";
 import ScheduleTicketPanel from "@/components/ScheduleTicketPanel";
 import TicketNudgePanel from "@/components/TicketNudgePanel";
@@ -3424,6 +3425,9 @@ export default function TicketDetailScreen() {
 
       <TicketWorkSection title="Visits & evidence" initiallyOpen={false}>
       <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
+      {currentUser && ["vendor", "partner", "admin"].includes(currentUser.role) ? (
+        <TicketSubmittedProof key={`${currentUser.id}:${currentUser.activeMembershipId}:${ticketId}`} ticketId={ticketId} status={ticket.status} role={currentUser.role} onChanged={() => { void load(); }} />
+      ) : null}
 
       <View
         style={[

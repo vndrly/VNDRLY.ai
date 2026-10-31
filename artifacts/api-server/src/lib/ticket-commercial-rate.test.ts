@@ -39,6 +39,12 @@ describe("accepted ticket commercial rates", () => {
       ),
     ).toThrow();
   });
+  it("keeps recurring tickets on the accepted job's AFE and rates", () => {
+    expect(resolveTicketCommercialRate({ jobOfferId: null, engagementJobOfferId: 7 }, frozen, { afeCode: "JOB-AFE" }))
+      .toMatchObject({ afe: "JOB-AFE", unitPrice: "125.00" });
+    expect(() => resolveTicketCommercialRate({ engagementJobOfferId: 7 }, null))
+      .toThrow("marketplace.acceptance_snapshot_required");
+  });
   it("preserves complex component prices without guessing their automatic calculation", () => {
     const terms = resolveTicketCommercialRate(
       { jobOfferId: 7 },

@@ -44,6 +44,11 @@ const candidate = (
 });
 
 describe("transparent marketplace ranking", () => {
+  it("never treats an unknown quote as a free or awardable rate", () => {
+    const [row] = rankMarketplaceVendors({ candidates: [candidate(1, { offer: null })] });
+    expect(row).toMatchObject({ offer: null, quoteRequired: true, offerable: false, eligibility: { eligible: true } });
+    expect(row.factors.find((factor) => factor.name === "price")).toMatchObject({ normalized: null, status: "not_comparable" });
+  });
   it("keeps an ineligible high performer below eligible vendors and preserves reason codes and radius", () => {
     const outside = candidate(1, {
       rating: 5,

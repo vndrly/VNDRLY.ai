@@ -19,3 +19,6 @@ it("rechecks a shared pin's current authority and rejects mismatched or ambiguou
  expect(await resolveNotificationDestination(actor,`${link}&siteId=10`)).toBeNull();
  mock.pin.mockRejectedValue(Error("No longer shared"));expect(await resolveNotificationDestination(actor,link)).toBeNull();
 });
+
+
+it("opens catalog quote requests only for vendor office memberships",async()=>{mock.membership.mockResolvedValue([{orgType:"vendor",role:"member"}]);expect(await resolveNotificationDestination({...actor,role:"vendor"},"/vendor-catalog")).toBe("/vendor-catalog");mock.membership.mockResolvedValue([{orgType:"vendor",role:"field_employee"}]);expect(await resolveNotificationDestination(actor,"/vendor-catalog")).toBeNull();});

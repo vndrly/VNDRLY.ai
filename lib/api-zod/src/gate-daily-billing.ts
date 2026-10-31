@@ -10,6 +10,7 @@ export const GateDailyBillingConfigureSchema = z
     operationId: z.uuid(),
     expectedVersion: z.number().int().min(0),
     workTypeId: z.number().int().positive(),
+    jobOfferId: z.number().int().positive().optional(),
     startDay: z.iso.date(),
     agreementReference: z.string().trim().min(1).max(1000),
     partialDayRule: rule,
@@ -47,6 +48,7 @@ export const GateDailyBillingConfigSchema = z
     partnerId: z.number().int().positive(),
     siteId: z.number().int().positive(),
     workTypeId: z.number().int().positive(),
+    jobOfferId: z.number().int().positive().optional(),
     periodStartDay: z.iso.date(),
     openTicketId: z.number().int().positive().nullable(),
     agreementReference: z.string(),
@@ -80,6 +82,8 @@ export const GateDailyBillingServiceSchema = z
     id: z.number().int().positive(),
     name: z.string(),
     dailyRateCents: z.number().int().nonnegative(),
+    jobOfferId: z.number().int().positive().optional(),
+    afe: z.string().optional(),
   })
   .strict();
 export const GateDailyBillingSetupSchema = z

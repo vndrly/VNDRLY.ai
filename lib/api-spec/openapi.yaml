@@ -72,6 +72,93 @@ tags:
       object is readable through `GET /storage/objects/*`.
 
 paths:
+  /partners/{partnerId}/catalog-import:
+    post:
+      operationId: importPartnerServiceCatalog
+      tags: [Partners]
+      parameters:
+        - { name: partnerId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [fileName, sourceBase64, mode]
+              properties:
+                fileName: { type: string, maxLength: 240 }
+                sourceBase64: { type: string, maxLength: 1400000 }
+                mode: { type: string, enum: [preview, import] }
+      responses:
+        '200':
+          description: Additive import preview or committed source-preserving import
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                required: [sourceHash, fileName, rows, created, duplicates, conflicts]
+                properties:
+                  sourceHash: { type: string }
+                  fileName: { type: string }
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                      required: [row, name, code, unit, outcome]
+                      properties:
+                        row: { type: integer }
+                        name: { type: string }
+                        code: { type: string }
+                        unit: { type: string }
+                        outcome: { type: string, enum: [new, duplicate, conflict, created] }
+                        workTypeId: { type: integer }
+                        reason: { type: string }
+                  created: { type: integer }
+                  duplicates: { type: integer }
+                  conflicts: { type: integer }
+                  importId: { type: integer }
+                  replayed: { type: boolean }
+        '400': { description: Invalid CSV or source }
+        '403': { description: Current partner administrator required }
+        '404': { description: Partner not found }
+  /partners/{partnerId}/catalog-imports:
+    get:
+      operationId: listPartnerCatalogImports
+      tags: [Partners]
+      parameters:
+        - { name: partnerId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Latest twenty preserved catalog import reports, excluding original file bytes
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        '403': { description: Current partner administrator required }
+  /partners/{partnerId}/catalog-imports/{importId}/source:
+    get:
+      operationId: downloadPartnerCatalogImportSource
+      tags: [Partners]
+      parameters:
+        - { name: partnerId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: importId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Byte-preserved original partner CSV
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+        '403': { description: Current partner administrator required }
+        '404': { description: Source not found }
+
   /service-marketplace/job-offers:
     post:
       operationId: createMarketplaceJobOffer
@@ -265,6 +352,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketplaceJobOfferAcceptance'
+  /service-marketplace/job-offers/{offerId}/tickets:
+    parameters:
+      - name: offerId
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+    get:
+      operationId: listMarketplaceJobTickets
+      tags: [ServiceMarketplace]
+      summary: List tickets belonging to an accepted job
+      responses:
+        '200':
+          description: Authorized job tickets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobTicketList'
+    post:
+      operationId: createMarketplaceJobTicket
+      tags: [ServiceMarketplace]
+      summary: Create a shift ticket retaining the accepted job and AFE
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceJobTicketInput'
+      responses:
+        '201':
+          description: Created job ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobTicketResult'
+        '200':
+          description: Idempotent replay of an existing job ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceJobTicketResult'
   /service-marketplace/partners/{partnerId}/work-types/{workTypeId}/vendors:
     parameters:
       - $ref: '#/components/parameters/MarketplacePartnerId'
@@ -343,6 +475,40 @@ paths:
         '403': { description: Active partner scope required }
         '404': { description: 'Owned work type, site, or current matching vendor not found' }
         '503': { description: Marketplace unavailable }
+  /service-marketplace/partners/{partnerId}/work-types/{workTypeId}/vendors/{vendorId}/quote-requests:
+    post:
+      operationId: requestPartnerMarketplaceQuote
+      tags: [ServiceMarketplace]
+      parameters:
+        - { name: partnerId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: workTypeId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: vendorId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [siteId, vendorCapabilityId, requestedCapacity, scope]
+              properties:
+                siteId: { type: integer, minimum: 1 }
+                vendorCapabilityId: { type: integer, minimum: 1 }
+                requestedCapacity: { type: integer, minimum: 1, maximum: 100000 }
+                scope: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        '202':
+          description: Quote request recorded in vendor inbox, deduplicated per demand and scope per day
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [requested]
+                properties:
+                  requested: { type: boolean }
+        '403': { description: Partner authority or enabled marketplace required }
+        '404': { description: Owned service or site not found }
+        '409': { description: Vendor no longer eligible or contact unavailable }
   /service-marketplace/vendors/{vendorId}/capabilities:
     parameters:
       - $ref: '#/components/parameters/MarketplaceVendorId'
@@ -4528,7 +4694,7 @@ components:
     MarketplaceDetailPartnerOfferId:
       name: vendorPartnerServiceOfferId
       in: query
-      required: true
+      required: false
       schema: { type: integer, minimum: 1 }
     MarketplaceRequestedCapacity:
       name: requestedCapacity
@@ -4602,7 +4768,7 @@ components:
     MarketplaceJobOfferDraft:
       type: object
       additionalProperties: false
-      required: [partnerId, workTypeId, vendorId, vendorCapabilityId, vendorPartnerServiceOfferId, siteLocationId, scope, requestedStartAt, requestedEndAt, crewCount, attachmentUrls, expiresAt]
+      required: [partnerId, workTypeId, vendorId, vendorCapabilityId, vendorPartnerServiceOfferId, siteLocationId, scope, requestedStartAt, requestedEndAt, crewCount, afeCode, attachmentUrls, expiresAt]
       properties:
         partnerId: { type: integer, minimum: 1 }
         workTypeId: { type: integer, minimum: 1 }
@@ -4614,13 +4780,40 @@ components:
         requestedStartAt: { type: string, format: date-time }
         requestedEndAt: { type: string, format: date-time }
         crewCount: { type: integer, minimum: 1, maximum: 100000 }
-        afeCode: { type: string, maxLength: 200 }
+        afeCode: { type: string, minLength: 1, maxLength: 200 }
         poNumber: { type: string, maxLength: 200 }
         attachmentUrls:
           type: array
           maxItems: 20
           items: { type: string, format: uri, pattern: '^https://' }
         expiresAt: { type: string, format: date-time }
+    MarketplaceJobTicketInput:
+      type: object
+      additionalProperties: false
+      required: [requestedStartAt, requestedEndAt]
+      properties:
+        requestedStartAt: { type: string, format: date-time }
+        requestedEndAt: { type: string, format: date-time }
+    MarketplaceJobTicketResult:
+      type: object
+      required: [ticketId, replayed]
+      properties:
+        ticketId: { type: integer }
+        replayed: { type: boolean }
+    MarketplaceJobTicketList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [id, status, scheduledStartAt, scheduledDurationMinutes]
+            properties:
+              id: { type: integer }
+              status: { type: string }
+              scheduledStartAt: { type: string, format: date-time, nullable: true }
+              scheduledDurationMinutes: { type: integer, nullable: true }
     MarketplaceJobOfferVersion:
       type: object
       additionalProperties: false
@@ -4689,7 +4882,7 @@ components:
     MarketplaceRankedVendor:
       type: object
       additionalProperties: false
-      required: [vendorId, vendorName, capabilityId, capabilityName, canonicalServiceId, matchExplanation, offer, rating, reviewCount, safety, completedJobs, onTimeRate, priorPartnerJobs, complianceCurrent, relationshipStatus, eligibility, offerable, ratingStatus, safetyStatus, weightedScore, factors]
+      required: [vendorId, vendorName, capabilityId, capabilityName, canonicalServiceId, matchExplanation, offer, rating, reviewCount, safety, completedJobs, onTimeRate, priorPartnerJobs, complianceCurrent, relationshipStatus, eligibility, offerable, quoteRequired, ratingStatus, safetyStatus, weightedScore, factors]
       properties:
         vendorId: { type: integer, minimum: 1 }
         vendorName: { type: string }
@@ -4698,7 +4891,7 @@ components:
         canonicalServiceId: { type: integer, minimum: 1 }
         matchExplanation: { type: string }
         offer:
-          type: object
+          type: [object, "null"]
           additionalProperties: false
           required: [id, unitPrice, unit, currency, capacity, available, commercialConditions]
           properties:
@@ -4745,6 +4938,7 @@ components:
                 availableCapacity: { type: integer, minimum: 0 }
                 requiredCapacity: { type: integer, minimum: 1 }
                 missingCredentials: { type: array, items: { type: string } }
+        quoteRequired: { type: boolean }
         offerable: { type: boolean }
         ratingStatus: { type: string, enum: [rated, not_yet_rated] }
         safetyStatus: { type: string, enum: [rated, not_yet_rated, unavailable] }

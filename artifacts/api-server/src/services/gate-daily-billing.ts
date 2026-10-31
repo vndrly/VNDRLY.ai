@@ -2,6 +2,8 @@ import { pool } from "@workspace/db";
 import { createHash } from "node:crypto";
 import { z } from "zod/v4";
 import type { PoolClient } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { freezeTicketSubmission } from "../lib/ticket-submissions";
 import type { SessionPayload } from "../lib/session";
 import {
   calculateGateBillingPeriod,
@@ -135,7 +137,7 @@ async function authorize(
   ]);
   return { station, vendorId: session.vendorId!, userId: session.userId! };
 }
-async function terms(c: PoolClient, context: Context, workTypeId: number) {
+async function terms(c: PoolClient, context: Context, workTypeId: number, jobOfferId?: number) {
   // A retained assignment/rate is not authority after the partner explicitly
   // revokes the company relationship. Keep the historical period for review.
   const relationship = (
@@ -144,7 +146,23 @@ async function terms(c: PoolClient, context: Context, workTypeId: number) {
       [context.vendorId, context.station.partner_id],
     )
   ).rows[0];
-  if (relationship?.status === "revoked") fail("commercial_authority_revoked");
+  if (["revoked", "restricted"].includes(relationship?.status)) fail("commercial_authority_revoked");
+
+  if (jobOfferId) {
+    const job = (await c.query(
+      `SELECT j.id,j.accepted_at,s.commercial_snapshot,s.scope_snapshot
+       FROM job_offers j JOIN job_offer_acceptance_snapshots s ON s.job_offer_id=j.id
+       JOIN site_work_assignments a ON a.site_location_id=j.site_location_id
+         AND a.vendor_id=j.vendor_id AND a.work_type_id=j.work_type_id AND a.is_gate_contractor=true
+       WHERE j.id=$1 AND j.vendor_id=$2 AND j.partner_id=$3 AND j.site_location_id=$4
+       AND j.work_type_id=$5 AND j.status='accepted'
+       FOR SHARE OF j,s,a`,
+      [jobOfferId, context.vendorId, context.station.partner_id, context.station.site_id, workTypeId],
+    )).rows[0];
+    if (!job) fail("accepted_job_required");
+    const snapshot = acceptedGateDailyTerms(job.commercial_snapshot, job.scope_snapshot);
+    return { ...snapshot, jobOfferId, approvalId: job.id as number, approvalAt: new Date(job.accepted_at).toISOString() };
+  }
 
   const row = (
     await c.query(
@@ -178,6 +196,20 @@ async function terms(c: PoolClient, context: Context, workTypeId: number) {
     afe: row.afe as string,
   };
 }
+
+/** A daily Gate agreement must be representable exactly, without inventing a rate or AFE. */
+export function acceptedGateDailyTerms(commercial: Record<string, unknown>, scope: Record<string, unknown>) {
+  if (!["day", "daily", "per_day"].includes(String(commercial.unit).toLowerCase()) ||
+      commercial.currency !== "USD" ||
+      (commercial.rateComponents != null && (typeof commercial.rateComponents !== "object" || Object.keys(commercial.rateComponents).length > 0)))
+    fail("approved_daily_terms_required");
+  const match = /^(\d+)(?:\.(\d{1,2})0*)?$/.exec(String(commercial.unitPrice));
+  if (!match) fail("precise_agreement_review_required");
+  const dailyRateCents = Number(BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0")));
+  if (!Number.isSafeInteger(dailyRateCents) || dailyRateCents > 100000000) fail("precise_agreement_review_required");
+  if (typeof scope.afeCode !== "string" || !scope.afeCode.trim()) fail("job_afe_required");
+  return { dailyRateCents, afe: scope.afeCode };
+}
 async function config(c: PoolClient, context: Context) {
   const value = await readRecord(
     c,
@@ -202,6 +234,7 @@ async function newTicket(
   context: Context,
   workTypeId: number,
   startDay: string,
+  jobOfferId?: number,
 ) {
   const id = (
     await c.query(
@@ -215,6 +248,18 @@ async function newTicket(
       ],
     )
   ).rows[0].id as number;
+  if (jobOfferId) {
+    // Copy identity only from the accepted, explicitly authorized job. The
+    // original one-ticket acceptance link is retained for historical records.
+    const linked = await c.query(
+      `UPDATE tickets t SET engagement_job_offer_id=j.id,canonical_service_id=j.canonical_service_id,
+       vendor_capability_id=j.vendor_capability_id,vendor_partner_service_offer_id=j.vendor_partner_service_offer_id
+       FROM job_offers j WHERE t.id=$1 AND j.id=$2 AND j.status='accepted'
+       AND j.vendor_id=t.vendor_id AND j.site_location_id=t.site_location_id AND j.work_type_id=t.work_type_id RETURNING t.id`,
+      [id, jobOfferId],
+    );
+    if (!linked.rowCount) fail("accepted_job_required");
+  }
   await c.query(
     "INSERT INTO ticket_status_history(ticket_id,from_status,to_status,actor_user_id,actor_role,reason) VALUES($1,NULL,'initiated',$2,'vendor','Gate post daily billing period opened')",
     [id, session.userId],
@@ -332,13 +377,27 @@ export function createGateDailyBillingService(
         for (const item of ids) {
           try {
             const price = await terms(c, context, item.id);
-            services.push({
+            // Existing agreements stay usable without reassigning old tickets.
+            // A new setup must start from an explicitly accepted job.
+            if (current && !current.jobOfferId) services.push({
               id: item.id,
               name: item.name,
               dailyRateCents: price.dailyRateCents,
             });
           } catch (error) {
             if (!(error instanceof GateBillingError)) throw error;
+          }
+          const jobs = (await c.query(
+            "SELECT id FROM job_offers WHERE vendor_id=$1 AND partner_id=$2 AND site_location_id=$3 AND work_type_id=$4 AND status='accepted' ORDER BY id DESC",
+            [context.vendorId, context.station.partner_id, context.station.site_id, item.id],
+          )).rows;
+          for (const job of jobs) {
+            try {
+              const price = await terms(c, context, item.id, job.id);
+              services.push({ id: item.id, name: item.name, dailyRateCents: price.dailyRateCents, jobOfferId: job.id, afe: price.afe });
+            } catch (error) {
+              if (!(error instanceof GateBillingError)) throw error;
+            }
           }
         }
         const notice = await readRecord(
@@ -400,11 +459,13 @@ export function createGateDailyBillingService(
           prior = await retry(c, context, input.operationId, fingerprint);
         if (prior) return publicConfig(ConfigSchema.parse(prior.result));
         const previous = await config(c, context);
+        if ((!previous || previous.jobOfferId) && !input.jobOfferId) fail("accepted_job_required");
         if ((previous?.version ?? 0) !== input.expectedVersion)
           fail("version_conflict");
         if (
           previous?.openTicketId &&
           (previous.workTypeId !== input.workTypeId ||
+            previous.jobOfferId !== input.jobOfferId ||
             previous.periodStartDay !== input.startDay ||
             previous.partialDayRule !== input.partialDayRule ||
             previous.agreementReference !== input.agreementReference)
@@ -427,8 +488,9 @@ export function createGateDailyBillingService(
               approvalId: previous.approvalId,
               approvalAt: previous.approvalAt,
               afe: previous.afe,
+              ...(previous.jobOfferId ? { jobOfferId: previous.jobOfferId } : {}),
             }
-          : await terms(c, context, input.workTypeId);
+          : await terms(c, context, input.workTypeId, input.jobOfferId);
         const saved = ConfigSchema.parse({
           version: (previous?.version ?? 0) + 1,
           stationId,
@@ -445,6 +507,7 @@ export function createGateDailyBillingService(
               context,
               input.workTypeId,
               input.startDay,
+              input.jobOfferId,
             )),
           agreementReference: input.agreementReference,
           partialDayRule: input.partialDayRule,
@@ -506,7 +569,7 @@ export function createGateDailyBillingService(
           fail("schedule_direction_changed");
         // Current commercial access and the partner approval must still exist;
         // use the saved period's approved rate, not today's mutable catalog price.
-        const continuationTerms = await terms(c, context, current.workTypeId);
+        const continuationTerms = await terms(c, context, current.workTypeId, current.jobOfferId);
         const quote = await preview(c, context, current, now());
         if (quote.fingerprint !== input.previewFingerprint)
           fail("preview_changed");
@@ -549,7 +612,7 @@ export function createGateDailyBillingService(
           fail("coverage_review_required");
         const ticket = (
           await c.query(
-            "SELECT status FROM tickets WHERE id=$1 AND vendor_id=$2 AND site_location_id=$3 AND work_type_id=$4 FOR UPDATE",
+            "SELECT status,engagement_job_offer_id FROM tickets WHERE id=$1 AND vendor_id=$2 AND site_location_id=$3 AND work_type_id=$4 FOR UPDATE",
             [
               current.openTicketId,
               context.vendorId,
@@ -560,6 +623,7 @@ export function createGateDailyBillingService(
         ).rows[0];
         if (
           !ticket ||
+          (ticket.engagement_job_offer_id ?? undefined) !== current.jobOfferId ||
           ticket.status !== "initiated" ||
           Number(
             (
@@ -612,6 +676,7 @@ export function createGateDailyBillingService(
               context,
               current.workTypeId,
               quote.period.nextPeriodStartDay,
+              current.jobOfferId,
             )
           : null;
         const saved = ConfigSchema.parse({
@@ -650,6 +715,7 @@ export function createGateDailyBillingService(
             invoiceStatus: result.invoiceStatus,
           },
         );
+        await freezeTicketSubmission(drizzle(c), current.openTicketId, context.userId);
         await append(c, session, "gate-billing-operation", input.operationId, {
           fingerprint,
           stationId,

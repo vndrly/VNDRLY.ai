@@ -21,6 +21,12 @@ export const ticketsTable = pgTable("tickets", {
   vendorCapabilityId: integer("vendor_capability_id").references(() => vendorCapabilitiesTable.id),
   vendorPartnerServiceOfferId: integer("vendor_partner_service_offer_id").references(() => vendorPartnerServiceOffersTable.id),
   jobOfferId: integer("job_offer_id").references((): AnyPgColumn => jobOffersTable.id),
+  // The original acceptance ticket remains unique; all shifts share this accepted job.
+  engagementJobOfferId: integer("engagement_job_offer_id").references((): AnyPgColumn => jobOffersTable.id),
+  engagementTicketKey: text("engagement_ticket_key"),
+  submissionRevision: integer("submission_revision").notNull().default(0),
+  proofSubmissions: jsonb("proof_submissions").$type<Record<string, unknown>[]>(),
+  approvedSubmissionRevision: integer("approved_submission_revision"),
   // Lifecycle status. Legal values:
   //   initiated | in_progress | pending_review | submitted | approved
   //   kicked_back | awaiting_acceptance | denied | funds_dispersed
@@ -107,7 +113,10 @@ export const ticketsTable = pgTable("tickets", {
   paymentReceiptUrl: text("payment_receipt_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-}, (t) => [uniqueIndex("tickets_job_offer_unique").on(t.jobOfferId)]);
+}, (t) => [
+  uniqueIndex("tickets_job_offer_unique").on(t.jobOfferId),
+  uniqueIndex("tickets_engagement_key_unique").on(t.engagementJobOfferId, t.engagementTicketKey),
+]);
 
 // Holds production tracking numbers that have been deliberately assigned
 // before a site or service date is known. Reservations stay outside `tickets`

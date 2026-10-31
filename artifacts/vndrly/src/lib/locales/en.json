@@ -1,10 +1,46 @@
 {
+  "partnerCatalogImport": {
+    "alreadyImported": "This original file was already imported. Showing its preserved import record.",
+    "history": "Preserved catalogs (latest 20)",
+    "title": "Import your service catalog",
+    "instructions": "Upload a UTF-8 CSV (up to 1 MB and 5,000 rows). Required header: name. Optional headers: code, category, description, unit. Preview before importing.",
+    "file": "Original CSV file",
+    "preview": "Preview import",
+    "error": "Unable to process the catalog. Check UTF-8 CSV format, a name header, matching columns, and the file size. Your existing catalog has not been overwritten.",
+    "rows": "source rows",
+    "created": "created",
+    "duplicates": "duplicates skipped",
+    "conflicts": "conflicts preserved for review",
+    "row": "Row",
+    "code": "Source code",
+    "name": "Service",
+    "unit": "Source unit",
+    "outcome": "Result",
+    "import": "Preserve original and import new services",
+    "download": "Download preserved original CSV",
+    "preservation": "Existing services, assignments and AFEs are preserved. Conflicting names are not merged. Original codes and units remain in the import record. New services enter the normal matching and review process.",
+    "results": {
+      "new": "Ready to add",
+      "created": "Added",
+      "duplicate": "Duplicate — unchanged",
+      "conflict": "Conflicting or unverified scope — unchanged"
+    }
+  },
   "smsEnrollment": {
     "link": "Enroll in SMS updates",
     "signupHint": "Open the SMS enrollment page in a new tab. Finish creating your account and sign in before saving your optional SMS consent.",
     "preferencesHint": "Open the SMS enrollment page in a new tab to choose optional text updates. Read the disclosure, enter your mobile number and save your consent."
   },
   "jobOffers": {
+    "acceptedJobs": "Accepted jobs",
+    "noAcceptedJobs": "No accepted jobs yet.",
+    "jobTickets": "Tickets for this job",
+    "ticketInheritance": "Job #{{job}} · Partner-assigned AFE: {{afe}}. Each ticket keeps this job and its accepted terms.",
+    "ticketFailed": "The ticket could not be created or loaded. Check the job dates and AFE, then try again.",
+    "ticketStart": "Shift start",
+    "ticketEnd": "Shift end",
+    "ticketSchedule": "The shift must be within the accepted job dates.",
+    "createTicket": "Create job ticket",
     "manualBillingRequired": "Manual billing is required for these accepted units, currency, or rate components. Automatic hourly USD calculations are unavailable.",
     "rateComponents": "Additional rate components",
     "overtimeTerms": "Overtime after {{dailyOtHours}} hours/day or {{weeklyOtHours}} hours/week at {{overtimeMultiplier}}× the hourly rate.",
@@ -37,6 +73,13 @@
     }
   },
   "partnerMarketplace": {
+    "quoteRequired": "Quote required",
+    "confirmAvailability": "Confirm availability with vendor",
+    "requestQuote": "Request quote",
+    "quoteScope": "Describe the work and requested dates",
+    "quoteExplanation": "This vendor matches your service. Request a partner rate before offering the job. A quote request does not authorize work.",
+    "quoteSent": "Quote requested. The vendor will provide a price for your review. Refresh these results when it is ready.",
+    "quoteError": "The quote request could not be delivered. Refresh eligibility and try again.",
     "title": "Find vendors for this service",
     "site": "Job site",
     "chooseSite": "Choose a site",

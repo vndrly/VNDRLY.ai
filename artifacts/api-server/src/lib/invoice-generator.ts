@@ -12,6 +12,7 @@
 
 import { and, eq, sql, desc } from "drizzle-orm";
 import { loadTicketCommercialRate } from "./ticket-commercial-rate";
+import { reviewedSubmission } from "./ticket-submissions";
 import {
   db,
   ticketsTable,
@@ -122,11 +123,17 @@ async function generateInvoiceForTicketInner(
     .select({
       id: ticketsTable.id,
       jobOfferId: ticketsTable.jobOfferId,
+      engagementJobOfferId: ticketsTable.engagementJobOfferId,
+      canonicalServiceId: ticketsTable.canonicalServiceId,
+      vendorCapabilityId: ticketsTable.vendorCapabilityId,
       vendorId: ticketsTable.vendorId,
       siteLocationId: ticketsTable.siteLocationId,
       workTypeId: ticketsTable.workTypeId,
       status: ticketsTable.status,
       approvedAt: ticketsTable.approvedAt,
+      submissionRevision: ticketsTable.submissionRevision,
+      approvedSubmissionRevision: ticketsTable.approvedSubmissionRevision,
+      proofSubmissions: ticketsTable.proofSubmissions,
       updatedAt: ticketsTable.updatedAt,
     })
     .from(ticketsTable)
@@ -135,28 +142,32 @@ async function generateInvoiceForTicketInner(
   if (ticket.status !== "approved") {
     return { ok: false, reason: `ticket_status_not_approved:${ticket.status}` };
   }
+  const proof = reviewedSubmission({ id: ticket.id, submission_revision: ticket.submissionRevision,
+    proof_submissions: ticket.proofSubmissions }, ticket.approvedSubmissionRevision);
+  const finance = proof?.finance;
   const commercial = await loadTicketCommercialRate(ticket, executor);
-  if (commercial?.automaticBilling === "manual_billing_required") return { ok: false, reason: "manual_billing_required" };
   // Period resolution must use the IMMUTABLE approval timestamp so that
   // subsequent edits to the ticket (which bump updatedAt) cannot silently
   // shift charges to a different invoice. Tickets approved before this
   // column existed fall back to updatedAt for backwards compatibility.
   const approvedAt = ticket.approvedAt ?? ticket.updatedAt ?? new Date();
 
-  const [site] = await executor
+  const [liveSite] = await executor
     .select()
     .from(siteLocationsTable)
     .where(eq(siteLocationsTable.id, ticket.siteLocationId));
+  const site = finance ? finance.site as typeof liveSite : liveSite;
   if (!site) return { ok: false, reason: "site_not_found" };
 
   // Gate post periods retain their original payer and AFE. Moving a site or
   // editing today's assignment must never re-address an already closed period.
-  const gateProof = (await executor.execute(sql`
+  const liveGateProof = (await executor.execute(sql`
     SELECT tool_output FROM assistant_action_audit
     WHERE vendor_id=${ticket.vendorId} AND partner_id IS NULL
       AND target_type='gate-billing-ticket' AND target_id=${String(ticketId)}
     ORDER BY id DESC LIMIT 1
   `)).rows[0]?.tool_output as { agreement?: unknown } | undefined;
+  const gateProof = proof ? proof.gate : liveGateProof;
   const gateAgreement = gateProof
     ? GateDailyBillingConfigSchema.safeParse(gateProof.agreement) : null;
   if (gateAgreement && (!gateAgreement.success ||
@@ -167,23 +178,38 @@ async function generateInvoiceForTicketInner(
       gateAgreement.data.openTicketId !== ticketId))
     return { ok: false, reason: "gate_billing_context_changed" };
 
+  if (commercial?.automaticBilling === "manual_billing_required") {
+    // Gate has already materialized reviewed daily coverage into exact lines.
+    // Only that explicit accepted-job agreement permits automatic daily billing.
+    const agreement = gateAgreement?.success ? gateAgreement.data : null;
+    if (!agreement || !agreement.jobOfferId ||
+        agreement.jobOfferId !== (ticket.engagementJobOfferId ?? ticket.jobOfferId) ||
+        !["day", "daily", "per_day"].includes(commercial.unit.toLowerCase()) ||
+        commercial.currency !== "USD" || commercial.afe !== agreement.afe ||
+        Number(commercial.unitPrice) !== agreement.dailyRateCents / 100)
+      return { ok: false, reason: "manual_billing_required" };
+  }
 
-  const [vendor] = await executor
+
+  const [liveVendor] = await executor
     .select()
     .from(vendorsTable)
     .where(eq(vendorsTable.id, ticket.vendorId));
+  const vendor = finance ? finance.vendor as typeof liveVendor : liveVendor;
   if (!vendor) return { ok: false, reason: "vendor_not_found" };
 
-  const [partner] = await executor
+  const [livePartner] = await executor
     .select()
     .from(partnersTable)
     .where(eq(partnersTable.id, site.partnerId));
+  const partner = finance ? finance.partner as typeof livePartner : livePartner;
   if (!partner) return { ok: false, reason: "partner_not_found" };
 
-  const [workType] = await executor
+  const [liveWorkType] = await executor
     .select()
     .from(workTypesTable)
     .where(eq(workTypesTable.id, ticket.workTypeId));
+  const workType = finance ? finance.workType as typeof liveWorkType | null : liveWorkType;
 
   // AFE preference: site_work_assignment > site fallback. Phase 1 was supposed
   // to provide a richer AFE resolver — for now this gives a deterministic
@@ -200,13 +226,13 @@ async function generateInvoiceForTicketInner(
     );
   // Marketplace scope is the accepted agreement, including an omitted AFE.
   // Existing Gate and ordinary assignment/site precedence remain unchanged.
-  const afe = commercial ? commercial.afe : gateAgreement?.success ? gateAgreement.data.afe : afeAssignment?.afe ?? site.afe ?? null;
+  const afe = proof ? proof.afe : commercial ? commercial.afe : gateAgreement?.success ? gateAgreement.data.afe : afeAssignment?.afe ?? site.afe ?? null;
 
   // Order by checkInAt ASC so weekly-OT reverse-walk (which converts the
   // latest hours of the week from regular→OT) operates on the correct
   // chronological ordering when an employee has multiple shifts on the same
   // day with different rates.
-  const checkInRows = await executor
+  let checkInRows = await executor
     .select({
       id: ticketCheckInsTable.id,
       ticketId: ticketCheckInsTable.ticketId,
@@ -225,17 +251,28 @@ async function generateInvoiceForTicketInner(
     .where(eq(ticketCheckInsTable.ticketId, ticketId))
     .orderBy(ticketCheckInsTable.checkInAt);
 
-  const assignmentRows = await executor
+  let assignmentRows = await executor
     .select()
     .from(ticketAssignmentRatesTable)
     .where(eq(ticketAssignmentRatesTable.ticketId, ticketId));
 
-  const lineItemRows = await executor
+  let lineItemRows = await executor
     .select()
     .from(ticketLineItemsTable)
     .where(eq(ticketLineItemsTable.ticketId, ticketId));
 
-  const taxRateRow = site.state
+  // The approved claim, not later live edits, supplies invoice quantities/evidence.
+  if (proof) {
+    const camel = (row: Record<string, any>) => Object.fromEntries(Object.entries(row).map(([key, value]) =>
+      [key.replace(/_([a-z])/g, (_, char: string) => char.toUpperCase()), value]));
+    lineItemRows = proof.lineItems.map(camel) as typeof lineItemRows;
+    assignmentRows = (proof.assignmentRates ?? []).map(camel) as typeof assignmentRows;
+    checkInRows = proof.checkIns.map(row => ({ ...camel(row), firstName: null, lastName: null,
+      checkInAt: new Date(row.check_in_at), checkOutAt: row.check_out_at ? new Date(row.check_out_at) : null,
+    })) as typeof checkInRows;
+  }
+
+  const liveTaxRateRow = site.state
     ? (
         await executor
           .select()
@@ -243,6 +280,7 @@ async function generateInvoiceForTicketInner(
           .where(eq(taxRatesTable.state, site.state))
       )[0]
     : undefined;
+  const taxRateRow = finance ? finance.taxRate as typeof liveTaxRateRow | null : liveTaxRateRow;
 
   const combined =
     site.combinedTaxRate != null
@@ -284,7 +322,7 @@ async function generateInvoiceForTicketInner(
           }
         : null;
 
-  const [vendorWorkTypeRow] = await executor
+  const [liveVendorWorkTypeRow] = await executor
     .select({ taxTreatment: vendorWorkTypesTable.taxTreatment })
     .from(vendorWorkTypesTable)
     .where(
@@ -294,8 +332,9 @@ async function generateInvoiceForTicketInner(
       ),
     )
     .limit(1);
+  const vendorWorkTypeRow = finance ? finance.vendorWorkType as typeof liveVendorWorkTypeRow | null : liveVendorWorkTypeRow;
 
-  const [partnerApprovalRow] = await executor
+  const [livePartnerApprovalRow] = await executor
     .select({ taxTreatment: partnerVendorWorkTypeApprovalsTable.taxTreatment })
     .from(partnerVendorWorkTypeApprovalsTable)
     .where(
@@ -306,6 +345,7 @@ async function generateInvoiceForTicketInner(
       ),
     )
     .limit(1);
+  const partnerApprovalRow = finance ? finance.partnerApproval as typeof livePartnerApprovalRow | null : livePartnerApprovalRow;
 
   const workTypeTaxTreatment = (workType?.taxTreatment ?? null) as TaxTreatment | null;
   const vendorWorkTypeTaxTreatment = (vendorWorkTypeRow?.taxTreatment ??
@@ -321,7 +361,7 @@ async function generateInvoiceForTicketInner(
   });
 
   // Billing settings: load or default.
-  const [billingRow] = await executor
+  const [liveBillingRow] = await executor
     .select()
     .from(vendorPartnerBillingSettingsTable)
     .where(
@@ -330,6 +370,7 @@ async function generateInvoiceForTicketInner(
         eq(vendorPartnerBillingSettingsTable.partnerId, site.partnerId),
       ),
     );
+  const billingRow = finance ? finance.billing as typeof liveBillingRow | null : liveBillingRow;
 
   const cadence = (billingRow?.cadence ?? "per_ticket") as
     | "per_ticket"

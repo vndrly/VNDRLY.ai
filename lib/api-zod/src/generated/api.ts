@@ -7,6 +7,56 @@
  */
 import * as zod from "zod";
 
+export const ImportPartnerServiceCatalogParams = zod.object({
+  partnerId: zod.coerce.number().min(1),
+});
+
+export const importPartnerServiceCatalogBodyFileNameMax = 240;
+
+export const importPartnerServiceCatalogBodySourceBase64Max = 1400000;
+
+export const ImportPartnerServiceCatalogBody = zod.object({
+  fileName: zod.string().max(importPartnerServiceCatalogBodyFileNameMax),
+  sourceBase64: zod
+    .string()
+    .max(importPartnerServiceCatalogBodySourceBase64Max),
+  mode: zod.enum(["preview", "import"]),
+});
+
+export const ImportPartnerServiceCatalogResponse = zod.object({
+  sourceHash: zod.string(),
+  fileName: zod.string(),
+  rows: zod.array(
+    zod.object({
+      row: zod.number(),
+      name: zod.string(),
+      code: zod.string(),
+      unit: zod.string(),
+      outcome: zod.enum(["new", "duplicate", "conflict", "created"]),
+      workTypeId: zod.number().optional(),
+      reason: zod.string().optional(),
+    }),
+  ),
+  created: zod.number(),
+  duplicates: zod.number(),
+  conflicts: zod.number(),
+  importId: zod.number().optional(),
+  replayed: zod.boolean().optional(),
+});
+
+export const ListPartnerCatalogImportsParams = zod.object({
+  partnerId: zod.coerce.number().min(1),
+});
+
+export const ListPartnerCatalogImportsResponse = zod.object({
+  items: zod.array(zod.record(zod.string(), zod.unknown())),
+});
+
+export const DownloadPartnerCatalogImportSourceParams = zod.object({
+  partnerId: zod.coerce.number().min(1),
+  importId: zod.coerce.number().min(1),
+});
+
 /**
  * @summary Prepare a draft with authoritative saved rates
  */
@@ -43,7 +93,7 @@ export const CreateMarketplaceJobOfferBody = zod.object({
   requestedStartAt: zod.coerce.date(),
   requestedEndAt: zod.coerce.date(),
   crewCount: zod.number().min(1).max(createMarketplaceJobOfferBodyCrewCountMax),
-  afeCode: zod.string().max(createMarketplaceJobOfferBodyAfeCodeMax).optional(),
+  afeCode: zod.string().min(1).max(createMarketplaceJobOfferBodyAfeCodeMax),
   poNumber: zod
     .string()
     .max(createMarketplaceJobOfferBodyPoNumberMax)
@@ -387,6 +437,52 @@ export const AcceptMarketplaceJobOfferResponse = zod.object({
 });
 
 /**
+ * @summary List tickets belonging to an accepted job
+ */
+
+export const ListMarketplaceJobTicketsParams = zod.object({
+  offerId: zod.coerce.number().min(1),
+});
+
+export const ListMarketplaceJobTicketsResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.number(),
+      status: zod.string(),
+      scheduledStartAt: zod.coerce.date().nullable(),
+      scheduledDurationMinutes: zod.number().nullable(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create a shift ticket retaining the accepted job and AFE
+ */
+
+export const CreateMarketplaceJobTicketParams = zod.object({
+  offerId: zod.coerce.number().min(1),
+});
+
+export const createMarketplaceJobTicketHeaderIdempotencyKeyMax = 200;
+
+export const CreateMarketplaceJobTicketHeader = zod.object({
+  "Idempotency-Key": zod
+    .string()
+    .min(1)
+    .max(createMarketplaceJobTicketHeaderIdempotencyKeyMax),
+});
+
+export const CreateMarketplaceJobTicketBody = zod.object({
+  requestedStartAt: zod.coerce.date(),
+  requestedEndAt: zod.coerce.date(),
+});
+
+export const CreateMarketplaceJobTicketResponse = zod.object({
+  ticketId: zod.number(),
+  replayed: zod.boolean(),
+});
+
+/**
  * Active partner membership or identified system admin required. Eligibility is evaluated before ranking and pagination. Missing evidence stays null. Private terms, internal notes, and other partner assessments are excluded. Price factors are unavailable when currencies or units differ.
  * @summary Compare current matching vendor offers for an owned work type and saved site
  */
@@ -549,23 +645,25 @@ export const SearchPartnerMarketplaceVendorsResponse = zod.object({
       capabilityName: zod.string(),
       canonicalServiceId: zod.number().min(1),
       matchExplanation: zod.string(),
-      offer: zod.object({
-        id: zod.number().min(1),
-        unitPrice: zod
-          .number()
-          .min(
-            searchPartnerMarketplaceVendorsResponseItemsItemOfferUnitPriceMin,
-          ),
-        unit: zod.string(),
-        currency: zod.string(),
-        capacity: zod
-          .number()
-          .min(
-            searchPartnerMarketplaceVendorsResponseItemsItemOfferCapacityMin,
-          ),
-        available: zod.boolean(),
-        commercialConditions: zod.string().nullable(),
-      }),
+      offer: zod
+        .object({
+          id: zod.number().min(1),
+          unitPrice: zod
+            .number()
+            .min(
+              searchPartnerMarketplaceVendorsResponseItemsItemOfferUnitPriceMin,
+            ),
+          unit: zod.string(),
+          currency: zod.string(),
+          capacity: zod
+            .number()
+            .min(
+              searchPartnerMarketplaceVendorsResponseItemsItemOfferCapacityMin,
+            ),
+          available: zod.boolean(),
+          commercialConditions: zod.string().nullable(),
+        })
+        .nullable(),
       rating: zod
         .number()
         .min(1)
@@ -641,6 +739,7 @@ export const SearchPartnerMarketplaceVendorsResponse = zod.object({
           missingCredentials: zod.array(zod.string()),
         }),
       }),
+      quoteRequired: zod.boolean(),
       offerable: zod.boolean(),
       ratingStatus: zod.enum(["rated", "not_yet_rated"]),
       safetyStatus: zod.enum(["rated", "not_yet_rated", "unavailable"]),
@@ -728,7 +827,7 @@ export const getPartnerMarketplaceVendorQueryPriorExperienceWeightMax = 100;
 
 export const GetPartnerMarketplaceVendorQueryParams = zod.object({
   vendorCapabilityId: zod.coerce.number().min(1),
-  vendorPartnerServiceOfferId: zod.coerce.number().min(1),
+  vendorPartnerServiceOfferId: zod.coerce.number().min(1).optional(),
   siteId: zod.coerce.number().min(1),
   requestedCapacity: zod.coerce
     .number()
@@ -832,19 +931,21 @@ export const GetPartnerMarketplaceVendorResponse = zod.object({
   capabilityName: zod.string(),
   canonicalServiceId: zod.number().min(1),
   matchExplanation: zod.string(),
-  offer: zod.object({
-    id: zod.number().min(1),
-    unitPrice: zod
-      .number()
-      .min(getPartnerMarketplaceVendorResponseOfferUnitPriceMin),
-    unit: zod.string(),
-    currency: zod.string(),
-    capacity: zod
-      .number()
-      .min(getPartnerMarketplaceVendorResponseOfferCapacityMin),
-    available: zod.boolean(),
-    commercialConditions: zod.string().nullable(),
-  }),
+  offer: zod
+    .object({
+      id: zod.number().min(1),
+      unitPrice: zod
+        .number()
+        .min(getPartnerMarketplaceVendorResponseOfferUnitPriceMin),
+      unit: zod.string(),
+      currency: zod.string(),
+      capacity: zod
+        .number()
+        .min(getPartnerMarketplaceVendorResponseOfferCapacityMin),
+      available: zod.boolean(),
+      commercialConditions: zod.string().nullable(),
+    })
+    .nullable(),
   rating: zod
     .number()
     .min(1)
@@ -912,6 +1013,7 @@ export const GetPartnerMarketplaceVendorResponse = zod.object({
       missingCredentials: zod.array(zod.string()),
     }),
   }),
+  quoteRequired: zod.boolean(),
   offerable: zod.boolean(),
   ratingStatus: zod.enum(["rated", "not_yet_rated"]),
   safetyStatus: zod.enum(["rated", "not_yet_rated", "unavailable"]),
@@ -944,6 +1046,26 @@ export const GetPartnerMarketplaceVendorResponse = zod.object({
       explanation: zod.string(),
     }),
   ),
+});
+
+export const RequestPartnerMarketplaceQuoteParams = zod.object({
+  partnerId: zod.coerce.number().min(1),
+  workTypeId: zod.coerce.number().min(1),
+  vendorId: zod.coerce.number().min(1),
+});
+
+export const requestPartnerMarketplaceQuoteBodyRequestedCapacityMax = 100000;
+
+export const requestPartnerMarketplaceQuoteBodyScopeMax = 2000;
+
+export const RequestPartnerMarketplaceQuoteBody = zod.object({
+  siteId: zod.number().min(1),
+  vendorCapabilityId: zod.number().min(1),
+  requestedCapacity: zod
+    .number()
+    .min(1)
+    .max(requestPartnerMarketplaceQuoteBodyRequestedCapacityMax),
+  scope: zod.string().min(1).max(requestPartnerMarketplaceQuoteBodyScopeMax),
 });
 
 /**

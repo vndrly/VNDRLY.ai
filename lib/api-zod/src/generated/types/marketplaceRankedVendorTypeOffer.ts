@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+/**
+ * @nullable
+ */
 export type MarketplaceRankedVendorTypeOffer = {
   /** @minimum 1 */
   id: number;
@@ -18,4 +21,4 @@ export type MarketplaceRankedVendorTypeOffer = {
   available: boolean;
   /** @nullable */
   commercialConditions: string | null;
-};
+} | null;

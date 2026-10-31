@@ -24,6 +24,7 @@ const draft = {
   requestedStartAt: "2026-11-01T10:00:00Z",
   requestedEndAt: "2026-11-01T12:00:00Z",
   crewCount: 2,
+  afeCode: "AFE-TEST-1",
   attachmentUrls: [],
   expiresAt: "2026-10-31T10:00:00Z",
 };

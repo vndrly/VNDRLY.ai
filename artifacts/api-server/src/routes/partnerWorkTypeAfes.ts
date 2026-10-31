@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
-import { eq, and, or, isNull, sql } from "drizzle-orm";
+import { eq, and, or, isNull, sql, desc } from "drizzle-orm";
 import {
   db,
   partnersTable,
@@ -20,6 +20,9 @@ import { sendApiError } from "../lib/apiError";
 import { sendValidationFailed } from "../lib/validation-error";
 import { classifySavedWorkType } from "../services/service-matching/catalog-classification";
 
+import { createPostgresPartnerMarketplaceStore } from "../services/marketplace/partner-store";
+import { catalogImportInput, importPartnerCatalog } from "../services/marketplace/partner-catalog-import";
+import { MarketplaceError } from "../services/marketplace/vendor-store";
 const router: IRouter = Router();
 
 function requireSession(req: Request, res: Response, next: NextFunction): void {
@@ -233,6 +236,52 @@ router.get(
     });
   },
 );
+
+router.post("/partners/:partnerId/catalog-import", requireSession, async (req, res): Promise<void> => {
+  const partnerId = Number(req.params.partnerId);
+  if (!Number.isSafeInteger(partnerId) || partnerId < 1) { sendApiError(res, 400, "partner.invalid_id", "Invalid partner id"); return; }
+  const session = getSessionFromRequest(req);
+  if (session?.publicDemo) { sendApiError(res, 403, "auth.forbidden", "Demo catalog imports are disabled"); return; }
+  const auth = await requirePartnerAdmin(req, partnerId);
+  if (!auth.ok) { sendApiError(res, auth.status, auth.code, auth.error); return; }
+  if (!(await createPostgresPartnerMarketplaceStore().authorize(auth.session, partnerId))) { sendApiError(res, 403, "auth.forbidden", "Current partner authority required"); return; }
+  const body = catalogImportInput.safeParse(req.body);
+  if (!body.success) { sendValidationFailed(res, body.error); return; }
+  const [partner] = await db.select({ id: partnersTable.id }).from(partnersTable).where(eq(partnersTable.id, partnerId)).limit(1);
+  if (!partner) { sendApiError(res, 404, "partner.not_found", "Partner not found"); return; }
+  try { res.json(await importPartnerCatalog(partnerId, auth.session.userId!, auth.session.role, body.data)); }
+  catch (error) {
+    if (error instanceof MarketplaceError) { sendApiError(res, error.status, error.code, error.message); return; }
+    throw error;
+  }
+});
+
+router.get("/partners/:partnerId/catalog-imports", requireSession, async (req, res): Promise<void> => {
+  const partnerId = Number(req.params.partnerId);
+  if (!Number.isSafeInteger(partnerId) || partnerId < 1) { sendApiError(res, 400, "partner.invalid_id", "Invalid partner id"); return; }
+  const auth = await requirePartnerAdmin(req, partnerId);
+  if (!auth.ok) { sendApiError(res, auth.status, auth.code, auth.error); return; }
+  if (!(await createPostgresPartnerMarketplaceStore().authorize(auth.session, partnerId))) { sendApiError(res, 403, "auth.forbidden", "Current partner authority required"); return; }
+  const { assistantActionAuditTable: audit } = await import("@workspace/db");
+  const imports = await db.select({ id: audit.id, report: audit.toolOutput, createdAt: audit.createdAt }).from(audit)
+    .where(and(eq(audit.partnerId, partnerId), eq(audit.targetType, "partner-catalog-import"), eq(audit.resultStatus, "completed"))).orderBy(desc(audit.id)).limit(20);
+  res.json({ items: imports.map(item => ({ ...(item.report as Record<string, unknown>), importId: item.id, importedAt: item.createdAt })) });
+});
+
+router.get("/partners/:partnerId/catalog-imports/:importId/source", requireSession, async (req, res): Promise<void> => {
+  const partnerId = Number(req.params.partnerId), importId = Number(req.params.importId);
+  if (![partnerId, importId].every(value => Number.isSafeInteger(value) && value > 0)) { sendApiError(res, 400, "catalog.invalid_id", "Invalid import id"); return; }
+  const auth = await requirePartnerAdmin(req, partnerId);
+  if (!auth.ok) { sendApiError(res, auth.status, auth.code, auth.error); return; }
+  if (!(await createPostgresPartnerMarketplaceStore().authorize(auth.session, partnerId))) { sendApiError(res, 403, "auth.forbidden", "Current partner authority required"); return; }
+  const { assistantActionAuditTable: audit } = await import("@workspace/db");
+  const [saved] = await db.select({ source: audit.toolInput }).from(audit).where(and(eq(audit.id, importId), eq(audit.partnerId, partnerId), eq(audit.targetType, "partner-catalog-import"))).limit(1);
+  const source = saved?.source as { fileName?: string; sourceBase64?: string } | undefined;
+  if (!source?.sourceBase64) { sendApiError(res, 404, "catalog.source_not_found", "Import source not found"); return; }
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(source.fileName ?? "catalog.csv")}`);
+  res.send(Buffer.from(source.sourceBase64, "base64"));
+});
 
 router.post(
   "/partners/:partnerId/work-types",

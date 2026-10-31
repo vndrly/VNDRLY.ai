@@ -51,10 +51,10 @@ async function fixture() {
     "INSERT INTO vendor_work_types(vendor_id,work_type_id,unit_price,unit) VALUES($1,$2,'999.99','per_day')",
     [vendor, workType],
   );
-  await pool.query(
-    "INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id,approved_unit_price,approved_unit) VALUES($1,$2,$3,'100.01','per_day')",
+  const approval = (await pool.query(
+    "INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id,approved_unit_price,approved_unit) VALUES($1,$2,$3,'100.01','per_day') RETURNING id,approved_at",
     [partner, vendor, workType],
-  );
+  )).rows[0];
   const user = (
       await pool.query(
         "INSERT INTO users(username,password_hash,role,display_name) VALUES($1,'synthetic-not-a-login','vendor','Gate Billing Test') RETURNING id",
@@ -79,10 +79,16 @@ async function fixture() {
     "INSERT INTO gate_duty_sessions(station_id,user_id,started_at,source,idempotency_key,post_coverage) VALUES($1,$2,'2026-10-01T17:00:00Z','web',$3,$4::jsonb)",
     [station, user, randomUUID(), JSON.stringify({ vendorId: vendor })],
   );
+  // Retained historical agreement: new setups now require an accepted job,
+  // while these regression tests exercise grandfathered period continuity.
+  await pool.query(
+    "INSERT INTO assistant_action_audit(user_id,vendor_id,actor_role,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_output,result_status) VALUES($1,$2,'vendor','gate-billing','typed','canonical','gate_daily_billing','office-billing','gate-billing-config',$3,$4::jsonb,'completed')",
+    [user, vendor, station, JSON.stringify({ version: 1, stationId: station, vendorId: vendor, partnerId: partner, siteId: site, workTypeId: workType, periodStartDay: "2026-10-01", openTicketId: null, agreementReference: "Retained historical agreement", partialDayRule: "full_day", dailyRateCents: 10001, approvalId: approval.id, approvalAt: new Date(approval.approved_at).toISOString(), afe: "TEST-AFE", lastBilledThroughDay: null, autoInvoiceEveryDays: null, directionActor: null })],
+  );
   const configure = () =>
     service.configure(session, station, {
       operationId: randomUUID(),
-      expectedVersion: 0,
+      expectedVersion: 1,
       workTypeId: workType,
       startDay: "2026-10-01",
       agreementReference: "Synthetic day-rate agreement",
@@ -314,7 +320,7 @@ describe("Gate office daily billing transaction", () => {
     );
     await service.configure(f.session, f.station, {
       operationId: randomUUID(),
-      expectedVersion: 0,
+      expectedVersion: 1,
       workTypeId: f.workType,
       startDay: "2026-10-01",
       agreementReference: "Explicit scheduled test agreement",
@@ -342,7 +348,7 @@ describe("Gate office daily billing transaction", () => {
     const revoked = await fixture();
     await service.configure(revoked.session, revoked.station, {
       operationId: randomUUID(),
-      expectedVersion: 0,
+      expectedVersion: 1,
       workTypeId: revoked.workType,
       startDay: "2026-10-01",
       agreementReference: "Revoked authorization test",

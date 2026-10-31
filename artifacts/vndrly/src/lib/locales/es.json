@@ -1,10 +1,46 @@
 {
+  "partnerCatalogImport": {
+    "alreadyImported": "Este archivo original ya se importó. Se muestra su registro conservado.",
+    "history": "Catálogos conservados (últimos 20)",
+    "title": "Importar su catálogo de servicios",
+    "instructions": "Cargue un CSV UTF-8 (hasta 1 MB y 5.000 filas). Encabezado requerido: name. Opcionales: code, category, description, unit. Revise antes de importar.",
+    "file": "Archivo CSV original",
+    "preview": "Vista previa",
+    "error": "No se pudo procesar el catálogo. Revise el formato CSV UTF-8, el encabezado name, las columnas y el tamaño. No se sobrescribió su catálogo existente.",
+    "rows": "filas originales",
+    "created": "creados",
+    "duplicates": "duplicados omitidos",
+    "conflicts": "conflictos conservados para revisión",
+    "row": "Fila",
+    "code": "Código original",
+    "name": "Servicio",
+    "unit": "Unidad original",
+    "outcome": "Resultado",
+    "import": "Conservar original e importar servicios nuevos",
+    "download": "Descargar CSV original conservado",
+    "preservation": "Se conservan servicios, asignaciones y AFE existentes. No se combinan nombres en conflicto. Los códigos y unidades originales permanecen en el registro de importación. Los servicios nuevos pasan por clasificación y revisión.",
+    "results": {
+      "new": "Listo para agregar",
+      "created": "Agregado",
+      "duplicate": "Duplicado — sin cambios",
+      "conflict": "Alcance diferente o no verificado — sin cambios"
+    }
+  },
   "smsEnrollment": {
     "link": "Inscribirse en actualizaciones por SMS",
     "signupHint": "Abra la página de inscripción por SMS en una pestaña nueva. Termine de crear su cuenta e inicie sesión antes de guardar su consentimiento opcional para SMS.",
     "preferencesHint": "Abra la página de inscripción por SMS en una pestaña nueva para elegir actualizaciones de texto opcionales. Lea la información, ingrese su número móvil y guarde su consentimiento."
   },
   "jobOffers": {
+    "acceptedJobs": "Trabajos aceptados",
+    "noAcceptedJobs": "Todavía no hay trabajos aceptados.",
+    "jobTickets": "Tickets de este trabajo",
+    "ticketInheritance": "Trabajo #{{job}} · AFE asignado por el socio: {{afe}}. Cada ticket conserva este trabajo y sus términos aceptados.",
+    "ticketFailed": "No se pudo crear o cargar el ticket. Revise las fechas y el AFE del trabajo e inténtelo de nuevo.",
+    "ticketStart": "Inicio del turno",
+    "ticketEnd": "Fin del turno",
+    "ticketSchedule": "El turno debe estar dentro de las fechas aceptadas del trabajo.",
+    "createTicket": "Crear ticket del trabajo",
     "manualBillingRequired": "Estas unidades, moneda o componentes de tarifa aceptados requieren facturación manual. Los cálculos automáticos por hora en USD no están disponibles.",
     "rateComponents": "Componentes adicionales de tarifa",
     "overtimeTerms": "Horas extra después de {{dailyOtHours}} horas/día o {{weeklyOtHours}} horas/semana a {{overtimeMultiplier}}× la tarifa por hora.",
@@ -37,6 +73,13 @@
     }
   },
   "partnerMarketplace": {
+    "quoteRequired": "Cotización requerida",
+    "confirmAvailability": "Confirme disponibilidad con el proveedor",
+    "requestQuote": "Solicitar cotización",
+    "quoteScope": "Describa el trabajo y las fechas solicitadas",
+    "quoteExplanation": "Este proveedor coincide con su servicio. Solicite una tarifa antes de ofrecer el trabajo. Solicitar cotización no autoriza trabajo.",
+    "quoteSent": "Cotización solicitada. El proveedor proporcionará un precio para su revisión. Actualice los resultados cuando esté listo.",
+    "quoteError": "No se pudo entregar la solicitud. Actualice la elegibilidad e inténtelo de nuevo.",
     "title": "Buscar proveedores para este servicio",
     "site": "Sitio de trabajo",
     "chooseSite": "Elegir un sitio",

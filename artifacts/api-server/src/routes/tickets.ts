@@ -1,5 +1,6 @@
 import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
 import { ticketAfeSql } from "../lib/ticket-afe";
+import { freezeTicketSubmission, reviewedSubmission, TicketSubmissionError } from "../lib/ticket-submissions";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
 import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
@@ -20,6 +21,14 @@ import { SESSION_SECRET } from "../lib/session";
 
 const COOKIE_NAME = "vndrly_session";
 type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null };
+async function ensurePartnerReviewer(session: Session, res: any): Promise<boolean> {
+  if (session.role === "admin") return true;
+  const member = (await db.execute(sql`SELECT role FROM user_org_memberships
+    WHERE user_id=${session.userId} AND org_type='partner' AND partner_id=${session.partnerId}`)).rows[0];
+  if (session.role === "partner" && ["admin", "member"].includes(String(member?.role))) return true;
+  res.status(403).json({ code: "ticket.reviewer_required", message: "A partner work reviewer or organization admin must review this proof sheet." });
+  return false;
+}
 function getSession(req: any): Session | null {
   const cookie = req.cookies?.[COOKIE_NAME];
   if (!cookie) return null;
@@ -289,6 +298,7 @@ async function ensureFieldAssignmentForFieldEmployee(
   const [ticket] = await db
     .select({
       jobOfferId: ticketsTable.jobOfferId,
+      engagementJobOfferId: ticketsTable.engagementJobOfferId,
       vendorId: ticketsTable.vendorId,
       siteLocationId: ticketsTable.siteLocationId,
       workTypeId: ticketsTable.workTypeId,
@@ -321,7 +331,7 @@ async function ensureFieldAssignmentForFieldEmployee(
   if (assignment) return true;
   // Ownership/crew membership was checked first. This grant is for this one
   // accepted engagement; it does not permit opening unrelated site tickets.
-  if (ticket.jobOfferId && await hasAcceptedMarketplaceAccess(ticket.vendorId, { ticketId, siteId: ticket.siteLocationId, workTypeId: ticket.workTypeId })) return true;
+  if ((ticket.jobOfferId || ticket.engagementJobOfferId) && await hasAcceptedMarketplaceAccess(ticket.vendorId, { ticketId, siteId: ticket.siteLocationId, workTypeId: ticket.workTypeId })) return true;
   // Narrow the diagnosis with one extra read so the mobile banner can
   // tell the operator whether the site itself was pulled or just this
   // particular work type for the site. Mirrors the create-ticket
@@ -558,6 +568,7 @@ const paymentDispersedByUsersAlias = aliasedTable(usersTable, "payment_dispersed
 const ticketSelect = {
   id: ticketsTable.id,
   jobOfferId: ticketsTable.jobOfferId,
+      engagementJobOfferId: ticketsTable.engagementJobOfferId,
   siteLocationId: ticketsTable.siteLocationId,
   vendorId: ticketsTable.vendorId,
   fieldEmployeeId: ticketsTable.fieldEmployeeId,
@@ -2280,6 +2291,20 @@ router.post("/tickets/:id/check-out", async (req, res): Promise<void> => {
   sendResponse(res, CheckOutTicketResponse, result);
 });
 
+router.get("/tickets/:id/proof-submissions", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) { res.status(400).json({ message: "Invalid ticket" }); return; }
+  if (!(await ensureFieldOwnership(req, res, id))) return;
+  const session = getSession(req);
+  if (!session || !["vendor", "partner", "admin"].includes(session.role)) {
+    res.status(403).json({ message: "Submitted commercial proof is available to the vendor office and partner reviewers." }); return;
+  }
+  const row = (await db.execute(sql`SELECT id,COALESCE(engagement_job_offer_id,job_offer_id) AS job_id,
+    submission_revision,approved_submission_revision,proof_submissions FROM tickets WHERE id=${id}`)).rows[0];
+  res.json({ jobId: row?.job_id ?? null, revision: row?.submission_revision ?? 0,
+    approvedRevision: row?.approved_submission_revision ?? null, submissions: row?.proof_submissions ?? [] });
+});
+
 router.post("/tickets/:id/submit", async (req, res): Promise<void> => {
   const params = SubmitTicketParams.safeParse(req.params);
   if (!params.success) {
@@ -2287,6 +2312,9 @@ router.post("/tickets/:id/submit", async (req, res): Promise<void> => {
     return;
   }
   if (!(await ensureFieldOwnership(req, res, params.data.id))) return;
+  if (getSession(req)?.role === "partner") {
+    res.status(403).json({ code: "ticket.vendor_submission_required", message: "The vendor must submit its work and proof sheet for partner review." }); return;
+  }
   // Task #494: cannot submit work on a ticket that has not been accepted yet.
   if (!(await ensureAccepted(req, res, params.data.id))) return;
 
@@ -2338,11 +2366,15 @@ router.post("/tickets/:id/submit", async (req, res): Promise<void> => {
   }
 
   const submitSession = getSession(req);
-  const updated = await db.transaction(async (tx) => {
+  let updated;
+  try { updated = await db.transaction(async (tx) => {
     const [priorSubmit] = await tx
       .select({ status: ticketsTable.status })
       .from(ticketsTable)
-      .where(eq(ticketsTable.id, params.data.id));
+      .where(eq(ticketsTable.id, params.data.id)).for("update");
+    if (!priorSubmit || !SUBMIT_ALLOWED_STATUSES.has(priorSubmit.status))
+      throw new TicketSubmissionError("ticket.submission_changed", "The ticket changed. Reload before submitting.");
+    await freezeTicketSubmission(tx, params.data.id, submitSession!.userId);
     const [u] = await tx
       .update(ticketsTable)
       .set({
@@ -2363,7 +2395,10 @@ router.post("/tickets/:id/submit", async (req, res): Promise<void> => {
       });
     }
     return u;
-  });
+  }); } catch (error) {
+    if (!(error instanceof TicketSubmissionError)) throw error;
+    res.status(409).json({ code: error.code, message: error.message }); return;
+  }
   if (!updated) {
     res.status(404).json({ code: "ticket.not_found", error: "ticket_not_found", message: "Ticket not found" });
     return;
@@ -2422,6 +2457,7 @@ router.post("/tickets/:id/approve", async (req, res): Promise<void> => {
   // `awaiting_acceptance`/`denied`/`initiated`/`in_progress` — i.e. before
   // any work happened. `approved` is allowed for idempotency. The existing
   // CAS below makes a no-op idempotent.
+  if (!(await ensurePartnerReviewer(session, res))) return;
   const APPROVABLE_STATUSES: ReadonlySet<string> = new Set([
     "submitted",
     "pending_review",
@@ -2440,14 +2476,23 @@ router.post("/tickets/:id/approve", async (req, res): Promise<void> => {
   // invoice generation when we actually transitioned. Repeated calls are
   // no-ops accounting-wise. The status flip + history insert run inside a
   // single transaction so we never end up with one without the other.
-  const updated = await db.transaction(async (tx) => {
+  let updated;
+  try { updated = await db.transaction(async (tx) => {
+    const locked = (await tx.execute(sql`SELECT * FROM tickets WHERE id=${params.data.id} FOR UPDATE`)).rows[0];
+    if (!locked || locked.status !== existing.status)
+      throw new TicketSubmissionError("ticket.submission_changed", "The ticket changed. Reload before approving.");
+    const proof = reviewedSubmission(locked, req.headers["x-submission-revision"]);
+    if (!proof && (locked.job_offer_id || locked.engagement_job_offer_id) && locked.status !== "approved")
+      throw new TicketSubmissionError("ticket.proof_required", "Submit the job's proof sheet before approving this ticket.");
+    if (proof && !["submitted", "approved"].includes(locked.status))
+      throw new TicketSubmissionError("ticket.not_submitted", "The vendor must submit the revised proof sheet before approval.");
     const [u] = await tx
       .update(ticketsTable)
       // Stamp approvedAt at the same moment we flip status. This is the
       // immutable accounting timestamp the invoice engine pivots on; it is
       // never overwritten on later edits.
-      .set({ status: "approved", approvedAt: new Date() })
-      .where(and(eq(ticketsTable.id, params.data.id), ne(ticketsTable.status, "approved")))
+      .set({ status: "approved", approvedAt: new Date(), approvedSubmissionRevision: proof?.revision ?? null })
+      .where(and(eq(ticketsTable.id, params.data.id), eq(ticketsTable.status, existing.status), ne(ticketsTable.status, "approved")))
       .returning();
     if (u) {
       await recordTicketTransition({
@@ -2457,11 +2502,14 @@ router.post("/tickets/:id/approve", async (req, res): Promise<void> => {
         toStatus: "approved",
         actorUserId: session.userId,
         actorRole: session.role,
-        reason: "ticket approved",
+        reason: proof ? `Proof sheet revision ${proof.revision} approved (${proof.digest})` : "ticket approved",
       });
     }
     return u;
-  });
+  }); } catch (error) {
+    if (!(error instanceof TicketSubmissionError)) throw error;
+    res.status(409).json({ code: error.code, message: error.message }); return;
+  }
   if (!updated) {
     // Either not found OR already approved. Distinguish for accurate response.
     const [existing] = await db
@@ -3291,13 +3339,20 @@ router.post("/tickets/:id/awaiting-payment", async (req, res): Promise<void> => 
   });
 });
 
-router.post("/tickets/:id/kickback", async (req, res): Promise<void> => {
+router.post(["/tickets/:id/kickback", "/tickets/:id/reject-submission"], async (req, res): Promise<void> => {
   const params = KickbackTicketParams.safeParse(req.params);
   if (!params.success) {
     sendValidationFailed(res, params.error);
     return;
   }
   if (!(await ensureFieldOwnership(req, res, params.data.id))) return;
+  const reviewer = getSession(req);
+  if (!reviewer || !["partner", "admin"].includes(reviewer.role)) {
+    res.status(403).json({ code: "ticket.partner_review_required", message: "Only the owning partner or an admin can review submitted work." }); return;
+  }
+  const reject = req.path.endsWith("/reject-submission");
+  if (!(await ensurePartnerReviewer(reviewer, res))) return;
+  const decisionStatus = reject ? "denied" : "kicked_back";
   // Task #494: cannot kick back a ticket that has not been accepted yet —
   // there is no submitted work to reject in the awaiting/denied states.
   if (!(await ensureAccepted(req, res, params.data.id))) return;
@@ -3324,29 +3379,35 @@ router.post("/tickets/:id/kickback", async (req, res): Promise<void> => {
     return;
   }
   const kickbackSession = getSession(req);
-  const updated = await db.transaction(async (tx) => {
-    const [priorKickback] = await tx
-      .select({ status: ticketsTable.status })
-      .from(ticketsTable)
-      .where(eq(ticketsTable.id, params.data.id));
+  let updated;
+  try { updated = await db.transaction(async (tx) => {
+    const priorKickback = (await tx.execute(sql`SELECT * FROM tickets WHERE id=${params.data.id} FOR UPDATE`)).rows[0];
+    if (!priorKickback || priorKickback.status !== kickbackExisting.status)
+      throw new TicketSubmissionError("ticket.submission_changed", "The ticket changed. Reload before reviewing.");
+    const proof = reviewedSubmission(priorKickback, req.headers["x-submission-revision"]);
+    if (proof && priorKickback.status !== "submitted")
+      throw new TicketSubmissionError("ticket.not_submitted", "Only submitted proof sheets can be returned or rejected.");
     const [u] = await tx
       .update(ticketsTable)
-      .set({ status: "kicked_back", kickbackReason: parsed.data.reason })
-      .where(eq(ticketsTable.id, params.data.id))
+      .set({ status: decisionStatus, lifecycleState: "off_site", kickbackReason: parsed.data.reason })
+      .where(and(eq(ticketsTable.id, params.data.id), eq(ticketsTable.status, priorKickback.status)))
       .returning();
     if (u && priorKickback && priorKickback.status !== "kicked_back") {
       await recordTicketTransition({
         tx,
         ticketId: u.id,
         fromStatus: priorKickback.status,
-        toStatus: "kicked_back",
+        toStatus: decisionStatus,
         actorUserId: kickbackSession?.userId ?? null,
         actorRole: kickbackSession?.role ?? null,
-        reason: parsed.data.reason,
+        reason: proof ? `Proof sheet revision ${proof.revision}: ${parsed.data.reason}` : parsed.data.reason,
       });
     }
     return u;
-  });
+  }); } catch (error) {
+    if (!(error instanceof TicketSubmissionError)) throw error;
+    res.status(409).json({ code: error.code, message: error.message }); return;
+  }
   if (!updated) {
     res.status(404).json({ code: "ticket.not_found", error: "ticket_not_found", message: "Ticket not found" });
     return;
@@ -3356,8 +3417,8 @@ router.post("/tickets/:id/kickback", async (req, res): Promise<void> => {
     const vendorUserIds = await findVendorUserIds(result.vendorId);
     await notifyUsers(vendorUserIds, {
       type: "ticket_kicked_back",
-      title: "Tracking number kicked back",
-      body: `Tracking #${String(updated.id).padStart(4, "0")} was kicked back: ${parsed.data.reason}`,
+      title: reject ? "Submitted work rejected" : "Tracking number kicked back",
+      body: `Tracking #${String(updated.id).padStart(4, "0")} was ${reject ? "rejected" : "kicked back"}: ${parsed.data.reason}`,
       link: `/tickets/${updated.id}`,
     });
   }
@@ -3701,6 +3762,7 @@ router.post("/tickets/:id/reinvite", async (req, res): Promise<void> => {
     .select({
       id: ticketsTable.id,
       jobOfferId: ticketsTable.jobOfferId,
+      engagementJobOfferId: ticketsTable.engagementJobOfferId,
       status: ticketsTable.status,
       vendorId: ticketsTable.vendorId,
       siteLocationId: ticketsTable.siteLocationId,
@@ -3731,7 +3793,7 @@ router.post("/tickets/:id/reinvite", async (req, res): Promise<void> => {
   }
   // Accepted marketplace terms and capacity belong to the original vendor.
   // Reassignment must create a new offer, not mutate that accepted engagement.
-  if (existing.jobOfferId != null) {
+  if (existing.jobOfferId != null || existing.engagementJobOfferId != null) {
     res.status(409).json({
       code: "marketplace.ticket_reinvite_not_allowed",
       error: "marketplace_ticket_reinvite_not_allowed",

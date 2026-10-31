@@ -79,9 +79,9 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
     const value = state.setup?.config;
     setService(
       value
-        ? String(value.workTypeId)
+        ? `${value.workTypeId}:${value.jobOfferId ?? "legacy"}`
         : state.setup?.services.length === 1
-          ? String(state.setup.services[0].id)
+          ? `${state.setup.services[0].id}:${state.setup.services[0].jobOfferId ?? "legacy"}`
           : "",
     );
     setStart(
@@ -112,7 +112,8 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
       "space-y-4 rounded-xl border-2 border-[var(--brand-primary)] bg-card p-4 text-card-foreground";
   const save = () =>
     void workflow?.configure({
-      workTypeId: Number(service),
+      workTypeId: Number(service.split(":")[0]),
+      ...(service.split(":")[1] !== "legacy" ? { jobOfferId: Number(service.split(":")[1]) } : {}),
       startDay: start,
       agreementReference: agreement,
       partialDayRule: rule,
@@ -187,8 +188,9 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
             >
               <option value="">{copy("Choose an approved service")}</option>
               {state.setup.services.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option key={`${item.id}:${item.jobOfferId ?? "legacy"}`} value={`${item.id}:${item.jobOfferId ?? "legacy"}`}>
                   {item.name} ·{" "}
+                  {item.jobOfferId ? `${copy("Job")} #${item.jobOfferId} · ${copy("AFE")}: ${item.afe} · ` : ""}
                   {money(
                     frozen && config?.workTypeId === item.id
                       ? config.dailyRateCents
@@ -202,10 +204,11 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
           {!state.setup.services.length ? (
             <p>
               {copy(
-                "Choose an approved per-day service before starting billing.",
+                "Select an accepted job with a partner-assigned AFE and Gate authorization.",
               )}
             </p>
           ) : null}
+          {config?.jobOfferId ? <p>{copy("Job")}: #{config.jobOfferId} · {copy("AFE")}: {config.afe}</p> : null}
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1">
               <span>{copy("Period starts")}</span>

@@ -9,6 +9,7 @@ import type {
 import JobOfferComposer from "./JobOfferComposer";
 import VendorJobOfferInbox from "./VendorJobOfferInbox";
 import JobOfferSummary from "./JobOfferSummary";
+import AcceptedJobTickets from "./AcceptedJobTickets";
 import i18n from "@/lib/i18n";
 
 const navigate = vi.fn();
@@ -32,6 +33,7 @@ const offer = {
   canonicalServiceId: 7,
   scope: "Pressure test",
   crewCount: 2,
+  afeReference: "AFE-TEST-1",
   status: "offered",
   version: 2,
   scheduledStartAt: "2026-11-01T10:00:00Z",
@@ -80,6 +82,9 @@ beforeEach(async () => {
       if (path.endsWith("/job-offers") && method === "POST")
         return Response.json({ ...offer, version: 1, status: "draft" });
       if (path.endsWith("/job-offers/8")) return Response.json(offer);
+      if (path.endsWith("/job-offers/8/tickets")) return method === "POST"
+        ? Response.json({ ticketId: 124, replayed: false })
+        : Response.json({ items: [{ id: 123, status: "initiated", scheduledStartAt: offer.scheduledStartAt, scheduledDurationMinutes: 120 }] });
       return Response.json({ items: [offer] });
     }),
   );
@@ -115,6 +120,21 @@ it("shows manual billing and every additional commercial component before confir
   expect(screen.getByText(/CAD 500.00/)).toBeTruthy();
 });
 describe("confirmed offer flow", () => {
+  it("creates a shift on the accepted job without allowing the vendor to replace its AFE", async () => {
+    mount(<AcceptedJobTickets offer={{ ...offer, status: "accepted" } as MarketplaceJobOffer} />);
+    expect(await screen.findByText("#123")).toBeTruthy();
+    expect(screen.getByText(/Partner-assigned AFE: AFE-TEST-1/)).toBeTruthy();
+    // Format dates in the test process timezone, matching datetime-local semantics.
+    const local = (iso: string) => { const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+    fireEvent.change(screen.getByLabelText("Shift start"), { target: { value: local(offer.scheduledStartAt) } });
+    fireEvent.change(screen.getByLabelText("Shift end"), { target: { value: local(offer.scheduledEndAt) } });
+    fireEvent.click(screen.getByRole("button", { name: "Create job ticket" }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/tickets/124"));
+    const creation = requests.find((row) => row.path.endsWith("/tickets") && row.method === "POST")!;
+    expect(creation.headers.get("Idempotency-Key")).toBeTruthy();
+    expect(creation.body).toEqual({ requestedStartAt: new Date(offer.scheduledStartAt).toISOString(), requestedEndAt: new Date(offer.scheduledEndAt).toISOString() });
+    expect(creation.body).not.toHaveProperty("afeCode");
+  });
   it("prepares authoritative saved terms and only sends after explicit confirmation", async () => {
     mount(
       <JobOfferComposer
@@ -133,6 +153,7 @@ describe("confirmed offer flow", () => {
     fireEvent.change(screen.getByLabelText("Offer expires"), {
       target: { value: "2026-10-31T10:00" },
     });
+    fireEvent.change(screen.getByLabelText("AFE reference"), { target: { value: "AFE-TEST-1" } });
     fireEvent.click(screen.getByRole("button", { name: "Prepare draft" }));
     await screen.findByRole("region", { name: "Confirm job offer" });
     expect(screen.getByText("USD 125.00 / hour")).toBeTruthy();

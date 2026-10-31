@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, lt, gt, lte, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, gt, lte, or, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   vendorsTable,
@@ -135,7 +135,7 @@ function adapter(tx: Transaction): JobOfferTransaction {
         (row) =>
           row.vendorId === input.vendorId &&
           row.capabilityId === input.vendorCapabilityId &&
-          row.offer.id === input.vendorPartnerServiceOfferId,
+          row.offer?.id === input.vendorPartnerServiceOfferId,
       );
       if (!candidate)
         throw new MarketplaceError(409, "marketplace.active_match_required");
@@ -150,7 +150,7 @@ function adapter(tx: Transaction): JobOfferTransaction {
         .where(eq(rates.id, input.vendorPartnerServiceOfferId));
       const raw = candidateRows.find(
         (row) =>
-          row.offer.id === input.vendorPartnerServiceOfferId &&
+          row.offer?.id === input.vendorPartnerServiceOfferId &&
           row.vendorId === input.vendorId,
       );
       if (!rate || !raw)
@@ -173,7 +173,8 @@ function adapter(tx: Transaction): JobOfferTransaction {
         weeklyOtHours: vendor?.weeklyOtHours ?? "40",
         overtimeMultiplier: billing?.overtimeMultiplier ?? "1.5",
       };
-      // A scheduled accepted offer reserves crew capacity until its canonical ticket terminates.
+      // Capacity belongs to the accepted job window, not the first shift's status.
+      // Approving one ticket must not release crews still committed to later shifts.
       const reservations = await tx
         .select({
           crews: offers.crewCount,
@@ -181,21 +182,12 @@ function adapter(tx: Transaction): JobOfferTransaction {
           end: offers.scheduledEndAt,
         })
         .from(offers)
-        .innerJoin(tickets, eq(tickets.id, offers.createdTicketId))
         .where(
           and(
             eq(offers.vendorCapabilityId, input.vendorCapabilityId),
             eq(offers.status, "accepted"),
             lt(offers.scheduledStartAt, new Date(input.requestedEndAt)),
             gt(offers.scheduledEndAt, new Date(input.requestedStartAt)),
-            inArray(tickets.status, [
-              "awaiting_acceptance",
-              "initiated",
-              "in_progress",
-              "pending_review",
-              "submitted",
-              "kicked_back",
-            ]),
           ),
         );
       if (
@@ -289,6 +281,7 @@ function adapter(tx: Transaction): JobOfferTransaction {
           vendorCapabilityId: offer.vendorCapabilityId,
           vendorPartnerServiceOfferId: offer.vendorPartnerServiceOfferId,
           jobOfferId: offer.id,
+          engagementJobOfferId: offer.id,
           status: "initiated",
           intakeChannel: "partner_self_service",
           description: offer.scope,
@@ -307,6 +300,54 @@ function adapter(tx: Transaction): JobOfferTransaction {
         },
       );
       return ticket.id;
+    },
+    async createJobTicket(offer, session, period, key) {
+      // The job row is already locked. Only a real accepted snapshot authorizes a new shift.
+      const [snapshot] = await tx.select().from(snapshots).where(eq(snapshots.jobOfferId, offer.id));
+      if (!snapshot || typeof snapshot.scopeSnapshot.afeCode !== "string" || !snapshot.scopeSnapshot.afeCode.trim())
+        throw new MarketplaceError(409, "marketplace.afe_required");
+      const [relationship] = await tx.select({ status: relationships.status }).from(relationships)
+        .where(and(eq(relationships.partnerId, offer.partnerId), eq(relationships.vendorId, offer.vendorId))).for("share");
+      if (isMarketplaceRelationshipRestricted(relationship?.status))
+        throw new MarketplaceError(409, "marketplace.relationship_restricted");
+      const start = new Date(period.requestedStartAt);
+      const duration = Math.ceil((Date.parse(period.requestedEndAt) - start.getTime()) / 60000);
+      const [prior] = await tx.select().from(tickets).where(and(
+        eq(tickets.engagementJobOfferId, offer.id), eq(tickets.engagementTicketKey, key),
+      ));
+      if (prior) {
+        if (prior.scheduledStartAt?.getTime() !== start.getTime() || prior.scheduledDurationMinutes !== duration)
+          throw new MarketplaceError(409, "marketplace.idempotency_conflict");
+        return { ticketId: prior.id, replayed: true };
+      }
+      const ticket = await createTicketWithHistory(tx, {
+        siteLocationId: offer.siteLocationId,
+        vendorId: offer.vendorId,
+        workTypeId: offer.workTypeId,
+        canonicalServiceId: offer.canonicalServiceId,
+        vendorCapabilityId: offer.vendorCapabilityId,
+        vendorPartnerServiceOfferId: offer.vendorPartnerServiceOfferId,
+        engagementJobOfferId: offer.id,
+        engagementTicketKey: key,
+        status: "initiated",
+        intakeChannel: "partner_self_service",
+        description: offer.scope,
+        createdById: session.userId!,
+        scheduledStartAt: start,
+        scheduledDurationMinutes: duration,
+      }, {
+        userId: session.userId!, role: session.role ?? null,
+        reason: `accepted_job_ticket:${offer.id}`,
+      });
+      return { ticketId: ticket.id, replayed: false };
+    },
+    async listJobTickets(offer) {
+      return tx.select({ id: tickets.id, status: tickets.status,
+        scheduledStartAt: tickets.scheduledStartAt, scheduledDurationMinutes: tickets.scheduledDurationMinutes,
+      }).from(tickets).where(and(
+        or(eq(tickets.engagementJobOfferId, offer.id), eq(tickets.jobOfferId, offer.id)),
+        eq(tickets.vendorId, offer.vendorId), eq(tickets.siteLocationId, offer.siteLocationId), eq(tickets.workTypeId, offer.workTypeId),
+      )).orderBy(desc(tickets.id));
     },
     async expire(now) {
       const rows = await tx

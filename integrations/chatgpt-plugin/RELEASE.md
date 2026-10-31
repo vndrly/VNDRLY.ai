@@ -1,3 +1,7 @@
+# VNDRLY plugin 1.22.15
+
+Matches capability-first vendor discovery, partner-assigned job AFEs, recurring tickets linked to the accepted job, and immutable submitted proof revisions. Service matching can return a vendor before a partner-specific rate exists; quote-required results do not authorize an award. New Gate billing setups select an accepted job with its saved daily terms and AFE and still require explicit Gate-contractor authority. Existing Gate agreements remain intact. Approval and kickback apply to the exact reviewed proof revision; unsupported conversational review must use the trusted VNDRLY review screen. Existing plugin/app identity, five service skills, branding, linked accounts and grants remain unchanged. Package validation is not deployment, submission, review approval or public availability.
+
 # VNDRLY plugin 1.22.14
 
 Parallel linked gates share authorized Site / Spur traffic, totals, task hoppers and handoff notes. Entry and exit gates remain separate evidence on one visit. The compact Site | Gate selector separates booth connectivity from GPS; unlinked gates hide the connection indicator. Existing MCP identity and grants remain unchanged.

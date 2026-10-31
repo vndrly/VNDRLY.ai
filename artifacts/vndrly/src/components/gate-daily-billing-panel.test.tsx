@@ -27,6 +27,7 @@ it("lets the office choose continuation and submits the displayed server quote, 
     partnerId: 8,
     siteId: 9,
     workTypeId: 10,
+    jobOfferId: 50,
     periodStartDay: "2026-10-01",
     openTicketId: 100,
     agreementReference: "Daily agreement",
@@ -45,7 +46,7 @@ it("lets the office choose continuation and submits the displayed server quote, 
         post,
         config,
         services: [
-          { id: 10, name: "Daily gate service", dailyRateCents: 10001 },
+          { id: 10, name: "Daily gate service", dailyRateCents: 10001, jobOfferId: 50, afe: "AFE1" },
         ],
       };
     if (path.endsWith("/preview"))
@@ -85,6 +86,8 @@ it("lets the office choose continuation and submits the displayed server quote, 
   expect(next.getAttribute("aria-checked")).toBe("true");
   expect(screen.getByText("Partner: Test Partner")).toBeTruthy();
   expect(screen.getByText("AFE: AFE1")).toBeTruthy();
+  expect(screen.getByText("Job: #50 · AFE: AFE1")).toBeTruthy();
+  expect((screen.getByRole("combobox", { name: "Approved daily service" }) as HTMLSelectElement).value).toBe("10:50");
   fireEvent.click(next);
   fireEvent.click(screen.getByRole("button", { name: "Invoice Now" }));
   await waitFor(() =>

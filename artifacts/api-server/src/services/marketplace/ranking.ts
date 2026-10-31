@@ -27,7 +27,7 @@ export interface RankingCandidate {
     capacity: number;
     available: boolean;
     commercialConditions: string | null;
-  };
+  } | null;
   rating: number | null;
   reviewCount: number;
   safety: { score: number; source: string; refreshedAt: string; reasons: string[] } | null;
@@ -50,6 +50,7 @@ export interface RankingFactor {
 export type RankedVendor = Omit<RankingCandidate, "eligibility"> & {
   eligibility: Omit<EligibilityResult, "internalEvidence">;
   offerable: boolean;
+  quoteRequired: boolean;
   ratingStatus: "rated" | "not_yet_rated";
   safetyStatus: "rated" | "not_yet_rated" | "unavailable";
   weightedScore: number;
@@ -83,14 +84,13 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
     )
       throw new Error("Invalid marketplace ranking weight");
   // A day rate and an hourly rate cannot form one price comparison without a scope estimate.
-  const bases = new Set(
-    input.candidates.map((row) => `${row.offer.currency}/${row.offer.unit}`),
-  );
+  const priced = input.candidates.flatMap((row) => row.offer ? [row.offer] : []);
+  const bases = new Set(priced.map((offer) => `${offer.currency}/${offer.unit}`));
   const minPrice = Math.min(
-    ...input.candidates.map((row) => row.offer.unitPrice),
+    ...priced.map((offer) => offer.unitPrice),
   );
   const maxPrice = Math.max(
-    ...input.candidates.map((row) => row.offer.unitPrice),
+    ...priced.map((offer) => offer.unitPrice),
   );
   const maxHistory = Math.max(
     1,
@@ -127,13 +127,13 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
     };
     factor(
       "price",
-      bases.size === 1
+      row.offer && bases.size === 1
         ? maxPrice === minPrice
           ? 1
           : (maxPrice - row.offer.unitPrice) / (maxPrice - minPrice)
         : null,
-      `Price: ${row.offer.unitPrice} ${row.offer.currency}/${row.offer.unit}${bases.size > 1 ? "; different currency or unit, not comparable" : "; lower comparable rate ranks higher"}`,
-      bases.size > 1 ? "not_comparable" : "available",
+      row.offer ? `Price: ${row.offer.unitPrice} ${row.offer.currency}/${row.offer.unit}${bases.size > 1 ? "; different currency or unit, not comparable" : "; lower comparable rate ranks higher"}` : "Price: quote required; no agreed partner rate",
+      !row.offer || bases.size > 1 ? "not_comparable" : "available",
     );
     factor(
       "rating",
@@ -170,8 +170,8 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
     );
     factor(
       "availability",
-      row.offer.available ? 1 : 0,
-      `Availability: ${row.offer.available ? "available" : "unavailable"}; capacity ${row.eligibility.facts.availableCapacity}`,
+      row.offer ? (row.offer.available ? 1 : 0) : null,
+      row.offer ? `Availability: ${row.offer.available ? "available" : "unavailable"}; capacity ${row.eligibility.facts.availableCapacity}` : `Availability: confirm with vendor; capability capacity ${row.eligibility.facts.availableCapacity}`,
     );
     factor(
       "priorExperience",
@@ -195,7 +195,7 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
       capabilityName: row.capabilityName,
       canonicalServiceId: row.canonicalServiceId,
       matchExplanation: row.matchExplanation,
-      offer: {
+      offer: row.offer ? {
         id: row.offer.id,
         unitPrice: row.offer.unitPrice,
         unit: row.offer.unit,
@@ -203,7 +203,7 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
         capacity: row.offer.capacity,
         available: row.offer.available,
         commercialConditions: row.offer.commercialConditions,
-      },
+      } : null,
       rating: row.rating,
       reviewCount: row.reviewCount,
       safety:
@@ -231,7 +231,8 @@ export function rankMarketplaceVendors(input: RankInput): RankedVendor[] {
           missingCredentials: [...row.eligibility.facts.missingCredentials],
         },
       },
-      offerable: row.eligibility.eligible,
+      offerable: row.eligibility.eligible && row.offer !== null,
+      quoteRequired: row.offer === null,
       ratingStatus: row.rating === null ? "not_yet_rated" : "rated",
       safetyStatus: row.safetyUnavailable
         ? "unavailable"

@@ -3,6 +3,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useListSiteLocations,
+  requestPartnerMarketplaceQuote,
   useSearchPartnerMarketplaceVendors,
   useGetPartnerMarketplaceVendor,
   getSearchPartnerMarketplaceVendorsQueryKey,
@@ -30,13 +31,16 @@ export default function PartnerVendorResults({
   const [end, setEnd] = useState("");
   const [sort, setSort] = useState<MarketplaceSortParameter>("recommended");
   const [eligibleOnly, setEligibleOnly] = useState(false);
-  const [compared, setCompared] = useState<number[]>([]);
+  const [compared, setCompared] = useState<string[]>([]);
   const [detailSelection, setDetailSelection] =
     useState<MarketplaceRankedVendor | null>(null);
   const detailId = detailSelection?.vendorId ?? 0;
   const [offerVendor, setOfferVendor] =
     useState<MarketplaceRankedVendor | null>(null);
   const [offset, setOffset] = useState(0);
+  const [quoteScope, setQuoteScope] = useState("");
+  const [quoteState, setQuoteState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const rowKey = (vendor: MarketplaceRankedVendor) => `${vendor.vendorId}:${vendor.capabilityId}:${vendor.offer?.id ?? "quote"}`;
   const site = sites.data?.find(
     (item) =>
       item.id === siteId && item.partnerId === partnerId && item.isActive,
@@ -60,7 +64,7 @@ export default function PartnerVendorResults({
     requestedCapacity,
     sort,
     vendorCapabilityId: detailSelection?.capabilityId ?? 0,
-    vendorPartnerServiceOfferId: detailSelection?.offer.id ?? 0,
+    ...(detailSelection?.offer ? { vendorPartnerServiceOfferId: detailSelection.offer.id } : {}),
   };
   const enabled = validCoordinates && validCapacity;
   const search = useSearchPartnerMarketplaceVendors(
@@ -102,20 +106,22 @@ export default function PartnerVendorResults({
     setOfferVendor(null);
     setDetailSelection(null);
     setOffset(0);
+    setQuoteState("idle");
+    setQuoteScope("");
   };
   const vendors = enabled && !search.isError ? (search.data?.items ?? []) : [];
   const visible = vendors.filter(
     (vendor) => !eligibleOnly || vendor.eligibility.eligible,
   );
   const selected = vendors.filter((vendor) =>
-    compared.includes(vendor.offer.id),
+    compared.includes(rowKey(vendor)),
   );
   const sameOffer =
     !!offerVendor &&
     !!details.data &&
     details.data.vendorId === offerVendor.vendorId &&
     details.data.capabilityId === offerVendor.capabilityId &&
-    details.data.offer.id === offerVendor.offer.id;
+    details.data.offer?.id === offerVendor.offer?.id;
   return (
     <div
       className="p-4 space-y-4 border-t"
@@ -127,6 +133,7 @@ export default function PartnerVendorResults({
           {t("partnerMarketplace.site")}
           <select
             id={`${id}-site`}
+            aria-label={t("partnerMarketplace.site")}
             className="rounded border bg-background p-2"
             value={siteId}
             onChange={(event) => {
@@ -275,19 +282,27 @@ export default function PartnerVendorResults({
           <div className="grid gap-4 xl:grid-cols-2">
             {visible.map((vendor) => (
               <VendorComparisonCard
-                key={`${vendor.vendorId}-${vendor.capabilityId}-${vendor.offer.id}`}
+                key={rowKey(vendor)}
                 vendor={vendor}
-                compared={compared.includes(vendor.offer.id)}
+                compared={compared.includes(rowKey(vendor))}
                 onCompare={() =>
                   setCompared(
-                    compared.includes(vendor.offer.id)
-                      ? compared.filter((value) => value !== vendor.offer.id)
-                      : [...compared, vendor.offer.id],
+                    compared.includes(rowKey(vendor))
+                      ? compared.filter((value) => value !== rowKey(vendor))
+                      : [...compared, rowKey(vendor)],
                   )
                 }
                 onDetails={() => {
                   setDetailSelection(vendor);
                   setOfferVendor(null);
+                  setQuoteScope("");
+                  setQuoteState("idle");
+                }}
+                onQuote={() => {
+                  setDetailSelection(vendor);
+                  setOfferVendor(null);
+                  setQuoteScope("");
+                  setQuoteState("idle");
                 }}
                 onOffer={() => {
                   setDetailSelection(vendor);
@@ -315,12 +330,10 @@ export default function PartnerVendorResults({
                 </thead>
                 <tbody>
                   {selected.map((vendor) => (
-                    <tr key={vendor.offer.id}>
+                    <tr key={rowKey(vendor)}>
                       <th scope="row">{vendor.vendorName}</th>
                       <td>
-                        {vendor.offer.currency}{" "}
-                        {vendor.offer.unitPrice.toFixed(2)} /{" "}
-                        {vendor.offer.unit}
+                        {vendor.offer ? `${vendor.offer.currency} ${vendor.offer.unitPrice.toFixed(2)} / ${vendor.offer.unit}` : t("partnerMarketplace.quoteRequired")}
                       </td>
                       <td>
                         {vendor.rating ?? t("partnerMarketplace.notYetRated")}
@@ -353,7 +366,32 @@ export default function PartnerVendorResults({
                 <>
                   <CardHeading as="h4">{details.data.vendorName}</CardHeading>
                   <p>{details.data.matchExplanation}</p>
-                  <p>{details.data.offer.commercialConditions}</p>
+                  <p>{details.data.offer?.commercialConditions ?? t("partnerMarketplace.quoteRequired")}</p>
+                  {!details.data.offer && details.data.eligibility.eligible && (
+                    <form className="space-y-2" onSubmit={async (event) => {
+                      event.preventDefault();
+                      if (!detailSelection || quoteState === "sending" || !quoteScope.trim()) return;
+                      setQuoteState("sending");
+                      try {
+                        await requestPartnerMarketplaceQuote(partnerId, workTypeId, detailSelection.vendorId, {
+                          siteId, vendorCapabilityId: detailSelection.capabilityId, requestedCapacity, scope: quoteScope.trim(),
+                        });
+                        setQuoteState("sent");
+                      } catch { setQuoteState("error"); }
+                    }}>
+                      <p className="text-sm">{t("partnerMarketplace.quoteExplanation")}</p>
+                      <label className="grid gap-1" htmlFor={`${id}-quote-scope`}>
+                        {t("partnerMarketplace.quoteScope")}
+                        <textarea id={`${id}-quote-scope`} className="rounded border bg-background p-2" required maxLength={2000}
+                          value={quoteScope} onChange={(event) => setQuoteScope(event.target.value)} disabled={quoteState === "sending" || quoteState === "sent"} />
+                      </label>
+                      <TogglePillButton type="submit" color="blue" disabled={!quoteScope.trim() || quoteState === "sending" || quoteState === "sent"}>
+                        {t("partnerMarketplace.requestQuote")}
+                      </TogglePillButton>
+                      {quoteState === "sent" && <p role="status">{t("partnerMarketplace.quoteSent")}</p>}
+                      {quoteState === "error" && <p role="alert">{t("partnerMarketplace.quoteError")}</p>}
+                    </form>
+                  )}
                 </>
               )}
             </section>
@@ -378,7 +416,7 @@ export default function PartnerVendorResults({
             )}
           {offerVendor && sameOffer && details.data && (
             <JobOfferComposer
-              key={`${siteId}-${requestedCapacity}-${start}-${end}-${offerVendor.offer.id}`}
+              key={`${siteId}-${requestedCapacity}-${start}-${end}-${offerVendor.offer?.id}`}
               partnerId={partnerId}
               workTypeId={workTypeId}
               siteLocationId={siteId}

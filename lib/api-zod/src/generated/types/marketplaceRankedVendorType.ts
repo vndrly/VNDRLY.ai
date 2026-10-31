@@ -22,6 +22,7 @@ export interface MarketplaceRankedVendorType {
   /** @minimum 1 */
   canonicalServiceId: number;
   matchExplanation: string;
+  /** @nullable */
   offer: MarketplaceRankedVendorTypeOffer;
   /**
    * @minimum 1
@@ -47,6 +48,7 @@ export interface MarketplaceRankedVendorType {
   /** @nullable */
   relationshipStatus: string | null;
   eligibility: MarketplaceRankedVendorTypeEligibility;
+  quoteRequired: boolean;
   offerable: boolean;
   ratingStatus: MarketplaceRankedVendorTypeRatingStatus;
   safetyStatus: MarketplaceRankedVendorTypeSafetyStatus;

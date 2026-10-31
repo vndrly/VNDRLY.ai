@@ -30,13 +30,37 @@ export interface MarketplaceJobOfferDraft {
    * @maximum 100000
    */
   crewCount: number;
-  /** @maxLength 200 */
-  afeCode?: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  afeCode: string;
   /** @maxLength 200 */
   poNumber?: string;
   /** @maxItems 20 */
   attachmentUrls: string[];
   expiresAt: string;
+}
+
+export interface MarketplaceJobTicketInput {
+  requestedStartAt: string;
+  requestedEndAt: string;
+}
+
+export interface MarketplaceJobTicketResult {
+  ticketId: number;
+  replayed: boolean;
+}
+
+export type MarketplaceJobTicketListItemsItem = {
+  id: number;
+  status: string;
+  scheduledStartAt: string | null;
+  scheduledDurationMinutes: number | null;
+};
+
+export interface MarketplaceJobTicketList {
+  items: MarketplaceJobTicketListItemsItem[];
 }
 
 export interface MarketplaceJobOfferVersion {
@@ -141,6 +165,9 @@ export interface MarketplaceRankingFactor {
   explanation: string;
 }
 
+/**
+ * @nullable
+ */
 export type MarketplaceRankedVendorOffer = {
   /** @minimum 1 */
   id: number;
@@ -153,7 +180,7 @@ export type MarketplaceRankedVendorOffer = {
   available: boolean;
   /** @nullable */
   commercialConditions: string | null;
-};
+} | null;
 
 /**
  * @nullable
@@ -229,6 +256,7 @@ export interface MarketplaceRankedVendor {
   /** @minimum 1 */
   canonicalServiceId: number;
   matchExplanation: string;
+  /** @nullable */
   offer: MarketplaceRankedVendorOffer;
   /**
    * @minimum 1
@@ -254,6 +282,7 @@ export interface MarketplaceRankedVendor {
   /** @nullable */
   relationshipStatus: string | null;
   eligibility: MarketplaceRankedVendorEligibility;
+  quoteRequired: boolean;
   offerable: boolean;
   ratingStatus: MarketplaceRankedVendorRatingStatus;
   safetyStatus: MarketplaceRankedVendorSafetyStatus;
@@ -4438,6 +4467,61 @@ export type MarketplaceLimitParameter = number;
 
 export type MarketplaceOffsetParameter = number;
 
+export type ImportPartnerServiceCatalogBodyMode =
+  (typeof ImportPartnerServiceCatalogBodyMode)[keyof typeof ImportPartnerServiceCatalogBodyMode];
+
+export const ImportPartnerServiceCatalogBodyMode = {
+  preview: "preview",
+  import: "import",
+} as const;
+
+export type ImportPartnerServiceCatalogBody = {
+  /** @maxLength 240 */
+  fileName: string;
+  /** @maxLength 1400000 */
+  sourceBase64: string;
+  mode: ImportPartnerServiceCatalogBodyMode;
+};
+
+export type ImportPartnerServiceCatalog200RowsItemOutcome =
+  (typeof ImportPartnerServiceCatalog200RowsItemOutcome)[keyof typeof ImportPartnerServiceCatalog200RowsItemOutcome];
+
+export const ImportPartnerServiceCatalog200RowsItemOutcome = {
+  new: "new",
+  duplicate: "duplicate",
+  conflict: "conflict",
+  created: "created",
+} as const;
+
+export type ImportPartnerServiceCatalog200RowsItem = {
+  row: number;
+  name: string;
+  code: string;
+  unit: string;
+  outcome: ImportPartnerServiceCatalog200RowsItemOutcome;
+  workTypeId?: number;
+  reason?: string;
+  [key: string]: unknown;
+};
+
+export type ImportPartnerServiceCatalog200 = {
+  sourceHash: string;
+  fileName: string;
+  rows: ImportPartnerServiceCatalog200RowsItem[];
+  created: number;
+  duplicates: number;
+  conflicts: number;
+  importId?: number;
+  replayed?: boolean;
+  [key: string]: unknown;
+};
+
+export type ListPartnerCatalogImports200ItemsItem = { [key: string]: unknown };
+
+export type ListPartnerCatalogImports200 = {
+  items: ListPartnerCatalogImports200ItemsItem[];
+};
+
 export type SearchPartnerMarketplaceVendorsParams = {
   /**
    * @minimum 1
@@ -4518,7 +4602,7 @@ export type GetPartnerMarketplaceVendorParams = {
   /**
    * @minimum 1
    */
-  vendorPartnerServiceOfferId: MarketplaceDetailPartnerOfferIdParameter;
+  vendorPartnerServiceOfferId?: MarketplaceDetailPartnerOfferIdParameter;
   /**
    * @minimum 1
    */
@@ -4569,6 +4653,27 @@ export type GetPartnerMarketplaceVendorParams = {
    * @maximum 100
    */
   priorExperienceWeight?: MarketplacePriorExperienceWeightParameter;
+};
+
+export type RequestPartnerMarketplaceQuoteBody = {
+  /** @minimum 1 */
+  siteId: number;
+  /** @minimum 1 */
+  vendorCapabilityId: number;
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  requestedCapacity: number;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  scope: string;
+};
+
+export type RequestPartnerMarketplaceQuote202 = {
+  requested: boolean;
 };
 
 export type ListVendorMarketplaceCapabilities200 = {

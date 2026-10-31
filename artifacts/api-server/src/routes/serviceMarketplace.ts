@@ -1,7 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
+import { notifyMarketplaceQuoteRequest, type MarketplaceQuoteRequest } from "../services/marketplace/quote-request";
 import { isSemanticMarketplaceEnabled, type SemanticMarketplaceScope } from "../services/marketplace/feature";
-import { createJobOfferInput, getJobOfferService, type JobOfferService } from "../services/marketplace/job-offers";
+import { createJobOfferInput, createJobTicketInput, getJobOfferService, type JobOfferService } from "../services/marketplace/job-offers";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendValidationFailed } from "../lib/validation-error";
 import { logger } from "../lib/logger";
@@ -128,6 +129,7 @@ export function createServiceMarketplaceRouter(
     store?: VendorMarketplaceStore;
     classifyCapability?: typeof classifyCapability;
     partnerStore?: PartnerMarketplaceStore;
+    requestQuote?: (input: MarketplaceQuoteRequest) => Promise<void>;
     jobOffers?: JobOfferService;
     isEnabled?: typeof isSemanticMarketplaceEnabled;
     now?: () => Date;
@@ -186,6 +188,14 @@ export function createServiceMarketplaceRouter(
   router.get(`${offerBase}/:offerId`, offerHandler("saved", async (req, res, service, session) => {
     res.json(publicOffer(await service.getJobOffer(id.parse(req.params.offerId), session)));
   }));
+  router.get(`${offerBase}/:offerId/tickets`, offerHandler("saved", async (req, res, service, session) => {
+    res.json({ items: await service.listJobTickets(id.parse(req.params.offerId), session) });
+  }));
+  router.post(`${offerBase}/:offerId/tickets`, offerHandler("saved", async (req, res, service, session) => {
+    const key = z.string().trim().min(1).max(200).parse(req.get("Idempotency-Key"));
+    const result = await service.createJobTicket(id.parse(req.params.offerId), createJobTicketInput.parse(req.body), session, key);
+    res.status(result.replayed ? 200 : 201).json(result);
+  }));
   for (const side of ["partner", "vendor"] as const) router.get(`/service-marketplace/${side}s/:orgId/job-offers`, offerHandler("list", async (req, res, service, session) => {
     res.json({ items: (await service.listJobOffers(side, id.parse(req.params.orgId), session)).map(publicOffer) });
   }));
@@ -235,7 +245,7 @@ export function createServiceMarketplaceRouter(
           ? z
               .object({
                 vendorCapabilityId: id,
-                vendorPartnerServiceOfferId: id,
+                vendorPartnerServiceOfferId: id.optional(),
               })
               .parse(req.query)
           : null;
@@ -250,7 +260,7 @@ export function createServiceMarketplaceRouter(
           offset: z.coerce.number().int().min(0).default(0),
           ...weightFields,
           ...(detailIdentity
-            ? { vendorCapabilityId: id, vendorPartnerServiceOfferId: id }
+            ? { vendorCapabilityId: id, vendorPartnerServiceOfferId: id.optional() }
             : {}),
         })
         .strict()
@@ -290,7 +300,9 @@ export function createServiceMarketplaceRouter(
           (row) =>
             row.vendorId === vendorId &&
             row.capabilityId === detailIdentity!.vendorCapabilityId &&
-            row.offer.id === detailIdentity!.vendorPartnerServiceOfferId,
+            (detailIdentity!.vendorPartnerServiceOfferId === undefined
+              ? row.offer === null
+              : row.offer?.id === detailIdentity!.vendorPartnerServiceOfferId),
         );
         if (!item)
           throw new MarketplaceError(404, "marketplace.vendor_not_found");
@@ -327,6 +339,37 @@ export function createServiceMarketplaceRouter(
     "/service-marketplace/partners/:partnerId/work-types/:workTypeId/vendors";
   router.get(partnerBase, searchPartner);
   router.get(`${partnerBase}/:discoveryVendorId`, searchPartner);
+  router.post(`${partnerBase}/:discoveryVendorId/quote-requests`, async (req, res) => {
+    try {
+      const partnerId = id.parse(req.params.partnerId);
+      const workTypeId = id.parse(req.params.workTypeId);
+      const vendorId = id.parse(req.params.discoveryVendorId);
+      const body = z.object({ siteId: id, vendorCapabilityId: id,
+        requestedCapacity: id.max(100000).default(1), scope: z.string().trim().min(1).max(2000) }).strict().parse(req.body);
+      const session = getSessionFromRequest(req);
+      if (!session?.userId || session.publicDemo ||
+          !(session.role === "admin" || (session.role === "partner" && session.partnerId === partnerId && session.vendorId == null && (session.activeMembershipId ?? 0) > 0)) ||
+          !(await partnerStore.authorize(session, partnerId)))
+        throw new MarketplaceError(403, "marketplace.partner_scope_required");
+      await requireFeature({ ownerOrgType: "partner", ownerOrgId: partnerId, siteId: body.siteId });
+      const context = await partnerStore.loadContext(partnerId, workTypeId, body.siteId);
+      if (!context || context.partnerId !== partnerId || context.workType.partnerId !== partnerId || context.site.partnerId !== partnerId)
+        throw new MarketplaceError(404, "marketplace.work_type_or_site_not_found");
+      const now = dependencies.now?.() ?? new Date();
+      const matches = await discoverPartnerMarketplaceVendors(partnerStore, context, { requestedCapacity: body.requestedCapacity }, now);
+      const vendor = matches.find((row) => row.vendorId === vendorId && row.capabilityId === body.vendorCapabilityId);
+      if (!vendor || !vendor.eligibility.eligible)
+        throw new MarketplaceError(409, "marketplace.vendor_not_eligible");
+      await (dependencies.requestQuote ?? notifyMarketplaceQuoteRequest)({ partnerId, vendorId, capabilityId: body.vendorCapabilityId,
+        workTypeId, workTypeName: context.workType.name, siteId: body.siteId, requestedCapacity: body.requestedCapacity, scope: body.scope, now });
+      res.status(202).json({ requested: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) { sendValidationFailed(res, error); return; }
+      if (error instanceof MarketplaceError) { res.status(error.status).json({ error: error.message, code: error.code }); return; }
+      logger.error({ err: error }, "Marketplace quote request failed");
+      res.status(503).json({ error: "Marketplace unavailable", code: "marketplace.unavailable" });
+    }
+  });
   const scope = async (
     req: Request,
   ): Promise<{ vendorId: number; actor: number; session: SessionPayload }> => {

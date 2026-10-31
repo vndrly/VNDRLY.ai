@@ -131,6 +131,9 @@ export async function resolveNotificationDestination(
         .limit(1)
     : [];
   if (session.role !== "admin" && !memberships.length) return null;
+  if (path === "/vendor-catalog" && keys.length === 0 &&
+      (session.role === "admin" || (session.role === "vendor" && memberships.some((membership) =>
+        membership.orgType === "vendor" && ["admin", "member"].includes(membership.role))))) return path;
   const ownerAllowed = (row: { ownerOrgType: string; ownerOrgId: number }) =>
     sessionCanSeeOwner(session, row.ownerOrgType, row.ownerOrgId);
   const authorizeChannel = async (channelId: string) => {

@@ -23,8 +23,10 @@ export function acceptedMarketplaceSites(
     .innerJoin(
       offers,
       and(
-        eq(offers.id, tickets.jobOfferId),
-        eq(offers.createdTicketId, tickets.id),
+        or(
+          and(eq(offers.id, tickets.jobOfferId), eq(offers.createdTicketId, tickets.id)),
+          eq(offers.id, tickets.engagementJobOfferId),
+        ),
         eq(offers.status, "accepted"),
         eq(offers.vendorId, tickets.vendorId),
         eq(offers.siteLocationId, tickets.siteLocationId),

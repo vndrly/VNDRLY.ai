@@ -1,7 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTestCookie } from "../test-utils/session";
 import { subjectFingerprint } from "../services/service-matching/candidates";
 import { createServiceMarketplaceRouter } from "./serviceMarketplace";
@@ -46,7 +46,9 @@ let rows: any[];
 let authority: boolean;
 let loaded: number;
 let context: any;
+const requestQuote = vi.fn(async () => {});
 beforeEach(() => {
+  requestQuote.mockClear();
   authority = true;
   loaded = 0;
   context = {
@@ -129,11 +131,40 @@ beforeEach(() => {
     .use(express.json())
     .use(
       "/api",
-      createServiceMarketplaceRouter({ partnerStore, now: () => now, isEnabled: async () => true }),
+      createServiceMarketplaceRouter({ partnerStore, requestQuote, now: () => now, isEnabled: async () => true }),
     );
 });
 const path = "/api/service-marketplace/partners/9/work-types/21/vendors";
 describe("partner marketplace discovery", () => {
+  it("discovers a service-matched vendor without partner pricing and supports exact detail without a rate ID", async () => {
+    rows[0].offer = null;
+    const result = await request(app).get(path + "?siteId=8").set("Cookie", cookie);
+    expect(result.status).toBe(200);
+    expect(result.body.items[0]).toMatchObject({ offer: null, quoteRequired: true, offerable: false, eligibility: { eligible: true, facts: { availableCapacity: 2 } } });
+    expect(SearchPartnerMarketplaceVendorsResponse.safeParse(result.body).success).toBe(true);
+    const detail = await request(app).get(path + "/3?siteId=8&vendorCapabilityId=7").set("Cookie", cookie);
+    expect(detail.status).toBe(200);
+    expect(detail.body).toEqual(result.body.items[0]);
+  });
+  it("keeps a matched vendor visible when pricing expires without exposing obsolete terms", async () => {
+    rows[0].offer.effectiveUntil = now;
+    const result = await request(app).get(path + "?siteId=8").set("Cookie", cookie);
+    expect(result.body.items[0]).toMatchObject({ offer: null, quoteRequired: true, offerable: false });
+  });
+  it("delivers a quote request only for an authorized current eligible match", async () => {
+    rows[0].offer = null;
+    const body = { siteId: 8, vendorCapabilityId: 7, requestedCapacity: 1, scope: "Gatekeeping next Monday" };
+    const result = await request(app).post(path + "/3/quote-requests").set("Cookie", cookie).send(body);
+    expect(result.status).toBe(202);
+    expect(requestQuote).toHaveBeenCalledWith(expect.objectContaining({ partnerId: 9, vendorId: 3, capabilityId: 7, scope: body.scope }));
+    requestQuote.mockClear();
+    rows[0].relationshipStatus = "revoked";
+    expect((await request(app).post(path + "/3/quote-requests").set("Cookie", cookie).send(body)).status).toBe(409);
+    authority = false;
+    expect((await request(app).post(path + "/3/quote-requests").set("Cookie", cookie).send(body)).status).toBe(403);
+    expect(requestQuote).not.toHaveBeenCalled();
+  });
+
   it("returns only approved facts and the selected partner's terms, with canonical detail readback", async () => {
     expect(mappingMatchesSavedSubject(context.demandMapping, subject)).toBe(
       true,
@@ -214,7 +245,6 @@ describe("partner marketplace discovery", () => {
   it("requires positive exact capability and commercial-offer identities in the generated and runtime contracts", async () => {
     for (const query of [
       { siteId: "8" },
-      { siteId: "8", vendorCapabilityId: "7" },
       { siteId: "8", vendorPartnerServiceOfferId: "12" },
       {
         siteId: "8",
@@ -302,7 +332,8 @@ describe("partner marketplace discovery", () => {
       .get(path + "?siteId=8&sort=price")
       .set("Cookie", cookie);
     expect(result.status).toBe(200);
-    expect(result.body.items.map((x: any) => x.vendorId)).toEqual([3]);
+    expect(result.body.items.map((x: any) => x.vendorId)).toEqual([3, 7]);
+    expect(result.body.items[1]).toMatchObject({ offer: null, quoteRequired: true, offerable: false });
     context.workType.name = "Changed demand";
     const stale = await request(app)
       .get(path + "?siteId=8")
@@ -475,12 +506,6 @@ describe("partner marketplace discovery", () => {
       },
       (row: any) => {
         row.capability.active = false;
-      },
-      (row: any) => {
-        row.offer.effectiveFrom = new Date("2026-10-19");
-      },
-      (row: any) => {
-        row.offer.effectiveUntil = now;
       },
     ]) {
       rows = [structuredClone(original)];

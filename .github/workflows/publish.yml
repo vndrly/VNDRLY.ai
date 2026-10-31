@@ -31,6 +31,7 @@ jobs:
         env:
           BASE_PATH: /
           NODE_ENV: production
+          VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED: "true"
       - name: Upload web build
         uses: actions/upload-artifact@v4
         with:

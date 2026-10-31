@@ -73,9 +73,9 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
     const value = state.setup?.config;
     setService(
       value
-        ? String(value.workTypeId)
+        ? `${value.workTypeId}:${value.jobOfferId ?? "legacy"}`
         : state.setup?.services.length === 1
-          ? String(state.setup.services[0].id)
+          ? `${state.setup.services[0].id}:${state.setup.services[0].jobOfferId ?? "legacy"}`
           : "",
     );
     setStart(
@@ -120,7 +120,8 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
     };
   const save = () =>
     void workflow?.configure({
-      workTypeId: Number(service),
+      workTypeId: Number(service.split(":")[0]),
+      ...(service.split(":")[1] !== "legacy" ? { jobOfferId: Number(service.split(":")[1]) } : {}),
       startDay: start,
       agreementReference: agreement,
       partialDayRule: rule,
@@ -192,18 +193,19 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
             value={service}
             disabled={locked || frozen}
             options={state.setup.services.map((item) => ({
-              id: String(item.id),
-              label: `${item.name} · ${money(frozen && config?.workTypeId === item.id ? config.dailyRateCents : item.dailyRateCents)} ${copy("Per day")}`,
+              id: `${item.id}:${item.jobOfferId ?? "legacy"}`,
+              label: `${item.name} · ${item.jobOfferId ? `${copy("Job")} #${item.jobOfferId} · ${copy("AFE")}: ${item.afe} · ` : ""}${money(frozen && config?.workTypeId === item.id ? config.dailyRateCents : item.dailyRateCents)} ${copy("Per day")}`,
             }))}
             onChange={setService}
           />
           {!state.setup.services.length ? (
             <Text style={text}>
               {copy(
-                "Choose an approved per-day service before starting billing.",
+                "Select an accepted job with a partner-assigned AFE and Gate authorization.",
               )}
             </Text>
           ) : null}
+          {config?.jobOfferId ? <Text style={text}>{copy("Job")}: #{config.jobOfferId} · {copy("AFE")}: {config.afe}</Text> : null}
           <Text style={text}>{copy("Period starts")} (YYYY-MM-DD)</Text>
           <TextInput
             accessibilityLabel={copy("Period starts")}

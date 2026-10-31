@@ -151,3 +151,11 @@ Use the ticket lifecycle tools for Start Travel, Arrived, Check In, Check Out an
 ## Dashboard and new assignments
 
 Dashboard ticket filters include Active, Stale, Flagged, Completed and Kickbacks, ordered newest first. Crew Map remains company scoped. Creating or assigning a ticket for another employee leaves it pending arrival; assignment never asserts the creator or employee is physically on site and never starts a clock. Resolve the authorized employee in the same company and use the existing confirmation-bound ticket assignment tools. The employee receives the saved assignment in My Work.
+
+## Service match, accepted job and submitted proof
+
+Use only current advertised marketplace reads. A vendor may match the partner's service before a partner-specific price exists. Preserve a quote-required result; never manufacture a price, availability, qualification or accepted relationship to turn discovery into an award. Existing company, coverage and commercial restrictions still apply.
+
+The partner assigns the AFE with the job offer. Preserve the saved accepted job, service, vendor, site, AFE and commercial terms on each ticket created for that job. Multiple tickets may belong to one accepted job. An assignment, rate-card edit or site default is not permission to replace an accepted ticket's billing reference. Historical records without job links remain historical; do not invent a link during a read or correction.
+
+Submission saves a numbered proof revision containing the claim and evidence. A partner decision must identify the same revision the reviewer saw. Current mutable notes or a newly fetched revision are not substitutes for the reviewed proof. On a changed-revision response, reload and review the changed proof before preparing a fresh decision; never automatically retry against a newer revision. Corrections and resubmission retain prior proof history. When a tool lacks an explicit supported revision-bound review contract, direct the reviewer to the trusted VNDRLY ticket proof screen rather than preparing an incomplete approval or kickback. Submitted, approved, invoiced and paid remain separate states.

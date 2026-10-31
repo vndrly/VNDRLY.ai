@@ -101,12 +101,13 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[1].id })).send({}).expect(403);
     const [unchanged] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(unchanged.status).toBe("submitted");
+    await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "partner", partnerId: partners[0].id, role: "admin" });
     const cookie = buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[0].id });
-    expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).send({}), 200);
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).set("X-Submission-Revision", String(submitted.submissionRevision)).send({}), 200);
     const [approved] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(approved).toMatchObject({ status: "approved", lifecycleState: "off_site" });
     expect(approved.approvedAt).not.toBeNull();
-    expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).send({}), 200);
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).set("X-Submission-Revision", String(submitted.submissionRevision)).send({}), 200);
     const [replayed] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(replayed.approvedAt).toEqual(approved.approvedAt);
     const payment = { paymentMethod: "check", paymentReference: "SYNTHETIC-NO-BANK-PAYMENT", note: "Runner-local accounting fixture only" };

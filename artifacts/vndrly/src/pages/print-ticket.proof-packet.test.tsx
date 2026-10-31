@@ -1,5 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { role: "partner" } }) }));
+vi.mock("@/components/ticket-submitted-proof", async (original) => ({
+  ...await original<typeof import("@/components/ticket-submitted-proof")>(),
+  useSubmittedProof: () => ({ data: { jobId: null, revision: 0, approvedRevision: null, submissions: [] }, isFetching: false, isError: false }),
+}));
 
 const completeTicket = {
   id: 42,

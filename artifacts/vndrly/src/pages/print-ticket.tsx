@@ -1,4 +1,7 @@
 import { CardHeading } from "@/components/ui/card-heading";
+
+import { TicketSubmittedProof, useSubmittedProof } from "@/components/ticket-submitted-proof";
+import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useMemo, useState } from "react";
 import {
   useGetTicket,
@@ -52,6 +55,8 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 };
 
 export default function PrintTicketPage({ id }: { id: number }) {
+  const { user } = useAuth();
+  const submittedProof = useSubmittedProof(id, !!user && ["vendor", "partner", "admin"].includes(user.role));
   const validId = Number.isFinite(id) && id > 0;
   const { data: ticket, isLoading, isError } = useGetTicket(id, {
     query: { enabled: validId, queryKey: getGetTicketQueryKey(id) },
@@ -94,12 +99,12 @@ export default function PrintTicketPage({ id }: { id: number }) {
   );
 
   const readyToPrint = useMemo(() => {
-    if (!ticket) return false;
+    if (!ticket || submittedProof.isFetching || submittedProof.isError) return false;
     if (siteLocationId && siteLoading) return false;
     if (partnerId && partnerLoading) return false;
     if (siteState && taxRateLoading) return false;
     return true;
-  }, [ticket, siteLocationId, siteLoading, partnerId, partnerLoading, siteState, taxRateLoading]);
+  }, [ticket, siteLocationId, siteLoading, partnerId, partnerLoading, siteState, taxRateLoading, submittedProof.isFetching, submittedProof.isError]);
 
   useEffect(() => {
     if (!readyToPrint) return;
@@ -110,11 +115,39 @@ export default function PrintTicketPage({ id }: { id: number }) {
   const [downloading, setDownloading] = useState(false);
 
   const handleDownloadPdf = async () => {
-    if (!ticket) return;
+    if (!ticket || submittedProof.isFetching || submittedProof.isError) return;
     setDownloading(true);
     try {
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "in", format: "letter", orientation: "portrait" });
+      const saved = submittedProof.data?.submissions.find(p => p.revision ===
+        (submittedProof.data?.approvedRevision ?? submittedProof.data?.revision));
+      if (saved) {
+        doc.setFontSize(11);
+        let lineY = 0.55;
+        const write = (text: string) => {
+          for (const line of doc.splitTextToSize(text, 7.4)) {
+            if (lineY > 10.3) { doc.addPage(); lineY = 0.55; }
+            doc.text(line, 0.55, lineY); lineY += 0.2;
+          }
+        };
+        write(`Submitted proof sheet - Ticket #${saved.ticketId}`);
+        write(`Job #${saved.jobId ?? "Legacy"} | AFE: ${saved.afe ?? "Not assigned"} | Revision ${saved.revision}`);
+        write(`Submitted: ${formatDateTime(saved.submittedAt)}`);
+        write(`Approval: ${submittedProof.data?.approvedRevision === saved.revision ? "Approved" : "Not approved"}`);
+        if (saved.ticket.notes) write(saved.ticket.notes);
+        for (const item of saved.lineItems) write(`${item.description}: ${item.precise_quantity ?? item.quantity} x ${item.precise_unit_price ?? item.unit_price}`);
+        for (const note of saved.notes) {
+          write(note.content ?? "");
+          for (const attachment of note.attachments ?? []) write(`Attachment: ${attachment}`);
+        }
+        for (const session of saved.checkIns) write(`Crew #${session.employee_id}: ${formatDateTime(session.check_in_at)} to ${formatDateTime(session.check_out_at)}`);
+        for (const day of saved.gate?.period?.days ?? []) write(`Gate ${day.day}: ${(Number(day.staffedMilliseconds) / 3600000).toFixed(2)} hours covered; USD ${(Number(day.chargeCents) / 100).toFixed(2)}${day.hasCoverageGap ? "; coverage gap acknowledged" : ""}`);
+        write(`Location evidence: ${saved.gps.length} recorded points`);
+        write(`Proof reference: ${saved.digest}`);
+        doc.save(`ticket-${saved.ticketId}-proof-${saved.revision}.pdf`);
+        return;
+      }
       const pageW = 8.5;
       const pageH = 11;
       const margin = 0.5;
@@ -375,9 +408,10 @@ export default function PrintTicketPage({ id }: { id: number }) {
         }
       `}</style>
 
+      <div className="w-full max-w-2xl"><TicketSubmittedProof history={submittedProof.data} /></div>
       <div className="no-print w-full max-w-2xl flex justify-end mb-4 gap-2">
         <button onClick={() => window.print()} className="px-4 py-2 rounded bg-amber-500 text-white font-semibold hover:bg-amber-600" data-testid="button-trigger-print">Print</button>
-        <PngPillButton color="red" onClick={handleDownloadPdf} disabled={downloading} data-testid="button-download-pdf">
+        <PngPillButton color="red" onClick={handleDownloadPdf} disabled={downloading || submittedProof.isFetching || submittedProof.isError} data-testid="button-download-pdf">
           {downloading ? "Preparing..." : "Download PDF"}
         </PngPillButton>
         <button onClick={() => window.close()} className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100" data-testid="button-close">Close</button>

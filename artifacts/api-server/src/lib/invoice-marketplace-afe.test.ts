@@ -6,15 +6,17 @@ const state = vi.hoisted(() => ({
   jobOfferId: 7 as number | null, acceptedAfe: "ACCEPTED-AFE" as string | null,
   assignmentAfe: "ASSIGNMENT-AFE" as string | null, siteAfe: "SITE-AFE",
   lines: [] as Record<string, unknown>[],
+  proof: null as any, savedSnapshot: null as any, liveTaxRate: "0.20",
 }));
 vi.mock("@workspace/db", async original => {
   const actual = await original<typeof import("@workspace/db")>();
   const { getTableName } = await import("drizzle-orm");
   const rows = (name: string): unknown[] => {
     switch (name) {
-      case "tickets": return [{ id: 5, jobOfferId: state.jobOfferId, vendorId: 2, siteLocationId: 3, workTypeId: 4, status: "approved", approvedAt: new Date("2026-10-18") }];
+      case "tickets": return [{ id: 5, jobOfferId: state.jobOfferId, vendorId: 2, siteLocationId: 3, workTypeId: 4, status: "approved", approvedAt: new Date("2026-10-18"),
+        submissionRevision: state.proof ? 1 : 0, approvedSubmissionRevision: state.proof ? 1 : null, proofSubmissions: state.proof ? [state.proof] : null }];
       case "job_offer_acceptance_snapshots": return [{ terms: { unitPrice: "125", unit: "hour", currency: "USD", billingRules: { dailyOtHours: "8", weeklyOtHours: "40", overtimeMultiplier: "1.5" } }, scope: { afeCode: state.acceptedAfe } }];
-      case "site_locations": return [{ id: 3, partnerId: 1, name: "Site", afe: state.siteAfe, state: null }];
+      case "site_locations": return [{ id: 3, partnerId: 1, name: "Site", afe: state.siteAfe, state: null, combinedTaxRate: state.liveTaxRate }];
       case "vendors": return [{ id: 2, name: "Vendor" }];
       case "partners": return [{ id: 1, name: "Partner" }];
       case "work_types": return [{ id: 4, name: "Gate", category: "operations" }];
@@ -37,14 +39,16 @@ vi.mock("@workspace/db", async original => {
     update: () => ({ set: () => ({ where: async () => {} }) }),
     insert: (table: any) => ({ values: (value: any) => {
       if (getTableName(table) === "invoice_lines") state.lines = value;
+      if (getTableName(table) === "invoice_rate_card_snapshots") state.savedSnapshot = value.snapshot;
       return { then: (resolve: any) => Promise.resolve().then(resolve), onConflictDoNothing: async () => {} };
     } }),
   };
   return { ...actual, db: database };
 });
 import { generateInvoiceForTicket } from "./invoice-generator";
+import { submissionDigest } from "./ticket-submissions";
 
-beforeEach(() => Object.assign(state, { jobOfferId: 7, acceptedAfe: "ACCEPTED-AFE", assignmentAfe: "ASSIGNMENT-AFE", siteAfe: "SITE-AFE", lines: [] }));
+beforeEach(() => Object.assign(state, { jobOfferId: 7, acceptedAfe: "ACCEPTED-AFE", assignmentAfe: "ASSIGNMENT-AFE", siteAfe: "SITE-AFE", lines: [], proof: null, savedSnapshot: null, liveTaxRate: "0.20" }));
 
 it("persists accepted AFE on invoice lines despite conflicting and later edited assignment/site AFEs", async () => {
   expect(await generateInvoiceForTicket(5)).toMatchObject({ ok: true, lineCount: 1 });
@@ -66,4 +70,21 @@ it("preserves non-marketplace assignment and site fallback behavior", async () =
   state.assignmentAfe = null;
   await generateInvoiceForTicket(5);
   expect(state.lines[0]?.afe).toBe("SITE-AFE");
+});
+it("regenerates the approved proof with frozen tax, billing settings and charges", async () => {
+  const content = { revision: 1, submittedAt: "2026-10-18T10:00:00Z", submittedById: 9, ticketId: 5,
+    jobId: 7, afe: "PROOF-AFE", ticket: {}, job: {}, notes: [], checkIns: [], gps: [], gate: null,
+    lineItems: [{ id: 8, ticket_id: 5, type: "equipment", description: "Approved equipment", quantity: "2", unit_price: "100", taxable_override: true }],
+    finance: { site: { id: 3, partnerId: 1, name: "Frozen site", state: "TX", combinedTaxRate: "0.0825", stateTaxRate: "0.0625", localTaxRate: "0.0200" },
+      vendor: { id: 2, name: "Vendor", dailyOtHours: "8", weeklyOtHours: "40" }, partner: { id: 1, name: "Partner" },
+      workType: { id: 4, name: "Gate", category: "operations", taxTreatment: null }, taxRate: { state: "TX", rate: "0.0625" },
+      vendorWorkType: null, partnerApproval: null, billing: { cadence: "per_ticket", paymentTermsDays: 45, overtimeMultiplier: "1.75" } },
+  };
+  state.proof = { ...content, digest: submissionDigest(content) };
+  expect(await generateInvoiceForTicket(5)).toMatchObject({ ok: true, lineCount: 1 });
+  expect(state.lines[0]).toMatchObject({ afe: "PROOF-AFE", amount: "200.00", taxRate: "0.0825", taxAmount: "16.50" });
+  const first = structuredClone(state.lines);
+  state.liveTaxRate = "0.50"; state.assignmentAfe = "CHANGED";
+  await generateInvoiceForTicket(5);
+  expect(state.lines).toEqual(first);
 });

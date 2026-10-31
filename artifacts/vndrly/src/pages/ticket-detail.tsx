@@ -1,4 +1,6 @@
 import { ContentCardHeader } from "@/components/ui/card";
+
+import { useSubmittedProof, TicketSubmittedProof } from "@/components/ticket-submitted-proof";
 import { TicketFieldActions } from "@/components/ticket-field-actions";
 import TicketLaborFinalization from "@/components/ticket-labor-finalization";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -545,8 +547,11 @@ export default function TicketDetail({ id }: { id: number }) {
   const updateTicket = useUpdateTicket();
   const submitTicket = useSubmitTicket();
   const checkOutTicket = useCheckOutTicket();
-  const approveTicket = useApproveTicket();
-  const kickbackTicket = useKickbackTicket();
+  const submittedProof = useSubmittedProof(id, !!user && ["vendor", "partner", "admin"].includes(user.role));
+  const [reviewedRevision, setReviewedRevision] = useState<number | null>(null);
+  const reviewRequest = { headers: { "X-Submission-Revision": String(reviewedRevision ?? submittedProof.data?.revision ?? "") } };
+  const approveTicket = useApproveTicket({ request: reviewRequest });
+  const kickbackTicket = useKickbackTicket({ request: reviewRequest });
   const unlockTicket = useUnlockTicket();
   const acceptTicket = useAcceptTicket();
   const denyTicket = useDenyTicket();
@@ -698,6 +703,8 @@ export default function TicketDetail({ id }: { id: number }) {
   });
 
   const invalidate = () => {
+    setReviewedRevision(null);
+    queryClient.invalidateQueries({ queryKey: ["ticket-proof-submissions", id] });
     queryClient.invalidateQueries({ queryKey: getGetTicketQueryKey(id) });
     // Task #501: any status-mutating action (accept/deny/reinvite/cancel/
     // reactivate/unlock/etc) writes a new ticket_status_history row, so
@@ -1180,6 +1187,16 @@ export default function TicketDetail({ id }: { id: number }) {
     } finally {
       setAwaitingPaymentPending(false);
     }
+  };
+  const [rejectingSubmission, setRejectingSubmission] = useState(false);
+  const handleRejectSubmission = async () => {
+    if (!kickbackReason.trim() || rejectingSubmission) return;
+    setRejectingSubmission(true);
+    try {
+      const response = await fetch(`/api/tickets/${id}/reject-submission`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", ...reviewRequest.headers }, body: JSON.stringify({ reason: kickbackReason.trim() }) });
+      if (!response.ok) { const error = await response.json(); throw new Error(error.message || "Review could not be saved"); }
+      invalidate(); setKickbackOpen(false); setKickbackReason(""); toast({ title: "Submitted work rejected" });
+    } catch (error) { onError(error); } finally { setRejectingSubmission(false); }
   };
   const handleKickback = () => {
     kickbackTicket.mutate({ id, data: { reason: kickbackReason } }, {
@@ -1830,6 +1847,8 @@ export default function TicketDetail({ id }: { id: number }) {
           </CardContent>
         </Card>
 
+        <TicketSubmittedProof history={submittedProof.data} onRevisionChange={setReviewedRevision} />
+        {submittedProof.isError && <p role="alert">Unable to load submitted proof. Reload before reviewing.</p>}
         <TicketSiteVisitSummaryCard ticketId={id} />
       </div>
 
@@ -3125,6 +3144,8 @@ export default function TicketDetail({ id }: { id: number }) {
                           <PngPillButton color="red" onClick={handleKickback} disabled={kickbackTicket.isPending || !kickbackReason} className="w-full" data-testid="button-submit-kickback">
                             {kickbackTicket.isPending ? t("ticketDetail.sending") : t("ticketDetail.kickBackTracking")}
                           </PngPillButton>
+                          <p className="text-sm">Return for correction to allow resubmission, or reject the submitted work with the reason above.</p>
+                          <PngPillButton color="red" onClick={() => void handleRejectSubmission()} disabled={rejectingSubmission || kickbackTicket.isPending || !kickbackReason.trim()} className="w-full">Reject submitted work</PngPillButton>
                         </div>
                       </DialogContent>
                     </Dialog>

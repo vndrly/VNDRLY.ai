@@ -15,6 +15,7 @@ import {
 import { projectCanonicalFleetComplianceConfigurationScore } from "../services/fleet-compliance-score";
 
 const state = vi.hoisted(() => ({
+  joins: [] as { table: string; sql: string; params: unknown[] }[],
   reads: [] as { table: string; sql: string; params: unknown[] }[],
   data: {} as Record<string, any[]>,
 }));
@@ -31,7 +32,9 @@ vi.mock("@workspace/db", () => ({
         innerJoin() {
           return query;
         },
-        leftJoin() {
+        leftJoin(value: any, predicate: any) {
+          const emitted = new PgDialect().sqlToQuery(predicate);
+          state.joins.push({ table: getTableName(value), sql: emitted.sql, params: emitted.params });
           return query;
         },
         where(value: any) {
@@ -122,6 +125,7 @@ const context = {
 } as any;
 beforeEach(() => {
   state.reads = [];
+  state.joins = [];
   state.data = {
     users: [
       {
@@ -148,7 +152,7 @@ beforeEach(() => {
       { ...context.site, id: 88, partnerId: 99 },
     ],
     service_mappings: [{ mapping: demandMapping, active: true }],
-    vendor_partner_service_offers: [
+    vendor_capabilities: [
       {
         capability,
         capabilityMapping,
@@ -278,17 +282,17 @@ beforeEach(() => {
 describe("partner marketplace persistence boundary", () => {
   it("discovers backfill-projected demand and capability using their runtime fingerprints", async () => {
     const demand = { ...demandMapping, evidence: backfillMappingEvidence({ ...workType, subjectType: "partner_work_type", subjectId: workType.id }, { workTypeId: workType.id }) };
-    state.data.vendor_partner_service_offers[0].capabilityMapping = {
+    state.data.vendor_capabilities[0].capabilityMapping = {
       ...capabilityMapping,
       evidence: backfillMappingEvidence({ ...capability, subjectType: "vendor_capability", subjectId: capability.id }, { sourceVendorWorkTypeId: 10 }),
     };
     const discover = () => discoverPartnerMarketplaceVendors(createPostgresPartnerMarketplaceStore(), { ...context, demandMapping: demand }, { requestedCapacity: 1 }, now);
     expect((await discover())[0]?.offerable).toBe(true);
-    state.data.vendor_partner_service_offers[0].capability = { ...capability, name: "Gate actuator repairs" };
+    state.data.vendor_capabilities[0].capability = { ...capability, name: "Gate actuator repairs" };
     expect(await discover()).toEqual([]);
   });
   it("rejects a tampered capability mapping before reading private compliance", async () => {
-    state.data.vendor_partner_service_offers[0].capability = {
+    state.data.vendor_capabilities[0].capability = {
       ...capability,
       name: "Tampered capability name",
     };
@@ -307,7 +311,7 @@ describe("partner marketplace persistence boundary", () => {
   });
   it("isolates one vendor compliance outage without hiding valid candidates", async () => {
     const secondCapability = { ...capability, id: 8, vendorId: 4, name: "Gate crews two" };
-    state.data.vendor_partner_service_offers.push({
+    state.data.vendor_capabilities.push({
       capability: secondCapability,
       capabilityMapping: mapping({
         ...secondCapability,
@@ -315,12 +319,12 @@ describe("partner marketplace persistence boundary", () => {
         subjectId: secondCapability.id,
       }),
       offer: {
-        ...state.data.vendor_partner_service_offers[0].offer,
+        ...state.data.vendor_capabilities[0].offer,
         id: 13,
         vendorCapabilityId: secondCapability.id,
       },
       vendor: {
-        ...state.data.vendor_partner_service_offers[0].vendor,
+        ...state.data.vendor_capabilities[0].vendor,
         id: 4,
         name: "OtherCo",
       },
@@ -430,7 +434,7 @@ describe("partner marketplace persistence boundary", () => {
   });
   it("requires the complete credential set on each qualifying worker and current document dates", async () => {
     state.data.vendor_people[1].expiry = "2026-01-01";
-    state.data.vendor_partner_service_offers[0].vendor.glExpirationDate =
+    state.data.vendor_capabilities[0].vendor.glExpirationDate =
       "2026-02-30";
     const rows = await discoverPartnerMarketplaceVendors(
       createPostgresPartnerMarketplaceStore(),
@@ -451,7 +455,7 @@ describe("partner marketplace persistence boundary", () => {
     state.data.safety_events = [];
     state.data.vendor_ratings = [];
     state.data.tickets = [];
-    state.data.vendor_partner_service_offers[0].vendor.fleetComplianceConfiguration = null;
+    state.data.vendor_capabilities[0].vendor.fleetComplianceConfiguration = null;
     const [row] = await discoverPartnerMarketplaceVendors(
       createPostgresPartnerMarketplaceStore(),
       context,
@@ -544,4 +548,19 @@ describe("partner marketplace persistence boundary", () => {
     await expect(marketplaceComplianceSummary(null)).resolves.toBeNull();
     await expect(marketplaceComplianceSummary({ version: 1, reviewerUserIds: [], entries: [], partnerScorePreview: { score: 58, status: "red", advisoryOnly: true, evaluatedAt: "2026-10-20T12:00:00.000Z", categories: [{ category: "vehicle", score: 60 }], reasons: [{ category: "driver_license", reason: "private wording is not rendered", reasonCode: "expired_record" }] } })).resolves.toEqual({ score: 58, source: "VNDRLY compliance score", refreshedAt: "2026-10-20T12:00:00.000Z", reasons: ["expired_record"] });
   });
+});
+
+it("starts discovery from capabilities and scopes optional pricing in the left join", async () => {
+  state.data.vendor_capabilities[0].offer = null;
+  const store = createPostgresPartnerMarketplaceStore();
+  const candidates = await store.listCandidates(context, now);
+  expect(candidates).toHaveLength(1);
+  expect(candidates[0].offer).toBeNull();
+  const optionalRate = state.joins.find((join) => join.table === "vendor_partner_service_offers");
+  expect(optionalRate?.sql).toContain('"partner_id"');
+  expect(optionalRate?.sql).toContain('"work_type_id"');
+  expect(optionalRate?.sql).toContain('"effective_until"');
+  expect(optionalRate?.params).toContain(9);
+  expect(optionalRate?.params).toContain(21);
+  expect(state.reads.find((read) => read.table === "vendor_capabilities")?.sql).not.toContain('"partner_id"');
 });

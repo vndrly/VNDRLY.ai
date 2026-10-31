@@ -27,7 +27,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     persistence = (await import("./job-offers-postgres"))
       .createPostgresJobOfferPersistence;
   });
-  async function fixture(afeCode?: string) {
+  async function fixture(afeCode = "TEST-AFE") {
     const suffix = randomUUID();
     const [partner] = await db
       .insert(s.partnersTable)
@@ -172,7 +172,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       })
       .returning();
     const input = {
-      ...(afeCode === undefined ? {} : { afeCode }),
+      afeCode,
       partnerId: partner.id,
       vendorId: vendor.id,
       workTypeId: work.id,
@@ -216,7 +216,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       mapping,
     };
   }
-  it.each(["ACCEPTED-AFE", undefined])("retains accepted AFE %s in canonical ticket reads and invoice regeneration", async afeCode => {
+  it.each(["ACCEPTED-AFE", "SECOND-AFE"])("retains accepted AFE %s in canonical ticket reads and invoice regeneration", async afeCode => {
     const f = await fixture(afeCode);
     await db.update(s.siteLocationsTable).set({ afe: "SITE-BEFORE" }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
     const [assignment] = await db.insert(s.siteWorkAssignmentsTable).values({ siteLocationId: f.input.siteLocationId, vendorId: f.vendor.id, workTypeId: f.work.id, afe: "ASSIGNMENT-BEFORE" }).returning();

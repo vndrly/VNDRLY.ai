@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import JobOfferSummary from "./JobOfferSummary";
+import AcceptedJobTickets from "./AcceptedJobTickets";
 
 export default function VendorJobOfferInbox({
   vendorId,
@@ -134,6 +135,7 @@ export default function VendorJobOfferInbox({
               {t("jobOffers.openTicket")}
             </a>
           )}
+          {offer.status === "accepted" && <AcceptedJobTickets offer={offer} />}
         </article>
       ))}
       {selected && (

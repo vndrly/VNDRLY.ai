@@ -65,6 +65,9 @@ async function loadTicketForAuth(ticketId: number) {
     .select({
       id: ticketsTable.id,
       jobOfferId: ticketsTable.jobOfferId,
+      engagementJobOfferId: ticketsTable.engagementJobOfferId,
+      siteLocationId: ticketsTable.siteLocationId,
+      workTypeId: ticketsTable.workTypeId,
       vendorId: ticketsTable.vendorId,
       status: ticketsTable.status,
       partnerId: siteLocationsTable.partnerId,
