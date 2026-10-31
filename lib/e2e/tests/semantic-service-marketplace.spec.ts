@@ -179,6 +179,7 @@ async function fixture(pool: pg.Pool, browser: Browser) {
     siteRadiusMeters: 500,
   });
   const partnerPage = await browser.newPage({ baseURL });
+  await pool.query("UPDATE site_locations SET afe=$1 WHERE id=ANY($2::int[])", [`E2E-AFE-${stamp}`, [near.id, far.id]]);
   const vendorPage = await browser.newPage({ baseURL });
   await login(partnerPage, flywheel);
   await login(vendorPage, midcon);
@@ -389,7 +390,8 @@ test("Gatekeeping and Perimeter Security match Gate Services; compare, send and 
     });
     const input = draft(f);
     await form.getByLabel("Scope of work", { exact: true }).fill(input.scope);
-    await form.getByLabel("AFE reference", { exact: true }).fill(input.afeCode);
+    await expect(form.getByLabel("AFE reference", { exact: true })).toHaveValue(input.afeCode);
+    await expect(form.getByLabel("AFE reference", { exact: true })).toHaveAttribute("readonly", "");
     // datetime-local is intentionally entered as wall time; the UI serializes it.
     await form
       .getByLabel("Requested start", { exact: true })

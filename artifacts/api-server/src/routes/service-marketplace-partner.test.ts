@@ -420,11 +420,11 @@ describe("partner marketplace discovery", () => {
     }
     rows[0].relationshipStatus = null;
     rows[0].complianceCurrent = false;
-    const blocked = await request(app)
+    const advisory = await request(app)
       .get(path + "?siteId=8")
       .set("Cookie", cookie);
-    expect(blocked.body.items[0]).toMatchObject({
-      offerable: false,
+    expect(advisory.body.items[0]).toMatchObject({
+      offerable: true,
       eligibility: { reasonCodes: ["COMPLIANCE_STALE"] },
     });
   });
