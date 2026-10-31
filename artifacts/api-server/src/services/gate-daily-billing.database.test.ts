@@ -9,8 +9,23 @@ import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { createGateDailyBillingService } from "./gate-daily-billing";
 import { generateInvoiceForTicket } from "../lib/invoice-generator";
+import { reviewedSubmission } from "../lib/ticket-submissions";
 const now = () => new Date("2026-10-03T15:00:00Z"),
   service = createGateDailyBillingService({ now });
+async function approveSubmittedProof(ticketId: number) {
+  const row = (await pool.query(
+    "SELECT id,submission_revision,proof_submissions FROM tickets WHERE id=$1",
+    [ticketId],
+  )).rows[0];
+  const proof = reviewedSubmission(row, row.submission_revision);
+  expect(proof).not.toBeNull();
+  const approved = await pool.query(
+    "UPDATE tickets SET status='approved',approved_at=$2,approved_submission_revision=$3 WHERE id=$1 AND status='submitted' AND submission_revision=$3 RETURNING id",
+    [ticketId, now(), proof!.revision],
+  );
+  expect(approved.rowCount).toBe(1);
+  return proof!;
+}
 async function fixture() {
   const label = randomUUID(),
     partner = (
@@ -188,10 +203,7 @@ describe("Gate office daily billing transaction", () => {
     });
     const next = (await service.preview(f.session, f.station)).config;
     expect(next).toMatchObject({ dailyRateCents: 12500, afe: "NEXT-AFE" });
-    await pool.query(
-      "UPDATE tickets SET status='approved',approved_at=$2 WHERE id=$1",
-      [result.ticketId, now()],
-    );
+    const approvedProof = await approveSubmittedProof(result.ticketId!);
     const invoice = await generateInvoiceForTicket(result.ticketId!);
     expect(invoice.ok).toBe(true);
     if (!invoice.ok) throw Error(invoice.reason);
@@ -213,10 +225,15 @@ describe("Gate office daily billing transaction", () => {
       f.site,
       changed,
     ]);
+    // A later site transfer cannot rewrite the payer of the approved proof.
     expect(await generateInvoiceForTicket(result.ticketId!)).toMatchObject({
-      ok: false,
-      reason: "gate_billing_context_changed",
+      ok: true,
+      invoiceId: invoice.invoiceId,
     });
+    expect((await pool.query("SELECT partner_id FROM invoices WHERE id=$1", [invoice.invoiceId])).rows)
+      .toEqual([{ partner_id: f.partner }]);
+    expect((await pool.query("SELECT proof_submissions FROM tickets WHERE id=$1", [result.ticketId])).rows[0].proof_submissions)
+      .toEqual([approvedProof]);
     await expect(service.preview(f.session, f.station)).rejects.toMatchObject({
       code: "gate_billing.context_changed",
     });
@@ -304,7 +321,11 @@ describe("Gate office daily billing transaction", () => {
     expect(posts.items.some((post) => post.id === f.station)).toBe(true);
     expect(posts.items.some((post) => post.id === other.station)).toBe(false);
     const setup = await service.setup(f.session, f.station);
-    expect(setup.config).toBeNull();
+    expect(setup.config).toMatchObject({
+      version: 1, openTicketId: null, agreementReference: "Retained historical agreement",
+      afe: "TEST-AFE", partnerId: f.partner, vendorId: f.vendor, siteId: f.site,
+    });
+    expect(setup.config).not.toHaveProperty("jobOfferId");
     expect(setup.services).toMatchObject([
       { id: f.workType, dailyRateCents: 10001 },
     ]);
@@ -455,12 +476,8 @@ describe("Gate office daily billing transaction", () => {
         )
       ).rows.map((row) => row.to_status),
     ).toEqual(["initiated", "pending_review", "submitted"]);
-    // Consumer compatibility: simulate the existing partner-approved row,
-    // then exercise the actual canonical invoice generator, not a new ledger.
-    await pool.query(
-      "UPDATE tickets SET status='approved',approved_at=$2 WHERE id=$1",
-      [a.ticketId, now()],
-    );
+    // Review the actual saved proof revision before canonical invoicing.
+    await approveSubmittedProof(a.ticketId!);
     const invoice = await generateInvoiceForTicket(a.ticketId!);
     expect(invoice.ok).toBe(true);
     if (!invoice.ok) throw Error(invoice.reason);

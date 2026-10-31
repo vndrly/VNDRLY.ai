@@ -4408,7 +4408,10 @@
       "not_approvable": "Este boleto no está listo para aprobarse.",
       "invalid_field_employee_id": "Ese empleado de campo no puede asignarse a este boleto.",
       "employee_invalid": "Selecciona un empleado válido.",
-      "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa."
+      "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa.",
+      "reviewer_required": "Un revisor autorizado del socio debe revisar este ticket.",
+      "vendor_submission_required": "El proveedor debe enviar el ticket y su hoja de comprobantes.",
+      "partner_review_required": "El socio debe revisar el ticket enviado."
     },
     "invalid_ticket_id": "El ID del ticket no es válido.",
     "ticket_not_found": "No se encontró el ticket.",

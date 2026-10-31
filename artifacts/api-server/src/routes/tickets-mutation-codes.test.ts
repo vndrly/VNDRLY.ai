@@ -74,6 +74,9 @@ vi.mock("@workspace/db", () => {
       { get: (_t, k: string) => ({ __table: name, __col: k }) },
     );
   const db: any = {
+    // Partner fixtures are work reviewers. Raw approval locks return the same
+    // legacy ticket state as the ownership/state selects (no proof revisions).
+    execute: async () => ({ rows: ticketRow ? [{ ...ticketRow, role: "member" }] : [] }),
     select: () => {
       // Most handlers do: (1) ownership/auth select (returns ticket row)
       // then (2) state-check select (also returns ticket row). Returning

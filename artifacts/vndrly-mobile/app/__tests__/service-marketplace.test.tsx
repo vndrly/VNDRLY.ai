@@ -93,7 +93,7 @@ const demand: MarketplaceDemand = {
   ownOffer: null,
   eligibility,
 };
-const vendor: MarketplaceRankedVendor = {
+const vendor: MarketplaceRankedVendor & { offer: NonNullable<MarketplaceRankedVendor["offer"]> } = {
   vendorId: 2,
   vendorName: "MidCon",
   capabilityId: 3,
@@ -121,6 +121,7 @@ const vendor: MarketplaceRankedVendor = {
   relationshipStatus: null,
   eligibility,
   offerable: true,
+  quoteRequired: false,
   weightedScore: 0.8,
   factors: [
     {
@@ -157,6 +158,8 @@ const offer: MarketplaceJobOffer = {
   expiresAt: "2099-01-02T10:00:00Z",
 };
 let requests: { path: string; method: string; body: any; headers: Headers }[];
+let quoteOnly: boolean;
+let failQuote: boolean;
 let failAccept: boolean;
 let failSend: boolean;
 let disabled: boolean;
@@ -174,6 +177,8 @@ beforeEach(() => {
   };
   state.push.mockReset();
   requests = [];
+  quoteOnly = false;
+  failQuote = false;
   failAccept = false;
   failSend = false;
   disabled = false;
@@ -197,6 +202,7 @@ beforeEach(() => {
       });
       if (disabled && path.includes("service-marketplace"))
         return Response.json({ code: "marketplace.disabled" }, { status: 503 });
+      const matchingVendor: MarketplaceRankedVendor = quoteOnly ? { ...vendor, offer: null, quoteRequired: true, offerable: false } : vendor;
       let result: unknown;
       if (path === "/api/work-types")
         result = [{ id: 9, partnerId: 8, name: "Gatekeeping", isActive: true }];
@@ -249,10 +255,13 @@ beforeEach(() => {
       else if (path.endsWith("/matching-demand"))
         result = { items: [demand], limit: 50, offset: 0 };
       else if (path.endsWith("/partner-rates")) result = { id: 4, ...body };
+      else if (path.endsWith("/quote-requests")) {
+        return Response.json(failQuote ? { code: "marketplace.quote_delivery_unavailable" } : { requested: true }, { status: failQuote ? 409 : 202 });
+      }
       else if (path.endsWith("/work-types/9/vendors"))
         result = {
           items: [
-            vendor,
+            matchingVendor,
             {
               ...vendor,
               vendorId: 6,
@@ -271,7 +280,7 @@ beforeEach(() => {
           offset: 0,
         };
       else if (path.endsWith("/vendors/2") && path.includes("work-types"))
-        result = vendor;
+        result = matchingVendor;
       else if (path.endsWith("/job-offers") && method === "GET")
         result = { items: [canonical] };
       else if (path.endsWith("/job-offers") && method === "POST") {
@@ -345,6 +354,50 @@ async function partner() {
 }
 
 describe("mobile service marketplace", () => {
+  it("shows an unpriced service match and sends a scoped quote request without awarding work", async () => {
+    quoteOnly = true;
+    await partner();
+    expect(screen.getByText("Quote required")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Offer job to MidCon" }).getAttribute("aria-disabled")).toBe("true");
+    click("Request quote from MidCon");
+    await screen.findByLabelText("Describe the work and requested dates");
+    const detail = requests.find(row => row.path.includes("/vendors/2?"));
+    expect(detail?.path).not.toContain("vendorPartnerServiceOfferId");
+    expect(detail?.path).not.toContain("limit=");
+    expect(detail?.path).not.toContain("offset=");
+    expect(requests.filter(row => row.method === "POST")).toHaveLength(0);
+    change("Describe the work and requested dates", "North gate Monday day shift");
+    click("Send quote request");
+    await screen.findByText("Quote requested. The vendor will provide a price for your review. Refresh these results when it is ready.");
+    expect(requests.find(row => row.path.endsWith("/quote-requests"))).toMatchObject({
+      method: "POST", path: "/api/service-marketplace/partners/8/work-types/9/vendors/2/quote-requests",
+      body: { siteId: 11, vendorCapabilityId: 3, requestedCapacity: 1, scope: "North gate Monday day shift" },
+    });
+    expect(requests.filter(row => row.method === "POST" && row.path.endsWith("/job-offers"))).toHaveLength(0);
+  });
+  it("keeps a failed quote request editable and does not claim delivery", async () => {
+    quoteOnly = true; failQuote = true;
+    await partner(); click("Request quote from MidCon");
+    await screen.findByLabelText("Describe the work and requested dates");
+    change("Describe the work and requested dates", "Monday shift"); click("Send quote request");
+    await screen.findByText("The quote request could not be delivered. Refresh eligibility and try again.");
+    expect(screen.queryByText(/Quote requested\./)).toBeNull();
+    expect(screen.getByDisplayValue("Monday shift")).toBeTruthy();
+  });
+  it("requires the partner AFE before drafting and sends the trimmed reference", async () => {
+    await partner(); click("Offer job to MidCon"); await screen.findByLabelText("Scope");
+    change("Scope", "North gate");
+    change("Start (ISO date and time)", "2099-01-03T10:00:00Z");
+    change("End (ISO date and time)", "2099-01-04T10:00:00Z");
+    change("Expiration (ISO date and time)", "2099-01-02T10:00:00Z");
+    change("AFE code", "   "); click("Prepare draft");
+    await screen.findByRole("alert");
+    expect(requests.filter(row => row.method === "POST" && row.path.endsWith("/job-offers"))).toHaveLength(0);
+    change("AFE code", " AFE-GATE-7 "); click("Prepare draft");
+    await screen.findByText("Confirm send");
+    expect(requests.find(row => row.method === "POST" && row.path.endsWith("/job-offers"))?.body.afeCode).toBe("AFE-GATE-7");
+  });
+
   it("does not fetch company marketplace records for an unsupported or missing scope", async () => {
     state.user = { id: 2, role: "field_employee", vendorId: 2 };
     await mount();
@@ -490,6 +543,7 @@ describe("mobile service marketplace", () => {
     click("Offer job to MidCon");
     await screen.findByLabelText("Scope");
     change("Scope", "Client scope");
+    change("AFE code", "AFE-TEST-1");
     change("Start (ISO date and time)", "2099-01-03T10:00:00Z");
     change("End (ISO date and time)", "2099-01-04T10:00:00Z");
     change("Expiration (ISO date and time)", "2099-01-02T10:00:00Z");
@@ -595,6 +649,7 @@ describe("mobile service marketplace", () => {
     click("Offer job to MidCon");
     await screen.findByLabelText("Scope");
     change("Scope", "Client scope");
+    change("AFE code", "AFE-TEST-1");
     change("Start (ISO date and time)", "2099-01-03T10:00:00Z");
     change("End (ISO date and time)", "2099-01-04T10:00:00Z");
     change("Expiration (ISO date and time)", "2099-01-02T10:00:00Z");

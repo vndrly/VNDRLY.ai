@@ -462,11 +462,9 @@ describe.runIf(haveRealDb)("invoices REST — create / regenerate / concurrency"
       checkOutAt: new Date("2026-05-03T21:00:00Z"),
     });
 
-    // Both POSTs see `status='submitted'` initially; the row-level lock on
-    // the UPDATE inside the approve handler's transaction serializes them.
-    // The second tx, on commit of the first, sees `status='approved'` and
-    // its `ne(status, "approved")` filter drops the row — so only one
-    // enqueue happens.
+    // The row lock serializes approval. A request that read submitted before
+    // its peer commits gets a stale-state conflict; one that reads approved
+    // replays successfully. Neither path may create a second invoice.
     const [r1, r2] = await Promise.all([
       request(app)
         .post(`/tickets/${ticketId}/approve`)
@@ -477,8 +475,13 @@ describe.runIf(haveRealDb)("invoices REST — create / regenerate / concurrency"
         .set("Cookie", adminCookie(adminUserId))
         .send({}),
     ]);
-    expectStatus(r1, 200);
-    expectStatus(r2, 200);
+    expect([r1.status, r2.status]).toContain(200);
+    for (const response of [r1, r2]) {
+      expect([200, 409]).toContain(response.status);
+      if (response.status === 409) {
+        expect(response.body.code).toBe("ticket.submission_changed");
+      }
+    }
 
     // Drain the in-flight generation if one is still running, then assert
     // exactly one invoice via the link table.

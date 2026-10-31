@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Switch } from "react-native";
 import { useTranslation } from "react-i18next";
 import {
   useListSiteLocations,
+  requestPartnerMarketplaceQuote,
   useSearchPartnerMarketplaceVendors,
   useGetPartnerMarketplaceVendor,
   MarketplaceSortParameter,
@@ -30,6 +31,12 @@ export default function PartnerVendorResults({
   const [selected, setSelected] = useState<MarketplaceRankedVendor | null>(
     null,
   );
+  const [quoteScope, setQuoteScope] = useState("");
+  const [quoteState, setQuoteState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const quoteVersion = useRef(0);
+  const quoteLocked = useRef(false);
+  const clearQuote = () => { quoteVersion.current++; quoteLocked.current = false; setQuoteScope(""); setQuoteState("idle"); };
+  const selectVendor = (vendor: MarketplaceRankedVendor) => { clearQuote(); setSelected(vendor); };
   const params = {
     siteId,
     requestedCapacity: Number(capacity),
@@ -47,7 +54,7 @@ export default function PartnerVendorResults({
         enabled:
           siteId > 0 &&
           Number.isInteger(Number(capacity)) &&
-          Number(capacity) > 0,
+          Number(capacity) > 0 && Number(capacity) <= 100000,
         retry: false,
       },
     },
@@ -57,9 +64,9 @@ export default function PartnerVendorResults({
     workTypeId,
     selected?.vendorId ?? 0,
     {
-      ...params,
+      siteId, requestedCapacity: Number(capacity), sort,
       vendorCapabilityId: selected?.capabilityId ?? 0,
-      vendorPartnerServiceOfferId: selected?.offer.id ?? 0,
+      ...(selected?.offer ? { vendorPartnerServiceOfferId: selected.offer.id } : {}),
     },
     {
       query: {
@@ -69,7 +76,7 @@ export default function PartnerVendorResults({
           workTypeId,
           params,
           selected?.capabilityId,
-          selected?.offer.id,
+          selected?.offer?.id,
         ],
         enabled: !!selected && !search.isError,
         retry: false,
@@ -78,6 +85,7 @@ export default function PartnerVendorResults({
   );
   const reset = () => {
     setSelected(null);
+    clearQuote();
     setOffset(0);
   };
   const latest = detail.data;
@@ -86,7 +94,7 @@ export default function PartnerVendorResults({
     selected &&
     latest.vendorId === selected.vendorId &&
     latest.capabilityId === selected.capabilityId &&
-    latest.offer.id === selected.offer.id;
+    latest.offer?.id === selected.offer?.id;
   return (
     <Panel>
       <Label>{t("mobileMarketplace.selectSite")}</Label>
@@ -135,6 +143,7 @@ export default function PartnerVendorResults({
         disabled={search.isFetching || !siteId}
         onPress={() => {
           setSelected(null);
+          clearQuote();
           void search.refetch();
         }}
       >
@@ -147,13 +156,12 @@ export default function PartnerVendorResults({
         search.data?.items
           .filter((vendor) => !eligibleOnly || vendor.eligibility.eligible)
           .map((vendor) => (
-            <Panel key={vendor.offer.id}>
+            <Panel key={`${vendor.vendorId}:${vendor.capabilityId}:${vendor.offer?.id ?? "quote"}`}>
               <Label>{vendor.vendorName}</Label>
               <Label>{vendor.capabilityName}</Label>
               <Label>{vendor.matchExplanation}</Label>
               <Label>
-                {vendor.offer.currency} {vendor.offer.unitPrice} /{" "}
-                {vendor.offer.unit}
+                {vendor.offer ? `${vendor.offer.currency} ${vendor.offer.unitPrice} / ${vendor.offer.unit}` : t("mobileMarketplace.quoteRequired")}
               </Label>
               <Label>{t("mobileMarketplace.rating")}</Label>
               <Label>
@@ -216,24 +224,56 @@ export default function PartnerVendorResults({
               {vendor.factors.map((factor) => (
                 <Label key={factor.name}>{factor.explanation}</Label>
               ))}
+              {!vendor.offer && <TogglePillButton
+                accessibilityLabel={t("mobileMarketplace.quoteTo", { name: vendor.vendorName })}
+                disabled={search.isFetching || !vendor.eligibility.eligible}
+                onPress={() => selectVendor(vendor)}>
+                {t("mobileMarketplace.requestQuote")}
+              </TogglePillButton>}
               <TogglePillButton
                 accessibilityLabel={t("mobileMarketplace.offerTo", {
                   name: vendor.vendorName,
                 })}
                 disabled={
                   search.isFetching ||
+                  !vendor.offer ||
                   !vendor.offerable ||
                   !vendor.eligibility.eligible
                 }
-                onPress={() => setSelected(vendor)}
+                onPress={() => selectVendor(vendor)}
               >
                 {t("mobileMarketplace.offerJob")}
               </TogglePillButton>
             </Panel>
           ))}
+      {selected && detail.data && !same && !detail.isFetching && <Label alert>{t("mobileMarketplace.changed")}</Label>}
+      {!search.isError && !detail.isError && same && !latest.offer && latest.eligibility.eligible && <Panel>
+        <Label>{t("mobileMarketplace.quoteExplanation")}</Label>
+        <Field label={t("mobileMarketplace.quoteScope")} value={quoteScope} multiline maxLength={2000}
+          editable={quoteState !== "sending" && quoteState !== "sent"} onChangeText={setQuoteScope} />
+        <TogglePillButton disabled={search.isFetching || detail.isFetching || !quoteScope.trim() || quoteState === "sending" || quoteState === "sent"}
+          onPress={async () => {
+            if (quoteLocked.current || !quoteScope.trim() || search.isFetching || detail.isFetching) return;
+            quoteLocked.current = true;
+            const version = quoteVersion.current;
+            setQuoteState("sending");
+            try {
+              await requestPartnerMarketplaceQuote(partnerId, workTypeId, latest.vendorId, {
+                siteId, vendorCapabilityId: latest.capabilityId, requestedCapacity: Number(capacity), scope: quoteScope.trim(),
+              });
+              if (version === quoteVersion.current) setQuoteState("sent");
+            } catch { if (version === quoteVersion.current) setQuoteState("error"); }
+            finally { if (version === quoteVersion.current) quoteLocked.current = false; }
+          }}>
+          {t("mobileMarketplace.sendQuoteRequest")}
+        </TogglePillButton>
+        {quoteState === "sent" && <Label>{t("mobileMarketplace.quoteSent")}</Label>}
+        {quoteState === "error" && <Label alert>{t("mobileMarketplace.quoteError")}</Label>}
+      </Panel>}
       {!search.isError &&
         !detail.isError &&
         same &&
+        latest.offer &&
         latest.offerable &&
         latest.eligibility.eligible && (
           <JobOfferComposer

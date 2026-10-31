@@ -1,5 +1,14 @@
 {
   "mobileMarketplace": {
+    "quoteRequired": "Quote required",
+    "requestQuote": "Request quote",
+    "quoteTo": "Request quote from {{name}}",
+    "sendQuoteRequest": "Send quote request",
+    "quoteScope": "Describe the work and requested dates",
+    "quoteExplanation": "This vendor matches your service. Request a price before offering the job. A quote request does not authorize work.",
+    "quoteSent": "Quote requested. The vendor will provide a price for your review. Refresh these results when it is ready.",
+    "quoteError": "The quote request could not be delivered. Refresh eligibility and try again.",
+    "afeRequired": "The partner must assign an AFE before preparing this job offer.",
     "previewCount": "Matching partner catalog entries: {{count}}",
     "stagedCoverage": "Optional service radius override. Leave blank to inherit company coverage; it is saved after the capability is created.",
     "activeCapability": "Active capability",
@@ -1283,7 +1292,10 @@
       "not_approvable": "This ticket isn't ready to be approved.",
       "invalid_field_employee_id": "That field employee can't be assigned to this ticket.",
       "employee_invalid": "Select a valid employee.",
-      "employee_vendor_mismatch": "Select an active field employee from this company."
+      "employee_vendor_mismatch": "Select an active field employee from this company.",
+      "reviewer_required": "An authorized partner reviewer must review this ticket.",
+      "vendor_submission_required": "The vendor must submit the ticket and its proof sheet.",
+      "partner_review_required": "The partner must review the submitted ticket."
     },
     "site": {
       "not_found": "Site not found.",

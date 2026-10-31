@@ -4408,7 +4408,10 @@
       "not_approvable": "This ticket isn't ready to be approved.",
       "invalid_field_employee_id": "That field employee can't be assigned to this ticket.",
       "employee_invalid": "Select a valid employee.",
-      "employee_vendor_mismatch": "Select an active field employee from this company."
+      "employee_vendor_mismatch": "Select an active field employee from this company.",
+      "reviewer_required": "An authorized partner reviewer must review this ticket.",
+      "vendor_submission_required": "The vendor must submit the ticket and its proof sheet.",
+      "partner_review_required": "The partner must review the submitted ticket."
     },
     "invalid_ticket_id": "That ticket id is invalid.",
     "ticket_not_found": "Ticket not found.",

@@ -37,6 +37,7 @@ const draft = {
   vendorPartnerServiceOfferId: 12,
   siteLocationId: 8,
   scope: "Synthetic controlled entry",
+  afeCode: "SYNTHETIC-PARTNER-AFE",
   requestedStartAt: "2026-11-01T10:00:00Z",
   requestedEndAt: "2026-11-01T12:00:00Z",
   crewCount: 1,

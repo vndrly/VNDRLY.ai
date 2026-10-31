@@ -151,6 +151,7 @@ export function JobOfferComposer({
       multiline={key === "scope" || key === "attachments"}
       keyboardType={key === "crews" ? "number-pad" : "default"}
       editable={!busy && !sent}
+      maxLength={key === "afe" ? 200 : undefined}
       onChangeText={(value) => {
         setForm((current) => ({ ...current, [key]: value }));
         setSaved(null);
@@ -168,9 +169,13 @@ export function JobOfferComposer({
         .map((url) => url.trim())
         .filter(Boolean);
       if (
+        !vendor.offer ||
         !vendor.offerable ||
+        !form.afe.trim() ||
+        form.afe.trim().length > 200 ||
         !vendor.eligibility.eligible ||
         !form.scope.trim() ||
+        form.scope.trim().length > 10000 ||
         !Number.isFinite(start) ||
         !Number.isFinite(end) ||
         end <= start ||
@@ -179,6 +184,8 @@ export function JobOfferComposer({
         expires > start ||
         !Number.isInteger(crews) ||
         crews < 1 ||
+        crews > 100000 ||
+        crews > vendor.eligibility.facts.availableCapacity ||
         attachments.length > 20 ||
         attachments.some((url) => {
           try {
@@ -202,7 +209,7 @@ export function JobOfferComposer({
         crewCount: crews,
         attachmentUrls: attachments,
         expiresAt: new Date(expires).toISOString(),
-        ...(form.afe.trim() ? { afeCode: form.afe.trim() } : {}),
+        afeCode: form.afe.trim(),
         ...(form.po.trim() ? { poNumber: form.po.trim() } : {}),
       };
       const fingerprint = JSON.stringify(data);
@@ -244,6 +251,7 @@ export function JobOfferComposer({
       {field("end", t("mobileMarketplace.end"))}
       {field("expires", t("mobileMarketplace.expires"))}
       {field("crews", t("mobileMarketplace.capacity"))}
+      <Label>{t("mobileMarketplace.afeRequired")}</Label>
       {field("afe", t("mobileMarketplace.afe"))}
       {field("po", t("mobileMarketplace.po"))}
       {field("attachments", t("mobileMarketplace.attachments"))}
@@ -252,6 +260,7 @@ export function JobOfferComposer({
           busy ||
           checking ||
           sent ||
+          !vendor.offer ||
           !vendor.offerable ||
           !vendor.eligibility.eligible
         }

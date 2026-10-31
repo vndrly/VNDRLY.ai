@@ -101,7 +101,8 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[1].id })).send({}).expect(403);
     const [unchanged] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(unchanged.status).toBe("submitted");
-    await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "partner", partnerId: partners[0].id, role: "admin" });
+    // A work reviewer can approve proof but has no AP authority; org admins do.
+    await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "partner", partnerId: partners[0].id, role: "member" });
     const cookie = buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[0].id });
     expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).set("X-Submission-Revision", String(submitted.submissionRevision)).send({}), 200);
     const [approved] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));

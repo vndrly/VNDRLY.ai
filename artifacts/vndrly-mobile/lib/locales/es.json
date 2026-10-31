@@ -1,5 +1,14 @@
 {
   "mobileMarketplace": {
+    "quoteRequired": "Cotización requerida",
+    "requestQuote": "Solicitar cotización",
+    "quoteTo": "Solicitar cotización a {{name}}",
+    "sendQuoteRequest": "Enviar solicitud de cotización",
+    "quoteScope": "Describa el trabajo y las fechas solicitadas",
+    "quoteExplanation": "Este proveedor coincide con su servicio. Solicite un precio antes de ofrecer el trabajo. Solicitar cotización no autoriza trabajo.",
+    "quoteSent": "Cotización solicitada. El proveedor proporcionará un precio para su revisión. Actualice los resultados cuando esté listo.",
+    "quoteError": "No se pudo entregar la solicitud. Actualice la elegibilidad e inténtelo de nuevo.",
+    "afeRequired": "El socio debe asignar un AFE antes de preparar esta oferta de trabajo.",
     "previewCount": "Entradas coincidentes de catálogos de socios: {{count}}",
     "stagedCoverage": "Radio específico opcional. Déjelo vacío para usar la cobertura de empresa; se guarda después de crear la capacidad.",
     "activeCapability": "Capacidad activa",
@@ -1283,7 +1292,10 @@
       "not_approvable": "Este boleto no está listo para aprobarse.",
       "invalid_field_employee_id": "Ese empleado de campo no puede asignarse a este boleto.",
       "employee_invalid": "Selecciona un empleado válido.",
-      "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa."
+      "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa.",
+      "reviewer_required": "Un revisor autorizado del socio debe revisar este ticket.",
+      "vendor_submission_required": "El proveedor debe enviar el ticket y su hoja de comprobantes.",
+      "partner_review_required": "El socio debe revisar el ticket enviado."
     },
     "site": {
       "not_found": "No se encontró el sitio.",
