@@ -249,7 +249,7 @@ router.post("/partners/:partnerId/catalog-import", requireSession, async (req, r
   if (!body.success) { sendValidationFailed(res, body.error); return; }
   const [partner] = await db.select({ id: partnersTable.id }).from(partnersTable).where(eq(partnersTable.id, partnerId)).limit(1);
   if (!partner) { sendApiError(res, 404, "partner.not_found", "Partner not found"); return; }
-  try { res.json(await importPartnerCatalog(partnerId, auth.session.userId!, auth.session.role, body.data)); }
+  try { res.json(await importPartnerCatalog(partnerId, auth.session.userId!, auth.isSystemAdmin ? "admin" : "partner", body.data)); }
   catch (error) {
     if (error instanceof MarketplaceError) { sendApiError(res, error.status, error.code, error.message); return; }
     throw error;

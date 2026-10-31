@@ -104,7 +104,7 @@ describe("transparent marketplace ranking", () => {
   it("supports partner sorting and configured weights with deterministic vendor ties", () => {
     const near = candidate(2);
     const cheap = candidate(1, {
-      offer: { ...near.offer, id: 1, unitPrice: 25 },
+      offer: { ...near.offer!, id: 1, unitPrice: 25 },
     });
     cheap.eligibility = {
       ...cheap.eligibility,
@@ -136,7 +136,7 @@ describe("transparent marketplace ranking", () => {
   it("does not imply prices on different units or currencies are comparable", () => {
     const hourly = candidate(1);
     const daily = candidate(2, {
-      offer: { ...hourly.offer, id: 2, unitPrice: 1, unit: "day" },
+      offer: { ...hourly.offer!, id: 2, unitPrice: 1, unit: "day" },
     });
     const rows = rankMarketplaceVendors({ candidates: [hourly, daily] });
     expect(
