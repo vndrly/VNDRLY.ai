@@ -26,4 +26,16 @@ describe('catalog conditional course connections',()=>{
     expect(direct.services[0].roleMappings).toEqual([fixtures.catalog.catalog.roleRules.survey]);
     expect((await safetyTrainingCatalogView({userId:1} as never,{familyId:'H15'})).total).toBe(0);
   });
+  it('shows exact remaining evidence and only the current company course link',async()=>{
+    const catalog=fixtures.catalog as typeof fixtures.catalog&{residuals?:{groups:unknown[]}};
+    catalog.residuals={groups:[{groupId:'G13',title:'Seismic source preparation',courseId:'G62',role:'Actual shot-firing personnel only',serviceIds:['VMS-SEISMIC'],vendorEvidenceRequired:['Approved source method and assigned role.'],practicalAssessmentRequired:['Observed source-specific capability by a qualified assessor.'],scopeConfirmation:'Confirm whether explosives are actually used.',sourceUrls:[]}]};
+    fixtures.required.mockResolvedValueOnce({provisional:true,services:[],items:new Map([['G62',{record:{id:'company-owned-course'}}]]),requirements:[]} as never);
+    const view=await safetyTrainingCatalogView({userId:1} as never,{});
+    expect(view.services[0].residualRequirements).toEqual([expect.objectContaining({courseId:'G62',trainingItemId:'company-owned-course',vendorEvidenceRequired:['Approved source method and assigned role.']})]);
+    const noPublished=await safetyTrainingCatalogView({userId:1} as never,{});
+    expect(noPublished.services[0].residualRequirements[0].trainingItemId).toBeNull();
+    expect(noPublished.vendorExtrasCountTowardScore).toBe(false);
+    delete catalog.residuals;
+  });
 });
+

@@ -6478,6 +6478,11 @@
     "baselineUnavailable": "No está disponible el cumplimiento de capacitación de la empresa.",
     "exposureAudience": "Personas y puestos incluidos en esta decisión",
     "exposureAudienceHelp": "Seleccione las personas o puestos cuyas tareas reales revisó. Esta decisión solo les corresponde a ellos. Los demás permanecen sin revisar; una asignación ordinaria no establece exposición.",
-    "conditionalRule": "Condicionado a las tareas reales y al alcance del servicio"
+    "conditionalRule": "Condicionado a las tareas reales y al alcance del servicio",
+    "taskGapsHeading": "Cursos específicos de tareas y evidencia pendiente",
+    "taskGapsHelp": "Busque un servicio para ver los conocimientos enseñados, los roles afectados, los registros requeridos del proveedor y las evaluaciones prácticas calificadas. Completar el curso no cierra esos requisitos separados.",
+    "taskCourse": "Abrir curso específico de tarea {{courseId}}",
+    "vendorEvidence": "Evidencia del proveedor aún requerida",
+    "practicalEvidence": "Evaluación práctica calificada o credenciales aplicables aún requeridas"
   }
 }

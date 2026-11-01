@@ -2,8 +2,11 @@ import {useQuery}from'@tanstack/react-query';
 import {CompanySafetyReadinessSchema}from'@workspace/api-zod';
 import {useAuth}from'@/hooks/use-auth';
 import {useTranslation}from'react-i18next';
+import {useState}from'react';
+import TrainingServiceConnections from'./work-hub/library/training-service-connections';
 export default function CompanyTrainingBaseline(){
  const {user}=useAuth(),{t}=useTranslation();
+ const [showTaskEvidence,setShowTaskEvidence]=useState(false);
  const query=useQuery({queryKey:['company-training-baseline',user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId],enabled:!!user,queryFn:async()=>{const response=await fetch(`${import.meta.env.BASE_URL.replace(/\/$/,'')}/api/safety/readiness`,{credentials:'include'});if(!response.ok)throw Error('Training compliance unavailable');return CompanySafetyReadinessSchema.parse((await response.json()).data);},refetchInterval:60000});
  if(query.isError)return <p role="alert">{t('trainingPolicy.baselineUnavailable')}</p>;
  const baseline=query.data?.trainingBaseline,category=query.data?.categories.find(c=>c.id==='training');
@@ -19,5 +22,6 @@ export default function CompanyTrainingBaseline(){
   {!!baseline.unavailable&&<p>{t('trainingPolicy.unavailableCourses',{count:baseline.unavailable})}</p>}
   {!!conditional&&<p>{t('trainingPolicy.conditionalGaps',{count:conditional})}</p>}
   {!!baseline.unmappedServiceIds.length&&<p>{t('trainingPolicy.unmappedServices',{count:baseline.unmappedServiceIds.length})}</p>}
+  <details onToggle={event=>setShowTaskEvidence(event.currentTarget.open)}><summary className="cursor-pointer font-semibold">{t('trainingPolicy.taskGapsHeading')}</summary><p>{t('trainingPolicy.taskGapsHelp')}</p>{showTaskEvidence&&<TrainingServiceConnections familyId=""/>}</details>
  </section>;
 }

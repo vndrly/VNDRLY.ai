@@ -6478,6 +6478,11 @@
     "baselineUnavailable": "Company training compliance is unavailable.",
     "exposureAudience": "People and positions covered by this decision",
     "exposureAudienceHelp": "Select the people or positions whose actual duties you reviewed. This decision applies only to them. Everyone else remains unreviewed; an ordinary assignment never establishes exposure.",
-    "conditionalRule": "Conditional on the actual duties and service scope"
+    "conditionalRule": "Conditional on the actual duties and service scope",
+    "taskGapsHeading": "Task-specific courses and remaining evidence",
+    "taskGapsHelp": "Search a service to see its taught knowledge, affected roles, required vendor records and qualified practical evaluations. Course completion does not close those separate requirements.",
+    "taskCourse": "Open task-specific course {{courseId}}",
+    "vendorEvidence": "Vendor evidence still required",
+    "practicalEvidence": "Qualified practical evaluation or applicable credentials still required"
   }
 }
