@@ -39,7 +39,7 @@ export function streamlineBody(body,{administrative=false}={}){
  return parts.join('\n\n').replace(/\n{3,}/g,'\n\n');
 }
 
-export function streamlineCourseContent(content,id,originalBoundary=''){
+export function streamlineCourseContent(content,id,originalBoundary='',preserveAssessment=false){
  const result=structuredClone(content),t=result.training;
  for(const lesson of t.lessons){lesson.body=streamlineBody(originalBoundary?lesson.body.replaceAll(originalBoundary,''):lesson.body);if(/(?:finish|completion|feedback)$/.test(lesson.id))lesson.title=lesson.title.replace(/(?: and practical boundaries| and practical evaluation boundary|Completion and practical boundaries)/i,'');}
  if(id==='G99')for(const lesson of t.lessons){
@@ -53,9 +53,9 @@ export function streamlineCourseContent(content,id,originalBoundary=''){
   G79_check6:['Is a surprise uncontrolled confrontation an appropriate training exercise?',['An online score makes it acceptable.','No; use a planned, safe fictional exercise.','Yes, bravery is the goal.','Yes, after a quiz.'],'A learning exercise must not create an uncontrolled confrontation. The fictional course scenario is sufficient for this knowledge check.'],
   G81_final19:['Should a training exercise introduce uncontrolled production-system changes?',['No; use fictional data or an approved isolated exercise environment.','Yes, realism is enough.','Yes, if reversible in theory.','An online course score authorizes production changes.'],'Practice with fictional data or an isolated environment so learning does not alter a live operation.'],
  };
- for(const q of t.questions){const edit=replacements[q.id];if(edit){q.prompt=edit[0];q.options.forEach((o,i)=>o.label=edit[1][i]);t.guided.explanations[q.id]=edit[2];}}
+ if(!preserveAssessment)for(const q of t.questions){const edit=replacements[q.id];if(edit){q.prompt=edit[0];q.options.forEach((o,i)=>o.label=edit[1][i]);t.guided.explanations[q.id]=edit[2];}}
  const wording=[['equipment outside the scope of the recorded practical assessment','a powered industrial truck outside the scope of the recorded operator evaluation'],['A supervisor has course attendance evidence but no practical assessment required for the planned equipment task.','A forklift operator has course attendance evidence but lacks the workplace performance evaluation required by 29 CFR 1910.178(l).'],['Verify relevant practical assessment and employer/site authorization before assigning isolator duties.','Verify the assigned-role training, applicable isolation procedure and employer designation before assigning isolator duties.'],['before night operators receive instruction or practical assessment','before night operators receive instruction for the changed controls']];
- for(const q of t.questions){for(const [from,to]of wording){q.prompt=q.prompt.replaceAll(from,to);q.options.forEach(o=>o.label=o.label.replaceAll(from,to));}}
+ if(!preserveAssessment)for(const q of t.questions){for(const [from,to]of wording){q.prompt=q.prompt.replaceAll(from,to);q.options.forEach(o=>o.label=o.label.replaceAll(from,to));}}
  // The existing introductory and closing teaching remains; no extra supervisor
  // checklist, evidence upload or independent assessor is invented for completion.
  const law=legalBoundary(id);

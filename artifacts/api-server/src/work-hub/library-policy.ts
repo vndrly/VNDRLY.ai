@@ -73,7 +73,9 @@ export function trainingReadContent(metadata: LibraryMetadata) {
  if(content?.kind!=='training'||!content.training||metadata.safetyResource?.sourceVersion!=='1.0')return content;
  const registry=(safetyTrainingCatalog as {curriculum:{id:string;sourceSha256:string;contentSha256:string;compatibleVersions?:{sourceSha256:string;contentSha256:string}[]}[]}).curriculum;
  const course=registry.find(c=>c.id===metadata.safetyResource!.familyId),version=course&&[course,...(course.compatibleVersions??[])].find(v=>v.sourceSha256===metadata.safetyResource!.sourceSha256);
- return version&&safetyTrainingContentHash(content)===version.contentSha256?streamlineCourseContent(content,metadata.safetyResource.familyId):content;
+ // Historical answer records must still show the questions/options actually
+ // answered. Only the current published revision uses rewritten questions.
+ return version&&safetyTrainingContentHash(content)===version.contentSha256?streamlineCourseContent(content,metadata.safetyResource.familyId,'',true):content;
 }
 export function safeLibraryContent(metadata: LibraryMetadata, manage: boolean) {
   const { fileSnapshots: _, ...safe } = metadata;

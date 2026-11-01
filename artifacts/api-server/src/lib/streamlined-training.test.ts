@@ -4,10 +4,16 @@ import {LibraryDraftSchema,type LibraryMetadata} from '@workspace/api-zod';
 import {course as h03} from '../../../../research/safety-program/2026-10-31/course-review/H03-permit-to-work-simops/guided-course.mjs';
 import {trainingReadContent} from '../work-hub/library-policy';
 import {safetyTrainingContentHash} from './safety-training-content-hash';
-import {legalTaskRequirements} from '../../../../scripts/lib/streamlined-training.mjs';
+import {legalTaskRequirements,streamlineCourseContent} from '../../../../scripts/lib/streamlined-training.mjs';
 const read=(path:string)=>JSON.parse(readFileSync(new URL('../../../../'+path,import.meta.url),'utf8'));
 const courses=read('research/safety-program/2026-11-02/prepared-course-publication.json').courses as {id:string;content:ReturnType<typeof LibraryDraftSchema.parse>}[];
 describe('streamlined training requirements',()=>{
+ it('keeps the actual historical assessment wording while current revisions remove the unsupported assessment demand',()=>{
+  const raw=read('research/safety-program/2026-11-02/task-courses/G71.json'),content=LibraryDraftSchema.parse({...raw,kind:'training',safetyRelated:true});
+  const historical=streamlineCourseContent(content,'G71','',true),current=streamlineCourseContent(content,'G71');
+  expect(historical.training!.questions).toEqual(content.training!.questions);expect(historical.training!.guided!.explanations).toEqual(content.training!.guided!.explanations);
+  expect(current.training!.questions.find(q=>q.id==='G71_final20')!.prompt).toBe('What should a calibration record identify?');
+ });
  it('retains all116 existing course families, their actual teaching, questions and worked scenarios without blanket evidence/assessor appendices',()=>{
   expect(courses).toHaveLength(116);
   for(const c of courses){const t=c.content.training!;expect(t.questions).toHaveLength(26);expect(t.guided!.steps).toHaveLength(10);
