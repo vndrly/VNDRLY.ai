@@ -15,9 +15,8 @@ export default function EnergySafetyCore(){
  return <section className="space-y-3 rounded-xl border-2 border-[var(--brand-primary)] bg-card p-5 text-foreground" aria-label="VNDRLY Energy Safety Core">
   <h2 className="text-xl font-bold">VNDRLY Energy Safety Core</h2>
   <p>Complete onshore safety lessons, 22 worked scenarios and 48 explained learning checks, followed by a separate 40-question certification exam.</p>
-  <p>Optional references include the 42-objective PEC benchmark crosswalk and 68 OSHA and applicability entries. They are outside the required learning path. No evidence upload, independent assessor or blanket practical evaluation is required for online completion.</p>
   <a className="font-semibold underline" href={`/work-hub/library/${result.data.itemId}`}>Open Energy Safety Core</a>
-  <p>VNDRLY internal knowledge credential. No external accreditation or universal operator acceptance is claimed.</p>
+  <p>Your VNDRLY Energy Safety Core credential stays with your VNDRLY user.</p>
   {!!result.data.credentials.length&&<div className="border-t pt-3"><h3 className="font-semibold">Your portable Energy Safety Core record</h3>{result.data.credentials.map((c,i)=><p key={`${c.courseSha256}:${c.passedAt}:${i}`}>Version {c.contentVersion} · Exam passed {c.score.toFixed(1)}% · {new Date(c.passedAt).toLocaleDateString()}. Your earned record stays with your VNDRLY user across company changes.</p>)}</div>}
  </section>;
 }

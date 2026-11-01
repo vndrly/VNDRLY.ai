@@ -11,9 +11,9 @@ export default function CertificationExam({data,busy,uncertain,send}:{data:Data;
  return <section className="space-y-4 rounded-xl border-2 p-5" aria-label="Certification exam">
  <h3 className="text-lg font-bold">Separate certification exam</h3>
  <p>{exam.questionCount} questions · Passing score {exam.passingPercent}%.</p>
- <p>Passing records a VNDRLY internal knowledge credential. This exam is unproctored and does not claim external accreditation or universal operator acceptance.</p>
+ <p>Passing records your VNDRLY Energy Safety Core credential.</p>
  {!complete?<p>Complete every learning section before starting the exam.</p>:!attempt||attempt.submittedAt?<>
- {attempt&&<div role="status"><p>Attempt {data.assignment.progress.certificationExam?.attempts.length}: {attempt.correctCount}/{attempt.questionIds.length} ({attempt.score?.toFixed(1)}%) — {attempt.passed?'Passed: VNDRLY internal course credential':'Not passed'}</p></div>}
+ {attempt&&<div role="status"><p>Attempt {data.assignment.progress.certificationExam?.attempts.length}: {attempt.correctCount}/{attempt.questionIds.length} ({attempt.score?.toFixed(1)}%) — {attempt.passed?'Passed: VNDRLY Energy Safety Core credential':'Not passed'}</p></div>}
  {!attempt?.passed&&(data.assignment.progress.certificationExam?.attempts.length??0)<exam.maximumAttempts&&<TogglePillButton tone="brand" disabled={locked} onClick={()=>void act({action:'exam_start'})}>{attempt?'Retake certification exam':'Start certification exam'}</TogglePillButton>}
  {attempt?.submittedAt&&<details><summary>Review submitted exam</summary>{exam.questions.map(q=><div key={q.id} className="border-t py-3"><p>{q.prompt}</p><p>Your answer: {q.options.filter(o=>attempt.answers[q.id]?.includes(o.id)).map(o=>o.label).join(', ')}</p><p>Correct answer: {q.options.filter(o=>exam.review.find(r=>r.questionId===q.id)?.correctOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><p>{exam.review.find(r=>r.questionId===q.id)?.explanation}</p></div>)}</details>}
  </>:<>

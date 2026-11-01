@@ -1,5 +1,5 @@
 import { LibraryFieldSchema, type LibraryMetadata } from "@workspace/api-zod";
-import {streamlineCourseContent} from '../../../../scripts/lib/streamlined-training.mjs';
+import {streamlineCourseContent,removeAccreditationDisclaimers} from '../../../../scripts/lib/streamlined-training.mjs';
 import {safetyTrainingCatalog} from '../data/safety-training-catalog';
 import {safetyTrainingContentHash} from '../lib/safety-training-content-hash';
 export function assignmentDeadline(
@@ -75,7 +75,9 @@ export function trainingReadContent(metadata: LibraryMetadata) {
  const course=registry.find(c=>c.id===metadata.safetyResource!.familyId),version=course?.compatibleVersions?.find(v=>v.sourceSha256===metadata.safetyResource!.sourceSha256);
  // Historical answer records must still show the questions/options actually
  // answered. Only the current published revision uses rewritten questions.
- return course&&version&&course.sourceSha256!==metadata.safetyResource.sourceSha256&&safetyTrainingContentHash(content)===version.contentSha256?streamlineCourseContent(content,metadata.safetyResource.familyId,'',true):content;
+ const hash=safetyTrainingContentHash(content);
+ if(course&&version&&course.sourceSha256!==metadata.safetyResource.sourceSha256&&hash===version.contentSha256)return streamlineCourseContent(content,metadata.safetyResource.familyId,'',true);
+ return course&&course.sourceSha256===metadata.safetyResource.sourceSha256&&hash===course.contentSha256?removeAccreditationDisclaimers(content):content;
 }
 export function safeLibraryContent(metadata: LibraryMetadata, manage: boolean) {
   const { fileSnapshots: _, ...safe } = metadata;

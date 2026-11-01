@@ -4,10 +4,27 @@ import {LibraryDraftSchema,type LibraryMetadata} from '@workspace/api-zod';
 import {course as h03} from '../../../../research/safety-program/2026-10-31/course-review/H03-permit-to-work-simops/guided-course.mjs';
 import {trainingReadContent} from '../work-hub/library-policy';
 import {safetyTrainingContentHash} from './safety-training-content-hash';
-import {legalTaskRequirements,streamlineCourseContent} from '../../../../scripts/lib/streamlined-training.mjs';
+import {legalTaskRequirements,streamlineCourseContent,removeAccreditationDisclaimers} from '../../../../scripts/lib/streamlined-training.mjs';
 const read=(path:string)=>JSON.parse(readFileSync(new URL('../../../../'+path,import.meta.url),'utf8'));
 const courses=read('research/safety-program/2026-11-02/prepared-course-publication.json').courses as {id:string;content:ReturnType<typeof LibraryDraftSchema.parse>}[];
 describe('streamlined training requirements',()=>{
+ it('removes added accreditation disclaimers from all published teaching without changing stored content, assessments or legal duties',()=>{
+  const core=read('research/safety-program/energy-safety-core/course.json');
+  const coreView=removeAccreditationDisclaimers(core.content);
+  expect(coreView.training.lessons).toHaveLength(11);
+  expect(JSON.stringify(coreView)).not.toMatch(/\bPEC\b|Outreach|benchmark|crosswalk|internal knowledge|unproctored|universal operator acceptance/i);
+  for(const c of [...courses,core]){
+   const before=JSON.stringify(c.content),shown=removeAccreditationDisclaimers(c.content);
+   expect([shown.description,...shown.training.lessons.flatMap((l:any)=>[l.title,l.body]),...shown.training.questions.flatMap((q:any)=>[q.prompt,...q.options.map((o:any)=>o.label)]),...Object.values(shown.training.guided.explanations)].join(' ')).not.toMatch(/accredit/i);
+   expect(shown.training.questions.map((q:any)=>[q.id,q.options.map((o:any)=>o.id),q.correctOptionIds])).toEqual(c.content.training.questions.map((q:any)=>[q.id,q.options.map((o:any)=>o.id),q.correctOptionIds]));
+   expect(shown.training.guided.steps).toEqual(c.content.training.guided.steps);
+   expect(JSON.stringify(c.content)).toBe(before);
+  }
+  const published=read('research/safety-program/2026-11-02/prepared-course-publication.json').courses.find((c:any)=>c.id==='R03');
+  const shown=trainingReadContent({content:published.content,safetyResource:{familyId:published.id,sourceVersion:published.sourceVersion,sourceSha256:published.sourceSha256}} as LibraryMetadata)!;
+  expect(JSON.stringify(shown)).not.toMatch(/accredit/i);
+  expect(shown.training!.guided!.steps).toHaveLength(10);
+ });
  it('keeps the actual historical assessment wording while current revisions remove the unsupported assessment demand',()=>{
   const raw=read('research/safety-program/2026-11-02/task-courses/G71.json'),content=LibraryDraftSchema.parse({...raw,kind:'training',safetyRelated:true});
   const historical=streamlineCourseContent(content,'G71','',true),current=streamlineCourseContent(content,'G71');

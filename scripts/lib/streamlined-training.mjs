@@ -18,6 +18,51 @@ export const legalTaskRequirements = [
 export function courseLegalRequirements(id){return legalTaskRequirements.filter(r=>r.courses.includes(id));}
 export function legalBoundary(id){return courseLegalRequirements(id).map(r=>`${r.citation} — ${r.appliesTo}: ${r.requirement} Source: ${r.url}`);}
 
+// Presentation-only corrections also cover immutable, already-assigned versions.
+// Keep their stored identities, answers and earned results intact.
+export function removeAccreditationDisclaimers(content){
+ const replacements=[
+  ['This lesson is awareness education, not legal advice, a PEC credential, or an independent authorization to perform regulated work.',''],
+  ['VNDRLY internal knowledge credential','VNDRLY Energy Safety Core credential'],
+  ['VNDRLY internal course credential','VNDRLY Energy Safety Core credential'],
+  ['No evidence upload, supervisor sign-off or practical evaluation is required to finish this online course.',''],
+  ['No evidence upload, independent assessor, supervisor sign-off or practical evaluation is required for online completion.',''],
+  ['No blanket evidence upload or practical evaluation is required for online completion.',''],
+  ['Optional benchmark and regulatory references are available outside the required learning path.',''],
+  ['The optional benchmark and regulatory references are not required course sections.',''],
+  ['Specific legal duties apply only to the actual work roles identified in the regulatory reference; they do not create additional course-completion steps.',''],
+  ['The online course and exercise attendance are learning records, not accreditation or proof of all emergency readiness.',''],
+  ['A course completion badge cannot create its own accreditation.',''],
+  ['laboratory scope/accreditation where required','laboratory scope'],
+  ['This course teaches reasoning and planning, not asbestos survey accreditation, lead-abatement qualification, industrial-hygiene certification or permission to disturb suspect materials.','This course teaches reasoning and planning.'],
+  ['Specialized credentials depend on the actual legal/contractual scope; this course creates no accreditation or universal licensing requirement.',''],
+  ['This module teaches transferable instructional design and evaluation methods; it grants no subject-matter qualification or provider accreditation.','This module teaches transferable instructional design and evaluation methods.'],
+  ['The assessment form cannot create its own accreditation.',''],
+  ['Provider approval and accreditation require an actual external or authorized basis where applicable.',''],
+  ['A course cannot become accredited because its title says certified or because it cites a respected regulator.',''],
+  ['6. Evaluate transfer and keep accreditation claims exact','6. Evaluate learning transfer'],
+  ['Does citing CDC make a provider accredited?','Does citing a reference establish that a learner can apply a procedure?'],
+  ['No; approval/accreditation requires its actual authorized basis.','No; check whether the learner understands and can apply the taught procedure.'],
+  ['Yes, citations confer approval.','Yes, citing a reference demonstrates the learner can apply it.'],
+  ['Reference use is not accreditation.','A reference supports instruction; the learner’s answers show whether they understood it.'],
+  ['Accreditation for every provider.','Only the provider’s name.'],
+  ["This course's paper assessment demonstrates instructional reasoning only; it cannot accredit the provider or create subject competence.","This course's paper assessment demonstrates instructional reasoning."],
+  [', not externally accredited',''],
+  [', not an accredited PEC or OSHA Outreach credential',''],
+  ['Exact work class, required licensed/accredited instruction where applicable and observed actual task competence.','Training specified for the actual asbestos work class.'],
+  ['Separate regulator/operator requirements, licenses, OQ, H2S specialty standards and accredited courses as actually required.','Applicable legal requirements for the actual transport, offshore, mine, aviation or licensed work.'],
+ ];
+ const clean=value=>{let text=value;for(const [from,to]of replacements)text=text.replaceAll(from,to);return text.replace(/ {2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();};
+ const result=structuredClone(content);
+ const removed=new Set(['ESC_BENCHMARK','ESC_OSHA','ESC_REVIEW']);
+ if(result.training){result.training.lessons=result.training.lessons.filter(l=>!removed.has(l.id));if(result.training.guided)result.training.guided.steps=result.training.guided.steps.filter(s=>!removed.has(s.lessonId));}
+ if(result.description)result.description=clean(result.description);
+ for(const lesson of result.training?.lessons??[]){lesson.title=clean(lesson.title);lesson.body=clean(lesson.body);}
+ for(const question of result.training?.questions??[]){question.prompt=clean(question.prompt);for(const option of question.options)option.label=clean(option.label);}
+ for(const [id,value]of Object.entries(result.training?.guided?.explanations??{}))result.training.guided.explanations[id]=clean(value);
+ return result;
+}
+
 // These headings were inserted as universal obligations by the old builders.
 const extraHeading=/^#{1,6}\s+(?:Vendor evidence still required|Qualified practical assessment still required|Separate practical evaluation|What needs a separate practical evaluation|Practical evaluation(?: and.*)?|Practical assessment(?: and.*)?|Record a defensible practical evaluation)\s*$/i;
 const extraSentence=/(?:practical.{0,65}(?:assess|evaluat|demonstrat|qualif|competence|capabilit|skills|train|instruct|check|drill)|qualified practical|qualified assessor|assessor must|must.*assessor|vendor evidence|separate practical boundary|separately assess|separately evaluat|observed.*(?:assessment|demonstration).*required)/i;
@@ -60,5 +105,5 @@ export function streamlineCourseContent(content,id,originalBoundary='',preserveA
  // checklist, evidence upload or independent assessor is invented for completion.
  const law=legalBoundary(id);
  if(law.length)t.lessons.at(-1).body+='\n\n## Legal requirements for the named work role\nThese apply only when you perform the work described below. They are not additional steps for completing this online course.\n\n'+law.join('\n\n');
- return result;
+ return removeAccreditationDisclaimers(result);
 }

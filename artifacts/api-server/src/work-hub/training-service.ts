@@ -400,7 +400,7 @@ export async function personalEnergySafetyCredentials(actor:LibraryActor){
  const credentials=rows.flatMap(row=>{
   const a=AssignmentMetadataSchema.safeParse(row.assignment),m=LibraryMetadataSchema.safeParse(row.metadata);
   if(!a.success||!m.success||m.data.safetyResource?.familyId!=='G99'||!isCanonicalEnergySafetyCourse(m.data))return [];
-  return (a.data.progress.certificationExam?.attempts??[]).filter(attempt=>attempt.passed&&attempt.submittedAt&&attempt.credential?.familyId==='G99'&&attempt.credential.contentVersion===a.data.contentVersion&&attempt.credential.contentVersion===m.data.contentVersion&&attempt.credential.courseSha256===m.data.safetyResource!.sourceSha256).map(attempt=>({course:'VNDRLY Energy Safety Core',familyId:'G99',courseSha256:attempt.credential!.courseSha256,contentVersion:attempt.credential!.contentVersion,passedAt:attempt.submittedAt,score:attempt.score,credentialType:'VNDRLY internal knowledge credential',proctored:false,accredited:false}));
+  return (a.data.progress.certificationExam?.attempts??[]).filter(attempt=>attempt.passed&&attempt.submittedAt&&attempt.credential?.familyId==='G99'&&attempt.credential.contentVersion===a.data.contentVersion&&attempt.credential.contentVersion===m.data.contentVersion&&attempt.credential.courseSha256===m.data.safetyResource!.sourceSha256).map(attempt=>({course:'VNDRLY Energy Safety Core',familyId:'G99',courseSha256:attempt.credential!.courseSha256,contentVersion:attempt.credential!.contentVersion,passedAt:attempt.submittedAt,score:attempt.score,credentialType:'VNDRLY Energy Safety Core credential'}));
  });
  return {credentials};
 }
