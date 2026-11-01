@@ -340,7 +340,8 @@ test("Gatekeeping and Perimeter Security match Gate Services; compare, send and 
     ).toBeVisible();
     await expect(
       midcon.getByText("Not yet rated", { exact: true }),
-    ).toHaveCount(2);
+    ).toHaveCount(1);
+    await expect(midcon.getByLabel("VNDRLY compliance score 0 out of 100", { exact: true })).toBeVisible();
     await expect(
       midcon.getByText("Gate Services", { exact: true }),
     ).toBeVisible();
