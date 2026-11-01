@@ -9,6 +9,7 @@ import {
 import { z } from "zod/v4";
 import {
   AssignmentMetadataSchema,
+  GuidedTrainingProgressSchema,
   LibraryDraftSchema,
 } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
@@ -210,6 +211,18 @@ export default function OwnerAssignment({
             <Text style={label}>{t("workHubLibrary.acknowledged")}</Text>
           )}
           {data.content?.training?.questions.map((question) => {
+            const guided=GuidedTrainingProgressSchema.safeParse(h.values.progress);
+            if(h.values.type==='guided_training'&&guided.success){
+              const response=guided.data.responses[question.id];
+              if(!response)return null;
+              const labels=(ids:string[])=>question.options.filter(o=>ids.includes(o.id)).map(o=>o.label).join(', ');
+              return <View key={question.id} style={{gap:6}}>
+                <Text style={label}>{question.prompt}</Text>
+                <Text style={label}>{t('h03Course.originalAnswer')}: {labels(response.originalOptionIds)}</Text>
+                <Text style={label}>{t('h03Course.currentAnswer')}: {labels(response.correctedOptionIds)}</Text>
+                <Text style={label}>{t(response.remediatedAt?'h03Course.corrected':response.correct?'h03Course.correct':'h03Course.needsCorrection')}{response.remediatedAt?` · ${new Date(response.remediatedAt).toLocaleString()}`:''}</Text>
+              </View>;
+            }
             const answers = (h.values.answers ?? {}) as Record<
               string,
               string[]
